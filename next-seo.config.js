@@ -18,7 +18,7 @@ const defaultSEOConfig = {
     site_name: "xtarter",
   },
   twitter: {
-    handle: "@sozonome",
+    handle: "@agstnsnathaniel",
     cardType: "summary_large_image",
   },
 };
