@@ -6,7 +6,7 @@ import { fetcher } from 'lib/utils/fetcher';
 
 import type { HomePageProps } from './types';
 
-export const username = 'sozonome';
+export const username = 'agustinusnathaniel';
 
 export const getStaticProps: GetStaticProps<HomePageProps> = async () => {
   const data = await fetcher<Array<Repo>>({
