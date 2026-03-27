@@ -2115,8 +2115,8 @@ packages:
   grapheme-splitter@1.0.4:
     resolution: {integrity: sha512-bzh50DW9kTPM00T8y4o8vQg89Di9oLJVLW/KaOGIXJWP/iqCN6WKYkbNOF04vFLJhwcpYUh9ydh/+5vpOqV4YQ==}
 
-  handlebars@4.7.7:
-    resolution: {integrity: sha512-aAcXm5OAfE/8IXkcZvCepKU3VzW1/39Fb5ZuqMtgI/hT8X2YgoMvBY5dLhq/cpOvw7Lk1nK/UF71aLG/ZnVYRA==}
+  handlebars@4.7.9:
+    resolution: {integrity: sha512-4E71E0rpOaQuJR2A3xDZ+GM1HyWYv1clR58tC8emQNeQe3RH7MAzSbat+V0wG78LQBo6m6bzSG/L4pBuCsgnUQ==}
     engines: {node: '>=0.4.7'}
     hasBin: true
 
@@ -5190,7 +5190,7 @@ snapshots:
     dependencies:
       conventional-commits-filter: 2.0.7
       dateformat: 3.0.3
-      handlebars: 4.7.7
+      handlebars: 4.7.9
       json-stringify-safe: 5.0.1
       lodash: 4.17.21
       meow: 8.1.2
@@ -6114,7 +6114,7 @@ snapshots:
 
   grapheme-splitter@1.0.4: {}
 
-  handlebars@4.7.7:
+  handlebars@4.7.9:
     dependencies:
       minimist: 1.2.8
       neo-async: 2.6.2
