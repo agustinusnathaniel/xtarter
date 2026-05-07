@@ -1,5 +1,13 @@
 # @xtarterize/tasks
 
+## 1.4.1
+
+### Patch Changes
+
+- Updated dependencies [[`5f5fe9a`](https://github.com/agustinusnathaniel/xtarterize/commit/5f5fe9a2df17274a71afcb853cba4e684c0499ec)]:
+  - @xtarterize/patchers@1.4.1
+  - @xtarterize/core@1.4.1
+
 ## 1.4.0
 
 ### Minor Changes

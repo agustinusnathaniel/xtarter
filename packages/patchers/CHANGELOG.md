@@ -1,5 +1,11 @@
 # @xtarterize/patchers
 
+## 1.4.1
+
+### Patch Changes
+
+- [`5f5fe9a`](https://github.com/agustinusnathaniel/xtarterize/commit/5f5fe9a2df17274a71afcb853cba4e684c0499ec) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - fix: use JSON5 parser in patchJson to handle JSONC comments
+
 ## 1.4.0
 
 ### Minor Changes
