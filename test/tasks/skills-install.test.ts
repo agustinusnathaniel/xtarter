@@ -125,6 +125,77 @@ describe('skillsInstallTask', () => {
 		expect(after).toContain('vercel-react-native-skills')
 	})
 
+	it('dryRun includes antd skill for projects with antd', async () => {
+		const profile = await detectProject(
+			path.join(fixtures, 'react-ui-libraries'),
+		)
+		const diffs = await skillsInstallTask.dryRun(
+			path.join(fixtures, 'react-ui-libraries'),
+			profile,
+		)
+		expect(diffs.length).toBe(1)
+		const after = diffs[0].after ?? ''
+		expect(after).toContain('antd')
+		expect(after).toContain('ant-design/ant-design-cli')
+	})
+
+	it('dryRun includes heroui-react skill for projects with @heroui/react', async () => {
+		const profile = await detectProject(
+			path.join(fixtures, 'react-ui-libraries'),
+		)
+		const diffs = await skillsInstallTask.dryRun(
+			path.join(fixtures, 'react-ui-libraries'),
+			profile,
+		)
+		const after = diffs[0].after ?? ''
+		expect(after).toContain('heroui-react')
+		expect(after).toContain('heroui-inc/heroui')
+	})
+
+	it('dryRun includes chakra-ui skills for projects with @chakra-ui/react', async () => {
+		const profile = await detectProject(
+			path.join(fixtures, 'react-ui-libraries'),
+		)
+		const diffs = await skillsInstallTask.dryRun(
+			path.join(fixtures, 'react-ui-libraries'),
+			profile,
+		)
+		const after = diffs[0].after ?? ''
+		expect(after).toContain('chakra-ui-builder')
+		expect(after).toContain('chakra-ui-refactor')
+		expect(after).toContain('chakra-ui/chakra-ui')
+	})
+
+	it('dryRun includes heroui-native skill for react-native projects with heroui-native', async () => {
+		const profile = await detectProject(
+			path.join(fixtures, 'react-native-hero'),
+		)
+		const diffs = await skillsInstallTask.dryRun(
+			path.join(fixtures, 'react-native-hero'),
+			profile,
+		)
+		expect(diffs.length).toBe(1)
+		const after = diffs[0].after ?? ''
+		expect(after).toContain('heroui-native')
+		expect(after).toContain('heroui-inc/heroui')
+	})
+
+	it('does not include component library skills in plain react projects', async () => {
+		const profile = await detectProject(
+			path.join(fixtures, 'react-vite-tailwind'),
+		)
+		const diffs = await skillsInstallTask.dryRun(
+			path.join(fixtures, 'react-vite-tailwind'),
+			profile,
+		)
+		const after = diffs[0].after ?? ''
+		expect(after).not.toContain('antd')
+		expect(after).not.toContain('heroui-react')
+		expect(after).not.toContain('heroui-native')
+		expect(after).not.toContain('chakra-ui-builder')
+		expect(after).not.toContain('chakra-ui-refactor')
+	})
+
 	it('returns skip when no relevant framework is detected', async () => {
 		const profile = await detectProject(path.join(fixtures, 'node-only'))
 		if (!skillsInstallTask.applicable(profile)) {

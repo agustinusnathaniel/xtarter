@@ -164,6 +164,30 @@ const SKILL_CATALOG: SkillDefinition[] = [
 	},
 
 	// ═════════════════════════════════════════════════════════════════
+	//  Component Libraries
+	// ═════════════════════════════════════════════════════════════════
+	{
+		source: 'ant-design/ant-design-cli',
+		skill: 'antd',
+		condition: (_p, d) => !!d.antd,
+	},
+	{
+		source: 'heroui-inc/heroui',
+		skill: 'heroui-react',
+		condition: (_p, d) => !!d['@heroui/react'],
+	},
+	{
+		source: 'chakra-ui/chakra-ui',
+		skill: 'chakra-ui-builder',
+		condition: (_p, d) => !!d['@chakra-ui/react'],
+	},
+	{
+		source: 'chakra-ui/chakra-ui',
+		skill: 'chakra-ui-refactor',
+		condition: (_p, d) => !!d['@chakra-ui/react'],
+	},
+
+	// ═════════════════════════════════════════════════════════════════
 	//  Expo / React Native
 	// ═════════════════════════════════════════════════════════════════
 	{
@@ -210,6 +234,11 @@ const SKILL_CATALOG: SkillDefinition[] = [
 		source: 'vercel-labs/agent-skills',
 		skill: 'vercel-react-native-skills',
 		condition: (p) => p.bundler === 'expo' || p.framework === 'react-native',
+	},
+	{
+		source: 'heroui-inc/heroui',
+		skill: 'heroui-native',
+		condition: (_p, d) => !!(d['heroui-native'] && d['react-native']),
 	},
 
 	// ═════════════════════════════════════════════════════════════════
