@@ -53,6 +53,9 @@ importers:
       '@changesets/cli':
         specifier: ^2.31.0
         version: 2.31.0(@types/node@25.6.0)
+      '@types/node':
+        specifier: 'catalog:'
+        version: 25.6.0
       turbo:
         specifier: ^2.9.9
         version: 2.9.9
@@ -5122,7 +5125,7 @@ snapshots:
 
   '@types/sax@1.2.7':
     dependencies:
-      '@types/node': 24.12.2
+      '@types/node': 25.6.0
 
   '@types/trusted-types@2.0.7':
     optional: true

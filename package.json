@@ -1,37 +1,38 @@
 {
-	"name": "xtarterize",
-	"private": true,
-	"version": "0.1.0",
-	"scripts": {
-		"build": "turbo run build",
-		"build:cli": "turbo run build --filter=!@xtarterize/docs",
-		"dev": "turbo run dev",
-		"test": "vp test",
-		"test:run": "vp test run",
-		"lint": "biome lint .",
-		"check": "biome check --write .",
-		"typecheck": "turbo run typecheck",
-		"docs:dev": "pnpm --filter @xtarterize/docs dev",
-		"docs:build": "pnpm --filter @xtarterize/docs build",
-		"docs:preview": "pnpm --filter @xtarterize/docs preview",
-		"cli:dev": "pnpm --filter @xtarterize/cli dev",
-		"cli:build": "pnpm --filter @xtarterize/cli build",
-		"up-interactive": "pnpm up -i -r",
-		"up-latest": "pnpm up-interactive -L",
-		"changeset": "changeset",
-		"version-packages": "changeset version",
-		"release": "changeset publish",
-		"prepare": "vp config"
-	},
-	"devDependencies": {
-		"@biomejs/biome": "^2.4.14",
-		"@changesets/changelog-github": "^0.7.0",
-		"@changesets/cli": "^2.31.0",
-		"turbo": "^2.9.9",
-		"vite-plus": "catalog:"
-	},
-	"packageManager": "pnpm@10.33.2",
-	"engines": {
-		"node": ">=18"
-	}
+  "name": "xtarterize",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "turbo run build",
+    "build:cli": "turbo run build --filter=!@xtarterize/docs",
+    "dev": "turbo run dev",
+    "test": "vp test",
+    "test:run": "vp test run",
+    "lint": "biome lint .",
+    "check": "biome check --write .",
+    "typecheck": "turbo run typecheck",
+    "docs:dev": "pnpm --filter @xtarterize/docs dev",
+    "docs:build": "pnpm --filter @xtarterize/docs build",
+    "docs:preview": "pnpm --filter @xtarterize/docs preview",
+    "cli:dev": "pnpm --filter @xtarterize/cli dev",
+    "cli:build": "pnpm --filter @xtarterize/cli build",
+    "up-interactive": "pnpm up -i -r",
+    "up-latest": "pnpm up-interactive -L",
+    "changeset": "changeset",
+    "version-packages": "changeset version",
+    "release": "changeset publish",
+    "prepare": "vp config"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.4.14",
+    "@changesets/changelog-github": "^0.7.0",
+    "@changesets/cli": "^2.31.0",
+    "@types/node": "catalog:",
+    "turbo": "^2.9.9",
+    "vite-plus": "catalog:"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "packageManager": "pnpm@10.33.2"
 }
