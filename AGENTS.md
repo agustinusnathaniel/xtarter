@@ -55,7 +55,7 @@ Every code change must pass the full quality pipeline:
 
 ```bash
 # Run tests
-pnpm test:run
+vp test
 
 # Type check all packages
 pnpm typecheck
@@ -97,7 +97,7 @@ pnpm dedupe
 # 5. Run full verification pipeline
 pnpm typecheck
 pnpm build
-pnpm test:run
+vp test
 pnpm lint
 ```
 
@@ -141,6 +141,8 @@ If your change affects behavior, architecture, or user-facing features, update t
 | Project overview | `README.md` |
 | Architecture decisions | `docs/ADRs/` |
 | Import conventions | `docs/ADRs/013-dynamic-import-conventions.md` |
+| Vite Plus migration | `docs/ADRs/014-vite-plus-migration.md` |
+| pnpm catalog policy | `docs/ADRs/015-pnpm-catalog-shared-dependencies.md` |
 | Task interface | `packages/core/src/_base.ts` |
 | Core utilities | `packages/core/src/` |
 | Patching engine | `packages/patchers/src/` |
@@ -153,3 +155,19 @@ If your change affects behavior, architecture, or user-facing features, update t
 ---
 
 **Do not skip these steps.** The quality of your work is measured by how well you follow this workflow, not just by the code you produce.
+
+<!--VITE PLUS START-->
+
+# Using Vite+, the Unified Toolchain for the Web
+
+This project is using Vite+, a unified toolchain built on top of Vite, Rolldown, Vitest, tsdown, Oxlint, Oxfmt, and Vite Task. Vite+ wraps runtime management, package management, and frontend tooling in a single global CLI called `vp`. Vite+ is distinct from Vite, and it invokes Vite through `vp dev` and `vp build`. Run `vp help` to print a list of commands and `vp <command> --help` for information about a specific command.
+
+Docs are local at `node_modules/vite-plus/docs` or online at https://viteplus.dev/guide/.
+
+## Review Checklist
+
+- [ ] Run `vp install` after pulling remote changes and before getting started.
+- [ ] Run `vp check` and `vp test` to format, lint, type check and test changes.
+- [ ] Check if there are `vite.config.ts` tasks or `package.json` scripts necessary for validation, run via `vp run <script>`.
+
+<!--VITE PLUS END-->

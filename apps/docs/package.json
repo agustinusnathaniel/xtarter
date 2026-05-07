@@ -11,13 +11,13 @@
 		"astro": "astro"
 	},
 	"dependencies": {
-		"@astrojs/starlight": "^0.38.5",
+		"@astrojs/starlight": "^0.39.0",
 		"@astrojs/starlight-tailwind": "^5.0.0",
 		"@fontsource-variable/atkinson-hyperlegible-next": "^5.2.6",
 		"@fontsource-variable/geist-mono": "^5.2.7",
 		"@fontsource/lora": "^5.2.8",
 		"@tailwindcss/vite": "4.2.2",
-		"astro": "^6.2.2",
+		"astro": "^6.3.0",
 		"astro-mermaid": "^2.0.1",
 		"mermaid": "^11.14.0",
 		"tailwindcss": "^4.2.4"

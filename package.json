@@ -6,8 +6,8 @@
 		"build": "turbo run build",
 		"build:cli": "turbo run build --filter=!@xtarterize/docs",
 		"dev": "turbo run dev",
-		"test": "vitest",
-		"test:run": "vitest run",
+		"test": "vp test",
+		"test:run": "vp test run",
 		"lint": "biome lint .",
 		"check": "biome check --write .",
 		"typecheck": "turbo run typecheck",
@@ -20,15 +20,15 @@
 		"up-latest": "pnpm up-interactive -L",
 		"changeset": "changeset",
 		"version-packages": "changeset version",
-		"release": "changeset publish"
+		"release": "changeset publish",
+		"prepare": "vp config"
 	},
 	"devDependencies": {
 		"@biomejs/biome": "^2.4.14",
 		"@changesets/changelog-github": "^0.7.0",
 		"@changesets/cli": "^2.31.0",
 		"turbo": "^2.9.9",
-		"vite": "^8.0.10",
-		"vitest": "^4.1.5"
+		"vite-plus": "catalog:"
 	},
 	"packageManager": "pnpm@10.33.2",
 	"engines": {

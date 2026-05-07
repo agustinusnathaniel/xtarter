@@ -7,7 +7,7 @@ import {
 	releaseWorkflowTask,
 	renovateTask,
 } from '@xtarterize/tasks'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it } from 'vite-plus/test'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const fixtures = path.resolve(__dirname, '../fixtures')

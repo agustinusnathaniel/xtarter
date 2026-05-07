@@ -6,7 +6,8 @@
 			"!**/dist",
 			"!**/.turbo",
 			"!**/node_modules",
-			"!**/.astro"
+			"!**/.astro",
+			"!test/fixtures"
 		]
 	},
 	"linter": {

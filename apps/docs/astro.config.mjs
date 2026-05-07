@@ -79,11 +79,11 @@ export default defineConfig({
 						},
 						{
 							label: 'Tasks',
-							autogenerate: { directory: 'contributing/tasks' },
+							items: [{ autogenerate: { directory: 'contributing/tasks' } }],
 						},
 						{
 							label: 'Patchers',
-							autogenerate: { directory: 'contributing/patchers' },
+							items: [{ autogenerate: { directory: 'contributing/patchers' } }],
 						},
 					],
 				},

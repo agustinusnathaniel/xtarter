@@ -5,7 +5,7 @@ description: Understand how xtarterize is structured and how the packages work t
 
 import { Aside, FileTree, Tabs, TabItem, LinkButton } from '@astrojs/starlight/components'
 
-xtarterize is organized as a monorepo using [Turborepo](https://turbo.build/repo) for task orchestration and [pnpm](https://pnpm.io/) for package management.
+xtarterize is organized as a monorepo using [Turborepo](https://turbo.build/repo) for task orchestration, [pnpm](https://pnpm.io/) for package management, and [Vite Plus](https://viteplus.dev) for build, test, and development workflows.
 
 ## Package Structure
 
@@ -126,7 +126,7 @@ flowchart LR
   <TabItem label="Setup">
     ```bash
     # Install dependencies
-    pnpm install
+    vp install
     ```
   </TabItem>
   <TabItem label="Build">
@@ -138,7 +138,13 @@ flowchart LR
   <TabItem label="Test">
     ```bash
     # Run tests
-    pnpm test:run
+    vp test
+    ```
+  </TabItem>
+  <TabItem label="Check">
+    ```bash
+    # Format, lint, and typecheck in one command
+    vp check
     ```
   </TabItem>
   <TabItem label="Develop">
@@ -149,8 +155,19 @@ flowchart LR
   </TabItem>
 </Tabs>
 
+## Toolchain
+
+| Tool | Purpose | Command |
+|------|---------|---------|
+| [Vite Plus](https://viteplus.dev) | Build, test, pack, dev server | `vp build`, `vp test`, `vp pack`, `vp dev` |
+| [Turborepo](https://turbo.build/repo) | Monorepo task orchestration | `turbo run build`, `turbo run typecheck` |
+| [Biome](https://biomejs.dev/) | Linting and formatting | `biome lint .`, `biome check --write .` |
+| [pnpm](https://pnpm.io/) | Package management, workspaces | `pnpm install`, `catalog:` for shared deps |
+| [Changesets](https://github.com/changesets/changesets) | Version management and publishing | `changeset`, `changeset version` |
+
 ## References
 
+- [Vite Plus Documentation](https://viteplus.dev/guide/) — Unified toolchain for the web
 - [Turborepo Documentation](https://turbo.build/repo/docs) — Monorepo task orchestration
 - [pnpm Workspaces](https://pnpm.io/workspaces) — Workspace and monorepo management
 - [citty](https://github.com/unjs/citty) — Elegant CLI framework for Node.js
