@@ -1,5 +1,11 @@
 # xtarterize
 
+## 1.4.2
+
+### Patch Changes
+
+- [`d74c677`](https://github.com/agustinusnathaniel/xtarterize/commit/d74c677de59f9a446318fd9b61c7106a385d41a4) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - refactor: add antd, heroui, chakra-ui agent skills check
+
 ## 1.4.1
 
 ## 1.4.0
