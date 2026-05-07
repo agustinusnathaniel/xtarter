@@ -95,7 +95,7 @@ function collectPatchOps(
  * preserving key order, comments, and formatting.
  */
 export function patchJson(text: string, incoming: object): string {
-	const existing = JSON.parse(text) as Record<string, unknown>
+	const existing = parseJsonc(text) as Record<string, unknown>
 	const ops: { path: (string | number)[]; value: unknown }[] = []
 	collectPatchOps(existing, incoming, [], ops)
 
