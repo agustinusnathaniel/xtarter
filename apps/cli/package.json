@@ -1,57 +1,57 @@
 {
-	"name": "xtarterize",
-	"version": "1.4.2",
-	"description": "Automated project setup and configuration scaffolding",
-	"author": "agustinusnathaniel",
-	"license": "MIT",
-	"type": "module",
-	"bin": {
-		"xtarterize": "./dist/index.mjs"
-	},
-	"files": [
-		"dist"
-	],
-	"publishConfig": {
-		"access": "public",
-		"provenance": true
-	},
-	"engines": {
-		"node": ">=18"
-	},
-	"scripts": {
-		"build": "vp pack",
-		"dev": "vp pack --watch",
-		"typecheck": "tsc --noEmit",
-		"prepublishOnly": "pnpm build"
-	},
-	"dependencies": {
-		"@clack/prompts": "^1.3.0",
-		"citty": "^0.2.2",
-		"cli-table3": "^0.6.5",
-		"jsonc-parser": "catalog:"
-	},
-	"devDependencies": {
-		"@types/node": "catalog:",
-		"@xtarterize/core": "workspace:*",
-		"@xtarterize/patchers": "workspace:*",
-		"@xtarterize/tasks": "workspace:*",
-		"typescript": "catalog:",
-		"vite-plus": "catalog:"
-	},
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/agustinusnathaniel/xtarterize"
-	},
-	"homepage": "https://xtarterize.sznm.dev",
-	"bugs": {
-		"url": "https://github.com/agustinusnathaniel/xtarterize/issues"
-	},
-	"keywords": [
-		"scaffold",
-		"starter",
-		"template",
-		"cli",
-		"project-setup",
-		"boilerplate"
-	]
+  "name": "xtarterize",
+  "version": "1.4.3",
+  "description": "Automated project setup and configuration scaffolding",
+  "keywords": [
+    "boilerplate",
+    "cli",
+    "project-setup",
+    "scaffold",
+    "starter",
+    "template"
+  ],
+  "homepage": "https://xtarterize.sznm.dev",
+  "bugs": {
+    "url": "https://github.com/agustinusnathaniel/xtarterize/issues"
+  },
+  "license": "MIT",
+  "author": "agustinusnathaniel",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/agustinusnathaniel/xtarterize"
+  },
+  "bin": {
+    "xtarterize": "./dist/index.mjs"
+  },
+  "files": [
+    "dist"
+  ],
+  "type": "module",
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "scripts": {
+    "build": "vp pack",
+    "dev": "vp pack --watch",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "pnpm build"
+  },
+  "dependencies": {
+    "@clack/prompts": "^1.3.0",
+    "citty": "^0.2.2",
+    "cli-table3": "^0.6.5",
+    "jsonc-parser": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "@xtarterize/core": "workspace:*",
+    "@xtarterize/patchers": "workspace:*",
+    "@xtarterize/tasks": "workspace:*",
+    "typescript": "catalog:",
+    "vite-plus": "catalog:"
+  },
+  "engines": {
+    "node": ">=18"
+  }
 }

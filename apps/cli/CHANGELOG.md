@@ -1,5 +1,11 @@
 # xtarterize
 
+## 1.4.3
+
+### Patch Changes
+
+- [`fb47341`](https://github.com/agustinusnathaniel/xtarterize/commit/fb47341064dd28c4d24286edccd6b60a0e767791) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Batch skill installations by source repository to avoid redundant `npx` invocations. Skills from the same source (e.g. `expo/skills` with 8 skills) are now grouped into a single command with multiple `--skill` flags, reducing repo cloning from N times to 1 per unique source.
+
 ## 1.4.2
 
 ### Patch Changes
@@ -31,7 +37,6 @@
 ### Minor Changes
 
 - [`3534a6f`](https://github.com/agustinusnathaniel/xtarterize/commit/3534a6f981ba5ac41fed9658cd06f77560979dfb) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Expand skills-install catalog with 20+ new stack-specific skills and refactor to declarative array format
-
   - Refactored `getSkillsToInstall` from imperative `if/push` blocks to a declarative `SKILL_CATALOG` array with per-skill `condition` functions for easier maintenance
   - Added new skills across multiple categories:
     - **Frontend/UI**: `baseline-ui`, `fixing-accessibility`, `fixing-metadata`, `fixing-motion-performance`
@@ -63,7 +68,6 @@
 - [`ccd9287`](https://github.com/agustinusnathaniel/xtarterize/commit/ccd9287afd967ed1ea0ef0c64b4a4a468e95b550) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - feat: add `patchJson` for surgical JSON text edits using `jsonc-parser`
 
   Replaced `JSON.stringify(mergeJson(...), null, 2)` with `patchJson`, which performs byte-level text edits via Microsoft's [`jsonc-parser`](https://github.com/microsoft/node-jsonc-parser). This preserves:
-
   - Comments (`// inline` and `/* block */`)
   - Key ordering
   - Whitespace and indentation style
@@ -88,7 +92,6 @@
 ### Patch Changes
 
 - [`5b93cc4`](https://github.com/agustinusnathaniel/xtarterize/commit/5b93cc443fbe95d6ec777daa1f47e4520e25f3e1) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - chore: update dependencies to latest safe versions
-
   - `@clack/prompts` ^1.2.0 → ^1.3.0
   - `astro` ^6.1.10 → ^6.2.1
   - `sharp` ^0.34.3 → ^0.34.5
