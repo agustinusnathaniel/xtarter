@@ -9,6 +9,12 @@ catalogs:
     '@types/node':
       specifier: ^25.6.0
       version: 25.6.0
+    consola:
+      specifier: ^3.4.2
+      version: 3.4.2
+    defu:
+      specifier: ^6.1.7
+      version: 6.1.7
     json5:
       specifier: ^2.2.3
       version: 2.2.3
@@ -131,7 +137,7 @@ importers:
   packages/core:
     dependencies:
       consola:
-        specifier: ^3.4.2
+        specifier: 'catalog:'
         version: 3.4.2
       diff:
         specifier: ^9.0.0
@@ -168,7 +174,7 @@ importers:
   packages/patchers:
     dependencies:
       defu:
-        specifier: ^6.1.7
+        specifier: 'catalog:'
         version: 6.1.7
       json5:
         specifier: 'catalog:'

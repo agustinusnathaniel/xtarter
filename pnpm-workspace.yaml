@@ -12,6 +12,8 @@ catalog:
   nypm: ^0.6.6
   jsonc-parser: ^3.3.1
   magicast: ^0.5.2
+  consola: ^3.4.2
+  defu: ^6.1.7
 
 onlyBuiltDependencies:
   - esbuild

@@ -17,7 +17,7 @@
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
-		"defu": "^6.1.7",
+		"defu": "catalog:",
 		"json5": "catalog:",
 		"jsonc-parser": "catalog:",
 		"magicast": "catalog:",
