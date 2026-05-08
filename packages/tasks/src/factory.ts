@@ -13,7 +13,6 @@ import {
 	readPackageJson,
 	resolvePath,
 	writeFile,
-	writePackageJson,
 } from '@xtarterize/core'
 import {
 	injectVitePlugin,

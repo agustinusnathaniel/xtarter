@@ -10,6 +10,7 @@ import { getAllTasks } from '@xtarterize/tasks'
 import { defineCommand } from 'citty'
 import { resolveCwd } from '@/utils/cwd.js'
 import { handlePreflightFailure } from '@/utils/preflight.js'
+import { resolveRuntimeFlags } from '@/utils/runtime-flags.js'
 
 export const listCommand = defineCommand({
 	meta: {
@@ -24,9 +25,7 @@ export const listCommand = defineCommand({
 	},
 	async run({ args }) {
 		const cwd = resolveCwd(args)
-		const json = args.json === true
-		const isCI = process.env.CI === 'true' || process.env.CI === '1'
-		const quiet = args.quiet || isCI || json
+		const { json, quiet } = resolveRuntimeFlags(args)
 
 		const preflight = await runPreflight(cwd)
 		handlePreflightFailure(preflight, json)
