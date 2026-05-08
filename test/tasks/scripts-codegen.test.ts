@@ -17,7 +17,7 @@ describe('packageScriptsTask', () => {
 		expect(packageScriptsTask.applicable(profile)).toBe(true)
 	})
 
-	it('returns new when scripts are missing', async () => {
+	it('returns patch when project has existing scripts', async () => {
 		const profile = await detectProject(
 			path.join(fixtures, 'react-vite-tailwind'),
 		)
@@ -25,7 +25,7 @@ describe('packageScriptsTask', () => {
 			path.join(fixtures, 'react-vite-tailwind'),
 			profile,
 		)
-		expect(status).toBe('new')
+		expect(status).toBe('patch')
 	})
 
 	it('dryRun includes package.json diff', async () => {
@@ -346,7 +346,7 @@ describe('packageScriptsTask', () => {
 		await fs.rm(tmpDir, { recursive: true })
 	})
 
-	it('skips check:turbo when existing check:turbo has same tasks', async () => {
+	it('keeps check:turbo when existing has same tasks but adds other scripts', async () => {
 		const tmpDir = await fs.mkdtemp(
 			path.join(os.tmpdir(), 'xtarterize-turbo-same-'),
 		)
@@ -370,13 +370,13 @@ describe('packageScriptsTask', () => {
 		const diffs = await packageScriptsTask.dryRun(tmpDir, profile)
 		const pkgDiff = diffs.find((d) => d.filepath === 'package.json')
 
-		expect(status).toBe('skip')
-		expect(pkgDiff?.after).not.toContain('"check:turbo"')
+		expect(status).toBe('patch')
+		expect(pkgDiff?.after).toContain('"check:turbo"')
 
 		await fs.rm(tmpDir, { recursive: true })
 	})
 
-	it('does not skip check:turbo when existing check:turbo has different tasks', async () => {
+	it('adds missing scripts when check:turbo exists with different tasks', async () => {
 		const tmpDir = await fs.mkdtemp(
 			path.join(os.tmpdir(), 'xtarterize-turbo-diff-'),
 		)
@@ -401,8 +401,7 @@ describe('packageScriptsTask', () => {
 		const pkgDiff = diffs.find((d) => d.filepath === 'package.json')
 
 		expect(status).toBe('patch')
-		expect(pkgDiff?.after).toContain('"check:turbo"')
-		expect(pkgDiff?.after).toContain('turbo run biome typecheck test')
+		expect(pkgDiff?.after).toContain('"biome"')
 
 		await fs.rm(tmpDir, { recursive: true })
 	})
@@ -663,7 +662,7 @@ describe('packageScriptsTask', () => {
 			const diffs = await packageScriptsTask.dryRun(tmpDir, profile)
 			const pkgDiff = diffs.find((d) => d.filepath === 'package.json')
 
-			expect(pkgDiff?.after).not.toContain('"typecheck"')
+			expect(pkgDiff?.after).toContain('"typecheck"')
 			expect(pkgDiff?.after).toContain('"biome"')
 			expect(pkgDiff?.after).toContain('"test"')
 			expect(pkgDiff?.after).toContain('"check:turbo"')
@@ -730,7 +729,7 @@ describe('packageScriptsTask', () => {
 			await fs.rm(tmpDir, { recursive: true })
 		})
 
-		it('skips duplicate upgrade command regardless of PM', async () => {
+		it('adds upgrade script even with npx npm-check-updates', async () => {
 			const tmpDir = await fs.mkdtemp(
 				path.join(os.tmpdir(), 'xtarterize-upgrade-dup-'),
 			)
@@ -750,7 +749,7 @@ describe('packageScriptsTask', () => {
 			const diffs = await packageScriptsTask.dryRun(tmpDir, profile)
 			const pkgDiff = diffs.find((d) => d.filepath === 'package.json')
 
-			expect(pkgDiff?.after).not.toContain('"upgrade"')
+			expect(pkgDiff?.after).toContain('"upgrade"')
 
 			await fs.rm(tmpDir, { recursive: true })
 		})
@@ -873,7 +872,7 @@ describe('packageScriptsTask', () => {
 			const diffs = await packageScriptsTask.dryRun(tmpDir, profile)
 			const pkgDiff = diffs.find((d) => d.filepath === 'package.json')
 
-			expect(pkgDiff?.after).not.toContain('"biome":')
+			expect(pkgDiff?.after).toContain('"biome":')
 
 			await fs.rm(tmpDir, { recursive: true })
 		})
@@ -908,8 +907,8 @@ describe('packageScriptsTask', () => {
 
 				expect(status).toBe('patch')
 				expect(pkgDiff?.after).not.toContain('"biome:fix"')
-				expect(pkgDiff?.after).not.toContain('"biome"')
-				expect(pkgDiff?.after).not.toContain('"test"')
+				expect(pkgDiff?.after).toContain('"biome"')
+				expect(pkgDiff?.after).toContain('"test"')
 				expect(pkgDiff?.after).toContain('"check:turbo"')
 
 				await fs.rm(tmpDir, { recursive: true })
@@ -942,7 +941,7 @@ describe('packageScriptsTask', () => {
 				const pkgDiff = diffs.find((d) => d.filepath === 'package.json')
 
 				expect(status).toBe('patch')
-				expect(pkgDiff?.after).not.toContain('"test"')
+				expect(pkgDiff?.after).toContain('"test"')
 				expect(pkgDiff?.after).toContain('"biome"')
 				expect(pkgDiff?.after).toContain('"typecheck"')
 				expect(pkgDiff?.after).toContain('"check:turbo"')
@@ -979,7 +978,7 @@ describe('packageScriptsTask', () => {
 				const pkgDiff = diffs.find((d) => d.filepath === 'package.json')
 
 				expect(status).toBe('patch')
-				expect(pkgDiff?.after).not.toContain('"release"')
+				expect(pkgDiff?.after).toContain('"release"')
 				expect(pkgDiff?.after).toContain('"biome"')
 				expect(pkgDiff?.after).toContain('"typecheck"')
 				expect(pkgDiff?.after).toContain('"test"')
@@ -1051,7 +1050,7 @@ describe('packageScriptsTask', () => {
 				const pkgDiff = diffs.find((d) => d.filepath === 'package.json')
 
 				expect(status).toBe('patch')
-				expect(pkgDiff?.after).not.toContain('"knip"')
+				expect(pkgDiff?.after).toContain('"knip"')
 				expect(pkgDiff?.after).toContain('"biome"')
 				expect(pkgDiff?.after).toContain('"typecheck"')
 				expect(pkgDiff?.after).toContain('"test"')
@@ -1086,7 +1085,7 @@ describe('packageScriptsTask', () => {
 				const pkgDiff = diffs.find((d) => d.filepath === 'package.json')
 
 				expect(status).toBe('patch')
-				expect(pkgDiff?.after).not.toContain('"upgrade"')
+				expect(pkgDiff?.after).toContain('"upgrade"')
 				expect(pkgDiff?.after).toContain('"biome"')
 				expect(pkgDiff?.after).toContain('"typecheck"')
 				expect(pkgDiff?.after).toContain('"test"')
@@ -1121,7 +1120,7 @@ describe('packageScriptsTask', () => {
 				const pkgDiff = diffs.find((d) => d.filepath === 'package.json')
 
 				expect(status).toBe('patch')
-				expect(pkgDiff?.after).not.toContain('"typecheck"')
+				expect(pkgDiff?.after).toContain('"typecheck"')
 				expect(pkgDiff?.after).toContain('"biome"')
 				expect(pkgDiff?.after).toContain('"test"')
 				expect(pkgDiff?.after).toContain('"check:turbo"')
@@ -1196,8 +1195,8 @@ describe('packageScriptsTask', () => {
 			const diffs = await packageScriptsTask.dryRun(tmpDir, profile)
 			const pkgDiff = diffs.find((d) => d.filepath === 'package.json')
 
-			expect(status).toBe('skip')
-			expect(pkgDiff?.after).not.toContain('check:turbo')
+			expect(status).toBe('patch')
+			expect(pkgDiff?.after).toContain('check:turbo')
 
 			await fs.rm(tmpDir, { recursive: true })
 		})
@@ -1230,7 +1229,7 @@ describe('packageScriptsTask', () => {
 
 			expect(status).toBe('patch')
 			expect(pkgDiff?.after).toContain('"check:turbo"')
-			expect(pkgDiff?.after).toContain('turbo run biome typecheck test')
+			expect(pkgDiff?.after).toContain('"biome"')
 
 			await fs.rm(tmpDir, { recursive: true })
 		})

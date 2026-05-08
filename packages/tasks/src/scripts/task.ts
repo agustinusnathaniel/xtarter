@@ -14,11 +14,6 @@ import {
 } from '@xtarterize/core'
 import { patchJson } from '@xtarterize/patchers'
 import { addDependency } from 'nypm'
-import {
-	areEquivalent,
-	findEquivalentScriptKey,
-	hasScriptWithEquivalentValue,
-} from './equivalence.js'
 import { filterMissingScripts, mergeScripts } from './merger.js'
 import { resolveScripts } from './resolver.js'
 
@@ -103,18 +98,21 @@ export function createPackageJsonTask(options: PackageJsonTaskOptions): Task {
 				if (!exists) missingFiles.push(fp)
 			}
 
-			if (missingScripts.length === 0 && hasDep && missingFiles.length === 0)
-				return 'skip'
-			if (missingScripts.length === 0 && hasDep && missingFiles.length > 0)
-				return 'patch'
-			if (!hasDep && missingScripts.length === 0 && missingFiles.length === 0)
-				return 'patch'
+			if (missingScripts.length === 0) {
+				if (missingFiles.length > 0) {
+					return 'patch'
+				}
+				return hasDep ? 'skip' : 'patch'
+			}
+
 			if (
 				missingScripts.length === scripts.length &&
-				(!needsDep || !hasDep) &&
-				missingFiles.length === extraFiles.length
-			)
+				missingFiles.length === extraFiles.length &&
+				(!needsDep || !hasDep)
+			) {
 				return 'new'
+			}
+
 			return 'patch'
 		},
 

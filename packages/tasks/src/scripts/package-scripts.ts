@@ -79,6 +79,9 @@ export const packageScriptsTask = createPackageJsonTask({
 				]
 
 		for (const s of lintScripts) {
+			if (Object.hasOwn(existingScripts, s.script)) {
+				continue
+			}
 			const existingKey = findEquivalentScriptKey(
 				existingScripts,
 				s.script,
@@ -91,6 +94,7 @@ export const packageScriptsTask = createPackageJsonTask({
 
 		const testScript = { script: 'test', value: 'vitest run' }
 		if (
+			!Object.hasOwn(existingScripts, testScript.script) &&
 			!findEquivalentScriptKey(
 				existingScripts,
 				testScript.script,
@@ -102,6 +106,7 @@ export const packageScriptsTask = createPackageJsonTask({
 
 		const upgradeScript = { script: 'upgrade', value: getUpgradeCommand(pm) }
 		if (
+			!Object.hasOwn(existingScripts, upgradeScript.script) &&
 			!findEquivalentScriptKey(
 				existingScripts,
 				upgradeScript.script,
@@ -113,6 +118,7 @@ export const packageScriptsTask = createPackageJsonTask({
 
 		const releaseScript = { script: 'release', value: 'commit-and-tag-version' }
 		if (
+			!Object.hasOwn(existingScripts, releaseScript.script) &&
 			!findEquivalentScriptKey(
 				existingScripts,
 				releaseScript.script,
@@ -124,6 +130,7 @@ export const packageScriptsTask = createPackageJsonTask({
 
 		const plopScript = { script: 'plop', value: 'plop' }
 		if (
+			!Object.hasOwn(existingScripts, plopScript.script) &&
 			!findEquivalentScriptKey(
 				existingScripts,
 				plopScript.script,
@@ -136,6 +143,7 @@ export const packageScriptsTask = createPackageJsonTask({
 		if (profile.typescript) {
 			const typecheckScript = { script: 'typecheck', value: 'tsc --noEmit' }
 			if (
+				!Object.hasOwn(existingScripts, typecheckScript.script) &&
 				!findEquivalentScriptKey(
 					existingScripts,
 					typecheckScript.script,
@@ -147,6 +155,7 @@ export const packageScriptsTask = createPackageJsonTask({
 
 			const knipScript = { script: 'knip', value: 'knip' }
 			if (
+				!Object.hasOwn(existingScripts, knipScript.script) &&
 				!findEquivalentScriptKey(
 					existingScripts,
 					knipScript.script,
@@ -157,7 +166,11 @@ export const packageScriptsTask = createPackageJsonTask({
 			}
 		}
 
-		const hasTurbo = profile.monorepoTool === 'turbo' || profile.existing.turbo
+		const hasTurbo =
+			profile.monorepoTool === 'turbo' ||
+			profile.existing.turbo ||
+			!!pkg?.devDependencies?.turborepo ||
+			!!pkg?.devDependencies?.turbo
 		if (hasTurbo) {
 			const recommendedKeys = useUltracite
 				? ['ultracite:check']
@@ -198,14 +211,30 @@ export const packageScriptsTask = createPackageJsonTask({
 			const existingCheckTurbo = Object.entries(existingScripts).find(
 				([key]) => key === 'check:turbo',
 			)
-			if (!existingCheckTurbo) {
+			const newCheckTurboValue = `turbo run ${compositeTasks.join(' ')}`
+			if (
+				!existingCheckTurbo ||
+				(existingCheckTurbo[1] &&
+					!areEquivalent(existingCheckTurbo[1], newCheckTurboValue))
+			) {
 				scripts.push({
 					script: 'check:turbo',
-					value: `turbo run ${compositeTasks.join(' ')}`,
+					value: newCheckTurboValue,
 				})
 			}
 		}
 
 		return scripts
+	},
+	async checkFn(cwd, profile, pkg) {
+		const scripts = await this.getScripts?.(cwd, profile)
+		const existingScripts = pkg.scripts ?? {}
+		const hasExistingScripts = Object.keys(existingScripts).length > 0
+
+		if (scripts?.length === 0) {
+			return 'skip'
+		}
+
+		return hasExistingScripts ? 'patch' : 'new'
 	},
 })
