@@ -1,4 +1,3 @@
-import { spinner } from '@clack/prompts'
 import {
 	detectProject,
 	type FileDiff,
@@ -14,6 +13,7 @@ import { mergeFileDiffs } from '@/ui/merge-file-diffs.js'
 import { resolveCwd } from '@/utils/cwd.js'
 import { handlePreflightFailure } from '@/utils/preflight.js'
 import { resolveRuntimeFlags } from '@/utils/runtime-flags.js'
+import { createSpinner } from '@/utils/spinner.js'
 
 export const diffCommand = defineCommand({
 	meta: {
@@ -33,11 +33,11 @@ export const diffCommand = defineCommand({
 		const preflight = await runPreflight(cwd)
 		handlePreflightFailure(preflight, json)
 
-		const s = spinner()
-		if (!quiet) s.start('Scanning project...')
+		const s = createSpinner(quiet)
+		s.start('Scanning project...')
 
 		const profile = await detectProject(cwd)
-		if (!quiet) s.stop('Project scanned')
+		s.stop('Project scanned')
 
 		const allTasks = getAllTasks()
 		const tasks = resolveTasks(profile, allTasks)

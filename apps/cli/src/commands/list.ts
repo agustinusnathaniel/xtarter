@@ -1,4 +1,3 @@
-import { spinner } from '@clack/prompts'
 import {
 	detectProject,
 	pc,
@@ -11,6 +10,7 @@ import { defineCommand } from 'citty'
 import { resolveCwd } from '@/utils/cwd.js'
 import { handlePreflightFailure } from '@/utils/preflight.js'
 import { resolveRuntimeFlags } from '@/utils/runtime-flags.js'
+import { createSpinner } from '@/utils/spinner.js'
 
 export const listCommand = defineCommand({
 	meta: {
@@ -30,11 +30,11 @@ export const listCommand = defineCommand({
 		const preflight = await runPreflight(cwd)
 		handlePreflightFailure(preflight, json)
 
-		const s = spinner()
-		if (!quiet) s.start('Scanning project...')
+		const s = createSpinner(quiet)
+		s.start('Scanning project...')
 
 		const profile = await detectProject(cwd)
-		if (!quiet) s.stop('Project scanned')
+		s.stop('Project scanned')
 
 		const allTasks = getAllTasks()
 		const tasks = resolveTasks(profile, allTasks)

@@ -1,4 +1,3 @@
-import { spinner } from '@clack/prompts'
 import type { DiagnosticCheck } from '@xtarterize/core'
 import {
 	detectProject,
@@ -14,6 +13,7 @@ import { defineCommand } from 'citty'
 import { resolveCwd } from '@/utils/cwd.js'
 import { handlePreflightFailure } from '@/utils/preflight.js'
 import { resolveRuntimeFlags } from '@/utils/runtime-flags.js'
+import { createSpinner } from '@/utils/spinner.js'
 
 function diagnosticIcon(status: DiagnosticCheck['status']): string {
 	switch (status) {
@@ -48,14 +48,14 @@ export const checkCommand = defineCommand({
 		const preflight = await runPreflight(cwd)
 		handlePreflightFailure(preflight, json)
 
-		const s = spinner()
-		if (!quiet) s.start('Scanning project...')
+		const s = createSpinner(quiet)
+		s.start('Scanning project...')
 
 		const profile = await detectProject(cwd)
 		const allTasks = getAllTasks()
 		const tasks = resolveTasks(profile, allTasks)
 		const statuses = await resolveTaskStatuses(tasks, cwd, profile)
-		if (!quiet) s.stop('Project scanned')
+		s.stop('Project scanned')
 
 		let conformant = 0
 		const total = tasks.length

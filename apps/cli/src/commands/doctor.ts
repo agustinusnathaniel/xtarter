@@ -1,4 +1,3 @@
-import { spinner } from '@clack/prompts'
 import type { DiagnosticCheck } from '@xtarterize/core'
 import {
 	pc,
@@ -10,6 +9,7 @@ import { defineCommand } from 'citty'
 import { resolveCwd } from '@/utils/cwd.js'
 import { handlePreflightFailure } from '@/utils/preflight.js'
 import { resolveRuntimeFlags } from '@/utils/runtime-flags.js'
+import { createSpinner } from '@/utils/spinner.js'
 
 function diagnosticIcon(status: DiagnosticCheck['status']): string {
 	switch (status) {
@@ -40,8 +40,8 @@ export const doctorCommand = defineCommand({
 		const preflight = await runPreflight(cwd)
 		handlePreflightFailure(preflight, json)
 
-		const s = spinner()
-		if (!quiet) s.start('Running diagnostics...')
+		const s = createSpinner(quiet)
+		s.start('Running diagnostics...')
 
 		const [installChecks, conflictChecks] = await Promise.all([
 			runToolInstallationChecks(cwd),
@@ -49,7 +49,7 @@ export const doctorCommand = defineCommand({
 		])
 		const diagnostics = [...installChecks, ...conflictChecks]
 
-		if (!quiet) s.stop('Diagnostics complete')
+		s.stop('Diagnostics complete')
 
 		const summary = {
 			pass: diagnostics.filter((d) => d.status === 'pass').length,
