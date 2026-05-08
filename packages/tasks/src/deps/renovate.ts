@@ -1,6 +1,6 @@
 import { readJsonIfExists } from '@xtarterize/core'
 import { mergeJson } from '@xtarterize/patchers'
-import { createJsonMergeTask, deepEqual, normalizeExtends } from '@/factory.js'
+import { createJsonMergeTask, deepEqual, normalizeExtends } from '@/factory'
 
 const incomingRenovate = () => ({
 	$schema: 'https://docs.renovatebot.com/renovate-schema.json',

@@ -1,5 +1,5 @@
 import type { ProjectProfile, Task, TaskStatus } from '@xtarterize/core'
-import { createFileTask, createSimpleFileTask } from '@/factory.js'
+import { createFileTask, createSimpleFileTask } from '@/factory'
 
 function detectPresence(
 	content: string | null,

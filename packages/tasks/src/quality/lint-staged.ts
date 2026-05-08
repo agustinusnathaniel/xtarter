@@ -1,5 +1,5 @@
 import { readPackageJson } from '@xtarterize/core'
-import { createPackageJsonTask } from '@/factory.js'
+import { createPackageJsonTask } from '@/factory'
 
 async function lintCmd(cwd: string): Promise<string> {
 	const pkg = await readPackageJson(cwd)

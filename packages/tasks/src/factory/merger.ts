@@ -1,7 +1,6 @@
 import { hasScriptWithEquivalentValue } from './equivalence.js'
+import type { PackageScriptsMap } from './index.js'
 import type { PackageJsonScriptEntry } from './task.js'
-
-type PackageScriptsMap = Record<string, string | undefined>
 
 export function mergeScripts(
 	current: PackageScriptsMap | undefined,

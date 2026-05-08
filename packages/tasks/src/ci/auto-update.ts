@@ -1,4 +1,4 @@
-import { createSimpleFileTask } from '@/factory.js'
+import { createSimpleFileTask } from '@/factory'
 import { renderAutoUpdateWorkflow } from '@/templates/workflows/auto-update-yml.js'
 
 export const autoUpdateWorkflowTask = createSimpleFileTask({

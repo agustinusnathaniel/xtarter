@@ -1,4 +1,4 @@
-import { createJsonMergeTask } from '@/factory.js'
+import { createJsonMergeTask } from '@/factory'
 
 export const incrementalTask = createJsonMergeTask({
 	id: 'ts/incremental',

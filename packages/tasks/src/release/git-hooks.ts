@@ -1,6 +1,6 @@
 import type { ProjectProfile } from '@xtarterize/core'
 import { readPackageJson } from '@xtarterize/core'
-import { createPackageJsonTask } from '@/factory.js'
+import { createPackageJsonTask } from '@/factory'
 
 function commitMsgHook(): string {
 	return 'pnpm commitlint --edit $1\n'

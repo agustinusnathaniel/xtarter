@@ -1,4 +1,4 @@
-import { createSimpleFileTask } from '@/factory.js'
+import { createSimpleFileTask } from '@/factory'
 import { renderKnipConfig } from '@/templates/knip-config.js'
 
 export const knipTask = createSimpleFileTask({

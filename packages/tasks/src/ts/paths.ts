@@ -1,6 +1,6 @@
 import type { ProjectProfile } from '@xtarterize/core'
 import { parseJsonc } from '@xtarterize/patchers'
-import { createJsonMergeTask } from '@/factory.js'
+import { createJsonMergeTask } from '@/factory'
 
 function getPathStatus(
 	content: string | null,

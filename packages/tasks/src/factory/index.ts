@@ -8,33 +8,187 @@ import {
 	fileExists,
 	findConfigFile,
 	readFile,
-	readPackageJson,
+	readJsonIfExists,
 	resolvePath,
 } from '@xtarterize/core'
 import { injectVitePlugin, mergeJson, parseJsonc } from '@xtarterize/patchers'
 import JSON5 from 'json5'
+import { addDependency } from 'nypm'
 import { relative } from 'pathe'
-import { checkJsonConfigTask, dryRunJsonConfigTask } from '@/factory-config.js'
-import {
-	ensureTaskDependency,
-	ensureTaskParentDir,
-	writeTaskDiffs,
-} from '@/factory-ops.js'
-import {
-	deepEqual,
-	getDefaultFilepath,
-	normalizeExtends,
-	normalizeLineEndings,
-	resolveTaskFile,
-} from '@/factory-utils.js'
 
-export type {
-	PackageJsonScriptEntry,
-	PackageJsonTaskOptions,
-} from '@/factory-package-json.js'
-export { createPackageJsonTask } from '@/factory-package-json.js'
+// ─── Shared Types ───
 
-export { deepEqual, normalizeExtends, normalizeLineEndings }
+// ─── Factory Utils ───
+
+export function deepEqual(a: unknown, b: unknown): boolean {
+	if (a === b) return true
+	if (typeof a !== typeof b) return false
+	if (typeof a !== 'object' || a === null || b === null) return false
+	if (Array.isArray(a) !== Array.isArray(b)) return false
+	if (Array.isArray(a) && Array.isArray(b)) {
+		if (a.length !== b.length) return false
+		return a.every((v, i) => deepEqual(v, b[i]))
+	}
+	const aKeys = Object.keys(a as object)
+	const bKeys = Object.keys(b as object)
+	if (aKeys.length !== bKeys.length) return false
+	return aKeys.every((k) =>
+		deepEqual(
+			(a as Record<string, unknown>)[k],
+			(b as Record<string, unknown>)[k],
+		),
+	)
+}
+
+export function normalizeExtends<T extends object>(obj: T): T {
+	if (!('extends' in obj)) return obj
+	const ext = (obj as Record<string, unknown>).extends
+	if (typeof ext === 'string') {
+		return { ...obj, extends: [ext] } as T
+	}
+	return obj
+}
+
+export function normalizeLineEndings(value: string): string {
+	return value.replace(/\r\n/g, '\n')
+}
+
+export function getDefaultFilepath(
+	filepath: string,
+	extensions?: string[],
+): string {
+	if (!extensions || extensions.length === 0) return filepath
+	const hasExt = extensions.some((ext) => filepath.endsWith(ext))
+	return hasExt ? filepath : `${filepath}${extensions[0]}`
+}
+
+export async function resolveTaskFile(
+	cwd: string,
+	filepath: string,
+	extensions?: string[],
+): Promise<string | null> {
+	if (extensions) {
+		const lastDot = filepath.lastIndexOf('.')
+		if (lastDot !== -1) {
+			const ext = filepath.slice(lastDot)
+			if (extensions.includes(ext)) {
+				const base = filepath.slice(0, lastDot)
+				return findConfigFile(cwd, base, extensions)
+			}
+		}
+		return findConfigFile(cwd, filepath, extensions)
+	}
+	return resolvePath(cwd, filepath)
+}
+
+// ─── Factory Ops ───
+
+export async function ensureTaskDependency(options: {
+	cwd: string
+	depName?: string
+	depInstallName?: string
+	installDev?: boolean
+}): Promise<void> {
+	if (!options.depName) return
+
+	const pkg = await readPackageJson(options.cwd)
+	const hasDep =
+		pkg?.devDependencies?.[options.depName] ||
+		pkg?.dependencies?.[options.depName]
+
+	if (hasDep) return
+
+	await addDependency([options.depInstallName ?? options.depName], {
+		cwd: options.cwd,
+		dev: options.installDev ?? true,
+	})
+}
+
+export async function ensureTaskParentDir(
+	cwd: string,
+	filepath: string,
+): Promise<void> {
+	const fullPath = resolvePath(cwd, filepath)
+	await ensureDir(resolvePath(fullPath, '..'))
+}
+
+export async function writeTaskDiffs(
+	cwd: string,
+	diffs: FileDiff[],
+): Promise<void> {
+	for (const diff of diffs) {
+		const fullPath = resolvePath(cwd, diff.filepath)
+		await ensureDir(resolvePath(fullPath, '..'))
+		await writeFile(fullPath, diff.after)
+	}
+}
+
+// ─── Factory Config ───
+
+export interface JsonConfigTaskOptions {
+	filepath: string
+	extensions?: string[]
+	incoming: (cwd: string, profile: ProjectProfile) => object | Promise<object>
+	merge?: (existing: object, incoming: object) => object
+}
+
+export async function checkJsonConfigTask(
+	cwd: string,
+	_profile: ProjectProfile,
+	options: JsonConfigTaskOptions,
+): Promise<TaskStatus> {
+	const fullPath = await resolveTaskFile(
+		cwd,
+		options.filepath,
+		options.extensions,
+	)
+	if (!fullPath) return 'new'
+
+	const exists = await fileExists(fullPath)
+	if (!exists) return 'new'
+
+	const actual = await readJsonIfExists(fullPath)
+	const incoming = await options.incoming(cwd, _profile)
+	const doMerge = options.merge ?? mergeJson
+	const merged = doMerge(actual ?? {}, incoming)
+
+	return deepEqual(actual, merged) ? 'skip' : 'patch'
+}
+
+export async function dryRunJsonConfigTask(
+	cwd: string,
+	profile: ProjectProfile,
+	options: JsonConfigTaskOptions,
+): Promise<FileDiff[]> {
+	const fullPath = await resolveTaskFile(
+		cwd,
+		options.filepath,
+		options.extensions,
+	)
+	const exists = fullPath !== null && (await fileExists(fullPath))
+	const before = exists ? await readFile(fullPath) : null
+	const filepath = exists
+		? relative(cwd, fullPath)
+		: getDefaultFilepath(options.filepath, options.extensions)
+
+	let after: string
+	if (exists && before) {
+		const incoming = await options.incoming(cwd, profile)
+		const actual = parseJsonc(before)
+		const doMerge = options.merge ?? mergeJson
+		const merged = doMerge(actual ?? {}, incoming)
+		after = patchJson(before, merged)
+	} else {
+		after = JSON.stringify(await options.incoming(cwd, profile), null, 2)
+	}
+
+	if (after === before) return []
+	return [{ filepath, before, after }]
+}
+
+// ─── Import readPackageJson for ops ───
+import { ensureDir, readPackageJson, writeFile } from '@xtarterize/core'
+import { patchJson } from '@xtarterize/patchers'
 
 // ─── FileTask (text files with optional merge/checkFn) ───
 
@@ -411,9 +565,9 @@ export interface VitePluginTaskOptions {
 	checkString: string
 }
 
-export function createVitePluginTask(options: VitePluginTaskOptions): Task {
-	const VITE_CONFIG_EXTENSIONS = ['.ts', '.js', '.mts', '.mjs', '.cjs', '.cts']
+const VITE_CONFIG_EXTENSIONS = ['.ts', '.js', '.mts', '.mjs', '.cjs', '.cts']
 
+export function createVitePluginTask(options: VitePluginTaskOptions): Task {
 	return {
 		id: options.id,
 		label: options.label,
@@ -575,3 +729,15 @@ export function createMultiFileJsonMergeTask(
 		},
 	}
 }
+
+export {
+	areEquivalent,
+	extractTool,
+	findEquivalentScriptKey,
+	hasScriptWithEquivalentValue,
+	normalizeCommand,
+	PackageScriptsMap,
+} from './equivalence.js'
+export type { PackageJsonScriptEntry, PackageJsonTaskOptions } from './task.js'
+// ─── Re-exports from sub-modules ───
+export { createPackageJsonTask } from './task.js'

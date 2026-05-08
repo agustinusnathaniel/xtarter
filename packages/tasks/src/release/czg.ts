@@ -1,4 +1,4 @@
-import { createPackageJsonTask } from '@/factory.js'
+import { createPackageJsonTask } from '@/factory'
 
 export const czgTask = createPackageJsonTask({
 	id: 'release/czg',

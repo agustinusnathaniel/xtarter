@@ -1,4 +1,4 @@
-import { createSimpleFileTask } from '@/factory.js'
+import { createSimpleFileTask } from '@/factory'
 
 const EDITORCONFIG = `root = true
 

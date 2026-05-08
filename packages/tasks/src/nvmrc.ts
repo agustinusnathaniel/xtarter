@@ -1,4 +1,4 @@
-import { createSimpleFileTask } from '@/factory.js'
+import { createSimpleFileTask } from '@/factory'
 
 export const nvmrcTask = createSimpleFileTask({
 	id: 'scripts/nvmrc',

@@ -1,4 +1,4 @@
-import { createVitePluginTask } from '@/factory.js'
+import { createVitePluginTask } from '@/factory'
 
 export const viteCheckerTask = createVitePluginTask({
 	id: 'vite/checker',

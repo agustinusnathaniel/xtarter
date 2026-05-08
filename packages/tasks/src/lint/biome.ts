@@ -1,6 +1,6 @@
 import { readJsonIfExists, readPackageJson } from '@xtarterize/core'
 import { mergeJson, parseJsonc } from '@xtarterize/patchers'
-import { createJsonMergeTask, deepEqual, normalizeExtends } from '@/factory.js'
+import { createJsonMergeTask, deepEqual, normalizeExtends } from '@/factory'
 import { renderBiomeJson } from '@/templates/biome-json.js'
 
 async function hasUltracite(cwd: string): Promise<boolean> {

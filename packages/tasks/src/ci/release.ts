@@ -1,5 +1,5 @@
 import type { ProjectProfile, TaskStatus } from '@xtarterize/core'
-import { createFileTask } from '@/factory.js'
+import { createFileTask } from '@/factory'
 import { renderReleaseWorkflow } from '@/templates/workflows/release-yml.js'
 
 function hasReleaseJob(content: string): boolean {

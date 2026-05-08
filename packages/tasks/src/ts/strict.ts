@@ -1,5 +1,5 @@
 import { parseJsonc } from '@xtarterize/patchers'
-import { createJsonMergeTask } from '@/factory.js'
+import { createJsonMergeTask } from '@/factory'
 
 function getStrictValue(content: string | null): boolean | undefined {
 	if (!content) return undefined

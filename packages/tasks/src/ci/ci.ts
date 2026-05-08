@@ -1,4 +1,4 @@
-import { createSimpleFileTask } from '@/factory.js'
+import { createSimpleFileTask } from '@/factory'
 import { renderCiWorkflow } from '@/templates/workflows/ci-yml.js'
 
 export const ciWorkflowTask = createSimpleFileTask({

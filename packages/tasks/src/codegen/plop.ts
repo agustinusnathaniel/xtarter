@@ -1,4 +1,4 @@
-import { createMultiFileTask } from '@/factory.js'
+import { createMultiFileTask } from '@/factory'
 import {
 	getPlopTemplateFiles,
 	plopTemplates,

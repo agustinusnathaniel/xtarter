@@ -1,4 +1,4 @@
-import { createPackageJsonTask } from '@/factory.js'
+import { createPackageJsonTask } from '@/factory'
 
 const VERSIONRC_TEMPLATE = `{
   "packageFiles": ["package.json"],

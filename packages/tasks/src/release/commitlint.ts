@@ -1,4 +1,4 @@
-import { createFileTask } from '@/factory.js'
+import { createFileTask } from '@/factory'
 import { renderCommitlintConfig } from '@/templates/commitlint-config.js'
 
 export const commitlintTask = createFileTask({

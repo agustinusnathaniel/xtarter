@@ -3,8 +3,8 @@ import {
 	areEquivalent,
 	extractTool,
 	findEquivalentScriptKey,
-} from '@/scripts/equivalence.js'
-import { createPackageJsonTask } from '@/scripts/task.js'
+} from './equivalence.js'
+import { createPackageJsonTask } from './task.js'
 
 function getUpgradeCommand(pm: string): string {
 	switch (pm) {

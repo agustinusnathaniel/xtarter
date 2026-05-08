@@ -1,6 +1,6 @@
 import type { ProjectProfile } from '@xtarterize/core'
 import { readPackageJson } from '@xtarterize/core'
-import { createJsonMergeTask } from '@/factory.js'
+import { createJsonMergeTask } from '@/factory'
 
 interface TurboTaskConfig {
 	dependsOn?: string[]
