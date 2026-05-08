@@ -9,6 +9,7 @@ import {
 import { getAllTasks } from '@xtarterize/tasks'
 import { defineCommand } from 'citty'
 import { resolveCwd } from '@/utils/cwd.js'
+import { handlePreflightFailure } from '@/utils/preflight.js'
 
 export const listCommand = defineCommand({
 	meta: {
@@ -23,33 +24,12 @@ export const listCommand = defineCommand({
 	},
 	async run({ args }) {
 		const cwd = resolveCwd(args)
-		const json = args.json ?? false
+		const json = args.json === true
 		const isCI = process.env.CI === 'true' || process.env.CI === '1'
 		const quiet = args.quiet || isCI || json
 
 		const preflight = await runPreflight(cwd)
-		if (!preflight.valid) {
-			if (json) {
-				console.log(
-					JSON.stringify({
-						ok: false,
-						errors: preflight.errors,
-					}),
-				)
-				process.exit(1)
-			}
-			console.log('')
-			console.log(`${pc.red('✖')} Preflight checks failed`)
-			console.log('')
-			for (const error of preflight.errors) {
-				console.log(`${pc.red(`  ✗ ${error.message}`)}`)
-				if (error.hint) {
-					console.log(`  ${pc.dim(error.hint)}`)
-				}
-			}
-			console.log('')
-			process.exit(1)
-		}
+		handlePreflightFailure(preflight, json)
 
 		const s = spinner()
 		if (!quiet) s.start('Scanning project...')
