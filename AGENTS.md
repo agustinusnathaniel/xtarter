@@ -103,9 +103,9 @@ pnpm lint
 
 ### Known Locked / Problematic Packages
 
-| Package | Locked Version | Reason |
-|---------|---------------|--------|
-| `@tailwindcss/vite` | `4.2.2` | `4.2.4` breaks Vite 8 build with `Missing field tsconfigPaths on BindingViteResolvePluginConfig.resolveOptions` |
+| Package             | Locked Version | Reason                                                                                                          |
+| ------------------- | -------------- | --------------------------------------------------------------------------------------------------------------- |
+| `@tailwindcss/vite` | `4.2.2`        | `4.2.4` breaks Vite 8 build with `Missing field tsconfigPaths on BindingViteResolvePluginConfig.resolveOptions` |
 
 If a dependency update causes any of the verification steps to fail, revert that specific package to its previous working version rather than trying to fix the breakage inline.
 
@@ -136,21 +136,21 @@ If your change affects behavior, architecture, or user-facing features, update t
 
 ## Quick Reference
 
-| Concern | Location |
-|---------|----------|
-| Project overview | `README.md` |
-| Architecture decisions | `docs/ADRs/` |
-| Import conventions | `docs/ADRs/013-dynamic-import-conventions.md` |
-| Vite Plus migration | `docs/ADRs/014-vite-plus-migration.md` |
-| pnpm catalog policy | `docs/ADRs/015-pnpm-catalog-shared-dependencies.md` |
-| Task interface | `packages/core/src/_base.ts` |
-| Core utilities | `packages/core/src/` |
-| Patching engine | `packages/patchers/src/` |
-| Task implementations | `packages/tasks/src/` |
-| CLI commands | `apps/cli/src/commands/` |
-| Publishable docs | `apps/docs/src/content/docs/` |
-| Tests | `test/` |
-| Workspace scripts | Root `package.json` |
+| Concern                | Location                                            |
+| ---------------------- | --------------------------------------------------- |
+| Project overview       | `README.md`                                         |
+| Architecture decisions | `docs/ADRs/`                                        |
+| Import conventions     | `docs/ADRs/013-dynamic-import-conventions.md`       |
+| Vite Plus migration    | `docs/ADRs/014-vite-plus-migration.md`              |
+| pnpm catalog policy    | `docs/ADRs/015-pnpm-catalog-shared-dependencies.md` |
+| Task interface         | `packages/core/src/_base.ts`                        |
+| Core utilities         | `packages/core/src/`                                |
+| Patching engine        | `packages/patchers/src/`                            |
+| Task implementations   | `packages/tasks/src/`                               |
+| CLI commands           | `apps/cli/src/commands/`                            |
+| Publishable docs       | `apps/docs/src/content/docs/`                       |
+| Tests                  | `test/`                                             |
+| Workspace scripts      | Root `package.json`                                 |
 
 ---
 
@@ -167,7 +167,6 @@ Docs are local at `node_modules/vite-plus/docs` or online at https://viteplus.de
 ## Review Checklist
 
 - [ ] Run `vp install` after pulling remote changes and before getting started.
-- [ ] Run `vp check` and `vp test` to format, lint, type check and test changes.
 - [ ] Check if there are `vite.config.ts` tasks or `package.json` scripts necessary for validation, run via `vp run <script>`.
 
 <!--VITE PLUS END-->
