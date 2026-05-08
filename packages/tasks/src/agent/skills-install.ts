@@ -372,9 +372,25 @@ async function getInstalledSkills(cwd: string): Promise<Set<string>> {
   ];
 
   const dirSkills = new Set<string>();
+  const skillDirsWithContent = new Set<string>();
   for (const dir of projectDirs) {
-    const skills = await readSkillsFromDir(dir);
-    for (const s of skills) dirSkills.add(s);
+    if (!(await fileExists(dir))) continue;
+    const { readdir } = await import("node:fs/promises");
+    try {
+      const entries = await readdir(dir, { withFileTypes: true });
+      for (const entry of entries) {
+        if (entry.isDirectory()) {
+          const skillPath = resolvePath(dir, entry.name);
+          const hasContent = await isDirNonEmpty(skillPath);
+          if (hasContent) {
+            skillDirsWithContent.add(entry.name);
+          }
+          dirSkills.add(entry.name);
+        }
+      }
+    } catch {
+      // ignore read errors
+    }
   }
 
   // Validate lock file entries against actual directories
@@ -382,13 +398,14 @@ async function getInstalledSkills(cwd: string): Promise<Set<string>> {
   const lockSkills = await readSkillLockFile(lockPath);
 
   const installed = new Set<string>();
+  // Only count lock file entries if they have actual content in the directory
   for (const s of lockSkills) {
-    if (dirSkills.has(s)) {
+    if (skillDirsWithContent.has(s)) {
       installed.add(s);
     }
   }
-  // Also include any directory skills not in lock file
-  for (const s of dirSkills) {
+  // Also include any directory skills not in lock file (but only if they have content)
+  for (const s of skillDirsWithContent) {
     installed.add(s);
   }
 
