@@ -196,6 +196,42 @@ describe('skillsTask', () => {
 		)
 		expect(skillsTask.applicable(nonTsProfile)).toBe(false)
 	})
+
+	it('returns new when project-context is missing', async () => {
+		const profile = await detectProject(
+			path.join(fixtures, 'react-vite-tailwind'),
+		)
+		const status = await skillsTask.check(
+			path.join(fixtures, 'react-vite-tailwind'),
+			profile,
+		)
+		expect(status).toBe('new')
+	})
+
+	it('returns skip when project-context already exists', async () => {
+		const tmpDir = await fs.mkdtemp(
+			path.join(os.tmpdir(), 'xtarterize-skills-'),
+		)
+		await fs.writeFile(
+			path.join(tmpDir, 'package.json'),
+			JSON.stringify({
+				name: 'skills-check',
+				version: '1.0.0',
+				devDependencies: { typescript: '^5.0.0' },
+			}),
+		)
+		await fs.mkdir(path.join(tmpDir, '.agents', 'skills'), { recursive: true })
+		await fs.writeFile(
+			path.join(tmpDir, '.agents', 'skills', 'project-context.md'),
+			'# Existing context\n',
+		)
+
+		const profile = await detectProject(tmpDir)
+		const status = await skillsTask.check(tmpDir, profile)
+		expect(status).toBe('skip')
+
+		await fs.rm(tmpDir, { recursive: true, force: true })
+	})
 })
 
 describe('turboTask', () => {

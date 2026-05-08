@@ -1,15 +1,10 @@
-import { createFileTask } from '@/factory.js'
+import { createAgentGuideTask } from '@/agent/module.js'
 import { renderAgentsMd } from '@/templates/agents-md.js'
 
-export const agentsMdTask = createFileTask({
+export const agentsMdTask = createAgentGuideTask({
 	id: 'agent/agents-md',
 	label: 'AGENTS.md',
-	group: 'Agent',
 	applicable: () => true,
 	filepath: 'AGENTS.md',
 	render: (profile) => renderAgentsMd(profile),
-	checkFn: async (_cwd, _profile, fullPath, content) => {
-		if (fullPath && content) return 'skip'
-		return 'new'
-	},
 })
