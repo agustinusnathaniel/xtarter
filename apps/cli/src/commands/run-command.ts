@@ -53,11 +53,13 @@ async function applyAndReport(
 	}
 }
 
-export async function runCommand(
+async function runPreflightAndDetect(
 	cwd: string,
 	args: CommandArgs,
-	options: RunCommandOptions,
-): Promise<void> {
+): Promise<{
+	profile: Awaited<ReturnType<typeof detectProject>>
+	quiet: boolean
+}> {
 	const isCI = process.env.CI === 'true' || process.env.CI === '1'
 	const quiet = args.quiet || isCI
 
@@ -111,48 +113,54 @@ export async function runCommand(
 		console.log('')
 	}
 
-	const allTasks = getAllTasks()
-	let tasks = resolveTasks(profile, allTasks)
+	return { profile, quiet }
+}
+
+function resolveActionableTasks(
+	tasks: ReturnType<typeof resolveTasks>,
+	statuses: Map<string, TaskStatus>,
+	options: RunCommandOptions,
+	args: CommandArgs,
+): ReturnType<typeof resolveTasks> {
+	let filteredTasks = tasks
 
 	if (args.skip) {
 		const skipIds = args.skip.split(',').map((s) => s.trim())
-		tasks = tasks.filter((t) => !skipIds.includes(t.id))
+		filteredTasks = filteredTasks.filter((t) => !skipIds.includes(t.id))
 	}
 
 	if (args.only) {
 		const onlyIds = args.only.split(',').map((s) => s.trim())
-		tasks = tasks.filter((t) => onlyIds.includes(t.id))
+		filteredTasks = filteredTasks.filter((t) => onlyIds.includes(t.id))
 	}
 
-	const statuses = await resolveTaskStatuses(tasks, cwd, profile)
-
-	const actionableTasks = tasks.filter((t) => {
+	return filteredTasks.filter((t) => {
 		const status = statuses.get(t.id)
 		return status !== undefined && options.actionableStatuses.includes(status)
 	})
+}
 
-	if (actionableTasks.length === 0) {
-		logSuccess(options.emptyMessage)
-		return
+async function handleDryRun(
+	tasks: ReturnType<typeof resolveTasks>,
+	cwd: string,
+	profile: Awaited<ReturnType<typeof detectProject>>,
+): Promise<void> {
+	const diffs: FileDiff[] = []
+	for (const task of tasks) {
+		const taskDiffs = await task.dryRun(cwd, profile)
+		diffs.push(...taskDiffs)
 	}
+	displayDiffs(mergeFileDiffs(diffs))
+}
 
-	if (!quiet) displayPlan(actionableTasks, statuses)
-
-	if (args.dryRun) {
-		const diffs: FileDiff[] = []
-		for (const task of actionableTasks) {
-			const taskDiffs = await task.dryRun(cwd, profile)
-			diffs.push(...taskDiffs)
-		}
-		displayDiffs(mergeFileDiffs(diffs))
-		return
-	}
-
-	if (args.yes || quiet) {
-		await applyAndReport(actionableTasks, cwd, profile)
-		return
-	}
-
+async function promptAndApply(
+	actionableTasks: ReturnType<typeof resolveTasks>,
+	cwd: string,
+	profile: Awaited<ReturnType<typeof detectProject>>,
+	statuses: Map<string, TaskStatus>,
+	args: CommandArgs,
+	options: RunCommandOptions,
+): Promise<void> {
 	const action = await select({
 		message: options.confirmMessage,
 		options: [
@@ -174,12 +182,7 @@ export async function runCommand(
 	}
 
 	if (action === 'dry-run') {
-		const diffs: FileDiff[] = []
-		for (const task of actionableTasks) {
-			const taskDiffs = await task.dryRun(cwd, profile)
-			diffs.push(...taskDiffs)
-		}
-		displayDiffs(mergeFileDiffs(diffs))
+		await handleDryRun(actionableTasks, cwd, profile)
 		return
 	}
 
@@ -208,6 +211,39 @@ export async function runCommand(
 		selectedIds,
 		args.includeConflicts,
 	)
+}
+
+export async function runCommand(
+	cwd: string,
+	args: CommandArgs,
+	options: RunCommandOptions,
+): Promise<void> {
+	const { profile, quiet } = await runPreflightAndDetect(cwd, args)
+
+	const allTasks = getAllTasks()
+	const tasks = resolveTasks(profile, allTasks)
+
+	const statuses = await resolveTaskStatuses(tasks, cwd, profile)
+	const actionableTasks = resolveActionableTasks(tasks, statuses, options, args)
+
+	if (actionableTasks.length === 0) {
+		logSuccess(options.emptyMessage)
+		return
+	}
+
+	if (!quiet) displayPlan(actionableTasks, statuses)
+
+	if (args.dryRun) {
+		await handleDryRun(actionableTasks, cwd, profile)
+		return
+	}
+
+	if (args.yes || quiet) {
+		await applyAndReport(actionableTasks, cwd, profile)
+		return
+	}
+
+	await promptAndApply(actionableTasks, cwd, profile, statuses, args, options)
 }
 
 async function resolveAmbiguousFramework(): Promise<
