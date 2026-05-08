@@ -1,5 +1,11 @@
 # xtarterize
 
+## 1.4.4
+
+### Patch Changes
+
+- [`522509e`](https://github.com/agustinusnathaniel/xtarterize/commit/522509e8a70327d7b8c618b804ac7a4390538be7) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Fix skills being incorrectly marked as installed when their folder is empty, causing batch installs to skip them.
+
 ## 1.4.3
 
 ### Patch Changes
