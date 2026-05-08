@@ -371,26 +371,10 @@ async function getInstalledSkills(cwd: string): Promise<Set<string>> {
     resolvePath(cwd, ".cursor", "skills"),
   ];
 
-  const dirSkills = new Set<string>();
   const skillDirsWithContent = new Set<string>();
   for (const dir of projectDirs) {
-    if (!(await fileExists(dir))) continue;
-    const { readdir } = await import("node:fs/promises");
-    try {
-      const entries = await readdir(dir, { withFileTypes: true });
-      for (const entry of entries) {
-        if (entry.isDirectory()) {
-          const skillPath = resolvePath(dir, entry.name);
-          const hasContent = await isDirNonEmpty(skillPath);
-          if (hasContent) {
-            skillDirsWithContent.add(entry.name);
-          }
-          dirSkills.add(entry.name);
-        }
-      }
-    } catch {
-      // ignore read errors
-    }
+    const skills = await readSkillsFromDir(dir);
+    for (const s of skills) skillDirsWithContent.add(s);
   }
 
   // Validate lock file entries against actual directories

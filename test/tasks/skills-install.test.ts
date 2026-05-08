@@ -1,3 +1,5 @@
+import fs from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { detectProject } from "@xtarterize/core";
@@ -200,5 +202,60 @@ describe("skillsInstallTask", () => {
     // Should NOT have separate lines for the same source
     const expoLines = after.split("\n").filter((l) => l.includes("expo/skills"));
     expect(expoLines.length).toBe(1);
+  });
+
+  it("does not treat empty skill folders as installed when lock entry exists", async () => {
+    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "xtarterize-skills-empty-dir-"));
+
+    await fs.writeFile(
+      path.join(tmpDir, "package.json"),
+      JSON.stringify(
+        {
+          name: "skills-empty-folder-fixture",
+          private: true,
+          type: "module",
+          dependencies: {
+            react: "^19.0.0",
+          },
+          devDependencies: {
+            typescript: "^5.8.0",
+            vite: "^7.0.0",
+          },
+        },
+        null,
+        2,
+      ),
+    );
+
+    await fs.writeFile(
+      path.join(tmpDir, "tsconfig.json"),
+      JSON.stringify({ compilerOptions: { target: "ES2022" } }, null, 2),
+    );
+
+    await fs.writeFile(
+      path.join(tmpDir, "skills-lock.json"),
+      JSON.stringify(
+        {
+          skills: {
+            "react-dev": {
+              source: "softaworks/agent-toolkit",
+            },
+          },
+        },
+        null,
+        2,
+      ),
+    );
+
+    await fs.mkdir(path.join(tmpDir, ".agents", "skills", "react-dev"), {
+      recursive: true,
+    });
+
+    const profile = await detectProject(tmpDir);
+    const diffs = await skillsInstallTask.dryRun(tmpDir, profile);
+    const after = diffs[0]?.after ?? "";
+
+    expect(diffs.length).toBe(1);
+    expect(after).toContain("--skill react-dev");
   });
 });
