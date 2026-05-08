@@ -1,5 +1,28 @@
 # xtarterize
 
+## 1.6.0
+
+### Minor Changes
+
+- [`82e1d9f`](https://github.com/agustinusnathaniel/xtarterize/commit/82e1d9f24fd223a8f3c15c0b516c89fe5537c105) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Improve script merging and task architecture
+
+  - Enhance script merging logic with better conflict resolution
+  - Improve task architecture for better maintainability
+  - Add tests for scripts and codegen tasks
+  - Update apply logic to not include conflicts by default unless explicitly requested
+
+### Patch Changes
+
+- [`82e1d9f`](https://github.com/agustinusnathaniel/xtarterize/commit/82e1d9f24fd223a8f3c15c0b516c89fe5537c105) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Update .gitignore
+
+  - Add missing ignore patterns for better monorepo hygiene
+
+- [`82e1d9f`](https://github.com/agustinusnathaniel/xtarterize/commit/82e1d9f24fd223a8f3c15c0b516c89fe5537c105) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Refactor CLI run-command to extract seams
+
+  - Extract god-function seams into smaller, focused functions
+  - Improve code organization in `apps/cli/src/commands/run-command.ts`
+  - Update init and sync commands for consistency
+
 ## 1.5.0
 
 ### Minor Changes
