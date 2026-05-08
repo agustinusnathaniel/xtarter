@@ -8,18 +8,13 @@ import {
 	fileExists,
 	findConfigFile,
 	readFile,
-	readJsonIfExists,
 	readPackageJson,
 	resolvePath,
 } from '@xtarterize/core'
-import {
-	injectVitePlugin,
-	mergeJson,
-	parseJsonc,
-	patchJson,
-} from '@xtarterize/patchers'
+import { injectVitePlugin, mergeJson, parseJsonc } from '@xtarterize/patchers'
 import JSON5 from 'json5'
 import { relative } from 'pathe'
+import { checkJsonConfigTask, dryRunJsonConfigTask } from '@/factory-config.js'
 import {
 	ensureTaskDependency,
 	ensureTaskParentDir,
@@ -193,38 +188,19 @@ export function createJsonMergeTask(options: JsonMergeTaskOptions): Task {
 				}
 			}
 
-			const actual = await readJsonIfExists(fullPath)
-			const expected = await options.incoming(cwd, profile)
-			const merged = mergeJson(actual ?? {}, expected)
-			if (deepEqual(actual, merged)) return 'skip'
-			return 'patch'
+			return checkJsonConfigTask(cwd, profile, {
+				filepath: options.filepath,
+				extensions: options.extensions,
+				incoming: options.incoming,
+			})
 		},
 
 		async dryRun(cwd, profile): Promise<FileDiff[]> {
-			const fullPath = await resolveTaskFile(
-				cwd,
-				options.filepath,
-				options.extensions,
-			)
-
-			const exists = fullPath !== null && (await fileExists(fullPath))
-			const before = exists ? await readFile(fullPath) : null
-			const filepath = exists
-				? relative(cwd, fullPath)
-				: getDefaultFilepath(options.filepath, options.extensions)
-
-			let after: string
-			if (exists && before) {
-				const incoming = await options.incoming(cwd, profile)
-				const actual = parseJsonc(before)
-				const merged = mergeJson(actual ?? {}, incoming)
-				after = patchJson(before, merged)
-			} else {
-				after = JSON.stringify(await options.incoming(cwd, profile), null, 2)
-			}
-
-			if (after === before) return []
-			return [{ filepath, before, after }]
+			return dryRunJsonConfigTask(cwd, profile, {
+				filepath: options.filepath,
+				extensions: options.extensions,
+				incoming: options.incoming,
+			})
 		},
 
 		async apply(cwd, profile): Promise<void> {
@@ -560,22 +536,20 @@ export function createMultiFileJsonMergeTask(
 		async check(cwd, profile): Promise<TaskStatus> {
 			let status: TaskStatus = 'skip'
 			for (const f of options.files) {
-				const fullPath = await resolveTaskFile(cwd, f.filepath, f.extensions)
-				if (!fullPath) {
-					status = 'new'
-					continue
-				}
-				const exists = await fileExists(fullPath)
-				if (!exists) {
-					status = 'new'
-					continue
-				}
-				const actual = await readJsonIfExists(fullPath)
-				const expected = await f.incoming(profile)
-				const doMerge = f.merge ?? mergeJson
-				const merged = doMerge(actual ?? {}, expected)
-				if (!deepEqual(actual, merged)) {
+				const entryStatus = await checkJsonConfigTask(cwd, profile, {
+					filepath: f.filepath,
+					extensions: f.extensions,
+					incoming: async () => f.incoming(profile),
+					merge: f.merge,
+				})
+
+				if (entryStatus === 'patch') {
 					status = 'patch'
+					continue
+				}
+
+				if (entryStatus === 'new' && status !== 'patch') {
+					status = 'new'
 				}
 			}
 			return status
@@ -584,25 +558,13 @@ export function createMultiFileJsonMergeTask(
 		async dryRun(cwd, profile): Promise<FileDiff[]> {
 			const diffs: FileDiff[] = []
 			for (const f of options.files) {
-				const fullPath = await resolveTaskFile(cwd, f.filepath, f.extensions)
-				const exists = fullPath !== null && (await fileExists(fullPath))
-				const before = exists ? await readFile(fullPath) : null
-				const filepath = exists ? relative(cwd, fullPath) : f.filepath
-
-				let after: string
-				if (exists && before) {
-					const incoming = await f.incoming(profile)
-					const actual = parseJsonc(before)
-					const doMerge = f.merge ?? mergeJson
-					const merged = doMerge(actual ?? {}, incoming)
-					after = patchJson(before, merged)
-				} else {
-					after = JSON.stringify(await f.incoming(profile), null, 2)
-				}
-
-				if (!exists || after !== before) {
-					diffs.push({ filepath, before, after })
-				}
+				const entryDiffs = await dryRunJsonConfigTask(cwd, profile, {
+					filepath: f.filepath,
+					extensions: f.extensions,
+					incoming: async () => f.incoming(profile),
+					merge: f.merge,
+				})
+				diffs.push(...entryDiffs)
 			}
 			return diffs
 		},
