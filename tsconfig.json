@@ -14,7 +14,8 @@
     "paths": {
       "@xtarterize/core": ["./packages/core/src/index.ts"],
       "@xtarterize/patchers": ["./packages/patchers/src/index.ts"],
-      "@xtarterize/tasks": ["./packages/tasks/src/index.ts"]
+      "@xtarterize/tasks": ["./packages/tasks/src/index.ts"],
+      "@xtarterize/cli/*": ["./apps/cli/src/*"]
     }
   },
   "include": ["test"],

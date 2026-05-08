@@ -1,9 +1,9 @@
 import fs from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
-import { checkCommand } from "../../apps/cli/src/commands/check.js";
-import { diffCommand } from "../../apps/cli/src/commands/diff.js";
-import { listCommand } from "../../apps/cli/src/commands/list.js";
+import { checkCommand } from "@xtarterize/cli/commands/check.js";
+import { diffCommand } from "@xtarterize/cli/commands/diff.js";
+import { listCommand } from "@xtarterize/cli/commands/list.js";
 import { describe, expect, it } from "vite-plus/test";
 
 async function createProjectFixture(): Promise<string> {
