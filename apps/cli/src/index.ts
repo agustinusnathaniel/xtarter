@@ -2,6 +2,7 @@ import { defineCommand, runMain } from 'citty'
 import { addCommand } from '@/commands/add.js'
 import { checkCommand } from '@/commands/check.js'
 import { diffCommand } from '@/commands/diff.js'
+import { doctorCommand } from '@/commands/doctor.js'
 import { initCommand } from '@/commands/init.js'
 import { listCommand } from '@/commands/list.js'
 import { restoreCommand } from '@/commands/restore.js'
@@ -31,6 +32,7 @@ const main = defineCommand({
 		sync: syncCommand,
 		diff: diffCommand,
 		check: checkCommand,
+		doctor: doctorCommand,
 		add: addCommand,
 		restore: restoreCommand,
 		list: listCommand,
