@@ -120,6 +120,35 @@ describe('detectProject', () => {
 		expect(profile.hasGit).toBe(false)
 	})
 
+	it('detects monorepo when running inside workspace package', async () => {
+		const root = await fs.mkdtemp(
+			path.join(os.tmpdir(), 'xtarterize-workspace-'),
+		)
+		await fs.mkdir(path.join(root, '.git'), { recursive: true })
+		await fs.writeFile(
+			path.join(root, 'pnpm-workspace.yaml'),
+			'packages:\n  - apps/*\n',
+		)
+		await fs.writeFile(
+			path.join(root, 'package.json'),
+			JSON.stringify({ name: 'workspace-root', version: '1.0.0' }),
+		)
+
+		const appDir = path.join(root, 'apps', 'web')
+		await fs.mkdir(appDir, { recursive: true })
+		await fs.writeFile(
+			path.join(appDir, 'package.json'),
+			JSON.stringify({ name: 'web-app', version: '1.0.0' }),
+		)
+
+		const profile = await detectProject(appDir)
+		expect(profile.monorepo).toBe(true)
+		expect(profile.workspaceRoot).toBe(false)
+		expect(profile.monorepoTool).toBeNull()
+
+		await fs.rm(root, { recursive: true, force: true })
+	})
+
 	it('detects bundlers from config files when dependencies are absent', async () => {
 		const cases = [
 			['vite.config.mjs', 'vite'],
