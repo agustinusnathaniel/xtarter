@@ -1,5 +1,44 @@
 # @xtarterize/tasks
 
+## 1.6.0
+
+### Minor Changes
+
+- [`82e1d9f`](https://github.com/agustinusnathaniel/xtarterize/commit/82e1d9f24fd223a8f3c15c0b516c89fe5537c105) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Improve script merging and task architecture
+
+  - Enhance script merging logic with better conflict resolution
+  - Improve task architecture for better maintainability
+  - Add tests for scripts and codegen tasks
+  - Update apply logic to not include conflicts by default unless explicitly requested
+
+- [`82e1d9f`](https://github.com/agustinusnathaniel/xtarterize/commit/82e1d9f24fd223a8f3c15c0b516c89fe5537c105) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Refactor tasks package with data-driven patterns
+
+  - Consolidate factory into `factory/` directory with proper module structure
+  - Make equivalence checks data-driven with `EquivalenceRule[]`
+  - Add `factory/equivalence-data.ts` for shared equivalence rules
+  - Add `factory/merger.ts` for merge operations
+  - Add `factory/package-scripts.ts` for script handling
+  - Add `factory/resolver.ts` for task resolution
+  - Refine equivalence check for scripts
+  - Update factory task, config, and utils
+
+### Patch Changes
+
+- [`82e1d9f`](https://github.com/agustinusnathaniel/xtarterize/commit/82e1d9f24fd223a8f3c15c0b516c89fe5537c105) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Add ADR for pragmatic script merge strategy
+
+  - Document the decision to use data-driven equivalence rules
+  - Explain the factory consolidation approach
+  - Provide rationale for script merging architecture
+
+- [`890eab5`](https://github.com/agustinusnathaniel/xtarterize/commit/890eab57054e0b953cb42ba0884e0b2c6770bc82) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Fix TypeScript build error for type imports
+
+  - Add `type` modifier to `PackageScriptsMap` import in `factory/index.ts`
+  - Fixes: `"PackageScriptsMap" is not exported` build error with tsdown/rolldown
+
+- Updated dependencies [[`82e1d9f`](https://github.com/agustinusnathaniel/xtarterize/commit/82e1d9f24fd223a8f3c15c0b516c89fe5537c105), [`82e1d9f`](https://github.com/agustinusnathaniel/xtarterize/commit/82e1d9f24fd223a8f3c15c0b516c89fe5537c105)]:
+  - @xtarterize/core@1.6.0
+  - @xtarterize/patchers@1.6.0
+
 ## 1.5.0
 
 ### Patch Changes
