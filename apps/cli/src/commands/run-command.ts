@@ -24,6 +24,7 @@ interface CommandArgs {
 	skip?: string
 	only?: string
 	quiet?: boolean
+	includeConflicts?: boolean
 }
 
 interface RunCommandOptions {
@@ -37,8 +38,11 @@ async function applyAndReport(
 	cwd: string,
 	profile: Awaited<ReturnType<typeof detectProject>>,
 	selectedIds?: string[],
+	includeConflicts?: boolean,
 ): Promise<void> {
-	const result = await applyTasks(tasks, cwd, profile, selectedIds)
+	const result = await applyTasks(tasks, cwd, profile, selectedIds, {
+		includeConflicts,
+	})
 	console.log('')
 	logSuccess(`Applied ${result.applied} tasks`)
 	if (result.errors.length > 0) {
@@ -186,12 +190,24 @@ export async function runCommand(
 			return
 		}
 
-		await applyAndReport(actionableTasks, cwd, profile, selected)
+		await applyAndReport(
+			actionableTasks,
+			cwd,
+			profile,
+			selected,
+			args.includeConflicts,
+		)
 		return
 	}
 
 	const selectedIds = actionableTasks.map((task) => task.id)
-	await applyAndReport(actionableTasks, cwd, profile, selectedIds)
+	await applyAndReport(
+		actionableTasks,
+		cwd,
+		profile,
+		selectedIds,
+		args.includeConflicts,
+	)
 }
 
 async function resolveAmbiguousFramework(): Promise<

@@ -13,7 +13,7 @@ export async function applyTasks(
 	const toApply = selectedIds
 		? tasks.filter((t) => selectedIds.includes(t.id))
 		: tasks
-	const includeConflicts = options.includeConflicts ?? selectedIds !== undefined
+	const includeConflicts = options.includeConflicts ?? false
 
 	let applied = 0
 	let skipped = 0
