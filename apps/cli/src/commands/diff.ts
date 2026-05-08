@@ -27,11 +27,21 @@ export const diffCommand = defineCommand({
   },
   async run({ args }) {
     const cwd = resolveCwd(args);
+    const json = args.json ?? false;
     const isCI = process.env.CI === "true" || process.env.CI === "1";
-    const quiet = args.quiet || isCI;
+    const quiet = args.quiet || isCI || json;
 
     const preflight = await runPreflight(cwd);
     if (!preflight.valid) {
+      if (json) {
+        console.log(
+          JSON.stringify({
+            ok: false,
+            errors: preflight.errors,
+          }),
+        );
+        process.exit(1);
+      }
       console.log("");
       console.log(`${pc.red("✖")} Preflight checks failed`);
       console.log("");
@@ -64,11 +74,24 @@ export const diffCommand = defineCommand({
       }
     }
 
-    if (diffs.length === 0) {
+    const mergedDiffs = mergeFileDiffs(diffs);
+
+    if (json) {
+      console.log(
+        JSON.stringify({
+          ok: true,
+          count: mergedDiffs.length,
+          diffs: mergedDiffs,
+        }),
+      );
+      return;
+    }
+
+    if (mergedDiffs.length === 0) {
       logSuccess("No pending changes");
       return;
     }
 
-    displayDiffs(mergeFileDiffs(diffs));
+    displayDiffs(mergedDiffs);
   },
 });
