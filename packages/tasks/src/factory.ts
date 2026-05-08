@@ -5,14 +5,12 @@ import type {
 	TaskStatus,
 } from '@xtarterize/core'
 import {
-	ensureDir,
 	fileExists,
 	findConfigFile,
 	readFile,
 	readJsonIfExists,
 	readPackageJson,
 	resolvePath,
-	writeFile,
 } from '@xtarterize/core'
 import {
 	injectVitePlugin,
@@ -21,8 +19,12 @@ import {
 	patchJson,
 } from '@xtarterize/patchers'
 import JSON5 from 'json5'
-import { addDependency } from 'nypm'
 import { relative } from 'pathe'
+import {
+	ensureTaskDependency,
+	ensureTaskParentDir,
+	writeTaskDiffs,
+} from '@/factory-ops.js'
 import {
 	deepEqual,
 	getDefaultFilepath,
@@ -120,29 +122,19 @@ export function createFileTask(options: FileTaskOptions): Task {
 		},
 
 		async apply(cwd, profile): Promise<void> {
-			if (options.depName) {
-				const pkg = await readPackageJson(cwd)
-				const hasDep =
-					pkg?.devDependencies?.[options.depName] ||
-					pkg?.dependencies?.[options.depName]
-				if (!hasDep) {
-					await addDependency([options.depInstallName ?? options.depName], {
-						cwd,
-						dev: options.installDev ?? true,
-					})
-				}
-			}
+			await ensureTaskDependency({
+				cwd,
+				depName: options.depName,
+				depInstallName: options.depInstallName,
+				installDev: options.installDev,
+			})
 
 			if (options.ensureParentDir) {
-				const fullPath = resolvePath(cwd, options.filepath)
-				await ensureDir(resolvePath(fullPath, '..'))
+				await ensureTaskParentDir(cwd, options.filepath)
 			}
 
 			const diffs = await this.dryRun(cwd, profile)
-			for (const diff of diffs) {
-				const fullPath = resolvePath(cwd, diff.filepath)
-				await writeFile(fullPath, diff.after)
-			}
+			await writeTaskDiffs(cwd, diffs)
 		},
 	}
 }
@@ -236,24 +228,14 @@ export function createJsonMergeTask(options: JsonMergeTaskOptions): Task {
 		},
 
 		async apply(cwd, profile): Promise<void> {
-			if (options.depName) {
-				const pkg = await readPackageJson(cwd)
-				const hasDep =
-					pkg?.devDependencies?.[options.depName] ||
-					pkg?.dependencies?.[options.depName]
-				if (!hasDep) {
-					await addDependency([options.depName], {
-						cwd,
-						dev: options.installDev ?? true,
-					})
-				}
-			}
+			await ensureTaskDependency({
+				cwd,
+				depName: options.depName,
+				installDev: options.installDev,
+			})
 
 			const diffs = await this.dryRun(cwd, profile)
-			for (const diff of diffs) {
-				const fullPath = resolvePath(cwd, diff.filepath)
-				await writeFile(fullPath, diff.after)
-			}
+			await writeTaskDiffs(cwd, diffs)
 		},
 	}
 }
@@ -331,29 +313,18 @@ export function createSimpleFileTask(options: SimpleFileTaskOptions): Task {
 		},
 
 		async apply(cwd, profile): Promise<void> {
-			if (options.depName) {
-				const pkg = await readPackageJson(cwd)
-				const hasDep =
-					pkg?.devDependencies?.[options.depName] ||
-					pkg?.dependencies?.[options.depName]
-				if (!hasDep) {
-					await addDependency([options.depName], {
-						cwd,
-						dev: options.installDev ?? true,
-					})
-				}
-			}
+			await ensureTaskDependency({
+				cwd,
+				depName: options.depName,
+				installDev: options.installDev,
+			})
 
 			if (options.ensureParentDir) {
-				const fullPath = resolvePath(cwd, options.filepath)
-				await ensureDir(resolvePath(fullPath, '..'))
+				await ensureTaskParentDir(cwd, options.filepath)
 			}
 
 			const diffs = await this.dryRun(cwd, profile)
-			for (const diff of diffs) {
-				const fullPath = resolvePath(cwd, diff.filepath)
-				await writeFile(fullPath, diff.after)
-			}
+			await writeTaskDiffs(cwd, diffs)
 		},
 	}
 }
@@ -438,25 +409,14 @@ export function createMultiFileTask(options: MultiFileTaskOptions): Task {
 		},
 
 		async apply(cwd, profile): Promise<void> {
-			if (options.depName) {
-				const pkg = await readPackageJson(cwd)
-				const hasDep =
-					pkg?.devDependencies?.[options.depName] ||
-					pkg?.dependencies?.[options.depName]
-				if (!hasDep) {
-					await addDependency([options.depName], {
-						cwd,
-						dev: options.installDev ?? true,
-					})
-				}
-			}
+			await ensureTaskDependency({
+				cwd,
+				depName: options.depName,
+				installDev: options.installDev,
+			})
 
 			const diffs = await this.dryRun(cwd, profile)
-			for (const diff of diffs) {
-				const fullPath = resolvePath(cwd, diff.filepath)
-				await ensureDir(resolvePath(fullPath, '..'))
-				await writeFile(fullPath, diff.after)
-			}
+			await writeTaskDiffs(cwd, diffs)
 		},
 	}
 }
@@ -535,13 +495,11 @@ export function createVitePluginTask(options: VitePluginTaskOptions): Task {
 		},
 
 		async apply(cwd, _profile): Promise<void> {
-			const pkg = await readPackageJson(cwd)
-			if (
-				!pkg?.devDependencies?.[options.depName] &&
-				!pkg?.dependencies?.[options.depName]
-			) {
-				await addDependency([options.depName], { cwd, dev: true })
-			}
+			await ensureTaskDependency({
+				cwd,
+				depName: options.depName,
+				installDev: true,
+			})
 
 			const configPath = await findConfigFile(
 				cwd,
@@ -651,10 +609,7 @@ export function createMultiFileJsonMergeTask(
 
 		async apply(cwd, profile): Promise<void> {
 			const diffs = await this.dryRun(cwd, profile)
-			for (const diff of diffs) {
-				const fullPath = resolvePath(cwd, diff.filepath)
-				await writeFile(fullPath, diff.after)
-			}
+			await writeTaskDiffs(cwd, diffs)
 		},
 	}
 }
