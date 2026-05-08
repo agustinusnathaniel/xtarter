@@ -6,14 +6,17 @@ export {
 	listBackups,
 	restoreBackup,
 } from '@/backup.js'
+// Detection types
 export type {
 	Bundler,
 	Framework,
+	MonorepoDetection,
 	PackageManager,
 	ProjectProfile,
 	Router,
 	Styling,
 } from '@/detect.js'
+// Detection functions - only re-export what users need
 export {
 	detectFramework,
 	detectPackageManager,
@@ -30,6 +33,7 @@ export { runPreflight } from '@/preflight.js'
 export { resolveTaskStatuses, resolveTasks } from '@/resolve.js'
 export type { FileDiff as CoreFileDiff } from '@/utils/diff.js'
 export { formatDiffHeader, generateDiff } from '@/utils/diff.js'
+// Re-export utilities needed by tasks
 export {
 	copyFile,
 	ensureDir,
