@@ -1,29 +1,29 @@
 {
-  "compilerOptions": {
-    "target": "ES2022",
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "types": ["node"],
-    "strict": true,
-    "incremental": true,
-    "tsBuildInfoFile": ".tsbuildinfo",
-    "outDir": "dist",
-    "rootDir": ".",
-    "esModuleInterop": true,
-    "skipLibCheck": true,
-    "paths": {
-      "@xtarterize/core": ["./packages/core/src/index.ts"],
-      "@xtarterize/patchers": ["./packages/patchers/src/index.ts"],
-      "@xtarterize/tasks": ["./packages/tasks/src/index.ts"],
-      "@xtarterize/cli/*": ["./apps/cli/src/*"]
-    }
-  },
-  "include": ["test"],
-  "references": [
-    { "path": "packages/core" },
-    { "path": "packages/patchers" },
-    { "path": "packages/tasks" },
-    { "path": "apps/cli" }
-  ],
-  "exclude": ["node_modules", "dist", "test/fixtures"]
+	"compilerOptions": {
+		"target": "ES2022",
+		"module": "ESNext",
+		"moduleResolution": "bundler",
+		"types": ["node"],
+		"strict": true,
+		"incremental": true,
+		"tsBuildInfoFile": ".tsbuildinfo",
+		"outDir": "dist",
+		"rootDir": ".",
+		"esModuleInterop": true,
+		"skipLibCheck": true,
+		"paths": {
+			"@xtarterize/core": ["./packages/core/src/index.ts"],
+			"@xtarterize/patchers": ["./packages/patchers/src/index.ts"],
+			"@xtarterize/tasks": ["./packages/tasks/src/index.ts"],
+			"@xtarterize/cli/*": ["./apps/cli/src/*"]
+		}
+	},
+	"include": ["test"],
+	"references": [
+		{ "path": "packages/core" },
+		{ "path": "packages/patchers" },
+		{ "path": "packages/tasks" },
+		{ "path": "apps/cli" }
+	],
+	"exclude": ["node_modules", "dist", "test/fixtures"]
 }
