@@ -1,5 +1,7 @@
 # @xtarterize/core
 
+## 1.4.3
+
 ## 1.4.2
 
 ## 1.4.1
@@ -27,7 +29,6 @@
 ### Minor Changes
 
 - [`3534a6f`](https://github.com/agustinusnathaniel/xtarterize/commit/3534a6f981ba5ac41fed9658cd06f77560979dfb) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Expand skills-install catalog with 20+ new stack-specific skills and refactor to declarative array format
-
   - Refactored `getSkillsToInstall` from imperative `if/push` blocks to a declarative `SKILL_CATALOG` array with per-skill `condition` functions for easier maintenance
   - Added new skills across multiple categories:
     - **Frontend/UI**: `baseline-ui`, `fixing-accessibility`, `fixing-metadata`, `fixing-motion-performance`
@@ -47,7 +48,6 @@
 ### Patch Changes
 
 - [`5b93cc4`](https://github.com/agustinusnathaniel/xtarterize/commit/5b93cc443fbe95d6ec777daa1f47e4520e25f3e1) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - chore: update dependencies to latest safe versions
-
   - `@clack/prompts` ^1.2.0 → ^1.3.0
   - `astro` ^6.1.10 → ^6.2.1
   - `sharp` ^0.34.3 → ^0.34.5
