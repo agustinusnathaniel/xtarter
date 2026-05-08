@@ -1,36 +1,38 @@
 {
-	"$schema": "https://biomejs.dev/schemas/2.4.14/schema.json",
-	"files": {
-		"includes": [
-			"**",
-			"!**/dist",
-			"!**/.turbo",
-			"!**/node_modules",
-			"!**/.astro",
-			"!test/fixtures"
-		]
-	},
-	"linter": {
-		"enabled": true,
-		"rules": {
-			"recommended": true,
-			"suspicious": {
-				"noExplicitAny": "warn"
-			}
-		}
-	},
-	"formatter": {
-		"enabled": true
-	},
-	"css": {
-		"parser": {
-			"tailwindDirectives": true
-		}
-	},
-	"javascript": {
-		"formatter": {
-			"quoteStyle": "single",
-			"semicolons": "asNeeded"
-		}
-	}
+  "$schema": "https://biomejs.dev/schemas/2.4.14/schema.json",
+  "files": {
+    "includes": [
+      "**",
+      "apps",
+      "packages",
+      "!**/dist",
+      "!**/.turbo",
+      "!**/node_modules",
+      "!**/.astro",
+      "!test/fixtures"
+    ]
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "recommended": true,
+      "suspicious": {
+        "noExplicitAny": "warn"
+      }
+    }
+  },
+  "formatter": {
+    "enabled": true
+  },
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
+    }
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "single",
+      "semicolons": "asNeeded"
+    }
+  }
 }
