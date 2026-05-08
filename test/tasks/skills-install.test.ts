@@ -184,6 +184,63 @@ describe("skillsInstallTask", () => {
     expect(diffs.length).toBe(0);
   });
 
+  it("returns patch when some skills are already installed", async () => {
+    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "xtarterize-skills-partial-"));
+
+    await fs.writeFile(
+      path.join(tmpDir, "package.json"),
+      JSON.stringify(
+        {
+          name: "skills-partial-install-fixture",
+          private: true,
+          type: "module",
+          dependencies: {
+            react: "^19.0.0",
+          },
+          devDependencies: {
+            typescript: "^5.8.0",
+            vite: "^7.0.0",
+          },
+        },
+        null,
+        2,
+      ),
+    );
+
+    await fs.writeFile(
+      path.join(tmpDir, "tsconfig.json"),
+      JSON.stringify({ compilerOptions: { target: "ES2022" } }, null, 2),
+    );
+
+    await fs.writeFile(
+      path.join(tmpDir, "skills-lock.json"),
+      JSON.stringify(
+        {
+          skills: {
+            "react-dev": {
+              source: "softaworks/agent-toolkit",
+            },
+          },
+        },
+        null,
+        2,
+      ),
+    );
+
+    await fs.mkdir(path.join(tmpDir, ".agents", "skills", "react-dev"), {
+      recursive: true,
+    });
+    await fs.writeFile(
+      path.join(tmpDir, ".agents", "skills", "react-dev", "SKILL.md"),
+      "# React Dev\n",
+    );
+
+    const profile = await detectProject(tmpDir);
+    const status = await skillsInstallTask.check(tmpDir, profile);
+
+    expect(status).toBe("patch");
+  });
+
   it("batches skills from the same source into a single command", async () => {
     const profile = await detectProject(path.join(fixtures, "react-native-expo"));
     const diffs = await skillsInstallTask.dryRun(path.join(fixtures, "react-native-expo"), profile);

@@ -13,6 +13,14 @@ interface SkillDefinition {
   condition: (profile: ProjectProfile, deps: Record<string, string>) => boolean;
 }
 
+function hasDep(deps: Record<string, string>, dep: string): boolean {
+  return dep in deps;
+}
+
+function hasAnyDep(deps: Record<string, string>, depNames: string[]): boolean {
+  return depNames.some((dep) => hasDep(deps, dep));
+}
+
 function getAllDeps(pkg: Record<string, unknown>): Record<string, string> {
   const deps: Record<string, string> = {};
   if (
@@ -131,7 +139,7 @@ const SKILL_CATALOG: SkillDefinition[] = [
   {
     source: "antfu/skills",
     skill: "nuxt",
-    condition: (_p, d) => !!d.nuxt,
+    condition: (_p, d) => hasDep(d, "nuxt"),
   },
 
   // ═════════════════════════════════════════════════════════════════
@@ -140,7 +148,7 @@ const SKILL_CATALOG: SkillDefinition[] = [
   {
     source: "shadcn/ui",
     skill: "shadcn",
-    condition: (_p, d) => !!(d.shadcn || d["shadcn-ui"] || d["@shadcn/ui"] || d["@shadcn-ui/cli"]),
+    condition: (_p, d) => hasAnyDep(d, ["shadcn", "shadcn-ui", "@shadcn/ui", "@shadcn-ui/cli"]),
   },
 
   // ═════════════════════════════════════════════════════════════════
@@ -149,7 +157,7 @@ const SKILL_CATALOG: SkillDefinition[] = [
   {
     source: "haydenbleasel/ultracite",
     skill: "ultracite",
-    condition: (_p, d) => !!d.ultracite,
+    condition: (_p, d) => hasDep(d, "ultracite"),
   },
 
   // ═════════════════════════════════════════════════════════════════
@@ -158,22 +166,22 @@ const SKILL_CATALOG: SkillDefinition[] = [
   {
     source: "ant-design/ant-design-cli",
     skill: "antd",
-    condition: (_p, d) => !!d.antd,
+    condition: (_p, d) => hasDep(d, "antd"),
   },
   {
     source: "heroui-inc/heroui",
     skill: "heroui-react",
-    condition: (_p, d) => !!d["@heroui/react"],
+    condition: (_p, d) => hasDep(d, "@heroui/react"),
   },
   {
     source: "chakra-ui/chakra-ui",
     skill: "chakra-ui-builder",
-    condition: (_p, d) => !!d["@chakra-ui/react"],
+    condition: (_p, d) => hasDep(d, "@chakra-ui/react"),
   },
   {
     source: "chakra-ui/chakra-ui",
     skill: "chakra-ui-refactor",
-    condition: (_p, d) => !!d["@chakra-ui/react"],
+    condition: (_p, d) => hasDep(d, "@chakra-ui/react"),
   },
 
   // ═════════════════════════════════════════════════════════════════
@@ -227,7 +235,7 @@ const SKILL_CATALOG: SkillDefinition[] = [
   {
     source: "heroui-inc/heroui",
     skill: "heroui-native",
-    condition: (_p, d) => !!(d["heroui-native"] && d["react-native"]),
+    condition: (_p, d) => hasDep(d, "heroui-native") && hasDep(d, "react-native"),
   },
 
   // ═════════════════════════════════════════════════════════════════
@@ -236,17 +244,17 @@ const SKILL_CATALOG: SkillDefinition[] = [
   {
     source: "antfu/skills",
     skill: "vite",
-    condition: (p, d) => p.bundler === "vite" || !!d.vite,
+    condition: (p, d) => p.bundler === "vite" || hasDep(d, "vite"),
   },
   {
     source: "antfu/skills",
     skill: "vitest",
-    condition: (_p, d) => !!d.vitest,
+    condition: (_p, d) => hasDep(d, "vitest"),
   },
   {
     source: "antfu/skills",
     skill: "tsdown",
-    condition: (_p, d) => !!d.tsdown,
+    condition: (_p, d) => hasDep(d, "tsdown"),
   },
   {
     source: "vercel/turborepo",
@@ -260,27 +268,27 @@ const SKILL_CATALOG: SkillDefinition[] = [
   {
     source: "supabase/agent-skills",
     skill: "supabase-postgres-best-practices",
-    condition: (_p, d) => !!(d["@supabase/supabase-js"] || d.supabase || d.pg || d.postgres),
+    condition: (_p, d) => hasAnyDep(d, ["@supabase/supabase-js", "supabase", "pg", "postgres"]),
   },
   {
     source: "ccheney/robust-skills",
     skill: "postgres-drizzle",
-    condition: (_p, d) => !!d["drizzle-orm"],
+    condition: (_p, d) => hasDep(d, "drizzle-orm"),
   },
   {
     source: "mindrally/skills",
     skill: "redis-best-practices",
-    condition: (_p, d) => !!(d.redis || d.ioredis),
+    condition: (_p, d) => hasAnyDep(d, ["redis", "ioredis"]),
   },
   {
     source: "better-auth/skills",
     skill: "better-auth-best-practices",
-    condition: (_p, d) => !!d["better-auth"],
+    condition: (_p, d) => hasDep(d, "better-auth"),
   },
   {
     source: "better-auth/skills",
     skill: "create-auth-skill",
-    condition: (_p, d) => !!d["better-auth"],
+    condition: (_p, d) => hasDep(d, "better-auth"),
   },
 
   // ═════════════════════════════════════════════════════════════════
@@ -289,7 +297,7 @@ const SKILL_CATALOG: SkillDefinition[] = [
   {
     source: "vercel/ai",
     skill: "ai-sdk",
-    condition: (_p, d) => !!d.ai,
+    condition: (_p, d) => hasDep(d, "ai"),
   },
 
   // ═════════════════════════════════════════════════════════════════
@@ -298,7 +306,7 @@ const SKILL_CATALOG: SkillDefinition[] = [
   {
     source: "remotion-dev/skills",
     skill: "remotion-best-practices",
-    condition: (_p, d) => !!(d.remotion || d["@remotion/cli"]),
+    condition: (_p, d) => hasAnyDep(d, ["remotion", "@remotion/cli"]),
   },
 ];
 
@@ -397,13 +405,18 @@ async function getInstalledSkills(cwd: string): Promise<Set<string>> {
 }
 
 function groupBySource(skills: SkillEntry[]): Map<string, string[]> {
-  const grouped = new Map<string, string[]>();
+  const grouped = new Map<string, Set<string>>();
   for (const { source, skill } of skills) {
-    const existing = grouped.get(source) ?? [];
-    existing.push(skill);
+    const existing = grouped.get(source) ?? new Set<string>();
+    existing.add(skill);
     grouped.set(source, existing);
   }
-  return grouped;
+
+  const normalized = new Map<string, string[]>();
+  for (const [source, skillSet] of grouped) {
+    normalized.set(source, [...skillSet]);
+  }
+  return normalized;
 }
 
 function formatCommands(skills: SkillEntry[]): string {
