@@ -1,5 +1,7 @@
 # @xtarterize/patchers
 
+## 1.5.0
+
 ## 1.4.4
 
 ## 1.4.3
@@ -56,6 +58,7 @@
 - [`ccd9287`](https://github.com/agustinusnathaniel/xtarterize/commit/ccd9287afd967ed1ea0ef0c64b4a4a468e95b550) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - feat: add `patchJson` for surgical JSON text edits using `jsonc-parser`
 
   Replaced `JSON.stringify(mergeJson(...), null, 2)` with `patchJson`, which performs byte-level text edits via Microsoft's [`jsonc-parser`](https://github.com/microsoft/node-jsonc-parser). This preserves:
+
   - Comments (`// inline` and `/* block */`)
   - Key ordering
   - Whitespace and indentation style
