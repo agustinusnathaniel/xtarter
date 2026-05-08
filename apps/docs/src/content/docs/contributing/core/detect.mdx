@@ -7,6 +7,8 @@ import { Aside, Tabs, TabItem } from '@astrojs/starlight/components'
 
 The `@xtarterize/core` package provides the `detectProject()` function — the foundation of xtarterize's context-aware behavior. It analyzes your project directory to build a [`ProjectProfile`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/detect.ts) that drives which conformance tasks are applicable.
 
+`detectProject()` now acts as an orchestration layer in [`packages/core/src/detect.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/detect.ts), while concrete detection adapters live in [`packages/core/src/detect/`](https://github.com/agustinusnathaniel/xtarterize/tree/main/packages/core/src/detect) (framework, bundler, router, styling, package manager, and monorepo).
+
 ## Overview
 
 Project detection is the first step in every xtarterize command. It analyzes your project directory to build a `ProjectProfile` that drives which conformance tasks are applicable.
@@ -74,6 +76,16 @@ interface ProjectProfile {
 ```
 
 ## Detection Logic
+
+### Detection modules
+
+- [`framework.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/detect/framework.ts) — framework/runtime/vite-plus detection
+- [`bundler.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/detect/bundler.ts) — bundler detection from deps and config files
+- [`router.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/detect/router.ts) — router detection from bundler + deps
+- [`styling.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/detect/styling.ts) — styling solution detection
+- [`package-manager.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/detect/package-manager.ts) — lockfile/nypm package manager detection
+- [`monorepo.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/detect/monorepo.ts) — workspace/monorepo detection
+- [`types.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/detect/types.ts) + [`utils.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/detect/utils.ts) — shared detection types and guards
 
 ```mermaid
 flowchart TD

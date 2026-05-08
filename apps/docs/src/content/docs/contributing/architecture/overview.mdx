@@ -11,9 +11,9 @@ xtarterize is organized as a monorepo using [Turborepo](https://turbo.build/repo
 
 <FileTree>
 - packages/
-  - core/ — [`@xtarterize/core`](https://github.com/agustinusnathaniel/xtarterize/tree/main/packages/core) — [`detect.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/detect.ts), [`resolve.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/resolve.ts), [`apply.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/apply.ts), [`backup.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/backup.ts), [`preflight.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/preflight.ts)
+  - core/ — [`@xtarterize/core`](https://github.com/agustinusnathaniel/xtarterize/tree/main/packages/core) — [`detect.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/detect.ts) + [`detect/`](https://github.com/agustinusnathaniel/xtarterize/tree/main/packages/core/src/detect), [`resolve.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/resolve.ts), [`apply.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/apply.ts), [`backup.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/backup.ts), [`preflight.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/preflight.ts)
   - patchers/ — [`@xtarterize/patchers`](https://github.com/agustinusnathaniel/xtarterize/tree/main/packages/patchers) — [`json-merge.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/patchers/src/json-merge.ts), [`ast-patch.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/patchers/src/ast-patch.ts)
-  - tasks/ — [`@xtarterize/tasks`](https://github.com/agustinusnathaniel/xtarterize/tree/main/packages/tasks) — [`factory.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/tasks/src/factory.ts), all task implementations
+  - tasks/ — [`@xtarterize/tasks`](https://github.com/agustinusnathaniel/xtarterize/tree/main/packages/tasks) — [`factory.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/tasks/src/factory.ts), [`factory-config.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/tasks/src/factory-config.ts), [`factory-ops.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/tasks/src/factory-ops.ts), all task implementations
 - apps/
   - cli/ — **xtarterize** — CLI binary ([citty](https://github.com/unjs/citty) + [@clack/prompts](https://github.com/natemoo-re/clack))
   - docs/ — @xtarterize/docs — This documentation site ([Astro](https://astro.build/)/[Starlight](https://starlight.astro.build/))
@@ -80,14 +80,14 @@ sequenceDiagram
 - **Dry-run is exact** — `dryRun()` output is bit-for-bit identical to what `apply()` writes
 - **Idempotency is non-negotiable** — Running twice produces no changes on second run
 - **Templates are parameterized** — All templates receive `ProjectProfile` and adapt accordingly
-- **Factory-based task creation** — Most tasks use `createSimpleFileTask`, `createJsonMergeTask`, or `createFileTask` to eliminate boilerplate. See [defu](https://github.com/unjs/defu) for deep merge logic
+- **Factory-based task creation** — Most tasks use `createSimpleFileTask`, `createJsonMergeTask`, or `createFileTask` to eliminate boilerplate, with shared seams in `factory-config.ts` and `factory-ops.ts`
 - **Shared command orchestration** — `init` and `sync` share a `runCommand()` helper in the CLI layer
 
 ## Core Modules
 
 ```mermaid
 flowchart TD
-    Core["@xtarterize/core"] --> Detect["detect.ts<br/>Project detection"]
+    Core["@xtarterize/core"] --> Detect["detect.ts + detect/*<br/>Project detection"]
     Core --> Resolve["resolve.ts<br/>Task resolution"]
     Core --> Apply["apply.ts<br/>Task application"]
     Core --> Backup["backup.ts<br/>File backup/restore"]
@@ -113,9 +113,9 @@ flowchart LR
     Tasks --> Codegen["codegen/<br/>plop"]
     Tasks --> Monorepo["monorepo/<br/>turbo"]
     Tasks --> Editor["editor/<br/>vscode (settings + extensions)"]
-    Tasks --> Agent["agent/<br/>agents-md, skills"]
+    Tasks --> Agent["agent/<br/>agents-md, skills, module"]
     Tasks --> Scripts["scripts/<br/>package-scripts"]
-    Tasks --> Factory["factory.ts<br/>task creation helpers"]
+    Tasks --> Factory["factory.ts + factory-*<br/>task creation helpers"]
     
     style Tasks fill:#6366f1,color:#fff
 ```
