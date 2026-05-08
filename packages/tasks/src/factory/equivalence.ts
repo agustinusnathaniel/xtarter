@@ -1,4 +1,4 @@
-type PackageScriptsMap = Record<string, string | undefined>
+export type PackageScriptsMap = Record<string, string | undefined>
 
 const PM_SCRIPT_REF_PATTERN = /^(?:pnpm|npm|yarn|bun)(?:\s+run)?\s+(\S+)/
 const RUNNER_PATTERN = /^(npx|yarn|bun)(?:\s+)(.+)$/i
@@ -46,14 +46,8 @@ export function isCompositeCommand(cmd: string): boolean {
 	return norm.startsWith('turbo run') || norm.startsWith('turborepo run')
 }
 
-const TOOL_ALIASES: Record<string, string[]> = {
-	release: ['commit-and-tag-version', 'standard-version', 'release-it'],
-	lint: ['eslint', 'biome', 'prettier', 'rome'],
-	test: ['vitest', 'jest', 'mocha'],
-	typecheck: ['tsc', 'tsc --noEmit'],
-	cleanup: ['knip', 'depcheck', 'npm-check-updates', 'ncu'],
-	scaffold: ['plop', 'hygen'],
-}
+// Imported from equivalence-data.ts
+import { EQUIVALENT_SUBCOMMANDS, TOOL_ALIASES } from './equivalence-data.js'
 
 export function normalizeTool(tool: string | null): string | null {
 	if (!tool) return null
@@ -65,76 +59,149 @@ export function normalizeTool(tool: string | null): string | null {
 	return tool?.toLowerCase() ?? null
 }
 
-// For tools like biome/ultracite, these subcommands are equivalent
-const EQUIVALENT_SUBCOMMANDS: Record<string, string[]> = {
-	biome: ['check', 'lint', 'format'],
-	ultracite: ['check', 'fix'],
+// EquivalenceRule: returns true (equivalent), false (not equivalent), or null (continue to next rule)
+type EquivalenceRule = {
+	name: string
+	check: (ctx: EquivalenceContext) => boolean | null
 }
 
-export function areEquivalent(a: string, b: string): boolean {
+type EquivalenceContext = {
+	normA: string
+	normB: string
+	isCompositeA: boolean
+	isCompositeB: boolean
+	hasShellOpA: boolean
+	hasShellOpB: boolean
+	toolA: string | null
+	toolB: string | null
+	argsA: string
+	argsB: string
+	refA: string | null
+	refB: string | null
+}
+
+function buildContext(a: string, b: string): EquivalenceContext {
 	const normA = normalizeCommand(a)
 	const normB = normalizeCommand(b)
-
-	// 1. Exact match
-	if (normA === normB) return true
-
-	// Check if composite commands
 	const isCompositeA = isCompositeCommand(normA)
 	const isCompositeB = isCompositeCommand(normB)
-
-	// 2. Same composite tasks
-	if (isCompositeA && isCompositeB) {
-		return extractCompositeTasks(normA) === extractCompositeTasks(normB)
-	}
-
-	// Don't mix composite with non-composite
-	if (isCompositeA || isCompositeB) {
-		return false
-	}
-
-	// Check for shell operators (if one has shell ops and other doesn't, not equivalent)
 	const hasShellOpA = /[&|;]/.test(a)
 	const hasShellOpB = /[&|;]/.test(b)
-	if (hasShellOpA !== hasShellOpB) {
-		return false
-	}
-
-	// 3. Same tool (exact match or same category via normalizeTool)
 	const toolA = extractTool(normA)
 	const toolB = extractTool(normB)
-	if (toolA === null || toolB === null) return false
-	if (normalizeTool(toolA) !== normalizeTool(toolB)) return false
-
-	// Same tool - compare args (normalize by removing trailing " ." for biome/ultracite)
-	const normalizeArgs = (args: string) =>
-		args.replace(/(\s+\.)?\s*$/, '').trim()
-	const argsA = normalizeArgs(normA.slice(toolA.length))
-	const argsB = normalizeArgs(normB.slice(toolB.length))
-	if (argsA === argsB) return true
-
-	// For tools with equivalent subcommands, strip them before comparing
-	const equivSubcommands = EQUIVALENT_SUBCOMMANDS[toolA.toLowerCase()]
-	if (equivSubcommands) {
-		const subcommandPattern = new RegExp(
-			'^(' + equivSubcommands.join('|') + ')\\s*',
-		)
-		const normalizeArgs = (args: string) =>
-			args
-				.replace(subcommandPattern, '')
-				.replace(/^--write\\s*/, '')
-				.trim()
-		return normalizeArgs(argsA) === normalizeArgs(argsB)
-	}
-
-	// 4. Same script reference (e.g., "npm run build" === "build" referenced via pnpm)
+	const argsA = normA.slice(toolA?.length ?? 0)
+	const argsB = normB.slice(toolB?.length ?? 0)
 	const refA = extractScriptRef(normA)
 	const refB = extractScriptRef(normB)
-	if (refA !== null && refB !== null) {
-		return refA === refB
+
+	return {
+		normA,
+		normB,
+		isCompositeA,
+		isCompositeB,
+		hasShellOpA,
+		hasShellOpB,
+		toolA,
+		toolB,
+		argsA,
+		argsB,
+		refA,
+		refB,
 	}
-	if (refA !== null || refB !== null) {
-		// One references a script, the other doesn't - not equivalent
-		return false
+}
+
+const EQUIVALENCE_RULES: EquivalenceRule[] = [
+	{
+		name: 'exact-match',
+		check: (ctx) => {
+			if (ctx.normA === ctx.normB) return true
+			return null
+		},
+	},
+	{
+		name: 'composite-same-tasks',
+		check: (ctx) => {
+			if (ctx.isCompositeA && ctx.isCompositeB) {
+				return (
+					extractCompositeTasks(ctx.normA) === extractCompositeTasks(ctx.normB)
+				)
+			}
+			return null
+		},
+	},
+	{
+		name: 'composite-mixed-reject',
+		check: (ctx) => {
+			if (ctx.isCompositeA || ctx.isCompositeB) {
+				return false
+			}
+			return null
+		},
+	},
+	{
+		name: 'shell-operator-mismatch',
+		check: (ctx) => {
+			if (ctx.hasShellOpA !== ctx.hasShellOpB) {
+				return false
+			}
+			return null
+		},
+	},
+	{
+		name: 'tool-mismatch',
+		check: (ctx) => {
+			if (ctx.toolA === null || ctx.toolB === null) return false
+			if (normalizeTool(ctx.toolA) !== normalizeTool(ctx.toolB)) return false
+			return null
+		},
+	},
+	{
+		name: 'same-tool-same-args',
+		check: (ctx) => {
+			const normalizeArgs = (args: string) =>
+				args.replace(/(\s+\.)?\s*$/, '').trim()
+			if (normalizeArgs(ctx.argsA) === normalizeArgs(ctx.argsB)) return true
+			return null
+		},
+	},
+	{
+		name: 'equivalent-subcommands',
+		check: (ctx) => {
+			const equivSubcommands = EQUIVALENT_SUBCOMMANDS[ctx.toolA!.toLowerCase()]
+			if (!equivSubcommands) return null
+			const subcommandPattern = new RegExp(
+				'^(' + equivSubcommands.join('|') + ')\\s*',
+			)
+			const normalizeArgs = (args: string) =>
+				args
+					.replace(subcommandPattern, '')
+					.replace(/^--write\s*/, '')
+					.trim()
+			return normalizeArgs(ctx.argsA) === normalizeArgs(ctx.argsB)
+		},
+	},
+	{
+		name: 'script-ref-mismatch',
+		check: (ctx) => {
+			if (ctx.refA !== null && ctx.refB !== null) {
+				return ctx.refA === ctx.refB
+			}
+			if (ctx.refA !== null || ctx.refB !== null) {
+				return false
+			}
+			return null
+		},
+	},
+]
+
+export function areEquivalent(a: string, b: string): boolean {
+	const ctx = buildContext(a, b)
+
+	for (const rule of EQUIVALENCE_RULES) {
+		const result = rule.check(ctx)
+		if (result !== null) {
+			return result
+		}
 	}
 
 	return false
