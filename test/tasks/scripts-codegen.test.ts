@@ -202,6 +202,1039 @@ describe('packageScriptsTask', () => {
 		expect(pkgDiff?.after).toContain('"typecheck"')
 		expect(pkgDiff?.after).toContain('"release"')
 	})
+
+	it('skips biome when existing lint uses biome', async () => {
+		const tmpDir = await fs.mkdtemp(
+			path.join(os.tmpdir(), 'xtarterize-biome-equivalence-'),
+		)
+		await fs.writeFile(
+			path.join(tmpDir, 'package.json'),
+			JSON.stringify({
+				name: 'biome-equivalence',
+				type: 'module',
+				scripts: {
+					lint: 'biome check .',
+				},
+				devDependencies: {
+					'@biomejs/biome': '^1.0.0',
+				},
+			}),
+		)
+
+		const profile = await detectProject(tmpDir)
+		const status = await packageScriptsTask.check(tmpDir, profile)
+		const diffs = await packageScriptsTask.dryRun(tmpDir, profile)
+		const pkgDiff = diffs.find((d) => d.filepath === 'package.json')
+
+		expect(status).toBe('patch')
+		expect(pkgDiff?.after).not.toContain('"biome"')
+		expect(pkgDiff?.after).toContain('"test"')
+
+		await fs.rm(tmpDir, { recursive: true })
+	})
+
+	it('skips upgrade when existing up-latest uses same tool', async () => {
+		const tmpDir = await fs.mkdtemp(
+			path.join(os.tmpdir(), 'xtarterize-upgrade-equivalence-'),
+		)
+		await fs.writeFile(
+			path.join(tmpDir, 'package.json'),
+			JSON.stringify({
+				name: 'upgrade-equivalence',
+				type: 'module',
+				scripts: {
+					'up-latest': 'pnpm up -i -L',
+				},
+			}),
+		)
+
+		const profile = await detectProject(tmpDir)
+		const status = await packageScriptsTask.check(tmpDir, profile)
+		const diffs = await packageScriptsTask.dryRun(tmpDir, profile)
+		const pkgDiff = diffs.find((d) => d.filepath === 'package.json')
+
+		expect(status).toBe('patch')
+		expect(pkgDiff?.after).not.toContain('"upgrade"')
+		expect(pkgDiff?.after).toContain('"biome"')
+
+		await fs.rm(tmpDir, { recursive: true })
+	})
+
+	it('skips when same script via different PM reference', async () => {
+		const tmpDir = await fs.mkdtemp(
+			path.join(os.tmpdir(), 'xtarterize-pm-script-ref-'),
+		)
+		await fs.writeFile(
+			path.join(tmpDir, 'package.json'),
+			JSON.stringify({
+				name: 'pm-script-ref',
+				type: 'module',
+				scripts: {
+					'npm:build': 'turbo run build',
+					dev: 'next dev',
+				},
+			}),
+		)
+
+		const profile = await detectProject(tmpDir)
+		const status = await packageScriptsTask.check(tmpDir, profile)
+		const diffs = await packageScriptsTask.dryRun(tmpDir, profile)
+		const pkgDiff = diffs.find((d) => d.filepath === 'package.json')
+
+		expect(status).toBe('patch')
+		expect(pkgDiff?.after).not.toContain('"build"')
+
+		await fs.rm(tmpDir, { recursive: true })
+	})
+
+	it('does not skip different tools even with similar patterns', async () => {
+		const tmpDir = await fs.mkdtemp(
+			path.join(os.tmpdir(), 'xtarterize-different-tools-'),
+		)
+		await fs.writeFile(
+			path.join(tmpDir, 'package.json'),
+			JSON.stringify({
+				name: 'different-tools',
+				type: 'module',
+				scripts: {
+					lint: 'eslint .',
+				},
+				devDependencies: {
+					eslint: '^8.0.0',
+				},
+			}),
+		)
+
+		const profile = await detectProject(tmpDir)
+		const status = await packageScriptsTask.check(tmpDir, profile)
+		const diffs = await packageScriptsTask.dryRun(tmpDir, profile)
+		const pkgDiff = diffs.find((d) => d.filepath === 'package.json')
+
+		expect(status).toBe('patch')
+		expect(pkgDiff?.after).toContain('"biome"')
+		expect(pkgDiff?.after).toContain('"biome:fix"')
+
+		await fs.rm(tmpDir, { recursive: true })
+	})
+
+	it('does not skip same tool with different arguments', async () => {
+		const tmpDir = await fs.mkdtemp(
+			path.join(os.tmpdir(), 'xtarterize-diff-args-'),
+		)
+		await fs.writeFile(
+			path.join(tmpDir, 'package.json'),
+			JSON.stringify({
+				name: 'diff-args',
+				type: 'module',
+				scripts: {
+					'biome:check': 'biome check src/',
+				},
+				devDependencies: {
+					'@biomejs/biome': '^1.0.0',
+				},
+			}),
+		)
+
+		const profile = await detectProject(tmpDir)
+		const status = await packageScriptsTask.check(tmpDir, profile)
+		const diffs = await packageScriptsTask.dryRun(tmpDir, profile)
+		const pkgDiff = diffs.find((d) => d.filepath === 'package.json')
+
+		expect(status).toBe('patch')
+		expect(pkgDiff?.after).toContain('"biome"')
+
+		await fs.rm(tmpDir, { recursive: true })
+	})
+
+	it('skips check:turbo when existing check:turbo has same tasks', async () => {
+		const tmpDir = await fs.mkdtemp(
+			path.join(os.tmpdir(), 'xtarterize-turbo-same-'),
+		)
+		await fs.writeFile(
+			path.join(tmpDir, 'package.json'),
+			JSON.stringify({
+				name: 'turbo-same',
+				type: 'module',
+				scripts: {
+					'check:turbo': 'turbo run biome typecheck test',
+				},
+				devDependencies: {
+					turbo: '^2.0.0',
+					typescript: '^5.3.0',
+				},
+			}),
+		)
+
+		const profile = await detectProject(tmpDir)
+		const status = await packageScriptsTask.check(tmpDir, profile)
+		const diffs = await packageScriptsTask.dryRun(tmpDir, profile)
+		const pkgDiff = diffs.find((d) => d.filepath === 'package.json')
+
+		expect(status).toBe('skip')
+		expect(pkgDiff?.after).not.toContain('"check:turbo"')
+
+		await fs.rm(tmpDir, { recursive: true })
+	})
+
+	it('does not skip check:turbo when existing check:turbo has different tasks', async () => {
+		const tmpDir = await fs.mkdtemp(
+			path.join(os.tmpdir(), 'xtarterize-turbo-diff-'),
+		)
+		await fs.writeFile(
+			path.join(tmpDir, 'package.json'),
+			JSON.stringify({
+				name: 'turbo-diff',
+				type: 'module',
+				scripts: {
+					'check:turbo': 'turbo run lint build',
+				},
+				devDependencies: {
+					turbo: '^2.0.0',
+					typescript: '^5.3.0',
+				},
+			}),
+		)
+
+		const profile = await detectProject(tmpDir)
+		const status = await packageScriptsTask.check(tmpDir, profile)
+		const diffs = await packageScriptsTask.dryRun(tmpDir, profile)
+		const pkgDiff = diffs.find((d) => d.filepath === 'package.json')
+
+		expect(status).toBe('patch')
+		expect(pkgDiff?.after).toContain('"check:turbo"')
+		expect(pkgDiff?.after).toContain('turbo run biome typecheck test')
+
+		await fs.rm(tmpDir, { recursive: true })
+	})
+
+	it('uses existing script keys in check:turbo when available', async () => {
+		const tmpDir = await fs.mkdtemp(
+			path.join(os.tmpdir(), 'xtarterize-turbo-refs-existing-'),
+		)
+		await fs.writeFile(
+			path.join(tmpDir, 'package.json'),
+			JSON.stringify({
+				name: 'turbo-refs-existing',
+				type: 'module',
+				scripts: {
+					lint: 'biome check .',
+					typecheck: 'tsc --noEmit',
+					test: 'vitest run',
+				},
+				devDependencies: {
+					turbo: '^2.0.0',
+					typescript: '^5.3.0',
+					'@biomejs/biome': '^1.0.0',
+					vitest: '^1.0.0',
+				},
+			}),
+		)
+
+		const profile = await detectProject(tmpDir)
+		const diffs = await packageScriptsTask.dryRun(tmpDir, profile)
+		const pkgDiff = diffs.find((d) => d.filepath === 'package.json')
+
+		expect(pkgDiff?.after).toContain('"check:turbo"')
+		expect(pkgDiff?.after).toContain('turbo run lint typecheck test')
+
+		await fs.rm(tmpDir, { recursive: true })
+	})
+
+	it('only adds missing scripts and builds check:turbo from all refs', async () => {
+		const tmpDir = await fs.mkdtemp(
+			path.join(os.tmpdir(), 'xtarterize-turbo-partial-'),
+		)
+		await fs.writeFile(
+			path.join(tmpDir, 'package.json'),
+			JSON.stringify({
+				name: 'turbo-partial',
+				type: 'module',
+				scripts: {
+					lint: 'biome check .',
+					test: 'vitest run',
+				},
+				devDependencies: {
+					turbo: '^2.0.0',
+					typescript: '^5.3.0',
+					'@biomejs/biome': '^1.0.0',
+					vitest: '^1.0.0',
+				},
+			}),
+		)
+
+		const profile = await detectProject(tmpDir)
+		const diffs = await packageScriptsTask.dryRun(tmpDir, profile)
+		const pkgDiff = diffs.find((d) => d.filepath === 'package.json')
+
+		expect(pkgDiff?.after).toContain('"typecheck"')
+		expect(pkgDiff?.after).toContain('"check:turbo"')
+		expect(pkgDiff?.after).toContain('turbo run lint typecheck test')
+
+		await fs.rm(tmpDir, { recursive: true })
+	})
+
+	it('does not duplicate existing biome when lint exists with biome', async () => {
+		const tmpDir = await fs.mkdtemp(
+			path.join(os.tmpdir(), 'xtarterize-no-dup-biome-'),
+		)
+		await fs.writeFile(
+			path.join(tmpDir, 'package.json'),
+			JSON.stringify({
+				name: 'no-dup-biome',
+				type: 'module',
+				scripts: {
+					lint: 'biome check .',
+				},
+				devDependencies: {
+					turbo: '^2.0.0',
+					typescript: '^5.3.0',
+					'@biomejs/biome': '^1.0.0',
+					vitest: '^1.0.0',
+				},
+			}),
+		)
+
+		const profile = await detectProject(tmpDir)
+		const status = await packageScriptsTask.check(tmpDir, profile)
+		const diffs = await packageScriptsTask.dryRun(tmpDir, profile)
+		const pkgDiff = diffs.find((d) => d.filepath === 'package.json')
+
+		expect(status).toBe('patch')
+		expect(pkgDiff?.after).not.toContain('"biome"')
+		expect(pkgDiff?.after).toContain('"typecheck"')
+		expect(pkgDiff?.after).toContain('"test"')
+		expect(pkgDiff?.after).toContain('"check:turbo"')
+		expect(pkgDiff?.after).toContain('turbo run lint typecheck test')
+
+		await fs.rm(tmpDir, { recursive: true })
+	})
+
+	describe('edge cases', () => {
+		it('handles empty scripts object', async () => {
+			const tmpDir = await fs.mkdtemp(
+				path.join(os.tmpdir(), 'xtarterize-empty-scripts-'),
+			)
+			await fs.writeFile(
+				path.join(tmpDir, 'package.json'),
+				JSON.stringify({
+					name: 'empty-scripts',
+					type: 'module',
+					scripts: {},
+					devDependencies: {
+						turbo: '^2.0.0',
+						typescript: '^5.3.0',
+						'@biomejs/biome': '^1.0.0',
+						vitest: '^1.0.0',
+					},
+				}),
+			)
+
+			const profile = await detectProject(tmpDir)
+			const status = await packageScriptsTask.check(tmpDir, profile)
+			const diffs = await packageScriptsTask.dryRun(tmpDir, profile)
+			const pkgDiff = diffs.find((d) => d.filepath === 'package.json')
+
+			expect(status).toBe('new')
+			expect(pkgDiff?.after).toContain('"biome"')
+			expect(pkgDiff?.after).toContain('"typecheck"')
+			expect(pkgDiff?.after).toContain('"test"')
+			expect(pkgDiff?.after).toContain('"check:turbo"')
+
+			await fs.rm(tmpDir, { recursive: true })
+		})
+
+		it('handles script with empty value', async () => {
+			const tmpDir = await fs.mkdtemp(
+				path.join(os.tmpdir(), 'xtarterize-empty-value-'),
+			)
+			await fs.writeFile(
+				path.join(tmpDir, 'package.json'),
+				JSON.stringify({
+					name: 'empty-value',
+					type: 'module',
+					scripts: {
+						lint: '',
+						build: 'turbo run build',
+					},
+					devDependencies: {
+						turbo: '^2.0.0',
+						typescript: '^5.3.0',
+					},
+				}),
+			)
+
+			const profile = await detectProject(tmpDir)
+			const diffs = await packageScriptsTask.dryRun(tmpDir, profile)
+			const pkgDiff = diffs.find((d) => d.filepath === 'package.json')
+
+			expect(pkgDiff?.after).toContain('"biome"')
+			expect(pkgDiff?.after).toContain('"test"')
+
+			await fs.rm(tmpDir, { recursive: true })
+		})
+
+		it('skips biome when existing eslint uses biome', async () => {
+			const tmpDir = await fs.mkdtemp(
+				path.join(os.tmpdir(), 'xtarterize-eslint-biome-'),
+			)
+			await fs.writeFile(
+				path.join(tmpDir, 'package.json'),
+				JSON.stringify({
+					name: 'eslint-biome',
+					type: 'module',
+					scripts: {
+						lint: 'eslint . --fix',
+					},
+					devDependencies: {
+						eslint: '^8.0.0',
+						turbo: '^2.0.0',
+						typescript: '^5.3.0',
+						vitest: '^1.0.0',
+					},
+				}),
+			)
+
+			const profile = await detectProject(tmpDir)
+			const diffs = await packageScriptsTask.dryRun(tmpDir, profile)
+			const pkgDiff = diffs.find((d) => d.filepath === 'package.json')
+
+			expect(pkgDiff?.after).toContain('"biome"')
+			expect(pkgDiff?.after).toContain('"check:turbo"')
+
+			await fs.rm(tmpDir, { recursive: true })
+		})
+
+		it('does not skip biome when existing lint has different args', async () => {
+			const tmpDir = await fs.mkdtemp(
+				path.join(os.tmpdir(), 'xtarterize-diff-args-'),
+			)
+			await fs.writeFile(
+				path.join(tmpDir, 'package.json'),
+				JSON.stringify({
+					name: 'diff-args',
+					type: 'module',
+					scripts: {
+						lint: 'biome check src/',
+					},
+					devDependencies: {
+						'@biomejs/biome': '^1.0.0',
+						turbo: '^2.0.0',
+						typescript: '^5.3.0',
+						vitest: '^1.0.0',
+					},
+				}),
+			)
+
+			const profile = await detectProject(tmpDir)
+			const diffs = await packageScriptsTask.dryRun(tmpDir, profile)
+			const pkgDiff = diffs.find((d) => d.filepath === 'package.json')
+
+			expect(pkgDiff?.after).toContain('"biome"')
+			expect(pkgDiff?.after).toContain('"typecheck"')
+			expect(pkgDiff?.after).toContain('"test"')
+
+			await fs.rm(tmpDir, { recursive: true })
+		})
+
+		it('handles namespaced script references separately', async () => {
+			const tmpDir = await fs.mkdtemp(
+				path.join(os.tmpdir(), 'xtarterize-pm-ref-'),
+			)
+			await fs.writeFile(
+				path.join(tmpDir, 'package.json'),
+				JSON.stringify({
+					name: 'pm-ref',
+					type: 'module',
+					scripts: {
+						'npm:build': 'turbo run build',
+						'pnpm:dev': 'turbo run dev',
+						typecheck: 'tsc --noEmit',
+					},
+					devDependencies: {
+						turbo: '^2.0.0',
+						typescript: '^5.3.0',
+						vitest: '^1.0.0',
+						'@biomejs/biome': '^1.0.0',
+					},
+				}),
+			)
+
+			const profile = await detectProject(tmpDir)
+			const diffs = await packageScriptsTask.dryRun(tmpDir, profile)
+			const pkgDiff = diffs.find((d) => d.filepath === 'package.json')
+
+			expect(pkgDiff?.after).not.toContain('"typecheck"')
+			expect(pkgDiff?.after).toContain('"biome"')
+			expect(pkgDiff?.after).toContain('"test"')
+			expect(pkgDiff?.after).toContain('"check:turbo"')
+
+			await fs.rm(tmpDir, { recursive: true })
+		})
+
+		it('non-TS project does not add typecheck or knip', async () => {
+			const tmpDir = await fs.mkdtemp(
+				path.join(os.tmpdir(), 'xtarterize-non-ts-'),
+			)
+			await fs.writeFile(
+				path.join(tmpDir, 'package.json'),
+				JSON.stringify({
+					name: 'non-ts',
+					type: 'module',
+					scripts: {
+						lint: 'biome check .',
+					},
+					devDependencies: {
+						turbo: '^2.0.0',
+						'@biomejs/biome': '^1.0.0',
+					},
+				}),
+			)
+
+			const profile = await detectProject(tmpDir)
+			const diffs = await packageScriptsTask.dryRun(tmpDir, profile)
+			const pkgDiff = diffs.find((d) => d.filepath === 'package.json')
+
+			expect(pkgDiff?.after).not.toContain('"typecheck"')
+			expect(pkgDiff?.after).not.toContain('"knip"')
+			expect(pkgDiff?.after).toContain('"test"')
+			expect(pkgDiff?.after).toContain('"check:turbo"')
+			expect(pkgDiff?.after).toContain('turbo run lint test')
+
+			await fs.rm(tmpDir, { recursive: true })
+		})
+
+		it('non-turbo monorepo does not add check:turbo', async () => {
+			const tmpDir = await fs.mkdtemp(
+				path.join(os.tmpdir(), 'xtarterize-no-turbo-'),
+			)
+			await fs.writeFile(
+				path.join(tmpDir, 'package.json'),
+				JSON.stringify({
+					name: 'no-turbo',
+					type: 'module',
+					scripts: {},
+					devDependencies: {
+						typescript: '^5.3.0',
+					},
+				}),
+			)
+
+			const profile = await detectProject(tmpDir)
+			const diffs = await packageScriptsTask.dryRun(tmpDir, profile)
+			const pkgDiff = diffs.find((d) => d.filepath === 'package.json')
+
+			expect(pkgDiff?.after).not.toContain('check:turbo')
+			expect(pkgDiff?.after).toContain('"biome"')
+			expect(pkgDiff?.after).toContain('"typecheck"')
+
+			await fs.rm(tmpDir, { recursive: true })
+		})
+
+		it('skips duplicate upgrade command regardless of PM', async () => {
+			const tmpDir = await fs.mkdtemp(
+				path.join(os.tmpdir(), 'xtarterize-upgrade-dup-'),
+			)
+			await fs.writeFile(
+				path.join(tmpDir, 'package.json'),
+				JSON.stringify({
+					name: 'upgrade-dup',
+					type: 'module',
+					scripts: {
+						upgrade: 'npx npm-check-updates -i',
+					},
+					devDependencies: {},
+				}),
+			)
+
+			const profile = await detectProject(tmpDir)
+			const diffs = await packageScriptsTask.dryRun(tmpDir, profile)
+			const pkgDiff = diffs.find((d) => d.filepath === 'package.json')
+
+			expect(pkgDiff?.after).not.toContain('"upgrade"')
+
+			await fs.rm(tmpDir, { recursive: true })
+		})
+
+		it('adds upgrade when existing is different', async () => {
+			const tmpDir = await fs.mkdtemp(
+				path.join(os.tmpdir(), 'xtarterize-upgrade-diff-'),
+			)
+			await fs.writeFile(
+				path.join(tmpDir, 'package.json'),
+				JSON.stringify({
+					name: 'upgrade-diff',
+					type: 'module',
+					scripts: {
+						upgrade: 'npm outdated',
+					},
+					devDependencies: {},
+				}),
+			)
+
+			const profile = await detectProject(tmpDir)
+			const diffs = await packageScriptsTask.dryRun(tmpDir, profile)
+			const pkgDiff = diffs.find((d) => d.filepath === 'package.json')
+
+			expect(pkgDiff?.after).toContain('"upgrade"')
+
+			await fs.rm(tmpDir, { recursive: true })
+		})
+
+		it('check:turbo uses only existing keys when all exist', async () => {
+			const tmpDir = await fs.mkdtemp(
+				path.join(os.tmpdir(), 'xtarterize-turbo-all-exist-'),
+			)
+			await fs.writeFile(
+				path.join(tmpDir, 'package.json'),
+				JSON.stringify({
+					name: 'turbo-all-exist',
+					type: 'module',
+					scripts: {
+						lint: 'biome check .',
+						check: 'biome check --write .',
+						typecheck: 'tsc --noEmit',
+						test: 'vitest run',
+					},
+					devDependencies: {
+						turbo: '^2.0.0',
+						typescript: '^5.3.0',
+						'@biomejs/biome': '^1.0.0',
+						vitest: '^1.0.0',
+					},
+				}),
+			)
+
+			const profile = await detectProject(tmpDir)
+			const status = await packageScriptsTask.check(tmpDir, profile)
+			const diffs = await packageScriptsTask.dryRun(tmpDir, profile)
+			const pkgDiff = diffs.find((d) => d.filepath === 'package.json')
+
+			expect(status).toBe('patch')
+			expect(pkgDiff?.after).toContain('"check:turbo"')
+			expect(pkgDiff?.after).toContain('turbo run lint typecheck test')
+			expect(pkgDiff?.after).not.toContain('"biome"')
+
+			await fs.rm(tmpDir, { recursive: true })
+		})
+
+		it('check:turbo mixes existing and new tasks correctly', async () => {
+			const tmpDir = await fs.mkdtemp(
+				path.join(os.tmpdir(), 'xtarterize-turbo-mix-'),
+			)
+			await fs.writeFile(
+				path.join(tmpDir, 'package.json'),
+				JSON.stringify({
+					name: 'turbo-mix',
+					type: 'module',
+					scripts: {
+						fmt: 'biome check --write .',
+					},
+					devDependencies: {
+						turbo: '^2.0.0',
+						typescript: '^5.3.0',
+						'@biomejs/biome': '^1.0.0',
+					},
+				}),
+			)
+
+			const profile = await detectProject(tmpDir)
+			const diffs = await packageScriptsTask.dryRun(tmpDir, profile)
+			const pkgDiff = diffs.find((d) => d.filepath === 'package.json')
+
+			expect(pkgDiff?.after).toContain('"typecheck"')
+			expect(pkgDiff?.after).toContain('"test"')
+			expect(pkgDiff?.after).toContain('"check:turbo"')
+
+			await fs.rm(tmpDir, { recursive: true })
+		})
+
+		it('handles script with trailing spaces', async () => {
+			const tmpDir = await fs.mkdtemp(
+				path.join(os.tmpdir(), 'xtarterize-trailing-spaces-'),
+			)
+			await fs.writeFile(
+				path.join(tmpDir, 'package.json'),
+				JSON.stringify({
+					name: 'trailing-spaces',
+					type: 'module',
+					scripts: {
+						biome: 'biome check .   ',
+					},
+					devDependencies: {
+						'@biomejs/biome': '^1.0.0',
+						turbo: '^2.0.0',
+						typescript: '^5.3.0',
+						vitest: '^1.0.0',
+					},
+				}),
+			)
+
+			const profile = await detectProject(tmpDir)
+			const diffs = await packageScriptsTask.dryRun(tmpDir, profile)
+			const pkgDiff = diffs.find((d) => d.filepath === 'package.json')
+
+			expect(pkgDiff?.after).not.toContain('"biome":')
+
+			await fs.rm(tmpDir, { recursive: true })
+		})
+
+		describe('all managed scripts use pragmatic approach', () => {
+			it('skips biome:fix when existing has check with biome', async () => {
+				const tmpDir = await fs.mkdtemp(
+					path.join(os.tmpdir(), 'xtarterize-biome-fix-'),
+				)
+				await fs.writeFile(
+					path.join(tmpDir, 'package.json'),
+					JSON.stringify({
+						name: 'biome-fix-skip',
+						type: 'module',
+						scripts: {
+							biome: 'biome check .',
+							check: 'biome check --write .',
+						},
+						devDependencies: {
+							'@biomejs/biome': '^1.0.0',
+							turbo: '^2.0.0',
+							typescript: '^5.3.0',
+							vitest: '^1.0.0',
+						},
+					}),
+				)
+
+				const profile = await detectProject(tmpDir)
+				const status = await packageScriptsTask.check(tmpDir, profile)
+				const diffs = await packageScriptsTask.dryRun(tmpDir, profile)
+				const pkgDiff = diffs.find((d) => d.filepath === 'package.json')
+
+				expect(status).toBe('patch')
+				expect(pkgDiff?.after).not.toContain('"biome:fix"')
+				expect(pkgDiff?.after).not.toContain('"biome"')
+				expect(pkgDiff?.after).not.toContain('"test"')
+				expect(pkgDiff?.after).toContain('"check:turbo"')
+
+				await fs.rm(tmpDir, { recursive: true })
+			})
+
+			it('skips test when existing has vitest', async () => {
+				const tmpDir = await fs.mkdtemp(
+					path.join(os.tmpdir(), 'xtarterize-test-skip-'),
+				)
+				await fs.writeFile(
+					path.join(tmpDir, 'package.json'),
+					JSON.stringify({
+						name: 'test-skip',
+						type: 'module',
+						scripts: {
+							test: 'vitest run --coverage',
+						},
+						devDependencies: {
+							vitest: '^1.0.0',
+							turbo: '^2.0.0',
+							typescript: '^5.3.0',
+							'@biomejs/biome': '^1.0.0',
+						},
+					}),
+				)
+
+				const profile = await detectProject(tmpDir)
+				const status = await packageScriptsTask.check(tmpDir, profile)
+				const diffs = await packageScriptsTask.dryRun(tmpDir, profile)
+				const pkgDiff = diffs.find((d) => d.filepath === 'package.json')
+
+				expect(status).toBe('patch')
+				expect(pkgDiff?.after).not.toContain('"test"')
+				expect(pkgDiff?.after).toContain('"biome"')
+				expect(pkgDiff?.after).toContain('"typecheck"')
+				expect(pkgDiff?.after).toContain('"check:turbo"')
+				expect(pkgDiff?.after).toContain('turbo run biome typecheck test')
+
+				await fs.rm(tmpDir, { recursive: true })
+			})
+
+			it('skips release when existing has standard-version', async () => {
+				const tmpDir = await fs.mkdtemp(
+					path.join(os.tmpdir(), 'xtarterize-release-skip-'),
+				)
+				await fs.writeFile(
+					path.join(tmpDir, 'package.json'),
+					JSON.stringify({
+						name: 'release-skip',
+						type: 'module',
+						scripts: {
+							release: 'standard-version',
+						},
+						devDependencies: {
+							'standard-version': '^9.0.0',
+							turbo: '^2.0.0',
+							typescript: '^5.3.0',
+							'@biomejs/biome': '^1.0.0',
+							vitest: '^1.0.0',
+						},
+					}),
+				)
+
+				const profile = await detectProject(tmpDir)
+				const status = await packageScriptsTask.check(tmpDir, profile)
+				const diffs = await packageScriptsTask.dryRun(tmpDir, profile)
+				const pkgDiff = diffs.find((d) => d.filepath === 'package.json')
+
+				expect(status).toBe('patch')
+				expect(pkgDiff?.after).not.toContain('"release"')
+				expect(pkgDiff?.after).toContain('"biome"')
+				expect(pkgDiff?.after).toContain('"typecheck"')
+				expect(pkgDiff?.after).toContain('"test"')
+
+				await fs.rm(tmpDir, { recursive: true })
+			})
+
+			it('skips plop when existing has hygen', async () => {
+				const tmpDir = await fs.mkdtemp(
+					path.join(os.tmpdir(), 'xtarterize-plop-skip-'),
+				)
+				await fs.writeFile(
+					path.join(tmpDir, 'package.json'),
+					JSON.stringify({
+						name: 'plop-skip',
+						type: 'module',
+						scripts: {
+							generate: 'hygen',
+						},
+						devDependencies: {
+							hygen: '^6.0.0',
+							turbo: '^2.0.0',
+							typescript: '^5.3.0',
+							'@biomejs/biome': '^1.0.0',
+							vitest: '^1.0.0',
+						},
+					}),
+				)
+
+				const profile = await detectProject(tmpDir)
+				const status = await packageScriptsTask.check(tmpDir, profile)
+				const diffs = await packageScriptsTask.dryRun(tmpDir, profile)
+				const pkgDiff = diffs.find((d) => d.filepath === 'package.json')
+
+				expect(status).toBe('patch')
+				expect(pkgDiff?.after).not.toContain('"plop"')
+				expect(pkgDiff?.after).toContain('"biome"')
+				expect(pkgDiff?.after).toContain('"typecheck"')
+				expect(pkgDiff?.after).toContain('"test"')
+
+				await fs.rm(tmpDir, { recursive: true })
+			})
+
+			it('skips knip when existing has depcheck', async () => {
+				const tmpDir = await fs.mkdtemp(
+					path.join(os.tmpdir(), 'xtarterize-knip-skip-'),
+				)
+				await fs.writeFile(
+					path.join(tmpDir, 'package.json'),
+					JSON.stringify({
+						name: 'knip-skip',
+						type: 'module',
+						scripts: {
+							knip: 'depcheck',
+						},
+						devDependencies: {
+							depcheck: '^1.0.0',
+							turbo: '^2.0.0',
+							typescript: '^5.3.0',
+							'@biomejs/biome': '^1.0.0',
+							vitest: '^1.0.0',
+						},
+					}),
+				)
+
+				const profile = await detectProject(tmpDir)
+				const status = await packageScriptsTask.check(tmpDir, profile)
+				const diffs = await packageScriptsTask.dryRun(tmpDir, profile)
+				const pkgDiff = diffs.find((d) => d.filepath === 'package.json')
+
+				expect(status).toBe('patch')
+				expect(pkgDiff?.after).not.toContain('"knip"')
+				expect(pkgDiff?.after).toContain('"biome"')
+				expect(pkgDiff?.after).toContain('"typecheck"')
+				expect(pkgDiff?.after).toContain('"test"')
+
+				await fs.rm(tmpDir, { recursive: true })
+			})
+
+			it('skips upgrade when existing has npm-check-updates', async () => {
+				const tmpDir = await fs.mkdtemp(
+					path.join(os.tmpdir(), 'xtarterize-upgrade-skip-'),
+				)
+				await fs.writeFile(
+					path.join(tmpDir, 'package.json'),
+					JSON.stringify({
+						name: 'upgrade-skip',
+						type: 'module',
+						scripts: {
+							upgrade: 'npx npm-check-updates -u',
+						},
+						devDependencies: {
+							turbo: '^2.0.0',
+							typescript: '^5.3.0',
+							'@biomejs/biome': '^1.0.0',
+							vitest: '^1.0.0',
+						},
+					}),
+				)
+
+				const profile = await detectProject(tmpDir)
+				const status = await packageScriptsTask.check(tmpDir, profile)
+				const diffs = await packageScriptsTask.dryRun(tmpDir, profile)
+				const pkgDiff = diffs.find((d) => d.filepath === 'package.json')
+
+				expect(status).toBe('patch')
+				expect(pkgDiff?.after).not.toContain('"upgrade"')
+				expect(pkgDiff?.after).toContain('"biome"')
+				expect(pkgDiff?.after).toContain('"typecheck"')
+				expect(pkgDiff?.after).toContain('"test"')
+
+				await fs.rm(tmpDir, { recursive: true })
+			})
+
+			it('skips typecheck when existing has tsc with different args', async () => {
+				const tmpDir = await fs.mkdtemp(
+					path.join(os.tmpdir(), 'xtarterize-typecheck-skip-'),
+				)
+				await fs.writeFile(
+					path.join(tmpDir, 'package.json'),
+					JSON.stringify({
+						name: 'typecheck-skip',
+						type: 'module',
+						scripts: {
+							typecheck: 'tsc --noEmit --build',
+						},
+						devDependencies: {
+							typescript: '^5.3.0',
+							turbo: '^2.0.0',
+							'@biomejs/biome': '^1.0.0',
+							vitest: '^1.0.0',
+						},
+					}),
+				)
+
+				const profile = await detectProject(tmpDir)
+				const status = await packageScriptsTask.check(tmpDir, profile)
+				const diffs = await packageScriptsTask.dryRun(tmpDir, profile)
+				const pkgDiff = diffs.find((d) => d.filepath === 'package.json')
+
+				expect(status).toBe('patch')
+				expect(pkgDiff?.after).not.toContain('"typecheck"')
+				expect(pkgDiff?.after).toContain('"biome"')
+				expect(pkgDiff?.after).toContain('"test"')
+				expect(pkgDiff?.after).toContain('"check:turbo"')
+				expect(pkgDiff?.after).toContain('turbo run biome typecheck test')
+
+				await fs.rm(tmpDir, { recursive: true })
+			})
+
+			it('adds all missing scripts when none exist', async () => {
+				const tmpDir = await fs.mkdtemp(
+					path.join(os.tmpdir(), 'xtarterize-all-missing-'),
+				)
+				await fs.writeFile(
+					path.join(tmpDir, 'package.json'),
+					JSON.stringify({
+						name: 'all-missing',
+						type: 'module',
+						scripts: {},
+						devDependencies: {
+							turbo: '^2.0.0',
+							typescript: '^5.3.0',
+							'@biomejs/biome': '^1.0.0',
+							vitest: '^1.0.0',
+						},
+					}),
+				)
+
+				const profile = await detectProject(tmpDir)
+				const diffs = await packageScriptsTask.dryRun(tmpDir, profile)
+				const pkgDiff = diffs.find((d) => d.filepath === 'package.json')
+
+				expect(pkgDiff?.after).toContain('"biome"')
+				expect(pkgDiff?.after).toContain('"biome:fix"')
+				expect(pkgDiff?.after).toContain('"test"')
+				expect(pkgDiff?.after).toContain('"typecheck"')
+				expect(pkgDiff?.after).toContain('"knip"')
+				expect(pkgDiff?.after).toContain('"upgrade"')
+				expect(pkgDiff?.after).toContain('"release"')
+				expect(pkgDiff?.after).toContain('"plop"')
+				expect(pkgDiff?.after).toContain('"check:turbo"')
+
+				await fs.rm(tmpDir, { recursive: true })
+			})
+		})
+
+		it('respects existing check:turbo with same tasks', async () => {
+			const tmpDir = await fs.mkdtemp(
+				path.join(os.tmpdir(), 'xtarterize-check-turbo-same-'),
+			)
+			await fs.writeFile(
+				path.join(tmpDir, 'package.json'),
+				JSON.stringify({
+					name: 'check-turbo-same',
+					type: 'module',
+					scripts: {
+						biome: 'biome check .',
+						typecheck: 'tsc --noEmit',
+						test: 'vitest run',
+						'check:turbo': 'turbo run biome typecheck test',
+					},
+					devDependencies: {
+						turbo: '^2.0.0',
+						typescript: '^5.3.0',
+						'@biomejs/biome': '^1.0.0',
+						vitest: '^1.0.0',
+					},
+				}),
+			)
+
+			const profile = await detectProject(tmpDir)
+			const status = await packageScriptsTask.check(tmpDir, profile)
+			const diffs = await packageScriptsTask.dryRun(tmpDir, profile)
+			const pkgDiff = diffs.find((d) => d.filepath === 'package.json')
+
+			expect(status).toBe('skip')
+			expect(pkgDiff?.after).not.toContain('check:turbo')
+
+			await fs.rm(tmpDir, { recursive: true })
+		})
+
+		it('overwrites existing check:turbo with different tasks', async () => {
+			const tmpDir = await fs.mkdtemp(
+				path.join(os.tmpdir(), 'xtarterize-check-turbo-diff-'),
+			)
+			await fs.writeFile(
+				path.join(tmpDir, 'package.json'),
+				JSON.stringify({
+					name: 'check-turbo-diff',
+					type: 'module',
+					scripts: {
+						'check:turbo': 'turbo run lint build',
+					},
+					devDependencies: {
+						turbo: '^2.0.0',
+						typescript: '^5.3.0',
+						'@biomejs/biome': '^1.0.0',
+						vitest: '^1.0.0',
+					},
+				}),
+			)
+
+			const profile = await detectProject(tmpDir)
+			const status = await packageScriptsTask.check(tmpDir, profile)
+			const diffs = await packageScriptsTask.dryRun(tmpDir, profile)
+			const pkgDiff = diffs.find((d) => d.filepath === 'package.json')
+
+			expect(status).toBe('patch')
+			expect(pkgDiff?.after).toContain('"check:turbo"')
+			expect(pkgDiff?.after).toContain('turbo run biome typecheck test')
+
+			await fs.rm(tmpDir, { recursive: true })
+		})
+	})
 })
 
 describe('plopTask', () => {

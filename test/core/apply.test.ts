@@ -110,7 +110,7 @@ describe('applyTasks', () => {
 		await fs.rm(tmpDir, { recursive: true })
 	})
 
-	it('skips conflict tasks unless they are selected intentionally', async () => {
+	it('skips conflict tasks unless includeConflicts is set', async () => {
 		const tmpDir = await fs.mkdtemp(
 			path.join(os.tmpdir(), 'xtarterize-conflict-'),
 		)
@@ -140,11 +140,22 @@ describe('applyTasks', () => {
 		expect(skipped.applied).toBe(0)
 		expect(applied).toBe(false)
 
-		const selected = await applyTasks([mockTask], tmpDir, profile, [
+		const withSelectedIds = await applyTasks([mockTask], tmpDir, profile, [
 			mockTask.id,
 		])
-		expect(selected.skipped).toBe(0)
-		expect(selected.applied).toBe(1)
+		expect(withSelectedIds.skipped).toBe(1)
+		expect(withSelectedIds.applied).toBe(0)
+		expect(applied).toBe(false)
+
+		const withIncludeConflicts = await applyTasks(
+			[mockTask],
+			tmpDir,
+			profile,
+			[mockTask.id],
+			{ includeConflicts: true },
+		)
+		expect(withIncludeConflicts.skipped).toBe(0)
+		expect(withIncludeConflicts.applied).toBe(1)
 		expect(applied).toBe(true)
 
 		await fs.rm(tmpDir, { recursive: true })

@@ -28,6 +28,10 @@ export const syncCommand = defineCommand({
 			type: 'boolean',
 			description: 'Suppress interactive prompts and verbose output',
 		},
+		includeConflicts: {
+			type: 'boolean',
+			description: 'Include conflicting tasks when applying (default: false)',
+		},
 	},
 	async run({ args }) {
 		await runCommand(resolveCwd(args), args, {
