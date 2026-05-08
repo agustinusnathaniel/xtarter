@@ -1,5 +1,23 @@
 # xtarterize
 
+## 1.5.0
+
+### Minor Changes
+
+- [`b9d0bc6`](https://github.com/agustinusnathaniel/xtarterize/commit/b9d0bc6569bc1b653e755e1454b389c0b78d340b) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - adds a new `doctor` command with human and JSON diagnostics output, expands machine-readable JSON output support across auditing commands, and refactors CLI command internals to share preflight/runtime/spinner utilities.
+
+  Core detection and reliability were improved by making backup index writes atomic/resilient and by improving monorepo detection for workspace package directories. Task internals were also refactored by splitting large factory helpers into smaller modules while preserving behavior.
+
+### Patch Changes
+
+- [`658c504`](https://github.com/agustinusnathaniel/xtarterize/commit/658c50470e462b958f0bcbc6a0eaeb92ed15acd0) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Refactor internal architecture by deepening module seams in project detection and task execution.
+
+  - modularize core detection into focused adapters (framework, bundler, router, styling, package manager, monorepo)
+  - centralize JSON config mutation flow in shared task helpers
+  - consolidate agent task behavior behind a dedicated agent module seam
+
+  These changes improve maintainability, testability, and consistency without changing end-user CLI behavior.
+
 ## 1.4.4
 
 ### Patch Changes
@@ -74,6 +92,7 @@
 - [`ccd9287`](https://github.com/agustinusnathaniel/xtarterize/commit/ccd9287afd967ed1ea0ef0c64b4a4a468e95b550) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - feat: add `patchJson` for surgical JSON text edits using `jsonc-parser`
 
   Replaced `JSON.stringify(mergeJson(...), null, 2)` with `patchJson`, which performs byte-level text edits via Microsoft's [`jsonc-parser`](https://github.com/microsoft/node-jsonc-parser). This preserves:
+
   - Comments (`// inline` and `/* block */`)
   - Key ordering
   - Whitespace and indentation style
