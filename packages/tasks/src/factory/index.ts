@@ -736,7 +736,7 @@ export {
 	findEquivalentScriptKey,
 	hasScriptWithEquivalentValue,
 	normalizeCommand,
-	PackageScriptsMap,
+	type PackageScriptsMap,
 } from './equivalence.js'
 export type { PackageJsonScriptEntry, PackageJsonTaskOptions } from './task.js'
 // ─── Re-exports from sub-modules ───
