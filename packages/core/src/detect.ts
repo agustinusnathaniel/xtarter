@@ -45,6 +45,58 @@ import { isStringRecord } from './detect/utils.js'
 
 export { detectFramework, detectPackageManager }
 
+// ConfigDetector: each detector maps to a key in ProjectProfile['existing']
+type ConfigDetector = {
+	key: keyof ProjectProfile['existing']
+	detect: (cwd: string) => Promise<boolean | string[]>
+}
+
+// Individual detector functions (defined before the array for hoisting)
+
+async function detectBiome(cwd: string): Promise<boolean> {
+	return findConfigFile(cwd, 'biome', ['.json', '.jsonc']).then(Boolean)
+}
+
+async function detectTsconfig(cwd: string): Promise<boolean> {
+	return findConfigFile(cwd, 'tsconfig', ['.json', '.jsonc']).then(Boolean)
+}
+
+async function detectRenovate(cwd: string): Promise<boolean> {
+	return findConfigFile(cwd, 'renovate', ['.json', '.jsonc']).then(Boolean)
+}
+
+async function detectCommitlint(cwd: string): Promise<boolean> {
+	return findConfigFile(cwd, 'commitlint.config', [
+		'.ts',
+		'.js',
+		'.mjs',
+		'.mts',
+		'.cts',
+	]).then(Boolean)
+}
+
+async function detectKnip(cwd: string): Promise<boolean> {
+	return findConfigFile(cwd, 'knip', ['.ts', '.mts']).then(Boolean)
+}
+
+async function detectPlop(cwd: string): Promise<boolean> {
+	return findConfigFile(cwd, 'plopfile', ['.ts', '.js', '.mjs']).then(Boolean)
+}
+
+async function detectTurbo(cwd: string): Promise<boolean> {
+	return fileExists(resolvePath(cwd, 'turbo.json'))
+}
+
+async function detectVscodeSettings(cwd: string): Promise<boolean> {
+	return fileExists(resolvePath(cwd, '.vscode', 'settings.json'))
+}
+
+async function detectAgentsMd(cwd: string): Promise<boolean> {
+	const found = await findConfigFile(cwd, 'AGENTS', ['.md']).then(Boolean)
+	if (found) return true
+	return fileExists(resolvePath(cwd, 'CLAUDE.md'))
+}
+
 async function detectGitHubWorkflows(cwd: string): Promise<string[]> {
 	const workflowsDir = resolvePath(cwd, '.github', 'workflows')
 	const exists = await fileExists(workflowsDir)
@@ -60,69 +112,53 @@ async function detectGitHubWorkflows(cwd: string): Promise<string[]> {
 		.map((e) => e.replace(/\.(yml|yaml)$/, ''))
 }
 
+async function detectViteConfig(cwd: string): Promise<boolean> {
+	return hasBundlerConfig(cwd, 'vite.config', [
+		'.ts',
+		'.js',
+		'.mts',
+		'.mjs',
+		'.cts',
+		'.cjs',
+	])
+}
+
+async function detectVersionrc(cwd: string): Promise<boolean> {
+	return fileExists(resolvePath(cwd, '.versionrc'))
+}
+
+async function detectGitignore(cwd: string): Promise<boolean> {
+	return fileExists(resolvePath(cwd, '.gitignore'))
+}
+
+// ConfigDetector array - order matters for the result object
+const CONFIG_DETECTORS: ConfigDetector[] = [
+	{ key: 'biome', detect: detectBiome },
+	{ key: 'tsconfig', detect: detectTsconfig },
+	{ key: 'renovate', detect: detectRenovate },
+	{ key: 'commitlint', detect: detectCommitlint },
+	{ key: 'knip', detect: detectKnip },
+	{ key: 'plop', detect: detectPlop },
+	{ key: 'turbo', detect: detectTurbo },
+	{ key: 'vscodeSettings', detect: detectVscodeSettings },
+	{ key: 'agentsMd', detect: detectAgentsMd },
+	{ key: 'githubWorkflows', detect: detectGitHubWorkflows },
+	{ key: 'viteConfig', detect: detectViteConfig },
+	{ key: 'versionrc', detect: detectVersionrc },
+	{ key: 'gitignore', detect: detectGitignore },
+]
+
 async function detectExistingConfigs(
 	cwd: string,
 ): Promise<ProjectProfile['existing']> {
-	const [
-		biome,
-		tsconfig,
-		renovate,
-		commitlint,
-		knip,
-		plop,
-		turbo,
-		vscodeSettings,
-		agentsMd,
-		githubWorkflows,
-		viteConfig,
-		versionrc,
-		gitignore,
-	] = await Promise.all([
-		findConfigFile(cwd, 'biome', ['.json', '.jsonc']).then(Boolean),
-		findConfigFile(cwd, 'tsconfig', ['.json', '.jsonc']).then(Boolean),
-		findConfigFile(cwd, 'renovate', ['.json', '.jsonc']).then(Boolean),
-		findConfigFile(cwd, 'commitlint.config', [
-			'.ts',
-			'.js',
-			'.mjs',
-			'.mts',
-			'.cts',
-		]).then(Boolean),
-		findConfigFile(cwd, 'knip', ['.ts', '.mts']).then(Boolean),
-		findConfigFile(cwd, 'plopfile', ['.ts', '.js', '.mjs']).then(Boolean),
-		fileExists(resolvePath(cwd, 'turbo.json')),
-		fileExists(resolvePath(cwd, '.vscode', 'settings.json')),
-		findConfigFile(cwd, 'AGENTS', ['.md'])
-			.then(Boolean)
-			.then((v) => v || fileExists(resolvePath(cwd, 'CLAUDE.md'))),
-		detectGitHubWorkflows(cwd),
-		hasBundlerConfig(cwd, 'vite.config', [
-			'.ts',
-			'.js',
-			'.mts',
-			'.mjs',
-			'.cts',
-			'.cjs',
-		]),
-		fileExists(resolvePath(cwd, '.versionrc')),
-		fileExists(resolvePath(cwd, '.gitignore')),
-	])
+	const results = await Promise.all(CONFIG_DETECTORS.map((d) => d.detect(cwd)))
 
-	return {
-		biome,
-		tsconfig,
-		renovate,
-		commitlint,
-		knip,
-		plop,
-		turbo,
-		vscodeSettings,
-		agentsMd,
-		githubWorkflows,
-		viteConfig,
-		versionrc,
-		gitignore,
+	const existing: Partial<ProjectProfile['existing']> = {}
+	for (let i = 0; i < CONFIG_DETECTORS.length; i++) {
+		;(existing as Record<string, unknown>)[CONFIG_DETECTORS[i].key] = results[i]
 	}
+
+	return existing as ProjectProfile['existing']
 }
 
 export async function detectProject(cwd: string): Promise<ProjectProfile> {
