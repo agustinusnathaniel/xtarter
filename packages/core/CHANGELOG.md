@@ -1,18 +1,22 @@
 # @xtarterize/core
 
+## 1.6.1
+
+### Patch Changes
+
+- [`acc82f8`](https://github.com/agustinusnathaniel/xtarter/commit/acc82f8b2f1f1ee2695ac85b92b03ef5cb9d1a72) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Internal refactoring: extract shared utilities, reorganize module structure, move deepEqual to @xtarterize/core, and rename apps/cli to apps/xtarterize.
+
 ## 1.6.0
 
 ### Patch Changes
 
 - [`82e1d9f`](https://github.com/agustinusnathaniel/xtarterize/commit/82e1d9f24fd223a8f3c15c0b516c89fe5537c105) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Improve script merging and task architecture
-
   - Enhance script merging logic with better conflict resolution
   - Improve task architecture for better maintainability
   - Add tests for scripts and codegen tasks
   - Update apply logic to not include conflicts by default unless explicitly requested
 
 - [`82e1d9f`](https://github.com/agustinusnathaniel/xtarterize/commit/82e1d9f24fd223a8f3c15c0b516c89fe5537c105) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Refactor `detectExistingConfigs` to be data-driven with `ConfigDetector[]`
-
   - Add `ConfigDetector` type mapping to keys in `ProjectProfile['existing']`
   - Implement individual detector functions for biome, tsconfig, renovate, commitlint, knip, plop, turbo, vscode, agents, github workflows, vite, versionrc, gitignore
   - Replace imperative detection logic with declarative detector array
