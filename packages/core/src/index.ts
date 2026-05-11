@@ -48,6 +48,7 @@ export {
 	writeJson,
 } from '@/utils/fs.js'
 export {
+	consola,
 	log,
 	logError,
 	logInfo,
@@ -62,3 +63,4 @@ export {
 	readPackageJson,
 	writePackageJson,
 } from '@/utils/pkg.js'
+export { abortIfCancelled, createSpinner, isCI } from '@/utils/prompts.js'

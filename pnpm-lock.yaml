@@ -83,9 +83,6 @@ importers:
       citty:
         specifier: 'catalog:'
         version: 0.2.2
-      consola:
-        specifier: 'catalog:'
-        version: 3.4.2
       giget:
         specifier: 'catalog:'
         version: 3.2.0
@@ -99,6 +96,9 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 25.6.0
+      '@xtarterize/core':
+        specifier: workspace:*
+        version: link:../../packages/core
       typescript:
         specifier: 'catalog:'
         version: 6.0.3
@@ -185,6 +185,9 @@ importers:
 
   packages/core:
     dependencies:
+      '@clack/prompts':
+        specifier: 'catalog:'
+        version: 1.3.0
       consola:
         specifier: 'catalog:'
         version: 3.4.2
