@@ -55,8 +55,8 @@ describe('autoUpdateWorkflowTask', () => {
 			profile,
 		)
 
-		expect(diff.after).toContain('npm-check-updates')
-		expect(diff.after).toContain('-u')
+		expect(diff.after).toContain('pnpm update')
+		expect(diff.after).toContain('pnpm dedupe')
 		expect(diff.after).toContain('pnpm run lint')
 		expect(diff.after).toContain('pnpm run typecheck')
 		expect(diff.after).toContain('pnpm run test')

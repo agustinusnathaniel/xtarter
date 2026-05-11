@@ -1,33 +1,55 @@
 import type { ProjectProfile } from '@xtarterize/core'
-import { dlxCommand, installDependenciesCommand, runScriptCommand } from 'nypm'
-
-function optionalScriptStep(
-	label: string,
-	command: string,
-	script: string,
-): string {
-	return `      - name: ${label}
-        run: |
-          if node -e "process.exit(require('./package.json').scripts?.${script} ? 0 : 1)"; then
-            ${command}
-          fi`
-}
+import { installDependenciesCommand, runScriptCommand } from 'nypm'
+import { ACTION_VERSIONS, NODE_VERSION } from './shared/versions.js'
+import type { YamlStep } from './shared/workflow.js'
+import { conditionalScriptStep, renderSteps } from './shared/workflow.js'
 
 export function renderAutoUpdateWorkflow(profile: ProjectProfile): string {
 	const pm = profile.packageManager
 	const installCmd = installDependenciesCommand(pm)
-	const dlx = dlxCommand(pm, 'npm-check-updates')
+	const updateCmd = pm === 'npm' ? 'npx npm-check-updates -u' : `${pm} update`
+	const dedupeCmd = `${pm} dedupe`
 	const runLint = runScriptCommand(pm, 'lint')
 	const runTypecheck = runScriptCommand(pm, 'typecheck')
 	const runTest = runScriptCommand(pm, 'test')
-	const setupCache = pm === 'bun' ? '' : `\n          cache: ${pm}`
-	const qualitySteps = [`      - run: ${runLint}`]
 
-	if (profile.typescript) {
-		qualitySteps.push(`      - run: ${runTypecheck}`)
+	const steps: YamlStep[] = [{ uses: ACTION_VERSIONS.CHECKOUT }]
+
+	if (pm === 'pnpm') {
+		steps.push({ uses: ACTION_VERSIONS.PNPM_SETUP, with: { cache: 'true' } })
 	}
 
-	qualitySteps.push(optionalScriptStep('Test', runTest, 'test'))
+	steps.push(
+		{
+			uses: ACTION_VERSIONS.SETUP_NODE,
+			with: {
+				'node-version': String(NODE_VERSION),
+				...(pm !== 'bun' ? { cache: pm } : {}),
+			},
+		},
+		{
+			name: 'Update dependencies',
+			run: `${installCmd}\n${updateCmd}\n${dedupeCmd}`,
+		},
+		{ run: runLint },
+	)
+
+	if (profile.typescript) {
+		steps.push({ run: runTypecheck })
+	}
+
+	steps.push(conditionalScriptStep('Test', runTest, 'test'))
+
+	steps.push({
+		uses: ACTION_VERSIONS.CREATE_PR,
+		with: {
+			'commit-message': 'chore(deps): update dependencies',
+			title: 'chore(deps): update dependencies',
+			body: 'Automated dependency updates',
+			branch: 'chore/update-dependencies',
+			'delete-branch': 'true',
+		},
+	})
 
 	return `name: Auto Update Dependencies
 
@@ -44,20 +66,6 @@ jobs:
   update:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-${pm === 'pnpm' ? '      - uses: pnpm/action-setup@v6\n' : ''}      - uses: actions/setup-node@v6
-        with:
-          node-version: 20${setupCache}
-      - run: ${installCmd}
-      - run: ${dlx} -u
-      - run: ${installCmd}
-${qualitySteps.join('\n')}
-      - uses: peter-evans/create-pull-request@v8
-        with:
-          commit-message: 'chore(deps): update dependencies'
-          title: 'chore(deps): update dependencies'
-          body: 'Automated dependency updates'
-          branch: chore/update-dependencies
-          delete-branch: true
+${renderSteps(steps, 6)}
 `
 }
