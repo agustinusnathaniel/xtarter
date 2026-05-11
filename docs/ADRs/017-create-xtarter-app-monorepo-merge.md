@@ -1,4 +1,4 @@
-# ADR-016: Merge create-xtarter-app into xtarterize Monorepo
+# ADR-017: Merge create-xtarter-app into xtarterize Monorepo
 
 **Status:** Accepted
 **Date:** 2026-05-11
