@@ -1,5 +1,11 @@
 # xtarterize
 
+## 1.8.0
+
+### Minor Changes
+
+- [`03231fa`](https://github.com/agustinusnathaniel/xtarter/commit/03231fa33b95f17143a7d78093c8d7cf9614e602) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Enhanced `doctor` command with grouped output (Environment, Tools, Project, Configuration), environment and project health checks, installed tool version display, and `--verbose` flag for system information.
+
 ## 1.7.0
 
 ## 1.6.1
