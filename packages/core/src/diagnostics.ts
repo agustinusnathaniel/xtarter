@@ -8,16 +8,129 @@ export interface DiagnosticCheck {
 	message: string
 }
 
+export async function getToolVersion(
+	tool: string,
+	cwd: string,
+): Promise<string | null> {
+	try {
+		const result = await x(tool, ['--version'], { nodeOptions: { cwd } })
+		if (result.exitCode === 0) {
+			return result.stdout.trim().split('\n')[0] || null
+		}
+		return null
+	} catch {
+		return null
+	}
+}
+
 export async function checkToolInstalled(
 	tool: string,
 	cwd: string,
 ): Promise<boolean> {
-	try {
-		const result = await x(tool, ['--version'], { nodeOptions: { cwd } })
-		return result.exitCode === 0
-	} catch {
-		return false
+	const version = await getToolVersion(tool, cwd)
+	return version !== null
+}
+
+export async function runEnvironmentChecks(
+	cwd: string,
+): Promise<DiagnosticCheck[]> {
+	const checks: DiagnosticCheck[] = []
+	const pkg = await readPackageJson(cwd)
+
+	const nodeVersion = process.version
+	const engineNode = pkg?.engines?.node
+	let nodeSatisfies = true
+
+	if (engineNode) {
+		const nodeMajor = Number.parseInt(nodeVersion.slice(1).split('.')[0], 10)
+		const cleanRange = engineNode.replace(/[>=<^~ ]/g, '').split('.')[0]
+		const engineMajor = Number.parseInt(cleanRange, 10)
+		if (!Number.isNaN(engineMajor)) {
+			nodeSatisfies = nodeMajor >= engineMajor
+		}
 	}
+
+	checks.push({
+		name: 'Node.js',
+		status: nodeSatisfies ? 'pass' : 'warn',
+		message: engineNode
+			? `Node.js ${nodeVersion} (required: ${engineNode})`
+			: `Node.js ${nodeVersion}`,
+	})
+
+	const gitVersion = await getToolVersion('git', cwd)
+	checks.push({
+		name: 'Git',
+		status: gitVersion ? 'pass' : 'fail',
+		message: gitVersion
+			? `Git ${gitVersion}`
+			: 'Git is not installed (required by xtarterize)',
+	})
+
+	return checks
+}
+
+export async function runProjectHealthChecks(
+	cwd: string,
+): Promise<DiagnosticCheck[]> {
+	const checks: DiagnosticCheck[] = []
+	const pkg = await readPackageJson(cwd)
+	if (!pkg) return checks
+
+	const deps = { ...pkg.dependencies, ...pkg.devDependencies }
+
+	const lockfiles = [
+		['pnpm-lock.yaml', 'pnpm'],
+		['package-lock.json', 'npm'],
+		['yarn.lock', 'yarn'],
+		['bun.lock', 'bun'],
+		['bun.lockb', 'bun'],
+	] as const
+
+	const lockfileDetected = (
+		await Promise.all(
+			lockfiles.map(([file]) => fileExists(resolvePath(cwd, file))),
+		)
+	).some(Boolean)
+
+	checks.push({
+		name: 'Lockfile',
+		status: lockfileDetected ? 'pass' : 'warn',
+		message: lockfileDetected
+			? 'Lockfile found — dependencies are locked'
+			: 'No lockfile found — dependencies may not be reproducible',
+	})
+
+	if (deps.typescript) {
+		const hasTsconfig = await fileExists(resolvePath(cwd, 'tsconfig.json'))
+		checks.push({
+			name: 'TypeScript config',
+			status: hasTsconfig ? 'pass' : 'warn',
+			message: hasTsconfig
+				? 'TypeScript config found (tsconfig.json)'
+				: 'TypeScript is a dependency but tsconfig.json is missing',
+		})
+	}
+
+	const hasReadme = await fileExists(resolvePath(cwd, 'README.md'))
+	checks.push({
+		name: 'README',
+		status: hasReadme ? 'pass' : 'warn',
+		message: hasReadme
+			? 'README.md found'
+			: 'No README.md — consider adding one',
+	})
+
+	const hasGitignore = await fileExists(resolvePath(cwd, '.gitignore'))
+	checks.push({
+		name: '.gitignore',
+		status: hasGitignore ? 'pass' : 'warn',
+		message: hasGitignore
+			? '.gitignore found'
+			: 'No .gitignore — generated files may be tracked',
+	})
+
+	return checks
 }
 
 export async function runConflictChecks(
@@ -29,7 +142,6 @@ export async function runConflictChecks(
 
 	const deps = { ...pkg.dependencies, ...pkg.devDependencies }
 
-	// Check for Biome + ESLint conflict
 	const hasBiome = !!deps['@biomejs/biome']
 	const hasEslint = !!deps.eslint
 	const hasPrettier = !!deps.prettier
@@ -52,7 +164,6 @@ export async function runConflictChecks(
 		})
 	}
 
-	// Check for legacy ESLint config files
 	const legacyEslintConfigs = [
 		'.eslintrc',
 		'.eslintrc.js',
@@ -96,31 +207,24 @@ export async function runToolInstallationChecks(
 	const toolsToCheck: {
 		name: string
 		dep: string
-		required: boolean
-		cmd?: string
+		cmd: string
 	}[] = [
-		{ name: 'Biome', dep: '@biomejs/biome', required: false, cmd: 'biome' },
-		{ name: 'ESLint', dep: 'eslint', required: false, cmd: 'eslint' },
-		{ name: 'TypeScript', dep: 'typescript', required: false, cmd: 'tsc' },
-		{
-			name: 'Commitlint',
-			dep: '@commitlint/cli',
-			required: false,
-			cmd: 'commitlint',
-		},
-		{ name: 'Knip', dep: 'knip', required: false, cmd: 'knip' },
+		{ name: 'Biome', dep: '@biomejs/biome', cmd: 'biome' },
+		{ name: 'ESLint', dep: 'eslint', cmd: 'eslint' },
+		{ name: 'TypeScript', dep: 'typescript', cmd: 'tsc' },
+		{ name: 'Commitlint', dep: '@commitlint/cli', cmd: 'commitlint' },
+		{ name: 'Knip', dep: 'knip', cmd: 'knip' },
 	]
 
 	for (const tool of toolsToCheck) {
 		if (deps[tool.dep]) {
-			const cmd = tool.cmd ?? tool.name.toLowerCase()
-			const installed = await checkToolInstalled(cmd, cwd)
+			const version = await getToolVersion(tool.cmd, cwd)
 			checks.push({
 				name: `${tool.name} installation`,
-				status: installed ? 'pass' : tool.required ? 'fail' : 'warn',
-				message: installed
-					? `${tool.name} is installed`
-					: `${tool.name} is in package.json but not installed (run install)`,
+				status: version ? 'pass' : 'warn',
+				message: version
+					? `${tool.name} ${version} is installed`
+					: `${tool.name} is in package.json but not installed (run \`pnpm install\`)`,
 			})
 		}
 	}

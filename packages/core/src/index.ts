@@ -25,7 +25,10 @@ export {
 export type { DiagnosticCheck } from '@/diagnostics.js'
 export {
 	checkToolInstalled,
+	getToolVersion,
 	runConflictChecks,
+	runEnvironmentChecks,
+	runProjectHealthChecks,
 	runToolInstallationChecks,
 } from '@/diagnostics.js'
 export type { PreflightError, PreflightResult } from '@/preflight.js'
