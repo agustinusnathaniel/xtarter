@@ -66,7 +66,7 @@ xtarterize/
 │   ├── patchers/      # JSON merge, YAML merge, AST patching (magicast)
 │   └── tasks/         # All task implementations + templates
 ├── apps/
-│   ├── cli/           # CLI entry point, commands, UI
+│   ├── xtarterize/     # CLI entry point, commands, UI
 │   └── create-xtarter-app/  # Project scaffolding CLI (Next.js/Vite templates)
 ├── test/              # Shared test fixtures and test suites
 ├── turbo.json
@@ -80,7 +80,7 @@ xtarterize/
 | `@xtarterize/core` | Project detection, task interface, file utilities, resolve/apply/backup engine | Yes |
 | `@xtarterize/patchers` | Deep merge (defu), YAML merge, AST patching (magicast) for config files | Yes |
 | `@xtarterize/tasks` | All task implementations and template renderers | Internal |
-| `xtarterize` (apps/cli) | CLI application using citty + @clack/prompts | Yes (as `xtarterize`) |
+| `xtarterize` (apps/xtarterize) | CLI application using citty + @clack/prompts | Yes (as `xtarterize`) |
 | `create-xtarter-app` (apps/create-xtarter-app) | Project scaffolding CLI (Next.js/Vite templates) | Yes (as `create-xtarter-app`) |
 
 ## Contributing a New Task

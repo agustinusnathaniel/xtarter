@@ -15,7 +15,7 @@ Before proposing any change:
   - `packages/core/` — project detection, task interface, file utilities, resolve/apply/backup engine
   - `packages/patchers/` — JSON merge, YAML merge, AST patching (magicast)
   - `packages/tasks/` — all task implementations and template renderers
-  - `apps/cli/` — CLI entry point using citty + @clack/prompts
+  - `apps/xtarterize/` — CLI entry point using citty + @clack/prompts
   - `apps/create-xtarter-app/` — project scaffolding CLI (Next.js/Vite templates)
   - `apps/docs/` — Astro + Starlight documentation site
   - `test/` — shared test fixtures and test suites
@@ -30,7 +30,7 @@ Before proposing any change:
 
 - Read the linked issue, PR description, or task thoroughly.
 - Identify the acceptance criteria. If they are ambiguous, ask for clarification before coding.
-- Determine which package(s) are affected: core, patchers, tasks, cli, create-xtarter-app, or docs.
+- Determine which package(s) are affected: core, patchers, tasks, xtarterize, create-xtarter-app, or docs.
 - Map the problem to existing abstractions (Task interface, patchers, detection engine) before inventing new ones.
 
 ## 3. Read the Architecture Decision Records (ADRs)
@@ -148,7 +148,7 @@ If your change affects behavior, architecture, or user-facing features, update t
 | Core utilities         | `packages/core/src/`                                |
 | Patching engine        | `packages/patchers/src/`                            |
 | Task implementations   | `packages/tasks/src/`                               |
-| CLI commands           | `apps/cli/src/commands/`                            |
+| CLI commands           | `apps/xtarterize/src/commands/`                    |
 | Publishable docs       | `apps/docs/src/content/docs/`                       |
 | Scaffolding CLI        | `apps/create-xtarter-app/src/`                      |
 | Tests                  | `test/`                                             |
