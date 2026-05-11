@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.2.1
+
+### Patch Changes
+
+- [`b2d0b5a`](https://github.com/agustinusnathaniel/xtarter/commit/b2d0b5a35f0b79e277bf736888e5cb0b09e1409c) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - refactor: migrate to use @xtarterize/core CLI utilities and citty subcommands; remove direct consola dependency
+
 ## 1.2.0
 
 ### Minor Changes

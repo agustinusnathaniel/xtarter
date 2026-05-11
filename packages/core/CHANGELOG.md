@@ -1,5 +1,11 @@
 # @xtarterize/core
 
+## 1.7.0
+
+### Minor Changes
+
+- [`b2d0b5a`](https://github.com/agustinusnathaniel/xtarter/commit/b2d0b5a35f0b79e277bf736888e5cb0b09e1409c) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - feat: add shared CLI utilities (abortIfCancelled, createSpinner, isCI) and re-export consola from core for use by xtarterize and create-xtarter-app apps
+
 ## 1.6.1
 
 ### Patch Changes
