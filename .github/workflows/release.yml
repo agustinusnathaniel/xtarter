@@ -48,7 +48,6 @@ jobs:
         with:
           node-version: 24
           check-latest: true
-          registry-url: "https://registry.npmjs.org"
 
       - uses: pnpm/action-setup@v6
         with:
@@ -70,5 +69,3 @@ jobs:
           commit: "chore: version packages"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
