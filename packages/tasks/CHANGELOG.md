@@ -1,18 +1,26 @@
 # @xtarterize/tasks
 
+## 1.6.1
+
+### Patch Changes
+
+- [`acc82f8`](https://github.com/agustinusnathaniel/xtarter/commit/acc82f8b2f1f1ee2695ac85b92b03ef5cb9d1a72) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Internal refactoring: extract shared utilities, reorganize module structure, move deepEqual to @xtarterize/core, and rename apps/cli to apps/xtarterize.
+
+- Updated dependencies [[`acc82f8`](https://github.com/agustinusnathaniel/xtarter/commit/acc82f8b2f1f1ee2695ac85b92b03ef5cb9d1a72)]:
+  - @xtarterize/core@1.6.1
+  - @xtarterize/patchers@1.6.1
+
 ## 1.6.0
 
 ### Minor Changes
 
 - [`82e1d9f`](https://github.com/agustinusnathaniel/xtarterize/commit/82e1d9f24fd223a8f3c15c0b516c89fe5537c105) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Improve script merging and task architecture
-
   - Enhance script merging logic with better conflict resolution
   - Improve task architecture for better maintainability
   - Add tests for scripts and codegen tasks
   - Update apply logic to not include conflicts by default unless explicitly requested
 
 - [`82e1d9f`](https://github.com/agustinusnathaniel/xtarterize/commit/82e1d9f24fd223a8f3c15c0b516c89fe5537c105) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Refactor tasks package with data-driven patterns
-
   - Consolidate factory into `factory/` directory with proper module structure
   - Make equivalence checks data-driven with `EquivalenceRule[]`
   - Add `factory/equivalence-data.ts` for shared equivalence rules
@@ -25,13 +33,11 @@
 ### Patch Changes
 
 - [`82e1d9f`](https://github.com/agustinusnathaniel/xtarterize/commit/82e1d9f24fd223a8f3c15c0b516c89fe5537c105) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Add ADR for pragmatic script merge strategy
-
   - Document the decision to use data-driven equivalence rules
   - Explain the factory consolidation approach
   - Provide rationale for script merging architecture
 
 - [`890eab5`](https://github.com/agustinusnathaniel/xtarterize/commit/890eab57054e0b953cb42ba0884e0b2c6770bc82) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Fix TypeScript build error for type imports
-
   - Add `type` modifier to `PackageScriptsMap` import in `factory/index.ts`
   - Fixes: `"PackageScriptsMap" is not exported` build error with tsdown/rolldown
 
@@ -141,7 +147,6 @@
 - [`ccd9287`](https://github.com/agustinusnathaniel/xtarterize/commit/ccd9287afd967ed1ea0ef0c64b4a4a468e95b550) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - feat: add `patchJson` for surgical JSON text edits using `jsonc-parser`
 
   Replaced `JSON.stringify(mergeJson(...), null, 2)` with `patchJson`, which performs byte-level text edits via Microsoft's [`jsonc-parser`](https://github.com/microsoft/node-jsonc-parser). This preserves:
-
   - Comments (`// inline` and `/* block */`)
   - Key ordering
   - Whitespace and indentation style
@@ -166,7 +171,6 @@
 ### Patch Changes
 
 - [`ccd9287`](https://github.com/agustinusnathaniel/xtarterize/commit/ccd9287afd967ed1ea0ef0c64b4a4a468e95b550) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - fix: `renovateTask` and `biomeTask` extends handling
-
   - Converted `renovateTask` from `createSimpleFileTask` to `createJsonMergeTask` so it properly deep-merges with existing `renovate.json` / `renovate.json5` configs instead of conflicting when the file already exists
   - Fixed `biomeTask` to handle string-form `extends` values (e.g., `"extends": "ultracite"`) in addition to arrays
   - Added `checkFn` to `renovateTask` for proper `skip` detection when the config already matches
@@ -176,7 +180,6 @@
   `resolveTaskFile` used `filepath.replace(/\.[^.]+$/, '')` which stripped the `.config` suffix from names like `commitlint.config.ts`, causing the file finder to search for `commitlint.ts` instead of `commitlint.config.ts`. The logic now checks whether the existing extension is in the allowed list before stripping, and falls back to searching with the full filename.
 
 - [`5b93cc4`](https://github.com/agustinusnathaniel/xtarterize/commit/5b93cc443fbe95d6ec777daa1f47e4520e25f3e1) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - chore: update dependencies to latest safe versions
-
   - `@clack/prompts` ^1.2.0 → ^1.3.0
   - `astro` ^6.1.10 → ^6.2.1
   - `sharp` ^0.34.3 → ^0.34.5

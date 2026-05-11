@@ -1,11 +1,16 @@
 # xtarterize
 
+## 1.6.1
+
+### Patch Changes
+
+- [`acc82f8`](https://github.com/agustinusnathaniel/xtarter/commit/acc82f8b2f1f1ee2695ac85b92b03ef5cb9d1a72) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Internal refactoring: extract shared utilities, reorganize module structure, move deepEqual to @xtarterize/core, and rename apps/cli to apps/xtarterize.
+
 ## 1.6.0
 
 ### Minor Changes
 
 - [`82e1d9f`](https://github.com/agustinusnathaniel/xtarterize/commit/82e1d9f24fd223a8f3c15c0b516c89fe5537c105) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Improve script merging and task architecture
-
   - Enhance script merging logic with better conflict resolution
   - Improve task architecture for better maintainability
   - Add tests for scripts and codegen tasks
@@ -14,11 +19,9 @@
 ### Patch Changes
 
 - [`82e1d9f`](https://github.com/agustinusnathaniel/xtarterize/commit/82e1d9f24fd223a8f3c15c0b516c89fe5537c105) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Update .gitignore
-
   - Add missing ignore patterns for better monorepo hygiene
 
 - [`82e1d9f`](https://github.com/agustinusnathaniel/xtarterize/commit/82e1d9f24fd223a8f3c15c0b516c89fe5537c105) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Refactor CLI run-command to extract seams
-
   - Extract god-function seams into smaller, focused functions
   - Improve code organization in `apps/cli/src/commands/run-command.ts`
   - Update init and sync commands for consistency
@@ -34,7 +37,6 @@
 ### Patch Changes
 
 - [`658c504`](https://github.com/agustinusnathaniel/xtarterize/commit/658c50470e462b958f0bcbc6a0eaeb92ed15acd0) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Refactor internal architecture by deepening module seams in project detection and task execution.
-
   - modularize core detection into focused adapters (framework, bundler, router, styling, package manager, monorepo)
   - centralize JSON config mutation flow in shared task helpers
   - consolidate agent task behavior behind a dedicated agent module seam
@@ -115,7 +117,6 @@
 - [`ccd9287`](https://github.com/agustinusnathaniel/xtarterize/commit/ccd9287afd967ed1ea0ef0c64b4a4a468e95b550) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - feat: add `patchJson` for surgical JSON text edits using `jsonc-parser`
 
   Replaced `JSON.stringify(mergeJson(...), null, 2)` with `patchJson`, which performs byte-level text edits via Microsoft's [`jsonc-parser`](https://github.com/microsoft/node-jsonc-parser). This preserves:
-
   - Comments (`// inline` and `/* block */`)
   - Key ordering
   - Whitespace and indentation style

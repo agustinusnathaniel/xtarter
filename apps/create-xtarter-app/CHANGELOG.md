@@ -1,19 +1,23 @@
 # Changelog
 
+## 1.2.0
+
+### Minor Changes
+
+- [#21](https://github.com/agustinusnathaniel/xtarter/pull/21) [`b2bf637`](https://github.com/agustinusnathaniel/xtarter/commit/b2bf637f0625c1d3e350d6823ac424f80f6a7f9f) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Migrate into xtarterize monorepo: adopt changesets for versioning, biome for formatting, and pnpm workspace catalog for dependencies. Drop ultracite and commit-and-tag-version.
+
 All notable changes to this project will be documented in this file. See [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) for commit guidelines.
 
 ## 1.1.0 (2026-03-31)
 
-
 ### Features
 
-* add tests, --yes flag, error recovery, and template preview ([61ce7c5](https://github.com/agustinusnathaniel/create-xtarter-app/commit/61ce7c5a7f0d73517fa58fd6f907d0158e03f6fa))
-
+- add tests, --yes flag, error recovery, and template preview ([61ce7c5](https://github.com/agustinusnathaniel/create-xtarter-app/commit/61ce7c5a7f0d73517fa58fd6f907d0158e03f6fa))
 
 ### Bug Fixes
 
-* resolve all pnpm fix issues ([f7eeaa8](https://github.com/agustinusnathaniel/create-xtarter-app/commit/f7eeaa85918516d57add132875fe43ac8ba6ac7f))
-* type check ([d298a2d](https://github.com/agustinusnathaniel/create-xtarter-app/commit/d298a2d0fc0dca9aec791c6158dffe57a81a8b31))
+- resolve all pnpm fix issues ([f7eeaa8](https://github.com/agustinusnathaniel/create-xtarter-app/commit/f7eeaa85918516d57add132875fe43ac8ba6ac7f))
+- type check ([d298a2d](https://github.com/agustinusnathaniel/create-xtarter-app/commit/d298a2d0fc0dca9aec791c6158dffe57a81a8b31))
 
 ## [1.0.2](https://github.com/agustinusnathaniel/create-xtarter-app/compare/v1.0.1...v1.0.2) (2026-03-31)
 
@@ -21,12 +25,10 @@ All notable changes to this project will be documented in this file. See [commit
 
 ## 1.0.0 (2026-03-30)
 
-
 ### Features
 
-* add tests, --yes flag, error recovery, and template preview ([61ce7c5](https://github.com/agustinusnathaniel/create-xtarter-app/commit/61ce7c5a7f0d73517fa58fd6f907d0158e03f6fa))
-
+- add tests, --yes flag, error recovery, and template preview ([61ce7c5](https://github.com/agustinusnathaniel/create-xtarter-app/commit/61ce7c5a7f0d73517fa58fd6f907d0158e03f6fa))
 
 ### Bug Fixes
 
-* resolve all pnpm fix issues ([f7eeaa8](https://github.com/agustinusnathaniel/create-xtarter-app/commit/f7eeaa85918516d57add132875fe43ac8ba6ac7f))
+- resolve all pnpm fix issues ([f7eeaa8](https://github.com/agustinusnathaniel/create-xtarter-app/commit/f7eeaa85918516d57add132875fe43ac8ba6ac7f))
