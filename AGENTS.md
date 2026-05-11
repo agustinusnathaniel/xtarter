@@ -37,7 +37,13 @@ Before proposing any change:
 
 All significant architectural decisions are recorded in `docs/ADRs/`. You **must** read any ADR relevant to your change before implementation.
 
-All ADRs are in `docs/ADRs/`. Read any ADR relevant to your change before implementation.
+| Scope | Location |
+|-------|----------|
+| Monorepo-level (infra, release, workspace) | `docs/ADRs/` |
+| xtarterize CLI (detection, patchers, tasks, CI) | `docs/ADRs/xtarterize/` |
+| create-xtarter-app (scaffolding) | `docs/ADRs/create-xtarter-app/` |
+
+Read any ADR relevant to your change before implementation.
 
 If your change introduces a new architectural pattern, dependency, or structural change, **create a new ADR** following the existing format (Status, Date, Context, Decision, Rationale, Alternatives, Consequences).
 
@@ -124,7 +130,7 @@ After implementation and testing are complete, commit the changes:
 
 If your change affects behavior, architecture, or user-facing features, update the relevant documentation:
 
-- **Internal decisions**: Add or update ADRs in `docs/ADRs/`.
+- **Internal decisions**: Add or update ADRs in the appropriate `docs/ADRs/` subdirectory (monorepo-level in `docs/ADRs/`, xtarterize-specific in `docs/ADRs/xtarterize/`, create-xtarter-app-specific in `docs/ADRs/create-xtarter-app/`).
 - **Publishable docs**: Update the Astro Starlight site in `apps/docs/src/content/docs/`:
   - CLI commands or behavior changes → `apps/docs/src/content/docs/guide/cli/`
   - Task system or contributing changes → `apps/docs/src/content/docs/contributing/`
@@ -141,8 +147,8 @@ If your change affects behavior, architecture, or user-facing features, update t
 | ---------------------- | --------------------------------------------------- |
 | Project overview       | `README.md`                                         |
 | Architecture decisions | `docs/ADRs/`                                        |
-| Import conventions     | `docs/ADRs/013-dynamic-import-conventions.md`       |
-| Vite Plus migration    | `docs/ADRs/014-vite-plus-migration.md`              |
+| Import conventions     | `docs/ADRs/xtarterize/013-dynamic-import-conventions.md` |
+| Vite Plus migration    | `docs/ADRs/xtarterize/014-vite-plus-migration.md`   |
 | pnpm catalog policy    | `docs/ADRs/015-pnpm-catalog-shared-dependencies.md` |
 | Task interface         | `packages/core/src/_base.ts`                        |
 | Core utilities         | `packages/core/src/`                                |
