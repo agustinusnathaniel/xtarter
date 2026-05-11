@@ -16,6 +16,7 @@ Before proposing any change:
   - `packages/patchers/` — JSON merge, YAML merge, AST patching (magicast)
   - `packages/tasks/` — all task implementations and template renderers
   - `apps/cli/` — CLI entry point using citty + @clack/prompts
+  - `apps/create-xtarter-app/` — project scaffolding CLI (Next.js/Vite templates)
   - `apps/docs/` — Astro + Starlight documentation site
   - `test/` — shared test fixtures and test suites
 - **Check recent changes** to understand the current implementation state:
@@ -29,7 +30,7 @@ Before proposing any change:
 
 - Read the linked issue, PR description, or task thoroughly.
 - Identify the acceptance criteria. If they are ambiguous, ask for clarification before coding.
-- Determine which package(s) are affected: core, patchers, tasks, cli, or docs.
+- Determine which package(s) are affected: core, patchers, tasks, cli, create-xtarter-app, or docs.
 - Map the problem to existing abstractions (Task interface, patchers, detection engine) before inventing new ones.
 
 ## 3. Read the Architecture Decision Records (ADRs)
@@ -149,6 +150,7 @@ If your change affects behavior, architecture, or user-facing features, update t
 | Task implementations   | `packages/tasks/src/`                               |
 | CLI commands           | `apps/cli/src/commands/`                            |
 | Publishable docs       | `apps/docs/src/content/docs/`                       |
+| Scaffolding CLI        | `apps/create-xtarter-app/src/`                      |
 | Tests                  | `test/`                                             |
 | Workspace scripts      | Root `package.json`                                 |
 
@@ -167,6 +169,7 @@ Docs are local at `node_modules/vite-plus/docs` or online at https://viteplus.de
 ## Review Checklist
 
 - [ ] Run `vp install` after pulling remote changes and before getting started.
+- [ ] Run `vp check` and `vp test` to format, lint, type check and test changes.
 - [ ] Check if there are `vite.config.ts` tasks or `package.json` scripts necessary for validation, run via `vp run <script>`.
 
 <!--VITE PLUS END-->
