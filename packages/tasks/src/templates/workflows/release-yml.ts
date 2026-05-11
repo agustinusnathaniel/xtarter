@@ -1,17 +1,8 @@
 import type { ProjectProfile } from '@xtarterize/core'
 import { installDependenciesCommand, runScriptCommand } from 'nypm'
-
-function optionalScriptStep(
-	label: string,
-	command: string,
-	script: string,
-): string {
-	return `      - name: ${label}
-        run: |
-          if node -e "process.exit(require('./package.json').scripts?.${script} ? 0 : 1)"; then
-            ${command}
-          fi`
-}
+import { ACTION_VERSIONS, NODE_VERSION } from './shared/versions.js'
+import type { YamlStep } from './shared/workflow.js'
+import { conditionalScriptStep, renderSteps } from './shared/workflow.js'
 
 export function renderReleaseWorkflow(profile: ProjectProfile): string {
 	const pm = profile.packageManager
@@ -20,26 +11,31 @@ export function renderReleaseWorkflow(profile: ProjectProfile): string {
 	const runTypecheck = runScriptCommand(pm, 'typecheck')
 	const runTest = runScriptCommand(pm, 'test')
 	const runRelease = runScriptCommand(pm, 'release')
-	const setupCache = pm === 'bun' ? '' : `\n          cache: ${pm}`
 
-	const pnpmSetup = pm === 'pnpm' ? ['      - uses: pnpm/action-setup@v6'] : []
+	const steps: YamlStep[] = [{ uses: ACTION_VERSIONS.CHECKOUT }]
 
-	const steps = [
-		'      - uses: actions/checkout@v6',
-		...pnpmSetup,
-		'      - uses: actions/setup-node@v6',
-		'        with:',
-		`          node-version: 20${setupCache}`,
-		`      - run: ${installCmd}`,
-		`      - run: ${runLint}`,
-	]
-
-	if (profile.typescript) {
-		steps.push(`      - run: ${runTypecheck}`)
+	if (pm === 'pnpm') {
+		steps.push({ uses: ACTION_VERSIONS.PNPM_SETUP, with: { cache: 'true' } })
 	}
 
-	steps.push(optionalScriptStep('Test', runTest, 'test'))
-	steps.push(`      - run: ${runRelease}`)
+	steps.push(
+		{
+			uses: ACTION_VERSIONS.SETUP_NODE,
+			with: {
+				'node-version': String(NODE_VERSION),
+				...(pm !== 'bun' ? { cache: pm } : {}),
+			},
+		},
+		{ run: installCmd },
+		{ run: runLint },
+	)
+
+	if (profile.typescript) {
+		steps.push({ run: runTypecheck })
+	}
+
+	steps.push(conditionalScriptStep('Test', runTest, 'test'))
+	steps.push({ run: runRelease })
 
 	return `name: Release
 
@@ -52,6 +48,6 @@ jobs:
   release:
     runs-on: ubuntu-latest
     steps:
-${steps.join('\n')}
+${renderSteps(steps, 6)}
 `
 }
