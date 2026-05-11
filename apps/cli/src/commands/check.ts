@@ -1,22 +1,11 @@
-import type { DiagnosticCheck } from '@xtarterize/core'
 import {
 	pc,
 	runConflictChecks,
 	runToolInstallationChecks,
 } from '@xtarterize/core'
 import { defineCommand } from 'citty'
+import { diagnosticIcon } from '@/utils/display.js'
 import { resolveCliContext, scanProject } from '@/utils/project.js'
-
-function diagnosticIcon(status: DiagnosticCheck['status']): string {
-	switch (status) {
-		case 'pass':
-			return pc.green('✔')
-		case 'warn':
-			return pc.yellow('~')
-		case 'fail':
-			return pc.red('✗')
-	}
-}
 
 export const checkCommand = defineCommand({
 	meta: {

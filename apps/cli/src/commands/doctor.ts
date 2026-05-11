@@ -1,4 +1,3 @@
-import type { DiagnosticCheck } from '@xtarterize/core'
 import {
 	pc,
 	runConflictChecks,
@@ -7,20 +6,10 @@ import {
 } from '@xtarterize/core'
 import { defineCommand } from 'citty'
 import { resolveCwd } from '@/utils/cwd.js'
+import { diagnosticIcon } from '@/utils/display.js'
 import { handlePreflightFailure } from '@/utils/preflight.js'
 import { resolveRuntimeFlags } from '@/utils/runtime-flags.js'
 import { createSpinner } from '@/utils/spinner.js'
-
-function diagnosticIcon(status: DiagnosticCheck['status']): string {
-	switch (status) {
-		case 'pass':
-			return pc.green('✔')
-		case 'warn':
-			return pc.yellow('~')
-		case 'fail':
-			return pc.red('✗')
-	}
-}
 
 export const doctorCommand = defineCommand({
 	meta: {
