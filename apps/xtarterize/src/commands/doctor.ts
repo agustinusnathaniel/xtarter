@@ -1,4 +1,5 @@
 import {
+	createSpinner,
 	pc,
 	runConflictChecks,
 	runPreflight,
@@ -9,7 +10,6 @@ import { resolveCwd } from '@/utils/cwd.js'
 import { diagnosticIcon } from '@/utils/display.js'
 import { handlePreflightFailure } from '@/utils/preflight.js'
 import { resolveRuntimeFlags } from '@/utils/runtime-flags.js'
-import { createSpinner } from '@/utils/spinner.js'
 
 export const doctorCommand = defineCommand({
 	meta: {

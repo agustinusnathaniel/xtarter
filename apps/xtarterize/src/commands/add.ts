@@ -1,17 +1,20 @@
-import { confirm, isCancel, spinner } from '@clack/prompts'
+import { confirm } from '@clack/prompts'
 import {
+	abortIfCancelled,
 	applyTasks,
+	createSpinner,
 	detectProject,
+	isCI,
 	logError,
 	logInfo,
 	logSuccess,
-	pc,
 	runPreflight,
 } from '@xtarterize/core'
 import { getAllTasks } from '@xtarterize/tasks'
 import { defineCommand } from 'citty'
 import { displayDiffs } from '@/ui/diff-display.js'
 import { resolveCwd } from '@/utils/cwd.js'
+import { handlePreflightFailure } from '@/utils/preflight.js'
 
 export const addCommand = defineCommand({
 	meta: {
@@ -41,29 +44,18 @@ export const addCommand = defineCommand({
 		}
 
 		const cwd = resolveCwd(args)
-		const isCI = process.env.CI === 'true' || process.env.CI === '1'
-		const quiet = args.quiet || isCI
+		const quiet = args.quiet || isCI()
 
 		const preflight = await runPreflight(cwd)
 		if (!preflight.valid) {
-			console.log('')
-			console.log(`${pc.red('✖')} Preflight checks failed`)
-			console.log('')
-			for (const error of preflight.errors) {
-				console.log(`${pc.red(`  ✗ ${error.message}`)}`)
-				if (error.hint) {
-					console.log(`  ${pc.dim(error.hint)}`)
-				}
-			}
-			console.log('')
-			process.exit(1)
+			handlePreflightFailure(preflight, false)
 		}
 
-		const s = spinner()
-		if (!quiet) s.start('Scanning project...')
+		const s = createSpinner(quiet)
+		s.start('Scanning project...')
 
 		const profile = await detectProject(cwd)
-		if (!quiet) s.stop('Project scanned')
+		s.stop('Project scanned')
 
 		const allTasks = getAllTasks()
 		const task = allTasks.find((t) => t.id === taskId)
@@ -95,7 +87,8 @@ export const addCommand = defineCommand({
 
 		if (!quiet) {
 			const proceed = await confirm({ message: 'Apply this change?' })
-			if (isCancel(proceed) || !proceed) return
+			abortIfCancelled(proceed, 'Apply cancelled')
+			if (!proceed) return
 		}
 
 		const result = await applyTasks([task], cwd, profile, [task.id])

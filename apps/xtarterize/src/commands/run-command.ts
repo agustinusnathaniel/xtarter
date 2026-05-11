@@ -1,8 +1,11 @@
-import { isCancel, select, spinner } from '@clack/prompts'
+import { select } from '@clack/prompts'
 import type { FileDiff, TaskStatus } from '@xtarterize/core'
 import {
+	abortIfCancelled,
 	applyTasks,
+	createSpinner,
 	detectProject,
+	isCI,
 	logError,
 	logInfo,
 	logSuccess,
@@ -17,6 +20,7 @@ import { displayDiffs } from '@/ui/diff-display.js'
 import { mergeFileDiffs } from '@/ui/merge-file-diffs.js'
 import { displayPlan } from '@/ui/plan-display.js'
 import { selectTasks } from '@/ui/select-menu.js'
+import { handlePreflightFailure } from '@/utils/preflight.js'
 
 interface CommandArgs {
 	dryRun?: boolean
@@ -60,31 +64,21 @@ async function runPreflightAndDetect(
 	profile: Awaited<ReturnType<typeof detectProject>>
 	quiet: boolean
 }> {
-	const isCI = process.env.CI === 'true' || process.env.CI === '1'
-	const quiet = args.quiet || isCI
+	const ci = isCI()
+	const quiet = args.quiet || ci
 
 	const preflight = await runPreflight(cwd)
 	if (!preflight.valid) {
-		console.log('')
-		console.log(`${pc.red('✖')} Preflight checks failed`)
-		console.log('')
-		for (const error of preflight.errors) {
-			console.log(`${pc.red(`  ✗ ${error.message}`)}`)
-			if (error.hint) {
-				console.log(`  ${pc.dim(error.hint)}`)
-			}
-		}
-		console.log('')
-		process.exit(1)
+		handlePreflightFailure(preflight, false)
 	}
 
-	const s = spinner()
-	if (!quiet) s.start('Scanning project...')
+	const s = createSpinner(quiet)
+	s.start('Scanning project...')
 
 	let profile = await detectProject(cwd)
 
 	if (profile.framework === null) {
-		if (!quiet) s.stop()
+		s.stop()
 		const pkg = await readPackageJson(cwd)
 		const allDeps: Record<string, string> = {}
 		if (pkg?.dependencies) Object.assign(allDeps, pkg.dependencies)
@@ -102,7 +96,7 @@ async function runPreflightAndDetect(
 			}
 		}
 	} else {
-		if (!quiet) s.stop('Project scanned')
+		s.stop('Project scanned')
 	}
 
 	if (!quiet) {
@@ -171,10 +165,7 @@ async function promptAndApply(
 		],
 	})
 
-	if (isCancel(action)) {
-		logInfo('Cancelled')
-		return
-	}
+	abortIfCancelled(action)
 
 	if (action === 'quit') {
 		logInfo('Cancelled')
@@ -259,9 +250,34 @@ async function resolveAmbiguousFramework(): Promise<
 		],
 	})
 
-	if (isCancel(choice)) {
-		process.exit(0)
-	}
+	abortIfCancelled(choice)
 
 	return choice as 'react' | 'react-native' | 'node'
 }
+
+export const sharedRunArgs = {
+	dryRun: {
+		type: 'boolean',
+		description: 'Preview changes without applying',
+	},
+	yes: {
+		type: 'boolean',
+		description: 'Skip all confirmations, apply all',
+	},
+	skip: {
+		type: 'string',
+		description: 'Exclude a specific task (comma-separated)',
+	},
+	only: {
+		type: 'string',
+		description: 'Apply only a specific task',
+	},
+	quiet: {
+		type: 'boolean',
+		description: 'Suppress interactive prompts and verbose output',
+	},
+	includeConflicts: {
+		type: 'boolean',
+		description: 'Include conflicting tasks when applying (default: false)',
+	},
+} as const

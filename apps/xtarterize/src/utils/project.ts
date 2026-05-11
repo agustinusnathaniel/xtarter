@@ -1,5 +1,6 @@
 import type { ProjectProfile, Task, TaskStatus } from '@xtarterize/core'
 import {
+	createSpinner,
 	detectProject,
 	resolveTaskStatuses,
 	resolveTasks,
@@ -9,7 +10,6 @@ import { getAllTasks } from '@xtarterize/tasks'
 import { resolveCwd } from './cwd.js'
 import { handlePreflightFailure } from './preflight.js'
 import { resolveRuntimeFlags } from './runtime-flags.js'
-import { createSpinner } from './spinner.js'
 
 export interface CliContext {
 	cwd: string

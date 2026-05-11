@@ -1,5 +1,7 @@
-import { isCancel, select, spinner } from '@clack/prompts'
+import { select } from '@clack/prompts'
 import {
+	abortIfCancelled,
+	createSpinner,
 	listBackups,
 	logError,
 	logSuccess,
@@ -27,7 +29,7 @@ export const restoreCommand = defineCommand({
 			return
 		}
 
-		const s = spinner()
+		const s = createSpinner(false)
 		s.start('Loading backups...')
 
 		const backups = await listBackups(cwd, filepath)
@@ -52,7 +54,7 @@ export const restoreCommand = defineCommand({
 			})),
 		})
 
-		if (isCancel(selected)) return
+		abortIfCancelled(selected)
 
 		await restoreBackup(cwd, selected)
 		logSuccess(`Restored ${filepath} from backup`)
