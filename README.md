@@ -1,4 +1,4 @@
-# xtarterize
+# xtarter
 
 Apply production-grade conformance configurations to any JavaScript/TypeScript project in one command.
 
@@ -66,7 +66,8 @@ xtarterize/
 │   ├── patchers/      # JSON merge, YAML merge, AST patching (magicast)
 │   └── tasks/         # All task implementations + templates
 ├── apps/
-│   └── cli/           # CLI entry point, commands, UI
+│   ├── cli/           # CLI entry point, commands, UI
+│   └── create-xtarter-app/  # Project scaffolding CLI (Next.js/Vite templates)
 ├── test/              # Shared test fixtures and test suites
 ├── turbo.json
 └── pnpm-workspace.yaml
@@ -80,6 +81,7 @@ xtarterize/
 | `@xtarterize/patchers` | Deep merge (defu), YAML merge, AST patching (magicast) for config files | Yes |
 | `@xtarterize/tasks` | All task implementations and template renderers | Internal |
 | `xtarterize` (apps/cli) | CLI application using citty + @clack/prompts | Yes (as `xtarterize`) |
+| `create-xtarter-app` (apps/create-xtarter-app) | Project scaffolding CLI (Next.js/Vite templates) | Yes (as `create-xtarter-app`) |
 
 ## Contributing a New Task
 
