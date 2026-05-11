@@ -14,8 +14,11 @@ import {
 } from '@xtarterize/core'
 import { patchJson } from '@xtarterize/patchers'
 import { addDependency } from 'nypm'
-import { filterMissingScripts, mergeScripts } from './merger.js'
-import { resolveScripts } from './resolver.js'
+import {
+	filterMissingScripts,
+	mergeScripts,
+	resolveScripts,
+} from './scripts.js'
 
 export interface PackageJsonScriptEntry {
 	script: string

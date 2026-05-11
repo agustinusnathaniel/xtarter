@@ -1,6 +1,26 @@
-import { hasScriptWithEquivalentValue } from './equivalence.js'
-import type { PackageScriptsMap } from './index.js'
+import type { ProjectProfile } from '@xtarterize/core'
+import {
+	hasScriptWithEquivalentValue,
+	type PackageScriptsMap,
+} from './equivalence.js'
 import type { PackageJsonScriptEntry } from './task.js'
+
+export interface ScriptsResolverOptions {
+	scripts?: PackageJsonScriptEntry[]
+	getScripts?: (
+		cwd: string,
+		profile: ProjectProfile,
+	) => Promise<PackageJsonScriptEntry[]>
+}
+
+export async function resolveScripts(
+	options: ScriptsResolverOptions,
+	cwd: string,
+	profile: ProjectProfile,
+): Promise<PackageJsonScriptEntry[]> {
+	if (options.getScripts) return options.getScripts(cwd, profile)
+	return options.scripts ?? []
+}
 
 export function mergeScripts(
 	current: PackageScriptsMap | undefined,
