@@ -1,5 +1,19 @@
 # @xtarterize/tasks
 
+## 1.7.0
+
+### Minor Changes
+
+- [`6b5eb96`](https://github.com/agustinusnathaniel/xtarter/commit/6b5eb961cd6196a148f7ee481474379194e2f3dd) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - refactor: extract shared YAML workflow step builder with typed step objects and automated indentation; migrate CI, release, and auto-update workflow templates to use shared helpers
+
+  fix: replace npm-check-updates with native package manager update commands (pnpm update / npm update / yarn upgrade) followed by dedupe in the auto-update workflow
+
+### Patch Changes
+
+- Updated dependencies [[`b2d0b5a`](https://github.com/agustinusnathaniel/xtarter/commit/b2d0b5a35f0b79e277bf736888e5cb0b09e1409c)]:
+  - @xtarterize/core@1.7.0
+  - @xtarterize/patchers@1.7.0
+
 ## 1.6.1
 
 ### Patch Changes
