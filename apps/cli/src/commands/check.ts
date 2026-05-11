@@ -1,19 +1,11 @@
 import type { DiagnosticCheck } from '@xtarterize/core'
 import {
-	detectProject,
 	pc,
-	resolveTaskStatuses,
-	resolveTasks,
 	runConflictChecks,
-	runPreflight,
 	runToolInstallationChecks,
 } from '@xtarterize/core'
-import { getAllTasks } from '@xtarterize/tasks'
 import { defineCommand } from 'citty'
-import { resolveCwd } from '@/utils/cwd.js'
-import { handlePreflightFailure } from '@/utils/preflight.js'
-import { resolveRuntimeFlags } from '@/utils/runtime-flags.js'
-import { createSpinner } from '@/utils/spinner.js'
+import { resolveCliContext, scanProject } from '@/utils/project.js'
 
 function diagnosticIcon(status: DiagnosticCheck['status']): string {
 	switch (status) {
@@ -42,25 +34,13 @@ export const checkCommand = defineCommand({
 		},
 	},
 	async run({ args }) {
-		const cwd = resolveCwd(args)
-		const { json, quiet } = resolveRuntimeFlags(args)
-
-		const preflight = await runPreflight(cwd)
-		handlePreflightFailure(preflight, json)
-
-		const s = createSpinner(quiet)
-		s.start('Scanning project...')
-
-		const profile = await detectProject(cwd)
-		const allTasks = getAllTasks()
-		const tasks = resolveTasks(profile, allTasks)
-		const statuses = await resolveTaskStatuses(tasks, cwd, profile)
-		s.stop('Project scanned')
+		const ctx = resolveCliContext(args)
+		const { profile, tasks, statuses } = await scanProject(ctx)
 
 		let conformant = 0
 		const total = tasks.length
-		const conflictChecks = await runConflictChecks(cwd)
-		const installChecks = await runToolInstallationChecks(cwd)
+		const conflictChecks = await runConflictChecks(ctx.cwd)
+		const installChecks = await runToolInstallationChecks(ctx.cwd)
 		const diagnostics = [...installChecks, ...conflictChecks]
 
 		for (const task of tasks) {
@@ -68,7 +48,7 @@ export const checkCommand = defineCommand({
 			if (status === 'skip') conformant++
 		}
 
-		if (json) {
+		if (ctx.json) {
 			console.log(
 				JSON.stringify({
 					ok: true,
@@ -85,7 +65,7 @@ export const checkCommand = defineCommand({
 			return
 		}
 
-		if (!quiet) {
+		if (!ctx.quiet) {
 			console.log('')
 			console.log(pc.bold('Conformance audit'))
 			console.log('')

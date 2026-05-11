@@ -1,16 +1,6 @@
-import {
-	detectProject,
-	pc,
-	resolveTaskStatuses,
-	resolveTasks,
-	runPreflight,
-} from '@xtarterize/core'
-import { getAllTasks } from '@xtarterize/tasks'
+import { pc } from '@xtarterize/core'
 import { defineCommand } from 'citty'
-import { resolveCwd } from '@/utils/cwd.js'
-import { handlePreflightFailure } from '@/utils/preflight.js'
-import { resolveRuntimeFlags } from '@/utils/runtime-flags.js'
-import { createSpinner } from '@/utils/spinner.js'
+import { resolveCliContext, scanProject } from '@/utils/project.js'
 
 export const listCommand = defineCommand({
 	meta: {
@@ -24,23 +14,10 @@ export const listCommand = defineCommand({
 		},
 	},
 	async run({ args }) {
-		const cwd = resolveCwd(args)
-		const { json, quiet } = resolveRuntimeFlags(args)
+		const ctx = resolveCliContext(args)
+		const { profile, tasks, statuses } = await scanProject(ctx)
 
-		const preflight = await runPreflight(cwd)
-		handlePreflightFailure(preflight, json)
-
-		const s = createSpinner(quiet)
-		s.start('Scanning project...')
-
-		const profile = await detectProject(cwd)
-		s.stop('Project scanned')
-
-		const allTasks = getAllTasks()
-		const tasks = resolveTasks(profile, allTasks)
-		const statuses = await resolveTaskStatuses(tasks, cwd, profile)
-
-		if (json) {
+		if (ctx.json) {
 			console.log(
 				JSON.stringify({
 					ok: true,
