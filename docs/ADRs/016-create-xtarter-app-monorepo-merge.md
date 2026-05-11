@@ -13,7 +13,7 @@ Both tools share the same author, target audience, and npm organization. Maintai
 
 ## Decision
 
-Merge `create-xtarter-app` into the `xtarterize` pnpm monorepo as `apps/create-xtarter-app/`, a sibling to `apps/cli/` and `apps/docs/`, with the following design decisions:
+Merge `create-xtarter-app` into the `xtarterize` pnpm monorepo as `apps/create-xtarter-app/`, a sibling to `apps/xtarterize/` and `apps/docs/`, with the following design decisions:
 
 ### Independent versioning
 

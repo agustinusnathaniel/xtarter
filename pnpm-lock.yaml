@@ -75,40 +75,6 @@ importers:
         specifier: 'catalog:'
         version: 0.1.20(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.6.1)(typescript@6.0.3)(vite@8.0.11(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.6.1))
 
-  apps/cli:
-    dependencies:
-      '@clack/prompts':
-        specifier: 'catalog:'
-        version: 1.3.0
-      citty:
-        specifier: 'catalog:'
-        version: 0.2.2
-      cli-table3:
-        specifier: ^0.6.5
-        version: 0.6.5
-      jsonc-parser:
-        specifier: 'catalog:'
-        version: 3.3.1
-    devDependencies:
-      '@types/node':
-        specifier: 'catalog:'
-        version: 25.6.0
-      '@xtarterize/core':
-        specifier: workspace:*
-        version: link:../../packages/core
-      '@xtarterize/patchers':
-        specifier: workspace:*
-        version: link:../../packages/patchers
-      '@xtarterize/tasks':
-        specifier: workspace:*
-        version: link:../../packages/tasks
-      typescript:
-        specifier: 'catalog:'
-        version: 6.0.3
-      vite-plus:
-        specifier: 'catalog:'
-        version: 0.1.20(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.6.1)(typescript@6.0.3)(vite@8.0.11(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.6.1))
-
   apps/create-xtarter-app:
     dependencies:
       '@clack/prompts':
@@ -176,6 +142,40 @@ importers:
       sharp:
         specifier: ^0.34.5
         version: 0.34.5
+
+  apps/xtarterize:
+    dependencies:
+      '@clack/prompts':
+        specifier: 'catalog:'
+        version: 1.3.0
+      citty:
+        specifier: 'catalog:'
+        version: 0.2.2
+      cli-table3:
+        specifier: ^0.6.5
+        version: 0.6.5
+      jsonc-parser:
+        specifier: 'catalog:'
+        version: 3.3.1
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 25.6.0
+      '@xtarterize/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@xtarterize/patchers':
+        specifier: workspace:*
+        version: link:../../packages/patchers
+      '@xtarterize/tasks':
+        specifier: workspace:*
+        version: link:../../packages/tasks
+      typescript:
+        specifier: 'catalog:'
+        version: 6.0.3
+      vite-plus:
+        specifier: 'catalog:'
+        version: 0.1.20(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.6.1)(typescript@6.0.3)(vite@8.0.11(@types/node@25.6.0)(esbuild@0.27.7)(jiti@2.6.1))
 
   packages/core:
     dependencies:

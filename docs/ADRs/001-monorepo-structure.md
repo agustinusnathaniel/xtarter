@@ -23,7 +23,7 @@ xtarterize/
 ## Rationale
 
 - `@xtarterize/core` and `@xtarterize/patchers` have clean APIs with no CLI dependencies — they can be published independently later
-- `apps/cli` stays thin — just wiring commands to the core packages
+- `apps/xtarterize` stays thin — just wiring commands to the core packages
 - Turborepo provides caching and parallel execution across packages
 - The structure leaves room for `apps/docs` without restructuring
 

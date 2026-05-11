@@ -1,7 +1,7 @@
 import fs from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
-import { doctorCommand } from '@xtarterize/cli/commands/doctor.js'
+import { doctorCommand } from '@xtarterize/app/commands/doctor.js'
 import { describe, expect, it } from 'vite-plus/test'
 
 async function createProjectFixture(): Promise<string> {

@@ -16,7 +16,7 @@ pnpm test:run
 packages/core/      # Detection engine, task interface, utilities
 packages/patchers/  # JSON/YAML merge, AST patching
 packages/tasks/     # All task implementations + templates
-apps/cli/           # CLI entry point, commands, UI
+apps/xtarterize/     # CLI entry point, commands, UI
 apps/docs/          # Documentation site (Astro + Starlight)
 test/               # Shared test fixtures and test suites
 ```
