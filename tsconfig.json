@@ -23,7 +23,8 @@
 		{ "path": "packages/core" },
 		{ "path": "packages/patchers" },
 		{ "path": "packages/tasks" },
-		{ "path": "apps/cli" }
+		{ "path": "apps/cli" },
+		{ "path": "apps/create-xtarter-app" }
 	],
 	"exclude": ["node_modules", "dist", "test/fixtures"]
 }
