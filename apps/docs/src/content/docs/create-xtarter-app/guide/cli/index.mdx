@@ -1,0 +1,138 @@
+---
+title: CLI Reference
+description: Complete command reference for create-xtarter-app — all arguments, options, and usage examples.
+---
+
+import { Tabs, TabItem } from '@astrojs/starlight/components'
+
+## Command
+
+```
+npx create-xtarter-app@latest [project-name] [options]
+```
+
+## Arguments
+
+| Argument | Required | Description |
+|----------|----------|-------------|
+| `project-name` | No | Name for the new project. If omitted, you'll be prompted. |
+
+## Options
+
+| Option | Alias | Type | Default | Description |
+|--------|-------|------|---------|-------------|
+| `--template` | `-t` | string | — | Template ID to use (skips prompt). See [Templates](/create-xtarter-app/guide/templates/) |
+| `--preview` | `-P` | boolean | — | Preview template details without scaffolding |
+| `--pm` | `-p` | string | — | Package manager (`pnpm`, `npm`, `bun`, `yarn`) |
+| `--no-git` | — | boolean | — | Skip git initialization |
+| `--clean` | — | boolean | — | Remove CI/CD config files after scaffolding |
+| `--yes` | `-y` | boolean | — | Use defaults for all prompts |
+| `--help` | `-h` | boolean | — | Show help text |
+| `--version` | `-v` | boolean | — | Show version |
+
+## Package managers
+
+| Manager | Command | Note |
+|---------|---------|------|
+| `pnpm` | (default) | Fast, disk-efficient |
+| `npm` | — | Default Node.js |
+| `bun` | — | Ultra-fast runtime |
+| `yarn` | — | Classic choice |
+
+## Examples
+
+<Tabs>
+  <TabItem label="pnpm">
+
+  ```bash
+  # Interactive — prompts for everything
+  pnpm create xtarter-app
+
+  # Quick start with defaults
+  pnpm create xtarter-app my-app --yes
+
+  # Pick a template
+  pnpm create xtarter-app my-app --template vite-tailwind
+
+  # Specific package manager, no git
+  pnpm create xtarter-app my-app --pm bun --no-git
+
+  # Preview a template
+  pnpm create xtarter-app --preview --template next-tailwind
+  ```
+
+  </TabItem>
+  <TabItem label="npm">
+
+  ```bash
+  npm create xtarter-app@latest
+  npm create xtarter-app@latest my-app --yes
+  npm create xtarter-app@latest my-app --template vite-tailwind
+  ```
+
+  </TabItem>
+  <TabItem label="bun">
+
+  ```bash
+  bun create xtarter-app
+  bun create xtarter-app my-app --yes
+  bun create xtarter-app my-app --template vite-tailwind
+  ```
+
+  </TabItem>
+  <TabItem label="yarn">
+
+  ```bash
+  yarn create xtarter-app
+  yarn create xtarter-app my-app --yes
+  yarn create xtarter-app my-app --template vite-tailwind
+  ```
+
+  </TabItem>
+</Tabs>
+
+## Error handling
+
+- **Invalid template ID** — prints all valid template IDs and exits
+- **Invalid package manager** — prints valid options and exits
+- **Target directory exists** — cancels with an error (won't overwrite)
+- **Invalid project name** — validation fails during prompt
+- **Download failure** — retries up to 3 times, then exits with error
+- **Install failure** — exits with the command's exit code
+
+## Programmatic API
+
+The package also exports a programmatic API for use in scripts and tooling:
+
+```ts
+import {
+  downloadTemplateFiles,
+  modifyPackageJson,
+  installDependencies,
+  initializeGit,
+  isGitInstalled,
+  cleanCIConfigs,
+  getTemplateById,
+  getTemplateChoices,
+  TEMPLATES,
+} from 'create-xtarter-app'
+
+// Download a template
+await downloadTemplateFiles({
+  template: getTemplateById('vite-tailwind')!,
+  targetPath: './my-app',
+})
+
+// Modify package.json
+await modifyPackageJson({ projectPath: './my-app', projectName: 'my-app' })
+
+// Install dependencies
+await installDependencies({ packageManager: 'pnpm', projectPath: './my-app' })
+
+// Initialize git
+if (isGitInstalled()) {
+  await initializeGit({ projectPath: './my-app' })
+}
+```
+
+See [Templates](/create-xtarter-app/guide/templates/) for the full `TemplateConfig` type.

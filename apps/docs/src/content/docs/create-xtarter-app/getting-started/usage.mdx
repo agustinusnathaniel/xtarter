@@ -1,0 +1,158 @@
+---
+title: Usage Guide
+description: Step-by-step guide through the create-xtarter-app interactive scaffolding flow.
+---
+
+import { Steps } from '@astrojs/starlight/components'
+
+## Scaffolding a project
+
+<Steps>
+
+1. ### Start the wizard
+
+   ```bash
+   pnpm create xtarter-app
+   ```
+
+   You'll see a banner and the first prompt.
+
+2. ### Enter a project name
+
+   The first prompt asks for your project name:
+
+   ```
+   ┌  Project name:
+   └  my-new-app
+   ```
+
+   - Must be **alphanumeric** plus hyphens and underscores (`my-app_v2`)
+   - Maximum **214 characters**
+   - You can also pass it as a positional argument: `pnpm create xtarter-app my-app`
+
+3. ### Pick a template
+
+   Choose from the available templates:
+
+   ```
+   ┌  Select a template:
+   │  ● Next.js + Chakra UI
+   │  ○ Next.js + Tailwind
+   │  ○ Vite + React + Chakra
+   │  ○ Vite + React + Tailwind
+   │  ○ Vite + React + Hero UI
+   └
+   ```
+
+   Use `--template` / `-t` to skip the prompt:
+
+   ```bash
+   pnpm create xtarter-app my-app --template vite-tailwind
+   ```
+
+4. ### Choose a package manager
+
+   ```
+   ┌  Select a package manager:
+   │  ● pnpm (recommended)
+   │  ○ npm
+   │  ○ bun
+   │  ○ yarn
+   └
+   ```
+
+   Use `--pm` / `-p` to skip:
+
+   ```bash
+   pnpm create xtarter-app my-app --pm bun
+   ```
+
+5. ### Decide on git init
+
+   ```
+   ┌  Initialize a git repository?
+   └  Yes / No
+   ```
+
+   - Creates a `.git` repo with an initial commit (`"Initial commit from create-xtarter-app"`)
+   - Requires `git` to be installed on your system
+   - Use `--no-git` to skip
+
+6. ### Clean CI/CD configs (optional)
+
+   ```
+   ┌  Remove CI/CD configurations (GitHub Actions, Vercel, etc.)?
+   └  Yes / No
+   ```
+
+   When enabled, removes:
+   - `.github/` directory and all workflow files
+   - `.gitlab-ci.yml`, `.travis.yml`, `.circleci/`
+   - `vercel.json`, `netlify.toml`, `.netlify/`
+   - `railway.toml`, `.railway/`, `fly.toml`, `.fly/`
+
+   Use `--clean` to enable it directly.
+
+7. ### Wait for download and install
+
+   The CLI downloads the template via tarball (no git clone required), modifies the
+   `package.json` name, installs dependencies, and initializes git (if enabled).
+
+8. ### You're ready
+
+   ```
+   ┌  Success! Project created at /path/to/my-app
+   │
+   │  Next steps:
+   │    cd my-app
+   │    pnpm dev
+   │
+   │  Template: Vite + React + Tailwind
+   └
+   ```
+
+</Steps>
+
+## Preview a template before scaffolding
+
+Use `--preview` / `-P` to see a template's details without scaffolding:
+
+```bash
+pnpm create xtarter-app --preview
+# or specify a template directly
+pnpm create xtarter-app --preview --template vite-tailwind
+```
+
+This shows the template's name, description, repository, and feature list.
+
+## Use defaults mode
+
+Skip all prompts with `--yes` / `-y`:
+
+```bash
+pnpm create xtarter-app my-app --yes
+```
+
+This uses: pnpm, git init enabled, CI/CD cleanup disabled.
+
+## Skipping git initialization
+
+If you don't want a git repo initialized during scaffolding:
+
+```bash
+pnpm create xtarter-app my-app --no-git
+```
+
+The CLI checks if `git` is installed. If not, git init is skipped automatically.
+
+## Package manager installation
+
+The CLI runs `<package-manager> install` after downloading. If the install fails
+(e.g., network issues), the process exits with an error. The template files are
+still downloaded — you can run the install manually.
+
+## What's modified after download
+
+- **`package.json` name** — updated to your project name (lowercased, special chars stripped)
+- **Workspace references** — any `workspace:*` entries in `pnpm.overrides` are removed
+- **CI/CD files** — removed if `--clean` is enabled

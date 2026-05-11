@@ -12,7 +12,7 @@
 		"react",
 		"typescript"
 	],
-	"homepage": "https://xtarter.sznm.dev",
+	"homepage": "https://xtarter.sznm.dev/create-xtarter-app",
 	"bugs": {
 		"url": "https://github.com/agustinusnathaniel/xtarter/issues"
 	},

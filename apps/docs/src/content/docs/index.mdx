@@ -1,137 +1,55 @@
 ---
-title: xtarterize
-description: The conformance CLI for JavaScript/TypeScript projects. Detect, validate, and sync your tooling automatically.
+title: xtarter
+description: Production-grade starter templates for JavaScript and TypeScript projects. Scaffold your next project with a single command.
 template: splash
 editUrl: false
 lastUpdated: false
 hero:
-  title: "The conformance CLI for JavaScript & TypeScript"
-  tagline: "Detect your project's stack. Validate your configs. Keep everything in sync — without overwriting a single file without your say-so."
+  title: "xtarter"
+  tagline: "Production-grade starter templates for JavaScript & TypeScript. Scaffold your next project in seconds."
   actions:
-    - text: Get Started
+    - text: Browse Templates
       icon: right-arrow
-      link: /getting-started/installation/
-    - text: View CLI Reference
+      link: "#templates"
+    - text: Get Started with xtarterize
       icon: external
       variant: minimal
-      link: /guide/cli/overview/
+      link: /xtarterize/
 ---
 
 import { LinkCard, CardGrid, LinkButton } from '@astrojs/starlight/components'
+import TemplateGallery from '../../components/TemplateGallery.astro'
 
+## Starter Templates
 
-## Why xtarterize?
+Every template comes pre-configured with Biome linting & formatting, TypeScript strict mode,
+GitHub Actions CI, VS Code settings, and AI agent skills — ready the moment you scaffold.
 
-Every [JavaScript](https://developer.mozilla.org/en-US/docs/Web/JavaScript)/[TypeScript](https://www.typescriptlang.org/) project needs [Biome](https://biomejs.dev/) ([linting](https://biomejs.dev/linter/) + [formatting](https://biomejs.dev/formatter/)), [TypeScript](https://www.typescriptlang.org/tsconfig/) ([strict mode](https://www.typescriptlang.org/tsconfig/#strict)), [CI workflows](https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions) ([GitHub Actions](https://docs.github.com/en/actions)), [editor configs](https://code.visualstudio.com/docs/getstarted/settings#_settingsjson) ([VS Code](https://code.visualstudio.com/)), [AI agent skills](https://skills.sh), and more. Setting them up is tedious. Keeping them consistent across projects is worse.
+<TemplateGallery />
 
-<div class="features-grid">
-
-<div class="feature-card">
-<div class="feature-icon">🔍</div>
-<h3>Detects your stack</h3>
-<p>Scans your project to understand what frameworks, tools, and configs you're using — before touching anything.</p>
-</div>
-
-<div class="feature-card">
-<div class="feature-icon">🎯</div>
-<h3>Applies only what fits</h3>
-<p>Never gets in your way. Only suggests configs that match your detected tooling and project structure.</p>
-</div>
-
-<div class="feature-card">
-<div class="feature-icon">🛡️</div>
-<h3>Never destructive</h3>
-<p>Shows you a diff before any change. Backs up your files. You're always in control.</p>
-</div>
-
-<div class="feature-card">
-<div class="feature-icon">🔄</div>
-<h3>Safe to rerun</h3>
-<p>Idempotent by design. Run it ten times — no duplicates, no corruption, no drift.</p>
-</div>
-
-<div class="feature-card">
-<div class="feature-icon">📈</div>
-<h3>Evolves with you</h3>
-<p>As your project grows, <code>sync</code> and <code>diff</code> keep your configs up to date without manual work.</p>
-</div>
-
-<div class="feature-card">
-<div class="feature-icon">⚡</div>
-<h3>Works everywhere</h3>
-<p>React, Vue, Svelte, Solid, Node, Bun — if it's JS/TS, xtarterize knows how to configure it.</p>
-</div>
-
-</div>
+<LinkButton href="https://github.com/agustinusnathaniel?tab=repositories&q=&type=source&language=" size="lg">View all templates on GitHub →</LinkButton>
 
 ---
 
-## How it works
+## The Tooling
 
-```mermaid
-flowchart LR
-    A["🔍 Detect<br/>Project Stack"] --> B["🎯 Resolve<br/>Applicable Tasks"]
-    B --> C["✅ Check<br/>Task Statuses"]
-    C --> D["📋 Plan<br/>Show Diffs"]
-    D --> E["🚀 Apply<br/>With Backups"]
+<div class="product-grid">
+  <div class="product-card">
+    <h2>
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
+      create-xtarter-app
+    </h2>
+    <p>Scaffold a new project from production-grade templates in a single command. Pick your stack, get a fully configured project.</p>
+    <LinkButton href="/create-xtarter-app/" variant="secondary">Learn more →</LinkButton>
+  </div>
+  <div class="product-card">
+    <h2>
+      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      xtarterize
+    </h2>
+    <p>Bring conformance to any existing JS/TS project. Detect your stack, validate configs, sync tooling — with diffs and backups.</p>
+    <LinkButton href="/xtarterize/" variant="secondary">Learn more →</LinkButton>
+  </div>
+</div>
 
-    style A fill:#6366f1,color:#fff
-    style B fill:#8b5cf6,color:#fff
-    style C fill:#a855f7,color:#fff
-    style D fill:#d946ef,color:#fff
-    style E fill:#22c55e,color:#fff
-```
 
----
-
-## Quick Start
-
-Get up and running in under a minute:
-
-```bash
-# 1. Initialize conformance for your project
-npx xtarterize init
-
-# 2. Check your current conformance status
-npx xtarterize check
-
-# 3. Preview what changes sync would make
-npx xtarterize diff
-```
-
-<LinkButton href="/getting-started/installation/" size="lg">Install xtarterize →</LinkButton>
-
----
-
-## Explore the docs
-
-<CardGrid>
-  <LinkCard title="Getting Started" href="/getting-started/introduction/" description="Learn the basics and set up your first project in minutes." />
-  <LinkCard title="CLI Reference" href="/guide/cli/overview/" description="Complete command reference with all flags and options." />
-  <LinkCard title="Conformance Tasks" href="/guide/tasks/overview/" description="See what tasks are available and how to customize them." />
-  <LinkCard title="Configuration" href="/guide/config/overview/" description="How xtarterize detects and adapts to your project." />
-  <LinkCard title="Architecture" href="/contributing/architecture/overview/" description="Understand the internal design and package structure." />
-  <LinkCard title="Contributing" href="/contributing/guidelines/" description="Get involved, report issues, or help build xtarterize." />
-</CardGrid>
-
----
-
-## New project or existing?
-
-xtarterize works with both:
-
-| Tool | When to use |
-|------|-------------|
-| **[create-xtarter-app](/getting-started/installation/)** | Day 0 — Scaffold a new project from curated templates |
-| **[xtarterize](/getting-started/installation/)** | Day 1+ — Bring conformance to any existing project |
-
-## References
-
-- [Biome](https://biomejs.dev/) — Fast linter and formatter
-- [TypeScript](https://www.typescriptlang.org/) — Typed JavaScript
-- [GitHub Actions](https://docs.github.com/en/actions) — CI/CD automation
-- [VS Code](https://code.visualstudio.com/) — Code editor with extensive configuration
-- [Agent Skills](https://skills.sh) — Open ecosystem of reusable AI agent capabilities
-- [Node.js](https://nodejs.org/) — JavaScript runtime
-
-<LinkButton href="/getting-started/installation/">Start now →</LinkButton>

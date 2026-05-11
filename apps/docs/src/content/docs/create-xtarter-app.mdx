@@ -1,0 +1,99 @@
+---
+title: create-xtarter-app
+description: Scaffold a new JavaScript/TypeScript project from production-grade templates with a single command.
+template: splash
+editUrl: false
+lastUpdated: false
+hero:
+  title: "Scaffold projects in seconds"
+  tagline: "Pick a template. Run one command. Get a fully configured project with linting, type checking, CI, and editor settings — ready to ship."
+  actions:
+    - text: Get Started
+      icon: right-arrow
+      link: /create-xtarter-app/getting-started/
+    - text: Browse Templates
+      icon: external
+      variant: minimal
+      link: /#templates
+---
+
+import { LinkCard, CardGrid, LinkButton } from '@astrojs/starlight/components'
+
+## Why create-xtarter-app?
+
+Starting a new JS/TS project means configuring Biome, TypeScript, ESLint, Prettier, GitHub Actions,
+VS Code settings, Tailwind, and more — before writing a single line of code.
+
+<div class="features-grid">
+
+<div class="feature-card">
+<div class="feature-icon">⚡</div>
+<h3>One command</h3>
+<p>Run <code>pnpm create xtarter-app</code> and pick your stack. Everything else is handled for you.</p>
+</div>
+
+<div class="feature-card">
+<div class="feature-icon">📦</div>
+<h3>Curated templates</h3>
+<p>Production-grade starters for Next.js, React + Vite, Remix, SvelteKit, Astro, and SolidJS.</p>
+</div>
+
+<div class="feature-card">
+<div class="feature-icon">🔧</div>
+<h3>Pre-configured tooling</h3>
+<p>Every template ships with Biome linting & formatting, TypeScript strict mode, and CI workflows.</p>
+</div>
+
+<div class="feature-card">
+<div class="feature-icon">🔄</div>
+<h3>Stay in sync</h3>
+<p>After scaffolding, use <strong>xtarterize</strong> to keep your conformance configs up to date.</p>
+</div>
+
+</div>
+
+---
+
+## Quick Start
+
+```bash
+# Scaffold a new project
+pnpm create xtarter-app
+
+# Follow the interactive prompts to pick your template
+# ?? Which template?
+#   - Next.js + Tailwind
+#   - React + Vite
+#   - SvelteKit
+#   - Remix
+#   - Astro
+```
+
+<LinkButton href="/create-xtarter-app/getting-started/" size="lg">Get started →</LinkButton>
+
+---
+
+## Available Templates
+
+<CardGrid>
+  <LinkCard title="Next.js + Tailwind" href="/#templates" description="Next.js 15, Tailwind CSS v4, TypeScript strict, Biome, CI/CD." />
+  <LinkCard title="React + Vite" href="/#templates" description="React 19, Vite, Tailwind v4, Storybook, testing setup." />
+  <LinkCard title="SvelteKit" href="/#templates" description="SvelteKit 2, Tailwind v4, TypeScript, Biome tooling." />
+  <LinkCard title="Remix" href="/#templates" description="Remix v3, Tailwind, Biome, deployment configs." />
+  <LinkCard title="Astro" href="/#templates" description="Astro + Starlight, Tailwind v4, TypeScript, Biome." />
+  <LinkCard title="SolidStart" href="/#templates" description="SolidStart, Tailwind v4, TypeScript, conformance tooling." />
+</CardGrid>
+
+---
+
+## After scaffolding? Use xtarterize
+
+Once your project is scaffolded, use **xtarterize** to keep your
+conformance configs in sync as the ecosystem evolves.
+
+| create-xtarter-app | xtarterize |
+|---|---|
+| Day 0 — scaffold new projects | Day 1+ — keep existing projects in shape |
+| `pnpm create xtarter-app` | `npx xtarterize init` |
+
+<LinkButton href="/xtarterize/" variant="secondary">Learn about xtarterize →</LinkButton>

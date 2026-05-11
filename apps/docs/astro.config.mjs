@@ -4,16 +4,16 @@ import { defineConfig } from 'astro/config'
 import astroMermaid from 'astro-mermaid'
 
 export default defineConfig({
-	site: 'https://xtarterize.sznm.dev',
+	site: 'https://xtarter.sznm.dev',
 	vite: {
 		plugins: [tailwindcss()],
 	},
 	integrations: [
 		astroMermaid(),
 		starlight({
-			title: 'xtarterize',
+			title: 'xtarter',
 			description:
-				'an adaptive CLI tool that automates conformance configuration for JavaScript/TypeScript projects.',
+				'Production-grade starter templates and conformance tooling for JavaScript/TypeScript projects.',
 			customCss: ['./src/styles/global.css'],
 			social: [
 				{
@@ -24,66 +24,108 @@ export default defineConfig({
 			],
 			sidebar: [
 				{
-					label: 'Getting Started',
-					// autogenerate: { directory: 'getting-started' },
+					label: 'Home',
+					link: '/',
+				},
+				{
+					label: 'xtarterize',
+					collapsed: false,
 					items: [
 						{
-							label: 'Introduction',
-							link: '/getting-started/introduction/',
+							label: 'Overview',
+							link: '/xtarterize/',
 						},
 						{
-							label: 'Installation',
-							link: '/getting-started/installation/',
+							label: 'Getting Started',
+							items: [
+								{ autogenerate: { directory: 'xtarterize/getting-started' } },
+							],
 						},
 						{
-							label: 'Initialization',
-							link: '/getting-started/initialization/',
+							label: 'CLI Reference',
+							link: '/xtarterize/guide/cli/overview/',
+						},
+						{
+							label: 'Conformance Tasks',
+							link: '/xtarterize/guide/tasks/overview/',
+						},
+						{
+							label: 'Configuration',
+							link: '/xtarterize/guide/config/overview/',
+						},
+						{
+							label: 'Contributing',
+							collapsed: true,
+							items: [
+								{
+									label: 'Architecture',
+									link: '/xtarterize/contributing/architecture/overview/',
+								},
+								{
+									label: 'Project Detection',
+									link: '/xtarterize/contributing/core/detect/',
+								},
+								{
+									label: 'Preflight & Diagnostics',
+									link: '/xtarterize/contributing/core/preflight/',
+								},
+								{
+									label: 'Task Resolution',
+									link: '/xtarterize/contributing/core/resolve/',
+								},
+								{
+									label: 'Apply Engine',
+									link: '/xtarterize/contributing/core/apply/',
+								},
+								{
+									label: 'Tasks',
+									items: [
+										{
+											autogenerate: {
+												directory: 'xtarterize/contributing/tasks',
+											},
+										},
+									],
+								},
+								{
+									label: 'Patchers',
+									items: [
+										{
+											autogenerate: {
+												directory: 'xtarterize/contributing/patchers',
+											},
+										},
+									],
+								},
+							],
 						},
 					],
 				},
 				{
-					label: 'CLI Reference',
-					link: '/guide/cli/overview/',
-				},
-				{
-					label: 'Conformance Tasks',
-					link: '/guide/tasks/overview/',
-				},
-				{
-					label: 'Configuration',
-					link: '/guide/config/overview/',
-				},
-				{
-					label: 'Contributing',
+					label: 'create-xtarter-app',
 					collapsed: true,
 					items: [
 						{
-							label: 'Architecture',
-							link: '/contributing/architecture/overview/',
+							label: 'Overview',
+							link: '/create-xtarter-app/',
 						},
 						{
-							label: 'Project Detection',
-							link: '/contributing/core/detect/',
+							label: 'Getting Started',
+							items: [
+								{
+									autogenerate: {
+										directory: 'create-xtarter-app/getting-started',
+									},
+								},
+							],
 						},
 						{
-							label: 'Preflight & Diagnostics',
-							link: '/contributing/core/preflight/',
+							label: 'CLI Reference',
+							link: '/create-xtarter-app/guide/cli/',
 						},
 						{
-							label: 'Task Resolution',
-							link: '/contributing/core/resolve/',
-						},
-						{
-							label: 'Apply Engine',
-							link: '/contributing/core/apply/',
-						},
-						{
-							label: 'Tasks',
-							items: [{ autogenerate: { directory: 'contributing/tasks' } }],
-						},
-						{
-							label: 'Patchers',
-							items: [{ autogenerate: { directory: 'contributing/patchers' } }],
+							label: 'Templates',
+							link: '/create-xtarter-app/guide/templates/',
 						},
 					],
 				},

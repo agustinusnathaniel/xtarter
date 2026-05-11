@@ -239,6 +239,7 @@ body .hero .sl-link-button {
 }
 
 .feature-card {
+	margin: 0;
 	display: flex;
 	flex-direction: column;
 	padding: 1.75rem;
@@ -362,5 +363,56 @@ hr {
 	.hero-buttons {
 		flex-direction: column;
 		align-items: center;
+	}
+}
+
+/* ============================================
+   PRODUCT CARDS (hub page)
+   ============================================ */
+
+.product-grid {
+	display: grid;
+	grid-template-columns: repeat(2, 1fr);
+	gap: 1.5rem;
+	margin: 1.5rem 0;
+}
+
+.product-card {
+	margin: 0;
+	padding: 2rem;
+	border-radius: 12px;
+	border: 1px solid var(--sl-color-gray-5);
+	background: var(--sl-color-gray-6);
+	display: flex;
+	flex-direction: column;
+	gap: 0.75rem;
+}
+
+.product-card h2 {
+	margin: 0;
+	font-size: 1.25rem;
+	font-weight: 700;
+	font-family: var(--font-sans);
+	display: flex;
+	align-items: center;
+	gap: 0.5rem;
+}
+
+.product-card h2 svg {
+	color: var(--sl-color-accent);
+	flex-shrink: 0;
+}
+
+.product-card p {
+	margin: 0;
+	color: var(--sl-color-gray-2);
+	line-height: 1.6;
+	font-size: 0.95rem;
+	flex: 1;
+}
+
+@media (max-width: 640px) {
+	.product-grid {
+		grid-template-columns: 1fr;
 	}
 }

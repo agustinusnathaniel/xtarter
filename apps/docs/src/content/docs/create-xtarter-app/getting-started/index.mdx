@@ -1,0 +1,67 @@
+---
+title: Getting Started with create-xtarter-app
+description: Scaffold a new JavaScript/TypeScript project from production-grade templates in seconds.
+---
+
+import { LinkCard, CardGrid, LinkButton } from '@astrojs/starlight/components'
+
+## What is create-xtarter-app?
+
+`create-xtarter-app` scaffolds a new project from a curated set of production-grade
+templates. Every template comes pre-configured with Biome linting & formatting,
+TypeScript strict mode, GitHub Actions CI, and more — no setup required.
+
+## Quick Start
+
+Scaffold a new project in one command:
+
+```bash
+# Using pnpm (recommended)
+pnpm create xtarter-app
+
+# Using npm
+npm create xtarter-app@latest
+
+# Using bun
+bun create xtarter-app
+
+# Using yarn
+yarn create xtarter-app
+```
+
+The interactive CLI will guide you through:
+1. **Project name** — what to call your new project
+2. **Template** — pick from Next.js, Vite + React, and more
+3. **Package manager** — pnpm (recommended), npm, bun, or yarn
+4. **Git init** — whether to initialize a git repository
+5. **CI/CD cleanup** — whether to remove pre-configured CI configs
+
+:::note
+You can skip all prompts with `--yes` / `-y` to use the defaults (pnpm, git init, no CI cleanup).
+:::
+
+```bash
+# Scaffold with defaults
+pnpm create xtarter-app my-app --yes
+```
+
+## What you get
+
+Every template ships with a complete, production-ready setup:
+
+| Tool | What's configured |
+|------|-------------------|
+| **Biome** | Linting rules, formatting config, VS Code integration |
+| **TypeScript** | Strict mode, path aliases, compiler settings |
+| **GitHub Actions** | CI workflows for lint, type-check, test |
+| **VS Code** | Editor settings, recommended extensions |
+| **Agent Skills** | AI agent configuration files |
+
+<LinkButton href="/create-xtarter-app/guide/templates/" size="lg">Browse all templates →</LinkButton>
+
+## Next Steps
+
+- [Usage Guide](/create-xtarter-app/getting-started/usage/) — Walk through each prompt and option
+- [CLI Reference](/create-xtarter-app/guide/cli/) — All commands, arguments, and flags
+- [Template Catalog](/create-xtarter-app/guide/templates/) — Detailed descriptions of every template
+- [Keep in Sync](/xtarterize/) — After scaffolding, use xtarterize to maintain your configs

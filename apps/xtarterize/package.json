@@ -10,15 +10,15 @@
 		"starter",
 		"template"
 	],
-	"homepage": "https://xtarterize.sznm.dev",
+	"homepage": "https://xtarter.sznm.dev/xtarterize",
 	"bugs": {
-		"url": "https://github.com/agustinusnathaniel/xtarterize/issues"
+		"url": "https://github.com/agustinusnathaniel/xtarter/issues"
 	},
 	"license": "MIT",
 	"author": "agustinusnathaniel",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/agustinusnathaniel/xtarterize"
+		"url": "https://github.com/agustinusnathaniel/xtarter/tree/main/apps/xtarterize"
 	},
 	"bin": {
 		"xtarterize": "./dist/index.mjs"

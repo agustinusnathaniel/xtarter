@@ -1,0 +1,121 @@
+---
+title: Templates
+description: All available templates for create-xtarter-app — framework, tools, and features for each.
+---
+
+Every template is a production-grade starter with Biome linting & formatting,
+TypeScript strict mode, GitHub Actions CI, and VS Code settings pre-configured.
+
+## Available Templates
+
+### Next.js + Chakra UI
+
+| | |
+|---|---|
+| **ID** | `next-chakra` |
+| **Stack** | Next.js 16, Chakra UI v3, TypeScript |
+| **Repo** | [`nextarter-chakra`](https://github.com/agustinusnathaniel/nextarter-chakra) |
+
+**Features:** Next.js 16, Chakra UI v3, Biome, Turborepo, TypeScript, Playwright
+
+```bash
+pnpm create xtarter-app my-app --template next-chakra
+```
+
+---
+
+### Next.js + Tailwind
+
+| | |
+|---|---|
+| **ID** | `next-tailwind` |
+| **Stack** | Next.js 16, Tailwind CSS v4, TypeScript |
+| **Repo** | [`nextarter-tailwind`](https://github.com/agustinusnathaniel/nextarter-tailwind) |
+
+**Features:** Next.js 16, Tailwind CSS v4, Biome, TypeScript, Playwright
+
+```bash
+pnpm create xtarter-app my-app --template next-tailwind
+```
+
+---
+
+### Vite + React + Chakra
+
+| | |
+|---|---|
+| **ID** | `vite-chakra` |
+| **Stack** | Vite 7, React 19, Chakra UI v3, TanStack Router |
+| **Repo** | [`vite-react-chakra-starter`](https://github.com/agustinusnathaniel/vite-react-chakra-starter) |
+
+**Features:** Vite 7, React 19, Chakra UI v3, TanStack Router, TanStack Query, Biome, Vitest
+
+```bash
+pnpm create xtarter-app my-app --template vite-chakra
+```
+
+---
+
+### Vite + React + Tailwind
+
+| | |
+|---|---|
+| **ID** | `vite-tailwind` |
+| **Stack** | Vite 7, React 19, Tailwind CSS v4, TanStack Router |
+| **Repo** | [`vite-react-tailwind-starter`](https://github.com/agustinusnathaniel/vite-react-tailwind-starter) |
+
+**Features:** Vite 7, React 19, Tailwind CSS v4, TanStack Router, TanStack Query, Biome, Vitest
+
+```bash
+pnpm create xtarter-app my-app --template vite-tailwind
+```
+
+---
+
+### Vite + React + Hero UI
+
+| | |
+|---|---|
+| **ID** | `vite-hero` |
+| **Stack** | Vite 7, React 19, Hero UI |
+| **Repo** | [`vite-react-hero-starter`](https://github.com/agustinusnathaniel/vite-react-hero-starter) |
+
+**Features:** Vite 7, React 19, Hero UI, TanStack Router, Biome, Vitest
+
+```bash
+pnpm create xtarter-app my-app --template vite-hero
+```
+
+---
+
+## Template structure
+
+Every template follows a consistent layout:
+
+```
+my-app/
+├── src/                   # Application source
+├── public/                # Static assets
+├── biome.json             # Biome linting + formatting config
+├── tsconfig.json          # TypeScript strict mode
+├── package.json           # Dependencies and scripts
+├── .vscode/               # Editor settings + extensions
+├── .github/workflows/     # CI/CD workflows
+└── .agents/               # AI agent skills
+```
+
+## TemplateConfig type
+
+For programmatic usage, the `TemplateConfig` type:
+
+```ts
+interface TemplateConfig {
+  id: string          // Unique identifier (e.g. "vite-tailwind")
+  name: string        // Human-readable name
+  description: string // One-line description
+  repo: string        // GitHub owner/repo
+  branch: string      // Git branch (always "main")
+  provider: "github"  // Download provider
+  path?: string       // Optional subdirectory within repo
+}
+```
