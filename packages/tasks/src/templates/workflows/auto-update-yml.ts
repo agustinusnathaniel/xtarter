@@ -45,7 +45,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-${pm === 'pnpm' ? '      - uses: pnpm/action-setup@v4\n' : ''}      - uses: actions/setup-node@v6
+${pm === 'pnpm' ? '      - uses: pnpm/action-setup@v6\n' : ''}      - uses: actions/setup-node@v6
         with:
           node-version: 20${setupCache}
       - run: ${installCmd}
@@ -54,7 +54,6 @@ ${pm === 'pnpm' ? '      - uses: pnpm/action-setup@v4\n' : ''}      - uses: acti
 ${qualitySteps.join('\n')}
       - uses: peter-evans/create-pull-request@v8
         with:
-          token: \${{ secrets.GITHUB_TOKEN }}
           commit-message: 'chore(deps): update dependencies'
           title: 'chore(deps): update dependencies'
           body: 'Automated dependency updates'

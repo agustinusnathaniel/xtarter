@@ -22,7 +22,7 @@ export function renderCiWorkflow(profile: ProjectProfile): string {
 	const runTest = runScriptCommand(pm, 'test')
 	const setupCache = pm === 'bun' ? '' : `\n          cache: ${pm}`
 
-	const pnpmSetup = pm === 'pnpm' ? ['      - uses: pnpm/action-setup@v4'] : []
+	const pnpmSetup = pm === 'pnpm' ? ['      - uses: pnpm/action-setup@v6'] : []
 
 	const steps = [
 		'      - uses: actions/checkout@v6',
