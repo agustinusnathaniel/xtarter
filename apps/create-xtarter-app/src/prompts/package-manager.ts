@@ -1,4 +1,5 @@
-import { cancel, isCancel, select } from '@clack/prompts'
+import { select } from '@clack/prompts'
+import { abortIfCancelled } from '@xtarterize/core'
 import type { PackageManager } from '@/types'
 
 const packageManagerOptions = [
@@ -11,7 +12,6 @@ const packageManagerOptions = [
 export async function promptPackageManager(
 	selectedPm?: PackageManager,
 ): Promise<PackageManager> {
-	// If package manager is provided via CLI flag, validate and return it
 	if (selectedPm) {
 		const validPms = packageManagerOptions.map((o) => o.value)
 		if (!validPms.includes(selectedPm)) {
@@ -22,17 +22,13 @@ export async function promptPackageManager(
 		return selectedPm
 	}
 
-	// Otherwise, prompt the user
 	const result = await select({
 		message: 'Which package manager would you like to use?',
 		options: packageManagerOptions,
 		initialValue: 'pnpm',
 	})
 
-	if (isCancel(result)) {
-		cancel('Operation cancelled')
-		process.exit(0)
-	}
+	abortIfCancelled(result)
 
 	return result as PackageManager
 }

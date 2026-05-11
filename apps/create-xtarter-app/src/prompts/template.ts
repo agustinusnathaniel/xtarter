@@ -1,11 +1,11 @@
-import { cancel, isCancel, select } from '@clack/prompts'
+import { select } from '@clack/prompts'
+import { abortIfCancelled } from '@xtarterize/core'
 import type { TemplateConfig } from '@/templates/registry'
 import { getTemplateById, getTemplateChoices } from '@/templates/registry'
 
 export async function promptTemplate(
 	selectedTemplate?: string,
 ): Promise<TemplateConfig> {
-	// If template is provided via CLI flag, validate and return it
 	if (selectedTemplate) {
 		const template = getTemplateById(selectedTemplate)
 		if (!template) {
@@ -19,16 +19,12 @@ export async function promptTemplate(
 		return template
 	}
 
-	// Otherwise, prompt the user
 	const result = await select({
 		message: 'Which template would you like to use?',
 		options: getTemplateChoices(),
 	})
 
-	if (isCancel(result)) {
-		cancel('Operation cancelled')
-		process.exit(0)
-	}
+	abortIfCancelled(result)
 
 	const template = getTemplateById(result)
 	if (!template) {

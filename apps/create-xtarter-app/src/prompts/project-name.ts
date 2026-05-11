@@ -1,4 +1,5 @@
-import { cancel, isCancel, text } from '@clack/prompts'
+import { text } from '@clack/prompts'
+import { abortIfCancelled } from '@xtarterize/core'
 
 const PROJECT_NAME_REGEX = /^[a-zA-Z0-9-_]+$/
 
@@ -22,10 +23,7 @@ export async function promptProjectName(
 		},
 	})
 
-	if (isCancel(result)) {
-		cancel('Operation cancelled')
-		process.exit(0)
-	}
+	abortIfCancelled(result)
 
 	return result.trim()
 }

@@ -1,4 +1,4 @@
-import consola from 'consola'
+import { consola } from '@xtarterize/core'
 import { exec } from 'tinyexec'
 
 export interface GitInitOptions {
@@ -15,7 +15,6 @@ export async function initializeGit({
 	logger.start('Initializing git repository...')
 
 	try {
-		// Initialize git repo
 		await exec('git', ['init'], {
 			nodeOptions: {
 				cwd: projectPath,
@@ -23,7 +22,6 @@ export async function initializeGit({
 			},
 		})
 
-		// Add all files
 		await exec('git', ['add', '.'], {
 			nodeOptions: {
 				cwd: projectPath,
@@ -31,7 +29,6 @@ export async function initializeGit({
 			},
 		})
 
-		// Create initial commit
 		await exec('git', ['commit', '-m', message], {
 			nodeOptions: {
 				cwd: projectPath,

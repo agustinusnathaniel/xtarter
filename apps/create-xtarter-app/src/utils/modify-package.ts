@@ -1,6 +1,6 @@
 import { access, readFile, rm, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import consola from 'consola'
+import { consola } from '@xtarterize/core'
 import { glob } from 'tinyglobby'
 
 export interface ModifyPackageOptions {
@@ -37,12 +37,9 @@ export async function modifyPackageJson({
 		const content = await readFile(packageJsonPath, 'utf-8')
 		const packageJson = JSON.parse(content)
 
-		// Update package name
 		packageJson.name = projectName.toLowerCase().replace(/[^a-z0-9-]/g, '-')
 
-		// Remove any workspace references if present
 		if (packageJson.pnpm?.overrides) {
-			// Keep overrides but clean up any workspace refs
 			for (const key of Object.keys(packageJson.pnpm.overrides)) {
 				if (packageJson.pnpm.overrides[key].includes('workspace:')) {
 					delete packageJson.pnpm.overrides[key]
@@ -102,7 +99,6 @@ export async function cleanCIConfigs({
 			}
 		}
 
-		// Also check for workflow files
 		const workflowFiles = await glob('.github/workflows/**/*', {
 			cwd: projectPath,
 			onlyFiles: true,

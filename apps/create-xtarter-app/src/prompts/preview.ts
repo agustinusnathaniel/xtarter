@@ -1,11 +1,10 @@
-import { styleText } from 'node:util'
-import { cancel, isCancel, text } from '@clack/prompts'
+import { text } from '@clack/prompts'
+import { abortIfCancelled, pc } from '@xtarterize/core'
 import { getTemplateById, TEMPLATES } from '@/templates/registry'
 
 export async function previewTemplate(templateId?: string): Promise<void> {
 	let selectedTemplateId = templateId
 
-	// If template not provided, prompt for it
 	if (!selectedTemplateId) {
 		const result = await text({
 			message: 'Which template would you like to preview?',
@@ -21,45 +20,37 @@ export async function previewTemplate(templateId?: string): Promise<void> {
 			},
 		})
 
-		if (isCancel(result)) {
-			cancel('Operation cancelled')
-			process.exit(0)
-		}
+		abortIfCancelled(result)
 
 		selectedTemplateId = result.trim()
 	}
 
 	const template = getTemplateById(selectedTemplateId)
 	if (!template) {
+		console.log(pc.red(`✖ Template "${selectedTemplateId}" not found`))
 		console.log(
-			styleText('red', `✖ Template "${selectedTemplateId}" not found`),
-		)
-		console.log(
-			styleText(
-				'yellow',
+			pc.yellow(
 				`Available templates: ${TEMPLATES.map((t) => t.id).join(', ')}`,
 			),
 		)
 		process.exit(1)
 	}
 
-	// Display template info
-	console.log(`\n${styleText('bold', styleText('cyan', '═'.repeat(60)))}`)
-	console.log(styleText('bold', styleText('white', `  ${template.name}`)))
-	console.log(styleText('bold', styleText('cyan', '═'.repeat(60))))
+	console.log(`\n${pc.bold(pc.cyan('═'.repeat(60)))}`)
+	console.log(pc.bold(pc.white(`  ${template.name}`)))
+	console.log(pc.bold(pc.cyan('═'.repeat(60))))
 	console.log()
-	console.log(`${styleText('gray', 'ID:')}  ${template.id}`)
-	console.log(styleText('gray', 'Description:'))
+	console.log(`${pc.dim('ID:')}  ${template.id}`)
+	console.log(pc.dim('Description:'))
 	console.log(`  ${template.description}`)
 	console.log()
-	console.log(styleText('gray', 'Repository:'))
+	console.log(pc.dim('Repository:'))
 	console.log(`  https://github.com/${template.repo}`)
 	console.log()
-	console.log(`${styleText('gray', 'Branch:')}  ${template.branch}`)
+	console.log(`${pc.dim('Branch:')}  ${template.branch}`)
 	console.log()
 
-	// Show what's included (based on template)
-	console.log(styleText('bold', 'Features:'))
+	console.log(pc.bold('Features:'))
 
 	const featureMap: Record<string, string[]> = {
 		'next-chakra': [
@@ -107,15 +98,13 @@ export async function previewTemplate(templateId?: string): Promise<void> {
 
 	const features = featureMap[template.id] || ['See repository for details']
 	for (const feature of features) {
-		console.log(`${styleText('green', '  ✔')} ${feature}`)
+		console.log(`${pc.green('  ✔')} ${feature}`)
 	}
 
 	console.log()
-	console.log(styleText('bold', 'Usage:'))
-	console.log(
-		`  ${styleText('cyan', `npx create-xtarter-app my-app -t ${template.id}`)}`,
-	)
+	console.log(pc.bold('Usage:'))
+	console.log(`  ${pc.cyan(`npx create-xtarter-app my-app -t ${template.id}`)}`)
 	console.log()
-	console.log(styleText('bold', styleText('cyan', '═'.repeat(60))))
+	console.log(pc.bold(pc.cyan('═'.repeat(60))))
 	console.log()
 }

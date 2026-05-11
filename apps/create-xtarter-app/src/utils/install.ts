@@ -1,4 +1,4 @@
-import consola from 'consola'
+import { consola } from '@xtarterize/core'
 import { exec } from 'tinyexec'
 import type { PackageManager } from '@/types'
 

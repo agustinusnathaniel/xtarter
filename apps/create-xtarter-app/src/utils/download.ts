@@ -1,4 +1,4 @@
-import consola from 'consola'
+import { consola } from '@xtarterize/core'
 import { downloadTemplate } from 'giget'
 import type { TemplateConfig } from '@/templates/registry'
 
@@ -9,7 +9,7 @@ export interface DownloadOptions {
 }
 
 const MAX_RETRIES = 3
-const RETRY_DELAY = 1000 // 1 second
+const RETRY_DELAY = 1000
 
 function sleep(ms: number): Promise<void> {
 	return new Promise((resolve) => setTimeout(resolve, ms))
@@ -30,8 +30,6 @@ export async function downloadTemplateFiles({
 				`Downloading template ${template.name}...${attempt > 1 ? ` (attempt ${attempt}/${MAX_RETRIES})` : ''}`,
 			)
 
-			// Build the source string for giget
-			// Format: github:owner/repo#branch
 			const source = `github:${template.repo}#${template.branch}`
 
 			await downloadTemplate(source, {
@@ -41,11 +39,10 @@ export async function downloadTemplateFiles({
 			})
 
 			logger.success(`Template downloaded to ${targetPath}`)
-			return // Success, exit retry loop
+			return
 		} catch (error) {
 			lastError = error instanceof Error ? error : new Error('Unknown error')
 
-			// Check if it's a network error (retryable)
 			const isNetworkError =
 				lastError.message.includes('ENOTFOUND') ||
 				lastError.message.includes('ECONNREFUSED') ||
@@ -63,6 +60,5 @@ export async function downloadTemplateFiles({
 		}
 	}
 
-	// Should never reach here, but just in case
 	throw lastError || new Error('Download failed after retries')
 }

@@ -1,16 +1,16 @@
-import { styleText } from 'node:util'
+import { pc } from '@xtarterize/core'
 
-export const APP_NAME: string = styleText('cyanBright', 'create-xtarter-app')
+export const APP_NAME: string = pc.cyan('create-xtarter-app')
 
 export const BANNER: string = `
-${styleText('cyanBright', '╔════════════════════════════════════════════╗')}
-${styleText('cyanBright', '║')}                                        ${styleText('cyanBright', '║')}
-${styleText('cyanBright', '║')}   ${styleText('bold', 'create-xtarter-app')}                    ${styleText('cyanBright', '║')}
-${styleText('cyanBright', '║')}                                        ${styleText('cyanBright', '║')}
-${styleText('cyanBright', '║')}   ${styleText('gray', 'Fast project scaffolding')}               ${styleText('cyanBright', '║')}
-${styleText('cyanBright', '║')}   ${styleText('gray', 'for modern web apps')}                    ${styleText('cyanBright', '║')}
-${styleText('cyanBright', '║')}                                        ${styleText('cyanBright', '║')}
-${styleText('cyanBright', '╚════════════════════════════════════════════╝')}
+${pc.cyan('╔════════════════════════════════════════════╗')}
+${pc.cyan('║')}                                        ${pc.cyan('║')}
+${pc.cyan('║')}   ${pc.bold('create-xtarter-app')}                    ${pc.cyan('║')}
+${pc.cyan('║')}                                        ${pc.cyan('║')}
+${pc.cyan('║')}   ${pc.dim('Fast project scaffolding')}               ${pc.cyan('║')}
+${pc.cyan('║')}   ${pc.dim('for modern web apps')}                    ${pc.cyan('║')}
+${pc.cyan('║')}                                        ${pc.cyan('║')}
+${pc.cyan('╚════════════════════════════════════════════╝')}
 `
 
 export const DEFAULT_TEMPLATE = 'next-chakra'
@@ -39,31 +39,31 @@ export const SUPPORTED_PACKAGE_MANAGERS = {
 } as const
 
 export const HELP_TEXT: string = `
-${styleText('bold', 'Usage:')}
-  ${styleText('cyan', 'npx create-xtarter-app@latest')} [project-name] [options]
+${pc.bold('Usage:')}
+  ${pc.cyan('npx create-xtarter-app@latest')} [project-name] [options]
 
-${styleText('bold', 'Options:')}
-  ${styleText('cyan', '--template, -t')} <name>     Template to use (skips prompt)
-  ${styleText('cyan', '--preview, -P')}             Preview template details
-  ${styleText('cyan', '--pm, -p')} <manager>        Package manager (pnpm|npm|bun|yarn)
-  ${styleText('cyan', '--no-git')}                  Skip git initialization
-  ${styleText('cyan', '--clean')}                   Remove CI/CD configs after scaffold
-  ${styleText('cyan', '--yes, -y')}                 Use defaults (pnpm, git init, no clean)
-  ${styleText('cyan', '--help, -h')}                Show this help message
-  ${styleText('cyan', '--version, -v')}             Show version number
+${pc.bold('Options:')}
+  ${pc.cyan('--template, -t')} <name>     Template to use (skips prompt)
+  ${pc.cyan('--preview, -P')}             Preview template details
+  ${pc.cyan('--pm, -p')} <manager>        Package manager (pnpm|npm|bun|yarn)
+  ${pc.cyan('--no-git')}                  Skip git initialization
+  ${pc.cyan('--clean')}                   Remove CI/CD configs after scaffold
+  ${pc.cyan('--yes, -y')}                 Use defaults (pnpm, git init, no clean)
+  ${pc.cyan('--help, -h')}                Show this help message
+  ${pc.cyan('--version, -v')}             Show version number
 
-${styleText('bold', 'Examples:')}
-  ${styleText('gray', '# Preview a template')}
-  ${styleText('cyan', 'npx create-xtarter-app@latest --preview vite-tailwind')}
+${pc.bold('Examples:')}
+  ${pc.dim('# Preview a template')}
+  ${pc.cyan('npx create-xtarter-app@latest --preview vite-tailwind')}
 
-  ${styleText('gray', '# Interactive mode')}
-  ${styleText('cyan', 'npx create-xtarter-app@latest')}
+  ${pc.dim('# Interactive mode')}
+  ${pc.cyan('npx create-xtarter-app@latest')}
 
-  ${styleText('gray', '# Quick scaffold with defaults')}
-  ${styleText('cyan', 'npx create-xtarter-app@latest my-app -y')}
+  ${pc.dim('# Quick scaffold with defaults')}
+  ${pc.cyan('npx create-xtarter-app@latest my-app -y')}
 
-  ${styleText('gray', '# Full control')}
-  ${styleText('cyan', 'npx create-xtarter-app@latest my-app -t vite-chakra -p pnpm --no-git')}
+  ${pc.dim('# Full control')}
+  ${pc.cyan('npx create-xtarter-app@latest my-app -t vite-chakra -p pnpm --no-git')}
 `
 
 export const VERSION = '0.1.0'

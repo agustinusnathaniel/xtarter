@@ -1,7 +1,7 @@
-import { cancel, confirm, isCancel } from '@clack/prompts'
+import { confirm } from '@clack/prompts'
+import { abortIfCancelled } from '@xtarterize/core'
 
 export async function promptGitInit(skipGit?: boolean): Promise<boolean> {
-	// If --no-git flag is provided, skip git initialization
 	if (skipGit) {
 		return false
 	}
@@ -11,16 +11,12 @@ export async function promptGitInit(skipGit?: boolean): Promise<boolean> {
 		initialValue: true,
 	})
 
-	if (isCancel(result)) {
-		cancel('Operation cancelled')
-		process.exit(0)
-	}
+	abortIfCancelled(result)
 
 	return result
 }
 
 export async function promptCleanCI(cleanMode?: boolean): Promise<boolean> {
-	// If --clean flag is provided, enable clean mode
 	if (cleanMode) {
 		return true
 	}
@@ -30,10 +26,7 @@ export async function promptCleanCI(cleanMode?: boolean): Promise<boolean> {
 		initialValue: false,
 	})
 
-	if (isCancel(result)) {
-		cancel('Operation cancelled')
-		process.exit(0)
-	}
+	abortIfCancelled(result)
 
 	return result
 }
