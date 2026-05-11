@@ -1,6 +1,10 @@
 # xtarterize
 
-Apply production-grade conformance configurations to any JavaScript/TypeScript project in one command.
+> Apply production-grade conformance configurations to any JavaScript/TypeScript project
+
+[![npm version](https://img.shields.io/npm/v/xtarterize.svg)](https://www.npmjs.com/package/xtarterize)
+[![npm downloads](https://img.shields.io/npm/dm/xtarterize.svg)](https://www.npmjs.com/package/xtarterize)
+[![License](https://img.shields.io/npm/l/xtarterize.svg)](LICENSE)
 
 `xtarterize` detects your tech stack automatically, then applies curated configurations for linting, type checking, CI workflows, code generation, editor settings, and more — without destructively overwriting your existing setup.
 
