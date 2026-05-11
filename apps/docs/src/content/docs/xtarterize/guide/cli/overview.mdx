@@ -24,9 +24,58 @@ The xtarterize CLI provides commands to detect, apply, and maintain conformance 
 | [`xtarterize sync`](#sync) | Update existing configs to latest templates |
 | [`xtarterize diff`](#diff) | Show pending changes without applying |
 | [`xtarterize check`](#check) | Audit current conformance status |
+| [`xtarterize doctor`](#doctor) | Run environment, tools, and project diagnostics |
 | [`xtarterize add <task-id>`](#add) | Apply a single conformance task |
 | [`xtarterize restore <file>`](#restore) | Restore a file from backup |
 | [`xtarterize list`](#list) | List all available tasks with status |
+
+## `doctor`
+
+Run comprehensive project diagnostics. Checks are grouped into four categories:
+
+| Group | Checks |
+|-------|--------|
+| **Environment** | Node.js version against `engines.node`, Git installation |
+| **Tools** | Required tools from `package.json` are installed (with version info) |
+| **Project** | Lockfile, `tsconfig.json`, `README.md`, `.gitignore` |
+| **Configuration** | Conflicting tool detection (e.g., Biome + ESLint/Prettier) |
+
+### Options
+
+| Option | Description |
+|--------|-------------|
+| `--verbose` | Show system information (OS, architecture, CPU count, RAM) |
+| `--quiet` | Suppress detailed output, show summary only |
+
+```bash
+npx xtarterize doctor
+npx xtarterize doctor --verbose
+```
+
+With `--verbose`, a **System** group is added displaying platform, OS release, architecture, CPU count, and RAM:
+
+```
+  System
+    ✅ Platform | Linux 6.8.0 | x64 | 16 CPUs | 32 GB RAM
+
+  Environment
+    ✅ Node.js 22.14.0 satisfies engines.node ^22.0.0
+    ✅ Git 2.43.0 is installed
+
+  Tools
+    ✅ TypeScript 5.7.3 is installed
+    ✅ Biome 1.9.4 is installed
+
+  Project
+    ✅ pnpm-lock.yaml exists
+    ✅ tsconfig.json exists
+    ⚠ README.md is missing
+
+  Configuration
+    ✅ No conflicting tools detected
+```
+
+All diagnostics also support `--json` for machine-readable output.
 
 ## `init`
 
