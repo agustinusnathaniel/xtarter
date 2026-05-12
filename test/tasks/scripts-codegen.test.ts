@@ -160,6 +160,14 @@ describe('packageScriptsTask', () => {
 					upgrade: 'pnpm up -i -L',
 					knip: 'knip',
 				},
+				devDependencies: {
+					vitest: '^3.0.0',
+					'@biomejs/biome': '^1.0.0',
+					typescript: '^5.3.0',
+					knip: '^5.0.0',
+					'commit-and-tag-version': '^12.0.0',
+					plop: '^4.0.0',
+				},
 			}),
 		)
 

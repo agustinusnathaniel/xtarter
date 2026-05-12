@@ -25,6 +25,12 @@ export interface PackageJsonScriptEntry {
 	value: string
 }
 
+export interface PackageJsonTaskDep {
+	depName: string
+	installDev?: boolean
+	script?: string
+}
+
 export interface PackageJsonTaskOptions {
 	id: string
 	label: string
@@ -38,6 +44,11 @@ export interface PackageJsonTaskOptions {
 	depName?: string
 	depCondition?: (profile: ProjectProfile) => boolean
 	installDev?: boolean
+	deps?: PackageJsonTaskDep[]
+	getDeps?: (
+		cwd: string,
+		profile: ProjectProfile,
+	) => Promise<PackageJsonTaskDep[]>
 	files?: {
 		filepath: string | ((profile: ProjectProfile) => string)
 		render: (cwd: string, profile: ProjectProfile) => Promise<string> | string
@@ -54,6 +65,45 @@ function resolveFilepath(
 	profile: ProjectProfile,
 ): string {
 	return typeof filepath === 'function' ? filepath(profile) : filepath
+}
+
+async function resolveDeps(
+	options: PackageJsonTaskOptions,
+	cwd: string,
+	profile: ProjectProfile,
+): Promise<PackageJsonTaskDep[]> {
+	if (options.getDeps) {
+		return options.getDeps(cwd, profile)
+	}
+	if (options.deps) {
+		return options.deps
+	}
+	if (options.depName) {
+		return [{ depName: options.depName, installDev: options.installDev }]
+	}
+	return []
+}
+
+function filterDepsByMissingScripts(
+	deps: PackageJsonTaskDep[],
+	missingScripts: PackageJsonScriptEntry[],
+): PackageJsonTaskDep[] {
+	const missingScriptNames = new Set(missingScripts.map((s) => s.script))
+	return deps.filter((dep) => !dep.script || missingScriptNames.has(dep.script))
+}
+
+async function getMissingDeps(
+	options: PackageJsonTaskOptions,
+	cwd: string,
+	profile: ProjectProfile,
+): Promise<PackageJsonTaskDep[]> {
+	const pkg = await readPackageJson(cwd)
+	if (!pkg) return []
+	const allDeps = await resolveDeps(options, cwd, profile)
+	return allDeps.filter(
+		(dep) =>
+			!pkg.devDependencies?.[dep.depName] && !pkg.dependencies?.[dep.depName],
+	)
 }
 
 function shouldInstallDep(
@@ -78,7 +128,12 @@ export function createPackageJsonTask(options: PackageJsonTaskOptions): Task {
 			if (!pkg) return 'conflict'
 
 			if (options.checkFn) {
-				return options.checkFn(cwd, profile, pkg)
+				const status = await options.checkFn(cwd, profile, pkg)
+				if (status === 'skip') {
+					const missing = await getMissingDeps(options, cwd, profile)
+					if (missing.length > 0) return 'patch'
+				}
+				return status
 			}
 
 			const scripts = await resolveScripts(options, cwd, profile)
@@ -153,6 +208,34 @@ export function createPackageJsonTask(options: PackageJsonTaskOptions): Task {
 							diffs.push({ filepath: 'package.json', before, after })
 						}
 					}
+
+					const allDeps = await resolveDeps(options, cwd, profile)
+					const neededDeps = filterDepsByMissingScripts(allDeps, missingScripts)
+					const missingDeps = neededDeps.filter(
+						(dep) =>
+							!pkg.devDependencies?.[dep.depName] &&
+							!pkg.dependencies?.[dep.depName],
+					)
+					if (missingDeps.length > 0) {
+						const devDeps = missingDeps.filter((dep) => dep.installDev ?? true)
+						const prodDeps = missingDeps.filter(
+							(dep) => !(dep.installDev ?? true),
+						)
+						if (devDeps.length > 0) {
+							diffs.push({
+								filepath: `devDependencies (${devDeps.map((d) => d.depName).join(', ')})`,
+								before: null,
+								after: devDeps.map((d) => d.depName).join('\n'),
+							})
+						}
+						if (prodDeps.length > 0) {
+							diffs.push({
+								filepath: `dependencies (${prodDeps.map((d) => d.depName).join(', ')})`,
+								before: null,
+								after: prodDeps.map((d) => d.depName).join('\n'),
+							})
+						}
+					}
 				}
 			}
 
@@ -160,13 +243,27 @@ export function createPackageJsonTask(options: PackageJsonTaskOptions): Task {
 		},
 
 		async apply(cwd, profile): Promise<void> {
-			const depName = options.depName
-			if (depName && shouldInstallDep(options, profile)) {
+			const scripts = await resolveScripts(options, cwd, profile)
+			const rawExisting = (await readPackageJson(cwd))?.scripts ?? {}
+			const existingScripts: Record<string, string> = {}
+			for (const [key, value] of Object.entries(rawExisting)) {
+				if (value !== undefined) {
+					existingScripts[key] = value
+				}
+			}
+			const missingScripts = filterMissingScripts(existingScripts, scripts)
+
+			const allDeps = await resolveDeps(options, cwd, profile)
+			const neededDeps = filterDepsByMissingScripts(allDeps, missingScripts)
+			for (const dep of neededDeps) {
 				const pkg = await readPackageJson(cwd)
-				if (!pkg?.devDependencies?.[depName] && !pkg?.dependencies?.[depName]) {
-					await addDependency([depName], {
+				if (
+					!pkg?.devDependencies?.[dep.depName] &&
+					!pkg?.dependencies?.[dep.depName]
+				) {
+					await addDependency([dep.depName], {
 						cwd,
-						dev: options.installDev ?? true,
+						dev: dep.installDev ?? true,
 					})
 				}
 			}
@@ -182,15 +279,6 @@ export function createPackageJsonTask(options: PackageJsonTaskOptions): Task {
 
 			const pkg = await readPackageJson(cwd)
 			if (pkg) {
-				const scripts = await resolveScripts(options, cwd, profile)
-				const rawExisting = pkg.scripts ?? {}
-				const existingScripts: Record<string, string> = {}
-				for (const [key, value] of Object.entries(rawExisting)) {
-					if (value !== undefined) {
-						existingScripts[key] = value
-					}
-				}
-				const missingScripts = filterMissingScripts(existingScripts, scripts)
 				if (missingScripts.length > 0) {
 					const incomingScripts: Record<string, string> = {}
 					for (const s of missingScripts) {

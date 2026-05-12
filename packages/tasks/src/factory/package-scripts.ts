@@ -4,6 +4,7 @@ import {
 	extractTool,
 	findEquivalentScriptKey,
 } from './equivalence.js'
+import type { PackageJsonTaskDep } from './task.js'
 import { createPackageJsonTask } from './task.js'
 
 function getUpgradeCommand(pm: string): string {
@@ -258,5 +259,46 @@ export const packageScriptsTask = createPackageJsonTask({
 		}
 
 		return hasExistingScripts ? 'patch' : 'new'
+	},
+	getDeps: async (cwd, profile) => {
+		const deps: PackageJsonTaskDep[] = []
+
+		deps.push({ depName: 'vitest', installDev: true, script: 'test' })
+
+		const useUltracite = await hasUltracite(cwd)
+		if (!useUltracite) {
+			deps.push({
+				depName: '@biomejs/biome',
+				installDev: true,
+				script: 'biome',
+			})
+		}
+
+		if (profile.typescript) {
+			deps.push({
+				depName: 'typescript',
+				installDev: true,
+				script: 'typecheck',
+			})
+			deps.push({ depName: 'knip', installDev: true, script: 'knip' })
+		}
+
+		if (profile.existing.changeset) {
+			deps.push({
+				depName: '@changesets/cli',
+				installDev: true,
+				script: 'changeset',
+			})
+		} else {
+			deps.push({
+				depName: 'commit-and-tag-version',
+				installDev: true,
+				script: 'release',
+			})
+		}
+
+		deps.push({ depName: 'plop', installDev: true, script: 'plop' })
+
+		return deps
 	},
 })
