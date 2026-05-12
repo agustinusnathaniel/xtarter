@@ -29,6 +29,14 @@ import { viteCheckerTask } from '@/vite/checker.js'
 import { viteVisualizerTask } from '@/vite/visualizer.js'
 
 export {
+	checkJsonConfigTask,
+	dryRunJsonConfigTask,
+	ensureTaskDependency,
+	ensureTaskParentDir,
+	writeTaskDiffs,
+} from '@/factory/index.js'
+
+export {
 	agentsMdTask,
 	autoUpdateWorkflowTask,
 	biomeTask,
