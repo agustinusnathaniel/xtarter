@@ -3,7 +3,7 @@ import { defineConfig } from 'vite-plus'
 export default defineConfig({
 	pack: {
 		entry: ['src/cli.ts', 'src/index.ts'],
-		target: 'node18',
+		target: 'node20',
 		platform: 'node',
 		format: ['esm'],
 		clean: true,

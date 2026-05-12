@@ -143,8 +143,11 @@ flowchart LR
   </TabItem>
   <TabItem label="Check">
     ```bash
-    # Format, lint, and typecheck in one command
-    vp check
+    # Format and lint with Biome
+    pnpm check
+
+    # Type check separately (Turborepo)
+    pnpm typecheck
     ```
   </TabItem>
   <TabItem label="Develop">
