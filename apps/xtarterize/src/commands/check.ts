@@ -2,6 +2,7 @@ import {
 	pc,
 	runConflictChecks,
 	runToolInstallationChecks,
+	statusTag,
 } from '@xtarterize/core'
 import { defineCommand } from 'citty'
 import { diagnosticIcon } from '@/utils/display.js'
@@ -71,7 +72,7 @@ export const checkCommand = defineCommand({
 								: pc.red('✗')
 
 				console.log(
-					`  ${icon} ${task.label.padEnd(40)} ${pc.dim(task.id)} [${status}]`,
+					`  ${icon} ${task.label.padEnd(40)} ${pc.dim(task.id)} ${statusTag(status)}`,
 				)
 			}
 

@@ -6,6 +6,7 @@ export type {
 	Task,
 	TaskStatus,
 } from '@/_base.js'
+export type { ApplyOptions } from '@/apply.js'
 export { applyTasks } from '@/apply.js'
 export type { Backup } from '@/backup.js'
 export {
@@ -80,3 +81,5 @@ export {
 	writePackageJson,
 } from '@/utils/pkg.js'
 export { abortIfCancelled, createSpinner, isCI } from '@/utils/prompts.js'
+export type { TagColor } from '@/utils/tags.js'
+export { actionTag, statusTag, tag } from '@/utils/tags.js'

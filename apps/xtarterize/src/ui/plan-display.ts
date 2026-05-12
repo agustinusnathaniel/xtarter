@@ -1,5 +1,5 @@
 import type { Task, TaskStatus } from '@xtarterize/core'
-import { pc } from '@xtarterize/core'
+import { pc, statusTag } from '@xtarterize/core'
 import Table from 'cli-table3'
 
 export function displayPlan(
@@ -35,9 +35,8 @@ export function displayPlan(
 
 	for (const task of tasks) {
 		const status = statuses.get(task.id) ?? 'new'
-		const colorFn = getStatusColor(status)
 		table.push([
-			colorFn(getStatusLabel(status)),
+			statusTag(status),
 			task.label,
 			pc.dim(task.id),
 			pc.dim(task.group),
@@ -46,34 +45,4 @@ export function displayPlan(
 
 	console.log(table.toString())
 	console.log('')
-}
-
-function getStatusLabel(status: string): string {
-	switch (status) {
-		case 'new':
-			return 'new'
-		case 'patch':
-			return 'patch'
-		case 'skip':
-			return 'skip'
-		case 'conflict':
-			return 'conflict'
-		default:
-			return status
-	}
-}
-
-function getStatusColor(status: string): (text: string) => string {
-	switch (status) {
-		case 'new':
-			return pc.green
-		case 'patch':
-			return pc.yellow
-		case 'skip':
-			return pc.dim
-		case 'conflict':
-			return pc.red
-		default:
-			return (t: string) => t
-	}
 }

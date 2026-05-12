@@ -1,5 +1,5 @@
 import type { DiffHunk, FileDiff } from '@xtarterize/core'
-import { formatDiffHeader, pc } from '@xtarterize/core'
+import { actionTag, formatDiffHeader, pc } from '@xtarterize/core'
 import Table from 'cli-table3'
 
 export type DisplayFormat = 'terminal' | 'json'
@@ -45,7 +45,7 @@ function displayTerminalDiffs(diffs: FileDiff[]): void {
 
 	for (const diff of diffs) {
 		const isNew = diff.before === null
-		const action = isNew ? pc.green('create') : pc.yellow('modify')
+		const action = actionTag(isNew ? 'create' : 'modify')
 		const stats = diff.stats
 			? `${pc.green(`+${diff.stats.added}`)} ${pc.red(`-${diff.stats.removed}`)}`
 			: ''

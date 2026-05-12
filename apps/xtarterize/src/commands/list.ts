@@ -1,4 +1,4 @@
-import { pc } from '@xtarterize/core'
+import { pc, statusTag } from '@xtarterize/core'
 import { defineCommand } from 'citty'
 import { resolveCliContext, scanProject } from '@/utils/project.js'
 
@@ -57,7 +57,9 @@ export const listCommand = defineCommand({
 							? '⚠'
 							: '✗'
 
-			console.log(`  ${icon} ${task.label.padEnd(40)} ${pc.dim(task.id)}`)
+			console.log(
+				`  ${icon} ${task.label.padEnd(40)} ${pc.dim(task.id)} ${statusTag(status)}`,
+			)
 		}
 
 		console.log('')

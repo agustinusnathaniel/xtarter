@@ -9,6 +9,7 @@ import {
 	logInfo,
 	logSuccess,
 	runPreflight,
+	statusTag,
 } from '@xtarterize/core'
 import { getAllTasks } from '@xtarterize/tasks'
 import { defineCommand } from 'citty'
@@ -80,7 +81,7 @@ export const addCommand = defineCommand({
 		}
 
 		const status = await task.check(cwd, profile)
-		if (!quiet) console.log(`Status: ${status}`)
+		if (!quiet) console.log(`${statusTag(status)} ${task.id}`)
 
 		if (status === 'skip') {
 			logSuccess('Already conformant')
@@ -97,7 +98,7 @@ export const addCommand = defineCommand({
 			if (!proceed) return
 		}
 
-		const result = await applyTasks([task], cwd, profile, [task.id])
+		const result = await applyTasks([task], cwd, profile, [task.id], { quiet })
 		if (result.errors.length > 0) {
 			logError(`${result.errors.length} errors`)
 			for (const error of result.errors) {

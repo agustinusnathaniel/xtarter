@@ -44,9 +44,11 @@ async function applyAndReport(
 	profile: Awaited<ReturnType<typeof detectProject>>,
 	selectedIds?: string[],
 	includeConflicts?: boolean,
+	quiet?: boolean,
 ): Promise<void> {
 	const result = await applyTasks(tasks, cwd, profile, selectedIds, {
 		includeConflicts,
+		quiet: quiet ?? isCI(),
 	})
 	console.log('')
 	logSuccess(`Applied ${result.applied} tasks`)
@@ -193,6 +195,7 @@ async function promptAndApply(
 			profile,
 			selected,
 			args.includeConflicts,
+			args.quiet,
 		)
 		return
 	}
@@ -204,6 +207,7 @@ async function promptAndApply(
 		profile,
 		selectedIds,
 		args.includeConflicts,
+		args.quiet,
 	)
 }
 
@@ -233,7 +237,14 @@ export async function runCommand(
 	}
 
 	if (args.yes || quiet) {
-		await applyAndReport(actionableTasks, cwd, profile)
+		await applyAndReport(
+			actionableTasks,
+			cwd,
+			profile,
+			undefined,
+			undefined,
+			quiet,
+		)
 		return
 	}
 

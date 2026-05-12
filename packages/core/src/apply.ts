@@ -1,19 +1,27 @@
-import type { Task } from '@/_base.js'
+import { spinner } from '@clack/prompts'
+import type { Task, TaskStatus } from '@/_base.js'
 import { backupFile } from '@/backup.js'
 import type { ProjectProfile } from '@/detect.js'
-import { logError, logInfo, logSuccess } from '@/utils/logger.js'
+import { logError, logInfo, pc } from '@/utils/logger.js'
+import { statusTag } from '@/utils/tags.js'
+
+export interface ApplyOptions {
+	includeConflicts?: boolean
+	quiet?: boolean
+}
 
 export async function applyTasks(
 	tasks: Task[],
 	cwd: string,
 	profile: ProjectProfile,
 	selectedIds?: string[],
-	options: { includeConflicts?: boolean } = {},
+	options: ApplyOptions = {},
 ): Promise<{ applied: number; skipped: number; errors: string[] }> {
 	const toApply = selectedIds
 		? tasks.filter((t) => selectedIds.includes(t.id))
 		: tasks
 	const includeConflicts = options.includeConflicts ?? false
+	const quiet = options.quiet ?? false
 
 	let applied = 0
 	let skipped = 0
@@ -21,7 +29,7 @@ export async function applyTasks(
 
 	// Collect unique filepaths from all tasks that will be applied
 	const filesToBackup = new Set<string>()
-	const tasksToRun: Task[] = []
+	const tasksToRun: { task: Task; status: TaskStatus }[] = []
 
 	for (const task of toApply) {
 		try {
@@ -35,11 +43,11 @@ export async function applyTasks(
 				logInfo(`Skipping conflict: ${task.label} (${task.id})`)
 				continue
 			}
-			tasksToRun.push(task)
 			const diffs = await task.dryRun(cwd, profile)
 			for (const diff of diffs) {
 				filesToBackup.add(diff.filepath)
 			}
+			tasksToRun.push({ task, status })
 		} catch (error) {
 			const message = error instanceof Error ? error.message : String(error)
 			errors.push(`${task.id}: ${message}`)
@@ -52,16 +60,22 @@ export async function applyTasks(
 		await backupFile(cwd, filepath)
 	}
 
-	for (const task of tasksToRun) {
+	const s = quiet ? null : spinner()
+
+	for (const { task, status } of tasksToRun) {
 		try {
-			logInfo(`Applying: ${task.label} (${task.id})`)
+			s?.start(`Applying ${task.label}`)
 			await task.apply(cwd, profile)
 			applied++
-			logSuccess(`${task.label} applied successfully`)
+			s?.stop(`${statusTag(status)} ${task.label}`)
 		} catch (error) {
 			const message = error instanceof Error ? error.message : String(error)
 			errors.push(`${task.id}: ${message}`)
-			logError(`Failed to apply ${task.id}: ${message}`)
+			if (s) {
+				s.stop(`${pc.red('✗')} ${task.label} — ${message}`)
+			} else {
+				logError(`Failed to apply ${task.id}: ${message}`)
+			}
 		}
 	}
 
