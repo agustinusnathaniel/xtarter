@@ -17,7 +17,7 @@ hero:
       link: /xtarterize/guide/cli/overview/
 ---
 
-import { LinkCard, CardGrid, LinkButton } from '@astrojs/starlight/components'
+import { Aside, LinkCard, CardGrid, LinkButton } from '@astrojs/starlight/components'
 
 
 ## Why xtarterize?
@@ -58,11 +58,15 @@ Every [JavaScript](https://developer.mozilla.org/en-US/docs/Web/JavaScript)/[Typ
 
 <div class="feature-card">
 <div class="feature-icon">⚡</div>
-<h3>Works everywhere</h3>
-<p>React, Vue, Svelte, Solid, Node, Bun — if it's JS/TS, xtarterize knows how to configure it.</p>
+<h3>Wide framework support</h3>
+<p>React, Vue, Svelte, Solid, Node, Bun — xtarterize detects your stack and applies what fits.</p>
 </div>
 
 </div>
+
+<Aside type="caution" title="Current focus: Vite + React + TypeScript">
+  The CLI detects a wide range of frameworks, but the deepest task coverage is for **Vite**, **React**, and **TypeScript** projects. Support for other stacks (Vue, Svelte, Solid, Node CLI, Bun, etc.) works but is **experimental** — tasks may be fewer or less mature. Contributions to expand coverage are welcome.
+</Aside>
 
 ---
 

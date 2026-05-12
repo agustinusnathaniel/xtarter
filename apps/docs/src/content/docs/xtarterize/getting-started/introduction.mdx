@@ -3,7 +3,11 @@ title: Introduction
 description: Learn what xtarterize is and how it automates conformance configuration for JS/TS projects.
 ---
 
-import { Steps, LinkButton } from '@astrojs/starlight/components'
+import { Aside, Steps, LinkButton } from '@astrojs/starlight/components'
+
+<Aside type="caution" title="Current focus: Vite + React + TypeScript">
+  The deepest task coverage is for projects using **Vite**, **React**, and **TypeScript**. Other stacks (Vue, Svelte, Solid, Node CLI, Bun, etc.) are detected and partially supported, but their conformance tasks are **experimental** — fewer tasks may apply and coverage is less mature.
+</Aside>
 
 xtarterize is an adaptive CLI tool that automates the setup, enforcement, and ongoing synchronization of developer conformance configurations across [JavaScript](https://developer.mozilla.org/en-US/docs/Web/JavaScript)/[TypeScript](https://www.typescriptlang.org/) projects.
 
