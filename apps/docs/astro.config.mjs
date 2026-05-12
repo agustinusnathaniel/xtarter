@@ -14,7 +14,47 @@ export default defineConfig({
 			title: 'xtarter',
 			description:
 				'Production-grade starter templates and conformance tooling for JavaScript/TypeScript projects.',
+			// logo: {
+			// 	light: './src/assets/logo-light.svg',
+			// 	dark: './src/assets/logo-dark.svg',
+			// 	replacesTitle: true,
+			// },
+			// favicon: '/favicon.svg',
 			customCss: ['./src/styles/global.css'],
+			head: [
+				{
+					tag: 'meta',
+					attrs: {
+						property: 'og:title',
+						content:
+							'xtarter — Production-grade JS/TS starters & conformance tooling',
+					},
+				},
+				{
+					tag: 'meta',
+					attrs: {
+						property: 'og:description',
+						content:
+							'Scaffold new projects or bring conformance to existing ones. Biome, TypeScript strict, CI, editor configs — ready in seconds.',
+					},
+				},
+				{
+					tag: 'meta',
+					attrs: { property: 'og:url', content: 'https://xtarter.sznm.dev' },
+				},
+				{
+					tag: 'meta',
+					attrs: { name: 'twitter:card', content: 'summary_large_image' },
+				},
+				{
+					tag: 'link',
+					attrs: {
+						rel: 'icon',
+						href: '/favicon.svg',
+						type: 'image/svg+xml',
+					},
+				},
+			],
 			social: [
 				{
 					icon: 'github',

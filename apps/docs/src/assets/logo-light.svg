@@ -1,0 +1,5 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 32" fill="none">
+  <rect width="28" height="28" x="2" y="2" rx="6" fill="#f97316"/>
+  <path d="M9 9l14 14M23 9L9 23" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="36" y="23" font-family="system-ui, -apple-system, sans-serif" font-size="18" font-weight="700" fill="#1d1715">xtarter</text>
+</svg>
