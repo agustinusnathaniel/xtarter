@@ -255,6 +255,11 @@ export function createPackageJsonTask(options: PackageJsonTaskOptions): Task {
 
 			const allDeps = await resolveDeps(options, cwd, profile)
 			const neededDeps = filterDepsByMissingScripts(allDeps, missingScripts)
+
+			const isPnpmWorkspaceRoot = await fileExists(
+				resolvePath(cwd, 'pnpm-workspace.yaml'),
+			)
+
 			for (const dep of neededDeps) {
 				const pkg = await readPackageJson(cwd)
 				if (
@@ -264,6 +269,7 @@ export function createPackageJsonTask(options: PackageJsonTaskOptions): Task {
 					await addDependency([dep.depName], {
 						cwd,
 						dev: dep.installDev ?? true,
+						workspace: isPnpmWorkspaceRoot || undefined,
 					})
 				}
 			}

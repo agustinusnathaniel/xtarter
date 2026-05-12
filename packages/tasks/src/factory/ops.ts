@@ -1,6 +1,7 @@
 import type { FileDiff } from '@xtarterize/core'
 import {
 	ensureDir,
+	fileExists,
 	readPackageJson,
 	resolvePath,
 	writeFile,
@@ -22,9 +23,14 @@ export async function ensureTaskDependency(options: {
 
 	if (hasDep) return
 
+	const isPnpmWorkspaceRoot = await fileExists(
+		resolvePath(options.cwd, 'pnpm-workspace.yaml'),
+	)
+
 	await addDependency([options.depInstallName ?? options.depName], {
 		cwd: options.cwd,
 		dev: options.installDev ?? true,
+		workspace: isPnpmWorkspaceRoot || undefined,
 	})
 }
 
