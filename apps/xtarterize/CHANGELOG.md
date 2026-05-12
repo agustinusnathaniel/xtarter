@@ -1,5 +1,16 @@
 # xtarterize
 
+## 1.10.0
+
+### Minor Changes
+
+- [`e68ae84`](https://github.com/agustinusnathaniel/xtarter/commit/e68ae84a8dc673547e39bd86a887a6836927b9c7) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - enhance diff/dry-run output with hunks, stats, and semantic JSON diffing
+  - Add `DiffHunk`, `ChangeStats`, `SemanticEntry` types and optional fields on `FileDiff`
+  - Add `computeChangeStats`, `computeUnifiedHunks`, `computeSemanticJsonDiff`, `enhanceDiff` core utilities
+  - Add `--format` flag to `init`, `sync`, `diff`, and `add` commands (`terminal` | `json`)
+  - Terminal output now shows `+N -M` change stats per file, `@@` hunk headers, and key-level semantic diffs for JSON files
+  - JSON output includes structured hunks, stats, and semantic data for AI-agent consumption
+
 ## 1.9.0
 
 ## 1.8.0
