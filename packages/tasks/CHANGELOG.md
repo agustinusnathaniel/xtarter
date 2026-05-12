@@ -1,5 +1,19 @@
 # @xtarterize/tasks
 
+## 1.9.0
+
+### Minor Changes
+
+- [`34ed365`](https://github.com/agustinusnathaniel/xtarter/commit/34ed3655a5f7c588f77ca9c2484a4b5894ed066c) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - feat: changeset-aware release workflow with smart node version detection
+
+  Release workflow task now detects changeset usage and generates the appropriate workflow (changesets/action@v1 for changeset projects, tag-push for others). Smart Node.js version detection from .nvmrc and package.json engines.node, applied to all workflow templates.
+
+### Patch Changes
+
+- Updated dependencies [[`34ed365`](https://github.com/agustinusnathaniel/xtarter/commit/34ed3655a5f7c588f77ca9c2484a4b5894ed066c)]:
+  - @xtarterize/core@1.9.0
+  - @xtarterize/patchers@1.9.0
+
 ## 1.8.0
 
 ### Patch Changes
