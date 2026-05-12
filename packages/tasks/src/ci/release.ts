@@ -3,27 +3,32 @@ import { createFileTask } from '@/factory'
 import { renderReleaseWorkflow } from '@/templates/workflows/release-yml.js'
 
 function hasReleaseJob(content: string): boolean {
-	return /jobs:\s*\n\s*release:/s.test(content)
+	return /jobs:\s*\n\s+release:/s.test(content)
 }
 
-function areStructurallySimilar(existing: string, incoming: string): boolean {
-	const existingHasRelease = hasReleaseJob(existing)
-	const incomingHasRelease = hasReleaseJob(incoming)
-	if (!existingHasRelease && !incomingHasRelease) return false
-	if (existingHasRelease && incomingHasRelease) return true
-	return false
+function usesChangesetsAction(content: string): boolean {
+	return /changesets\/action@v1/.test(content)
 }
 
 async function checkReleaseWorkflow(
-	_profile: string,
+	_cwd: string,
 	profile: ProjectProfile,
 	_filepath: string | null,
 	content: string | null,
 ): Promise<TaskStatus> {
 	if (!content) return 'new'
-	const expected = renderReleaseWorkflow(profile)
+
+	const expected = renderReleaseWorkflow(profile, content)
+
 	if (content.trim() === expected.trim()) return 'skip'
-	if (areStructurallySimilar(content, expected)) return 'patch'
+
+	if (profile.existing.changeset) {
+		if (usesChangesetsAction(content)) return 'patch'
+		if (hasReleaseJob(content)) return 'conflict'
+		return 'new'
+	}
+
+	if (hasReleaseJob(content)) return 'patch'
 	return 'conflict'
 }
 
@@ -33,6 +38,6 @@ export const releaseWorkflowTask = createFileTask({
 	group: 'CI/CD',
 	applicable: (profile) => profile.hasGitHub,
 	filepath: '.github/workflows/release.yml',
-	render: (profile, _existing) => renderReleaseWorkflow(profile),
+	render: (profile, existing) => renderReleaseWorkflow(profile, existing),
 	checkFn: checkReleaseWorkflow,
 })

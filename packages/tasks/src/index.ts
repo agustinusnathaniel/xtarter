@@ -20,6 +20,7 @@ import { catVersionTask } from '@/release/cat-version.js'
 import { commitlintTask } from '@/release/commitlint.js'
 import { czgTask } from '@/release/czg.js'
 import { gitHooksTask } from '@/release/git-hooks.js'
+import { renderReleaseWorkflow } from '@/templates/workflows/release-yml.js'
 import { gitignoreTsbuildinfoTask } from '@/ts/gitignore-tsbuildinfo.js'
 import { incrementalTask } from '@/ts/incremental.js'
 import { pathsTask } from '@/ts/paths.js'
@@ -47,6 +48,7 @@ export {
 	pathsTask,
 	plopTask,
 	releaseWorkflowTask,
+	renderReleaseWorkflow,
 	renovateTask,
 	skillsInstallTask,
 	skillsTask,

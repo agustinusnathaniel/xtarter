@@ -1,10 +1,10 @@
 import type { ProjectProfile } from '@xtarterize/core'
 import { installDependenciesCommand, runScriptCommand } from 'nypm'
-import { ACTION_VERSIONS, NODE_VERSION } from './shared/versions.js'
+import { ACTION_VERSIONS } from './shared/versions.js'
 import type { YamlStep } from './shared/workflow.js'
 import { conditionalScriptStep, renderSteps } from './shared/workflow.js'
 
-export function renderReleaseWorkflow(profile: ProjectProfile): string {
+function renderTagPushWorkflow(profile: ProjectProfile): string {
 	const pm = profile.packageManager
 	const installCmd = installDependenciesCommand(pm)
 	const runLint = runScriptCommand(pm, 'lint')
@@ -22,7 +22,7 @@ export function renderReleaseWorkflow(profile: ProjectProfile): string {
 		{
 			uses: ACTION_VERSIONS.SETUP_NODE,
 			with: {
-				'node-version': String(NODE_VERSION),
+				'node-version': profile.nodeVersion,
 				...(pm !== 'bun' ? { cache: pm } : {}),
 			},
 		},
@@ -50,4 +50,112 @@ jobs:
     steps:
 ${renderSteps(steps, 6)}
 `
+}
+
+function renderChangesetWorkflow(profile: ProjectProfile): string {
+	const pm = profile.packageManager
+	const installCmd = installDependenciesCommand(pm)
+	const runBuild = runScriptCommand(pm, 'build')
+
+	const checkoutStep: YamlStep = {
+		uses: ACTION_VERSIONS.CHECKOUT,
+		with: { 'fetch-depth': '0' },
+	}
+
+	const steps: YamlStep[] = [checkoutStep]
+
+	if (pm === 'bun') {
+		steps.push({ uses: 'oven-sh/setup-bun@v2' })
+	} else {
+		steps.push({
+			uses: ACTION_VERSIONS.SETUP_NODE,
+			with: {
+				'node-version': profile.nodeVersion,
+				cache: pm,
+			},
+		})
+	}
+
+	if (pm === 'pnpm') {
+		steps.push({ uses: ACTION_VERSIONS.PNPM_SETUP, with: { cache: 'true' } })
+	}
+
+	steps.push(
+		{ run: installCmd },
+		conditionalScriptStep('Build', runBuild, 'build'),
+	)
+
+	const versionScript = runScriptCommand(pm, 'version-packages')
+	const publishScript = runScriptCommand(pm, 'release')
+
+	const changesetActionStep: YamlStep = {
+		name: 'Create Release Pull Request or Publish',
+		if: "github.ref == 'refs/heads/main'",
+		uses: 'changesets/action@v1',
+		with: {
+			version: versionScript,
+			publish: publishScript,
+			title: '"chore: version packages"',
+			commit: '"chore: version packages"',
+		},
+		env: {
+			GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}',
+		},
+	}
+
+	steps.push(changesetActionStep)
+
+	return `name: Release
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - ".changeset/**"
+      - "**/CHANGELOG.md"
+      - "**/package.json"
+      - ".github/workflows/release.yml"
+  pull_request:
+    types:
+      - opened
+      - synchronize
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version bump type (major, minor, patch). Leave empty for changeset-defined."
+        required: false
+        type: choice
+        options:
+          - major
+          - minor
+          - patch
+
+concurrency:
+  group: \${{ github.workflow }}-\${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+  packages: write
+  id-token: write
+  pull-requests: write
+
+jobs:
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    steps:
+${renderSteps(steps, 6)}
+`
+}
+
+export function renderReleaseWorkflow(
+	profile: ProjectProfile,
+	_existing: string | null,
+): string {
+	if (profile.existing.changeset) {
+		return renderChangesetWorkflow(profile)
+	}
+	return renderTagPushWorkflow(profile)
 }

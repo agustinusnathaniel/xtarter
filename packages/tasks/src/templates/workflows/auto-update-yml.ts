@@ -1,6 +1,6 @@
 import type { ProjectProfile } from '@xtarterize/core'
 import { installDependenciesCommand, runScriptCommand } from 'nypm'
-import { ACTION_VERSIONS, NODE_VERSION } from './shared/versions.js'
+import { ACTION_VERSIONS } from './shared/versions.js'
 import type { YamlStep } from './shared/workflow.js'
 import { conditionalScriptStep, renderSteps } from './shared/workflow.js'
 
@@ -23,7 +23,7 @@ export function renderAutoUpdateWorkflow(profile: ProjectProfile): string {
 		{
 			uses: ACTION_VERSIONS.SETUP_NODE,
 			with: {
-				'node-version': String(NODE_VERSION),
+				'node-version': profile.nodeVersion,
 				...(pm !== 'bun' ? { cache: pm } : {}),
 			},
 		},

@@ -5,6 +5,7 @@ export interface YamlStep {
 	with?: Record<string, string>
 	env?: Record<string, string>
 	continueOnError?: boolean
+	if?: string
 }
 
 export function renderSteps(steps: YamlStep[], indent: number): string {
@@ -14,6 +15,7 @@ export function renderSteps(steps: YamlStep[], indent: number): string {
 		.map((step) => {
 			const pairs: [string, string | boolean | Record<string, string>][] = []
 			if (step.name !== undefined) pairs.push(['name', step.name])
+			if (step.if !== undefined) pairs.push(['if', step.if])
 			if (step.uses !== undefined) pairs.push(['uses', step.uses])
 			if (step.run !== undefined) pairs.push(['run', step.run])
 			if (step.with !== undefined) pairs.push(['with', step.with])

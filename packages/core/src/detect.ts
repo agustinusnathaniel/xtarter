@@ -1,6 +1,11 @@
 // Main detection entry point - imports from modular files
 
-import { fileExists, findConfigFile, resolvePath } from '@/utils/fs.js'
+import {
+	fileExists,
+	findConfigFile,
+	readFile,
+	resolvePath,
+} from '@/utils/fs.js'
 import { readPackageJson } from '@/utils/pkg.js'
 
 // Import types
@@ -131,6 +136,37 @@ async function detectGitignore(cwd: string): Promise<boolean> {
 	return fileExists(resolvePath(cwd, '.gitignore'))
 }
 
+async function detectChangeset(cwd: string): Promise<boolean> {
+	const hasConfig = await fileExists(
+		resolvePath(cwd, '.changeset', 'config.json'),
+	)
+	if (hasConfig) return true
+	const pkg = await readPackageJson(cwd)
+	return !!(
+		pkg?.devDependencies?.['@changesets/cli'] ??
+		pkg?.dependencies?.['@changesets/cli']
+	)
+}
+
+async function detectNodeVersion(cwd: string): Promise<string> {
+	const nvmrcPath = resolvePath(cwd, '.nvmrc')
+	const nvmrcExists = await fileExists(nvmrcPath)
+	if (nvmrcExists) {
+		const content = await readFile(nvmrcPath)
+		const match = content.trim().match(/^v?(\d+)/)
+		if (match) return match[1]
+	}
+
+	const pkg = await readPackageJson(cwd)
+	const enginesNode = pkg?.engines?.node
+	if (enginesNode) {
+		const match = String(enginesNode).match(/\d+/)
+		if (match) return match[0]
+	}
+
+	return '20'
+}
+
 // ConfigDetector array - order matters for the result object
 const CONFIG_DETECTORS: ConfigDetector[] = [
 	{ key: 'biome', detect: detectBiome },
@@ -146,6 +182,7 @@ const CONFIG_DETECTORS: ConfigDetector[] = [
 	{ key: 'viteConfig', detect: detectViteConfig },
 	{ key: 'versionrc', detect: detectVersionrc },
 	{ key: 'gitignore', detect: detectGitignore },
+	{ key: 'changeset', detect: detectChangeset },
 ]
 
 async function detectExistingConfigs(
@@ -173,6 +210,8 @@ export async function detectProject(cwd: string): Promise<ProjectProfile> {
 		const existing = await detectExistingConfigs(cwd)
 		const packageManager = await detectPackageManager(cwd)
 
+		const nodeVersion = await detectNodeVersion(cwd)
+
 		return {
 			framework: null,
 			frameworkVersion: null,
@@ -186,6 +225,7 @@ export async function detectProject(cwd: string): Promise<ProjectProfile> {
 			monorepo: monorepoInfo.monorepo,
 			monorepoTool: monorepoInfo.monorepoTool,
 			workspaceRoot: monorepoInfo.workspaceRoot,
+			nodeVersion,
 			hasGitHub,
 			hasGit,
 			existing,
@@ -210,14 +250,21 @@ export async function detectProject(cwd: string): Promise<ProjectProfile> {
 		'typescript' in allDeps ||
 		(await fileExists(resolvePath(cwd, 'tsconfig.json')))
 
-	const [monorepoInfo, hasGitHub, hasGit, packageManager, existing] =
-		await Promise.all([
-			detectMonorepo(cwd),
-			fileExists(resolvePath(cwd, '.github')),
-			fileExists(resolvePath(cwd, '.git')),
-			detectPackageManager(cwd),
-			detectExistingConfigs(cwd),
-		])
+	const [
+		monorepoInfo,
+		hasGitHub,
+		hasGit,
+		packageManager,
+		existing,
+		nodeVersion,
+	] = await Promise.all([
+		detectMonorepo(cwd),
+		fileExists(resolvePath(cwd, '.github')),
+		fileExists(resolvePath(cwd, '.git')),
+		detectPackageManager(cwd),
+		detectExistingConfigs(cwd),
+		detectNodeVersion(cwd),
+	])
 
 	return {
 		framework,
@@ -232,6 +279,7 @@ export async function detectProject(cwd: string): Promise<ProjectProfile> {
 		monorepo: monorepoInfo.monorepo,
 		monorepoTool: monorepoInfo.monorepoTool,
 		workspaceRoot: monorepoInfo.workspaceRoot,
+		nodeVersion,
 		hasGitHub,
 		hasGit,
 		existing,

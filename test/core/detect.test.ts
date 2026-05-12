@@ -27,6 +27,7 @@ describe('detectProject', () => {
 		expect(profile.workspaceRoot).toBe(false)
 		expect(profile.hasGitHub).toBe(false)
 		expect(profile.hasGit).toBe(false)
+		expect(profile.nodeVersion).toBe('18')
 		expect(profile.existing.tsconfig).toBe(true)
 		expect(profile.existing.viteConfig).toBe(true)
 		expect(profile.existing.biome).toBe(false)
@@ -185,5 +186,77 @@ describe('detectProject', () => {
 
 		const profile = await detectProject(tmpDir)
 		expect(profile.bundler).toBe('vite')
+	})
+
+	it('nodeVersion defaults to 20 when no config present', async () => {
+		const tmpDir = await fs.mkdtemp(
+			path.join(os.tmpdir(), 'xtarterize-nodever-'),
+		)
+		await fs.writeFile(
+			path.join(tmpDir, 'package.json'),
+			JSON.stringify({ name: 'test-pkg' }),
+		)
+
+		const profile = await detectProject(tmpDir)
+		expect(profile.nodeVersion).toBe('20')
+	})
+
+	it('nodeVersion reads from .nvmrc', async () => {
+		const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'xtarterize-nvmrc-'))
+		await fs.writeFile(path.join(tmpDir, '.nvmrc'), '22\n')
+		await fs.writeFile(
+			path.join(tmpDir, 'package.json'),
+			JSON.stringify({ name: 'test-pkg' }),
+		)
+
+		const profile = await detectProject(tmpDir)
+		expect(profile.nodeVersion).toBe('22')
+	})
+
+	it('nodeVersion reads from .nvmrc stripping leading v', async () => {
+		const tmpDir = await fs.mkdtemp(
+			path.join(os.tmpdir(), 'xtarterize-nvmrc-v-'),
+		)
+		await fs.writeFile(path.join(tmpDir, '.nvmrc'), 'v18\n')
+		await fs.writeFile(
+			path.join(tmpDir, 'package.json'),
+			JSON.stringify({ name: 'test-pkg' }),
+		)
+
+		const profile = await detectProject(tmpDir)
+		expect(profile.nodeVersion).toBe('18')
+	})
+
+	it('nodeVersion falls back to engines.node from package.json', async () => {
+		const tmpDir = await fs.mkdtemp(
+			path.join(os.tmpdir(), 'xtarterize-engines-'),
+		)
+		await fs.writeFile(
+			path.join(tmpDir, 'package.json'),
+			JSON.stringify({
+				name: 'test-pkg',
+				engines: { node: '>=22' },
+			}),
+		)
+
+		const profile = await detectProject(tmpDir)
+		expect(profile.nodeVersion).toBe('22')
+	})
+
+	it('nodeVersion prefers .nvmrc over engines.node', async () => {
+		const tmpDir = await fs.mkdtemp(
+			path.join(os.tmpdir(), 'xtarterize-prefer-nvmrc-'),
+		)
+		await fs.writeFile(path.join(tmpDir, '.nvmrc'), '20\n')
+		await fs.writeFile(
+			path.join(tmpDir, 'package.json'),
+			JSON.stringify({
+				name: 'test-pkg',
+				engines: { node: '22' },
+			}),
+		)
+
+		const profile = await detectProject(tmpDir)
+		expect(profile.nodeVersion).toBe('20')
 	})
 })

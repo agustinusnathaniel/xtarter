@@ -116,16 +116,38 @@ export const packageScriptsTask = createPackageJsonTask({
 			scripts.push(upgradeScript)
 		}
 
-		const releaseScript = { script: 'release', value: 'commit-and-tag-version' }
-		if (
-			!Object.hasOwn(existingScripts, releaseScript.script) &&
-			!findEquivalentScriptKey(
-				existingScripts,
-				releaseScript.script,
-				releaseScript.value,
-			)
-		) {
-			scripts.push(releaseScript)
+		if (profile.existing.changeset) {
+			const changesetScripts = [
+				{ script: 'changeset', value: 'changeset' },
+				{
+					script: 'version-packages',
+					value: 'changeset version',
+				},
+				{ script: 'release', value: 'changeset publish' },
+			]
+			for (const s of changesetScripts) {
+				if (
+					!Object.hasOwn(existingScripts, s.script) &&
+					!findEquivalentScriptKey(existingScripts, s.script, s.value)
+				) {
+					scripts.push(s)
+				}
+			}
+		} else {
+			const releaseScript = {
+				script: 'release',
+				value: 'commit-and-tag-version',
+			}
+			if (
+				!Object.hasOwn(existingScripts, releaseScript.script) &&
+				!findEquivalentScriptKey(
+					existingScripts,
+					releaseScript.script,
+					releaseScript.value,
+				)
+			) {
+				scripts.push(releaseScript)
+			}
 		}
 
 		const plopScript = { script: 'plop', value: 'plop' }

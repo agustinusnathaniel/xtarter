@@ -56,6 +56,7 @@ export interface ProjectProfile {
 	monorepo: boolean
 	monorepoTool: 'turbo' | 'nx' | 'lerna' | null
 	workspaceRoot: boolean
+	nodeVersion: string
 	hasGitHub: boolean
 	hasGit: boolean
 	existing: {
@@ -72,5 +73,6 @@ export interface ProjectProfile {
 		viteConfig: boolean
 		versionrc: boolean
 		gitignore: boolean
+		changeset: boolean
 	}
 }
