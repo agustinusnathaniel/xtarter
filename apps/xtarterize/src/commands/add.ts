@@ -15,6 +15,7 @@ import { defineCommand } from 'citty'
 import { displayDiffs } from '@/ui/diff-display.js'
 import { resolveCwd } from '@/utils/cwd.js'
 import { handlePreflightFailure } from '@/utils/preflight.js'
+import { resolveRuntimeFlags } from '@/utils/runtime-flags.js'
 
 export const addCommand = defineCommand({
 	meta: {
@@ -29,6 +30,10 @@ export const addCommand = defineCommand({
 		quiet: {
 			type: 'boolean',
 			description: 'Suppress interactive prompts',
+		},
+		format: {
+			type: 'string',
+			description: 'Output format (terminal|json)',
 		},
 	},
 	async run({ args }) {
@@ -83,7 +88,8 @@ export const addCommand = defineCommand({
 		}
 
 		const diffs = await task.dryRun(cwd, profile)
-		if (!quiet) displayDiffs(diffs)
+		const { format } = resolveRuntimeFlags(args)
+		if (!quiet) displayDiffs(diffs, format)
 
 		if (!quiet) {
 			const proceed = await confirm({ message: 'Apply this change?' })

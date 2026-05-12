@@ -90,16 +90,23 @@ describe('cli json output', () => {
 			await diffCommand.run?.({ args: { cwd, json: true } } as never)
 		})) as {
 			ok: boolean
-			count: number
-			diffs: Array<{ filepath: string; before: string | null; after: string }>
+			summary: { total: number; stats?: { added: number; removed: number } }
+			files: Array<{
+				filepath: string
+				action: string
+				before?: string
+				after: string
+				stats?: { added: number; removed: number }
+				hunks?: Array<{ header: string; added: number; removed: number }>
+			}>
 		}
 
 		expect(output.ok).toBe(true)
-		expect(output.count).toBeGreaterThanOrEqual(0)
-		expect(Array.isArray(output.diffs)).toBe(true)
-		if (output.diffs.length > 0) {
-			expect(typeof output.diffs[0]?.filepath).toBe('string')
-			expect(typeof output.diffs[0]?.after).toBe('string')
+		expect(output.summary.total).toBeGreaterThanOrEqual(0)
+		expect(Array.isArray(output.files)).toBe(true)
+		if (output.files.length > 0) {
+			expect(typeof output.files[0]?.filepath).toBe('string')
+			expect(typeof output.files[0]?.after).toBe('string')
 		}
 
 		await fs.rm(cwd, { recursive: true, force: true })
