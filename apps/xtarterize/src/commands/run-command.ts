@@ -16,7 +16,7 @@ import {
 	runPreflight,
 } from '@xtarterize/core'
 import { getAllTasks } from '@xtarterize/tasks'
-import { displayDiffs } from '@/ui/diff-display.js'
+import { type DisplayFormat, displayDiffs } from '@/ui/diff-display.js'
 import { mergeFileDiffs } from '@/ui/merge-file-diffs.js'
 import { displayPlan } from '@/ui/plan-display.js'
 import { selectTasks } from '@/ui/select-menu.js'
@@ -29,6 +29,7 @@ interface CommandArgs {
 	only?: string
 	quiet?: boolean
 	includeConflicts?: boolean
+	format?: string
 }
 
 interface RunCommandOptions {
@@ -138,13 +139,15 @@ async function handleDryRun(
 	tasks: ReturnType<typeof resolveTasks>,
 	cwd: string,
 	profile: Awaited<ReturnType<typeof detectProject>>,
+	format: string = 'terminal',
 ): Promise<void> {
 	const diffs: FileDiff[] = []
 	for (const task of tasks) {
 		const taskDiffs = await task.dryRun(cwd, profile)
 		diffs.push(...taskDiffs)
 	}
-	displayDiffs(mergeFileDiffs(diffs))
+	const resolvedFormat: DisplayFormat = format === 'json' ? 'json' : 'terminal'
+	displayDiffs(mergeFileDiffs(diffs), resolvedFormat)
 }
 
 async function promptAndApply(
@@ -173,7 +176,7 @@ async function promptAndApply(
 	}
 
 	if (action === 'dry-run') {
-		await handleDryRun(actionableTasks, cwd, profile)
+		await handleDryRun(actionableTasks, cwd, profile, args.format)
 		return
 	}
 
@@ -225,7 +228,7 @@ export async function runCommand(
 	if (!quiet) displayPlan(actionableTasks, statuses)
 
 	if (args.dryRun) {
-		await handleDryRun(actionableTasks, cwd, profile)
+		await handleDryRun(actionableTasks, cwd, profile, args.format)
 		return
 	}
 
@@ -279,5 +282,9 @@ export const sharedRunArgs = {
 	includeConflicts: {
 		type: 'boolean',
 		description: 'Include conflicting tasks when applying (default: false)',
+	},
+	format: {
+		type: 'string',
+		description: 'Output format (terminal|json)',
 	},
 } as const

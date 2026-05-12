@@ -14,6 +14,14 @@ export const diffCommand = defineCommand({
 			type: 'boolean',
 			description: 'Suppress verbose output',
 		},
+		json: {
+			type: 'boolean',
+			description: 'Output as JSON for machine consumption',
+		},
+		format: {
+			type: 'string',
+			description: 'Output format (terminal|json)',
+		},
 	},
 	async run({ args }) {
 		const ctx = resolveCliContext(args)
@@ -30,22 +38,11 @@ export const diffCommand = defineCommand({
 
 		const mergedDiffs = mergeFileDiffs(diffs)
 
-		if (ctx.json) {
-			console.log(
-				JSON.stringify({
-					ok: true,
-					count: mergedDiffs.length,
-					diffs: mergedDiffs,
-				}),
-			)
-			return
-		}
-
 		if (mergedDiffs.length === 0) {
 			logSuccess('No pending changes')
 			return
 		}
 
-		displayDiffs(mergedDiffs)
+		displayDiffs(mergedDiffs, ctx.format)
 	},
 })
