@@ -10,7 +10,8 @@
 			"@xtarterize/core",
 			"@xtarterize/patchers",
 			"@xtarterize/tasks",
-			"xtarterize"
+			"xtarterize",
+			"create-xtarter-app"
 		]
 	],
 	"linked": [],
