@@ -1,6 +1,5 @@
 ---
 "@xtarterize/core": minor
-"@xtarterize/patchers": minor
 "@xtarterize/tasks": minor
 "xtarterize": minor
 "create-xtarter-app": minor
