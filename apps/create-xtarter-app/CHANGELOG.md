@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.11.0
+
+### Minor Changes
+
+- [`23ccade`](https://github.com/agustinusnathaniel/xtarter/commit/23ccadee1814ce6798fba4d43b09ac6a2b42bb02) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - feat: add colored tag utility and per-task spinner animation to CLI
+  fix: add workspace flag to pnpm dependency installs in monorepo roots
+  chore: bump build target from node18 to node20, add engines.node >=24 to packages
+
 ## 1.10.0
 
 ## 1.9.0
