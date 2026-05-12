@@ -42,6 +42,10 @@ export async function ensureTaskParentDir(
 	await ensureDir(resolvePath(fullPath, '..'))
 }
 
+export function isExecutableFile(filepath: string): boolean {
+	return filepath.startsWith('.husky/') || filepath.startsWith('.vite-hooks/')
+}
+
 export async function writeTaskDiffs(
 	cwd: string,
 	diffs: FileDiff[],
@@ -49,6 +53,10 @@ export async function writeTaskDiffs(
 	for (const diff of diffs) {
 		const fullPath = resolvePath(cwd, diff.filepath)
 		await ensureDir(resolvePath(fullPath, '..'))
-		await writeFile(fullPath, diff.after)
+		await writeFile(
+			fullPath,
+			diff.after,
+			isExecutableFile(diff.filepath) ? 0o755 : undefined,
+		)
 	}
 }

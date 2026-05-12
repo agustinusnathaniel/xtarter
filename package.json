@@ -24,7 +24,7 @@
 		"up-latest": "pnpm up-interactive -L",
 		"changeset": "changeset",
 		"version-packages": "changeset version",
-		"release": "changeset publish",
+		"release": "changeset publish --provenance",
 		"prepare": "vp config"
 	},
 	"devDependencies": {

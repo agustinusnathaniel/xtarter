@@ -13,9 +13,10 @@ export async function readFile(filePath: string): Promise<string> {
 export async function writeFile(
 	filePath: string,
 	content: string,
+	mode?: number,
 ): Promise<void> {
 	await fs.mkdir(dirname(filePath), { recursive: true })
-	await fs.writeFile(filePath, content, 'utf-8')
+	await fs.writeFile(filePath, content, { mode })
 }
 
 export async function fileExists(filePath: string): Promise<boolean> {

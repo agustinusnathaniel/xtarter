@@ -33,6 +33,7 @@ export {
 	dryRunJsonConfigTask,
 	ensureTaskDependency,
 	ensureTaskParentDir,
+	isExecutableFile,
 	writeTaskDiffs,
 } from '@/factory/index.js'
 

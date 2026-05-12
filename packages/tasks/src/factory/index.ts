@@ -44,6 +44,7 @@ export {
 export {
 	ensureTaskDependency,
 	ensureTaskParentDir,
+	isExecutableFile,
 	writeTaskDiffs,
 } from './ops.js'
 export type { PackageJsonScriptEntry, PackageJsonTaskOptions } from './task.js'
