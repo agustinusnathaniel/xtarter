@@ -61,6 +61,9 @@ export interface ProjectProfile {
 	hasGit: boolean
 	existing: {
 		biome: boolean
+		oxlint: boolean
+		oxfmt: boolean
+		eslint: boolean
 		tsconfig: boolean
 		renovate: boolean
 		commitlint: boolean

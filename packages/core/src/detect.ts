@@ -62,6 +62,38 @@ async function detectBiome(cwd: string): Promise<boolean> {
 	return findConfigFile(cwd, 'biome', ['.json', '.jsonc']).then(Boolean)
 }
 
+async function detectOxlint(cwd: string): Promise<boolean> {
+	return findConfigFile(cwd, '.oxlintrc', ['.json', '.jsonc']).then(Boolean)
+}
+
+async function detectOxfmt(cwd: string): Promise<boolean> {
+	return findConfigFile(cwd, '.oxfmtrc', ['.json', '.jsonc']).then(Boolean)
+}
+
+async function detectEslint(cwd: string): Promise<boolean> {
+	const hasConfigFile = await findConfigFile(cwd, '.eslintrc', [
+		'.js',
+		'.cjs',
+		'.json',
+		'.yaml',
+		'.yml',
+	]).then(Boolean)
+	if (hasConfigFile) return true
+
+	const hasFlatConfig = await findConfigFile(cwd, 'eslint.config', [
+		'.js',
+		'.mjs',
+		'.cjs',
+		'.ts',
+		'.mts',
+		'.cts',
+	]).then(Boolean)
+	if (hasFlatConfig) return true
+
+	const pkg = await readPackageJson(cwd)
+	return !!(pkg?.devDependencies?.eslint ?? pkg?.dependencies?.eslint)
+}
+
 async function detectTsconfig(cwd: string): Promise<boolean> {
 	return findConfigFile(cwd, 'tsconfig', ['.json', '.jsonc']).then(Boolean)
 }
@@ -170,6 +202,9 @@ async function detectNodeVersion(cwd: string): Promise<string> {
 // ConfigDetector array - order matters for the result object
 const CONFIG_DETECTORS: ConfigDetector[] = [
 	{ key: 'biome', detect: detectBiome },
+	{ key: 'oxlint', detect: detectOxlint },
+	{ key: 'oxfmt', detect: detectOxfmt },
+	{ key: 'eslint', detect: detectEslint },
 	{ key: 'tsconfig', detect: detectTsconfig },
 	{ key: 'renovate', detect: detectRenovate },
 	{ key: 'commitlint', detect: detectCommitlint },

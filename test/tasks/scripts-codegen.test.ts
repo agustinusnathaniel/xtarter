@@ -255,6 +255,8 @@ describe('packageScriptsTask', () => {
 				},
 			}),
 		)
+		// Create lockfile so PM detection returns pnpm
+		await fs.writeFile(path.join(tmpDir, 'pnpm-lock.yaml'), '')
 
 		const profile = await detectProject(tmpDir)
 		const status = await packageScriptsTask.check(tmpDir, profile)
@@ -295,14 +297,14 @@ describe('packageScriptsTask', () => {
 		await fs.rm(tmpDir, { recursive: true })
 	})
 
-	it('does not skip different tools even with similar patterns', async () => {
+	it('does not add lint scripts when ESLint is detected', async () => {
 		const tmpDir = await fs.mkdtemp(
-			path.join(os.tmpdir(), 'xtarterize-different-tools-'),
+			path.join(os.tmpdir(), 'xtarterize-eslint-nolint-'),
 		)
 		await fs.writeFile(
 			path.join(tmpDir, 'package.json'),
 			JSON.stringify({
-				name: 'different-tools',
+				name: 'eslint-only',
 				type: 'module',
 				scripts: {
 					lint: 'eslint .',
@@ -319,8 +321,11 @@ describe('packageScriptsTask', () => {
 		const pkgDiff = diffs.find((d) => d.filepath === 'package.json')
 
 		expect(status).toBe('patch')
-		expect(pkgDiff?.after).toContain('"biome"')
-		expect(pkgDiff?.after).toContain('"biome:fix"')
+		expect(pkgDiff?.after).not.toContain('"biome"')
+		expect(pkgDiff?.after).not.toContain('"biome:fix"')
+		expect(pkgDiff?.after).not.toContain('"lint": "vp')
+		expect(pkgDiff?.after).not.toContain('"check"')
+		expect(pkgDiff?.after).not.toContain('"fix"')
 
 		await fs.rm(tmpDir, { recursive: true })
 	})
@@ -580,7 +585,7 @@ describe('packageScriptsTask', () => {
 			await fs.rm(tmpDir, { recursive: true })
 		})
 
-		it('skips biome when existing eslint uses biome', async () => {
+		it('skips all lint scripts when existing eslint uses biome', async () => {
 			const tmpDir = await fs.mkdtemp(
 				path.join(os.tmpdir(), 'xtarterize-eslint-biome-'),
 			)
@@ -605,7 +610,7 @@ describe('packageScriptsTask', () => {
 			const diffs = await packageScriptsTask.dryRun(tmpDir, profile)
 			const pkgDiff = diffs.find((d) => d.filepath === 'package.json')
 
-			expect(pkgDiff?.after).toContain('"biome"')
+			expect(pkgDiff?.after).not.toContain('"biome"')
 			expect(pkgDiff?.after).toContain('"check:turbo"')
 
 			await fs.rm(tmpDir, { recursive: true })
@@ -1277,5 +1282,129 @@ describe('plopTask', () => {
 		expect(diffs[0].after).toContain('actions: [')
 		expect(diffs[0].after).not.toContain('prompts: []')
 		expect(diffs[0].after).not.toContain('actions: []')
+	})
+
+	it('uses vp scripts when Vite+ detected and no existing biome', async () => {
+		const tmpDir = await fs.mkdtemp(
+			path.join(os.tmpdir(), 'xtarterize-viteplus-nobiome-'),
+		)
+		await fs.writeFile(
+			path.join(tmpDir, 'package.json'),
+			JSON.stringify({
+				name: 'viteplus-nobiome',
+				type: 'module',
+				devDependencies: {
+					'vite-plus': '^0.1.0',
+					typescript: '^5.3.0',
+				},
+			}),
+		)
+
+		const profile = await detectProject(tmpDir)
+		const diffs = await packageScriptsTask.dryRun(tmpDir, profile)
+		const pkgDiff = diffs.find((d) => d.filepath === 'package.json')
+
+		expect(pkgDiff?.after).toContain('"lint": "vp lint"')
+		expect(pkgDiff?.after).toContain('"check": "vp check"')
+		expect(pkgDiff?.after).toContain('"fix": "vp check --fix"')
+		expect(pkgDiff?.after).not.toContain('"biome"')
+		expect(pkgDiff?.after).not.toContain('"biome:fix"')
+
+		await fs.rm(tmpDir, { recursive: true })
+	})
+
+	it('keeps biome scripts when Vite+ detected but biome dep already present', async () => {
+		const tmpDir = await fs.mkdtemp(
+			path.join(os.tmpdir(), 'xtarterize-viteplus-biome-'),
+		)
+		await fs.writeFile(
+			path.join(tmpDir, 'package.json'),
+			JSON.stringify({
+				name: 'viteplus-biome',
+				type: 'module',
+				devDependencies: {
+					'vite-plus': '^0.1.0',
+					'@biomejs/biome': '^2.4.0',
+					typescript: '^5.3.0',
+				},
+			}),
+		)
+
+		const profile = await detectProject(tmpDir)
+		const diffs = await packageScriptsTask.dryRun(tmpDir, profile)
+		const pkgDiff = diffs.find((d) => d.filepath === 'package.json')
+
+		expect(pkgDiff?.after).toContain('"biome": "biome check ."')
+		expect(pkgDiff?.after).toContain('"biome:fix": "biome check --write ."')
+		expect(pkgDiff?.after).not.toContain('"lint": "vp lint"')
+
+		await fs.rm(tmpDir, { recursive: true })
+	})
+
+	it('skips lint scripts when ESLint is already set up', async () => {
+		const tmpDir = await fs.mkdtemp(
+			path.join(os.tmpdir(), 'xtarterize-eslint-'),
+		)
+		await fs.writeFile(
+			path.join(tmpDir, 'package.json'),
+			JSON.stringify({
+				name: 'eslint-project',
+				type: 'module',
+				scripts: {
+					lint: 'eslint .',
+				},
+				devDependencies: {
+					eslint: '^8.56.0',
+					typescript: '^5.3.0',
+				},
+			}),
+		)
+
+		const profile = await detectProject(tmpDir)
+		const diffs = await packageScriptsTask.dryRun(tmpDir, profile)
+		const pkgDiff = diffs.find((d) => d.filepath === 'package.json')
+
+		expect(pkgDiff?.after).not.toContain('"biome"')
+		expect(pkgDiff?.after).not.toContain('"lint": "vp lint"')
+		expect(pkgDiff?.after).not.toContain('"check"')
+		expect(pkgDiff?.after).not.toContain('"fix"')
+
+		await fs.rm(tmpDir, { recursive: true })
+	})
+
+	it('uses direct oxlint scripts when oxlint config exists without Vite+', async () => {
+		const tmpDir = await fs.mkdtemp(
+			path.join(os.tmpdir(), 'xtarterize-oxlint-standalone-'),
+		)
+		await fs.writeFile(
+			path.join(tmpDir, 'package.json'),
+			JSON.stringify({
+				name: 'oxlint-standalone',
+				type: 'module',
+				devDependencies: {
+					typescript: '^5.3.0',
+				},
+			}),
+		)
+		await fs.writeFile(
+			path.join(tmpDir, '.oxlintrc.json'),
+			JSON.stringify({ rules: { 'no-console': 'error' } }),
+		)
+
+		const profile = await detectProject(tmpDir)
+		const diffs = await packageScriptsTask.dryRun(tmpDir, profile)
+		const pkgDiff = diffs.find((d) => d.filepath === 'package.json')
+
+		expect(pkgDiff?.after).toContain('"lint": "oxlint --import-plugin"')
+		expect(pkgDiff?.after).toContain(
+			'"check": "oxlint --import-plugin && oxfmt --check"',
+		)
+		expect(pkgDiff?.after).toContain(
+			'"fix": "oxlint --fix --import-plugin && oxfmt"',
+		)
+		expect(pkgDiff?.after).not.toContain('"biome"')
+		expect(pkgDiff?.after).not.toContain('"vp ')
+
+		await fs.rm(tmpDir, { recursive: true })
 	})
 })

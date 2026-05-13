@@ -118,13 +118,20 @@ If a dependency update causes any of the verification steps to fail, revert that
 
 ## 7. Commit Your Work
 
-After implementation and testing are complete, commit the changes:
+After implementation and testing are complete:
 
-- Review all modified files with `git diff` and `git status` before committing.
-- **Split into multiple commits** if the change spans unrelated concerns (e.g., core engine fix + new task + docs update should be separate commits).
-- Include documentation updates in the same commit when they belong to the same logical change.
-- **If unsure whether to commit or not, ask the user first.** Do not commit secrets, temporary files, or unrelated changes.
-- Write clear commit messages following the project's convention (Conventional Commits).
+1. **Create a changeset** if the change is user-facing (new feature, fix, breaking change):
+   ```bash
+   pnpm changeset
+   ```
+   This will prompt for bump type (patch/minor/major) and a summary. The generated `.md` file in `.changeset/` should be committed alongside the code changes.
+
+2. **Commit the changes:**
+   - Review all modified files with `git diff` and `git status` before committing.
+   - **Split into multiple commits** if the change spans unrelated concerns (e.g., core engine fix + new task + docs update should be separate commits).
+   - Include documentation updates and the changeset in the same commit when they belong to the same logical change.
+   - **If unsure whether to commit or not, ask the user first.** Do not commit secrets, temporary files, or unrelated changes.
+   - Write clear commit messages following the project's convention (Conventional Commits).
 
 ## 8. Update Documentation
 
