@@ -1,5 +1,7 @@
 # xtarter
 
+[![All Contributors](https://img.shields.io/github/all-contributors/agustinusnathaniel/xtarterize?color=ee8449&style=flat-square)](#contributors)
+
 Production-grade scaffolding and conformance tooling for JavaScript/TypeScript projects.
 
 The **xtarter stack** gives you two complementary tools:
@@ -133,6 +135,36 @@ pnpm typecheck        # Type check all packages
 - **Dry-run first** — Always see what will change before applying
 - **Backup always** — Every modified file is backed up to `.xtarterize/backups/`
 - **Real templates** — All configurations derived from actual production projects
+
+## Contributors
+
+<!-- ALL-CONTRIBUTORS-LIST:START - Do not remove or modify this section -->
+<!-- prettier-ignore-start -->
+<!-- markdownlint-disable -->
+<table>
+  <tbody>
+    <tr>
+      <td align="center" valign="top" width="14.28%"><a href="https://agustinusnathaniel.com/"><img src="https://avatars.githubusercontent.com/u/17046154?v=4?s=100" width="100px;" alt="Agustinus Nathaniel"/><br /><sub><b>Agustinus Nathaniel</b></sub></a><br /><a href="https://github.com/agustinusnathaniel/xtarterize/commits?author=agustinusnathaniel" title="Code">💻</a> <a href="https://github.com/agustinusnathaniel/xtarterize/commits?author=agustinusnathaniel" title="Documentation">📖</a> <a href="#design-agustinusnathaniel" title="Design">🎨</a> <a href="#infra-agustinusnathaniel" title="Infrastructure (Hosting, Build-Tools, etc)">🚇</a> <a href="#ideas-agustinusnathaniel" title="Ideas, Planning, & Feedback">🤔</a> <a href="https://github.com/agustinusnathaniel/xtarterize/commits?author=agustinusnathaniel" title="Tests">⚠️</a></td>
+      <td align="center" valign="top" width="14.28%"><a href="https://github.com/bryanprimus"><img src="https://avatars.githubusercontent.com/u/46083126?v=4?s=100" width="100px;" alt="Bryan Primus"/><br /><sub><b>Bryan Primus</b></sub></a><br /><a href="https://github.com/agustinusnathaniel/xtarterize/commits?author=bryanprimus" title="Code">💻</a></td>
+    </tr>
+  </tbody>
+  <tfoot>
+    <tr>
+      <td align="center" size="13px" colspan="7">
+        <img src="https://raw.githubusercontent.com/all-contributors/all-contributors-cli/1b8533af435da9854653492b1327a23a4dbd0a10/assets/logo-small.svg">
+          <a href="https://all-contributors.js.org/docs/en/bot/usage">Add your contributions</a>
+        </img>
+      </td>
+    </tr>
+  </tfoot>
+</table>
+
+<!-- markdownlint-restore -->
+<!-- prettier-ignore-end -->
+
+<!-- ALL-CONTRIBUTORS-LIST:END -->
+
+Contributions of any kind welcome! See [CONTRIBUTING.md](CONTRIBUTING.md) to get started.
 
 ## License
 
