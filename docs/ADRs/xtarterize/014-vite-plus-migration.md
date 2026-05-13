@@ -72,6 +72,31 @@ Instead, each workspace package that needs Vite Plus declares it as a direct dev
 - Vite Task is new and may not model the same DAG correctly
 - Retained Turborepo for now; can revisit when Vite Task stabilizes
 
+### xtarterize integration: Oxlint/Oxfmt as default for Vite+ projects
+
+xtarterize auto-detects Vite+ and configures Oxlint/Oxfmt (via `vp` commands) as the default linting/formatting stack:
+
+| Concern | Vite+ project | Non-Vite+ project |
+|---------|---------------|-------------------|
+| Config files | `.oxlintrc.json` + `.oxfmtrc.json` | `biome.json` |
+| Scripts | `vp lint` / `vp check` / `vp check --fix` | `biome check .` / `biome check --write .` |
+| Lint-staged | `vp staged` (via git hooks) | `lint-staged` + `biome check --write` |
+| Git hooks | `vp staged` | `npx lint-staged` |
+| CI | `vp check` (fmt + lint + typecheck) | `biome lint .` + `biome check .` + `tsc --noEmit` |
+| Biome | Config generated for IDE fallback | Primary linter |
+
+**Oxlint config** (`.oxlintrc.json`) mirrors the user's existing ESLint preferences:
+- TypeScript strict mode with `@typescript-eslint` rules
+- Import ordering via `import/order`  
+- React/JSX-a11y rules when framework detected
+- `no-console` enforced, `complexity` warnings
+
+**Oxfmt config** (`.oxfmtrc.json`) matches the project's Biome formatting defaults:
+- `indentStyle: space`, `indentWidth: 2`, `lineWidth: 80`
+- `quotes: single`, `semicolons: true`, `trailingComma: all`
+
+Biome `biome.json` config is still generated for IDE integration (VS Code extension support), but scripts and CI use `vp` commands. The `@biomejs/biome` dependency is only installed when the project does not already have Vite+.
+
 ## Consequences
 
 - Per-package `vite.config.ts` now contains both Vite and pack config — slightly larger files but fewer total config files
