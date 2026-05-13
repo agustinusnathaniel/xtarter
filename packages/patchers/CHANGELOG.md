@@ -1,5 +1,13 @@
 # @xtarterize/patchers
 
+## 1.12.0
+
+### Minor Changes
+
+- [`cff22ee`](https://github.com/agustinusnathaniel/xtarter/commit/cff22ee02d29c62888647e6000c919215a4a7195) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - feat: add multi-layer shebang enforcement for CLI binaries
+  fix: add missing node shebang to create-xtarter-app CLI entry
+  chore: add all-contributors setup
+
 ## 1.11.0
 
 ## 1.10.0
@@ -76,6 +84,7 @@
 - [`ccd9287`](https://github.com/agustinusnathaniel/xtarterize/commit/ccd9287afd967ed1ea0ef0c64b4a4a468e95b550) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - feat: add `patchJson` for surgical JSON text edits using `jsonc-parser`
 
   Replaced `JSON.stringify(mergeJson(...), null, 2)` with `patchJson`, which performs byte-level text edits via Microsoft's [`jsonc-parser`](https://github.com/microsoft/node-jsonc-parser). This preserves:
+
   - Comments (`// inline` and `/* block */`)
   - Key ordering
   - Whitespace and indentation style

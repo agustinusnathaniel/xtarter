@@ -1,5 +1,13 @@
 # @xtarterize/core
 
+## 1.12.0
+
+### Minor Changes
+
+- [`cff22ee`](https://github.com/agustinusnathaniel/xtarter/commit/cff22ee02d29c62888647e6000c919215a4a7195) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - feat: add multi-layer shebang enforcement for CLI binaries
+  fix: add missing node shebang to create-xtarter-app CLI entry
+  chore: add all-contributors setup
+
 ## 1.11.0
 
 ### Minor Changes
@@ -46,6 +54,7 @@
 ### Patch Changes
 
 - [`82e1d9f`](https://github.com/agustinusnathaniel/xtarterize/commit/82e1d9f24fd223a8f3c15c0b516c89fe5537c105) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Improve script merging and task architecture
+
   - Enhance script merging logic with better conflict resolution
   - Improve task architecture for better maintainability
   - Add tests for scripts and codegen tasks
