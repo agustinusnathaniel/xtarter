@@ -1,6 +1,7 @@
 import starlight from '@astrojs/starlight'
 import tailwindcss from '@tailwindcss/vite'
 import { defineConfig } from 'astro/config'
+import { property } from 'astro/zod'
 import astroMermaid from 'astro-mermaid'
 
 export default defineConfig({
@@ -39,6 +40,14 @@ export default defineConfig({
 						property: 'og:description',
 						content:
 							'Scaffold new projects or bring conformance to existing ones. Biome, TypeScript strict, CI, editor configs — ready in seconds.',
+					},
+				},
+				{
+					tag: 'meta',
+					attrs: {
+						property: 'og:image',
+						content:
+							'https://og.sznm.dev/api/generate?heading=xtarter&text=Production-grade%20JS/TS%20starters%20%26%20conformance%20tooling&template=color',
 					},
 				},
 				{
