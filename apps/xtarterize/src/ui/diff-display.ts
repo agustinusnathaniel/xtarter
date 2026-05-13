@@ -79,25 +79,11 @@ function renderFileDiff(diff: FileDiff): void {
 	console.log(pc.bold(formatDiffHeader(diff.filepath, isNew)) + stats)
 	console.log('')
 
-	if (isNew && diff.hunks) {
-		renderFullFileDiff(diff.hunks)
-	} else if (diff.semantic && !isNew) {
-		renderSemanticDiff(diff.semantic, diff)
-	} else if (diff.hunks) {
+	if (diff.hunks) {
 		renderHunkDiff(diff.hunks)
 	}
 
 	console.log('')
-}
-
-function renderFullFileDiff(hunks: DiffHunk[]): void {
-	for (const hunk of hunks) {
-		for (const line of hunk.lines) {
-			const content =
-				line.startsWith('+ ') || line.startsWith('- ') ? line.slice(2) : line
-			console.log(pc.green(`+ ${content}`))
-		}
-	}
 }
 
 function renderHunkDiff(hunks: DiffHunk[]): void {
@@ -112,57 +98,6 @@ function renderHunkDiff(hunks: DiffHunk[]): void {
 				console.log(line)
 			}
 		}
-	}
-}
-
-function renderSemanticDiff(
-	semantic: NonNullable<FileDiff['semantic']>,
-	diff: FileDiff,
-): void {
-	const prefix = '  '
-
-	if (semantic.added) {
-		for (const [key, value] of Object.entries(semantic.added)) {
-			console.log(
-				`${prefix}${pc.green(`+ ${pc.bold(key)}`)} ${formatValue(value)}`,
-			)
-		}
-	}
-	if (semantic.removed) {
-		for (const [key, value] of Object.entries(semantic.removed)) {
-			console.log(
-				`${prefix}${pc.red(`- ${pc.bold(key)}`)} ${formatValue(value)}`,
-			)
-		}
-	}
-	if (semantic.modified) {
-		for (const [key, entry] of Object.entries(semantic.modified)) {
-			console.log(
-				`${prefix}${pc.red(`- ${pc.bold(key)}`)} ${formatValue(entry.before)}`,
-			)
-			console.log(
-				`${prefix}${pc.green(`+ ${pc.bold(key)}`)} ${formatValue(entry.after)}`,
-			)
-		}
-	}
-
-	if (diff.stats) {
-		console.log(
-			`${prefix}${pc.dim('→')} ${pc.green(`+${diff.stats.added}`)} ${pc.red(`-${diff.stats.removed}`)}`,
-		)
-	}
-}
-
-function formatValue(value: string): string {
-	try {
-		const parsed = JSON.parse(value)
-		if (typeof parsed === 'string') return parsed
-		if (typeof parsed === 'number' || typeof parsed === 'boolean')
-			return String(parsed)
-		if (parsed === null) return 'null'
-		return value
-	} catch {
-		return value
 	}
 }
 
