@@ -1,5 +1,21 @@
 # @xtarterize/core
 
+## 1.13.0
+
+### Minor Changes
+
+- [#31](https://github.com/agustinusnathaniel/xtarter/pull/31) [`76953e4`](https://github.com/agustinusnathaniel/xtarter/commit/76953e423f4e0c652251f6a9c4d5b3eeefa6e9b7) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - feat: add oxlint and oxfmt support with Vite+ auto-detection
+
+  When Vite+ is detected, xtarterize now configures oxlint/oxfmt (via `vp`) instead of Biome as the default linting/formatting stack:
+
+  - **Scripts**: `vp lint` / `vp check` / `vp check --fix` for Vite+ projects (instead of `biome check .` / `biome check --write .`)
+  - **Config**: `.oxlintrc.json` (with `consistent-type-imports`, `import/order`, `no-console` rules) and `.oxfmtrc.json` for Vite+ projects
+  - **Standalone oxlint**: Direct `oxlint`/`oxfmt` commands when oxlint/oxfmt config exists without Vite+
+  - **ESLint detection**: Existing ESLint setups are preserved — no lint tasks are applied
+  - **CI**: Single `vp check` step for Vite+ projects (handles fmt + lint + typecheck)
+  - **Lint-staged**: Skipped for Vite+ projects (uses `vp staged` via git hooks)
+  - **Biome**: Config still generated for IDE fallback, but scripts point to `vp` when Vite+ is present
+
 ## 1.12.0
 
 ### Minor Changes
