@@ -5,9 +5,11 @@ export default defineConfig({
 		entry: ['src/index.ts'],
 		target: 'node20',
 		sourcemap: true,
-		banner: '#!/usr/bin/env node',
 		minify: true,
 		treeshake: true,
+		exports: {
+			bin: './src/index.ts',
+		},
 		deps: {
 			alwaysBundle: [
 				'@xtarterize/core',

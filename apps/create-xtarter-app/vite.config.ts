@@ -11,6 +11,9 @@ export default defineConfig({
 		dts: { sourcemap: true },
 		minify: true,
 		treeshake: true,
+		exports: {
+			bin: './src/cli.ts',
+		},
 	},
 	test: {
 		name: 'create-xtarter-app',

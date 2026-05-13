@@ -5,6 +5,8 @@
 	"scripts": {
 		"build": "turbo run build",
 		"build:cli": "turbo run build --filter=!@xtarterize/docs",
+		"verify:shebangs": "node scripts/verify-shebangs.mjs",
+		"build:verify": "pnpm build && pnpm verify:shebangs",
 		"dev": "turbo run dev",
 		"test": "vp test",
 		"test:run": "vp test run",

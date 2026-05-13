@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import { defineCommand, runMain } from 'citty'
 import { addCommand } from '@/commands/add.js'
 import { checkCommand } from '@/commands/check.js'
