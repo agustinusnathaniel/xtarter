@@ -11,6 +11,7 @@ import { editorconfigTask } from '@/editor/editorconfig.js'
 import { vscodeTask } from '@/editor/vscode.js'
 import { packageScriptsTask } from '@/factory/package-scripts.js'
 import { biomeTask } from '@/lint/biome.js'
+import { oxfmtTask, oxlintTask } from '@/lint/oxlint.js'
 import { turboTask } from '@/monorepo/turbo.js'
 import { npmrcTask } from '@/npmrc.js'
 import { nvmrcTask } from '@/nvmrc.js'
@@ -53,6 +54,8 @@ export {
 	lintStagedTask,
 	npmrcTask,
 	nvmrcTask,
+	oxfmtTask,
+	oxlintTask,
 	packageScriptsTask,
 	pathsTask,
 	plopTask,
@@ -71,6 +74,8 @@ export {
 export function getAllTasks(): Task[] {
 	return [
 		biomeTask,
+		oxlintTask,
+		oxfmtTask,
 		strictTask,
 		pathsTask,
 		incrementalTask,
