@@ -21,19 +21,10 @@ export default defineConfig({
 			// },
 			// favicon: '/favicon.svg',
 			customCss: ['./src/styles/global.css'],
+			components: {
+				Head: './src/components/StarlightHead.astro',
+			},
 			head: [
-				...(process.env.UMAMI_SRC && process.env.UMAMI_WEBSITE_ID
-					? [
-							{
-								tag: 'script',
-								attrs: {
-									src: process.env.UMAMI_SRC,
-									'data-website-id': process.env.UMAMI_WEBSITE_ID,
-									defer: true,
-								},
-							},
-						]
-					: []),
 				{
 					tag: 'meta',
 					attrs: {
