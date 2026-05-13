@@ -13,7 +13,7 @@ export const lintStagedTask = createPackageJsonTask({
 	id: 'quality/lint-staged',
 	label: 'lint-staged config',
 	group: 'Quality',
-	applicable: () => true,
+	applicable: (profile) => !profile.vitePlus,
 	depName: 'lint-staged',
 	installDev: true,
 	files: [

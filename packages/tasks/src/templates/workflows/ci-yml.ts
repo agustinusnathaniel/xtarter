@@ -7,8 +7,6 @@ import { conditionalScriptStep, renderSteps } from './shared/workflow.js'
 export function renderCiWorkflow(profile: ProjectProfile): string {
 	const pm = profile.packageManager
 	const installCmd = installDependenciesCommand(pm)
-	const runLint = runScriptCommand(pm, 'lint')
-	const runTypecheck = runScriptCommand(pm, 'typecheck')
 	const runCheck = runScriptCommand(pm, 'check')
 	const runTest = runScriptCommand(pm, 'test')
 
@@ -18,21 +16,38 @@ export function renderCiWorkflow(profile: ProjectProfile): string {
 		steps.push({ uses: ACTION_VERSIONS.PNPM_SETUP, with: { cache: 'true' } })
 	}
 
-	steps.push(
-		{
-			uses: ACTION_VERSIONS.SETUP_NODE,
-			with: {
-				'node-version': profile.nodeVersion,
-				...(pm !== 'bun' ? { cache: pm } : {}),
+	if (profile.vitePlus) {
+		steps.push(
+			{
+				uses: ACTION_VERSIONS.SETUP_NODE,
+				with: {
+					'node-version': profile.nodeVersion,
+					...(pm !== 'bun' ? { cache: pm } : {}),
+				},
 			},
-		},
-		{ run: installCmd },
-		{ run: runLint },
-		{ run: runCheck },
-	)
+			{ run: installCmd },
+			{ run: runCheck },
+		)
+	} else {
+		const runLint = runScriptCommand(pm, 'lint')
+		const runTypecheck = runScriptCommand(pm, 'typecheck')
 
-	if (profile.typescript) {
-		steps.push({ run: runTypecheck })
+		steps.push(
+			{
+				uses: ACTION_VERSIONS.SETUP_NODE,
+				with: {
+					'node-version': profile.nodeVersion,
+					...(pm !== 'bun' ? { cache: pm } : {}),
+				},
+			},
+			{ run: installCmd },
+			{ run: runLint },
+			{ run: runCheck },
+		)
+
+		if (profile.typescript) {
+			steps.push({ run: runTypecheck })
+		}
 	}
 
 	steps.push(conditionalScriptStep('Test', runTest, 'test'))

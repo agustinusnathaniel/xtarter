@@ -1,7 +1,8 @@
 // Tool aliases — canonical tool name maps to known aliases
 export const TOOL_ALIASES: Record<string, string[]> = {
 	release: ['commit-and-tag-version', 'standard-version', 'release-it'],
-	lint: ['eslint', 'biome', 'prettier', 'rome'],
+	lint: ['eslint', 'biome', 'oxlint', 'prettier', 'rome'],
+	format: ['oxfmt', 'prettier'],
 	test: ['vitest', 'jest', 'mocha'],
 	typecheck: ['tsc', 'tsc --noEmit'],
 	cleanup: ['knip', 'depcheck', 'npm-check-updates', 'ncu'],
@@ -12,4 +13,5 @@ export const TOOL_ALIASES: Record<string, string[]> = {
 export const EQUIVALENT_SUBCOMMANDS: Record<string, string[]> = {
 	biome: ['check', 'lint', 'format'],
 	ultracite: ['check', 'fix'],
+	vp: ['lint', 'check', 'fmt', 'staged'],
 }

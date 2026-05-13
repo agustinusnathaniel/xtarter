@@ -19,7 +19,11 @@ export const biomeTask = createJsonMergeTask({
 	id: 'lint/biome',
 	label: 'Biome (lint + format)',
 	group: 'Linting & Formatting',
-	applicable: () => true,
+	applicable: (profile) =>
+		!profile.existing.eslint &&
+		!profile.existing.oxlint &&
+		!profile.existing.oxfmt &&
+		(profile.existing.biome || !profile.vitePlus),
 	filepath: 'biome.json',
 	extensions: ['.json', '.jsonc'],
 	incoming: (_cwd, profile) => JSON.parse(renderBiomeJson(profile)),
@@ -36,6 +40,14 @@ export const biomeTask = createJsonMergeTask({
 
 		if (hasUltraciteExtends && (await hasUltracite(cwd))) {
 			return 'skip'
+		}
+
+		if (profile.vitePlus) {
+			const actual = normalizeExtends((await readJsonIfExists(fullPath)) ?? {})
+			const expected = normalizeExtends(JSON.parse(renderBiomeJson(profile)))
+			const merged = mergeJson(actual, expected)
+			if (deepEqual(actual, merged)) return 'skip'
+			return 'patch'
 		}
 
 		const pkg = await readPackageJson(cwd)
