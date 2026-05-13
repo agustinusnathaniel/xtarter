@@ -17,7 +17,7 @@ describe('oxlint config validation', () => {
 		const configFile = diffs.find((d) => d.filepath === '.oxlintrc.json')
 
 		expect(configFile).toBeDefined()
-		expect(configFile!.before).toBeNull()
+		expect(configFile?.before).toBeNull()
 
 		const config = JSON.parse(configFile!.after!)
 		expect(config.rules['no-console']).toBe('error')
@@ -91,7 +91,7 @@ describe('oxfmt config validation', () => {
 		const configFile = diffs.find((d) => d.filepath === '.oxfmtrc.json')
 
 		expect(configFile).toBeDefined()
-		expect(configFile!.before).toBeNull()
+		expect(configFile?.before).toBeNull()
 
 		const config = JSON.parse(configFile!.after!)
 		expect(config.indentStyle).toBe('space')

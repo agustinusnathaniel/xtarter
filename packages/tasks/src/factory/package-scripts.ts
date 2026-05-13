@@ -256,8 +256,8 @@ export const packageScriptsTask = createPackageJsonTask({
 							: profile.vitePlus
 								? 'vp'
 								: 'biome'
-			const lintTaskKey =
-				lintTool === 'vp' || lintTool === 'oxlint' ? 'lint' : lintTool
+			const lintTaskKey: string =
+				lintTool === 'vp' || lintTool === 'oxlint' ? 'lint' : (lintTool ?? '')
 
 			const recommendedKeys = !lintTool
 				? ['typecheck', 'test'].filter((k) => {
@@ -365,7 +365,11 @@ export const packageScriptsTask = createPackageJsonTask({
 								})
 
 			const baseTasks: string[] = lintTool
-				? [lintTaskKey!, 'typecheck', 'test']
+				? [
+						lintTool === 'vp' || lintTool === 'oxlint' ? 'lint' : lintTool,
+						'typecheck',
+						'test',
+					]
 				: ['typecheck', 'test']
 			const compositeTasks = getCompositeTasks(
 				existingScripts,
