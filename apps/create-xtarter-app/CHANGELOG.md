@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.12.0
+
+### Minor Changes
+
+- [`cff22ee`](https://github.com/agustinusnathaniel/xtarter/commit/cff22ee02d29c62888647e6000c919215a4a7195) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - feat: add multi-layer shebang enforcement for CLI binaries
+  fix: add missing node shebang to create-xtarter-app CLI entry
+  chore: add all-contributors setup
+
 ## 1.11.0
 
 ### Minor Changes
