@@ -1,6 +1,6 @@
 {
 	"name": "xtarterize",
-	"version": "1.11.0",
+	"version": "1.12.0",
 	"description": "Automated project setup and configuration scaffolding",
 	"keywords": [
 		"boilerplate",
@@ -53,5 +53,24 @@
 	},
 	"engines": {
 		"node": ">=18"
+	},
+	"exports": {
+		".": "./dist/index.mjs",
+		"./package.json": "./package.json"
+	},
+	"inlinedDependencies": {
+		"@babel/parser": "7.29.2",
+		"confbox": "0.2.4",
+		"consola": "3.4.2",
+		"defu": "6.1.7",
+		"diff": "9.0.0",
+		"exsolve": "1.0.8",
+		"json5": "2.2.3",
+		"magicast": "0.5.2",
+		"nypm": "0.6.6",
+		"pathe": "2.0.3",
+		"picocolors": "1.1.1",
+		"pkg-types": "2.3.1",
+		"tinyexec": "1.1.2"
 	}
 }

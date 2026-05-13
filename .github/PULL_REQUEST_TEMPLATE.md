@@ -28,3 +28,7 @@
 - [ ] New tasks follow the `Task` interface
 - [ ] Templates are accurate and production-grade
 - [ ] ADR created/updated for architectural changes
+
+## Contributors
+
+Once merged, comment `@all-contributors please add @<your-username>` to be added to the contributors list.

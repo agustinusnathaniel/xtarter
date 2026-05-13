@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import { existsSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { cancel, intro, note, outro } from '@clack/prompts'
