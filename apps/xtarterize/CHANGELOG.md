@@ -1,5 +1,13 @@
 # xtarterize
 
+## 1.13.0
+
+### Patch Changes
+
+- [`813b1ea`](https://github.com/agustinusnathaniel/xtarter/commit/813b1eadecb75ba42d92b34911d968a072bbaaf6) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - refactor(diff-display): use unified diff format for all dry-run output
+
+  Consolidates three separate renderers (full-file, hunk, semantic) into a single unified diff format (`renderHunkDiff`) for consistent git-style patch output across new, modified, and JSON files in `--dryRun` and `diff` commands.
+
 ## 1.12.0
 
 ### Minor Changes
