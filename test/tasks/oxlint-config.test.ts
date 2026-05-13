@@ -15,11 +15,10 @@ describe('oxlint config validation', () => {
 		const profile = await detectProject(testDir)
 		const diffs = await oxlintTask.dryRun(testDir, profile)
 		const configFile = diffs.find((d) => d.filepath === '.oxlintrc.json')
+		if (!configFile) throw new Error('Expected .oxlintrc.json diff to exist')
+		expect(configFile.before).toBeNull()
 
-		expect(configFile).toBeDefined()
-		expect(configFile?.before).toBeNull()
-
-		const config = JSON.parse(configFile!.after!)
+		const config = JSON.parse(configFile.after)
 		expect(config.rules['no-console']).toBe('error')
 		expect(config.rules.complexity).toBe('warn')
 		expect(config.rules['no-unused-vars']).toBe('off')
@@ -38,7 +37,8 @@ describe('oxlint config validation', () => {
 			const profile = await detectProject(testDir)
 			const diffs = await oxlintTask.dryRun(testDir, profile)
 			const configFile = diffs.find((d) => d.filepath === '.oxlintrc.json')
-			const config = configFile!.after!
+			if (!configFile) throw new Error('Expected .oxlintrc.json diff to exist')
+			const config = configFile.after
 
 			const { writeFile, mkdtemp, rm } = await import('node:fs/promises')
 			const { join } = await import('node:path')
@@ -77,8 +77,8 @@ describe('oxlint config validation', () => {
 		const diffs = await oxlintTask.dryRun(testDir, profile)
 		const configFile = diffs.find((d) => d.filepath === '.oxlintrc.json')
 
-		expect(configFile).toBeDefined()
-		const config = JSON.parse(configFile!.after!)
+		if (!configFile) throw new Error('Expected .oxlintrc.json diff to exist')
+		const config = JSON.parse(configFile.after)
 		expect(config.rules['jsx-a11y/anchor-is-valid']).toBeDefined()
 	})
 })
@@ -90,10 +90,10 @@ describe('oxfmt config validation', () => {
 		const diffs = await oxfmtTask.dryRun(testDir, profile)
 		const configFile = diffs.find((d) => d.filepath === '.oxfmtrc.json')
 
-		expect(configFile).toBeDefined()
-		expect(configFile?.before).toBeNull()
+		if (!configFile) throw new Error('Expected .oxfmtrc.json diff to exist')
+		expect(configFile.before).toBeNull()
 
-		const config = JSON.parse(configFile!.after!)
+		const config = JSON.parse(configFile.after)
 		expect(config.indentStyle).toBe('space')
 		expect(config.indentWidth).toBe(2)
 		expect(config.lineWidth).toBe(80)
@@ -109,7 +109,8 @@ describe('oxfmt config validation', () => {
 			const profile = await detectProject(testDir)
 			const diffs = await oxfmtTask.dryRun(testDir, profile)
 			const configFile = diffs.find((d) => d.filepath === '.oxfmtrc.json')
-			const config = configFile!.after!
+			if (!configFile) throw new Error('Expected .oxfmtrc.json diff to exist')
+			const config = configFile.after
 
 			const { writeFile, mkdtemp, rm } = await import('node:fs/promises')
 			const { join } = await import('node:path')

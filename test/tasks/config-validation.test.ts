@@ -21,9 +21,9 @@ describe('biome config validation', () => {
 		const profile = await detectProject(testDir)
 		const diffs = await biomeTask.dryRun(testDir, profile)
 		const configFile = diffs.find((d) => d.filepath === 'biome.json')
+		if (!configFile) throw new Error('Expected biome.json diff to exist')
 
-		expect(configFile).toBeDefined()
-		const config = JSON.parse(configFile!.after!)
+		const config = JSON.parse(configFile.after)
 		expect(config.formatter.enabled).toBe(true)
 		expect(config.linter.enabled).toBe(true)
 		expect(config.linter.rules.recommended).toBe(true)
@@ -37,7 +37,8 @@ describe('biome config validation', () => {
 			const profile = await detectProject(testDir)
 			const diffs = await biomeTask.dryRun(testDir, profile)
 			const configFile = diffs.find((d) => d.filepath === 'biome.json')
-			const config = configFile!.after!
+			if (!configFile) throw new Error('Expected biome.json diff to exist')
+			const config = configFile.after
 
 			const { writeFile, mkdtemp, rm } = await import('node:fs/promises')
 			const { join } = await import('node:path')
@@ -76,8 +77,9 @@ describe('biome config validation', () => {
 		const profile = await detectProject(testDir)
 		const diffs = await biomeTask.dryRun(testDir, profile)
 		const configFile = diffs.find((d) => d.filepath === 'biome.json')
+		if (!configFile) throw new Error('Expected biome.json diff to exist')
 
-		const config = JSON.parse(configFile!.after!)
+		const config = JSON.parse(configFile.after)
 		expect(config.css?.parser?.tailwindDirectives).toBe(true)
 	})
 })
@@ -89,9 +91,9 @@ describe('renovate config validation', () => {
 		const diffs = await renovateTask.dryRun(testDir, profile)
 		const configFile = diffs.find((d) => d.filepath === 'renovate.json')
 
-		expect(configFile).toBeDefined()
-		expect(() => JSON.parse(configFile!.after!)).not.toThrow()
-		const config = JSON.parse(configFile!.after!)
+		if (!configFile) throw new Error('Expected renovate.json diff to exist')
+		expect(() => JSON.parse(configFile.after)).not.toThrow()
+		const config = JSON.parse(configFile.after)
 		expect(config.$schema).toBeDefined()
 	})
 })
@@ -103,8 +105,8 @@ describe('vscode config validation', () => {
 		const diffs = await vscodeTask.dryRun(testDir, profile)
 		const settingsFile = diffs.find((d) => d.filepath.endsWith('settings.json'))
 
-		expect(settingsFile).toBeDefined()
-		expect(() => JSON.parse(settingsFile!.after!)).not.toThrow()
+		if (!settingsFile) throw new Error('Expected settings.json diff to exist')
+		expect(() => JSON.parse(settingsFile.after)).not.toThrow()
 	})
 })
 

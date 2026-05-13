@@ -99,6 +99,7 @@ function renderChangesetWorkflow(profile: ProjectProfile): string {
 			commit: '"chore: version packages"',
 		},
 		env: {
+			// biome-ignore lint/suspicious/noTemplateCurlyInString: GitHub Actions expression syntax
 			GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}',
 		},
 	}

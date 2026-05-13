@@ -23,7 +23,6 @@ import {
 } from './ops.js'
 import {
 	getDefaultFilepath,
-	normalizeExtends,
 	normalizeLineEndings,
 	resolveTaskFile,
 } from './utils.js'

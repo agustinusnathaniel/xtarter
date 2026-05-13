@@ -1,9 +1,4 @@
-import type {
-	FileDiff,
-	ProjectProfile,
-	Task,
-	TaskStatus,
-} from '@xtarterize/core'
+import type { FileDiff, Task, TaskStatus } from '@xtarterize/core'
 import {
 	fileExists,
 	readFile,

@@ -25,7 +25,7 @@ export function renderSteps(steps: YamlStep[], indent: number): string {
 			return pairs
 				.map(([key, value], i) => {
 					const prefix =
-						i === 0 ? ' '.repeat(indent) + '- ' : ' '.repeat(indent + 2)
+						i === 0 ? `${' '.repeat(indent)}- ` : ' '.repeat(indent + 2)
 
 					if (typeof value === 'string' && value.includes('\n')) {
 						const lines = [`${prefix}${key}: |`]

@@ -167,10 +167,11 @@ const EQUIVALENCE_RULES: EquivalenceRule[] = [
 	{
 		name: 'equivalent-subcommands',
 		check: (ctx) => {
-			const equivSubcommands = EQUIVALENT_SUBCOMMANDS[ctx.toolA!.toLowerCase()]
+			if (!ctx.toolA) return null
+			const equivSubcommands = EQUIVALENT_SUBCOMMANDS[ctx.toolA.toLowerCase()]
 			if (!equivSubcommands) return null
 			const subcommandPattern = new RegExp(
-				'^(' + equivSubcommands.join('|') + ')\\s*',
+				`^(${equivSubcommands.join('|')})\\s*`,
 			)
 			const normalizeArgs = (args: string) =>
 				args

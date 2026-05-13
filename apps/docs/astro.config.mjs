@@ -1,7 +1,6 @@
 import starlight from '@astrojs/starlight'
 import tailwindcss from '@tailwindcss/vite'
 import { defineConfig } from 'astro/config'
-import { property } from 'astro/zod'
 import astroMermaid from 'astro-mermaid'
 
 export default defineConfig({

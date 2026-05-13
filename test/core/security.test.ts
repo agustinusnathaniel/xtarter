@@ -1,12 +1,7 @@
 import fs from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
-import {
-	detectProject,
-	fileExists,
-	resolvePath,
-	writeFile,
-} from '@xtarterize/core'
+import { detectProject, writeFile } from '@xtarterize/core'
 import { isExecutableFile, writeTaskDiffs } from '@xtarterize/tasks'
 import { describe, expect, it } from 'vite-plus/test'
 

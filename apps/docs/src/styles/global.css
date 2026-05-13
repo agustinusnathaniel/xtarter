@@ -350,8 +350,8 @@ html {
    Remove link underline in content cards
    ============================================ */
 
-.sl-markdown-content .template-card {
-	text-decoration: none !important;
+.sl-markdown-content a.template-card {
+	text-decoration: none;
 }
 
 /* ============================================

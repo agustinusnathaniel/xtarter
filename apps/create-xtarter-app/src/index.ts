@@ -1,6 +1,5 @@
 // Main entry point for programmatic usage
 export type { TemplateConfig } from '@/templates/registry'
-// biome-ignore lint/performance/noBarrelFile: Required for programmatic API exports
 export {
 	getTemplateById,
 	getTemplateChoices,

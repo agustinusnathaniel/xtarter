@@ -25,7 +25,7 @@ export const checkCommand = defineCommand({
 	},
 	async run({ args }) {
 		const ctx = resolveCliContext(args)
-		const { profile, tasks, statuses } = await scanProject(ctx)
+		const { tasks, statuses } = await scanProject(ctx)
 
 		let conformant = 0
 		const total = tasks.length

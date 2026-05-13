@@ -48,6 +48,7 @@ function filterTopics(topics: string[]): string[] {
 	return topics.filter((t) => !EXCLUDED_TOPICS.includes(t))
 }
 
+// biome-ignore lint/correctness/noUnusedVariables: used in template below
 let templates: Template[] = []
 
 try {
