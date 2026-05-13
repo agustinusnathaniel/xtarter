@@ -259,4 +259,143 @@ describe('detectProject', () => {
 		const profile = await detectProject(tmpDir)
 		expect(profile.nodeVersion).toBe('20')
 	})
+
+	it('detects Vite+ from vite-plus dep', async () => {
+		const tmpDir = await fs.mkdtemp(
+			path.join(os.tmpdir(), 'xtarterize-vp-detect-'),
+		)
+		await fs.writeFile(
+			path.join(tmpDir, 'package.json'),
+			JSON.stringify({
+				name: 'vp-project',
+				devDependencies: { 'vite-plus': '^0.1.0' },
+			}),
+		)
+
+		const profile = await detectProject(tmpDir)
+		expect(profile.vitePlus).toBe(true)
+		await fs.rm(tmpDir, { recursive: true })
+	})
+
+	it('detects Vite+ from fixtures/vite-plus-no-lint', async () => {
+		const profile = await detectProject(
+			path.join(fixtures, 'vite-plus-no-lint'),
+		)
+		expect(profile.vitePlus).toBe(true)
+		expect(profile.existing.biome).toBe(false)
+		expect(profile.existing.eslint).toBe(false)
+		expect(profile.existing.oxlint).toBe(false)
+		expect(profile.existing.oxfmt).toBe(false)
+	})
+
+	it('detects Vite+ with biome in vite-plus-biome fixture', async () => {
+		const profile = await detectProject(path.join(fixtures, 'vite-plus-biome'))
+		expect(profile.vitePlus).toBe(true)
+		expect(profile.existing.biome).toBe(true)
+	})
+
+	it('detects ESLint from dep', async () => {
+		const tmpDir = await fs.mkdtemp(
+			path.join(os.tmpdir(), 'xtarterize-eslint-dep-'),
+		)
+		await fs.writeFile(
+			path.join(tmpDir, 'package.json'),
+			JSON.stringify({
+				name: 'eslint-project',
+				devDependencies: { eslint: '^8.56.0' },
+			}),
+		)
+
+		const profile = await detectProject(tmpDir)
+		expect(profile.existing.eslint).toBe(true)
+		await fs.rm(tmpDir, { recursive: true })
+	})
+
+	it('detects ESLint from eslintrc config', async () => {
+		const tmpDir = await fs.mkdtemp(
+			path.join(os.tmpdir(), 'xtarterize-eslintrc-'),
+		)
+		await fs.writeFile(
+			path.join(tmpDir, 'package.json'),
+			JSON.stringify({ name: 'eslint-project' }),
+		)
+		await fs.writeFile(
+			path.join(tmpDir, '.eslintrc.json'),
+			JSON.stringify({ rules: {} }),
+		)
+
+		const profile = await detectProject(tmpDir)
+		expect(profile.existing.eslint).toBe(true)
+		await fs.rm(tmpDir, { recursive: true })
+	})
+
+	it('detects ESLint from eslint.config flat config', async () => {
+		const tmpDir = await fs.mkdtemp(
+			path.join(os.tmpdir(), 'xtarterize-flat-eslint-'),
+		)
+		await fs.writeFile(
+			path.join(tmpDir, 'package.json'),
+			JSON.stringify({ name: 'eslint-flat' }),
+		)
+		await fs.writeFile(
+			path.join(tmpDir, 'eslint.config.js'),
+			'export default []',
+		)
+
+		const profile = await detectProject(tmpDir)
+		expect(profile.existing.eslint).toBe(true)
+		await fs.rm(tmpDir, { recursive: true })
+	})
+
+	it('detects oxlint config', async () => {
+		const tmpDir = await fs.mkdtemp(
+			path.join(os.tmpdir(), 'xtarterize-oxlint-detect-'),
+		)
+		await fs.writeFile(
+			path.join(tmpDir, 'package.json'),
+			JSON.stringify({ name: 'oxlint-project' }),
+		)
+		await fs.writeFile(
+			path.join(tmpDir, '.oxlintrc.json'),
+			JSON.stringify({ rules: {} }),
+		)
+
+		const profile = await detectProject(tmpDir)
+		expect(profile.existing.oxlint).toBe(true)
+		await fs.rm(tmpDir, { recursive: true })
+	})
+
+	it('detects oxfmt config', async () => {
+		const tmpDir = await fs.mkdtemp(
+			path.join(os.tmpdir(), 'xtarterize-oxfmt-detect-'),
+		)
+		await fs.writeFile(
+			path.join(tmpDir, 'package.json'),
+			JSON.stringify({ name: 'oxfmt-project' }),
+		)
+		await fs.writeFile(
+			path.join(tmpDir, '.oxfmtrc.json'),
+			JSON.stringify({ indentStyle: 'space' }),
+		)
+
+		const profile = await detectProject(tmpDir)
+		expect(profile.existing.oxfmt).toBe(true)
+		await fs.rm(tmpDir, { recursive: true })
+	})
+
+	it('detects ESLint from fixtures/eslint-project', async () => {
+		const profile = await detectProject(path.join(fixtures, 'eslint-project'))
+		expect(profile.existing.eslint).toBe(true)
+		expect(profile.existing.biome).toBe(false)
+	})
+
+	it('detects oxlint standalone from fixtures/oxlint-standalone', async () => {
+		const profile = await detectProject(
+			path.join(fixtures, 'oxlint-standalone'),
+		)
+		expect(profile.existing.oxlint).toBe(true)
+		expect(profile.vitePlus).toBe(false)
+		expect(profile.existing.biome).toBe(false)
+		expect(profile.existing.eslint).toBe(false)
+	})
 })
