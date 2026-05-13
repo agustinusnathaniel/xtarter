@@ -14,21 +14,7 @@ export function renderOxlintConfig(profile: ProjectProfile): string {
 				'error',
 				{ prefer: 'type-imports' },
 			],
-			'@typescript-eslint/explicit-module-boundary-types': 'off',
 			complexity: 'warn',
-			'import/order': [
-				'warn',
-				{
-					groups: [
-						['builtin', 'external'],
-						['internal', 'parent'],
-						['sibling', 'index'],
-						'object',
-					],
-					'newlines-between': 'always',
-					alphabetize: { order: 'asc', caseInsensitive: true },
-				},
-			],
 		},
 	}
 
@@ -41,13 +27,6 @@ export function renderOxlintConfig(profile: ProjectProfile): string {
 				aspects: ['invalidHref', 'preferButton'],
 			},
 		]
-		;(config.rules as Record<string, unknown>)['react/jsx-props-no-spreading'] =
-			'off'
-		;(config.rules as Record<string, unknown>)['react/require-default-props'] =
-			'off'
-		;(config.rules as Record<string, unknown>)[
-			'react/function-component-definition'
-		] = 'off'
 	}
 
 	return JSON.stringify(config, null, 2)
