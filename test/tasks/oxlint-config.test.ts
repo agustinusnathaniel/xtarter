@@ -19,15 +19,64 @@ describe('oxlint config validation', () => {
 		expect(configFile.before).toBeNull()
 
 		const config = JSON.parse(configFile.after)
-		expect(config.rules['no-console']).toBe('error')
-		expect(config.rules.complexity).toBe('warn')
+
+		// Core ESLint rules
+		expect(config.rules['no-console']).toEqual([
+			'error',
+			{ allow: ['info', 'warn', 'error'] },
+		])
 		expect(config.rules['no-unused-vars']).toBe('off')
+		expect(config.rules.complexity).toEqual(['warn', { max: 30 }])
+		expect(config.rules['max-params']).toEqual(['error', { max: 3 }])
+		expect(config.rules.eqeqeq).toBe('error')
+		expect(config.rules['prefer-const']).toBe('error')
+		expect(config.rules['no-var']).toBe('error')
+		expect(config.rules['prefer-template']).toBe('error')
+		expect(config.rules['no-shadow']).toBe('warn')
+
+		// TypeScript rules
 		expect(
 			Array.isArray(config.rules['@typescript-eslint/no-unused-vars']),
 		).toBe(true)
 		expect(
 			Array.isArray(config.rules['@typescript-eslint/consistent-type-imports']),
 		).toBe(true)
+		expect(
+			config.rules['@typescript-eslint/consistent-type-definitions'],
+		).toEqual(['error', 'type'])
+		expect(config.rules['@typescript-eslint/array-type']).toEqual([
+			'error',
+			{ default: 'generic' },
+		])
+
+		// Import rules
+		expect(config.rules['import/no-duplicates']).toBe('error')
+		expect(config.rules['import/first']).toBe('error')
+		expect(config.rules['import/prefer-default-export']).toBe('off')
+
+		// Unicorn (relaxed)
+		expect(config.rules['unicorn/no-null']).toBe('off')
+		expect(config.rules['unicorn/filename-case']).toBe('off')
+		expect(config.rules['unicorn/no-array-reduce']).toBe('off')
+
+		// Categories
+		expect(config.categories).toEqual({
+			correctness: 'error',
+			suspicious: 'warn',
+			style: 'warn',
+			perf: 'warn',
+		})
+
+		// Overrides
+		expect(config.overrides).toBeDefined()
+		expect(config.overrides[0].files).toContain('*.test.ts')
+		expect(config.overrides[0].rules['vitest/consistent-test-it']).toEqual([
+			'error',
+			{ fn: 'it', withinDescribe: 'test' },
+		])
+
+		// React (also present because vite-plus-no-lint has react dep)
+		expect(Array.isArray(config.rules['react/jsx-key'])).toBe(true)
 	})
 
 	it(
@@ -80,6 +129,13 @@ describe('oxlint config validation', () => {
 		if (!configFile) throw new Error('Expected .oxlintrc.json diff to exist')
 		const config = JSON.parse(configFile.after)
 		expect(config.rules['jsx-a11y/anchor-is-valid']).toBeDefined()
+		expect(config.rules['react/jsx-key']).toBeDefined()
+		expect(config.rules['react/jsx-boolean-value']).toBe('error')
+		expect(config.rules['react/self-closing-comp']).toBe('error')
+		expect(config.rules['react/no-unknown-property']).toBe('error')
+		expect(config.rules['jsx-a11y/alt-text']).toBe('error')
+		expect(config.plugins).toContain('react')
+		expect(config.plugins).toContain('jsx-a11y')
 	})
 })
 

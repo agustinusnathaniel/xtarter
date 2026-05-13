@@ -24,10 +24,24 @@ export function renderBiomeJson(profile: ProjectProfile): string {
 			enabled: true,
 			rules: {
 				recommended: true,
+				complexity: {
+					noExcessiveCognitiveComplexity: {
+						level: 'warn',
+						options: { maxAllowedComplexity: 30 },
+					},
+					useMaxParams: {
+						level: 'error',
+						options: { max: 3 },
+					},
+				},
 				style: {
 					useConsistentArrayType: {
 						level: 'error',
 						options: { syntax: 'generic' },
+					},
+					useConsistentTypeDefinitions: {
+						level: 'error',
+						options: { style: 'type' },
 					},
 				},
 			},
@@ -52,6 +66,27 @@ export function renderBiomeJson(profile: ProjectProfile): string {
 				},
 			},
 		},
+		overrides: [
+			{
+				includes: ['*.test.ts', '*.test.tsx', '*.spec.ts', '*.spec.tsx'],
+				linter: {
+					rules: {
+						complexity: {
+							noExcessiveCognitiveComplexity: 'off',
+						},
+						nursery: {
+							useConsistentTestIt: {
+								level: 'error',
+								options: {
+									function: 'it',
+									withinDescribe: 'test',
+								},
+							},
+						},
+					},
+				},
+			},
+		],
 	}
 
 	if (hasTailwind) {
