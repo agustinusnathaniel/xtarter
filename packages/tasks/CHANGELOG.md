@@ -1,5 +1,20 @@
 # @xtarterize/tasks
 
+## 1.13.1
+
+### Patch Changes
+
+- [`f1069d6`](https://github.com/agustinusnathaniel/xtarter/commit/f1069d6bea26aabece3ed030303642e1d3f14693) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - refactor: enrich oxlint and biome config templates with additional lint rules
+
+  Add non-recommended rules mapped from typical ESLint configs:
+
+  - Oxlint: max-params, eqeqeq, prefer-const, no-var, prefer-template, no-shadow, consistent-type-definitions, array-type, react rules, vitest overrides, unicorn relaxations, import rules
+  - Biome: noExcessiveCognitiveComplexity, useMaxParams, useConsistentTypeDefinitions, useConsistentTestIt overrides
+
+- Updated dependencies []:
+  - @xtarterize/core@1.13.1
+  - @xtarterize/patchers@1.13.1
+
 ## 1.13.0
 
 ### Minor Changes
