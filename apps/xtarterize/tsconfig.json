@@ -3,6 +3,7 @@
 		"target": "ES2022",
 		"module": "ESNext",
 		"moduleResolution": "bundler",
+		"resolveJsonModule": true,
 		"strict": true,
 		"incremental": true,
 		"composite": true,
@@ -14,7 +15,8 @@
 		"skipLibCheck": true,
 		"types": ["node"],
 		"paths": {
-			"@/*": ["./src/*"]
+			"@/*": ["./src/*"],
+			"^/*": ["./*"]
 		}
 	},
 	"include": ["src"],

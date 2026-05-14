@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+import { version } from '^/package.json'
 import { defineCommand, runMain } from 'citty'
 import { addCommand } from '@/commands/add.js'
 import { checkCommand } from '@/commands/check.js'
@@ -15,7 +16,7 @@ process.on('SIGTERM', () => process.exit(0))
 const main = defineCommand({
 	meta: {
 		name: 'xtarterize',
-		version: '0.1.0',
+		version,
 		description: 'Apply conformance configuration to JS/TS projects',
 	},
 	args: {

@@ -1,3 +1,4 @@
+import { version } from '^/package.json'
 import { pc } from '@xtarterize/core'
 
 export const APP_NAME: string = pc.cyan('create-xtarter-app')
@@ -66,4 +67,4 @@ ${pc.bold('Examples:')}
   ${pc.cyan('npx create-xtarter-app@latest my-app -t vite-chakra -p pnpm --no-git')}
 `
 
-export const VERSION = '0.1.0'
+export const VERSION: string = version
