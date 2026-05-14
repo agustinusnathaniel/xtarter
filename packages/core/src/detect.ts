@@ -30,7 +30,7 @@ export type {
 	Styling,
 }
 
-import { detectBundler, hasBundlerConfig } from './detect/bundler.js'
+import { detectBundler } from './detect/bundler.js'
 
 // Detection functions
 import {
@@ -50,25 +50,43 @@ import { isStringRecord } from './detect/utils.js'
 
 export { detectFramework, detectPackageManager }
 
-// ConfigDetector: each detector maps to a key in ProjectProfile['existing']
-type ConfigDetector = {
+// ── Declarative file-existence detectors ──
+
+interface FileDetectorSpec {
 	key: keyof ProjectProfile['existing']
-	detect: (cwd: string) => Promise<boolean | string[]>
+	basename: string
+	extensions: string[]
 }
 
-// Individual detector functions (defined before the array for hoisting)
+const FILE_DETECTORS: FileDetectorSpec[] = [
+	{ key: 'biome', basename: 'biome', extensions: ['.json', '.jsonc'] },
+	{ key: 'oxlint', basename: '.oxlintrc', extensions: ['.json', '.jsonc'] },
+	{ key: 'oxfmt', basename: '.oxfmtrc', extensions: ['.json', '.jsonc'] },
+	{ key: 'tsconfig', basename: 'tsconfig', extensions: ['.json', '.jsonc'] },
+	{ key: 'renovate', basename: 'renovate', extensions: ['.json', '.jsonc'] },
+	{
+		key: 'commitlint',
+		basename: 'commitlint.config',
+		extensions: ['.ts', '.js', '.mjs', '.mts', '.cts'],
+	},
+	{ key: 'knip', basename: 'knip', extensions: ['.ts', '.mts'] },
+	{ key: 'plop', basename: 'plopfile', extensions: ['.ts', '.js', '.mjs'] },
+	{ key: 'turbo', basename: 'turbo', extensions: ['.json'] },
+	{
+		key: 'vscodeSettings',
+		basename: '.vscode/settings',
+		extensions: ['.json'],
+	},
+	{
+		key: 'viteConfig',
+		basename: 'vite.config',
+		extensions: ['.ts', '.js', '.mts', '.mjs', '.cts', '.cjs'],
+	},
+	{ key: 'versionrc', basename: '.versionrc', extensions: [] },
+	{ key: 'gitignore', basename: '.gitignore', extensions: [] },
+]
 
-async function detectBiome(cwd: string): Promise<boolean> {
-	return findConfigFile(cwd, 'biome', ['.json', '.jsonc']).then(Boolean)
-}
-
-async function detectOxlint(cwd: string): Promise<boolean> {
-	return findConfigFile(cwd, '.oxlintrc', ['.json', '.jsonc']).then(Boolean)
-}
-
-async function detectOxfmt(cwd: string): Promise<boolean> {
-	return findConfigFile(cwd, '.oxfmtrc', ['.json', '.jsonc']).then(Boolean)
-}
+// ── Custom detectors for complex cases ──
 
 async function detectEslint(cwd: string): Promise<boolean> {
 	const hasConfigFile = await findConfigFile(cwd, '.eslintrc', [
@@ -94,46 +112,6 @@ async function detectEslint(cwd: string): Promise<boolean> {
 	return !!(pkg?.devDependencies?.eslint ?? pkg?.dependencies?.eslint)
 }
 
-async function detectTsconfig(cwd: string): Promise<boolean> {
-	return findConfigFile(cwd, 'tsconfig', ['.json', '.jsonc']).then(Boolean)
-}
-
-async function detectRenovate(cwd: string): Promise<boolean> {
-	return findConfigFile(cwd, 'renovate', ['.json', '.jsonc']).then(Boolean)
-}
-
-async function detectCommitlint(cwd: string): Promise<boolean> {
-	return findConfigFile(cwd, 'commitlint.config', [
-		'.ts',
-		'.js',
-		'.mjs',
-		'.mts',
-		'.cts',
-	]).then(Boolean)
-}
-
-async function detectKnip(cwd: string): Promise<boolean> {
-	return findConfigFile(cwd, 'knip', ['.ts', '.mts']).then(Boolean)
-}
-
-async function detectPlop(cwd: string): Promise<boolean> {
-	return findConfigFile(cwd, 'plopfile', ['.ts', '.js', '.mjs']).then(Boolean)
-}
-
-async function detectTurbo(cwd: string): Promise<boolean> {
-	return fileExists(resolvePath(cwd, 'turbo.json'))
-}
-
-async function detectVscodeSettings(cwd: string): Promise<boolean> {
-	return fileExists(resolvePath(cwd, '.vscode', 'settings.json'))
-}
-
-async function detectAgentsMd(cwd: string): Promise<boolean> {
-	const found = await findConfigFile(cwd, 'AGENTS', ['.md']).then(Boolean)
-	if (found) return true
-	return fileExists(resolvePath(cwd, 'CLAUDE.md'))
-}
-
 async function detectGitHubWorkflows(cwd: string): Promise<string[]> {
 	const workflowsDir = resolvePath(cwd, '.github', 'workflows')
 	const exists = await fileExists(workflowsDir)
@@ -149,25 +127,6 @@ async function detectGitHubWorkflows(cwd: string): Promise<string[]> {
 		.map((e) => e.replace(/\.(yml|yaml)$/, ''))
 }
 
-async function detectViteConfig(cwd: string): Promise<boolean> {
-	return hasBundlerConfig(cwd, 'vite.config', [
-		'.ts',
-		'.js',
-		'.mts',
-		'.mjs',
-		'.cts',
-		'.cjs',
-	])
-}
-
-async function detectVersionrc(cwd: string): Promise<boolean> {
-	return fileExists(resolvePath(cwd, '.versionrc'))
-}
-
-async function detectGitignore(cwd: string): Promise<boolean> {
-	return fileExists(resolvePath(cwd, '.gitignore'))
-}
-
 async function detectChangeset(cwd: string): Promise<boolean> {
 	const hasConfig = await fileExists(
 		resolvePath(cwd, '.changeset', 'config.json'),
@@ -178,6 +137,59 @@ async function detectChangeset(cwd: string): Promise<boolean> {
 		pkg?.devDependencies?.['@changesets/cli'] ??
 		pkg?.dependencies?.['@changesets/cli']
 	)
+}
+
+async function detectAgentsMd(cwd: string): Promise<boolean> {
+	const found = await findConfigFile(cwd, 'AGENTS', ['.md']).then(Boolean)
+	if (found) return true
+	return fileExists(resolvePath(cwd, 'CLAUDE.md'))
+}
+
+// ── Custom detectors ──
+
+type CustomDetector = {
+	key: keyof ProjectProfile['existing']
+	detect: (cwd: string) => Promise<boolean | string[]>
+}
+
+const CUSTOM_DETECTORS: CustomDetector[] = [
+	{ key: 'eslint', detect: detectEslint },
+	{ key: 'githubWorkflows', detect: detectGitHubWorkflows },
+	{ key: 'changeset', detect: detectChangeset },
+	{ key: 'agentsMd', detect: detectAgentsMd },
+]
+
+// ── Unified detection runner ──
+
+async function detectFileConfig(
+	cwd: string,
+	spec: FileDetectorSpec,
+): Promise<boolean> {
+	if (spec.extensions.length === 0) {
+		return fileExists(resolvePath(cwd, spec.basename))
+	}
+	return findConfigFile(cwd, spec.basename, spec.extensions).then(Boolean)
+}
+
+async function detectExistingConfigs(
+	cwd: string,
+): Promise<ProjectProfile['existing']> {
+	const fileResults = await Promise.all(
+		FILE_DETECTORS.map((d) => detectFileConfig(cwd, d)),
+	)
+	const customResults = await Promise.all(
+		CUSTOM_DETECTORS.map((d) => d.detect(cwd)),
+	)
+	const existing: Partial<ProjectProfile['existing']> = {}
+	for (let i = 0; i < FILE_DETECTORS.length; i++) {
+		;(existing as Record<string, unknown>)[FILE_DETECTORS[i].key] =
+			fileResults[i]
+	}
+	for (let i = 0; i < CUSTOM_DETECTORS.length; i++) {
+		;(existing as Record<string, unknown>)[CUSTOM_DETECTORS[i].key] =
+			customResults[i]
+	}
+	return existing as ProjectProfile['existing']
 }
 
 async function detectNodeVersion(cwd: string): Promise<string> {
@@ -197,40 +209,6 @@ async function detectNodeVersion(cwd: string): Promise<string> {
 	}
 
 	return '20'
-}
-
-// ConfigDetector array - order matters for the result object
-const CONFIG_DETECTORS: ConfigDetector[] = [
-	{ key: 'biome', detect: detectBiome },
-	{ key: 'oxlint', detect: detectOxlint },
-	{ key: 'oxfmt', detect: detectOxfmt },
-	{ key: 'eslint', detect: detectEslint },
-	{ key: 'tsconfig', detect: detectTsconfig },
-	{ key: 'renovate', detect: detectRenovate },
-	{ key: 'commitlint', detect: detectCommitlint },
-	{ key: 'knip', detect: detectKnip },
-	{ key: 'plop', detect: detectPlop },
-	{ key: 'turbo', detect: detectTurbo },
-	{ key: 'vscodeSettings', detect: detectVscodeSettings },
-	{ key: 'agentsMd', detect: detectAgentsMd },
-	{ key: 'githubWorkflows', detect: detectGitHubWorkflows },
-	{ key: 'viteConfig', detect: detectViteConfig },
-	{ key: 'versionrc', detect: detectVersionrc },
-	{ key: 'gitignore', detect: detectGitignore },
-	{ key: 'changeset', detect: detectChangeset },
-]
-
-async function detectExistingConfigs(
-	cwd: string,
-): Promise<ProjectProfile['existing']> {
-	const results = await Promise.all(CONFIG_DETECTORS.map((d) => d.detect(cwd)))
-
-	const existing: Partial<ProjectProfile['existing']> = {}
-	for (let i = 0; i < CONFIG_DETECTORS.length; i++) {
-		;(existing as Record<string, unknown>)[CONFIG_DETECTORS[i].key] = results[i]
-	}
-
-	return existing as ProjectProfile['existing']
 }
 
 export async function detectProject(cwd: string): Promise<ProjectProfile> {

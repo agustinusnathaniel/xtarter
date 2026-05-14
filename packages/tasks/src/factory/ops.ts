@@ -1,12 +1,10 @@
 import type { FileDiff } from '@xtarterize/core'
 import {
 	ensureDir,
-	fileExists,
-	readPackageJson,
+	installDependency,
 	resolvePath,
 	writeFile,
 } from '@xtarterize/core'
-import { addDependency } from 'nypm'
 
 export async function ensureTaskDependency(options: {
 	cwd: string
@@ -15,23 +13,11 @@ export async function ensureTaskDependency(options: {
 	installDev?: boolean
 }): Promise<void> {
 	if (!options.depName) return
-
-	const pkg = await readPackageJson(options.cwd)
-	const hasDep =
-		pkg?.devDependencies?.[options.depName] ||
-		pkg?.dependencies?.[options.depName]
-
-	if (hasDep) return
-
-	const isPnpmWorkspaceRoot = await fileExists(
-		resolvePath(options.cwd, 'pnpm-workspace.yaml'),
+	await installDependency(
+		options.cwd,
+		options.depInstallName ?? options.depName,
+		options.installDev ?? true,
 	)
-
-	await addDependency([options.depInstallName ?? options.depName], {
-		cwd: options.cwd,
-		dev: options.installDev ?? true,
-		workspace: isPnpmWorkspaceRoot || undefined,
-	})
 }
 
 export async function ensureTaskParentDir(

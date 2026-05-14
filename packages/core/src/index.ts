@@ -77,6 +77,7 @@ export {
 	getDependencyVersion,
 	getNodeVersion,
 	hasDependency,
+	installDependency,
 	readPackageJson,
 	writePackageJson,
 } from '@/utils/pkg.js'

@@ -6,6 +6,7 @@ import type {
 } from '@xtarterize/core'
 import {
 	fileExists,
+	installDependency,
 	readFile,
 	readPackageJson,
 	resolvePath,
@@ -13,7 +14,6 @@ import {
 	writePackageJson,
 } from '@xtarterize/core'
 import { patchJson } from '@xtarterize/patchers'
-import { addDependency } from 'nypm'
 import {
 	filterMissingScripts,
 	mergeScripts,
@@ -256,22 +256,8 @@ export function createPackageJsonTask(options: PackageJsonTaskOptions): Task {
 			const allDeps = await resolveDeps(options, cwd, profile)
 			const neededDeps = filterDepsByMissingScripts(allDeps, missingScripts)
 
-			const isPnpmWorkspaceRoot = await fileExists(
-				resolvePath(cwd, 'pnpm-workspace.yaml'),
-			)
-
 			for (const dep of neededDeps) {
-				const pkg = await readPackageJson(cwd)
-				if (
-					!pkg?.devDependencies?.[dep.depName] &&
-					!pkg?.dependencies?.[dep.depName]
-				) {
-					await addDependency([dep.depName], {
-						cwd,
-						dev: dep.installDev ?? true,
-						workspace: isPnpmWorkspaceRoot || undefined,
-					})
-				}
+				await installDependency(cwd, dep.depName, dep.installDev ?? true)
 			}
 
 			for (const f of options.files ?? []) {

@@ -1,3 +1,4 @@
+import { addDependency } from 'nypm'
 import { type PackageJson, readPackageJSON, writePackageJSON } from 'pkg-types'
 import { fileExists, resolvePath } from '@/utils/fs.js'
 
@@ -40,4 +41,23 @@ export function getNodeVersion(pkg: {
 }): string {
 	if (pkg.engines?.node) return pkg.engines.node
 	return '20'
+}
+
+export async function installDependency(
+	cwd: string,
+	depName: string,
+	dev: boolean = true,
+): Promise<void> {
+	const pkg = await readPackageJson(cwd)
+	if (pkg?.devDependencies?.[depName] || pkg?.dependencies?.[depName]) return
+
+	const isPnpmWorkspaceRoot = await fileExists(
+		resolvePath(cwd, 'pnpm-workspace.yaml'),
+	)
+
+	await addDependency([depName], {
+		cwd,
+		dev,
+		workspace: isPnpmWorkspaceRoot || undefined,
+	})
 }
