@@ -33,16 +33,16 @@
 		"prepare": "vp config"
 	},
 	"devDependencies": {
-		"@biomejs/biome": "^2.4.14",
+		"@biomejs/biome": "^2.4.15",
 		"@changesets/changelog-github": "^0.7.0",
 		"@changesets/cli": "^2.31.0",
 		"@types/node": "catalog:",
 		"all-contributors-cli": "^6.26.1",
-		"turbo": "^2.9.9",
+		"turbo": "^2.9.12",
 		"vite-plus": "catalog:"
 	},
 	"engines": {
 		"node": ">=24"
 	},
-	"packageManager": "pnpm@10.33.2"
+	"packageManager": "pnpm@10.33.4"
 }
