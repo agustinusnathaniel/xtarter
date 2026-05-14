@@ -43,7 +43,8 @@
 		"dev": "vp pack --watch",
 		"typecheck": "tsc --noEmit",
 		"test": "vp test run",
-		"prepublishOnly": "pnpm build"
+		"prepublishOnly": "pnpm build",
+		"validate:templates": "node scripts/validate-templates.mjs"
 	},
 	"dependencies": {
 		"@clack/prompts": "catalog:",

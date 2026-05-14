@@ -4,3 +4,4 @@ dist
 .turbo
 .plans
 .claude/handoffs
+.templates-validate-cache.json
