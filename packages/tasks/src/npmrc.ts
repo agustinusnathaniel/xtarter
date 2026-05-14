@@ -1,4 +1,4 @@
-import { createSimpleFileTask } from '@/factory'
+import { createFileTask } from '@/factory'
 
 function npmrcContent(): string {
 	return [
@@ -9,7 +9,7 @@ function npmrcContent(): string {
 	].join('\n')
 }
 
-export const npmrcTask = createSimpleFileTask({
+export const npmrcTask = createFileTask({
 	id: 'scripts/npmrc',
 	label: '.npmrc — package manager config',
 	group: 'Scripts',

@@ -1,5 +1,5 @@
 import type { ProjectProfile, Task, TaskStatus } from '@xtarterize/core'
-import { createFileTask, createSimpleFileTask } from '@/factory'
+import { createFileTask } from '@/factory'
 
 function detectPresence(
 	content: string | null,
@@ -18,7 +18,7 @@ export function createAgentPresenceTask(options: {
 	ensureParentDir?: boolean
 	whenPresent?: TaskStatus
 }): Task {
-	return createSimpleFileTask({
+	return createFileTask({
 		id: options.id,
 		label: options.label,
 		group: 'Agent',

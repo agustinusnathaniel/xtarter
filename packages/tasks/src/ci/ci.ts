@@ -1,7 +1,7 @@
-import { createSimpleFileTask } from '@/factory'
+import { createFileTask } from '@/factory'
 import { renderCiWorkflow } from '@/templates/workflows/ci-yml.js'
 
-export const ciWorkflowTask = createSimpleFileTask({
+export const ciWorkflowTask = createFileTask({
 	id: 'ci/ci',
 	label: 'GitHub CI workflow',
 	group: 'CI/CD',

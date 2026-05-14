@@ -46,6 +46,7 @@ export {
 	isExecutableFile,
 	writeTaskDiffs,
 } from './ops.js'
+export { lintToolScripts, resolveLintTool } from './package-scripts.js'
 export type { PackageJsonScriptEntry, PackageJsonTaskOptions } from './task.js'
 export { createPackageJsonTask } from './task.js'
 // ─── Re-exports from sub-modules ───
@@ -116,7 +117,11 @@ export function createFileTask(options: FileTaskOptions): Task {
 				return 'patch'
 			}
 
-			if (actual.trim() === expected.trim()) return 'skip'
+			if (
+				normalizeLineEndings(actual.trim()) ===
+				normalizeLineEndings(expected.trim())
+			)
+				return 'skip'
 			return 'conflict'
 		},
 
@@ -231,95 +236,6 @@ export function createJsonMergeTask(options: JsonMergeTaskOptions): Task {
 				depName: options.depName,
 				installDev: options.installDev,
 			})
-
-			const diffs = await this.dryRun(cwd, profile)
-			await writeTaskDiffs(cwd, diffs)
-		},
-	}
-}
-
-// ─── SimpleFileTask (new files only, skip-if-exists) ───
-
-export interface SimpleFileTaskOptions {
-	id: string
-	label: string
-	group: string
-	applicable: (profile: ProjectProfile) => boolean
-	filepath: string
-	extensions?: string[]
-	render: (profile: ProjectProfile) => string
-	depName?: string
-	installDev?: boolean
-	ensureParentDir?: boolean
-	checkFn?: (
-		cwd: string,
-		profile: ProjectProfile,
-		fullPath: string | null,
-		content: string | null,
-	) => Promise<TaskStatus>
-}
-
-export function createSimpleFileTask(options: SimpleFileTaskOptions): Task {
-	return {
-		id: options.id,
-		label: options.label,
-		group: options.group,
-		applicable: options.applicable,
-
-		async check(cwd, profile): Promise<TaskStatus> {
-			const fullPath = await resolveTaskFile(
-				cwd,
-				options.filepath,
-				options.extensions,
-			)
-
-			if (!fullPath) return 'new'
-
-			const exists = await fileExists(fullPath)
-			if (!exists) return 'new'
-
-			if (options.checkFn) {
-				const content = await readFile(fullPath)
-				return options.checkFn(cwd, profile, fullPath, content)
-			}
-
-			const expected = options.render(profile)
-			const actual = await readFile(fullPath)
-			if (
-				normalizeLineEndings(actual.trim()) ===
-				normalizeLineEndings(expected.trim())
-			)
-				return 'skip'
-			return 'conflict'
-		},
-
-		async dryRun(cwd, profile): Promise<FileDiff[]> {
-			const fullPath = await resolveTaskFile(
-				cwd,
-				options.filepath,
-				options.extensions,
-			)
-
-			const exists = fullPath !== null && (await fileExists(fullPath))
-			const before = exists ? await readFile(fullPath) : null
-			const filepath = exists
-				? relative(cwd, fullPath)
-				: getDefaultFilepath(options.filepath, options.extensions)
-			const after = options.render(profile)
-
-			return [{ filepath, before, after }]
-		},
-
-		async apply(cwd, profile): Promise<void> {
-			await ensureTaskDependency({
-				cwd,
-				depName: options.depName,
-				installDev: options.installDev,
-			})
-
-			if (options.ensureParentDir) {
-				await ensureTaskParentDir(cwd, options.filepath)
-			}
 
 			const diffs = await this.dryRun(cwd, profile)
 			await writeTaskDiffs(cwd, diffs)

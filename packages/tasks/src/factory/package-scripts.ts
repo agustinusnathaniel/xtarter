@@ -7,6 +7,101 @@ import {
 import type { PackageJsonTaskDep } from './task.js'
 import { createPackageJsonTask } from './task.js'
 
+export type LintTool = 'ultracite' | 'biome' | 'oxlint' | 'vp'
+
+export type ScriptEntry = { script: string; value: string }
+
+export function resolveLintTool(params: {
+	existingEslint: boolean
+	useUltracite: boolean
+	hasBiomeDep: boolean
+	existingOxlint: boolean
+	existingOxfmt: boolean
+	vitePlus: boolean
+}): LintTool | null {
+	if (params.existingEslint) return null
+	if (params.useUltracite) return 'ultracite'
+	if (params.hasBiomeDep) return 'biome'
+	if (params.existingOxlint || params.existingOxfmt) return 'oxlint'
+	if (params.vitePlus) return 'vp'
+	return 'biome'
+}
+
+export function lintToolScripts(
+	tool: LintTool | null,
+	oxlintPlugins: string,
+): ScriptEntry[] {
+	switch (tool) {
+		case 'ultracite':
+			return [
+				{ script: 'ultracite:check', value: 'ultracite check' },
+				{ script: 'ultracite:fix', value: 'ultracite fix' },
+			]
+		case 'biome':
+			return [
+				{ script: 'biome', value: 'biome check .' },
+				{ script: 'biome:fix', value: 'biome check --write .' },
+			]
+		case 'oxlint':
+			return [
+				{ script: 'lint', value: `oxlint ${oxlintPlugins}` },
+				{
+					script: 'check',
+					value: `oxlint ${oxlintPlugins} && oxfmt --check`,
+				},
+				{
+					script: 'fix',
+					value: `oxlint --fix ${oxlintPlugins} && oxfmt`,
+				},
+			]
+		case 'vp':
+			return [
+				{ script: 'lint', value: 'vp lint' },
+				{ script: 'check', value: 'vp check' },
+				{ script: 'fix', value: 'vp check --fix' },
+			]
+		default:
+			return []
+	}
+}
+
+function lintTurboTasks(
+	tool: LintTool | null,
+	existingScripts: Record<string, string>,
+	typescript: boolean,
+): string[] {
+	const taskKey = tool === 'vp' || tool === 'oxlint' ? 'lint' : (tool ?? '')
+	const baseTasks: string[] = tool
+		? [tool === 'vp' || tool === 'oxlint' ? 'lint' : tool, 'typecheck', 'test']
+		: ['typecheck', 'test']
+
+	let recommendedKeys: string[]
+	if (!tool) {
+		recommendedKeys = ['typecheck', 'test']
+	} else if (tool === 'ultracite') {
+		recommendedKeys = ['ultracite:check']
+	} else {
+		recommendedKeys = baseTasks
+	}
+
+	return getCompositeTasks(existingScripts, baseTasks).filter((t) => {
+		if (t === 'typecheck' && !typescript) return false
+		if (taskKey && t === taskKey && !recommendedKeys.includes(taskKey))
+			return false
+		return true
+	})
+}
+
+function oxlintPluginFlags(profile: {
+	framework: import('@xtarterize/core').Framework
+}): string {
+	const plugins = ['--import-plugin']
+	if (profile.framework === 'react') {
+		plugins.push('--react-plugin', '--jsx-a11y-plugin')
+	}
+	return plugins.join(' ')
+}
+
 function getUpgradeCommand(pm: string): string {
 	switch (pm) {
 		case 'pnpm':
@@ -22,22 +117,28 @@ function getUpgradeCommand(pm: string): string {
 	}
 }
 
-async function hasUltracite(cwd: string): Promise<boolean> {
-	const pkg = await readPackageJson(cwd)
-	return !!(pkg?.devDependencies?.ultracite || pkg?.dependencies?.ultracite)
-}
+type ScriptsMap = Record<string, string>
 
-function oxlintPluginFlags(profile: {
-	framework: import('@xtarterize/core').Framework
-}): string {
-	const plugins = ['--import-plugin']
-	if (profile.framework === 'react') {
-		plugins.push('--react-plugin', '--jsx-a11y-plugin')
+function pushIfMissing(
+	scripts: ScriptEntry[],
+	existing: ScriptsMap,
+	entry: ScriptEntry,
+): void {
+	if (
+		!Object.hasOwn(existing, entry.script) &&
+		!findEquivalentScriptKey(existing, entry.script, entry.value)
+	) {
+		scripts.push(entry)
 	}
-	return plugins.join(' ')
 }
 
-type ScriptEntry = { script: string; value: string }
+function pushAllIfMissing(
+	scripts: ScriptEntry[],
+	existing: ScriptsMap,
+	entries: ScriptEntry[],
+): void {
+	for (const entry of entries) pushIfMissing(scripts, existing, entry)
+}
 
 function getCompositeTasks(
 	existingScripts: Record<string, string>,
@@ -66,175 +167,67 @@ export const packageScriptsTask = createPackageJsonTask({
 	applicable: () => true,
 	getScripts: async (cwd, profile) => {
 		const pm = profile.packageManager
-		const useUltracite = await hasUltracite(cwd)
 
 		const pkg = await readPackageJson(cwd)
 		const rawScripts = pkg?.scripts ?? {}
-		const existingScripts: Record<string, string> = {}
+		const existingScripts: ScriptsMap = {}
 		for (const [key, value] of Object.entries(rawScripts)) {
-			if (value !== undefined) {
-				existingScripts[key] = value
-			}
+			if (value !== undefined) existingScripts[key] = value
 		}
 
-		const scripts: ScriptEntry[] = []
-		const useVitePlus = profile.vitePlus
 		const hasBiomeDep = !!(
 			pkg?.devDependencies?.['@biomejs/biome'] ??
 			pkg?.dependencies?.['@biomejs/biome']
 		)
-
+		const useUltracite = !!(
+			pkg?.devDependencies?.ultracite || pkg?.dependencies?.ultracite
+		)
 		const oxlintPlugins = oxlintPluginFlags(profile)
+		const lintTool = resolveLintTool({
+			existingEslint: profile.existing.eslint,
+			useUltracite,
+			hasBiomeDep,
+			existingOxlint: profile.existing.oxlint,
+			existingOxfmt: profile.existing.oxfmt,
+			vitePlus: profile.vitePlus,
+		})
 
-		const toolScripts: ScriptEntry[] = profile.existing.eslint
-			? []
-			: useUltracite
-				? [
-						{ script: 'ultracite:check', value: 'ultracite check' },
-						{ script: 'ultracite:fix', value: 'ultracite fix' },
-					]
-				: hasBiomeDep
-					? [
-							{ script: 'biome', value: 'biome check .' },
-							{ script: 'biome:fix', value: 'biome check --write .' },
-						]
-					: profile.existing.oxlint || profile.existing.oxfmt
-						? profile.vitePlus
-							? [
-									{ script: 'lint', value: 'vp lint' },
-									{ script: 'check', value: 'vp check' },
-									{ script: 'fix', value: 'vp check --fix' },
-								]
-							: [
-									{ script: 'lint', value: `oxlint ${oxlintPlugins}` },
-									{
-										script: 'check',
-										value: `oxlint ${oxlintPlugins} && oxfmt --check`,
-									},
-									{
-										script: 'fix',
-										value: `oxlint --fix ${oxlintPlugins} && oxfmt`,
-									},
-								]
-						: useVitePlus
-							? [
-									{ script: 'lint', value: 'vp lint' },
-									{ script: 'check', value: 'vp check' },
-									{ script: 'fix', value: 'vp check --fix' },
-								]
-							: [
-									{ script: 'biome', value: 'biome check .' },
-									{ script: 'biome:fix', value: 'biome check --write .' },
-								]
-
-		for (const s of toolScripts) {
-			if (Object.hasOwn(existingScripts, s.script)) {
-				continue
-			}
-			const existingKey = findEquivalentScriptKey(
-				existingScripts,
-				s.script,
-				s.value,
-			)
-			if (!existingKey) {
-				scripts.push(s)
-			}
-		}
-
-		const testScript = { script: 'test', value: 'vitest run' }
-		if (
-			!Object.hasOwn(existingScripts, testScript.script) &&
-			!findEquivalentScriptKey(
-				existingScripts,
-				testScript.script,
-				testScript.value,
-			)
-		) {
-			scripts.push(testScript)
-		}
-
-		const upgradeScript = { script: 'upgrade', value: getUpgradeCommand(pm) }
-		if (
-			!Object.hasOwn(existingScripts, upgradeScript.script) &&
-			!findEquivalentScriptKey(
-				existingScripts,
-				upgradeScript.script,
-				upgradeScript.value,
-			)
-		) {
-			scripts.push(upgradeScript)
-		}
+		const scripts: ScriptEntry[] = []
+		pushAllIfMissing(
+			scripts,
+			existingScripts,
+			lintToolScripts(lintTool, oxlintPlugins),
+		)
+		pushIfMissing(scripts, existingScripts, {
+			script: 'test',
+			value: 'vitest run',
+		})
+		pushIfMissing(scripts, existingScripts, {
+			script: 'upgrade',
+			value: getUpgradeCommand(pm),
+		})
 
 		if (profile.existing.changeset) {
-			const changesetScripts = [
+			pushAllIfMissing(scripts, existingScripts, [
 				{ script: 'changeset', value: 'changeset' },
-				{
-					script: 'version-packages',
-					value: 'changeset version',
-				},
+				{ script: 'version-packages', value: 'changeset version' },
 				{ script: 'release', value: 'changeset publish' },
-			]
-			for (const s of changesetScripts) {
-				if (
-					!Object.hasOwn(existingScripts, s.script) &&
-					!findEquivalentScriptKey(existingScripts, s.script, s.value)
-				) {
-					scripts.push(s)
-				}
-			}
+			])
 		} else {
-			const releaseScript = {
+			pushIfMissing(scripts, existingScripts, {
 				script: 'release',
 				value: 'commit-and-tag-version',
-			}
-			if (
-				!Object.hasOwn(existingScripts, releaseScript.script) &&
-				!findEquivalentScriptKey(
-					existingScripts,
-					releaseScript.script,
-					releaseScript.value,
-				)
-			) {
-				scripts.push(releaseScript)
-			}
+			})
 		}
 
-		const plopScript = { script: 'plop', value: 'plop' }
-		if (
-			!Object.hasOwn(existingScripts, plopScript.script) &&
-			!findEquivalentScriptKey(
-				existingScripts,
-				plopScript.script,
-				plopScript.value,
-			)
-		) {
-			scripts.push(plopScript)
-		}
+		pushIfMissing(scripts, existingScripts, { script: 'plop', value: 'plop' })
 
 		if (profile.typescript) {
-			const typecheckScript = { script: 'typecheck', value: 'tsc --noEmit' }
-			if (
-				!Object.hasOwn(existingScripts, typecheckScript.script) &&
-				!findEquivalentScriptKey(
-					existingScripts,
-					typecheckScript.script,
-					typecheckScript.value,
-				)
-			) {
-				scripts.push(typecheckScript)
-			}
-
-			const knipScript = { script: 'knip', value: 'knip' }
-			if (
-				!Object.hasOwn(existingScripts, knipScript.script) &&
-				!findEquivalentScriptKey(
-					existingScripts,
-					knipScript.script,
-					knipScript.value,
-				)
-			) {
-				scripts.push(knipScript)
-			}
+			pushIfMissing(scripts, existingScripts, {
+				script: 'typecheck',
+				value: 'tsc --noEmit',
+			})
+			pushIfMissing(scripts, existingScripts, { script: 'knip', value: 'knip' })
 		}
 
 		const hasTurbo =
@@ -243,161 +236,18 @@ export const packageScriptsTask = createPackageJsonTask({
 			!!pkg?.devDependencies?.turborepo ||
 			!!pkg?.devDependencies?.turbo
 		if (hasTurbo) {
-			const lintTool = profile.existing.eslint
-				? null
-				: useUltracite
-					? 'ultracite'
-					: hasBiomeDep
-						? 'biome'
-						: profile.existing.oxlint || profile.existing.oxfmt
-							? profile.vitePlus
-								? 'vp'
-								: 'oxlint'
-							: profile.vitePlus
-								? 'vp'
-								: 'biome'
-			const lintTaskKey: string =
-				lintTool === 'vp' || lintTool === 'oxlint' ? 'lint' : (lintTool ?? '')
-
-			const recommendedKeys = !lintTool
-				? ['typecheck', 'test'].filter((k) => {
-						if (k === 'typecheck' && !profile.typescript) return false
-						if (
-							k === 'typecheck' &&
-							findEquivalentScriptKey(
-								existingScripts,
-								'typecheck',
-								'tsc --noEmit',
-							)
-						)
-							return false
-						if (
-							k === 'test' &&
-							findEquivalentScriptKey(existingScripts, 'test', 'vitest run')
-						)
-							return false
-						return true
-					})
-				: lintTool === 'ultracite'
-					? ['ultracite:check']
-					: lintTool === 'oxlint'
-						? ['lint', 'typecheck', 'test'].filter((k) => {
-								if (k === 'typecheck' && !profile.typescript) return false
-								if (
-									k === 'lint' &&
-									findEquivalentScriptKey(existingScripts, 'lint', 'oxlint')
-								)
-									return false
-								if (
-									k === 'typecheck' &&
-									findEquivalentScriptKey(
-										existingScripts,
-										'typecheck',
-										'tsc --noEmit',
-									)
-								)
-									return false
-								if (
-									k === 'test' &&
-									findEquivalentScriptKey(existingScripts, 'test', 'vitest run')
-								)
-									return false
-								return true
-							})
-						: lintTool === 'biome'
-							? ['biome', 'typecheck', 'test'].filter((k) => {
-									if (k === 'typecheck' && !profile.typescript) return false
-									if (
-										k === 'biome' &&
-										findEquivalentScriptKey(
-											existingScripts,
-											'biome',
-											'biome check .',
-										)
-									)
-										return false
-									if (
-										k === 'typecheck' &&
-										findEquivalentScriptKey(
-											existingScripts,
-											'typecheck',
-											'tsc --noEmit',
-										)
-									)
-										return false
-									if (
-										k === 'test' &&
-										findEquivalentScriptKey(
-											existingScripts,
-											'test',
-											'vitest run',
-										)
-									)
-										return false
-									return true
-								})
-							: ['lint', 'typecheck', 'test'].filter((k) => {
-									if (k === 'typecheck' && !profile.typescript) return false
-									if (
-										k === 'lint' &&
-										findEquivalentScriptKey(existingScripts, 'lint', 'vp lint')
-									)
-										return false
-									if (
-										k === 'typecheck' &&
-										findEquivalentScriptKey(
-											existingScripts,
-											'typecheck',
-											'tsc --noEmit',
-										)
-									)
-										return false
-									if (
-										k === 'test' &&
-										findEquivalentScriptKey(
-											existingScripts,
-											'test',
-											'vitest run',
-										)
-									)
-										return false
-									return true
-								})
-
-			const baseTasks: string[] = lintTool
-				? [
-						lintTool === 'vp' || lintTool === 'oxlint' ? 'lint' : lintTool,
-						'typecheck',
-						'test',
-					]
-				: ['typecheck', 'test']
-			const compositeTasks = getCompositeTasks(
+			const turboTasks = lintTurboTasks(
+				lintTool,
 				existingScripts,
-				baseTasks,
-			).filter((t) => {
-				if (t === 'typecheck' && !profile.typescript) return false
-				if (
-					lintTaskKey &&
-					t === lintTaskKey &&
-					!recommendedKeys.includes(lintTaskKey)
-				)
-					return false
-				return true
-			})
-
-			const existingCheckTurbo = Object.entries(existingScripts).find(
-				([key]) => key === 'check:turbo',
+				profile.typescript,
 			)
-			const newCheckTurboValue = `turbo run ${compositeTasks.join(' ')}`
+			const existingCheckTurbo = existingScripts['check:turbo']
+			const newCheckTurboValue = `turbo run ${turboTasks.join(' ')}`
 			if (
 				!existingCheckTurbo ||
-				(existingCheckTurbo[1] &&
-					!areEquivalent(existingCheckTurbo[1], newCheckTurboValue))
+				!areEquivalent(existingCheckTurbo, newCheckTurboValue)
 			) {
-				scripts.push({
-					script: 'check:turbo',
-					value: newCheckTurboValue,
-				})
+				scripts.push({ script: 'check:turbo', value: newCheckTurboValue })
 			}
 		}
 
@@ -419,20 +269,27 @@ export const packageScriptsTask = createPackageJsonTask({
 
 		deps.push({ depName: 'vitest', installDev: true, script: 'test' })
 
-		const useUltracite = await hasUltracite(cwd)
-		const pkgForDeps = await readPackageJson(cwd)
-		const alreadyHasBiome = !!(
-			pkgForDeps?.devDependencies?.['@biomejs/biome'] ??
-			pkgForDeps?.dependencies?.['@biomejs/biome']
-		)
-		const shouldAddBiomeDep =
-			!useUltracite &&
-			!alreadyHasBiome &&
-			!profile.existing.eslint &&
-			!profile.existing.oxlint &&
-			!profile.existing.oxfmt &&
-			!profile.vitePlus
-		if (shouldAddBiomeDep) {
+		const pkg = await readPackageJson(cwd)
+		const lintTool = resolveLintTool({
+			existingEslint: profile.existing.eslint,
+			useUltracite: !!(
+				pkg?.devDependencies?.ultracite || pkg?.dependencies?.ultracite
+			),
+			hasBiomeDep: !!(
+				pkg?.devDependencies?.['@biomejs/biome'] ??
+				pkg?.dependencies?.['@biomejs/biome']
+			),
+			existingOxlint: profile.existing.oxlint,
+			existingOxfmt: profile.existing.oxfmt,
+			vitePlus: profile.vitePlus,
+		})
+		if (
+			lintTool === 'biome' &&
+			!(
+				pkg?.devDependencies?.['@biomejs/biome'] ??
+				pkg?.dependencies?.['@biomejs/biome']
+			)
+		) {
 			deps.push({
 				depName: '@biomejs/biome',
 				installDev: true,

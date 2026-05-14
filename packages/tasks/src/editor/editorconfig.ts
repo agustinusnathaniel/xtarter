@@ -1,4 +1,4 @@
-import { createSimpleFileTask } from '@/factory'
+import { createFileTask } from '@/factory'
 
 const EDITORCONFIG = `root = true
 
@@ -14,7 +14,7 @@ insert_final_newline = true
 trim_trailing_whitespace = false
 `
 
-export const editorconfigTask = createSimpleFileTask({
+export const editorconfigTask = createFileTask({
 	id: 'editor/editorconfig',
 	label: 'EditorConfig',
 	group: 'Editor',

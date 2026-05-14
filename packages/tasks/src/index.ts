@@ -35,6 +35,8 @@ export {
 	ensureTaskDependency,
 	ensureTaskParentDir,
 	isExecutableFile,
+	lintToolScripts,
+	resolveLintTool,
 	writeTaskDiffs,
 } from '@/factory/index.js'
 

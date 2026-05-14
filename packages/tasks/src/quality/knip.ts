@@ -1,7 +1,7 @@
-import { createSimpleFileTask } from '@/factory'
+import { createFileTask } from '@/factory'
 import { renderKnipConfig } from '@/templates/knip-config.js'
 
-export const knipTask = createSimpleFileTask({
+export const knipTask = createFileTask({
 	id: 'quality/knip',
 	label: 'Knip (unused code detection)',
 	group: 'Quality',

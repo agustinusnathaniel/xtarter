@@ -1,6 +1,6 @@
-import { createSimpleFileTask } from '@/factory'
+import { createFileTask } from '@/factory'
 
-export const nvmrcTask = createSimpleFileTask({
+export const nvmrcTask = createFileTask({
 	id: 'scripts/nvmrc',
 	label: '.nvmrc — Node version pinning',
 	group: 'Scripts',
