@@ -88,7 +88,10 @@ const FILE_DETECTORS: FileDetectorSpec[] = [
 
 // ── Custom detectors for complex cases ──
 
-async function detectEslint(cwd: string): Promise<boolean> {
+async function detectEslint(
+	cwd: string,
+	deps?: Record<string, string>,
+): Promise<boolean> {
 	const hasConfigFile = await findConfigFile(cwd, '.eslintrc', [
 		'.js',
 		'.cjs',
@@ -108,6 +111,7 @@ async function detectEslint(cwd: string): Promise<boolean> {
 	]).then(Boolean)
 	if (hasFlatConfig) return true
 
+	if (deps) return !!deps.eslint
 	const pkg = await readPackageJson(cwd)
 	return !!(pkg?.devDependencies?.eslint ?? pkg?.dependencies?.eslint)
 }
@@ -127,11 +131,15 @@ async function detectGitHubWorkflows(cwd: string): Promise<string[]> {
 		.map((e) => e.replace(/\.(yml|yaml)$/, ''))
 }
 
-async function detectChangeset(cwd: string): Promise<boolean> {
+async function detectChangeset(
+	cwd: string,
+	deps?: Record<string, string>,
+): Promise<boolean> {
 	const hasConfig = await fileExists(
 		resolvePath(cwd, '.changeset', 'config.json'),
 	)
 	if (hasConfig) return true
+	if (deps) return !!deps['@changesets/cli']
 	const pkg = await readPackageJson(cwd)
 	return !!(
 		pkg?.devDependencies?.['@changesets/cli'] ??
@@ -149,7 +157,10 @@ async function detectAgentsMd(cwd: string): Promise<boolean> {
 
 type CustomDetector = {
 	key: keyof ProjectProfile['existing']
-	detect: (cwd: string) => Promise<boolean | string[]>
+	detect: (
+		cwd: string,
+		deps?: Record<string, string>,
+	) => Promise<boolean | string[]>
 }
 
 const CUSTOM_DETECTORS: CustomDetector[] = [
@@ -173,12 +184,13 @@ async function detectFileConfig(
 
 async function detectExistingConfigs(
 	cwd: string,
+	deps?: Record<string, string>,
 ): Promise<ProjectProfile['existing']> {
 	const fileResults = await Promise.all(
 		FILE_DETECTORS.map((d) => detectFileConfig(cwd, d)),
 	)
 	const customResults = await Promise.all(
-		CUSTOM_DETECTORS.map((d) => d.detect(cwd)),
+		CUSTOM_DETECTORS.map((d) => d.detect(cwd, deps)),
 	)
 	const existing: Partial<ProjectProfile['existing']> = {}
 	for (let i = 0; i < FILE_DETECTORS.length; i++) {
@@ -275,7 +287,7 @@ export async function detectProject(cwd: string): Promise<ProjectProfile> {
 		fileExists(resolvePath(cwd, '.github')),
 		fileExists(resolvePath(cwd, '.git')),
 		detectPackageManager(cwd),
-		detectExistingConfigs(cwd),
+		detectExistingConfigs(cwd, allDeps),
 		detectNodeVersion(cwd),
 	])
 

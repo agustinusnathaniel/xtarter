@@ -73,36 +73,41 @@ export {
 	vscodeTask,
 }
 
+let _allTasks: Task[] | null = null
+
 export function getAllTasks(): Task[] {
-	return [
-		biomeTask,
-		oxlintTask,
-		oxfmtTask,
-		strictTask,
-		pathsTask,
-		incrementalTask,
-		gitignoreTsbuildinfoTask,
-		viteCheckerTask,
-		viteVisualizerTask,
-		releaseWorkflowTask,
-		autoUpdateWorkflowTask,
-		ciWorkflowTask,
-		renovateTask,
-		commitlintTask,
-		czgTask,
-		catVersionTask,
-		gitHooksTask,
-		knipTask,
-		lintStagedTask,
-		plopTask,
-		turboTask,
-		vscodeTask,
-		editorconfigTask,
-		agentsMdTask,
-		skillsTask,
-		skillsInstallTask,
-		packageScriptsTask,
-		npmrcTask,
-		nvmrcTask,
-	]
+	if (!_allTasks) {
+		_allTasks = [
+			biomeTask,
+			oxlintTask,
+			oxfmtTask,
+			strictTask,
+			pathsTask,
+			incrementalTask,
+			gitignoreTsbuildinfoTask,
+			viteCheckerTask,
+			viteVisualizerTask,
+			releaseWorkflowTask,
+			autoUpdateWorkflowTask,
+			ciWorkflowTask,
+			renovateTask,
+			commitlintTask,
+			czgTask,
+			catVersionTask,
+			gitHooksTask,
+			knipTask,
+			lintStagedTask,
+			plopTask,
+			turboTask,
+			vscodeTask,
+			editorconfigTask,
+			agentsMdTask,
+			skillsTask,
+			skillsInstallTask,
+			packageScriptsTask,
+			npmrcTask,
+			nvmrcTask,
+		]
+	}
+	return _allTasks
 }
