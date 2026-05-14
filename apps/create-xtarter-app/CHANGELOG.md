@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.13.2
+
+### Patch Changes
+
+- [`746caae`](https://github.com/agustinusnathaniel/xtarter/commit/746caae9d39aa967318639418b90a684170b8047) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - fix: read version from package.json via ^ alias instead of hardcoding
+
 ## 1.13.1
 
 ## 1.13.0
