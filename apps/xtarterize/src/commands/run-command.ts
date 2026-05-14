@@ -3,24 +3,22 @@ import type { FileDiff, TaskStatus } from '@xtarterize/core'
 import {
 	abortIfCancelled,
 	applyTasks,
-	createSpinner,
-	detectProject,
 	isCI,
 	logError,
 	logInfo,
 	logSuccess,
-	pc,
-	readPackageJson,
 	resolveTaskStatuses,
 	resolveTasks,
-	runPreflight,
 } from '@xtarterize/core'
 import { getAllTasks } from '@xtarterize/tasks'
 import { type DisplayFormat, displayDiffs } from '@/ui/diff-display.js'
 import { mergeFileDiffs } from '@/ui/merge-file-diffs.js'
 import { displayPlan } from '@/ui/plan-display.js'
 import { selectTasks } from '@/ui/select-menu.js'
-import { handlePreflightFailure } from '@/utils/preflight.js'
+import {
+	detectProjectWithAmbiguity,
+	printProjectProfile,
+} from '@/utils/project.js'
 
 interface CommandArgs {
 	dryRun?: boolean
@@ -41,7 +39,7 @@ interface RunCommandOptions {
 async function applyAndReport(
 	tasks: ReturnType<typeof resolveTasks>,
 	cwd: string,
-	profile: Awaited<ReturnType<typeof detectProject>>,
+	profile: Awaited<ReturnType<typeof detectProjectWithAmbiguity>>,
 	selectedIds?: string[],
 	includeConflicts?: boolean,
 	quiet?: boolean,
@@ -58,59 +56,6 @@ async function applyAndReport(
 			logError(`  - ${error}`)
 		}
 	}
-}
-
-async function runPreflightAndDetect(
-	cwd: string,
-	args: CommandArgs,
-): Promise<{
-	profile: Awaited<ReturnType<typeof detectProject>>
-	quiet: boolean
-}> {
-	const ci = isCI()
-	const quiet = args.quiet || ci
-
-	const preflight = await runPreflight(cwd)
-	if (!preflight.valid) {
-		handlePreflightFailure(preflight, false)
-	}
-
-	const s = createSpinner(quiet)
-	s.start('Scanning project...')
-
-	let profile = await detectProject(cwd)
-
-	if (profile.framework === null) {
-		s.stop()
-		const pkg = await readPackageJson(cwd)
-		const allDeps: Record<string, string> = {}
-		if (pkg?.dependencies) Object.assign(allDeps, pkg.dependencies)
-		if (pkg?.devDependencies) Object.assign(allDeps, pkg.devDependencies)
-
-		const hasReactNative = !!(allDeps['react-native'] || allDeps.expo)
-		const hasReact = !!allDeps.react
-
-		if (hasReactNative && hasReact) {
-			if (quiet) {
-				profile = { ...profile, framework: 'react' }
-			} else {
-				const resolved = await resolveAmbiguousFramework()
-				profile = { ...profile, framework: resolved }
-			}
-		}
-	} else {
-		s.stop('Project scanned')
-	}
-
-	if (!quiet) {
-		console.log('')
-		console.log(`${pc.bold(`Framework: ${profile.framework ?? 'none'}`)}`)
-		console.log(`${pc.bold(`Bundler: ${profile.bundler ?? 'none'}`)}`)
-		console.log(`${pc.bold(`Package Manager: ${profile.packageManager}`)}`)
-		console.log('')
-	}
-
-	return { profile, quiet }
 }
 
 function resolveActionableTasks(
@@ -140,7 +85,7 @@ function resolveActionableTasks(
 async function handleDryRun(
 	tasks: ReturnType<typeof resolveTasks>,
 	cwd: string,
-	profile: Awaited<ReturnType<typeof detectProject>>,
+	profile: Awaited<ReturnType<typeof detectProjectWithAmbiguity>>,
 	format: string = 'terminal',
 ): Promise<void> {
 	const diffs: FileDiff[] = []
@@ -155,7 +100,7 @@ async function handleDryRun(
 async function promptAndApply(
 	actionableTasks: ReturnType<typeof resolveTasks>,
 	cwd: string,
-	profile: Awaited<ReturnType<typeof detectProject>>,
+	profile: Awaited<ReturnType<typeof detectProjectWithAmbiguity>>,
 	statuses: Map<string, TaskStatus>,
 	args: CommandArgs,
 	options: RunCommandOptions,
@@ -216,7 +161,11 @@ export async function runCommand(
 	args: CommandArgs,
 	options: RunCommandOptions,
 ): Promise<void> {
-	const { profile, quiet } = await runPreflightAndDetect(cwd, args)
+	const ci = isCI()
+	const quiet = args.quiet || ci
+
+	const profile = await detectProjectWithAmbiguity(cwd, quiet)
+	if (!quiet) printProjectProfile(profile)
 
 	const allTasks = getAllTasks()
 	const tasks = resolveTasks(profile, allTasks)
@@ -249,24 +198,6 @@ export async function runCommand(
 	}
 
 	await promptAndApply(actionableTasks, cwd, profile, statuses, args, options)
-}
-
-async function resolveAmbiguousFramework(): Promise<
-	'react' | 'react-native' | 'node'
-> {
-	const choice = await select({
-		message:
-			'Detected both React and React Native dependencies. Which best describes this project?',
-		options: [
-			{ value: 'react', label: 'React (web)' },
-			{ value: 'react-native', label: 'React Native / Expo (mobile)' },
-			{ value: 'node', label: 'Universal (web + native, treating as Node)' },
-		],
-	})
-
-	abortIfCancelled(choice)
-
-	return choice as 'react' | 'react-native' | 'node'
 }
 
 export const sharedRunArgs = {

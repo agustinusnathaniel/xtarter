@@ -10,6 +10,7 @@ import {
 	runToolInstallationChecks,
 } from '@xtarterize/core'
 import { defineCommand } from 'citty'
+import { formatDoctorResult } from '@/ui/json-formatter.js'
 import { resolveCwd } from '@/utils/cwd.js'
 import { diagnosticIcon } from '@/utils/display.js'
 import { handlePreflightFailure } from '@/utils/preflight.js'
@@ -86,9 +87,7 @@ export const doctorCommand = defineCommand({
 		}
 
 		if (json) {
-			console.log(
-				JSON.stringify({ ok: true, summary, diagnostics: allDiagnostics }),
-			)
+			console.log(formatDoctorResult(allDiagnostics))
 			return
 		}
 

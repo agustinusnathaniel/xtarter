@@ -1,5 +1,6 @@
 import { pc, statusTag } from '@xtarterize/core'
 import { defineCommand } from 'citty'
+import { formatListResult } from '@/ui/json-formatter.js'
 import { resolveCliContext, scanProject } from '@/utils/project.js'
 
 export const listCommand = defineCommand({
@@ -18,23 +19,7 @@ export const listCommand = defineCommand({
 		const { profile, tasks, statuses } = await scanProject(ctx)
 
 		if (ctx.json) {
-			console.log(
-				JSON.stringify({
-					ok: true,
-					profile: {
-						framework: profile.framework,
-						bundler: profile.bundler,
-						packageManager: profile.packageManager,
-						typescript: profile.typescript,
-					},
-					tasks: tasks.map((task) => ({
-						id: task.id,
-						label: task.label,
-						group: task.group,
-						status: statuses.get(task.id) ?? 'new',
-					})),
-				}),
-			)
+			console.log(formatListResult(profile, tasks, statuses))
 			return
 		}
 

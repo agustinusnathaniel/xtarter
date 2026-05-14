@@ -5,6 +5,7 @@ import {
 	statusTag,
 } from '@xtarterize/core'
 import { defineCommand } from 'citty'
+import { formatCheckResult } from '@/ui/json-formatter.js'
 import { diagnosticIcon } from '@/utils/display.js'
 import { resolveCliContext, scanProject } from '@/utils/project.js'
 
@@ -27,33 +28,17 @@ export const checkCommand = defineCommand({
 		const ctx = resolveCliContext(args)
 		const { tasks, statuses } = await scanProject(ctx)
 
-		let conformant = 0
-		const total = tasks.length
 		const conflictChecks = await runConflictChecks(ctx.cwd)
 		const installChecks = await runToolInstallationChecks(ctx.cwd)
 		const diagnostics = [...installChecks, ...conflictChecks]
 
-		for (const task of tasks) {
-			const status = statuses.get(task.id) ?? 'new'
-			if (status === 'skip') conformant++
-		}
-
 		if (ctx.json) {
-			console.log(
-				JSON.stringify({
-					ok: true,
-					summary: { conformant, total },
-					tasks: tasks.map((task) => ({
-						id: task.id,
-						label: task.label,
-						group: task.group,
-						status: statuses.get(task.id) ?? 'new',
-					})),
-					diagnostics,
-				}),
-			)
+			console.log(formatCheckResult(tasks, statuses, diagnostics))
 			return
 		}
+
+		const conformant = tasks.filter((t) => statuses.get(t.id) === 'skip').length
+		const total = tasks.length
 
 		if (!ctx.quiet) {
 			console.log('')
