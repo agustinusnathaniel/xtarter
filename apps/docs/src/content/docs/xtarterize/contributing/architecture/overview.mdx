@@ -80,7 +80,7 @@ sequenceDiagram
 - **Dry-run is exact** — `dryRun()` output is bit-for-bit identical to what `apply()` writes
 - **Idempotency is non-negotiable** — Running twice produces no changes on second run
 - **Templates are parameterized** — All templates receive `ProjectProfile` and adapt accordingly
-- **Factory-based task creation** — Most tasks use `createSimpleFileTask`, `createJsonMergeTask`, or `createFileTask` to eliminate boilerplate, with shared seams in `factory-config.ts` and `factory-ops.ts`
+- **Factory-based task creation** — Most tasks use `createFileTask`, `createJsonMergeTask`, or `createMultiFileTask` to eliminate boilerplate, with shared seams in `json-config.ts` and `ops.ts`
 - **Shared command orchestration** — `init` and `sync` share a `runCommand()` helper in the CLI layer
 
 ## Core Modules

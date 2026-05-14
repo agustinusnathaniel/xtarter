@@ -38,7 +38,7 @@ normalizeExtends({ extends: "biome" })
 
 ### 3. `normalizeLineEndings` (Text Files)
 
-Convert `\r\n` to `\n` before comparing file contents in `createSimpleFileTask`:
+Convert `\r\n` to `\n` before comparing file contents in `createFileTask` (merged from the former `createSimpleFileTask`):
 
 ```typescript
 if (normalizeLineEndings(actual.trim()) === normalizeLineEndings(expected.trim()))
@@ -59,6 +59,6 @@ Previously, if `biome` existed with a different value (e.g., `"eslint ."`), the 
 
 - `createPackageJsonTask.check()` and `.dryRun()` now filter with `hasScriptValue`, not just `hasOwnScript`
 - `biomeTask` and `renovateTask` use `normalizeExtends` before `deepEqual` comparison
-- `createSimpleFileTask.check()` normalizes line endings before comparison
+- `createFileTask.check()` normalizes line endings before comparison (unified from the former `createSimpleFileTask`)
 - Tasks that previously returned `conflict` for script mismatches now return `patch` (with only missing scripts added)
 - Tests must be updated to expect `patch` + no-op diff instead of `conflict`

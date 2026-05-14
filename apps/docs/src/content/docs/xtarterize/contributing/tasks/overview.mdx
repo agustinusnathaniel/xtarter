@@ -108,9 +108,8 @@ classDiagram
 
 Most tasks are created through factory functions in [`factory.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/tasks/src/factory.ts) that eliminate boilerplate:
 
-- **`createSimpleFileTask`** — For tasks that write a single new file (CI workflows, [renovate](https://docs.renovatebot.com/), [commitlint](https://commitlint.js.org/), [knip](https://knip.dev/), AI skills)
+- **`createFileTask`** — For tasks that write a single file (CI workflows, [renovate](https://docs.renovatebot.com/), [commitlint](https://commitlint.js.org/), [knip](https://knip.dev/), [`.editorconfig`](https://editorconfig.org/), [`.gitignore`](https://git-scm.com/docs/gitignore), AI skills). Supports exact-match comparison with `normalizeLineEndings` and optional custom `checkFn`.
 - **`createMultiFileTask`** — For tasks that write multiple text files with optional dependency install (e.g. [plop](https://plopjs.com/) writes both `plopfile.ts` and `plop/*.hbs` template files)
-- **`createFileTask`** — For text files with custom check/merge logic (`AGENTS.md`, [`.gitignore`](https://git-scm.com/docs/gitignore) entries)
 - **`createJsonMergeTask`** — For tasks that deep-merge JSON configs ([`tsconfig.json`](https://www.typescriptlang.org/tsconfig/), [`biome.json`](https://biomejs.dev/reference/configuration/), [`turbo.json`](https://turbo.build/repo/docs/reference/configuration)). Uses shared JSON mutation helpers in [`factory-config.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/tasks/src/factory-config.ts)
 - **`createMultiFileJsonMergeTask`** — For tasks that merge multiple JSON files ([`.vscode/settings.json`](https://code.visualstudio.com/docs/getstarted/settings#_settingsjson) + [`.vscode/extensions.json`](https://code.visualstudio.com/docs/editor/extension-marketplace#_workspace-recommended-extensions)). Supports custom per-file merge functions and reuses [`factory-config.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/tasks/src/factory-config.ts)
 - **`createVitePluginTask`** — For injecting plugins into [`vite.config.ts`](https://vitejs.dev/config/) ([`vite-plugin-checker`](https://vite-plugin-checker.netlify.app/checkers/typescript.html), [`rollup-plugin-visualizer`](https://github.com/btd/rollup-plugin-visualizer))
@@ -132,7 +131,7 @@ The factory provides several utilities for robust equivalence detection:
 |--------|---------|---------|
 | `deepEqual` | Compare objects regardless of key ordering | `createJsonMergeTask`, `createMultiFileJsonMergeTask` |
 | `normalizeExtends` | Normalize `"extends": "str"` to `"extends": ["str"]` | `biomeTask`, `renovateTask` |
-| `normalizeLineEndings` | Convert `\r\n` to `\n` before comparison | `createSimpleFileTask` |
+| `normalizeLineEndings` | Convert `\r\n` to `\n` before comparison | `createFileTask` |
 | `hasScriptValue` | Check if a command value already exists under any script name | `createPackageJsonTask` |
 
 #### `normalizeExtends`
