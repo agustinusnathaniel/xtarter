@@ -14,13 +14,13 @@ vp create @xtarter:vite-tailwind
 
 ## Templates
 
-| Name            | Description                                   |
-| --------------- | --------------------------------------------- |
-| `vite-chakra`   | Vite 7 + TanStack Router + Chakra UI v3       |
-| `vite-tailwind` | Vite 7 + TanStack Router + Tailwind CSS v4    |
-| `vite-hero`     | Vite 7 + Hero UI                              |
-| `next-chakra`   | Next.js 16 + Chakra UI v3 + Biome + Turborepo |
-| `next-tailwind` | Next.js 16 + Tailwind CSS v4                  |
+| Name            | Description                                |
+| --------------- | ------------------------------------------ |
+| `vite-chakra`   | Vite Plus + TanStack Router + Chakra UI    |
+| `vite-tailwind` | Vite Plus + TanStack Router + Tailwind CSS |
+| `vite-hero`     | Vite Plus + TanStack Router + Hero UI      |
+| `next-chakra`   | Next.js + Chakra UI v3                     |
+| `next-tailwind` | Next.js + Tailwind CSS v4                  |
 
 ## Related
 
