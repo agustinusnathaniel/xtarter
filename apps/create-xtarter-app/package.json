@@ -20,7 +20,8 @@
 	"author": "agustinusnathaniel",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/agustinusnathaniel/xtarter/tree/main/apps/create-xtarter-app"
+		"url": "https://github.com/agustinusnathaniel/xtarter",
+		"directory": "apps/create-xtarter-app"
 	},
 	"bin": {
 		"create-xtarter-app": "./dist/cli.mjs"

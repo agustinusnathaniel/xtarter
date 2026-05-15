@@ -18,7 +18,8 @@
 	"author": "agustinusnathaniel",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/agustinusnathaniel/xtarter/tree/main/apps/xtarterize"
+		"url": "https://github.com/agustinusnathaniel/xtarter",
+		"directory": "apps/xtarterize"
 	},
 	"bin": {
 		"xtarterize": "./dist/index.mjs"
