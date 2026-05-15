@@ -1,5 +1,15 @@
 # @xtarterize/tasks
 
+## 1.13.5
+
+### Patch Changes
+
+- [`8dca764`](https://github.com/agustinusnathaniel/xtarter/commit/8dca764cb467e5efe14c130c446c43830469ac9a) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - fix(tasks): add -y flag for agent skills install
+
+- Updated dependencies []:
+  - @xtarterize/core@1.13.5
+  - @xtarterize/patchers@1.13.5
+
 ## 1.13.4
 
 ### Patch Changes
