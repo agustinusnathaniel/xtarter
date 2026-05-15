@@ -1,5 +1,20 @@
 # @xtarterize/tasks
 
+## 1.13.4
+
+### Patch Changes
+
+- [`e46e74a`](https://github.com/agustinusnathaniel/xtarter/commit/e46e74a111a7f26810124764dbb4b5f15dc88464) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - fix: move npx `--yes` flag before package name and add 60s timeout to agent/skills-install
+
+  The `-y` flag was passed after `skills@latest` arguments, so npx still prompted
+  "Ok to proceed?" and hung on user input. Moved `--yes` to a npx flag position
+  before the package name, and added a 60-second timeout to prevent indefinite
+  hanging on slow networks.
+
+- Updated dependencies []:
+  - @xtarterize/core@1.13.4
+  - @xtarterize/patchers@1.13.4
+
 ## 1.13.3
 
 ### Patch Changes
