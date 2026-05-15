@@ -200,6 +200,7 @@ export const skillsInstallTask: Task = {
 				'add',
 				source,
 				...skillNames.flatMap((s) => ['--skill', s]),
+				'-y',
 			]
 			const result = await x('npx', args, {
 				timeout: 60_000,
