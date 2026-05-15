@@ -178,6 +178,10 @@ export default defineConfig({
 							label: 'Templates',
 							link: '/create-xtarter-app/guide/templates/',
 						},
+						{
+							label: 'Vite+ Org Templates',
+							link: '/create-xtarter-app/guide/org-templates/',
+						},
 					],
 				},
 			],
