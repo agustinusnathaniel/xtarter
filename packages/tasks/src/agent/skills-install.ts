@@ -195,13 +195,14 @@ export const skillsInstallTask: Task = {
 		const grouped = groupBySource(missing)
 		for (const [source, skillNames] of grouped) {
 			const args = [
+				'--yes',
 				'skills@latest',
 				'add',
 				source,
 				...skillNames.flatMap((s) => ['--skill', s]),
-				'-y',
 			]
 			const result = await x('npx', args, {
+				timeout: 60_000,
 				nodeOptions: { cwd, stdio: 'inherit' },
 			})
 			if (result.exitCode !== 0) {
