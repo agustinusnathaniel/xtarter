@@ -13,13 +13,13 @@
 	],
 	"homepage": "https://xtarter.sznm.dev",
 	"bugs": {
-		"url": "https://github.com/agustinusnathaniel/xtarterize/issues"
+		"url": "https://github.com/agustinusnathaniel/xtarter/issues"
 	},
 	"license": "MIT",
 	"author": "agustinusnathaniel",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/agustinusnathaniel/xtarterize",
+		"url": "https://github.com/agustinusnathaniel/xtarter",
 		"directory": "apps/xtarter-create"
 	},
 	"files": [
