@@ -1,0 +1,69 @@
+{
+	"name": "@xtarter/create",
+	"version": "0.1.0",
+	"description": "Curated starter templates for modern web apps",
+	"keywords": [
+		"scaffold",
+		"starter",
+		"template",
+		"nextjs",
+		"vite",
+		"react",
+		"typescript"
+	],
+	"homepage": "https://xtarter.sznm.dev",
+	"bugs": {
+		"url": "https://github.com/agustinusnathaniel/xtarterize/issues"
+	},
+	"license": "MIT",
+	"author": "agustinusnathaniel",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/agustinusnathaniel/xtarterize",
+		"directory": "apps/xtarter-create"
+	},
+	"files": [
+		"package.json",
+		"README.md"
+	],
+	"type": "module",
+	"publishConfig": {
+		"access": "public",
+		"provenance": true
+	},
+	"scripts": {
+		"build": "echo '@xtarter/create has nothing to build'"
+	},
+	"createConfig": {
+		"templates": [
+			{
+				"name": "vite-chakra",
+				"description": "Vite Plus, TanStack Router, Chakra UI v3",
+				"template": "github:agustinusnathaniel/vite-react-chakra-starter"
+			},
+			{
+				"name": "vite-tailwind",
+				"description": "Vite Plus, TanStack Router, Tailwind CSS v4",
+				"template": "github:agustinusnathaniel/vite-react-tailwind-starter"
+			},
+			{
+				"name": "vite-hero",
+				"description": "Vite Plus, TanStack Router, Hero UI",
+				"template": "github:agustinusnathaniel/vite-react-hero-starter"
+			},
+			{
+				"name": "next-chakra",
+				"description": "Next.js with Chakra UI",
+				"template": "github:agustinusnathaniel/nextarter-chakra"
+			},
+			{
+				"name": "next-tailwind",
+				"description": "Next.js with Tailwind CSS",
+				"template": "github:agustinusnathaniel/nextarter-tailwind"
+			}
+		]
+	},
+	"engines": {
+		"node": ">=18"
+	}
+}
