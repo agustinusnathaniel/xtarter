@@ -14,7 +14,7 @@ export const TEMPLATES: TemplateConfig[] = [
 	{
 		id: 'next-chakra',
 		name: 'Next.js + Chakra UI',
-		description: 'Next.js 16 with Chakra UI v3, Biome, Turborepo',
+		description: 'Next.js with Chakra UI',
 		repo: 'agustinusnathaniel/nextarter-chakra',
 		branch: 'main',
 		provider: 'github',
@@ -22,7 +22,7 @@ export const TEMPLATES: TemplateConfig[] = [
 	{
 		id: 'next-tailwind',
 		name: 'Next.js + Tailwind',
-		description: 'Next.js 16 with Tailwind CSS v4',
+		description: 'Next.js with Tailwind CSS',
 		repo: 'agustinusnathaniel/nextarter-tailwind',
 		branch: 'main',
 		provider: 'github',
@@ -30,7 +30,7 @@ export const TEMPLATES: TemplateConfig[] = [
 	{
 		id: 'vite-chakra',
 		name: 'Vite + React + Chakra',
-		description: 'Vite 7, TanStack Router, Chakra UI v3',
+		description: 'Vite+, TanStack Router, Chakra UI',
 		repo: 'agustinusnathaniel/vite-react-chakra-starter',
 		branch: 'main',
 		provider: 'github',
@@ -38,7 +38,7 @@ export const TEMPLATES: TemplateConfig[] = [
 	{
 		id: 'vite-tailwind',
 		name: 'Vite + React + Tailwind',
-		description: 'Vite 7, TanStack Router, Tailwind CSS v4',
+		description: 'Vite+, TanStack Router, Tailwind CSS',
 		repo: 'agustinusnathaniel/vite-react-tailwind-starter',
 		branch: 'main',
 		provider: 'github',
@@ -46,7 +46,7 @@ export const TEMPLATES: TemplateConfig[] = [
 	{
 		id: 'vite-hero',
 		name: 'Vite + React + Hero UI',
-		description: 'Vite 7 with Hero UI library',
+		description: 'Vite+, TanStack Router, Hero UI',
 		repo: 'agustinusnathaniel/vite-react-hero-starter',
 		branch: 'main',
 		provider: 'github',
