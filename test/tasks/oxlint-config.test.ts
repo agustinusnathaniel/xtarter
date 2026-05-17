@@ -154,8 +154,6 @@ describe('oxfmt config validation', () => {
 		expect(config.indentWidth).toBe(2)
 		expect(config.lineWidth).toBe(80)
 		expect(config.quotes).toBe('single')
-		expect(config.semicolons).toBe(true)
-		expect(config.trailingComma).toBe('all')
 	})
 
 	it(

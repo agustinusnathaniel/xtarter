@@ -1,15 +1,15 @@
 import type { ProjectProfile } from '@xtarterize/core'
+import type { Configuration } from './_biome-config.generated.js'
 
 export function renderBiomeJson(profile: ProjectProfile): string {
 	const hasTailwind =
 		profile.styling.includes('tailwind') ||
 		profile.styling.includes('nativewind')
 
-	const config: Record<string, unknown> = {
+	const config: Configuration = {
 		$schema: './node_modules/@biomejs/biome/configuration_schema.json',
 		vcs: { enabled: true, clientKind: 'git', useIgnoreFile: true },
 		files: {
-			ignoreUnknown: false,
 			includes: [
 				'src/**/*',
 				'*.config.ts',
@@ -19,11 +19,9 @@ export function renderBiomeJson(profile: ProjectProfile): string {
 				'!.claude',
 			],
 		},
-		formatter: { enabled: true, indentStyle: 'space' },
+		formatter: { indentStyle: 'space' },
 		linter: {
-			enabled: true,
 			rules: {
-				recommended: true,
 				complexity: {
 					noExcessiveCognitiveComplexity: {
 						level: 'warn',
@@ -48,7 +46,6 @@ export function renderBiomeJson(profile: ProjectProfile): string {
 		},
 		javascript: { formatter: { quoteStyle: 'single' } },
 		assist: {
-			enabled: true,
 			actions: {
 				source: {
 					organizeImports: {

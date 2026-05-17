@@ -24,9 +24,8 @@ describe('biome config validation', () => {
 		if (!configFile) throw new Error('Expected biome.json diff to exist')
 
 		const config = JSON.parse(configFile.after)
-		expect(config.formatter.enabled).toBe(true)
-		expect(config.linter.enabled).toBe(true)
-		expect(config.linter.rules.recommended).toBe(true)
+		expect(config.formatter.indentStyle).toBe('space')
+		expect(config.linter.rules.complexity).toBeDefined()
 		expect(config.javascript.formatter.quoteStyle).toBe('single')
 	})
 

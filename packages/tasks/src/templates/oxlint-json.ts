@@ -1,7 +1,9 @@
 import type { ProjectProfile } from '@xtarterize/core'
+import type { OxlintConfig, OxlintEnv } from 'oxlint'
+import type { OxfmtConfig } from './_types.js'
 
 export function renderOxlintConfig(profile: ProjectProfile): string {
-	const rules: Record<string, unknown> = {
+	const rules: OxlintConfig['rules'] = {
 		'no-console': ['error', { allow: ['info', 'warn', 'error'] }],
 		'no-unused-vars': 'off',
 		'@typescript-eslint/no-unused-vars': [
@@ -62,12 +64,13 @@ export function renderOxlintConfig(profile: ProjectProfile): string {
 		})
 	}
 
-	const plugins: string[] = ['eslint', 'typescript', 'unicorn', 'import', 'oxc']
+	const plugins = ['eslint', 'typescript', 'unicorn', 'import', 'oxc'] as const
+	const activePlugins: OxlintConfig['plugins'] = [...plugins]
 	if (profile.framework === 'react') {
-		plugins.push('react', 'jsx-a11y')
+		activePlugins.push('react', 'jsx-a11y')
 	}
 
-	const env: Record<string, boolean> = {
+	const env: OxlintEnv = {
 		builtin: true,
 	}
 	if (profile.runtime === 'browser' || profile.runtime === 'universal') {
@@ -77,9 +80,9 @@ export function renderOxlintConfig(profile: ProjectProfile): string {
 		env.node = true
 	}
 
-	const config: Record<string, unknown> = {
+	const config: OxlintConfig & { $schema?: string } = {
 		$schema: './node_modules/oxlint/configuration_schema.json',
-		plugins,
+		plugins: activePlugins,
 		env,
 		categories: {
 			correctness: 'error',
@@ -117,14 +120,12 @@ export function renderOxlintConfig(profile: ProjectProfile): string {
 }
 
 export function renderOxfmtConfig(_profile: ProjectProfile): string {
-	const config = {
+	const config: OxfmtConfig = {
 		$schema: './node_modules/oxfmt/configuration_schema.json',
 		indentStyle: 'space',
 		indentWidth: 2,
 		lineWidth: 80,
 		quotes: 'single',
-		semicolons: true,
-		trailingComma: 'all',
 	}
 
 	return JSON.stringify(config, null, 2)

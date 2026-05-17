@@ -9,7 +9,8 @@
 			"!**/.turbo",
 			"!**/node_modules",
 			"!**/.astro",
-			"!test/fixtures"
+			"!test/fixtures",
+			"!**/*.generated.d.ts"
 		]
 	},
 	"linter": {

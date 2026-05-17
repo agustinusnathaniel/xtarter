@@ -4,3 +4,6 @@ dist
 .turbo
 .plans
 .claude/handoffs
+
+# Generated from @biomejs/biome configuration_schema.json
+packages/tasks/src/templates/_biome-config.generated.d.ts
