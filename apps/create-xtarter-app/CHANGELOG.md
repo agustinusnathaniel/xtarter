@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.13.6
+
+### Patch Changes
+
+- [`e65b98c`](https://github.com/agustinusnathaniel/xtarter/commit/e65b98c57b3a640365d867befb0e551769841b70) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Remove redundant default values from biome.json and .oxfmtrc.json templates (formatter.enabled, linter.enabled, semicolons, trailingComma, etc.)
+
+  Add type-safe config interfaces: generated Configuration type from @biomejs/biome schema, upstream OxlintConfig/OxlintEnv types, and local OxfmtConfig type
+
+  Switch commitlint.config.ts output from JSDoc @type to import type { UserConfig }
+
 ## 1.13.5
 
 ## 1.13.4
