@@ -8,8 +8,9 @@ export function renderCommitlintConfig(profile: ProjectProfile): string {
 				? "['components', 'composables', 'views', 'config', 'docs']"
 				: "['components', 'hooks', 'pages', 'utils', 'config', 'docs']"
 
-	return `/** @type {import('@commitlint/types').UserConfig} */
-const CommitLintConfiguration = {
+	return `import type { UserConfig } from '@commitlint/types';
+
+const commitlintConfig: UserConfig = {
   extends: ['@commitlint/config-conventional'],
   rules: {
     'scope-case': [2, 'always', 'kebab-case'],
@@ -21,6 +22,6 @@ const CommitLintConfiguration = {
   },
 };
 
-export default CommitLintConfiguration;
+export default commitlintConfig;
 `
 }
