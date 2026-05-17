@@ -1,5 +1,6 @@
 import type { Task, TaskStatus } from '@/_base.js'
 import type { ProjectProfile } from '@/detect.js'
+import { detectProject } from '@/detect.js'
 
 export function resolveTasks(
 	profile: ProjectProfile,
@@ -25,4 +26,18 @@ export async function resolveTaskStatuses(
 	}
 
 	return results
+}
+
+export async function resolveProjectTasks(
+	cwd: string,
+	allTasks: Task[],
+): Promise<{
+	profile: ProjectProfile
+	tasks: Task[]
+	statuses: Map<string, TaskStatus>
+}> {
+	const profile = await detectProject(cwd)
+	const tasks = resolveTasks(profile, allTasks)
+	const statuses = await resolveTaskStatuses(tasks, cwd, profile)
+	return { profile, tasks, statuses }
 }

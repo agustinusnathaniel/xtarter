@@ -46,8 +46,23 @@ export function isCompositeCommand(cmd: string): boolean {
 	return norm.startsWith('turbo run') || norm.startsWith('turborepo run')
 }
 
-// Imported from equivalence-data.ts
-import { EQUIVALENT_SUBCOMMANDS, TOOL_ALIASES } from './equivalence-data.js'
+// Tool aliases — canonical tool name maps to known aliases
+const TOOL_ALIASES: Record<string, string[]> = {
+	release: ['commit-and-tag-version', 'standard-version', 'release-it'],
+	lint: ['eslint', 'biome', 'oxlint', 'prettier', 'rome'],
+	format: ['oxfmt', 'prettier'],
+	test: ['vitest', 'jest', 'mocha'],
+	typecheck: ['tsc', 'tsc --noEmit'],
+	cleanup: ['knip', 'depcheck', 'npm-check-updates', 'ncu'],
+	scaffold: ['plop', 'hygen'],
+}
+
+// For tools like biome/ultracite, these subcommands are equivalent
+const EQUIVALENT_SUBCOMMANDS: Record<string, string[]> = {
+	biome: ['check', 'lint', 'format'],
+	ultracite: ['check', 'fix'],
+	vp: ['lint', 'check', 'fmt', 'staged'],
+}
 
 export function normalizeTool(tool: string | null): string | null {
 	if (!tool) return null

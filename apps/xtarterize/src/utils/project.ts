@@ -6,8 +6,7 @@ import {
 	detectProject,
 	pc,
 	readPackageJson,
-	resolveTaskStatuses,
-	resolveTasks,
+	resolveProjectTasks,
 	runPreflight,
 } from '@xtarterize/core'
 import { getAllTasks } from '@xtarterize/tasks'
@@ -48,21 +47,19 @@ export async function scanProject(ctx: CliContext): Promise<ScanResult> {
 	const s = createSpinner(ctx.quiet)
 	s.start('Scanning project...')
 
-	const profile = await detectProject(ctx.cwd)
-	s.stop('Project scanned')
-
 	const allTasks = getAllTasks()
-	const tasks = resolveTasks(profile, allTasks)
-	const statuses = await resolveTaskStatuses(tasks, ctx.cwd, profile)
+	const result = await resolveProjectTasks(ctx.cwd, allTasks)
 
-	return { profile, tasks, statuses }
+	s.stop('Project scanned')
+	return result
 }
 
 export async function detectProjectWithAmbiguity(
 	cwd: string,
 	quiet: boolean,
+	baseProfile?: ProjectProfile,
 ): Promise<ProjectProfile> {
-	let profile = await detectProject(cwd)
+	let profile = baseProfile ?? (await detectProject(cwd))
 
 	if (profile.framework === null && !quiet) {
 		const pkg = await readPackageJson(cwd)

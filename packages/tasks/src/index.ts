@@ -1,6 +1,4 @@
 import type { Task } from '@xtarterize/core'
-import { agentsMdTask } from '@/agent/agents-md.js'
-import { skillsTask } from '@/agent/skills.js'
 import { skillsInstallTask } from '@/agent/skills-install.js'
 import { autoUpdateWorkflowTask } from '@/ci/auto-update.js'
 import { ciWorkflowTask } from '@/ci/ci.js'
@@ -9,6 +7,7 @@ import { plopTask } from '@/codegen/plop.js'
 import { renovateTask } from '@/deps/renovate.js'
 import { editorconfigTask } from '@/editor/editorconfig.js'
 import { vscodeTask } from '@/editor/vscode.js'
+import { createFileTask } from '@/factory'
 import { packageScriptsTask } from '@/factory/package-scripts.js'
 import { biomeTask } from '@/lint/biome.js'
 import { oxfmtTask, oxlintTask } from '@/lint/oxlint.js'
@@ -21,6 +20,8 @@ import { catVersionTask } from '@/release/cat-version.js'
 import { commitlintTask } from '@/release/commitlint.js'
 import { czgTask } from '@/release/czg.js'
 import { gitHooksTask } from '@/release/git-hooks.js'
+import { renderAgentsMd } from '@/templates/agents-md.js'
+import { renderProjectContext } from '@/templates/project-context.js'
 import { renderReleaseWorkflow } from '@/templates/workflows/release-yml.js'
 import { gitignoreTsbuildinfoTask } from '@/ts/gitignore-tsbuildinfo.js'
 import { incrementalTask } from '@/ts/incremental.js'
@@ -39,6 +40,30 @@ export {
 	resolveLintTool,
 	writeTaskDiffs,
 } from '@/factory/index.js'
+
+// Inline agent task definitions (was agent/module.ts + agents-md.ts + skills.ts)
+const agentsMdTask = createFileTask({
+	id: 'agent/agents-md',
+	label: 'AGENTS.md',
+	group: 'Agent',
+	applicable: () => true,
+	filepath: 'AGENTS.md',
+	render: (profile) => renderAgentsMd(profile),
+	checkFn: async (_cwd, _profile, _fullPath, content) =>
+		content ? 'skip' : 'new',
+})
+
+const skillsTask = createFileTask({
+	id: 'agent/skills',
+	label: 'AI Skills directory',
+	group: 'Agent',
+	applicable: (profile) => profile.typescript,
+	filepath: '.agents/skills/project-context.md',
+	render: (profile) => renderProjectContext(profile),
+	ensureParentDir: true,
+	checkFn: async (_cwd, _profile, _fullPath, content) =>
+		content ? 'skip' : 'new',
+})
 
 export {
 	agentsMdTask,

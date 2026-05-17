@@ -1,5 +1,5 @@
 import { select } from '@clack/prompts'
-import type { FileDiff, TaskStatus } from '@xtarterize/core'
+import type { FileDiff, Task, TaskStatus } from '@xtarterize/core'
 import {
 	abortIfCancelled,
 	applyTasks,
@@ -7,8 +7,7 @@ import {
 	logError,
 	logInfo,
 	logSuccess,
-	resolveTaskStatuses,
-	resolveTasks,
+	resolveProjectTasks,
 } from '@xtarterize/core'
 import { getAllTasks } from '@xtarterize/tasks'
 import { type DisplayFormat, displayDiffs } from '@/ui/diff-display.js'
@@ -37,7 +36,7 @@ interface RunCommandOptions {
 }
 
 async function applyAndReport(
-	tasks: ReturnType<typeof resolveTasks>,
+	tasks: Task[],
 	cwd: string,
 	profile: Awaited<ReturnType<typeof detectProjectWithAmbiguity>>,
 	selectedIds?: string[],
@@ -59,11 +58,11 @@ async function applyAndReport(
 }
 
 function resolveActionableTasks(
-	tasks: ReturnType<typeof resolveTasks>,
+	tasks: Task[],
 	statuses: Map<string, TaskStatus>,
 	options: RunCommandOptions,
 	args: CommandArgs,
-): ReturnType<typeof resolveTasks> {
+): Task[] {
 	let filteredTasks = tasks
 
 	if (args.skip) {
@@ -83,7 +82,7 @@ function resolveActionableTasks(
 }
 
 async function handleDryRun(
-	tasks: ReturnType<typeof resolveTasks>,
+	tasks: Task[],
 	cwd: string,
 	profile: Awaited<ReturnType<typeof detectProjectWithAmbiguity>>,
 	format: string = 'terminal',
@@ -98,7 +97,7 @@ async function handleDryRun(
 }
 
 async function promptAndApply(
-	actionableTasks: ReturnType<typeof resolveTasks>,
+	actionableTasks: Task[],
 	cwd: string,
 	profile: Awaited<ReturnType<typeof detectProjectWithAmbiguity>>,
 	statuses: Map<string, TaskStatus>,
@@ -164,13 +163,15 @@ export async function runCommand(
 	const ci = isCI()
 	const quiet = args.quiet || ci
 
-	const profile = await detectProjectWithAmbiguity(cwd, quiet)
+	const allTasks = getAllTasks()
+	const {
+		profile: baseProfile,
+		tasks,
+		statuses,
+	} = await resolveProjectTasks(cwd, allTasks)
+	const profile = await detectProjectWithAmbiguity(cwd, quiet, baseProfile)
 	if (!quiet) printProjectProfile(profile)
 
-	const allTasks = getAllTasks()
-	const tasks = resolveTasks(profile, allTasks)
-
-	const statuses = await resolveTaskStatuses(tasks, cwd, profile)
 	const actionableTasks = resolveActionableTasks(tasks, statuses, options, args)
 
 	if (actionableTasks.length === 0) {

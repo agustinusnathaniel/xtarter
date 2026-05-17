@@ -1,5 +1,3 @@
-// Main detection entry point - imports from modular files
-
 import {
 	fileExists,
 	findConfigFile,
@@ -7,8 +5,6 @@ import {
 	resolvePath,
 } from '@/utils/fs.js'
 import { readPackageJson } from '@/utils/pkg.js'
-
-// Import types
 import type {
 	Bundler,
 	Framework,
@@ -19,7 +15,6 @@ import type {
 	Styling,
 } from './detect/types.js'
 
-// Re-export types
 export type {
 	Bundler,
 	Framework,
@@ -31,24 +26,83 @@ export type {
 }
 
 import { detectBundler } from './detect/bundler.js'
-
-// Detection functions
-import {
-	detectFramework,
-	detectRuntime,
-	detectVitePlus,
-} from './detect/framework.js'
 import { detectMonorepo } from './detect/monorepo.js'
 import {
 	detectFrameworkVersion,
 	detectPackageManager,
 } from './detect/package-manager.js'
-import { detectRouter } from './detect/router.js'
-import { detectStyling } from './detect/styling.js'
-// Utilities
-import { isStringRecord } from './detect/utils.js'
 
-export { detectFramework, detectPackageManager }
+export { detectPackageManager }
+
+// ── Inline type guards (was detect/utils.ts) ──
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+	return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+function isStringRecord(value: unknown): value is Record<string, string> {
+	if (!isRecord(value)) return false
+	return Object.values(value).every((v): v is string => typeof v === 'string')
+}
+
+// ── Inline framework detection (was detect/framework.ts) ──
+
+export function detectFramework(deps: Record<string, string>): Framework {
+	const hasReactNative = !!(deps['react-native'] || deps.expo)
+	const hasReact = !!deps.react
+	const hasVue = !!deps.vue
+	const hasSvelte = !!deps.svelte
+	const hasSolid = !!deps['solid-js']
+
+	if (hasReactNative && hasReact) return null
+	if (hasReactNative) return 'react-native'
+	if (hasReact) return 'react'
+	if (hasVue) return 'vue'
+	if (hasSvelte) return 'svelte'
+	if (hasSolid) return 'solid'
+	return 'node'
+}
+
+function detectRuntime(
+	framework: Framework,
+	bundler: Bundler,
+): 'browser' | 'node' | 'edge' | 'native' | 'universal' {
+	if (framework === 'react-native') return 'native'
+	if (bundler === 'expo') return 'native'
+	if (bundler === 'nextjs') return 'edge'
+	if (bundler === 'tanstack-start') return 'edge'
+	if (bundler === 'vite' || bundler === 'webpack' || bundler === 'rspack')
+		return 'browser'
+	if (framework === 'node') return 'node'
+	return 'browser'
+}
+
+function detectVitePlus(deps: Record<string, string>): boolean {
+	return 'vite-plus' in deps || 'vp' in deps
+}
+
+// ── Inline router detection (was detect/router.ts) ──
+
+function detectRouter(deps: Record<string, string>, bundler: Bundler): Router {
+	if (bundler === 'nextjs') return 'next'
+	if (bundler === 'expo') return 'expo-router'
+	if (deps['@tanstack/react-router']) return 'tanstack-router'
+	if (deps['react-router'] || deps['react-router-dom']) return 'react-router'
+	if (deps['vue-router']) return 'vue-router'
+	return null
+}
+
+// ── Inline styling detection (was detect/styling.ts) ──
+
+function detectStyling(deps: Record<string, string>): Styling[] {
+	const result: Styling[] = []
+	if (deps.tailwindcss || deps['@tailwindcss/vite']) result.push('tailwind')
+	if (deps['styled-components']) result.push('styled-components')
+	if (deps['@vanilla-extract/css']) result.push('vanilla-extract')
+	if (deps.nativewind) result.push('nativewind')
+	if (result.length === 0) result.push('vanilla')
+	return result
+}
 
 // ── Declarative file-existence detectors ──
 
@@ -223,37 +277,58 @@ async function detectNodeVersion(cwd: string): Promise<string> {
 	return '20'
 }
 
+// ── Shared base profile fields ──
+
+async function computeBaseProfile(cwd: string): Promise<{
+	monorepo: boolean
+	monorepoTool: 'turbo' | 'nx' | 'lerna' | null
+	workspaceRoot: boolean
+	nodeVersion: string
+	hasGitHub: boolean
+	hasGit: boolean
+	existing: ProjectProfile['existing']
+	packageManager: PackageManager
+}> {
+	const [monorepoInfo, hasGitHub, hasGit, packageManager, nodeVersion] =
+		await Promise.all([
+			detectMonorepo(cwd),
+			fileExists(resolvePath(cwd, '.github')),
+			fileExists(resolvePath(cwd, '.git')),
+			detectPackageManager(cwd),
+			detectNodeVersion(cwd),
+		])
+
+	const existing = await detectExistingConfigs(cwd)
+
+	return {
+		monorepo: monorepoInfo.monorepo,
+		monorepoTool: monorepoInfo.monorepoTool,
+		workspaceRoot: monorepoInfo.workspaceRoot,
+		nodeVersion,
+		hasGitHub,
+		hasGit,
+		existing,
+		packageManager,
+	}
+}
+
+// ── Main detection entry point ──
+
 export async function detectProject(cwd: string): Promise<ProjectProfile> {
+	const base = await computeBaseProfile(cwd)
 	const pkg = await readPackageJson(cwd)
 
 	if (!pkg) {
-		const monorepoInfo = await detectMonorepo(cwd)
-		const [hasGitHub, hasGit] = await Promise.all([
-			fileExists(resolvePath(cwd, '.github')),
-			fileExists(resolvePath(cwd, '.git')),
-		])
-		const existing = await detectExistingConfigs(cwd)
-		const packageManager = await detectPackageManager(cwd)
-
-		const nodeVersion = await detectNodeVersion(cwd)
-
 		return {
 			framework: null,
 			frameworkVersion: null,
 			bundler: null,
 			router: null,
 			styling: ['vanilla'],
-			typescript: existing.tsconfig,
+			typescript: base.existing.tsconfig,
 			runtime: 'node',
-			packageManager,
 			vitePlus: false,
-			monorepo: monorepoInfo.monorepo,
-			monorepoTool: monorepoInfo.monorepoTool,
-			workspaceRoot: monorepoInfo.workspaceRoot,
-			nodeVersion,
-			hasGitHub,
-			hasGit,
-			existing,
+			...base,
 		}
 	}
 
@@ -267,46 +342,19 @@ export async function detectProject(cwd: string): Promise<ProjectProfile> {
 
 	const framework = detectFramework(allDeps)
 	const bundler = await detectBundler(allDeps, cwd)
-	const router = detectRouter(allDeps, bundler)
-	const styling = detectStyling(allDeps)
-	const runtime = detectRuntime(framework, bundler)
-	const vitePlus = detectVitePlus(allDeps)
 	const typescript =
 		'typescript' in allDeps ||
 		(await fileExists(resolvePath(cwd, 'tsconfig.json')))
 
-	const [
-		monorepoInfo,
-		hasGitHub,
-		hasGit,
-		packageManager,
-		existing,
-		nodeVersion,
-	] = await Promise.all([
-		detectMonorepo(cwd),
-		fileExists(resolvePath(cwd, '.github')),
-		fileExists(resolvePath(cwd, '.git')),
-		detectPackageManager(cwd),
-		detectExistingConfigs(cwd, allDeps),
-		detectNodeVersion(cwd),
-	])
-
 	return {
 		framework,
-		frameworkVersion: detectFrameworkVersion(pkg as unknown, framework),
+		frameworkVersion: detectFrameworkVersion(pkg, framework),
 		bundler,
-		router,
-		styling,
+		router: detectRouter(allDeps, bundler),
+		styling: detectStyling(allDeps),
 		typescript,
-		runtime,
-		vitePlus,
-		packageManager,
-		monorepo: monorepoInfo.monorepo,
-		monorepoTool: monorepoInfo.monorepoTool,
-		workspaceRoot: monorepoInfo.workspaceRoot,
-		nodeVersion,
-		hasGitHub,
-		hasGit,
-		existing,
+		runtime: detectRuntime(framework, bundler),
+		vitePlus: detectVitePlus(allDeps),
+		...base,
 	}
 }

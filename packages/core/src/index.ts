@@ -41,7 +41,11 @@ export {
 } from '@/diagnostics.js'
 export type { PreflightError, PreflightResult } from '@/preflight.js'
 export { runPreflight } from '@/preflight.js'
-export { resolveTaskStatuses, resolveTasks } from '@/resolve.js'
+export {
+	resolveProjectTasks,
+	resolveTaskStatuses,
+	resolveTasks,
+} from '@/resolve.js'
 export { deepEqual } from '@/utils/deep-equal.js'
 export {
 	computeChangeStats,
