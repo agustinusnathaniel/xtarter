@@ -105,6 +105,10 @@ export default defineConfig({
 							link: '/xtarterize/guide/config/overview/',
 						},
 						{
+							label: 'Changelog',
+							link: '/xtarterize/changelog/',
+						},
+						{
 							label: 'Contributing',
 							collapsed: true,
 							items: [

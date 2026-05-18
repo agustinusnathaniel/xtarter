@@ -1,0 +1,163 @@
+---
+title: Changelog
+description: What's new in xtarterize.
+---
+
+import { Aside, Tabs, TabItem, CardGrid, Card, LinkButton, Steps } from '@astrojs/starlight/components'
+
+Latest updates and feature releases for xtarterize.
+
+## v1.13 — May 17, 2026
+
+<Aside type="note" title="Oxlint & Oxfmt support">
+  When Vite+ is detected, xtarterize now configures oxlint/oxfmt (via `vp`) instead of Biome as the default linting/formatting stack. Includes `.oxlintrc.json` / `.oxfmtrc.json` generation and a single `vp check` CI step.
+</Aside>
+
+- Non-recommended lint rules mapped from ESLint configs: `eqeqeq`, `prefer-const`, `no-shadow`, `max-params`, React rules, Vitest overrides for Oxlint; `noExcessiveCognitiveComplexity`, `useMaxParams` for Biome
+- Generated config templates (Biome, Oxlint, Oxfmt, commitlint) now ship with proper TypeScript types
+
+## v1.12 — May 15, 2026
+
+- `all-contributors` setup task
+- Minimum Node.js version bumped to 24
+
+## v1.11 — May 13, 2026
+
+- Per-task spinner animation during `init` and `sync`
+- Colored status tags in the conformance plan table (`new`, `patch`, `skip`, `conflict`)
+- Workspace flag (`-w`) for pnpm dependency installs in monorepo roots
+
+## v1.10 — May 12, 2026
+
+New `--format` flag for `init`, `sync`, `diff`, and `add` commands:
+
+<Tabs>
+<TabItem label="Terminal output">
+Shows `+N -M` change stats per file and `@@` hunk headers in git-style unified diff format.
+</TabItem>
+<TabItem label="JSON output">
+Includes structured hunks, stats, and semantic key-level diffs — designed for CI pipelines and AI-agent consumption.
+</TabItem>
+</Tabs>
+
+## v1.9 — May 12, 2026
+
+- Release workflow task detects Changesets and generates the appropriate workflow (`changesets/action@v1` vs tag-push)
+- Node.js version auto-detected from `.nvmrc` and `package.json engines.node`
+
+## v1.8 — May 12, 2026
+
+New `doctor` command for environment and project health diagnostics:
+
+<CardGrid>
+  <Card title="Environment">
+    Node version, package manager, OS detection
+  </Card>
+  <Card title="Tools">
+    Displays installed tool versions (Biome, oxlint, etc.)
+  </Card>
+  <Card title="Project">
+    Project health checks and diagnostics
+  </Card>
+  <Card title="Configuration">
+    Config file status and detected settings
+  </Card>
+</CardGrid>
+
+`--verbose` flag for system information. JSON output mode for machine consumption.
+
+## v1.7 — May 12, 2026
+
+- Auto-update workflow now uses native package manager commands (`pnpm update && pnpm dedupe`) instead of `npm-check-updates`
+
+## v1.6 — May 11, 2026
+
+<Aside type="note" title="JSONC preservation">
+  Config files now preserve comments, key ordering, indentation style, and trailing commas during edits — no more losing your inline annotations.
+</Aside>
+
+- Duplicate scripts with the same command are now skipped automatically
+- `"extends": "config:base"` treated as equivalent to `"extends": ["config:base"]`
+- Only missing scripts are added; existing scripts are never overwritten
+
+## v1.5 — May 8, 2026
+
+- Unified diff format for all dry-run and diff output — consistent git-style patch view across new, modified, and JSON files
+
+## v1.4 — May 8, 2026
+
+New conformance tasks:
+
+<CardGrid>
+  <Card title="EditorConfig">
+    `.editorconfig` generation for consistent editor settings
+  </Card>
+  <Card title="npmrc">
+    `.npmrc` with strict engine checks and exact version pinning
+  </Card>
+  <Card title="nvmrc">
+    Node version pinning in `.nvmrc`
+  </Card>
+  <Card title="lint-staged">
+    Run linters only on staged files — faster pre-commit hooks
+  </Card>
+  <Card title="Git hooks">
+    Pre-configured git hooks via simple-git-hooks
+  </Card>
+  <Card title="pnpm catalogs">
+    Workspace `catalog:` protocol for centralized dependency versions
+  </Card>
+</CardGrid>
+
+Skills from the same source repo are now grouped into a single `npx` command with multiple `--skill` flags.
+
+## v1.3 — May 2, 2026
+
+Expanded the agent skills catalog to 20+ stack-specific skills:
+
+<CardGrid>
+  <Card title="Frontend / UI">
+    `baseline-ui`, `fixing-accessibility`, `fixing-metadata`, `fixing-motion-performance`
+  </Card>
+  <Card title="React">
+    `react-dev`, `react-useeffect`
+  </Card>
+  <Card title="Vue / Nuxt">
+    `vue`, `vue-best-practices`, `nuxt`
+  </Card>
+  <Card title="Expo / React Native">
+    `upgrading-expo`, `vercel-react-native-skills`
+  </Card>
+  <Card title="Build tools">
+    `vite`, `vitest`, `tsdown`, `turborepo`
+  </Card>
+  <Card title="Database / Auth">
+    `supabase-postgres-best-practices`, `postgres-drizzle`, `redis-best-practices`, `better-auth-best-practices`, `create-auth-skill`
+  </Card>
+  <Card title="AI / SDKs">
+    `ai-sdk`
+  </Card>
+  <Card title="Specialized">
+    `remotion-best-practices`
+  </Card>
+</CardGrid>
+
+## v1.2 — May 1, 2026
+
+- Diffs targeting the same JSON file are now merged into a single unified view instead of separate per-task diffs — see the complete intended state at once
+
+## v1.1 — April 29, 2026
+
+<Aside type="note" title="Automatic agent skill installation">
+  `xtarterize init` now detects your stack and installs relevant agent skills from the [skills.sh](https://skills.sh) ecosystem automatically — React gets React skills, Vue gets Vue skills, no manual setup.
+</Aside>
+
+- Framework-aware Biome config, Plop templates, and CI workflows
+- `--cwd` flag correctly resolved throughout the full pipeline
+- Conformance plan and dry-run output rendered as proper tables
+
+## v1.0 — April 21, 2026
+
+<Aside type="tip" title="Initial release">
+  Core commands: `init`, `sync`, `diff`, `doctor`. Full support for Biome, TypeScript strict mode, CI workflows, Renovate, commitlint, VS Code settings, and more.
+</Aside>
