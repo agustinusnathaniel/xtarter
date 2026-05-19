@@ -1,0 +1,48 @@
+---
+title: AI Agent Skills
+description: Install the create-xtarter-app skill for AI assistants to get deep knowledge of scaffolding commands, templates, and project creation workflows.
+---
+
+import { Aside, LinkButton } from '@astrojs/starlight/components'
+
+Install the create-xtarter-app skill for AI assistants (Claude Code, GitHub Copilot, Cline, etc.) to give them deep knowledge of scaffolding, template selection, and project creation.
+
+When installed, your AI assistant knows how to pick the right template from your stack description, use proper flags, and follow best practices.
+
+## Install
+
+```bash
+npx skills add agustinusnathaniel/xtarter
+```
+
+## How it works
+
+The skill activates when you ask about creating a project or mention a template:
+
+| You ask... | The agent... |
+|------------|-------------|
+| "Scaffold a new project" | Runs interactive mode or suggests a template based on your stack |
+| "I want a Next.js app with Tailwind" | Maps to `next-tailwind`, runs scaffold with `--template next-tailwind` |
+| "Create a Vite SPA with Chakra UI" | Maps to `vite-chakra`, runs scaffold with `--template vite-chakra` |
+| "What templates are available?" | Runs `preview` to list all 5 templates |
+| "Preview the vite-tailwind template" | Runs `preview vite-tailwind` to show repo and branch details |
+
+<Aside type="tip">
+  The skill teaches agents to match your stack description to the correct template ID using a decision table, so you don't need to remember template names.
+</Aside>
+
+## What's included
+
+- Scaffold and preview commands with all flags (`--template`, `--pm`, `--no-git`, `--clean`, `--yes`)
+- Template selection decision table mapping stack descriptions to template IDs
+- All 5 templates (`next-chakra`, `next-tailwind`, `vite-chakra`, `vite-tailwind`, `vite-hero`)
+- Agent workflows for scaffolding, previewing, and CI usage
+- Anti-patterns — common mistakes agents should avoid
+
+## Resources
+
+- [CLI Reference](/create-xtarter-app/guide/cli/) — Full command reference
+- [Templates](/create-xtarter-app/guide/templates/) — Template catalog
+- [skills.sh](https://skills.sh) — Learn more about AI skills
+
+<LinkButton href="/create-xtarter-app/guide/templates/">Browse Templates →</LinkButton>
