@@ -1,53 +1,48 @@
 ---
 title: AI Agent Skills
-description: create-xtarter-app publishes an AI agent skill that teaches coding agents how to scaffold projects, pick templates, and follow best practices.
+description: Install the create-xtarter-app skill for AI assistants to get deep knowledge of scaffolding commands, templates, and project creation workflows.
 ---
 
-create-xtarter-app publishes an **AI agent skill** at `skills/create-xtarter-app/` that teaches coding agents (Claude Code, GitHub Copilot, Cline, etc.) how to scaffold projects effectively.
+import { Aside, LinkButton } from '@astrojs/starlight/components'
 
-## How the skill gets invoked
+Install the create-xtarter-app skill for AI assistants (Claude Code, GitHub Copilot, Cline, etc.) to give them deep knowledge of scaffolding, template selection, and project creation.
 
-The skill's description acts as a trigger — when you ask an agent about scaffolding or templates, it loads the skill and gains expert knowledge. Common trigger phrases:
+When installed, your AI assistant knows how to pick the right template from your stack description, use proper flags, and follow best practices.
 
-| You say... | What the agent learns |
-|------------|----------------------|
+## Install
+
+```bash
+npx skills add agustinusnathaniel/xtarter
+```
+
+## How it works
+
+The skill activates when you ask about creating a project or mention a template:
+
+| You ask... | The agent... |
+|------------|-------------|
 | "Scaffold a new project" | Runs interactive mode or suggests a template based on your stack |
-| "I want a Next.js app with Tailwind" | Maps "Next.js + Tailwind" to `next-tailwind`, runs scaffold with `--template next-tailwind` |
-| "Create a Vite SPA with Chakra UI" | Maps "Vite + Chakra" to `vite-chakra`, runs scaffold with `--template vite-chakra` |
-| "What templates are available?" | Runs `preview` to list all 5 templates with descriptions |
+| "I want a Next.js app with Tailwind" | Maps to `next-tailwind`, runs scaffold with `--template next-tailwind` |
+| "Create a Vite SPA with Chakra UI" | Maps to `vite-chakra`, runs scaffold with `--template vite-chakra` |
+| "What templates are available?" | Runs `preview` to list all 5 templates |
 | "Preview the vite-tailwind template" | Runs `preview vite-tailwind` to show repo and branch details |
-| "Scaffold in CI" | Uses `--yes` for non-interactive mode, auto-detects `CI=true` |
 
-Without the skill, an agent might guess template names, use wrong flags, or not know the available options. With the skill loaded, it picks the right template from a decision table, uses correct flags, and follows anti-patterns.
+<Aside type="tip">
+  The skill teaches agents to match your stack description to the correct template ID using a decision table, so you don't need to remember template names.
+</Aside>
 
-## What the skill covers
+## What's included
 
-The skill teaches agents:
-
-- Scaffold and preview commands with all flags
-- Template selection — a decision table mapping user stack descriptions to the right template ID
-- Available templates (`next-chakra`, `next-tailwind`, `vite-chakra`, `vite-tailwind`, `vite-hero`) with their stacks
+- Scaffold and preview commands with all flags (`--template`, `--pm`, `--no-git`, `--clean`, `--yes`)
+- Template selection decision table mapping stack descriptions to template IDs
+- All 5 templates (`next-chakra`, `next-tailwind`, `vite-chakra`, `vite-tailwind`, `vite-hero`)
 - Agent workflows for scaffolding, previewing, and CI usage
 - Anti-patterns — common mistakes agents should avoid
-- Error handling for common failure modes (wrong template name, non-empty directory, network issues)
 
-## Skill structure
+## Resources
 
-```
-skills/create-xtarter-app/
-  SKILL.md                          # Entry point (~126 lines)
-  references/
-    templates.md                    # Detailed template information (repo, branch, full stack)
-```
+- [CLI Reference](/create-xtarter-app/guide/cli/) — Full command reference
+- [Templates](/create-xtarter-app/guide/templates/) — Template catalog
+- [skills.sh](https://skills.sh) — Learn more about AI skills
 
-The skill uses **progressive disclosure**: SKILL.md covers core workflows, template selection, and decision tables; the template reference file is loaded on demand when the agent needs detailed information (e.g., exact repo URLs, branch names).
-
-## Agent-first design
-
-The skill is optimized for AI agent consumption:
-
-- **Decision parsing table** — "If the user says X → they want Y → pick Z" covers all 5 templates plus ambiguous cases
-- **MANDATORY loading triggers** — template reference uses explicit language before scaffolding
-- **Anti-patterns** — clear NEVER lists with reasoning
-
-
+<LinkButton href="/create-xtarter-app/guide/templates/">Browse Templates →</LinkButton>

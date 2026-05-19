@@ -1,57 +1,50 @@
 ---
 title: AI Agent Skills
-description: xtarterize publishes an AI agent skill that teaches coding agents how to use the CLI, parse its JSON output, and follow best practices.
+description: Install the xtarterize skill for AI assistants to get deep knowledge of CLI commands, JSON output, tasks, and conformance workflows.
 ---
 
-xtarterize publishes an **AI agent skill** at `skills/xtarterize/` that teaches coding agents (Claude Code, GitHub Copilot, Cline, etc.) how to use the CLI effectively.
+import { Aside, LinkButton } from '@astrojs/starlight/components'
 
-## How the skill gets invoked
+Install the xtarterize skill for AI assistants (Claude Code, GitHub Copilot, Cline, etc.) to give them deep knowledge of the CLI, its JSON output, tasks, and best practices.
 
-The skill's description acts as a trigger — when you ask an agent about anything related to xtarterize, it loads the skill and gains expert knowledge. Common trigger phrases:
+When installed, your AI assistant knows how to use `--format json`, parse task statuses, follow agent workflows, and avoid common mistakes.
 
-| You say... | What the agent learns |
-|------------|----------------------|
+## Install
+
+```bash
+npx skills add agustinusnathaniel/xtarter
+```
+
+## How it works
+
+The skill activates when you ask about conformance, linting, CI, or any xtarterize task:
+
+| You ask... | The agent... |
+|------------|-------------|
 | "Set up linting for this project" | Runs `check --format json`, parses task statuses, applies `init` or `add lint/biome` |
 | "Check our conformance status" | Runs `check --format json`, reports which tasks are `skip` vs `new`/`patch` |
 | "Add TypeScript strict mode" | Loads the task catalog, runs `add ts/strict --format json` |
 | "What would change if I init?" | Runs `diff --format json`, presents structured file diffs |
-| "This project has config conflicts" | Identifies `conflict` status, presents options without auto-applying |
-| "Run diagnostics on our setup" | Runs `doctor --format json`, reports any `fail` diagnostics |
-| "I need to restore a backup" | Uses `restore` to recover from `.xtarterize/backups/` |
+| "Run diagnostics" | Runs `doctor --format json`, reports any `fail` diagnostics |
+| "Restore a backup" | Uses `restore` to recover from `.xtarterize/backups/` |
 
-Without the skill, an agent might guess flags, parse terminal output, or miss tasks entirely. With the skill loaded, it uses `--format json`, parses structured output, follows anti-patterns, and loads reference files on demand.
+<Aside type="tip">
+  The skill teaches agents to use <code>--format json</code> for every command and parse the structured output rather than terminal text.
+</Aside>
 
-## What the skill covers
+## What's included
 
-The skill teaches agents:
-
-- All 8 CLI commands and their flags
-- JSON output shapes for every command (`check`, `diff`, `list`, `doctor`, etc.)
+- All 8 CLI commands (`init`, `sync`, `diff`, `check`, `add`, `list`, `restore`, `doctor`)
+- JSON output shapes for every command
 - Parsing patterns — which JSON fields to inspect to decide the next action
 - The 4 task statuses (`new`, `patch`, `skip`, `conflict`) and how to handle each
-- Agent workflows for initializing projects, adding tasks, diagnosing failures, and restoring backups
+- Agent workflows for initialization, single tasks, diagnostics, and backups
 - Anti-patterns — common mistakes agents should avoid
-- When to load detailed reference files (task catalog, full command reference)
 
-## Skill structure
+## Resources
 
-```
-skills/xtarterize/
-  SKILL.md                          # Entry point (~104 lines)
-  references/
-    commands.md                     # Full flag reference + JSON output shapes
-    tasks.md                        # Complete task catalog with IDs
-```
+- [CLI Reference](/xtarterize/guide/cli/overview/) — Full command reference
+- [Conformance Tasks](/xtarterize/guide/tasks/overview/) — Task catalog
+- [skills.sh](https://skills.sh) — Learn more about AI skills
 
-The skill uses **progressive disclosure**: SKILL.md covers core workflows and decision tables; reference files are loaded on demand when the agent needs detailed information (e.g., exact task IDs, full flag descriptions).
-
-## Agent-first design
-
-The skill is optimized for AI agent consumption:
-
-- **JSON output by default** — all commands shown with `--format json`; exact JSON shapes documented
-- **Decision tables** — "parse this field → to decide next action" patterns for every command
-- **MANDATORY loading triggers** — reference files use explicit "MANDATORY — READ ENTIRE FILE" language
-- **Anti-patterns** — clear NEVER lists with reasoning
-
-
+<LinkButton href="/xtarterize/guide/cli/overview/">View CLI Reference →</LinkButton>
