@@ -7,6 +7,15 @@ description: Scaffold new JS/TS projects from curated starter templates pre-conf
 
 Scaffolds production-grade JS/TS projects from curated starter templates. Every template ships with Biome, TypeScript strict mode, GitHub Actions CI, VS Code settings, and AI agent skills pre-configured.
 
+## When this skill loads
+
+This skill is activated when the user asks to create a new project, scaffold an app, or mentions a template name. Upon loading:
+
+1. **Determine the stack** — ask the user about their framework (Next.js vs Vite) and UI library preference before picking a template
+2. **Use the decision table** — match the user's stack description to the correct template ID
+3. **Never guess template names** — only the 5 listed IDs are valid
+4. **Check the target directory** — verify it doesn't already exist and isn't non-empty
+
 ## Quick reference
 
 ```bash

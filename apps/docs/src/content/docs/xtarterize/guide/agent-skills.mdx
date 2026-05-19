@@ -5,6 +5,22 @@ description: xtarterize publishes an AI agent skill that teaches coding agents h
 
 xtarterize publishes an **AI agent skill** at `skills/xtarterize/` that teaches coding agents (Claude Code, GitHub Copilot, Cline, etc.) how to use the CLI effectively.
 
+## How the skill gets invoked
+
+The skill's description acts as a trigger — when you ask an agent about anything related to xtarterize, it loads the skill and gains expert knowledge. Common trigger phrases:
+
+| You say... | What the agent learns |
+|------------|----------------------|
+| "Set up linting for this project" | Runs `check --format json`, parses task statuses, applies `init` or `add lint/biome` |
+| "Check our conformance status" | Runs `check --format json`, reports which tasks are `skip` vs `new`/`patch` |
+| "Add TypeScript strict mode" | Loads the task catalog, runs `add ts/strict --format json` |
+| "What would change if I init?" | Runs `diff --format json`, presents structured file diffs |
+| "This project has config conflicts" | Identifies `conflict` status, presents options without auto-applying |
+| "Run diagnostics on our setup" | Runs `doctor --format json`, reports any `fail` diagnostics |
+| "I need to restore a backup" | Uses `restore` to recover from `.xtarterize/backups/` |
+
+Without the skill, an agent might guess flags, parse terminal output, or miss tasks entirely. With the skill loaded, it uses `--format json`, parses structured output, follows anti-patterns, and loads reference files on demand.
+
 ## What the skill covers
 
 The skill teaches agents:
@@ -27,7 +43,7 @@ skills/xtarterize/
     tasks.md                        # Complete task catalog with IDs
 ```
 
-The skill uses **progressive disclosure**: SKILL.md covers core workflows and decision tables; reference files are loaded on demand when the agent needs detailed information.
+The skill uses **progressive disclosure**: SKILL.md covers core workflows and decision tables; reference files are loaded on demand when the agent needs detailed information (e.g., exact task IDs, full flag descriptions).
 
 ## Agent-first design
 
@@ -38,6 +54,4 @@ The skill is optimized for AI agent consumption:
 - **MANDATORY loading triggers** — reference files use explicit "MANDATORY — READ ENTIRE FILE" language
 - **Anti-patterns** — clear NEVER lists with reasoning
 
-## Discovery
 
-The `.claude-plugin/plugin.json` registers the skill for agent system discovery. Agent systems that support skill discovery (such as Claude Code) automatically find and load it when working with the repository.

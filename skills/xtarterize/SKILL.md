@@ -7,6 +7,15 @@ description: Apply production-grade conformance configurations (linting, type ch
 
 Scans any JS/TS project and applies curated configs via a task-based engine. **Always use `--format json`** for agent-driven invocations.
 
+## When this skill loads
+
+This skill is activated when the user asks about project conformance, linting setup, CI, or any xtarterize task. Upon loading:
+
+1. **Assess the ask** — is the user requesting a full setup (`init`), a single task (`add`), a status check (`check`), or diagnostics (`doctor`)?
+2. **Check current state first** — run `check --format json` to understand what's already configured before proposing changes
+3. **Never guess task IDs** — load the task reference before using `add`
+4. **Always use `--format json`** — parse structured output, never terminal text
+
 ## Quick reference
 
 ```bash

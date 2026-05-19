@@ -5,6 +5,21 @@ description: create-xtarter-app publishes an AI agent skill that teaches coding 
 
 create-xtarter-app publishes an **AI agent skill** at `skills/create-xtarter-app/` that teaches coding agents (Claude Code, GitHub Copilot, Cline, etc.) how to scaffold projects effectively.
 
+## How the skill gets invoked
+
+The skill's description acts as a trigger — when you ask an agent about scaffolding or templates, it loads the skill and gains expert knowledge. Common trigger phrases:
+
+| You say... | What the agent learns |
+|------------|----------------------|
+| "Scaffold a new project" | Runs interactive mode or suggests a template based on your stack |
+| "I want a Next.js app with Tailwind" | Maps "Next.js + Tailwind" to `next-tailwind`, runs scaffold with `--template next-tailwind` |
+| "Create a Vite SPA with Chakra UI" | Maps "Vite + Chakra" to `vite-chakra`, runs scaffold with `--template vite-chakra` |
+| "What templates are available?" | Runs `preview` to list all 5 templates with descriptions |
+| "Preview the vite-tailwind template" | Runs `preview vite-tailwind` to show repo and branch details |
+| "Scaffold in CI" | Uses `--yes` for non-interactive mode, auto-detects `CI=true` |
+
+Without the skill, an agent might guess template names, use wrong flags, or not know the available options. With the skill loaded, it picks the right template from a decision table, uses correct flags, and follows anti-patterns.
+
 ## What the skill covers
 
 The skill teaches agents:
@@ -25,7 +40,7 @@ skills/create-xtarter-app/
     templates.md                    # Detailed template information (repo, branch, full stack)
 ```
 
-The skill uses **progressive disclosure**: SKILL.md covers core workflows, template selection, and decision tables; the template reference file is loaded on demand.
+The skill uses **progressive disclosure**: SKILL.md covers core workflows, template selection, and decision tables; the template reference file is loaded on demand when the agent needs detailed information (e.g., exact repo URLs, branch names).
 
 ## Agent-first design
 
@@ -35,6 +50,4 @@ The skill is optimized for AI agent consumption:
 - **MANDATORY loading triggers** — template reference uses explicit language before scaffolding
 - **Anti-patterns** — clear NEVER lists with reasoning
 
-## Discovery
 
-The `.claude-plugin/plugin.json` registers the skill for agent system discovery. Agent systems that support skill discovery (such as Claude Code) automatically find and load it when working with the repository.
