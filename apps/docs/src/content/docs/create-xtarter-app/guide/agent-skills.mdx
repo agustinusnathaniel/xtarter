@@ -1,0 +1,40 @@
+---
+title: AI Agent Skills
+description: create-xtarter-app publishes an AI agent skill that teaches coding agents how to scaffold projects, pick templates, and follow best practices.
+---
+
+create-xtarter-app publishes an **AI agent skill** at `skills/create-xtarter-app/` that teaches coding agents (Claude Code, GitHub Copilot, Cline, etc.) how to scaffold projects effectively.
+
+## What the skill covers
+
+The skill teaches agents:
+
+- Scaffold and preview commands with all flags
+- Template selection — a decision table mapping user stack descriptions to the right template ID
+- Available templates (`next-chakra`, `next-tailwind`, `vite-chakra`, `vite-tailwind`, `vite-hero`) with their stacks
+- Agent workflows for scaffolding, previewing, and CI usage
+- Anti-patterns — common mistakes agents should avoid
+- Error handling for common failure modes (wrong template name, non-empty directory, network issues)
+
+## Skill structure
+
+```
+skills/create-xtarter-app/
+  SKILL.md                          # Entry point (~126 lines)
+  references/
+    templates.md                    # Detailed template information (repo, branch, full stack)
+```
+
+The skill uses **progressive disclosure**: SKILL.md covers core workflows, template selection, and decision tables; the template reference file is loaded on demand.
+
+## Agent-first design
+
+The skill is optimized for AI agent consumption:
+
+- **Decision parsing table** — "If the user says X → they want Y → pick Z" covers all 5 templates plus ambiguous cases
+- **MANDATORY loading triggers** — template reference uses explicit language before scaffolding
+- **Anti-patterns** — clear NEVER lists with reasoning
+
+## Discovery
+
+The `.claude-plugin/plugin.json` registers the skill for agent system discovery. Agent systems that support skill discovery (such as Claude Code) automatically find and load it when working with the repository.

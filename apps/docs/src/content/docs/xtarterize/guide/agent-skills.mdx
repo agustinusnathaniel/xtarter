@@ -1,63 +1,43 @@
 ---
 title: AI Agent Skills
-description: xtarterize ships with published AI agent skills that teach coding agents how to use the CLI, parse its output, and follow best practices.
+description: xtarterize publishes an AI agent skill that teaches coding agents how to use the CLI, parse its JSON output, and follow best practices.
 ---
 
-xtarterize includes published **AI agent skills** that teach coding agents (Claude Code, GitHub Copilot, Cline, etc.) how to use the CLI, parse its structured output, and follow best practices.
+xtarterize publishes an **AI agent skill** at `skills/xtarterize/` that teaches coding agents (Claude Code, GitHub Copilot, Cline, etc.) how to use the CLI effectively.
 
-## What are agent skills?
+## What the skill covers
 
-Agent skills are markdown files that teach AI coding agents how to work with specific tools, frameworks, and libraries. When an agent loads a skill, it gains expert knowledge about:
+The skill teaches agents:
 
-- Available CLI commands and their flags
-- How to parse JSON output for decision-making
-- Common workflows and anti-patterns
-- When to load detailed reference files
-
-xtarterize ships two skills:
-
-| Skill | Location | What it teaches |
-|-------|----------|-----------------|
-| `xtarterize` | `skills/xtarterize/` | All CLI commands, JSON output shapes, task catalog, agent workflows |
-| `create-xtarter-app` | `skills/create-xtarter-app/` | Scaffolding commands, template selection, project creation workflows |
-
-## How agents discover the skills
-
-The `.claude-plugin/plugin.json` file in the repository root registers both skills for agent system discovery:
-
-```json
-{
-  "name": "xtarter-skills",
-  "skills": [
-    "./skills/xtarterize",
-    "./skills/create-xtarter-app"
-  ]
-}
-```
-
-Agent systems that support skill discovery (such as Claude Code) will automatically find and load these skills when working with the repository.
+- All 8 CLI commands and their flags
+- JSON output shapes for every command (`check`, `diff`, `list`, `doctor`, etc.)
+- Parsing patterns — which JSON fields to inspect to decide the next action
+- The 4 task statuses (`new`, `patch`, `skip`, `conflict`) and how to handle each
+- Agent workflows for initializing projects, adding tasks, diagnosing failures, and restoring backups
+- Anti-patterns — common mistakes agents should avoid
+- When to load detailed reference files (task catalog, full command reference)
 
 ## Skill structure
 
-Each skill follows a progressive disclosure pattern:
-
 ```
-skills/<tool>/
-  SKILL.md                          # Entry point (<150 lines)
+skills/xtarterize/
+  SKILL.md                          # Entry point (~104 lines)
   references/
     commands.md                     # Full flag reference + JSON output shapes
-    tasks.md                        # Task catalog with IDs (xtarterize only)
-    templates.md                    # Template details (create-xtarter-app only)
+    tasks.md                        # Complete task catalog with IDs
 ```
 
-- **SKILL.md** contains the core workflows, decision tables, and anti-patterns — enough for most tasks
-- **Reference files** are loaded on demand when the agent needs detailed information (e.g., exact task IDs, full flag descriptions)
+The skill uses **progressive disclosure**: SKILL.md covers core workflows and decision tables; reference files are loaded on demand when the agent needs detailed information.
 
 ## Agent-first design
 
-The skills are designed specifically for AI agent consumption:
+The skill is optimized for AI agent consumption:
 
-- **JSON output by default** — all xtarterize commands shown with `--format json`; the skill documents exact JSON shapes agents can parse
+- **JSON output by default** — all commands shown with `--format json`; exact JSON shapes documented
 - **Decision tables** — "parse this field → to decide next action" patterns for every command
-- **MANDATORY loading triggers** — reference files use explicit language at relevant workflow steps
-- **Anti-patterns** — clear NEVER lists with reasoning, preventing common mistakes
+- **MANDATORY loading triggers** — reference files use explicit "MANDATORY — READ ENTIRE FILE" language
+- **Anti-patterns** — clear NEVER lists with reasoning
+
+## Discovery
+
+The `.claude-plugin/plugin.json` registers the skill for agent system discovery. Agent systems that support skill discovery (such as Claude Code) automatically find and load it when working with the repository.
