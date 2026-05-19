@@ -119,6 +119,10 @@ export default defineConfig({
 							link: '/xtarterize/guide/config/overview/',
 						},
 						{
+							label: 'AI Agent Skills',
+							link: '/xtarterize/guide/agent-skills/',
+						},
+						{
 							label: 'Changelog',
 							link: '/xtarterize/changelog/',
 						},
@@ -199,6 +203,10 @@ export default defineConfig({
 						{
 							label: 'Vite+ Org Templates',
 							link: '/create-xtarter-app/guide/org-templates/',
+						},
+						{
+							label: 'AI Agent Skills',
+							link: '/create-xtarter-app/guide/agent-skills/',
 						},
 					],
 				},

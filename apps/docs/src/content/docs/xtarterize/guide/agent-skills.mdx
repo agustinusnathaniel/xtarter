@@ -1,0 +1,50 @@
+---
+title: AI Agent Skills
+description: Install the xtarterize skill for AI assistants to get deep knowledge of CLI commands, JSON output, tasks, and conformance workflows.
+---
+
+import { Aside, LinkButton } from '@astrojs/starlight/components'
+
+Install the xtarterize skill for AI assistants (Claude Code, GitHub Copilot, Cline, etc.) to give them deep knowledge of the CLI, its JSON output, tasks, and best practices.
+
+When installed, your AI assistant knows how to use `--format json`, parse task statuses, follow agent workflows, and avoid common mistakes.
+
+## Install
+
+```bash
+npx skills add agustinusnathaniel/xtarter
+```
+
+## How it works
+
+The skill activates when you ask about conformance, linting, CI, or any xtarterize task:
+
+| You ask... | The agent... |
+|------------|-------------|
+| "Set up linting for this project" | Runs `check --format json`, parses task statuses, applies `init` or `add lint/biome` |
+| "Check our conformance status" | Runs `check --format json`, reports which tasks are `skip` vs `new`/`patch` |
+| "Add TypeScript strict mode" | Loads the task catalog, runs `add ts/strict --format json` |
+| "What would change if I init?" | Runs `diff --format json`, presents structured file diffs |
+| "Run diagnostics" | Runs `doctor --format json`, reports any `fail` diagnostics |
+| "Restore a backup" | Uses `restore` to recover from `.xtarterize/backups/` |
+
+<Aside type="tip">
+  The skill teaches agents to use <code>--format json</code> for every command and parse the structured output rather than terminal text.
+</Aside>
+
+## What's included
+
+- All 8 CLI commands (`init`, `sync`, `diff`, `check`, `add`, `list`, `restore`, `doctor`)
+- JSON output shapes for every command
+- Parsing patterns — which JSON fields to inspect to decide the next action
+- The 4 task statuses (`new`, `patch`, `skip`, `conflict`) and how to handle each
+- Agent workflows for initialization, single tasks, diagnostics, and backups
+- Anti-patterns — common mistakes agents should avoid
+
+## Resources
+
+- [CLI Reference](/xtarterize/guide/cli/overview/) — Full command reference
+- [Conformance Tasks](/xtarterize/guide/tasks/overview/) — Task catalog
+- [skills.sh](https://skills.sh) — Learn more about AI skills
+
+<LinkButton href="/xtarterize/guide/cli/overview/">View CLI Reference →</LinkButton>

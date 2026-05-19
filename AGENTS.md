@@ -19,6 +19,8 @@ Before proposing any change:
   - `apps/create-xtarter-app/` — project scaffolding CLI (Next.js/Vite templates)
   - `apps/docs/` — Astro + Starlight documentation site
   - `test/` — shared test fixtures and test suites
+  - `skills/` — published agent skills for xtarterize and create-xtarter-app
+  - `.claude-plugin/` — plugin registry for agent system discovery (`plugin.json`)
 - **Check recent changes** to understand the current implementation state:
   ```bash
   git log --oneline -20
@@ -165,6 +167,8 @@ If your change affects behavior, architecture, or user-facing features, update t
 | Publishable docs       | `apps/docs/src/content/docs/`                       |
 | Scaffolding CLI        | `apps/create-xtarter-app/src/`                      |
 | Tests                  | `test/`                                             |
+| Published agent skills | `skills/`                                           |
+| Agent plugin registry  | `.claude-plugin/plugin.json`                        |
 | Workspace scripts      | Root `package.json`                                 |
 
 ---
