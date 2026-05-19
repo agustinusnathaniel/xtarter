@@ -25,7 +25,15 @@ export default defineConfig({
 			components: {
 				Head: './src/components/StarlightHead.astro',
 			},
-			plugins: [lucode()],
+			plugins: [
+				lucode({
+					navLinks: [
+						{ label: 'xtarterize', link: '/xtarterize/' },
+						{ label: 'create-xtarter-app', link: '/create-xtarter-app/' },
+						{ label: 'GitHub', link: 'https://github.com/agustinusnathaniel/xtarterize' },
+					],
+				}),
+			],
 			head: [
 				{
 					tag: 'meta',
