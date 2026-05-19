@@ -24,13 +24,17 @@ export default defineConfig({
 			customCss: ['./src/styles/global.css'],
 			components: {
 				Head: './src/components/StarlightHead.astro',
+				PageFrame: './src/components/override/PageFrame.astro',
 			},
 			plugins: [
 				lucode({
 					navLinks: [
 						{ label: 'xtarterize', link: '/xtarterize/' },
 						{ label: 'create-xtarter-app', link: '/create-xtarter-app/' },
-						{ label: 'GitHub', link: 'https://github.com/agustinusnathaniel/xtarterize' },
+						{
+							label: 'GitHub',
+							link: 'https://github.com/agustinusnathaniel/xtarterize',
+						},
 					],
 				}),
 			],

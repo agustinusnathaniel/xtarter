@@ -1,4 +1,4 @@
-@layer base, starlight, theme, components, utilities;
+@layer base, starlight, theme, components, utilities, lucode;
 
 @import "@astrojs/starlight-tailwind";
 @import "tailwindcss/theme.css" layer(theme);
@@ -53,28 +53,19 @@ h6 {
 }
 
 /* ============================================
-   LANDING PAGE - HERO SECTION (Starlight native)
+   LANDING PAGE - HERO SECTION (lucode-starlight override)
    ============================================ */
 
-/* Starlight splash hero wrapper */
-.hero {
-	position: relative;
-	text-align: center;
-	padding: 4rem 1rem 2rem;
-}
-
-/* Hero title - larger, bolder, sans-serif */
-body .hero h1 {
+/* Hero title - larger, bolder, sans-serif with gradient */
+/* #_top beats Astro scoped [data-astro-cid-*] selectors (0,1,0,0 vs 0,0,1,1) */
+#_top {
 	font-size: clamp(2.5rem, 6vw, 4rem);
 	font-weight: 800;
 	line-height: 1.1;
 	letter-spacing: -0.03em;
 	font-family: var(--font-sans);
 	margin-bottom: 1.5rem;
-}
 
-/* Gradient text for "JavaScript & TypeScript" */
-body .hero h1 {
 	background: linear-gradient(
 		135deg,
 		var(--sl-color-white) 0%,
@@ -88,8 +79,8 @@ body .hero h1 {
 	background-clip: text;
 }
 
-/* Hero tagline - Starlight uses .tagline div, not <p> */
-body .hero .tagline {
+/* Hero tagline — use [data-layout] to beat Astro scoped selectors */
+.hero[data-layout] .tagline {
 	font-size: clamp(1.1rem, 2vw, 1.35rem);
 	color: var(--sl-color-gray-2);
 	max-width: 640px;
@@ -97,8 +88,8 @@ body .hero .tagline {
 	line-height: 1.6;
 }
 
-/* Hero action buttons */
-body .hero .sl-link-button {
+/* Hero action buttons — lucode uses .link-button not .sl-link-button */
+.hero[data-layout] .actions .link-button {
 	font-size: 1.125rem;
 	padding: 0.75rem 1.75rem;
 }
@@ -106,6 +97,18 @@ body .hero .sl-link-button {
 /* Hero image area (if used) */
 .hero .hero-html {
 	margin-top: 2rem;
+}
+
+/* ============================================
+   SPLASH PAGE CONTENT — wraps markdown below hero on splash pages
+   lucode-starlight PageFrame doesn't container-wrap non-sidebar content
+   ============================================ */
+
+main > .markdown-wrapper {
+	max-width: 1024px;
+	margin: 0 auto;
+	padding: 2rem 1.5rem 4rem;
+	width: 100%;
 }
 
 /* ============================================
@@ -200,7 +203,7 @@ hr {
    CTA BUTTONS
    ============================================ */
 
-.sl-markdown-content .hero-buttons .sl-link-button {
+.hero .actions .link-button {
 	font-size: 1.125rem;
 	padding: 0.75rem 1.75rem;
 }
@@ -218,11 +221,7 @@ hr {
    ============================================ */
 
 @media (max-width: 640px) {
-	.hero-section {
-		padding: 2rem 0.5rem 2rem;
-	}
-
-	.hero-buttons {
+	.hero[data-layout] .actions {
 		flex-direction: column;
 		align-items: center;
 	}
