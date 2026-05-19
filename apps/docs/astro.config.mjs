@@ -119,6 +119,10 @@ export default defineConfig({
 							link: '/xtarterize/guide/config/overview/',
 						},
 						{
+							label: 'AI Agent Skills',
+							link: '/xtarterize/guide/agent-skills/',
+						},
+						{
 							label: 'Changelog',
 							link: '/xtarterize/changelog/',
 						},
