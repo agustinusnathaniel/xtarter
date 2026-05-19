@@ -2,6 +2,7 @@ import starlight from '@astrojs/starlight'
 import tailwindcss from '@tailwindcss/vite'
 import { defineConfig } from 'astro/config'
 import astroMermaid from 'astro-mermaid'
+import lucode from 'lucode-starlight'
 
 export default defineConfig({
 	site: 'https://xtarter.sznm.dev',
@@ -24,6 +25,7 @@ export default defineConfig({
 			components: {
 				Head: './src/components/StarlightHead.astro',
 			},
+			plugins: [lucode()],
 			head: [
 				{
 					tag: 'meta',
