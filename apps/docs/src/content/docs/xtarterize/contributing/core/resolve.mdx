@@ -62,7 +62,7 @@ applicable: (profile) => profile.hasGitHub
 applicable: (profile) => profile.monorepoTool === 'turbo'
 ```
 
-Task statuses are evaluated in parallel via `Promise.all`, making resolution efficient even with many tasks.
+Task statuses are evaluated in parallel via `Effect.all`, making resolution efficient even with many tasks.
 
 ## References
 

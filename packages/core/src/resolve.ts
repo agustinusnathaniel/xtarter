@@ -1,6 +1,8 @@
+import { Effect } from 'effect'
 import type { Task, TaskStatus } from '@/_base.js'
 import type { ProjectProfile } from '@/detect.js'
 import { detectProject } from '@/detect.js'
+import { TaskError } from '@/errors.js'
 
 export function resolveTasks(
 	profile: ProjectProfile,
@@ -9,23 +11,28 @@ export function resolveTasks(
 	return allTasks.filter((task) => task.applicable(profile))
 }
 
-export async function resolveTaskStatuses(
+export function resolveTaskStatuses(
 	tasks: Task[],
 	cwd: string,
 	profile: ProjectProfile,
 ): Promise<Map<string, TaskStatus>> {
-	const results = new Map<string, TaskStatus>()
-	const statusPromises = tasks.map(async (task) => {
-		const status = await task.check(cwd, profile)
-		return [task.id, status] as [string, TaskStatus]
-	})
-
-	const entries = await Promise.all(statusPromises)
-	for (const [id, status] of entries) {
-		results.set(id, status)
-	}
-
-	return results
+	return Effect.runPromise(
+		Effect.all(
+			tasks.map((task) =>
+				Effect.tryPromise({
+					try: (_signal) => task.check(cwd, profile),
+					catch: (cause) =>
+						new TaskError({
+							taskId: task.id,
+							message: `Failed to check ${task.id}`,
+							cause,
+						}),
+				}).pipe(
+					Effect.map((status) => [task.id, status] as [string, TaskStatus]),
+				),
+			),
+		).pipe(Effect.map((entries) => new Map(entries))),
+	)
 }
 
 export async function resolveProjectTasks(

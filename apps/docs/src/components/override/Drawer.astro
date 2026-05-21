@@ -1,8 +1,9 @@
 ---
-import userConfig from 'virtual:lucode-starlight-config';
-import DrawerGroup from './DrawerGroup.astro';
-const { sidebar } = Astro.locals.starlightRoute;
-const currentPath = Astro.url.pathname;
+import userConfig from 'virtual:lucode-starlight-config'
+import DrawerGroup from './DrawerGroup.astro'
+
+const { sidebar } = Astro.locals.starlightRoute
+const currentPath = Astro.url.pathname
 ---
 
 <div popover="auto" id="drawer">

@@ -23,6 +23,7 @@
 		"@clack/prompts": "catalog:",
 		"consola": "catalog:",
 		"diff": "^9.0.0",
+		"effect": "catalog:",
 		"json5": "catalog:",
 		"nypm": "catalog:",
 		"pathe": "catalog:",

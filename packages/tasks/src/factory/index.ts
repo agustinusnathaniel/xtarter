@@ -11,6 +11,7 @@ import {
 	readFile,
 	readPackageJson,
 	resolvePath,
+	TaskError,
 } from '@xtarterize/core'
 import { injectVitePlugin, mergeJson, parseJsonc } from '@xtarterize/patchers'
 import JSON5 from 'json5'
@@ -19,6 +20,7 @@ import { checkJsonConfigTask, dryRunJsonConfigTask } from './json-config.js'
 import {
 	ensureTaskDependency,
 	ensureTaskParentDir,
+	wrapTask,
 	writeTaskDiffs,
 } from './ops.js'
 import {
@@ -44,6 +46,7 @@ export {
 	ensureTaskDependency,
 	ensureTaskParentDir,
 	isExecutableFile,
+	wrapTask,
 	writeTaskDiffs,
 } from './ops.js'
 export { lintToolScripts, resolveLintTool } from './package-scripts.js'
@@ -90,73 +93,80 @@ export function createFileTask(options: FileTaskOptions): Task {
 		applicable: options.applicable,
 
 		async check(cwd, profile): Promise<TaskStatus> {
-			const fullPath = await resolveTaskFile(
-				cwd,
-				options.filepath,
-				options.extensions,
-			)
+			return wrapTask(options.id, 'createFileTask.check', async () => {
+				const fullPath = await resolveTaskFile(
+					cwd,
+					options.filepath,
+					options.extensions,
+				)
 
-			if (!fullPath) return 'new'
+				if (!fullPath) return 'new' as TaskStatus
 
-			const exists = await fileExists(fullPath)
-			if (!exists) return 'new'
+				const exists = await fileExists(fullPath)
+				if (!exists) return 'new'
 
-			if (options.checkFn) {
-				const content = await readFile(fullPath)
-				return options.checkFn(cwd, profile, fullPath, content)
-			}
+				if (options.checkFn) {
+					const content = await readFile(fullPath)
+					return options.checkFn(cwd, profile, fullPath, content)
+				}
 
-			const expected = options.render(profile, null)
-			const actual = await readFile(fullPath)
+				const expected = options.render(profile, null)
+				const actual = await readFile(fullPath)
 
-			if (options.merge) {
-				const actualJson = parseJsonc(actual) as object
-				const expectedJson = JSON5.parse(expected)
-				const merged = mergeJson(actualJson, expectedJson)
-				if (JSON.stringify(actualJson) === JSON.stringify(merged)) return 'skip'
-				return 'patch'
-			}
+				if (options.merge) {
+					const actualJson = parseJsonc(actual) as object
+					const expectedJson = JSON5.parse(expected)
+					const merged = mergeJson(actualJson, expectedJson)
+					if (JSON.stringify(actualJson) === JSON.stringify(merged))
+						return 'skip'
+					return 'patch'
+				}
 
-			if (
-				normalizeLineEndings(actual.trim()) ===
-				normalizeLineEndings(expected.trim())
-			)
-				return 'skip'
-			return 'conflict'
+				if (
+					normalizeLineEndings(actual.trim()) ===
+					normalizeLineEndings(expected.trim())
+				)
+					return 'skip'
+				return 'conflict'
+			})
 		},
 
 		async dryRun(cwd, profile): Promise<FileDiff[]> {
-			const fullPath = await resolveTaskFile(
-				cwd,
-				options.filepath,
-				options.extensions,
-			)
+			return wrapTask(options.id, 'createFileTask.dryRun', async () => {
+				const fullPath = await resolveTaskFile(
+					cwd,
+					options.filepath,
+					options.extensions,
+				)
 
-			const exists = fullPath !== null && (await fileExists(fullPath))
-			const before = exists ? await readFile(fullPath) : null
-			const filepath = exists
-				? relative(cwd, fullPath)
-				: getDefaultFilepath(options.filepath, options.extensions)
+				const exists = fullPath !== null && (await fileExists(fullPath))
+				const before = exists ? await readFile(fullPath) : null
+				const filepath = exists
+					? relative(cwd, fullPath)
+					: getDefaultFilepath(options.filepath, options.extensions)
 
-			const after = options.render(profile, before)
+				const after = options.render(profile, before)
 
-			return [{ filepath, before, after }]
+				return [{ filepath, before, after }]
+			})
 		},
 
 		async apply(cwd, profile): Promise<void> {
-			await ensureTaskDependency({
-				cwd,
-				depName: options.depName,
-				depInstallName: options.depInstallName,
-				installDev: options.installDev,
+			return wrapTask(options.id, 'createFileTask.apply', async () => {
+				await ensureTaskDependency({
+					cwd,
+					depName: options.depName,
+					depInstallName: options.depInstallName,
+					installDev: options.installDev,
+				})
+
+				if (options.ensureParentDir) {
+					await ensureTaskParentDir(cwd, options.filepath)
+				}
+
+				const diffs = await this.dryRun(cwd, profile)
+				await writeTaskDiffs(cwd, diffs)
 			})
-
-			if (options.ensureParentDir) {
-				await ensureTaskParentDir(cwd, options.filepath)
-			}
-
-			const diffs = await this.dryRun(cwd, profile)
-			await writeTaskDiffs(cwd, diffs)
 		},
 	}
 }
@@ -189,56 +199,62 @@ export function createJsonMergeTask(options: JsonMergeTaskOptions): Task {
 		applicable: options.applicable,
 
 		async check(cwd, profile): Promise<TaskStatus> {
-			const fullPath = await resolveTaskFile(
-				cwd,
-				options.filepath,
-				options.extensions,
-			)
+			return wrapTask(options.id, 'createJsonMergeTask.check', async () => {
+				const fullPath = await resolveTaskFile(
+					cwd,
+					options.filepath,
+					options.extensions,
+				)
 
-			if (!fullPath) return 'new'
+				if (!fullPath) return 'new'
 
-			const exists = await fileExists(fullPath)
-			if (!exists) return 'new'
+				const exists = await fileExists(fullPath)
+				if (!exists) return 'new'
 
-			if (options.checkFn) {
-				const content = await readFile(fullPath)
-				return options.checkFn(cwd, profile, fullPath, content)
-			}
-
-			const pkg = await readPackageJson(cwd)
-			if (options.depName) {
-				if (
-					!pkg?.devDependencies?.[options.depName] &&
-					!pkg?.dependencies?.[options.depName]
-				) {
-					return 'patch'
+				if (options.checkFn) {
+					const content = await readFile(fullPath)
+					return options.checkFn(cwd, profile, fullPath, content)
 				}
-			}
 
-			return checkJsonConfigTask(cwd, profile, {
-				filepath: options.filepath,
-				extensions: options.extensions,
-				incoming: options.incoming,
+				const pkg = await readPackageJson(cwd)
+				if (options.depName) {
+					if (
+						!pkg?.devDependencies?.[options.depName] &&
+						!pkg?.dependencies?.[options.depName]
+					) {
+						return 'patch'
+					}
+				}
+
+				return checkJsonConfigTask(cwd, profile, {
+					filepath: options.filepath,
+					extensions: options.extensions,
+					incoming: options.incoming,
+				})
 			})
 		},
 
 		async dryRun(cwd, profile): Promise<FileDiff[]> {
-			return dryRunJsonConfigTask(cwd, profile, {
-				filepath: options.filepath,
-				extensions: options.extensions,
-				incoming: options.incoming,
-			})
+			return wrapTask(options.id, 'createJsonMergeTask.dryRun', () =>
+				dryRunJsonConfigTask(cwd, profile, {
+					filepath: options.filepath,
+					extensions: options.extensions,
+					incoming: options.incoming,
+				}),
+			)
 		},
 
 		async apply(cwd, profile): Promise<void> {
-			await ensureTaskDependency({
-				cwd,
-				depName: options.depName,
-				installDev: options.installDev,
-			})
+			return wrapTask(options.id, 'createJsonMergeTask.apply', async () => {
+				await ensureTaskDependency({
+					cwd,
+					depName: options.depName,
+					installDev: options.installDev,
+				})
 
-			const diffs = await this.dryRun(cwd, profile)
-			await writeTaskDiffs(cwd, diffs)
+				const diffs = await this.dryRun(cwd, profile)
+				await writeTaskDiffs(cwd, diffs)
+			})
 		},
 	}
 }
@@ -268,69 +284,75 @@ export function createMultiFileTask(options: MultiFileTaskOptions): Task {
 		applicable: options.applicable,
 
 		async check(cwd, profile): Promise<TaskStatus> {
-			const files = options.files(profile)
-			let hasMissing = false
-			let hasMismatch = false
+			return wrapTask(options.id, 'createMultiFileTask.check', async () => {
+				const files = options.files(profile)
+				let hasMissing = false
+				let hasMismatch = false
 
-			for (const f of files) {
-				const fullPath = resolvePath(cwd, f.filepath)
-				const exists = await fileExists(fullPath)
-				if (!exists) {
-					hasMissing = true
-					continue
+				for (const f of files) {
+					const fullPath = resolvePath(cwd, f.filepath)
+					const exists = await fileExists(fullPath)
+					if (!exists) {
+						hasMissing = true
+						continue
+					}
+					const expected = f.content(profile)
+					const actual = await readFile(fullPath)
+					if (actual.trim() !== expected.trim()) {
+						hasMismatch = true
+					}
 				}
-				const expected = f.content(profile)
-				const actual = await readFile(fullPath)
-				if (actual.trim() !== expected.trim()) {
-					hasMismatch = true
+
+				if (hasMismatch) return 'conflict'
+				if (hasMissing) return 'new'
+
+				if (options.depName) {
+					const pkg = await readPackageJson(cwd)
+					const hasDep =
+						pkg?.devDependencies?.[options.depName] ||
+						pkg?.dependencies?.[options.depName]
+					if (!hasDep) return 'patch'
 				}
-			}
 
-			if (hasMismatch) return 'conflict'
-			if (hasMissing) return 'new'
-
-			if (options.depName) {
-				const pkg = await readPackageJson(cwd)
-				const hasDep =
-					pkg?.devDependencies?.[options.depName] ||
-					pkg?.dependencies?.[options.depName]
-				if (!hasDep) return 'patch'
-			}
-
-			return 'skip'
+				return 'skip'
+			})
 		},
 
 		async dryRun(cwd, profile): Promise<FileDiff[]> {
-			const files = options.files(profile)
-			const diffs: FileDiff[] = []
+			return wrapTask(options.id, 'createMultiFileTask.dryRun', async () => {
+				const files = options.files(profile)
+				const diffs: FileDiff[] = []
 
-			for (const f of files) {
-				const fullPath = resolvePath(cwd, f.filepath)
-				const exists = await fileExists(fullPath)
-				const before = exists ? await readFile(fullPath) : null
-				const after = f.content(profile)
+				for (const f of files) {
+					const fullPath = resolvePath(cwd, f.filepath)
+					const exists = await fileExists(fullPath)
+					const before = exists ? await readFile(fullPath) : null
+					const after = f.content(profile)
 
-				if (!exists || before?.trim() !== after.trim()) {
-					diffs.push({
-						filepath: relative(cwd, fullPath),
-						before,
-						after,
-					})
+					if (!exists || before?.trim() !== after.trim()) {
+						diffs.push({
+							filepath: relative(cwd, fullPath),
+							before,
+							after,
+						})
+					}
 				}
-			}
 
-			return diffs
+				return diffs
+			})
 		},
 
 		async apply(cwd, profile): Promise<void> {
-			await ensureTaskDependency({
-				cwd,
-				depName: options.depName,
-				installDev: options.installDev,
-			})
+			return wrapTask(options.id, 'createMultiFileTask.apply', async () => {
+				await ensureTaskDependency({
+					cwd,
+					depName: options.depName,
+					installDev: options.installDev,
+				})
 
-			const diffs = await this.dryRun(cwd, profile)
-			await writeTaskDiffs(cwd, diffs)
+				const diffs = await this.dryRun(cwd, profile)
+				await writeTaskDiffs(cwd, diffs)
+			})
 		},
 	}
 }
@@ -359,88 +381,98 @@ export function createVitePluginTask(options: VitePluginTaskOptions): Task {
 		applicable: options.applicable,
 
 		async check(cwd, _profile): Promise<TaskStatus> {
-			const configPath = await findConfigFile(
-				cwd,
-				'vite.config',
-				VITE_CONFIG_EXTENSIONS,
-			)
-			if (!configPath) return 'conflict'
+			return wrapTask(options.id, 'createVitePluginTask.check', async () => {
+				const configPath = await findConfigFile(
+					cwd,
+					'vite.config',
+					VITE_CONFIG_EXTENSIONS,
+				)
+				if (!configPath) return 'conflict'
 
-			const content = await readFile(configPath)
-			if (content.includes(options.checkString)) return 'skip'
-			return 'new'
+				const content = await readFile(configPath)
+				if (content.includes(options.checkString)) return 'skip'
+				return 'new'
+			})
 		},
 
 		async dryRun(cwd, _profile): Promise<FileDiff[]> {
-			const { generateCode, loadFile, parseExpression } = await import(
-				'magicast'
-			)
+			return wrapTask(options.id, 'createVitePluginTask.dryRun', async () => {
+				const { generateCode, loadFile, parseExpression } = await import(
+					'magicast'
+				)
 
-			const configPath = await findConfigFile(
-				cwd,
-				'vite.config',
-				VITE_CONFIG_EXTENSIONS,
-			)
-			if (!configPath) return []
+				const configPath = await findConfigFile(
+					cwd,
+					'vite.config',
+					VITE_CONFIG_EXTENSIONS,
+				)
+				if (!configPath) return []
 
-			const before = await readFile(configPath)
-			const mod = await loadFile(configPath)
+				const before = await readFile(configPath)
+				const mod = await loadFile(configPath)
 
-			if (mod.$code.includes(options.checkString)) {
-				return [{ filepath: 'vite.config', before, after: before }]
-			}
+				if (mod.$code.includes(options.checkString)) {
+					return [{ filepath: 'vite.config', before, after: before }]
+				}
 
-			const defaultExport = mod.exports.default
-			if (!defaultExport || !Array.isArray(defaultExport.plugins)) {
-				return [{ filepath: 'vite.config', before, after: before }]
-			}
+				const defaultExport = mod.exports.default
+				if (!defaultExport || !Array.isArray(defaultExport.plugins)) {
+					return [{ filepath: 'vite.config', before, after: before }]
+				}
 
-			const plugins: unknown[] = defaultExport.plugins as unknown[]
-			plugins.push(parseExpression(options.pluginCall))
+				const plugins: unknown[] = defaultExport.plugins as unknown[]
+				plugins.push(parseExpression(options.pluginCall))
 
-			const { code: after } = generateCode(mod)
-			const importDecl =
-				options.importStyle === 'named'
-					? `import { ${options.importName} } from '${options.depName}'\n`
-					: `import ${options.importName} from '${options.depName}'\n`
-			const finalAfter = `${importDecl}${after}`
+				const { code: after } = generateCode(mod)
+				const importDecl =
+					options.importStyle === 'named'
+						? `import { ${options.importName} } from '${options.depName}'\n`
+						: `import ${options.importName} from '${options.depName}'\n`
+				const finalAfter = `${importDecl}${after}`
 
-			return [{ filepath: 'vite.config', before, after: finalAfter }]
+				return [{ filepath: 'vite.config', before, after: finalAfter }]
+			})
 		},
 
 		async apply(cwd, _profile): Promise<void> {
-			await ensureTaskDependency({
-				cwd,
-				depName: options.depName,
-				installDev: true,
-			})
+			return wrapTask(options.id, 'createVitePluginTask.apply', async () => {
+				await ensureTaskDependency({
+					cwd,
+					depName: options.depName,
+					installDev: true,
+				})
 
-			const configPath = await findConfigFile(
-				cwd,
-				'vite.config',
-				VITE_CONFIG_EXTENSIONS,
-			)
-			if (!configPath) {
-				throw new Error(`No vite.config file found for ${options.id}`)
-			}
-
-			const importSpecifier =
-				options.importStyle === 'named'
-					? `{ ${options.importName} }`
-					: options.importName
-
-			const result = await injectVitePlugin(
-				configPath,
-				options.depName,
-				importSpecifier,
-				options.pluginCall,
-			)
-
-			if (!result.success) {
-				throw new Error(
-					result.fallback ?? `Failed to inject ${options.depName}`,
+				const configPath = await findConfigFile(
+					cwd,
+					'vite.config',
+					VITE_CONFIG_EXTENSIONS,
 				)
-			}
+				if (!configPath) {
+					throw new TaskError({
+						taskId: options.id,
+						message: `No vite.config file found for ${options.id}`,
+					})
+				}
+
+				const importSpecifier =
+					options.importStyle === 'named'
+						? `{ ${options.importName} }`
+						: options.importName
+
+				const result = await injectVitePlugin(
+					configPath,
+					options.depName,
+					importSpecifier,
+					options.pluginCall,
+				)
+
+				if (!result.success) {
+					throw new TaskError({
+						taskId: options.id,
+						message: result.fallback ?? `Failed to inject ${options.depName}`,
+					})
+				}
+			})
 		},
 	}
 }
@@ -472,44 +504,62 @@ export function createMultiFileJsonMergeTask(
 		applicable: options.applicable,
 
 		async check(cwd, profile): Promise<TaskStatus> {
-			let status: TaskStatus = 'skip'
-			for (const f of options.files) {
-				const entryStatus = await checkJsonConfigTask(cwd, profile, {
-					filepath: f.filepath,
-					extensions: f.extensions,
-					incoming: async () => f.incoming(profile),
-					merge: f.merge,
-				})
+			return wrapTask(
+				options.id,
+				'createMultiFileJsonMergeTask.check',
+				async () => {
+					let status: TaskStatus = 'skip'
+					for (const f of options.files) {
+						const entryStatus = await checkJsonConfigTask(cwd, profile, {
+							filepath: f.filepath,
+							extensions: f.extensions,
+							incoming: async () => f.incoming(profile),
+							merge: f.merge,
+						})
 
-				if (entryStatus === 'patch') {
-					status = 'patch'
-					continue
-				}
+						if (entryStatus === 'patch') {
+							status = 'patch'
+							continue
+						}
 
-				if (entryStatus === 'new' && status !== 'patch') {
-					status = 'new'
-				}
-			}
-			return status
+						if (entryStatus === 'new' && status !== 'patch') {
+							status = 'new'
+						}
+					}
+					return status
+				},
+			)
 		},
 
 		async dryRun(cwd, profile): Promise<FileDiff[]> {
-			const diffs: FileDiff[] = []
-			for (const f of options.files) {
-				const entryDiffs = await dryRunJsonConfigTask(cwd, profile, {
-					filepath: f.filepath,
-					extensions: f.extensions,
-					incoming: async () => f.incoming(profile),
-					merge: f.merge,
-				})
-				diffs.push(...entryDiffs)
-			}
-			return diffs
+			return wrapTask(
+				options.id,
+				'createMultiFileJsonMergeTask.dryRun',
+				async () => {
+					const diffs: FileDiff[] = []
+					for (const f of options.files) {
+						const entryDiffs = await dryRunJsonConfigTask(cwd, profile, {
+							filepath: f.filepath,
+							extensions: f.extensions,
+							incoming: async () => f.incoming(profile),
+							merge: f.merge,
+						})
+						diffs.push(...entryDiffs)
+					}
+					return diffs
+				},
+			)
 		},
 
 		async apply(cwd, profile): Promise<void> {
-			const diffs = await this.dryRun(cwd, profile)
-			await writeTaskDiffs(cwd, diffs)
+			return wrapTask(
+				options.id,
+				'createMultiFileJsonMergeTask.apply',
+				async () => {
+					const diffs = await this.dryRun(cwd, profile)
+					await writeTaskDiffs(cwd, diffs)
+				},
+			)
 		},
 	}
 }

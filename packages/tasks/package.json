@@ -24,6 +24,7 @@
 	"dependencies": {
 		"@xtarterize/core": "workspace:*",
 		"@xtarterize/patchers": "workspace:*",
+		"effect": "catalog:",
 		"json5": "catalog:",
 		"magicast": "catalog:",
 		"nypm": "catalog:",

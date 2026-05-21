@@ -175,6 +175,10 @@ If your change affects behavior, architecture, or user-facing features, update t
 
 **Do not skip these steps.** The quality of your work is measured by how well you follow this workflow, not just by the code you produce.
 
+### Library / Dependency References
+
+To check the source code and documentation of a package, run `bunx opensrc path <package-name>` (e.g. `bunx opensrc path lexical`) to get the local path to its cached source, then read or grep files under that path (e.g. `cat $(bunx opensrc path lexical)/README.md`). Use this instead of reading `node_modules`. For beta / pre-release versions, always pin the exact version with `<package>@<version>` (e.g. `bunx opensrc path effect@4.0.0-beta.69`).
+
 <!--VITE PLUS START-->
 
 # Using Vite+, the Unified Toolchain for the Web

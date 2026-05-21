@@ -1,31 +1,53 @@
 import fs from 'node:fs/promises'
+import { Effect } from 'effect'
 import JSON5 from 'json5'
 import { dirname, resolve } from 'pathe'
+import { FileSystemError } from '@/errors.js'
 
-export async function ensureDir(dirPath: string): Promise<void> {
-	await fs.mkdir(dirPath, { recursive: true })
+export function ensureDir(dirPath: string): Promise<void> {
+	return Effect.runPromise(
+		Effect.tryPromise({
+			try: () => fs.mkdir(dirPath, { recursive: true }).then(() => undefined),
+			catch: (cause) => new FileSystemError({ path: dirPath, cause }),
+		}),
+	)
 }
 
-export async function readFile(filePath: string): Promise<string> {
-	return fs.readFile(filePath, 'utf-8')
+export function readFile(filePath: string): Promise<string> {
+	return Effect.runPromise(
+		Effect.tryPromise({
+			try: () => fs.readFile(filePath, 'utf-8'),
+			catch: (cause) => new FileSystemError({ path: filePath, cause }),
+		}),
+	)
 }
 
-export async function writeFile(
+export function writeFile(
 	filePath: string,
 	content: string,
 	mode?: number,
 ): Promise<void> {
-	await fs.mkdir(dirname(filePath), { recursive: true })
-	await fs.writeFile(filePath, content, { mode })
+	return Effect.runPromise(
+		Effect.tryPromise({
+			try: async () => {
+				await fs.mkdir(dirname(filePath), { recursive: true })
+				await fs.writeFile(filePath, content, { mode })
+			},
+			catch: (cause) => new FileSystemError({ path: filePath, cause }),
+		}),
+	)
 }
 
-export async function fileExists(filePath: string): Promise<boolean> {
-	try {
-		await fs.access(filePath)
-		return true
-	} catch {
-		return false
-	}
+export function fileExists(filePath: string): Promise<boolean> {
+	return Effect.runPromise(
+		Effect.orElseSucceed(
+			Effect.tryPromise({
+				try: () => fs.access(filePath).then(() => true),
+				catch: (cause) => new FileSystemError({ path: filePath, cause }),
+			}),
+			() => false,
+		),
+	)
 }
 
 export async function findConfigFile(
@@ -43,16 +65,31 @@ export async function findConfigFile(
 export async function readJson<T = Record<string, unknown>>(
 	filePath: string,
 ): Promise<T> {
-	const content = await fs.readFile(filePath, 'utf-8')
-	return JSON5.parse(content) as T
+	const content = await readFile(filePath)
+	try {
+		return JSON5.parse(content) as T
+	} catch (cause) {
+		throw new FileSystemError({ path: filePath, cause })
+	}
 }
 
 export async function writeJson(
 	filePath: string,
 	data: unknown,
 ): Promise<void> {
-	await fs.mkdir(dirname(filePath), { recursive: true })
-	await fs.writeFile(filePath, `${JSON.stringify(data, null, 2)}\n`, 'utf-8')
+	await Effect.runPromise(
+		Effect.tryPromise({
+			try: async () => {
+				await fs.mkdir(dirname(filePath), { recursive: true })
+				await fs.writeFile(
+					filePath,
+					`${JSON.stringify(data, null, 2)}\n`,
+					'utf-8',
+				)
+			},
+			catch: (cause) => new FileSystemError({ path: filePath, cause }),
+		}),
+	)
 }
 
 export async function readJsonIfExists<T = Record<string, unknown>>(
@@ -64,8 +101,15 @@ export async function readJsonIfExists<T = Record<string, unknown>>(
 }
 
 export async function copyFile(src: string, dest: string): Promise<void> {
-	await fs.mkdir(dirname(dest), { recursive: true })
-	await fs.cp(src, dest)
+	await Effect.runPromise(
+		Effect.tryPromise({
+			try: async () => {
+				await fs.mkdir(dirname(dest), { recursive: true })
+				await fs.cp(src, dest)
+			},
+			catch: (cause) => new FileSystemError({ path: dest, cause }),
+		}),
+	)
 }
 
 export function resolvePath(cwd: string, ...segments: string[]): string {
