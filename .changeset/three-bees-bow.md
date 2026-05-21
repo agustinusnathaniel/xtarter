@@ -29,8 +29,9 @@ all callers to understand Effect), we apply Effect at two levels:
    `Effect.runPromise` unwraps at the function boundary. Tests require zero
    changes.
 
-**What changed (20 files, +1307/-820):**
+**What changed (26 files, +1857/-1571):**
 
+Tagged errors and Effect composition:
 - `packages/core/src/errors.ts` (new) — consolidated `Data.TaggedError`
   types: `FileSystemError` (read/write/parse failures), `BackupError`
   (backup operations), `TaskError` (task check/apply failures)
@@ -42,28 +43,38 @@ all callers to understand Effect), we apply Effect at two levels:
   `BackupError` typing and atomic index writes
 - `packages/core/src/diagnostics.ts` — parallel checks via `Effect.all`,
   tool execution with `FileSystemError`, all `tryEffect` helpers upgraded
-  to tagged errors
+  to tagged errors; exported `tryReadPackageJson` to eliminate 4 copies
+  of the null-guard pattern
 - `packages/core/src/preflight.ts` — validation orchestration via
-  `Effect.gen` with `FileSystemError`
+  `Effect.gen` with `FileSystemError`; deduplicated `tryEffect` by
+  importing from diagnostics
 - `packages/core/src/resolve.ts` — concurrent task status checks via
   `Effect.all`
 - `packages/core/src/apply.ts` — per-task error handling with `TaskError`,
   same-name tasks continue after failures
 - `packages/core/src/utils/deep-equal.ts` — custom recursion replaced
   with `Equal.equals` from Effect
-- `packages/tasks/src/factory/index.ts` — all 17 catch/throw handlers in
-  5 factory methods use `TaskError`
-- `packages/tasks/src/factory/task.ts` — 3 catch handlers use `TaskError`
-- `packages/tasks/src/agent/skills-install.ts` — 4 catch/throw use `TaskError`
+
+Reducing Effect ceremony:
+- `packages/tasks/src/factory/ops.ts` — added `wrapTask(taskId, method, fn)`
+  internal helper collapsing the 6-line `Effect.runPromise(Effect.tryPromise)`
+  pattern into 1 line
+- `packages/tasks/src/factory/index.ts` — replaced 15 Effect wrappers,
+  removed `Effect` import
+- `packages/tasks/src/factory/task.ts` — replaced 3 wrappers, removed
+  `Effect` and `TaskError` imports
+- `packages/tasks/src/agent/skills-install.ts` — replaced 3 wrappers,
+  removed `Effect` import, fixed hardcoded task IDs in error metadata
 
 **Trade-offs.**
 
 - Added Effect v4 beta as a dependency (~44 MB install size, 10 transitive
   deps). Beta stability risk is mitigated by pinning the exact version in
   `pnpm-workspace.yaml` catalog.
-- Internal Effect usage adds import boilerplate (`import { Effect } from
-  'effect'`) at call sites — acceptable because the alternative was ad-hoc
-  error handling that was harder to reason about.
+- The initial adoption introduced `Effect.tryPromise` ceremony at every
+  call site; subsequent consolidation via `wrapTask` collapsed 21 such
+  wrappers into a single 8-line helper, removing the `Effect` import from
+  all task factory files.
 
 **Verification.**
 
