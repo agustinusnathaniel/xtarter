@@ -209,7 +209,7 @@ importers:
         specifier: ^9.0.0
         version: 9.0.0
       effect:
-        specifier: 4.0.0-beta.70
+        specifier: 'catalog:'
         version: 4.0.0-beta.70
       json5:
         specifier: 'catalog:'
