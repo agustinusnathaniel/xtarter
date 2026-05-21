@@ -1,5 +1,15 @@
 # @xtarterize/tasks
 
+## 1.13.8
+
+### Patch Changes
+
+- [#48](https://github.com/agustinusnathaniel/xtarter/pull/48) [`825df7b`](https://github.com/agustinusnathaniel/xtarter/commit/825df7bd746aa186c9196586227474fd932c3394) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Re-include ultracite for Biome and Oxlint & Oxfmt task for more consistent configurations.
+
+- Updated dependencies [[`825df7b`](https://github.com/agustinusnathaniel/xtarter/commit/825df7bd746aa186c9196586227474fd932c3394)]:
+  - @xtarterize/core@1.13.8
+  - @xtarterize/patchers@1.13.8
+
 ## 1.13.7
 
 ### Patch Changes
