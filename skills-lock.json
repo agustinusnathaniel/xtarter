@@ -19,6 +19,12 @@
 			"skillPath": "skills/engineering/improve-codebase-architecture/SKILL.md",
 			"computedHash": "c77b86b4332919499608f9af1880074e1fec65a59b95c70c27a9f39cd137865e"
 		},
+		"opensrc": {
+			"source": "vercel-labs/opensrc",
+			"sourceType": "github",
+			"skillPath": "skills/opensrc/SKILL.md",
+			"computedHash": "20d4395d64cae1e0de62053e1084c0ef58fbf573326a38fbd04f4bb677f0d729"
+		},
 		"skill-creator": {
 			"source": "anthropics/skills",
 			"sourceType": "github",
