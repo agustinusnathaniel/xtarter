@@ -1,25 +1,20 @@
 import type { ProjectProfile } from '@xtarterize/core'
+import {
+	getUltraciteFrameworkPresetSuffix,
+	getUltraciteRouterPresetSuffix,
+} from './ultracite-presets.js'
 
 function getUltraciteExtends(profile: ProjectProfile): string[] {
 	const presets = ['ultracite/biome/core']
 
-	if (profile.framework === 'react') {
-		presets.push('ultracite/biome/react')
-	} else if (profile.framework === 'vue') {
-		presets.push('ultracite/biome/vue')
-	} else if (profile.framework === 'svelte') {
-		presets.push('ultracite/biome/svelte')
-	} else if (profile.framework === 'solid') {
-		presets.push('ultracite/biome/solid')
+	const frameworkPreset = getUltraciteFrameworkPresetSuffix(profile)
+	if (frameworkPreset) {
+		presets.push(`ultracite/biome/${frameworkPreset}`)
 	}
 
-	if (profile.bundler === 'nextjs') {
-		presets.push('ultracite/biome/next')
-	} else if (
-		profile.router === 'tanstack-router' ||
-		profile.router === 'react-router'
-	) {
-		presets.push('ultracite/biome/remix')
+	const routerPreset = getUltraciteRouterPresetSuffix(profile)
+	if (routerPreset) {
+		presets.push(`ultracite/biome/${routerPreset}`)
 	}
 
 	return presets

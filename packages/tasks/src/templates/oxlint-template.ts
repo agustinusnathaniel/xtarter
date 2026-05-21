@@ -1,4 +1,8 @@
 import type { ProjectProfile } from '@xtarterize/core'
+import {
+	getUltraciteFrameworkPresetSuffix,
+	getUltraciteRouterPresetSuffix,
+} from './ultracite-presets.js'
 
 function getOxlintEnv(profile: ProjectProfile): Record<string, boolean> {
 	const env: Record<string, boolean> = { builtin: true }
@@ -14,19 +18,14 @@ function getOxlintEnv(profile: ProjectProfile): Record<string, boolean> {
 function getUltracitePresets(profile: ProjectProfile): string[] {
 	const presets = ['core']
 
-	if (profile.framework === 'react') {
-		presets.push('react')
-	} else if (profile.framework === 'vue') {
-		presets.push('vue')
+	const frameworkPreset = getUltraciteFrameworkPresetSuffix(profile)
+	if (frameworkPreset) {
+		presets.push(frameworkPreset)
 	}
 
-	if (profile.bundler === 'nextjs') {
-		presets.push('next')
-	} else if (
-		profile.router === 'tanstack-router' ||
-		profile.router === 'react-router'
-	) {
-		presets.push('remix')
+	const routerPreset = getUltraciteRouterPresetSuffix(profile)
+	if (routerPreset) {
+		presets.push(routerPreset)
 	}
 
 	return presets
@@ -35,21 +34,14 @@ function getUltracitePresets(profile: ProjectProfile): string[] {
 export function renderOxlintTsConfig(profile: ProjectProfile): string {
 	const presets = getUltracitePresets(profile)
 
-	const importLines = presets.map((p) =>
-		p === 'core'
-			? `import core from "ultracite/oxlint/${p}"`
-			: `import ${p} from "ultracite/oxlint/${p}"`,
+	const importLines = presets.map(
+		(p) => `import ${p} from "ultracite/oxlint/${p}"`,
 	)
 
-	const extendsArray = presets.map((p) => p)
+	const extendsArray = presets
 
 	const env = getOxlintEnv(profile)
-	const needsNodeOnly = env.node && !env.browser
-	const envLine = needsNodeOnly
-		? `\n  env: { node: true },`
-		: env.node && env.browser
-			? `\n  env: { node: true },`
-			: ''
+	const envLine = env.node ? `\n  env: { node: true },` : ''
 
 	return `import { defineConfig } from "oxlint";
 ${importLines.join('\n')}
