@@ -65,6 +65,7 @@
 	"inlinedDependencies": {
 		"consola": "3.4.2",
 		"diff": "9.0.0",
+		"effect": "4.0.0-beta.70",
 		"json5": "2.2.3",
 		"picocolors": "1.1.1"
 	}

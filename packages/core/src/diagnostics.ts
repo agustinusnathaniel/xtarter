@@ -1,5 +1,6 @@
 import { Effect } from 'effect'
 import { x } from 'tinyexec'
+import { FileSystemError } from '@/errors.js'
 import { fileExists, resolvePath } from '@/utils/fs.js'
 import { readPackageJson } from '@/utils/pkg.js'
 
@@ -7,13 +8,6 @@ export interface DiagnosticCheck {
 	name: string
 	status: 'pass' | 'warn' | 'fail'
 	message: string
-}
-
-function tryEffect<A>(f: () => Promise<A>): Effect.Effect<A, Error> {
-	return Effect.tryPromise({
-		try: (_signal) => f(),
-		catch: (cause) => new Error(String(cause)),
-	})
 }
 
 function makeCheck(
@@ -24,17 +18,27 @@ function makeCheck(
 	return { name, status, message }
 }
 
+function tryEffect<A>(f: () => Promise<A>): Effect.Effect<A, Error> {
+	return Effect.tryPromise({
+		try: (_signal) => f(),
+		catch: (cause) => new Error(String(cause)),
+	})
+}
+
 function runTool(
 	tool: string,
 	cwd: string,
-): Effect.Effect<string | null, Error> {
+): Effect.Effect<string | null, FileSystemError> {
 	return Effect.orElseSucceed(
-		tryEffect(async () => {
-			const result = await x(tool, ['--version'], { nodeOptions: { cwd } })
-			if (result.exitCode === 0) {
-				return result.stdout.trim().split('\n')[0] || null
-			}
-			return null
+		Effect.tryPromise({
+			try: async (_signal) => {
+				const result = await x(tool, ['--version'], { nodeOptions: { cwd } })
+				if (result.exitCode === 0) {
+					return result.stdout.trim().split('\n')[0] || null
+				}
+				return null
+			},
+			catch: (cause) => new FileSystemError({ path: tool, cause }),
 		}),
 		() => null,
 	)

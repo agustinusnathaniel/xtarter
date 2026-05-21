@@ -39,6 +39,7 @@ export {
 	runProjectHealthChecks,
 	runToolInstallationChecks,
 } from '@/diagnostics.js'
+export { BackupError, FileSystemError, TaskError } from '@/errors.js'
 export type { PreflightError, PreflightResult } from '@/preflight.js'
 export { runPreflight } from '@/preflight.js'
 export {

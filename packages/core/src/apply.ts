@@ -3,6 +3,7 @@ import { Effect } from 'effect'
 import type { Task, TaskStatus } from '@/_base.js'
 import { backupFile } from '@/backup.js'
 import type { ProjectProfile } from '@/detect.js'
+import { TaskError } from '@/errors.js'
 import { logError, logInfo, pc } from '@/utils/logger.js'
 import { statusTag } from '@/utils/tags.js'
 
@@ -54,7 +55,11 @@ async function runApply(
 				Effect.tryPromise({
 					try: (_signal) => task.check(cwd, profile),
 					catch: (cause) =>
-						new Error(`Failed to check ${task.id}: ${String(cause)}`),
+						new TaskError({
+							taskId: task.id,
+							message: `Failed to check ${task.id}`,
+							cause,
+						}),
 				}),
 			)
 			if (status === 'skip') continue
@@ -87,8 +92,15 @@ async function runApply(
 			await Effect.runPromise(
 				Effect.tryPromise({
 					try: (_signal) => task.apply(cwd, profile),
-					catch: (cause) =>
-						new Error(`Failed to apply ${task.id}: ${String(cause)}`),
+					catch: (cause) => {
+						const causeMsg =
+							cause instanceof Error ? cause.message : String(cause)
+						return new TaskError({
+							taskId: task.id,
+							message: causeMsg,
+							cause,
+						})
+					},
 				}),
 			)
 			applied++

@@ -2,6 +2,7 @@ import { Effect } from 'effect'
 import type { Task, TaskStatus } from '@/_base.js'
 import type { ProjectProfile } from '@/detect.js'
 import { detectProject } from '@/detect.js'
+import { TaskError } from '@/errors.js'
 
 export function resolveTasks(
 	profile: ProjectProfile,
@@ -21,7 +22,11 @@ export function resolveTaskStatuses(
 				Effect.tryPromise({
 					try: (_signal) => task.check(cwd, profile),
 					catch: (cause) =>
-						new Error(`Failed to check ${task.id}: ${String(cause)}`),
+						new TaskError({
+							taskId: task.id,
+							message: `Failed to check ${task.id}`,
+							cause,
+						}),
 				}).pipe(
 					Effect.map((status) => [task.id, status] as [string, TaskStatus]),
 				),
