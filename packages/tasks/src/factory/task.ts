@@ -10,12 +10,11 @@ import {
 	readFile,
 	readPackageJson,
 	resolvePath,
-	TaskError,
 	writeFile,
 	writePackageJson,
 } from '@xtarterize/core'
 import { patchJson } from '@xtarterize/patchers'
-import { Effect } from 'effect'
+import { wrapTask } from './ops.js'
 import {
 	filterMissingScripts,
 	mergeScripts,
@@ -126,209 +125,173 @@ export function createPackageJsonTask(options: PackageJsonTaskOptions): Task {
 		applicable: options.applicable,
 
 		async check(cwd, profile): Promise<TaskStatus> {
-			return Effect.runPromise(
-				Effect.tryPromise({
-					try: async () => {
-						const pkg = await readPackageJson(cwd)
-						if (!pkg) return 'conflict'
+			return wrapTask(options.id, 'createPackageJsonTask.check', async () => {
+				const pkg = await readPackageJson(cwd)
+				if (!pkg) return 'conflict'
 
-						if (options.checkFn) {
-							const status = await options.checkFn(cwd, profile, pkg)
-							if (status === 'skip') {
-								const missing = await getMissingDeps(options, cwd, profile)
-								if (missing.length > 0) return 'patch'
-							}
-							return status
-						}
+				if (options.checkFn) {
+					const status = await options.checkFn(cwd, profile, pkg)
+					if (status === 'skip') {
+						const missing = await getMissingDeps(options, cwd, profile)
+						if (missing.length > 0) return 'patch'
+					}
+					return status
+				}
 
-						const scripts = await resolveScripts(options, cwd, profile)
-						const scriptsMap = pkg.scripts ?? {}
-						const missingScripts = filterMissingScripts(scriptsMap, scripts)
+				const scripts = await resolveScripts(options, cwd, profile)
+				const scriptsMap = pkg.scripts ?? {}
+				const missingScripts = filterMissingScripts(scriptsMap, scripts)
 
-						const needsDep = shouldInstallDep(options, profile)
-						const depName = options.depName
-						const hasDep =
-							!needsDep ||
-							(depName &&
-								(pkg.devDependencies?.[depName] || pkg.dependencies?.[depName]))
+				const needsDep = shouldInstallDep(options, profile)
+				const depName = options.depName
+				const hasDep =
+					!needsDep ||
+					(depName &&
+						(pkg.devDependencies?.[depName] || pkg.dependencies?.[depName]))
 
-						const extraFiles = options.files ?? []
-						const missingFiles: string[] = []
-						for (const f of extraFiles) {
-							const fp = resolveFilepath(f.filepath, profile)
-							const fullPath = resolvePath(cwd, fp)
-							const exists = await fileExists(fullPath)
-							if (!exists) missingFiles.push(fp)
-						}
+				const extraFiles = options.files ?? []
+				const missingFiles: string[] = []
+				for (const f of extraFiles) {
+					const fp = resolveFilepath(f.filepath, profile)
+					const fullPath = resolvePath(cwd, fp)
+					const exists = await fileExists(fullPath)
+					if (!exists) missingFiles.push(fp)
+				}
 
-						if (missingScripts.length === 0) {
-							if (missingFiles.length > 0) {
-								return 'patch'
-							}
-							return hasDep ? 'skip' : 'patch'
-						}
-
-						if (
-							missingScripts.length === scripts.length &&
-							missingFiles.length === extraFiles.length &&
-							(!needsDep || !hasDep)
-						) {
-							return 'new'
-						}
-
+				if (missingScripts.length === 0) {
+					if (missingFiles.length > 0) {
 						return 'patch'
-					},
-					catch: (cause) =>
-						new TaskError({
-							taskId: options.id,
-							message: `createPackageJsonTask.check failed: ${String(cause)}`,
-							cause,
-						}),
-				}),
-			)
+					}
+					return hasDep ? 'skip' : 'patch'
+				}
+
+				if (
+					missingScripts.length === scripts.length &&
+					missingFiles.length === extraFiles.length &&
+					(!needsDep || !hasDep)
+				) {
+					return 'new'
+				}
+
+				return 'patch'
+			})
 		},
 
 		async dryRun(cwd, profile): Promise<FileDiff[]> {
-			return Effect.runPromise(
-				Effect.tryPromise({
-					try: async () => {
-						const diffs: FileDiff[] = []
+			return wrapTask(options.id, 'createPackageJsonTask.dryRun', async () => {
+				const diffs: FileDiff[] = []
 
-						for (const f of options.files ?? []) {
-							const fp = resolveFilepath(f.filepath, profile)
-							const fullPath = resolvePath(cwd, fp)
-							const exists = await fileExists(fullPath)
-							if (exists) continue
-							diffs.push({
-								filepath: fp,
-								before: null,
-								after: await f.render(cwd, profile),
-							})
-						}
+				for (const f of options.files ?? []) {
+					const fp = resolveFilepath(f.filepath, profile)
+					const fullPath = resolvePath(cwd, fp)
+					const exists = await fileExists(fullPath)
+					if (exists) continue
+					diffs.push({
+						filepath: fp,
+						before: null,
+						after: await f.render(cwd, profile),
+					})
+				}
 
-						const pkgPath = resolvePath(cwd, 'package.json')
-						const pkgExists = await fileExists(pkgPath)
-						if (pkgExists) {
-							const before = await readFile(pkgPath)
-							const pkg = await readPackageJson(cwd)
-							if (pkg) {
-								const scripts = await resolveScripts(options, cwd, profile)
-								const scriptsMap = pkg.scripts ?? {}
-								const missingScripts = filterMissingScripts(scriptsMap, scripts)
-								if (missingScripts.length > 0) {
-									const incomingScripts: Record<string, string> = {}
-									for (const s of missingScripts) {
-										incomingScripts[s.script] = s.value
-									}
-									const after = patchJson(before, { scripts: incomingScripts })
-									if (after !== before) {
-										diffs.push({ filepath: 'package.json', before, after })
-									}
-								}
-
-								const allDeps = await resolveDeps(options, cwd, profile)
-								const neededDeps = filterDepsByMissingScripts(
-									allDeps,
-									missingScripts,
-								)
-								const missingDeps = neededDeps.filter(
-									(dep) =>
-										!pkg.devDependencies?.[dep.depName] &&
-										!pkg.dependencies?.[dep.depName],
-								)
-								if (missingDeps.length > 0) {
-									const devDeps = missingDeps.filter(
-										(dep) => dep.installDev ?? true,
-									)
-									const prodDeps = missingDeps.filter(
-										(dep) => !(dep.installDev ?? true),
-									)
-									if (devDeps.length > 0) {
-										diffs.push({
-											filepath: `devDependencies (${devDeps.map((d) => d.depName).join(', ')})`,
-											before: null,
-											after: devDeps.map((d) => d.depName).join('\n'),
-										})
-									}
-									if (prodDeps.length > 0) {
-										diffs.push({
-											filepath: `dependencies (${prodDeps.map((d) => d.depName).join(', ')})`,
-											before: null,
-											after: prodDeps.map((d) => d.depName).join('\n'),
-										})
-									}
-								}
-							}
-						}
-
-						return diffs
-					},
-					catch: (cause) =>
-						new TaskError({
-							taskId: options.id,
-							message: `createPackageJsonTask.dryRun failed: ${String(cause)}`,
-							cause,
-						}),
-				}),
-			)
-		},
-
-		async apply(cwd, profile): Promise<void> {
-			return Effect.runPromise(
-				Effect.tryPromise({
-					try: async () => {
+				const pkgPath = resolvePath(cwd, 'package.json')
+				const pkgExists = await fileExists(pkgPath)
+				if (pkgExists) {
+					const before = await readFile(pkgPath)
+					const pkg = await readPackageJson(cwd)
+					if (pkg) {
 						const scripts = await resolveScripts(options, cwd, profile)
-						const rawExisting = (await readPackageJson(cwd))?.scripts ?? {}
-						const existingScripts: Record<string, string> = {}
-						for (const [key, value] of Object.entries(rawExisting)) {
-							if (value !== undefined) {
-								existingScripts[key] = value
+						const scriptsMap = pkg.scripts ?? {}
+						const missingScripts = filterMissingScripts(scriptsMap, scripts)
+						if (missingScripts.length > 0) {
+							const incomingScripts: Record<string, string> = {}
+							for (const s of missingScripts) {
+								incomingScripts[s.script] = s.value
+							}
+							const after = patchJson(before, { scripts: incomingScripts })
+							if (after !== before) {
+								diffs.push({ filepath: 'package.json', before, after })
 							}
 						}
-						const missingScripts = filterMissingScripts(
-							existingScripts,
-							scripts,
-						)
 
 						const allDeps = await resolveDeps(options, cwd, profile)
 						const neededDeps = filterDepsByMissingScripts(
 							allDeps,
 							missingScripts,
 						)
-
-						for (const dep of neededDeps) {
-							await installDependency(cwd, dep.depName, dep.installDev ?? true)
-						}
-
-						for (const f of options.files ?? []) {
-							const fp = resolveFilepath(f.filepath, profile)
-							const fullPath = resolvePath(cwd, fp)
-							const exists = await fileExists(fullPath)
-							if (!exists) {
-								await writeFile(fullPath, await f.render(cwd, profile))
+						const missingDeps = neededDeps.filter(
+							(dep) =>
+								!pkg.devDependencies?.[dep.depName] &&
+								!pkg.dependencies?.[dep.depName],
+						)
+						if (missingDeps.length > 0) {
+							const devDeps = missingDeps.filter(
+								(dep) => dep.installDev ?? true,
+							)
+							const prodDeps = missingDeps.filter(
+								(dep) => !(dep.installDev ?? true),
+							)
+							if (devDeps.length > 0) {
+								diffs.push({
+									filepath: `devDependencies (${devDeps.map((d) => d.depName).join(', ')})`,
+									before: null,
+									after: devDeps.map((d) => d.depName).join('\n'),
+								})
+							}
+							if (prodDeps.length > 0) {
+								diffs.push({
+									filepath: `dependencies (${prodDeps.map((d) => d.depName).join(', ')})`,
+									before: null,
+									after: prodDeps.map((d) => d.depName).join('\n'),
+								})
 							}
 						}
+					}
+				}
 
-						const pkg = await readPackageJson(cwd)
-						if (pkg) {
-							if (missingScripts.length > 0) {
-								const incomingScripts: Record<string, string> = {}
-								for (const s of missingScripts) {
-									incomingScripts[s.script] = s.value
-								}
-								pkg.scripts = mergeScripts(pkg.scripts, missingScripts)
-								await writePackageJson(cwd, pkg)
-							}
+				return diffs
+			})
+		},
+
+		async apply(cwd, profile): Promise<void> {
+			return wrapTask(options.id, 'createPackageJsonTask.apply', async () => {
+				const scripts = await resolveScripts(options, cwd, profile)
+				const rawExisting = (await readPackageJson(cwd))?.scripts ?? {}
+				const existingScripts: Record<string, string> = {}
+				for (const [key, value] of Object.entries(rawExisting)) {
+					if (value !== undefined) {
+						existingScripts[key] = value
+					}
+				}
+				const missingScripts = filterMissingScripts(existingScripts, scripts)
+
+				const allDeps = await resolveDeps(options, cwd, profile)
+				const neededDeps = filterDepsByMissingScripts(allDeps, missingScripts)
+
+				for (const dep of neededDeps) {
+					await installDependency(cwd, dep.depName, dep.installDev ?? true)
+				}
+
+				for (const f of options.files ?? []) {
+					const fp = resolveFilepath(f.filepath, profile)
+					const fullPath = resolvePath(cwd, fp)
+					const exists = await fileExists(fullPath)
+					if (!exists) {
+						await writeFile(fullPath, await f.render(cwd, profile))
+					}
+				}
+
+				const pkg = await readPackageJson(cwd)
+				if (pkg) {
+					if (missingScripts.length > 0) {
+						const incomingScripts: Record<string, string> = {}
+						for (const s of missingScripts) {
+							incomingScripts[s.script] = s.value
 						}
-					},
-					catch: (cause) =>
-						new TaskError({
-							taskId: options.id,
-							message: `createPackageJsonTask.apply failed: ${String(cause)}`,
-							cause,
-						}),
-				}),
-			)
+						pkg.scripts = mergeScripts(pkg.scripts, missingScripts)
+						await writePackageJson(cwd, pkg)
+					}
+				}
+			})
 		},
 	}
 }

@@ -3,8 +3,23 @@ import {
 	ensureDir,
 	installDependency,
 	resolvePath,
+	TaskError,
 	writeFile,
 } from '@xtarterize/core'
+
+export function wrapTask<A>(
+	taskId: string,
+	method: string,
+	fn: () => Promise<A>,
+): Promise<A> {
+	return fn().catch((cause) => {
+		throw new TaskError({
+			taskId,
+			message: `${method} failed: ${String(cause)}`,
+			cause,
+		})
+	})
+}
 
 export async function ensureTaskDependency(options: {
 	cwd: string
