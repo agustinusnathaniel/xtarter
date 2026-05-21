@@ -1,15 +1,41 @@
 import type { ProjectProfile } from '@xtarterize/core'
-import type { Configuration } from './_biome-config.generated.js'
+
+function getUltraciteExtends(profile: ProjectProfile): string[] {
+	const presets = ['ultracite/biome/core']
+
+	if (profile.framework === 'react') {
+		presets.push('ultracite/biome/react')
+	} else if (profile.framework === 'vue') {
+		presets.push('ultracite/biome/vue')
+	} else if (profile.framework === 'svelte') {
+		presets.push('ultracite/biome/svelte')
+	} else if (profile.framework === 'solid') {
+		presets.push('ultracite/biome/solid')
+	}
+
+	if (profile.bundler === 'nextjs') {
+		presets.push('ultracite/biome/next')
+	} else if (
+		profile.router === 'tanstack-router' ||
+		profile.router === 'react-router'
+	) {
+		presets.push('ultracite/biome/remix')
+	}
+
+	return presets
+}
 
 export function renderBiomeJson(profile: ProjectProfile): string {
 	const hasTailwind =
 		profile.styling.includes('tailwind') ||
 		profile.styling.includes('nativewind')
 
-	const config: Configuration = {
+	const config: Record<string, unknown> = {
 		$schema: './node_modules/@biomejs/biome/configuration_schema.json',
 		vcs: { enabled: true, clientKind: 'git', useIgnoreFile: true },
+		extends: getUltraciteExtends(profile),
 		files: {
+			ignoreUnknown: false,
 			includes: [
 				'src/**/*',
 				'*.config.ts',
@@ -19,33 +45,26 @@ export function renderBiomeJson(profile: ProjectProfile): string {
 				'!.claude',
 			],
 		},
-		formatter: { indentStyle: 'space' },
+		formatter: { enabled: true, indentStyle: 'space' },
 		linter: {
+			enabled: true,
 			rules: {
-				complexity: {
-					noExcessiveCognitiveComplexity: {
-						level: 'warn',
-						options: { maxAllowedComplexity: 30 },
-					},
-					useMaxParams: {
-						level: 'error',
-						options: { max: 3 },
-					},
-				},
 				style: {
+					useConsistentTypeDefinitions: 'off',
 					useConsistentArrayType: {
 						level: 'error',
 						options: { syntax: 'generic' },
 					},
-					useConsistentTypeDefinitions: {
+					useFilenamingConvention: {
 						level: 'error',
-						options: { style: 'type' },
+						options: { filenameCases: ['kebab-case'] },
 					},
 				},
 			},
 		},
 		javascript: { formatter: { quoteStyle: 'single' } },
 		assist: {
+			enabled: true,
 			actions: {
 				source: {
 					organizeImports: {
@@ -68,9 +87,6 @@ export function renderBiomeJson(profile: ProjectProfile): string {
 				includes: ['*.test.ts', '*.test.tsx', '*.spec.ts', '*.spec.tsx'],
 				linter: {
 					rules: {
-						complexity: {
-							noExcessiveCognitiveComplexity: 'off',
-						},
 						nursery: {
 							useConsistentTestIt: {
 								level: 'error',

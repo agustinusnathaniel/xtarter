@@ -25,7 +25,7 @@ describe('biome config validation', () => {
 
 		const config = JSON.parse(configFile.after)
 		expect(config.formatter.indentStyle).toBe('space')
-		expect(config.linter.rules.complexity).toBeDefined()
+		expect(config.linter.rules.style.useConsistentTypeDefinitions).toBe('off')
 		expect(config.javascript.formatter.quoteStyle).toBe('single')
 	})
 

@@ -74,6 +74,7 @@ export interface FileTaskOptions {
 	render: (profile: ProjectProfile, existing: string | null) => string
 	merge?: boolean
 	depName?: string
+	depNames?: string[]
 	depInstallName?: string
 	installDev?: boolean
 	ensureParentDir?: boolean
@@ -108,6 +109,15 @@ export function createFileTask(options: FileTaskOptions): Task {
 				if (options.checkFn) {
 					const content = await readFile(fullPath)
 					return options.checkFn(cwd, profile, fullPath, content)
+				}
+
+				const pkg = await readPackageJson(cwd)
+				const deps =
+					options.depNames ?? (options.depName ? [options.depName] : [])
+				for (const dep of deps) {
+					if (!pkg?.devDependencies?.[dep] && !pkg?.dependencies?.[dep]) {
+						return 'patch'
+					}
 				}
 
 				const expected = options.render(profile, null)
@@ -153,12 +163,16 @@ export function createFileTask(options: FileTaskOptions): Task {
 
 		async apply(cwd, profile): Promise<void> {
 			return wrapTask(options.id, 'createFileTask.apply', async () => {
-				await ensureTaskDependency({
-					cwd,
-					depName: options.depName,
-					depInstallName: options.depInstallName,
-					installDev: options.installDev,
-				})
+				const deps =
+					options.depNames ?? (options.depName ? [options.depName] : [])
+				for (const dep of deps) {
+					await ensureTaskDependency({
+						cwd,
+						depName: dep,
+						depInstallName: options.depInstallName,
+						installDev: options.installDev,
+					})
+				}
 
 				if (options.ensureParentDir) {
 					await ensureTaskParentDir(cwd, options.filepath)
@@ -182,6 +196,7 @@ export interface JsonMergeTaskOptions {
 	extensions?: string[]
 	incoming: (cwd: string, profile: ProjectProfile) => object | Promise<object>
 	depName?: string
+	depNames?: string[]
 	installDev?: boolean
 	checkFn?: (
 		cwd: string,
@@ -217,11 +232,10 @@ export function createJsonMergeTask(options: JsonMergeTaskOptions): Task {
 				}
 
 				const pkg = await readPackageJson(cwd)
-				if (options.depName) {
-					if (
-						!pkg?.devDependencies?.[options.depName] &&
-						!pkg?.dependencies?.[options.depName]
-					) {
+				const depNames =
+					options.depNames ?? (options.depName ? [options.depName] : [])
+				for (const dep of depNames) {
+					if (!pkg?.devDependencies?.[dep] && !pkg?.dependencies?.[dep]) {
 						return 'patch'
 					}
 				}
@@ -246,11 +260,15 @@ export function createJsonMergeTask(options: JsonMergeTaskOptions): Task {
 
 		async apply(cwd, profile): Promise<void> {
 			return wrapTask(options.id, 'createJsonMergeTask.apply', async () => {
-				await ensureTaskDependency({
-					cwd,
-					depName: options.depName,
-					installDev: options.installDev,
-				})
+				const deps =
+					options.depNames ?? (options.depName ? [options.depName] : [])
+				for (const dep of deps) {
+					await ensureTaskDependency({
+						cwd,
+						depName: dep,
+						installDev: options.installDev,
+					})
+				}
 
 				const diffs = await this.dryRun(cwd, profile)
 				await writeTaskDiffs(cwd, diffs)

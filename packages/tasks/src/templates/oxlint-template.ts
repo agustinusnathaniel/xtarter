@@ -1,9 +1,82 @@
 import type { ProjectProfile } from '@xtarterize/core'
-import type { OxlintConfig, OxlintEnv } from 'oxlint'
-import type { OxfmtConfig } from './_types.js'
 
-export function renderOxlintConfig(profile: ProjectProfile): string {
-	const rules: OxlintConfig['rules'] = {
+function getOxlintEnv(profile: ProjectProfile): Record<string, boolean> {
+	const env: Record<string, boolean> = { builtin: true }
+	if (profile.runtime === 'browser' || profile.runtime === 'universal') {
+		env.browser = true
+	}
+	if (profile.runtime === 'node' || profile.runtime === 'universal') {
+		env.node = true
+	}
+	return env
+}
+
+function getUltracitePresets(profile: ProjectProfile): string[] {
+	const presets = ['core']
+
+	if (profile.framework === 'react') {
+		presets.push('react')
+	} else if (profile.framework === 'vue') {
+		presets.push('vue')
+	}
+
+	if (profile.bundler === 'nextjs') {
+		presets.push('next')
+	} else if (
+		profile.router === 'tanstack-router' ||
+		profile.router === 'react-router'
+	) {
+		presets.push('remix')
+	}
+
+	return presets
+}
+
+export function renderOxlintTsConfig(profile: ProjectProfile): string {
+	const presets = getUltracitePresets(profile)
+
+	const importLines = presets.map((p) =>
+		p === 'core'
+			? `import core from "ultracite/oxlint/${p}"`
+			: `import ${p} from "ultracite/oxlint/${p}"`,
+	)
+
+	const extendsArray = presets.map((p) => p)
+
+	const env = getOxlintEnv(profile)
+	const needsNodeOnly = env.node && !env.browser
+	const envLine = needsNodeOnly
+		? `\n  env: { node: true },`
+		: env.node && env.browser
+			? `\n  env: { node: true },`
+			: ''
+
+	return `import { defineConfig } from "oxlint";
+${importLines.join('\n')}
+
+export default defineConfig({
+  extends: [${extendsArray.join(', ')}],${envLine}
+  rules: {
+    "no-console": ["error", { allow: ["info", "warn", "error"] }],
+    "no-shadow": "warn",
+  },
+  overrides: [
+    {
+      files: ["*.test.ts", "*.test.tsx", "*.spec.ts", "*.spec.tsx"],
+      rules: {
+        "no-console": "off",
+        "@typescript-eslint/no-explicit-any": "off",
+      },
+    },
+  ],
+});
+`
+}
+
+export function renderOxlintJsonConfig(profile: ProjectProfile): string {
+	const env = getOxlintEnv(profile)
+
+	const rules: Record<string, unknown> = {
 		'no-console': ['error', { allow: ['info', 'warn', 'error'] }],
 		'no-unused-vars': 'off',
 		'@typescript-eslint/no-unused-vars': [
@@ -14,7 +87,6 @@ export function renderOxlintConfig(profile: ProjectProfile): string {
 			'error',
 			{ prefer: 'type-imports' },
 		],
-		'@typescript-eslint/consistent-type-definitions': ['error', 'type'],
 		'@typescript-eslint/array-type': ['error', { default: 'generic' }],
 		complexity: ['warn', { max: 30 }],
 		'max-params': ['error', { max: 3 }],
@@ -64,25 +136,14 @@ export function renderOxlintConfig(profile: ProjectProfile): string {
 		})
 	}
 
-	const plugins = ['eslint', 'typescript', 'unicorn', 'import', 'oxc'] as const
-	const activePlugins: OxlintConfig['plugins'] = [...plugins]
+	const plugins: string[] = ['eslint', 'typescript', 'unicorn', 'import', 'oxc']
 	if (profile.framework === 'react') {
-		activePlugins.push('react', 'jsx-a11y')
+		plugins.push('react', 'jsx-a11y')
 	}
 
-	const env: OxlintEnv = {
-		builtin: true,
-	}
-	if (profile.runtime === 'browser' || profile.runtime === 'universal') {
-		env.browser = true
-	}
-	if (profile.runtime === 'node' || profile.runtime === 'universal') {
-		env.node = true
-	}
-
-	const config: OxlintConfig & { $schema?: string } = {
+	const config: Record<string, unknown> = {
 		$schema: './node_modules/oxlint/configuration_schema.json',
-		plugins: activePlugins,
+		plugins,
 		env,
 		categories: {
 			correctness: 'error',
@@ -114,18 +175,6 @@ export function renderOxlintConfig(profile: ProjectProfile): string {
 				},
 			},
 		],
-	}
-
-	return JSON.stringify(config, null, 2)
-}
-
-export function renderOxfmtConfig(_profile: ProjectProfile): string {
-	const config: OxfmtConfig = {
-		$schema: './node_modules/oxfmt/configuration_schema.json',
-		indentStyle: 'space',
-		indentWidth: 2,
-		lineWidth: 80,
-		quotes: 'single',
 	}
 
 	return JSON.stringify(config, null, 2)

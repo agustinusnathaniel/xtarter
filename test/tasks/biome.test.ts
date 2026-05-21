@@ -219,7 +219,7 @@ describe('oxlintTask', () => {
 		const diffs = await oxlintTask.dryRun(tmpDir, profile)
 
 		expect(diffs.length).toBeGreaterThan(0)
-		expect(diffs[0].filepath).toBe('.oxlintrc.json')
+		expect(diffs[0].filepath).toBe('oxlint.config.ts')
 		expect(diffs[0].before).toBeNull()
 		expect(diffs[0].after).toContain('no-console')
 		await fs.rm(tmpDir, { recursive: true })
@@ -244,9 +244,9 @@ describe('oxfmtTask', () => {
 		const diffs = await oxfmtTask.dryRun(tmpDir, profile)
 
 		expect(diffs.length).toBeGreaterThan(0)
-		expect(diffs[0].filepath).toBe('.oxfmtrc.json')
+		expect(diffs[0].filepath).toBe('oxfmt.config.ts')
 		expect(diffs[0].before).toBeNull()
-		expect(diffs[0].after).toContain('indentStyle')
+		expect(diffs[0].after).toContain('singleQuote')
 		await fs.rm(tmpDir, { recursive: true })
 	})
 })
