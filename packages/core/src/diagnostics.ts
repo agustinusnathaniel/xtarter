@@ -18,11 +18,22 @@ function makeCheck(
 	return { name, status, message }
 }
 
-function tryEffect<A>(f: () => Promise<A>): Effect.Effect<A, FileSystemError> {
+export function tryEffect<A>(
+	f: () => Promise<A>,
+): Effect.Effect<A, FileSystemError> {
 	return Effect.tryPromise({
 		try: (_signal) => f(),
 		catch: (cause) => new FileSystemError({ path: 'unknown', cause }),
 	})
+}
+
+export function tryReadPackageJson(
+	cwd: string,
+): Effect.Effect<Awaited<ReturnType<typeof readPackageJson>>, FileSystemError> {
+	return Effect.orElseSucceed(
+		tryEffect(() => readPackageJson(cwd)),
+		() => null as Awaited<ReturnType<typeof readPackageJson>>,
+	)
 }
 
 function runTool(
@@ -63,10 +74,7 @@ export function checkToolInstalled(
 export function runEnvironmentChecks(cwd: string): Promise<DiagnosticCheck[]> {
 	return Effect.runPromise(
 		Effect.gen(function* () {
-			const pkg = yield* Effect.orElseSucceed(
-				tryEffect(() => readPackageJson(cwd)),
-				() => null as Awaited<ReturnType<typeof readPackageJson>>,
-			)
+			const pkg = yield* tryReadPackageJson(cwd)
 
 			const nodeVersion = process.version
 			const engineNode = pkg?.engines?.node
@@ -121,10 +129,7 @@ export function runProjectHealthChecks(
 ): Promise<DiagnosticCheck[]> {
 	return Effect.runPromise(
 		Effect.gen(function* () {
-			const pkg = yield* Effect.orElseSucceed(
-				tryEffect(() => readPackageJson(cwd)),
-				() => null as Awaited<ReturnType<typeof readPackageJson>>,
-			)
+			const pkg = yield* tryReadPackageJson(cwd)
 			if (!pkg) return [] as DiagnosticCheck[]
 
 			const deps = { ...pkg.dependencies, ...pkg.devDependencies }
@@ -194,10 +199,7 @@ export function runProjectHealthChecks(
 export function runConflictChecks(cwd: string): Promise<DiagnosticCheck[]> {
 	return Effect.runPromise(
 		Effect.gen(function* () {
-			const pkg = yield* Effect.orElseSucceed(
-				tryEffect(() => readPackageJson(cwd)),
-				() => null as Awaited<ReturnType<typeof readPackageJson>>,
-			)
+			const pkg = yield* tryReadPackageJson(cwd)
 			if (!pkg) return [] as DiagnosticCheck[]
 
 			const deps = { ...pkg.dependencies, ...pkg.devDependencies }
@@ -269,10 +271,7 @@ export function runToolInstallationChecks(
 ): Promise<DiagnosticCheck[]> {
 	return Effect.runPromise(
 		Effect.gen(function* () {
-			const pkg = yield* Effect.orElseSucceed(
-				tryEffect(() => readPackageJson(cwd)),
-				() => null as Awaited<ReturnType<typeof readPackageJson>>,
-			)
+			const pkg = yield* tryReadPackageJson(cwd)
 			if (!pkg) return [] as DiagnosticCheck[]
 
 			const deps = { ...pkg.dependencies, ...pkg.devDependencies }

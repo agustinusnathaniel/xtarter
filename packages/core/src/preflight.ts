@@ -1,7 +1,6 @@
 import { Effect } from 'effect'
-import { FileSystemError } from '@/errors.js'
+import { tryEffect, tryReadPackageJson } from '@/diagnostics.js'
 import { fileExists, resolvePath } from '@/utils/fs.js'
-import { readPackageJson } from '@/utils/pkg.js'
 
 export interface PreflightError {
 	code: string
@@ -12,13 +11,6 @@ export interface PreflightError {
 export interface PreflightResult {
 	valid: boolean
 	errors: PreflightError[]
-}
-
-function tryEffect<A>(f: () => Promise<A>): Effect.Effect<A, FileSystemError> {
-	return Effect.tryPromise({
-		try: (_signal) => f(),
-		catch: (cause) => new FileSystemError({ path: 'unknown', cause }),
-	})
 }
 
 export function runPreflight(cwd: string): Promise<PreflightResult> {
@@ -38,10 +30,7 @@ export function runPreflight(cwd: string): Promise<PreflightResult> {
 				return { valid: false, errors }
 			}
 
-			const pkg = yield* Effect.orElseSucceed(
-				tryEffect(() => readPackageJson(cwd)),
-				() => null as Awaited<ReturnType<typeof readPackageJson>>,
-			)
+			const pkg = yield* tryReadPackageJson(cwd)
 			if (!pkg?.name) {
 				errors.push({
 					code: 'INVALID_PACKAGE_JSON',
