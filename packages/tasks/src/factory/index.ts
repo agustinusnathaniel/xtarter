@@ -11,6 +11,7 @@ import {
 	readFile,
 	readPackageJson,
 	resolvePath,
+	TaskError,
 } from '@xtarterize/core'
 import { injectVitePlugin, mergeJson, parseJsonc } from '@xtarterize/patchers'
 import { Effect } from 'effect'
@@ -130,7 +131,11 @@ export function createFileTask(options: FileTaskOptions): Task {
 						return 'conflict'
 					},
 					catch: (cause) =>
-						new Error(`createFileTask.check(${options.id}): ${String(cause)}`),
+						new TaskError({
+							taskId: options.id,
+							message: `createFileTask.check failed: ${String(cause)}`,
+							cause,
+						}),
 				}),
 			)
 		},
@@ -156,7 +161,11 @@ export function createFileTask(options: FileTaskOptions): Task {
 						return [{ filepath, before, after }]
 					},
 					catch: (cause) =>
-						new Error(`createFileTask.dryRun(${options.id}): ${String(cause)}`),
+						new TaskError({
+							taskId: options.id,
+							message: `createFileTask.dryRun failed: ${String(cause)}`,
+							cause,
+						}),
 				}),
 			)
 		},
@@ -180,7 +189,11 @@ export function createFileTask(options: FileTaskOptions): Task {
 						await writeTaskDiffs(cwd, diffs)
 					},
 					catch: (cause) =>
-						new Error(`createFileTask.apply(${options.id}): ${String(cause)}`),
+						new TaskError({
+							taskId: options.id,
+							message: `createFileTask.apply failed: ${String(cause)}`,
+							cause,
+						}),
 				}),
 			)
 		},
@@ -251,9 +264,11 @@ export function createJsonMergeTask(options: JsonMergeTaskOptions): Task {
 						})
 					},
 					catch: (cause) =>
-						new Error(
-							`createJsonMergeTask.check(${options.id}): ${String(cause)}`,
-						),
+						new TaskError({
+							taskId: options.id,
+							message: `createJsonMergeTask.check failed: ${String(cause)}`,
+							cause,
+						}),
 				}),
 			)
 		},
@@ -268,9 +283,11 @@ export function createJsonMergeTask(options: JsonMergeTaskOptions): Task {
 							incoming: options.incoming,
 						}),
 					catch: (cause) =>
-						new Error(
-							`createJsonMergeTask.dryRun(${options.id}): ${String(cause)}`,
-						),
+						new TaskError({
+							taskId: options.id,
+							message: `createJsonMergeTask.dryRun failed: ${String(cause)}`,
+							cause,
+						}),
 				}),
 			)
 		},
@@ -289,9 +306,11 @@ export function createJsonMergeTask(options: JsonMergeTaskOptions): Task {
 						await writeTaskDiffs(cwd, diffs)
 					},
 					catch: (cause) =>
-						new Error(
-							`createJsonMergeTask.apply(${options.id}): ${String(cause)}`,
-						),
+						new TaskError({
+							taskId: options.id,
+							message: `createJsonMergeTask.apply failed: ${String(cause)}`,
+							cause,
+						}),
 				}),
 			)
 		},
@@ -358,9 +377,11 @@ export function createMultiFileTask(options: MultiFileTaskOptions): Task {
 						return 'skip'
 					},
 					catch: (cause) =>
-						new Error(
-							`createMultiFileTask.check(${options.id}): ${String(cause)}`,
-						),
+						new TaskError({
+							taskId: options.id,
+							message: `createMultiFileTask.check failed: ${String(cause)}`,
+							cause,
+						}),
 				}),
 			)
 		},
@@ -390,9 +411,11 @@ export function createMultiFileTask(options: MultiFileTaskOptions): Task {
 						return diffs
 					},
 					catch: (cause) =>
-						new Error(
-							`createMultiFileTask.dryRun(${options.id}): ${String(cause)}`,
-						),
+						new TaskError({
+							taskId: options.id,
+							message: `createMultiFileTask.dryRun failed: ${String(cause)}`,
+							cause,
+						}),
 				}),
 			)
 		},
@@ -411,9 +434,11 @@ export function createMultiFileTask(options: MultiFileTaskOptions): Task {
 						await writeTaskDiffs(cwd, diffs)
 					},
 					catch: (cause) =>
-						new Error(
-							`createMultiFileTask.apply(${options.id}): ${String(cause)}`,
-						),
+						new TaskError({
+							taskId: options.id,
+							message: `createMultiFileTask.apply failed: ${String(cause)}`,
+							cause,
+						}),
 				}),
 			)
 		},
@@ -459,9 +484,11 @@ export function createVitePluginTask(options: VitePluginTaskOptions): Task {
 						return 'new'
 					},
 					catch: (cause) =>
-						new Error(
-							`createVitePluginTask.check(${options.id}): ${String(cause)}`,
-						),
+						new TaskError({
+							taskId: options.id,
+							message: `createVitePluginTask.check failed: ${String(cause)}`,
+							cause,
+						}),
 				}),
 			)
 		},
@@ -506,9 +533,11 @@ export function createVitePluginTask(options: VitePluginTaskOptions): Task {
 						return [{ filepath: 'vite.config', before, after: finalAfter }]
 					},
 					catch: (cause) =>
-						new Error(
-							`createVitePluginTask.dryRun(${options.id}): ${String(cause)}`,
-						),
+						new TaskError({
+							taskId: options.id,
+							message: `createVitePluginTask.dryRun failed: ${String(cause)}`,
+							cause,
+						}),
 				}),
 			)
 		},
@@ -529,7 +558,10 @@ export function createVitePluginTask(options: VitePluginTaskOptions): Task {
 							VITE_CONFIG_EXTENSIONS,
 						)
 						if (!configPath) {
-							throw new Error(`No vite.config file found for ${options.id}`)
+							throw new TaskError({
+								taskId: options.id,
+								message: `No vite.config file found for ${options.id}`,
+							})
 						}
 
 						const importSpecifier =
@@ -545,15 +577,19 @@ export function createVitePluginTask(options: VitePluginTaskOptions): Task {
 						)
 
 						if (!result.success) {
-							throw new Error(
-								result.fallback ?? `Failed to inject ${options.depName}`,
-							)
+							throw new TaskError({
+								taskId: options.id,
+								message:
+									result.fallback ?? `Failed to inject ${options.depName}`,
+							})
 						}
 					},
 					catch: (cause) =>
-						new Error(
-							`createVitePluginTask.apply(${options.id}): ${String(cause)}`,
-						),
+						new TaskError({
+							taskId: options.id,
+							message: `createVitePluginTask.apply failed: ${String(cause)}`,
+							cause,
+						}),
 				}),
 			)
 		},
@@ -611,9 +647,11 @@ export function createMultiFileJsonMergeTask(
 						return status
 					},
 					catch: (cause) =>
-						new Error(
-							`createMultiFileJsonMergeTask.check(${options.id}): ${String(cause)}`,
-						),
+						new TaskError({
+							taskId: options.id,
+							message: `createMultiFileJsonMergeTask.check failed: ${String(cause)}`,
+							cause,
+						}),
 				}),
 			)
 		},
@@ -635,9 +673,11 @@ export function createMultiFileJsonMergeTask(
 						return diffs
 					},
 					catch: (cause) =>
-						new Error(
-							`createMultiFileJsonMergeTask.dryRun(${options.id}): ${String(cause)}`,
-						),
+						new TaskError({
+							taskId: options.id,
+							message: `createMultiFileJsonMergeTask.dryRun failed: ${String(cause)}`,
+							cause,
+						}),
 				}),
 			)
 		},
@@ -650,9 +690,11 @@ export function createMultiFileJsonMergeTask(
 						await writeTaskDiffs(cwd, diffs)
 					},
 					catch: (cause) =>
-						new Error(
-							`createMultiFileJsonMergeTask.apply(${options.id}): ${String(cause)}`,
-						),
+						new TaskError({
+							taskId: options.id,
+							message: `createMultiFileJsonMergeTask.apply failed: ${String(cause)}`,
+							cause,
+						}),
 				}),
 			)
 		},

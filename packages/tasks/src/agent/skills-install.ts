@@ -4,6 +4,7 @@ import {
 	readFile,
 	readPackageJson,
 	resolvePath,
+	TaskError,
 } from '@xtarterize/core'
 import { Effect } from 'effect'
 import { x } from 'tinyexec'
@@ -165,7 +166,11 @@ export const skillsInstallTask: Task = {
 					return 'patch'
 				},
 				catch: (cause) =>
-					new Error(`skillsInstallTask.check: ${String(cause)}`),
+					new TaskError({
+						taskId: 'skillsInstallTask.check',
+						message: String(cause),
+						cause,
+					}),
 			}),
 		)
 	},
@@ -194,7 +199,11 @@ export const skillsInstallTask: Task = {
 					]
 				},
 				catch: (cause) =>
-					new Error(`skillsInstallTask.dryRun: ${String(cause)}`),
+					new TaskError({
+						taskId: 'skillsInstallTask.dryRun',
+						message: String(cause),
+						cause,
+					}),
 			}),
 		)
 	},
@@ -227,14 +236,19 @@ export const skillsInstallTask: Task = {
 							nodeOptions: { cwd, stdio: 'inherit' },
 						})
 						if (result.exitCode !== 0) {
-							throw new Error(
-								`Failed to install skills from ${source}: ${skillNames.join(', ')}`,
-							)
+							throw new TaskError({
+								taskId: 'skillsInstallTask.apply',
+								message: `Failed to install skills from ${source}: ${skillNames.join(', ')}`,
+							})
 						}
 					}
 				},
 				catch: (cause) =>
-					new Error(`skillsInstallTask.apply: ${String(cause)}`),
+					new TaskError({
+						taskId: 'skillsInstallTask.apply',
+						message: String(cause),
+						cause,
+					}),
 			}),
 		)
 	},

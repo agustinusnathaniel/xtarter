@@ -1,4 +1,5 @@
 import { Effect } from 'effect'
+import { FileSystemError } from '@/errors.js'
 import { fileExists, resolvePath } from '@/utils/fs.js'
 import { readPackageJson } from '@/utils/pkg.js'
 
@@ -13,10 +14,10 @@ export interface PreflightResult {
 	errors: PreflightError[]
 }
 
-function tryEffect<A>(f: () => Promise<A>): Effect.Effect<A, Error> {
+function tryEffect<A>(f: () => Promise<A>): Effect.Effect<A, FileSystemError> {
 	return Effect.tryPromise({
 		try: (_signal) => f(),
-		catch: (cause) => new Error(String(cause)),
+		catch: (cause) => new FileSystemError({ path: 'unknown', cause }),
 	})
 }
 

@@ -10,6 +10,7 @@ import {
 	readFile,
 	readPackageJson,
 	resolvePath,
+	TaskError,
 	writeFile,
 	writePackageJson,
 } from '@xtarterize/core'
@@ -178,9 +179,11 @@ export function createPackageJsonTask(options: PackageJsonTaskOptions): Task {
 						return 'patch'
 					},
 					catch: (cause) =>
-						new Error(
-							`createPackageJsonTask.check(${options.id}): ${String(cause)}`,
-						),
+						new TaskError({
+							taskId: options.id,
+							message: `createPackageJsonTask.check failed: ${String(cause)}`,
+							cause,
+						}),
 				}),
 			)
 		},
@@ -261,9 +264,11 @@ export function createPackageJsonTask(options: PackageJsonTaskOptions): Task {
 						return diffs
 					},
 					catch: (cause) =>
-						new Error(
-							`createPackageJsonTask.dryRun(${options.id}): ${String(cause)}`,
-						),
+						new TaskError({
+							taskId: options.id,
+							message: `createPackageJsonTask.dryRun failed: ${String(cause)}`,
+							cause,
+						}),
 				}),
 			)
 		},
@@ -317,9 +322,11 @@ export function createPackageJsonTask(options: PackageJsonTaskOptions): Task {
 						}
 					},
 					catch: (cause) =>
-						new Error(
-							`createPackageJsonTask.apply(${options.id}): ${String(cause)}`,
-						),
+						new TaskError({
+							taskId: options.id,
+							message: `createPackageJsonTask.apply failed: ${String(cause)}`,
+							cause,
+						}),
 				}),
 			)
 		},
