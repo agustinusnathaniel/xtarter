@@ -10,7 +10,9 @@
 			"!**/node_modules",
 			"!**/.astro",
 			"!test/fixtures",
-			"!**/*.generated.d.ts"
+			"!**/*.generated.d.ts",
+			"!.agents",
+			"!.claude"
 		]
 	},
 	"linter": {

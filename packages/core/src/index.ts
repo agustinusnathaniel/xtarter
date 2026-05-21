@@ -6,7 +6,7 @@ export type {
 	Task,
 	TaskStatus,
 } from '@/_base.js'
-export type { ApplyOptions } from '@/apply.js'
+export type { ApplyOptions, ApplyResult } from '@/apply.js'
 export { applyTasks } from '@/apply.js'
 export type { Backup } from '@/backup.js'
 export {

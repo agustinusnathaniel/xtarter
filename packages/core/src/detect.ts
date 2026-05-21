@@ -172,8 +172,7 @@ async function detectEslint(
 
 async function detectGitHubWorkflows(cwd: string): Promise<string[]> {
 	const workflowsDir = resolvePath(cwd, '.github', 'workflows')
-	const exists = await fileExists(workflowsDir)
-	if (!exists) return []
+	if (!(await fileExists(workflowsDir))) return []
 
 	const { readdir } = await import('node:fs/promises')
 	const entries = await readdir(workflowsDir)

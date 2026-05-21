@@ -1,4 +1,5 @@
 import { spinner } from '@clack/prompts'
+import { Effect } from 'effect'
 import type { Task, TaskStatus } from '@/_base.js'
 import { backupFile } from '@/backup.js'
 import type { ProjectProfile } from '@/detect.js'
@@ -10,36 +11,54 @@ export interface ApplyOptions {
 	quiet?: boolean
 }
 
-export async function applyTasks(
+export interface ApplyResult {
+	applied: number
+	skipped: number
+	errors: string[]
+}
+
+export function applyTasks(
 	tasks: Task[],
 	cwd: string,
 	profile: ProjectProfile,
 	selectedIds?: string[],
 	options: ApplyOptions = {},
-): Promise<{ applied: number; skipped: number; errors: string[] }> {
+): Promise<ApplyResult> {
 	const toApply = selectedIds
 		? tasks.filter((t) => selectedIds.includes(t.id))
 		: tasks
+
 	const includeConflicts = options.includeConflicts ?? false
 	const quiet = options.quiet ?? false
 
-	let applied = 0
-	let skipped = 0
-	const errors: string[] = []
+	return runApply(toApply, cwd, profile, includeConflicts, quiet)
+}
+
+async function runApply(
+	toApply: Task[],
+	cwd: string,
+	profile: ProjectProfile,
+	includeConflicts: boolean,
+	quiet: boolean,
+): Promise<ApplyResult> {
+	const s = quiet ? null : spinner()
+
+	const tasksToRun: { task: Task; status: TaskStatus }[] = []
 
 	// Collect unique filepaths from all tasks that will be applied
 	const filesToBackup = new Set<string>()
-	const tasksToRun: { task: Task; status: TaskStatus }[] = []
 
 	for (const task of toApply) {
 		try {
-			const status = await task.check(cwd, profile)
-			if (status === 'skip') {
-				skipped++
-				continue
-			}
+			const status = await Effect.runPromise(
+				Effect.tryPromise({
+					try: (_signal) => task.check(cwd, profile),
+					catch: (cause) =>
+						new Error(`Failed to check ${task.id}: ${String(cause)}`),
+				}),
+			)
+			if (status === 'skip') continue
 			if (status === 'conflict' && !includeConflicts) {
-				skipped++
 				logInfo(`Skipping conflict: ${task.label} (${task.id})`)
 				continue
 			}
@@ -50,7 +69,6 @@ export async function applyTasks(
 			tasksToRun.push({ task, status })
 		} catch (error) {
 			const message = error instanceof Error ? error.message : String(error)
-			errors.push(`${task.id}: ${message}`)
 			logError(`Failed to check/dryRun ${task.id}: ${message}`)
 		}
 	}
@@ -60,12 +78,19 @@ export async function applyTasks(
 		await backupFile(cwd, filepath)
 	}
 
-	const s = quiet ? null : spinner()
+	let applied = 0
+	const errors: string[] = []
 
 	for (const { task, status } of tasksToRun) {
 		try {
 			s?.start(`Applying ${task.label}`)
-			await task.apply(cwd, profile)
+			await Effect.runPromise(
+				Effect.tryPromise({
+					try: (_signal) => task.apply(cwd, profile),
+					catch: (cause) =>
+						new Error(`Failed to apply ${task.id}: ${String(cause)}`),
+				}),
+			)
 			applied++
 			s?.stop(`${statusTag(status)} ${task.label}`)
 		} catch (error) {
@@ -79,5 +104,7 @@ export async function applyTasks(
 		}
 	}
 
+	const skipped = toApply.length - applied - errors.length
+	console.log('')
 	return { applied, skipped, errors }
 }

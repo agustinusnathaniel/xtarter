@@ -1,31 +1,47 @@
 import fs from 'node:fs/promises'
+import { Effect } from 'effect'
 import JSON5 from 'json5'
 import { dirname, resolve } from 'pathe'
 
-export async function ensureDir(dirPath: string): Promise<void> {
-	await fs.mkdir(dirPath, { recursive: true })
+function tryEffect<A>(f: () => Promise<A>): Effect.Effect<A, Error> {
+	return Effect.tryPromise({
+		try: (_signal) => f(),
+		catch: (cause) => new Error(String(cause)),
+	})
 }
 
-export async function readFile(filePath: string): Promise<string> {
-	return fs.readFile(filePath, 'utf-8')
+export function ensureDir(dirPath: string): Promise<void> {
+	return Effect.runPromise(
+		tryEffect(() =>
+			fs.mkdir(dirPath, { recursive: true }).then(() => undefined),
+		),
+	)
 }
 
-export async function writeFile(
+export function readFile(filePath: string): Promise<string> {
+	return Effect.runPromise(tryEffect(() => fs.readFile(filePath, 'utf-8')))
+}
+
+export function writeFile(
 	filePath: string,
 	content: string,
 	mode?: number,
 ): Promise<void> {
-	await fs.mkdir(dirname(filePath), { recursive: true })
-	await fs.writeFile(filePath, content, { mode })
+	return Effect.runPromise(
+		tryEffect(async () => {
+			await fs.mkdir(dirname(filePath), { recursive: true })
+			await fs.writeFile(filePath, content, { mode })
+		}),
+	)
 }
 
-export async function fileExists(filePath: string): Promise<boolean> {
-	try {
-		await fs.access(filePath)
-		return true
-	} catch {
-		return false
-	}
+export function fileExists(filePath: string): Promise<boolean> {
+	return Effect.runPromise(
+		Effect.orElseSucceed(
+			tryEffect(() => fs.access(filePath).then(() => true)),
+			() => false,
+		),
+	)
 }
 
 export async function findConfigFile(
@@ -43,7 +59,7 @@ export async function findConfigFile(
 export async function readJson<T = Record<string, unknown>>(
 	filePath: string,
 ): Promise<T> {
-	const content = await fs.readFile(filePath, 'utf-8')
+	const content = await readFile(filePath)
 	return JSON5.parse(content) as T
 }
 
@@ -51,8 +67,16 @@ export async function writeJson(
 	filePath: string,
 	data: unknown,
 ): Promise<void> {
-	await fs.mkdir(dirname(filePath), { recursive: true })
-	await fs.writeFile(filePath, `${JSON.stringify(data, null, 2)}\n`, 'utf-8')
+	await Effect.runPromise(
+		tryEffect(async () => {
+			await fs.mkdir(dirname(filePath), { recursive: true })
+			await fs.writeFile(
+				filePath,
+				`${JSON.stringify(data, null, 2)}\n`,
+				'utf-8',
+			)
+		}),
+	)
 }
 
 export async function readJsonIfExists<T = Record<string, unknown>>(
@@ -64,8 +88,12 @@ export async function readJsonIfExists<T = Record<string, unknown>>(
 }
 
 export async function copyFile(src: string, dest: string): Promise<void> {
-	await fs.mkdir(dirname(dest), { recursive: true })
-	await fs.cp(src, dest)
+	await Effect.runPromise(
+		tryEffect(async () => {
+			await fs.mkdir(dirname(dest), { recursive: true })
+			await fs.cp(src, dest)
+		}),
+	)
 }
 
 export function resolvePath(cwd: string, ...segments: string[]): string {
