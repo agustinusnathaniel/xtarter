@@ -10,7 +10,7 @@ Latest updates and feature releases for xtarterize.
 ## v1.13 — May 17, 2026
 
 <Aside type="note" title="Oxlint & Oxfmt support">
-  When Vite+ is detected, xtarterize now configures oxlint/oxfmt (via `vp`) instead of Biome as the default linting/formatting stack. Includes `.oxlintrc.json` / `.oxfmtrc.json` generation and a single `vp check` CI step.
+  When Vite+ is detected, xtarterize now configures oxlint/oxfmt (via `vp`) instead of Biome as the default linting/formatting stack. Generates `oxlint.config.ts` / `oxfmt.config.ts` (or `.oxlintrc.json` / `.oxfmtrc.json` for existing configs), extends Ultracite presets, and uses a single `vp check` CI step.
 </Aside>
 
 - Non-recommended lint rules mapped from ESLint configs: `eqeqeq`, `prefer-const`, `no-shadow`, `max-params`, React rules, Vitest overrides for Oxlint; `noExcessiveCognitiveComplexity`, `useMaxParams` for Biome

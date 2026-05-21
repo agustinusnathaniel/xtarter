@@ -114,8 +114,6 @@ interface FileDetectorSpec {
 
 const FILE_DETECTORS: FileDetectorSpec[] = [
 	{ key: 'biome', basename: 'biome', extensions: ['.json', '.jsonc'] },
-	{ key: 'oxlint', basename: '.oxlintrc', extensions: ['.json', '.jsonc'] },
-	{ key: 'oxfmt', basename: '.oxfmtrc', extensions: ['.json', '.jsonc'] },
 	{ key: 'tsconfig', basename: 'tsconfig', extensions: ['.json', '.jsonc'] },
 	{ key: 'renovate', basename: 'renovate', extensions: ['.json', '.jsonc'] },
 	{
@@ -206,6 +204,30 @@ async function detectAgentsMd(cwd: string): Promise<boolean> {
 	return fileExists(resolvePath(cwd, 'CLAUDE.md'))
 }
 
+async function detectOxlint(cwd: string): Promise<boolean> {
+	const oldFormat = await findConfigFile(cwd, '.oxlintrc', [
+		'.json',
+		'.jsonc',
+	]).then(Boolean)
+	if (oldFormat) return true
+
+	return findConfigFile(cwd, 'oxlint.config', ['.ts', '.js', '.mjs']).then(
+		Boolean,
+	)
+}
+
+async function detectOxfmt(cwd: string): Promise<boolean> {
+	const oldFormat = await findConfigFile(cwd, '.oxfmtrc', [
+		'.json',
+		'.jsonc',
+	]).then(Boolean)
+	if (oldFormat) return true
+
+	return findConfigFile(cwd, 'oxfmt.config', ['.ts', '.js', '.mjs']).then(
+		Boolean,
+	)
+}
+
 // ── Custom detectors ──
 
 type CustomDetector = {
@@ -218,6 +240,8 @@ type CustomDetector = {
 
 const CUSTOM_DETECTORS: CustomDetector[] = [
 	{ key: 'eslint', detect: detectEslint },
+	{ key: 'oxlint', detect: detectOxlint },
+	{ key: 'oxfmt', detect: detectOxfmt },
 	{ key: 'githubWorkflows', detect: detectGitHubWorkflows },
 	{ key: 'changeset', detect: detectChangeset },
 	{ key: 'agentsMd', detect: detectAgentsMd },

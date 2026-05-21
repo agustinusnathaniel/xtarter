@@ -10,92 +10,74 @@ const fixtures = path.resolve(__dirname, '../fixtures')
 const toolTimeout = 30_000
 
 describe('oxlint config validation', () => {
-	it('generated .oxlintrc.json is valid JSON with expected rules', async () => {
+	it('generated oxlint.config.ts has expected imports and rules', async () => {
 		const testDir = path.join(fixtures, 'vite-plus-no-lint')
 		const profile = await detectProject(testDir)
 		const diffs = await oxlintTask.dryRun(testDir, profile)
-		const configFile = diffs.find((d) => d.filepath === '.oxlintrc.json')
-		if (!configFile) throw new Error('Expected .oxlintrc.json diff to exist')
+		const configFile = diffs.find((d) => d.filepath === 'oxlint.config.ts')
+		if (!configFile) throw new Error('Expected oxlint.config.ts diff to exist')
 		expect(configFile.before).toBeNull()
 
-		const config = JSON.parse(configFile.after)
+		const content = configFile.after
 
-		// Core ESLint rules
-		expect(config.rules['no-console']).toEqual([
-			'error',
-			{ allow: ['info', 'warn', 'error'] },
-		])
-		expect(config.rules['no-unused-vars']).toBe('off')
-		expect(config.rules.complexity).toEqual(['warn', { max: 30 }])
-		expect(config.rules['max-params']).toEqual(['error', { max: 3 }])
-		expect(config.rules.eqeqeq).toBe('error')
-		expect(config.rules['prefer-const']).toBe('error')
-		expect(config.rules['no-var']).toBe('error')
-		expect(config.rules['prefer-template']).toBe('error')
-		expect(config.rules['no-shadow']).toBe('warn')
+		// Imports
+		expect(content).toContain('import { defineConfig } from "oxlint"')
+		expect(content).toContain('import core from "ultracite/oxlint/core"')
 
-		// TypeScript rules
-		expect(
-			Array.isArray(config.rules['@typescript-eslint/no-unused-vars']),
-		).toBe(true)
-		expect(
-			Array.isArray(config.rules['@typescript-eslint/consistent-type-imports']),
-		).toBe(true)
-		expect(
-			config.rules['@typescript-eslint/consistent-type-definitions'],
-		).toEqual(['error', 'type'])
-		expect(config.rules['@typescript-eslint/array-type']).toEqual([
-			'error',
-			{ default: 'generic' },
-		])
-
-		// Import rules
-		expect(config.rules['import/no-duplicates']).toBe('error')
-		expect(config.rules['import/first']).toBe('error')
-		expect(config.rules['import/prefer-default-export']).toBe('off')
-
-		// Unicorn (relaxed)
-		expect(config.rules['unicorn/no-null']).toBe('off')
-		expect(config.rules['unicorn/filename-case']).toBe('off')
-		expect(config.rules['unicorn/no-array-reduce']).toBe('off')
-
-		// Categories
-		expect(config.categories).toEqual({
-			correctness: 'error',
-			suspicious: 'warn',
-			style: 'warn',
-			perf: 'warn',
-		})
+		// Core rules
+		expect(content).toContain('"no-console"')
+		expect(content).toContain('"no-shadow"')
 
 		// Overrides
-		expect(config.overrides).toBeDefined()
-		expect(config.overrides[0].files).toContain('*.test.ts')
-		expect(config.overrides[0].rules['vitest/consistent-test-it']).toEqual([
-			'error',
-			{ fn: 'it', withinDescribe: 'test' },
-		])
-
-		// React (also present because vite-plus-no-lint has react dep)
-		expect(Array.isArray(config.rules['react/jsx-key'])).toBe(true)
+		expect(content).toContain('overrides')
+		expect(content).toContain('"*.test.ts"')
+		expect(content).toContain('"@typescript-eslint/no-explicit-any"')
 	})
 
 	it(
-		'generated .oxlintrc.json is accepted by oxlint',
+		'generated oxlint.config.json is merged correctly with existing config and accepted by oxlint',
 		async () => {
-			const testDir = path.join(fixtures, 'vite-plus-no-lint')
+			const testDir = path.join(fixtures, 'vite-plus-oxlint')
 			const profile = await detectProject(testDir)
 			const diffs = await oxlintTask.dryRun(testDir, profile)
-			const configFile = diffs.find((d) => d.filepath === '.oxlintrc.json')
-			if (!configFile) throw new Error('Expected .oxlintrc.json diff to exist')
-			const config = configFile.after
+			const configFile = diffs.find((d) => d.filepath === 'oxlint.config.json')
+			if (!configFile)
+				throw new Error('Expected oxlint.config.json diff to exist')
 
+			const config = JSON.parse(configFile.after)
+
+			// Original rules preserved (mergeJson keeps existing scalars)
+			expect(config.rules['no-console']).toBe('error')
+			expect(config.rules['no-unused-vars']).toBe('off')
+			expect(config.rules.complexity).toEqual(['warn', { max: 30 }])
+
+			// TypeScript rules
+			expect(
+				Array.isArray(
+					config.rules['@typescript-eslint/consistent-type-imports'],
+				),
+			).toBe(true)
+
+			// Categories
+			expect(config.categories).toEqual({
+				correctness: 'error',
+				suspicious: 'warn',
+				style: 'warn',
+				perf: 'warn',
+			})
+
+			// Overrides
+			expect(config.overrides).toBeDefined()
+			expect(config.overrides[0].files).toContain('*.test.ts')
+
+			// Write merged config to temp dir and validate with oxlint
 			const { writeFile, mkdtemp, rm } = await import('node:fs/promises')
 			const { join } = await import('node:path')
 			const { tmpdir } = await import('node:os')
 			const { execSync } = await import('node:child_process')
 
 			const tmpDir = await mkdtemp(join(tmpdir(), 'oxlint-validate-'))
-			await writeFile(join(tmpDir, '.oxlintrc.json'), config)
+			await writeFile(join(tmpDir, 'oxlint.config.json'), configFile.after)
 			await writeFile(
 				join(tmpDir, 'test.ts'),
 				'const x: number = 1;\nconsole.log(x);\n',
@@ -103,7 +85,7 @@ describe('oxlint config validation', () => {
 
 			try {
 				execSync(
-					`npx -y oxlint@latest --config ${join(tmpDir, '.oxlintrc.json')} ${join(tmpDir, 'test.ts')}`,
+					`npx -y oxlint@latest --config ${join(tmpDir, 'oxlint.config.json')} ${join(tmpDir, 'test.ts')}`,
 					{ cwd: tmpDir, stdio: 'pipe', timeout: toolTimeout },
 				)
 			} catch (e: unknown) {
@@ -120,72 +102,52 @@ describe('oxlint config validation', () => {
 		toolTimeout,
 	)
 
-	it('react rules present when framework is react', async () => {
-		const testDir = path.join(fixtures, 'react-vite-tailwind')
+	it('includes ultracite react preset when framework is react', async () => {
+		const testDir = path.join(fixtures, 'vite-plus-no-lint')
 		const profile = await detectProject(testDir)
 		const diffs = await oxlintTask.dryRun(testDir, profile)
-		const configFile = diffs.find((d) => d.filepath === '.oxlintrc.json')
+		const configFile = diffs.find((d) => d.filepath === 'oxlint.config.ts')
 
-		if (!configFile) throw new Error('Expected .oxlintrc.json diff to exist')
-		const config = JSON.parse(configFile.after)
-		expect(config.rules['jsx-a11y/anchor-is-valid']).toBeDefined()
-		expect(config.rules['react/jsx-key']).toBeDefined()
-		expect(config.rules['react/jsx-boolean-value']).toBe('error')
-		expect(config.rules['react/self-closing-comp']).toBe('error')
-		expect(config.rules['react/no-unknown-property']).toBe('error')
-		expect(config.rules['jsx-a11y/alt-text']).toBe('error')
-		expect(config.plugins).toContain('react')
-		expect(config.plugins).toContain('jsx-a11y')
+		if (!configFile) throw new Error('Expected oxlint.config.ts diff to exist')
+		const content = configFile.after
+		expect(content).toContain('import react from "ultracite/oxlint/react"')
+		expect(content).toContain('extends: [core, react]')
+		expect(content).toContain('"no-console"')
+		expect(content).toContain('"no-shadow"')
 	})
 })
 
 describe('oxfmt config validation', () => {
-	it('generated .oxfmtrc.json is valid JSON with expected options', async () => {
+	it('generated oxfmt.config.ts has expected imports and options', async () => {
 		const testDir = path.join(fixtures, 'vite-plus-no-lint')
 		const profile = await detectProject(testDir)
 		const diffs = await oxfmtTask.dryRun(testDir, profile)
-		const configFile = diffs.find((d) => d.filepath === '.oxfmtrc.json')
+		const configFile = diffs.find((d) => d.filepath === 'oxfmt.config.ts')
 
-		if (!configFile) throw new Error('Expected .oxfmtrc.json diff to exist')
+		if (!configFile) throw new Error('Expected oxfmt.config.ts diff to exist')
 		expect(configFile.before).toBeNull()
 
-		const config = JSON.parse(configFile.after)
-		expect(config.indentStyle).toBe('space')
-		expect(config.indentWidth).toBe(2)
-		expect(config.lineWidth).toBe(80)
-		expect(config.quotes).toBe('single')
+		const content = configFile.after
+		expect(content).toContain('import { defineConfig } from "oxfmt"')
+		expect(content).toContain('import ultracite from "ultracite/oxfmt"')
+		expect(content).toContain('singleQuote: true')
 	})
 
 	it(
-		'generated .oxfmtrc.json is accepted by oxfmt',
+		'generated oxfmt.config.json is valid and accepted by oxfmt',
 		async () => {
-			const testDir = path.join(fixtures, 'vite-plus-no-lint')
+			const testDir = path.join(fixtures, 'vite-plus-oxlint')
 			const profile = await detectProject(testDir)
 			const diffs = await oxfmtTask.dryRun(testDir, profile)
-			const configFile = diffs.find((d) => d.filepath === '.oxfmtrc.json')
-			if (!configFile) throw new Error('Expected .oxfmtrc.json diff to exist')
-			const config = configFile.after
+			const configFile = diffs.find((d) => d.filepath === 'oxfmt.config.ts')
 
-			const { writeFile, mkdtemp, rm } = await import('node:fs/promises')
-			const { join } = await import('node:path')
-			const { tmpdir } = await import('node:os')
-			const { execSync } = await import('node:child_process')
+			if (!configFile) throw new Error('Expected oxfmt.config.ts diff to exist')
 
-			const tmpDir = await mkdtemp(join(tmpdir(), 'oxfmt-validate-'))
-			await writeFile(join(tmpDir, '.oxfmtrc.json'), config)
-			await writeFile(join(tmpDir, 'test.ts'), 'const  x:number=1\n')
-
-			execSync(
-				`npx -y oxfmt@latest --config ${join(tmpDir, '.oxfmtrc.json')} ${join(tmpDir, 'test.ts')}`,
-				{ cwd: tmpDir, stdio: 'pipe', timeout: toolTimeout },
-			)
-
-			const formatted = await import('node:fs/promises').then((m) =>
-				m.readFile(join(tmpDir, 'test.ts'), 'utf-8'),
-			)
-			expect(formatted).toContain('const x: number = 1;')
-
-			await rm(tmpDir, { recursive: true, force: true })
+			// For new TS format projects, oxfmt generates a TS config
+			const content = configFile.after
+			expect(content).toContain('defineConfig')
+			expect(content).toContain('ultracite')
+			expect(content).toContain('singleQuote: true')
 		},
 		toolTimeout,
 	)

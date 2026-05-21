@@ -11,11 +11,11 @@ xtarterize applies conformance configuration through discrete, independently app
 
 | Task ID | Description | Applicable When |
 |---------|-------------|-----------------|
-| `lint/biome` | Install [Biome](https://biomejs.dev/), write `biome.json` with framework-aware parser options | Always (TS/JS projects) |
+| `lint/biome` | Install [Biome](https://biomejs.dev/) + [Ultracite](https://ultracite.ai/), write `biome.json` extending Ultracite presets with framework-aware overrides | Non-Vite+ projects (no ESLint/Oxlint detected) |
+| `lint/oxlint` | Install [Oxlint](https://oxc.rs/) + Ultracite, write `oxlint.config.ts` or `.oxlintrc.json` (legacy) extending Ultracite presets | [Vite+](https://viteplus.dev/) projects (no ESLint/Biome detected) |
+| `lint/oxfmt` | Install [Oxfmt](https://oxc.rs/) + Ultracite, write `oxfmt.config.ts` or `.oxfmtrc.json` (legacy) extending Ultracite preset | Vite+ projects (no ESLint/Biome detected) |
 
-<Aside type="tip">
-  For stricter, opinionated linting, run <code>npx ultracite init</code> after <code>xtarterize init</code>. The <code>package.json</code> lint scripts will auto-detect [Ultracite](https://www.ultracite.ai/) and use <code>ultracite:check</code> / <code>ultracite:fix</code> instead of Biome directly.
-</Aside>
+All three tasks install [Ultracite](https://ultracite.ai/) automatically alongside the tool-specific dependency and generate configs that extend/import Ultracite presets. No separate `ultracite init` step needed.
 
 ### Framework-Aware Biome Config
 

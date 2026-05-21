@@ -82,7 +82,7 @@ npx xtarterize init
 
 The `init` command applies all tasks that are applicable to your detected stack:
 
-- **Linting & Formatting** — [Biome](https://biomejs.dev/) ([`linter`](https://biomejs.dev/reference/configuration/#linter) + [`formatter`](https://biomejs.dev/reference/configuration/#formatter)), with [Tailwind CSS](https://tailwindcss.com/) [`css.parser.tailwindDirectives`](https://biomejs.dev/reference/configuration/#cssparsertailwinddirectives) support when detected
+- **Linting & Formatting** — [Biome](https://biomejs.dev/) (non-Vite+) or [Oxlint](https://oxc.rs/) + [Oxfmt](https://oxc.rs/) (Vite+), with [Ultracite](https://ultracite.ai/) presets installed automatically and configs extended/imported from Ultracite
 - **TypeScript** — [`strict: true`](https://www.typescriptlang.org/tsconfig/#strict), [`paths`](https://www.typescriptlang.org/tsconfig/#paths) aliases, [`incremental: true`](https://www.typescriptlang.org/tsconfig/#incremental) + [`tsBuildInfoFile`](https://www.typescriptlang.org/tsconfig/#tsBuildInfoFile), [`.gitignore`](https://git-scm.com/docs/gitignore) `*.tsbuildinfo` entries
 - **Vite Plugins** — [`vite-plugin-checker`](https://vite-plugin-checker.netlify.app/) ([`checker()`](https://vite-plugin-checker.netlify.app/checkers/typescript.html) for TypeScript), [`rollup-plugin-visualizer`](https://github.com/btd/rollup-plugin-visualizer)
 - **CI/CD** — [GitHub Actions](https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions) workflows ([`on.push.tags`](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#running-your-workflow-when-a-push-of-a-specific-tag-occurs) for release, [`schedule.cron`](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#schedule) for auto-updates, [`on.pull_request`](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#pull_request) for CI) with [`pnpm/action-setup@v4`](https://github.com/pnpm/action-setup) for pnpm projects
@@ -93,7 +93,7 @@ The `init` command applies all tasks that are applicable to your detected stack:
 - **Monorepo** — [Turborepo](https://turbo.build/repo/docs/reference/configuration) ([`turbo.json`](https://turbo.build/repo/docs/reference/configuration) pipeline)
 - **Editor** — [VS Code](https://code.visualstudio.com/) [`settings.json`](https://code.visualstudio.com/docs/getstarted/settings#_settingsjson) and [`extensions.json`](https://code.visualstudio.com/docs/editor/extension-marketplace#_workspace-recommended-extensions) (additive merging preserves your existing extensions)
 - **Agent** — `AGENTS.md`, [`.agents/skills/`](https://docs.opencode.ai/skills) directory, and install relevant [agent skills](https://skills.sh) via `npx skills@latest add` for your detected stack
-- **Scripts** — [`package.json` `scripts`](https://docs.npmjs.com/cli/v10/using-npm/scripts) (with [Ultracite](https://www.ultracite.ai/) detection if installed)
+- **Scripts** — [`package.json` `scripts`](https://docs.npmjs.com/cli/v10/using-npm/scripts) (uses [Ultracite](https://www.ultracite.ai/)-aware lint/check/fix scripts when Ultracite is in dependencies)
 
 <Aside>
   Each task checks if it's already applied and skips if conformant. Running `init` twice produces no changes on the second run.
@@ -101,15 +101,9 @@ The `init` command applies all tasks that are applicable to your detected stack:
 
 ## Ultracite
 
-xtarterize sets up [Biome](https://biomejs.dev/) with sensible defaults. If you want stricter, more opinionated linting, we recommend [Ultracite](https://www.ultracite.ai/) — a Biome preset with stricter rules for code quality.
+[Ultracite](https://ultracite.ai/) is installed automatically alongside any lint tool (Biome, Oxlint, or Oxfmt). The generated configs extend or import Ultracite presets by default — no separate `ultracite init` step needed.
 
-After running `xtarterize init`, you can optionally run:
-
-```bash
-npx ultracite init
-```
-
-This will replace the default `biome.json` with Ultracite's stricter configuration. The `package.json` lint scripts will automatically detect Ultracite and use `ultracite` instead of `biome check`.
+xtarterize overlays its own conventions on top of Ultracite defaults where they differ (e.g., kebab-case filenames, single quotes, generic array types). You can further customize by editing the generated config files directly.
 
 ## References
 

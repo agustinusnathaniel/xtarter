@@ -1,6 +1,6 @@
 # ADR-004: Exclude Ultracite Integration
 
-**Status:** Accepted  
+**Status:** Superseded by ADR-020  
 **Date:** 2026-04-29
 
 ## Decision

@@ -1,15 +1,36 @@
 import type { ProjectProfile } from '@xtarterize/core'
-import type { Configuration } from './_biome-config.generated.js'
+import {
+	getUltraciteFrameworkPresetSuffix,
+	getUltraciteRouterPresetSuffix,
+} from './ultracite-presets.js'
+
+function getUltraciteExtends(profile: ProjectProfile): string[] {
+	const presets = ['ultracite/biome/core']
+
+	const frameworkPreset = getUltraciteFrameworkPresetSuffix(profile)
+	if (frameworkPreset) {
+		presets.push(`ultracite/biome/${frameworkPreset}`)
+	}
+
+	const routerPreset = getUltraciteRouterPresetSuffix(profile)
+	if (routerPreset) {
+		presets.push(`ultracite/biome/${routerPreset}`)
+	}
+
+	return presets
+}
 
 export function renderBiomeJson(profile: ProjectProfile): string {
 	const hasTailwind =
 		profile.styling.includes('tailwind') ||
 		profile.styling.includes('nativewind')
 
-	const config: Configuration = {
+	const config: Record<string, unknown> = {
 		$schema: './node_modules/@biomejs/biome/configuration_schema.json',
 		vcs: { enabled: true, clientKind: 'git', useIgnoreFile: true },
+		extends: getUltraciteExtends(profile),
 		files: {
+			ignoreUnknown: false,
 			includes: [
 				'src/**/*',
 				'*.config.ts',
@@ -19,33 +40,26 @@ export function renderBiomeJson(profile: ProjectProfile): string {
 				'!.claude',
 			],
 		},
-		formatter: { indentStyle: 'space' },
+		formatter: { enabled: true, indentStyle: 'space' },
 		linter: {
+			enabled: true,
 			rules: {
-				complexity: {
-					noExcessiveCognitiveComplexity: {
-						level: 'warn',
-						options: { maxAllowedComplexity: 30 },
-					},
-					useMaxParams: {
-						level: 'error',
-						options: { max: 3 },
-					},
-				},
 				style: {
+					useConsistentTypeDefinitions: 'off',
 					useConsistentArrayType: {
 						level: 'error',
 						options: { syntax: 'generic' },
 					},
-					useConsistentTypeDefinitions: {
+					useFilenamingConvention: {
 						level: 'error',
-						options: { style: 'type' },
+						options: { filenameCases: ['kebab-case'] },
 					},
 				},
 			},
 		},
 		javascript: { formatter: { quoteStyle: 'single' } },
 		assist: {
+			enabled: true,
 			actions: {
 				source: {
 					organizeImports: {
@@ -68,9 +82,6 @@ export function renderBiomeJson(profile: ProjectProfile): string {
 				includes: ['*.test.ts', '*.test.tsx', '*.spec.ts', '*.spec.tsx'],
 				linter: {
 					rules: {
-						complexity: {
-							noExcessiveCognitiveComplexity: 'off',
-						},
 						nursery: {
 							useConsistentTestIt: {
 								level: 'error',
