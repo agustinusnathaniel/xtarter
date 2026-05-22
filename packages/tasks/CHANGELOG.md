@@ -1,5 +1,25 @@
 # @xtarterize/tasks
 
+## 1.13.9
+
+### Patch Changes
+
+- [`355332f`](https://github.com/agustinusnathaniel/xtarter/commit/355332fe44c3a99f22dba8643bbc0bc414428f51) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - feat: add General section to skill catalog with always-applicable skills
+
+  Adds 6 general-purpose skills to the `SKILL_CATALOG` that are always
+  applicable to any TypeScript project:
+
+  - `opensrc` (vercel-labs/opensrc)
+  - `grill-me` (mattpocock/skills)
+  - `handoff` (mattpocock/skills)
+  - `improve-codebase-architecture` (mattpocock/skills)
+  - `write-a-skill` (mattpocock/skills)
+  - `caveman` (mattpocock/skills)
+
+- Updated dependencies []:
+  - @xtarterize/core@1.13.9
+  - @xtarterize/patchers@1.13.9
+
 ## 1.13.8
 
 ### Patch Changes
