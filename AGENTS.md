@@ -122,18 +122,35 @@ If a dependency update causes any of the verification steps to fail, revert that
 
 After implementation and testing are complete:
 
-1. **Create a changeset** if the change is user-facing (new feature, fix, breaking change):
+1. **Create a changeset** if the change is user-facing:
    ```bash
    pnpm changeset
    ```
    This will prompt for bump type (patch/minor/major) and a summary. The generated `.md` file in `.changeset/` should be committed alongside the code changes.
+
+   Changeset bump type rules:
+   - **`minor`**: only for actual new features or user-facing additions (`feat` commits)
+   - **`patch`**: everything else — refactors, fixes, chores, docs, tests, tooling
+   - **`major`**: breaking changes only
 
 2. **Commit the changes:**
    - Review all modified files with `git diff` and `git status` before committing.
    - **Split into multiple commits** if the change spans unrelated concerns (e.g., core engine fix + new task + docs update should be separate commits).
    - Include documentation updates and the changeset in the same commit when they belong to the same logical change.
    - **If unsure whether to commit or not, ask the user first.** Do not commit secrets, temporary files, or unrelated changes.
-   - Write clear commit messages following the project's convention (Conventional Commits).
+   - Write clear commit messages following Conventional Commits:
+
+     | Commit type | Changeset bump | When to use |
+     |-------------|---------------|-------------|
+     | `feat`      | minor         | Actual new feature or user-facing capability |
+     | `fix`       | patch         | Bug fix |
+     | `refactor`  | patch         | Restructuring, no new behavior |
+     | `chore`     | patch         | Maintenance, tooling, deps |
+     | `docs`      | patch         | Documentation |
+     | `test`      | patch         | Tests |
+     | `style`     | patch         | Formatting |
+
+     Only `feat` warrants a minor bump — all other types are patch.
 
 ## 8. Update Documentation
 
