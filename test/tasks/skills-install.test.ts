@@ -60,6 +60,13 @@ describe('skillsInstallTask', () => {
 		expect(after).toContain('fixing-motion-performance')
 		// Build tool skills
 		expect(after).toContain('vite')
+		// General skills
+		expect(after).toContain('opensrc')
+		expect(after).toContain('grill-me')
+		expect(after).toContain('handoff')
+		expect(after).toContain('improve-codebase-architecture')
+		expect(after).toContain('write-a-skill')
+		expect(after).toContain('caveman')
 	})
 
 	it('dryRun includes vue and frontend skills for vue projects', async () => {
@@ -198,26 +205,31 @@ describe('skillsInstallTask', () => {
 		expect(after).not.toContain('chakra-ui-refactor')
 	})
 
-	it('returns skip when no relevant framework is detected', async () => {
+	it('returns new for node-only projects with general skills', async () => {
 		const profile = await detectProject(path.join(fixtures, 'node-only'))
 		if (!skillsInstallTask.applicable(profile)) {
-			// If not applicable, skip testing check
 			return
 		}
 		const status = await skillsInstallTask.check(
 			path.join(fixtures, 'node-only'),
 			profile,
 		)
-		expect(status).toBe('skip')
+		expect(status).toBe('new')
 	})
 
-	it('returns empty dryRun when no relevant framework is detected', async () => {
+	it('returns general skills for node-only projects', async () => {
 		const profile = await detectProject(path.join(fixtures, 'node-only'))
+		if (!skillsInstallTask.applicable(profile)) {
+			return
+		}
 		const diffs = await skillsInstallTask.dryRun(
 			path.join(fixtures, 'node-only'),
 			profile,
 		)
-		expect(diffs.length).toBe(0)
+		expect(diffs.length).toBe(1)
+		const after = diffs[0].after ?? ''
+		expect(after).toContain('opensrc')
+		expect(after).toContain('caveman')
 	})
 
 	it('returns patch when some skills are already installed', async () => {

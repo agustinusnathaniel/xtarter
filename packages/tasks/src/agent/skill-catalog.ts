@@ -27,6 +27,40 @@ function hasAnyDep(deps: Record<string, string>, depNames: string[]): boolean {
  */
 export const SKILL_CATALOG: SkillDefinition[] = [
 	// ═════════════════════════════════════════════════════════════════
+	//  General (always applicable)
+	// ═════════════════════════════════════════════════════════════════
+	{
+		source: 'vercel-labs/opensrc',
+		skill: 'opensrc',
+		condition: () => true,
+	},
+	{
+		source: 'mattpocock/skills',
+		skill: 'grill-me',
+		condition: () => true,
+	},
+	{
+		source: 'mattpocock/skills',
+		skill: 'handoff',
+		condition: () => true,
+	},
+	{
+		source: 'mattpocock/skills',
+		skill: 'improve-codebase-architecture',
+		condition: () => true,
+	},
+	{
+		source: 'mattpocock/skills',
+		skill: 'write-a-skill',
+		condition: () => true,
+	},
+	{
+		source: 'mattpocock/skills',
+		skill: 'caveman',
+		condition: () => true,
+	},
+
+	// ═════════════════════════════════════════════════════════════════
 	//  Frontend / UI
 	// ═════════════════════════════════════════════════════════════════
 	{
