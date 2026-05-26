@@ -13,6 +13,14 @@ The `@xtarterize/core` package provides the `detectProject()` function — the f
 
 Project detection is the first step in every xtarterize command. It analyzes your project directory to build a `ProjectProfile` that drives which conformance tasks are applicable.
 
+### Profile caching
+
+Detection results are cached to avoid redundant I/O on repeated invocations. The cache is stored in `.xtarterize/cache/profile-fingerprint.json` and keyed by a fingerprint of `package.json`, lockfile, and config directories (`.github/`, `.vscode/`, `.changeset/`).
+
+The cache is invalidated when any of these inputs change (mtime or size). Corrupt or missing cache files fall through to full re-computation — the cache is always best-effort. A cache hit typically completes in under 1ms vs 50-150ms for a full detection run.
+
+See the file `docs/ADRs/xtarterize/021-fingerprint-profile-caching.md` for the full design.
+
 ## detectProject Function
 
 ```typescript

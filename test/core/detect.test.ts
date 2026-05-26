@@ -3,7 +3,7 @@ import os from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { detectProject } from '@xtarterize/core'
-import { describe, expect, it } from 'vite-plus/test'
+import { afterAll, describe, expect, it } from 'vite-plus/test'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const fixtures = path.resolve(__dirname, '../fixtures')
@@ -398,4 +398,18 @@ describe('detectProject', () => {
 		expect(profile.existing.biome).toBe(false)
 		expect(profile.existing.eslint).toBe(false)
 	})
+})
+
+afterAll(async () => {
+	const entries = await fs.readdir(fixtures, { withFileTypes: true })
+	await Promise.all(
+		entries
+			.filter((e) => e.isDirectory())
+			.map((e) =>
+				fs.rm(path.join(fixtures, e.name, '.xtarterize'), {
+					recursive: true,
+					force: true,
+				}),
+			),
+	)
 })
