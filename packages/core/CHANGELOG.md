@@ -1,5 +1,14 @@
 # @xtarterize/core
 
+## 1.13.10
+
+### Patch Changes
+
+- [#51](https://github.com/agustinusnathaniel/xtarter/pull/51) [`dc722ea`](https://github.com/agustinusnathaniel/xtarter/commit/dc722ead5f376e26c217c97cfffc8102a967819a) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - refactor: add fingerprint-based caching to detectProject
+
+  Wraps detectProject with a best-effort cache keyed on project state
+  fingerprints. Cache hit <1ms vs ~50-150ms for full detection.
+
 ## 1.13.9
 
 ## 1.13.8
