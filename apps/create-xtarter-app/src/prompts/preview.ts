@@ -52,52 +52,7 @@ export async function previewTemplate(templateId?: string): Promise<void> {
 
 	console.log(pc.bold('Features:'))
 
-	const featureMap: Record<string, string[]> = {
-		'next-chakra': [
-			'Next.js 16',
-			'Chakra UI v3',
-			'Biome',
-			'Turborepo',
-			'TypeScript',
-			'Playwright',
-		],
-		'next-tailwind': [
-			'Next.js 16',
-			'Tailwind CSS v4',
-			'Biome',
-			'TypeScript',
-			'Playwright',
-		],
-		'vite-chakra': [
-			'Vite 7',
-			'React 19',
-			'Chakra UI v3',
-			'TanStack Router',
-			'TanStack Query',
-			'Biome',
-			'Vitest',
-		],
-		'vite-tailwind': [
-			'Vite 7',
-			'React 19',
-			'Tailwind CSS v4',
-			'TanStack Router',
-			'TanStack Query',
-			'Biome',
-			'Vitest',
-		],
-		'vite-hero': [
-			'Vite 7',
-			'React 19',
-			'Hero UI',
-			'TanStack Router',
-			'Biome',
-			'Vitest',
-		],
-	}
-
-	const features = featureMap[template.id] || ['See repository for details']
-	for (const feature of features) {
+	for (const feature of template.features) {
 		console.log(`${pc.green('  ✔')} ${feature}`)
 	}
 

@@ -16,6 +16,8 @@ describe('Template Registry', () => {
 				expect(template.id).toBeDefined()
 				expect(template.name).toBeDefined()
 				expect(template.description).toBeDefined()
+				expect(template.features).toBeDefined()
+				expect(template.features.length).toBeGreaterThan(0)
 				expect(template.repo).toBeDefined()
 				expect(template.branch).toBe('main')
 				expect(template.provider).toBe('github')
