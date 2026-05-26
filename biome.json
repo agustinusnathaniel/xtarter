@@ -12,7 +12,9 @@
 			"!test/fixtures",
 			"!**/*.generated.d.ts",
 			"!.agents",
-			"!.claude"
+			"!.claude",
+			"!**/*.css",
+			"!**/*.astro"
 		]
 	},
 	"linter": {
