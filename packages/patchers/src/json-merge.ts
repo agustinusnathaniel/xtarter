@@ -55,9 +55,12 @@ function deepEqual(a: unknown, b: unknown): boolean {
 function collectPatchOps(
 	existing: unknown,
 	incoming: unknown,
-	path: (string | number)[],
-	ops: { path: (string | number)[]; value: unknown }[],
+	context: {
+		path: (string | number)[]
+		ops: { path: (string | number)[]; value: unknown }[]
+	},
 ): void {
+	const { path, ops } = context
 	if (
 		typeof incoming !== 'object' ||
 		incoming === null ||
@@ -85,7 +88,7 @@ function collectPatchOps(
 		if (!(key in existingObj)) {
 			ops.push({ path: [...path, key], value })
 		} else {
-			collectPatchOps(existingObj[key], value, [...path, key], ops)
+			collectPatchOps(existingObj[key], value, { path: [...path, key], ops })
 		}
 	}
 }
@@ -97,7 +100,7 @@ function collectPatchOps(
 export function patchJson(text: string, incoming: object): string {
 	const existing = parseJsonc(text) as Record<string, unknown>
 	const ops: { path: (string | number)[]; value: unknown }[] = []
-	collectPatchOps(existing, incoming, [], ops)
+	collectPatchOps(existing, incoming, { path: [], ops })
 
 	if (ops.length === 0) return text
 

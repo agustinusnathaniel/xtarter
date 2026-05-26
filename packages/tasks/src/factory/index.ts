@@ -38,10 +38,7 @@ export {
 	type PackageScriptsMap,
 } from './equivalence.js'
 export type { JsonConfigTaskOptions } from './json-config.js'
-export {
-	checkJsonConfigTask,
-	dryRunJsonConfigTask,
-} from './json-config.js'
+export { checkJsonConfigTask, dryRunJsonConfigTask } from './json-config.js'
 export {
 	ensureTaskDependency,
 	ensureTaskParentDir,
@@ -62,6 +59,15 @@ export {
 // ─── Re-exports from core (convenience) ───
 export { deepEqual }
 
+// ─── Reusable context for checkFn callbacks ───
+
+export interface CheckFnContext {
+	cwd: string
+	profile: ProjectProfile
+	fullPath: string | null
+	content: string | null
+}
+
 // ─── FileTask (text files with optional merge/checkFn) ───
 
 export interface FileTaskOptions {
@@ -78,12 +84,7 @@ export interface FileTaskOptions {
 	depInstallName?: string
 	installDev?: boolean
 	ensureParentDir?: boolean
-	checkFn?: (
-		cwd: string,
-		profile: ProjectProfile,
-		fullPath: string | null,
-		content: string | null,
-	) => Promise<TaskStatus>
+	checkFn?: (context: CheckFnContext) => Promise<TaskStatus>
 }
 
 export function createFileTask(options: FileTaskOptions): Task {
@@ -108,7 +109,7 @@ export function createFileTask(options: FileTaskOptions): Task {
 
 				if (options.checkFn) {
 					const content = await readFile(fullPath)
-					return options.checkFn(cwd, profile, fullPath, content)
+					return options.checkFn({ cwd, profile, fullPath, content })
 				}
 
 				const pkg = await readPackageJson(cwd)
@@ -198,12 +199,7 @@ export interface JsonMergeTaskOptions {
 	depName?: string
 	depNames?: string[]
 	installDev?: boolean
-	checkFn?: (
-		cwd: string,
-		profile: ProjectProfile,
-		fullPath: string | null,
-		content: string | null,
-	) => Promise<TaskStatus>
+	checkFn?: (context: CheckFnContext) => Promise<TaskStatus>
 }
 
 export function createJsonMergeTask(options: JsonMergeTaskOptions): Task {
@@ -228,7 +224,7 @@ export function createJsonMergeTask(options: JsonMergeTaskOptions): Task {
 
 				if (options.checkFn) {
 					const content = await readFile(fullPath)
-					return options.checkFn(cwd, profile, fullPath, content)
+					return options.checkFn({ cwd, profile, fullPath, content })
 				}
 
 				const pkg = await readPackageJson(cwd)
@@ -477,12 +473,12 @@ export function createVitePluginTask(options: VitePluginTaskOptions): Task {
 						? `{ ${options.importName} }`
 						: options.importName
 
-				const result = await injectVitePlugin(
+				const result = await injectVitePlugin({
 					configPath,
-					options.depName,
-					importSpecifier,
-					options.pluginCall,
-				)
+					importPath: options.depName,
+					importName: importSpecifier,
+					pluginExpression: options.pluginCall,
+				})
 
 				if (!result.success) {
 					throw new TaskError({

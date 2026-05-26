@@ -32,7 +32,7 @@ export const renovateTask = createJsonMergeTask({
 	filepath: 'renovate.json',
 	extensions: ['.json', '.json5'],
 	incoming: incomingRenovate,
-	async checkFn(_cwd, _profile, fullPath, content) {
+	async checkFn({ fullPath, content }) {
 		if (!fullPath || !content) return 'new'
 		const actual = normalizeExtends((await readJsonIfExists(fullPath)) ?? {})
 		const expected = normalizeExtends(incomingRenovate())

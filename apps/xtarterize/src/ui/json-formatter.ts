@@ -25,12 +25,15 @@ export function formatTaskList(
 	}))
 }
 
-export function formatCheckResult(
-	tasks: Task[],
-	statuses: Map<string, TaskStatus>,
-	diagnostics: DiagnosticCheck[],
-	timing?: ResolveTiming,
-): string {
+interface CheckResultOptions {
+	tasks: Task[]
+	statuses: Map<string, TaskStatus>
+	diagnostics: DiagnosticCheck[]
+	timing?: ResolveTiming
+}
+
+export function formatCheckResult(options: CheckResultOptions): string {
+	const { tasks, statuses, diagnostics, timing } = options
 	const conformant = tasks.filter((t) => statuses.get(t.id) === 'skip').length
 	const result: Record<string, unknown> = {
 		ok: true,
@@ -42,12 +45,15 @@ export function formatCheckResult(
 	return JSON.stringify(result)
 }
 
-export function formatListResult(
-	profile: ProjectProfile,
-	tasks: Task[],
-	statuses: Map<string, TaskStatus>,
-	timing?: ResolveTiming,
-): string {
+interface ListResultOptions {
+	profile: ProjectProfile
+	tasks: Task[]
+	statuses: Map<string, TaskStatus>
+	timing?: ResolveTiming
+}
+
+export function formatListResult(options: ListResultOptions): string {
+	const { profile, tasks, statuses, timing } = options
 	const result: Record<string, unknown> = {
 		ok: true,
 		profile: {

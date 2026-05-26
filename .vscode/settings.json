@@ -7,7 +7,7 @@
 		"editor.defaultFormatter": "oxc.oxc-vscode"
 	},
 	"[typescript]": {
-		"editor.defaultFormatter": "oxc.oxc-vscode"
+		"editor.defaultFormatter": "biomejs.biome"
 	},
 	"[typescriptreact]": {
 		"editor.defaultFormatter": "oxc.oxc-vscode"

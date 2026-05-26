@@ -9,11 +9,7 @@ export type {
 export type { ApplyOptions, ApplyResult } from '@/apply.js'
 export { applyTasks } from '@/apply.js'
 export type { Backup } from '@/backup.js'
-export {
-	backupFile,
-	listBackups,
-	restoreBackup,
-} from '@/backup.js'
+export { backupFile, listBackups, restoreBackup } from '@/backup.js'
 // Detection types
 export type {
 	Bundler,

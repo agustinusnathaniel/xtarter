@@ -17,7 +17,7 @@ export const gitignoreTsbuildinfoTask = createFileTask({
 		}
 		return `${existing.replace(/\n*$/, '')}\n\n${header}\n${missing.map((e) => e).join('\n')}\n`
 	},
-	checkFn: async (_cwd, _profile, _fullPath, content) => {
+	checkFn: async ({ content }) => {
 		if (!content) return 'new'
 		const allPresent = ENTRIES.every((entry) => content.includes(entry))
 		return allPresent ? 'skip' : 'patch'

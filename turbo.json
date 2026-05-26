@@ -5,12 +5,18 @@
 			"dependsOn": ["^build", "typecheck"],
 			"outputs": ["dist/**"]
 		},
+		"lint": {
+			"inputs": ["biome.json", "apps/", "packages/"]
+		},
 		"dev": {
 			"persistent": true,
 			"cache": false
 		},
 		"typecheck": {
 			"dependsOn": ["^build"]
+		},
+		"test": {
+			"inputs": ["vitest.config.ts", "test/"]
 		}
 	}
 }

@@ -27,7 +27,7 @@ export const strictTask = createJsonMergeTask({
 	group: 'TypeScript',
 	applicable: (profile) => profile.typescript,
 	filepath: 'tsconfig.json',
-	checkFn: async (_cwd, _profile, fullPath, content) => {
+	checkFn: async ({ fullPath, content }) => {
 		if (!fullPath || !content) return 'new'
 		const value = getStrictValue(content)
 		if (value === undefined) return 'patch'

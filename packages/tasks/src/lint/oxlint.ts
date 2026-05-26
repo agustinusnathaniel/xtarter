@@ -30,7 +30,7 @@ export const oxlintTask = createFileTask({
 
 		return renderOxlintTsConfig(profile)
 	},
-	async checkFn(_cwd, profile, fullPath, content) {
+	async checkFn({ profile, fullPath, content }) {
 		if (!fullPath || !content) return 'new'
 
 		if (content.trim().startsWith('{')) {
@@ -71,7 +71,7 @@ export const oxfmtTask = createFileTask({
 
 		return renderOxfmtTsConfig(_profile)
 	},
-	async checkFn(_cwd, _profile, fullPath, content) {
+	async checkFn({ fullPath, content }) {
 		if (!fullPath || !content) return 'new'
 
 		if (content.trim().startsWith('{')) {
