@@ -48,7 +48,7 @@ export const TEMPLATES: TemplateConfig[] = [
 		name: 'Vite + React + Chakra',
 		description: 'Vite+, TanStack Router, Chakra UI',
 		features: [
-			'Vite 7',
+			'Vite+ (Vite 8)',
 			'React 19',
 			'Chakra UI v3',
 			'TanStack Router',
@@ -65,7 +65,7 @@ export const TEMPLATES: TemplateConfig[] = [
 		name: 'Vite + React + Tailwind',
 		description: 'Vite+, TanStack Router, Tailwind CSS',
 		features: [
-			'Vite 7',
+			'Vite+ (Vite 8)',
 			'React 19',
 			'Tailwind CSS v4',
 			'TanStack Router',
@@ -82,7 +82,7 @@ export const TEMPLATES: TemplateConfig[] = [
 		name: 'Vite + React + Hero UI',
 		description: 'Vite+, TanStack Router, Hero UI',
 		features: [
-			'Vite 7',
+			'Vite+ (Vite 8)',
 			'React 19',
 			'Hero UI',
 			'TanStack Router',
