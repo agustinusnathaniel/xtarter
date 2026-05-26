@@ -28,6 +28,10 @@ const main = defineCommand({
 			type: 'boolean',
 			description: 'Output machine-readable JSON',
 		},
+		timing: {
+			type: 'boolean',
+			description: 'Show detailed per-task timing breakdown',
+		},
 	},
 	subCommands: {
 		init: initCommand,

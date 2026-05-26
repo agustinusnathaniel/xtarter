@@ -1,5 +1,10 @@
 import { select } from '@clack/prompts'
-import type { ProjectProfile, Task, TaskStatus } from '@xtarterize/core'
+import type {
+	ProjectProfile,
+	ResolveTiming,
+	Task,
+	TaskStatus,
+} from '@xtarterize/core'
 import {
 	abortIfCancelled,
 	createSpinner,
@@ -20,6 +25,7 @@ export interface CliContext {
 	json: boolean
 	quiet: boolean
 	format: DisplayFormat
+	timing: boolean
 }
 
 export function resolveCliContext(args: {
@@ -27,17 +33,19 @@ export function resolveCliContext(args: {
 	json?: boolean | string | number | string[]
 	format?: string
 	cwd?: string | boolean
+	timing?: boolean
 	_?: (string | number)[]
 }): CliContext {
 	const cwd = resolveCwd(args)
 	const { json, quiet, format } = resolveRuntimeFlags(args)
-	return { cwd, json, quiet, format }
+	return { cwd, json, quiet, format, timing: args.timing === true }
 }
 
 export interface ScanResult {
 	profile: ProjectProfile
 	tasks: Task[]
 	statuses: Map<string, TaskStatus>
+	timing: ResolveTiming
 }
 
 export async function scanProject(ctx: CliContext): Promise<ScanResult> {

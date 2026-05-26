@@ -1,5 +1,10 @@
 import { select } from '@clack/prompts'
-import type { FileDiff, Task, TaskStatus } from '@xtarterize/core'
+import type {
+	FileDiff,
+	ResolveTiming,
+	Task,
+	TaskStatus,
+} from '@xtarterize/core'
 import {
 	abortIfCancelled,
 	applyTasks,
@@ -18,6 +23,7 @@ import {
 	detectProjectWithAmbiguity,
 	printProjectProfile,
 } from '@/utils/project.js'
+import { printTiming } from '@/utils/timing-display.js'
 
 interface CommandArgs {
 	dryRun?: boolean
@@ -27,6 +33,7 @@ interface CommandArgs {
 	quiet?: boolean
 	includeConflicts?: boolean
 	format?: string
+	timing?: boolean
 }
 
 interface RunCommandOptions {
@@ -39,9 +46,11 @@ async function applyAndReport(
 	tasks: Task[],
 	cwd: string,
 	profile: Awaited<ReturnType<typeof detectProjectWithAmbiguity>>,
+	timing: ResolveTiming,
 	selectedIds?: string[],
 	includeConflicts?: boolean,
 	quiet?: boolean,
+	recordTiming?: boolean,
 ): Promise<void> {
 	const result = await applyTasks(tasks, cwd, profile, selectedIds, {
 		includeConflicts,
@@ -55,6 +64,7 @@ async function applyAndReport(
 			logError(`  - ${error}`)
 		}
 	}
+	if (!quiet) printTiming(timing, result.timing, recordTiming)
 }
 
 function resolveActionableTasks(
@@ -85,6 +95,7 @@ async function handleDryRun(
 	tasks: Task[],
 	cwd: string,
 	profile: Awaited<ReturnType<typeof detectProjectWithAmbiguity>>,
+	timing: ResolveTiming,
 	format: string = 'terminal',
 ): Promise<void> {
 	const diffs: FileDiff[] = []
@@ -94,6 +105,7 @@ async function handleDryRun(
 	}
 	const resolvedFormat: DisplayFormat = format === 'json' ? 'json' : 'terminal'
 	displayDiffs(mergeFileDiffs(diffs), resolvedFormat)
+	printTiming(timing)
 }
 
 async function promptAndApply(
@@ -101,6 +113,7 @@ async function promptAndApply(
 	cwd: string,
 	profile: Awaited<ReturnType<typeof detectProjectWithAmbiguity>>,
 	statuses: Map<string, TaskStatus>,
+	timing: ResolveTiming,
 	args: CommandArgs,
 	options: RunCommandOptions,
 ): Promise<void> {
@@ -122,7 +135,7 @@ async function promptAndApply(
 	}
 
 	if (action === 'dry-run') {
-		await handleDryRun(actionableTasks, cwd, profile, args.format)
+		await handleDryRun(actionableTasks, cwd, profile, timing, args.format)
 		return
 	}
 
@@ -137,9 +150,11 @@ async function promptAndApply(
 			actionableTasks,
 			cwd,
 			profile,
+			timing,
 			selected,
 			args.includeConflicts,
 			args.quiet,
+			args.timing,
 		)
 		return
 	}
@@ -149,9 +164,11 @@ async function promptAndApply(
 		actionableTasks,
 		cwd,
 		profile,
+		timing,
 		selectedIds,
 		args.includeConflicts,
 		args.quiet,
+		args.timing,
 	)
 }
 
@@ -168,6 +185,7 @@ export async function runCommand(
 		profile: baseProfile,
 		tasks,
 		statuses,
+		timing,
 	} = await resolveProjectTasks(cwd, allTasks)
 	const profile = await detectProjectWithAmbiguity(cwd, quiet, baseProfile)
 	if (!quiet) printProjectProfile(profile)
@@ -176,13 +194,14 @@ export async function runCommand(
 
 	if (actionableTasks.length === 0) {
 		logSuccess(options.emptyMessage)
+		if (!quiet) printTiming(timing)
 		return
 	}
 
 	if (!quiet) displayPlan(actionableTasks, statuses)
 
 	if (args.dryRun) {
-		await handleDryRun(actionableTasks, cwd, profile, args.format)
+		await handleDryRun(actionableTasks, cwd, profile, timing, args.format)
 		return
 	}
 
@@ -191,14 +210,24 @@ export async function runCommand(
 			actionableTasks,
 			cwd,
 			profile,
+			timing,
 			undefined,
 			undefined,
 			quiet,
+			args.timing,
 		)
 		return
 	}
 
-	await promptAndApply(actionableTasks, cwd, profile, statuses, args, options)
+	await promptAndApply(
+		actionableTasks,
+		cwd,
+		profile,
+		statuses,
+		timing,
+		args,
+		options,
+	)
 }
 
 export const sharedRunArgs = {
@@ -229,5 +258,9 @@ export const sharedRunArgs = {
 	format: {
 		type: 'string',
 		description: 'Output format (terminal|json)',
+	},
+	timing: {
+		type: 'boolean',
+		description: 'Show detailed per-task timing breakdown',
 	},
 } as const
