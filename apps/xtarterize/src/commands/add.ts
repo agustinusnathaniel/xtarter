@@ -17,6 +17,7 @@ import { displayDiffs } from '@/ui/diff-display.js'
 import { resolveCwd } from '@/utils/cwd.js'
 import { handlePreflightFailure } from '@/utils/preflight.js'
 import { resolveRuntimeFlags } from '@/utils/runtime-flags.js'
+import { printTiming } from '@/utils/timing-display.js'
 
 export const addCommand = defineCommand({
 	meta: {
@@ -36,6 +37,10 @@ export const addCommand = defineCommand({
 			type: 'string',
 			description: 'Output format (terminal|json)',
 		},
+		timing: {
+			type: 'boolean',
+			description: 'Show detailed per-task timing breakdown',
+		},
 	},
 	async run({ args }) {
 		const taskId = args.taskId
@@ -51,6 +56,7 @@ export const addCommand = defineCommand({
 
 		const cwd = resolveCwd(args)
 		const quiet = args.quiet || isCI()
+		const recordTiming = args.timing === true
 
 		const preflight = await runPreflight(cwd)
 		if (!preflight.valid) {
@@ -60,7 +66,9 @@ export const addCommand = defineCommand({
 		const s = createSpinner(quiet)
 		s.start('Scanning project...')
 
+		const detectionStart = performance.now()
 		const profile = await detectProject(cwd)
+		const detectionMs = performance.now() - detectionStart
 		s.stop('Project scanned')
 
 		const allTasks = getAllTasks()
@@ -85,6 +93,8 @@ export const addCommand = defineCommand({
 
 		if (status === 'skip') {
 			logSuccess('Already conformant')
+			if (!quiet)
+				printTiming({ detectionMs, resolutionMs: 0, resolutionSumMs: 0 })
 			return
 		}
 
@@ -104,8 +114,20 @@ export const addCommand = defineCommand({
 			for (const error of result.errors) {
 				logError(`  - ${error}`)
 			}
+			if (!quiet)
+				printTiming(
+					{ detectionMs, resolutionMs: 0, resolutionSumMs: 0 },
+					result.timing,
+				)
 			return
 		}
 		logSuccess(`${task.id} applied successfully`)
+		if (!quiet) {
+			printTiming(
+				{ detectionMs, resolutionMs: 0, resolutionSumMs: 0 },
+				result.timing,
+				recordTiming,
+			)
+		}
 	},
 })

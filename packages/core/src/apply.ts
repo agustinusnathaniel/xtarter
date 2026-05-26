@@ -4,6 +4,7 @@ import type { Task, TaskStatus } from '@/_base.js'
 import { backupFile } from '@/backup.js'
 import type { ProjectProfile } from '@/detect.js'
 import { TaskError } from '@/errors.js'
+import type { ApplyTiming, TaskTiming } from '@/timing.js'
 import { logError, logInfo, pc } from '@/utils/logger.js'
 import { statusTag } from '@/utils/tags.js'
 
@@ -16,6 +17,7 @@ export interface ApplyResult {
 	applied: number
 	skipped: number
 	errors: string[]
+	timing?: ApplyTiming
 }
 
 export function applyTasks(
@@ -42,15 +44,17 @@ async function runApply(
 	includeConflicts: boolean,
 	quiet: boolean,
 ): Promise<ApplyResult> {
+	const applyStart = performance.now()
+	const perTask: TaskTiming[] = []
 	const s = quiet ? null : spinner()
 
 	const tasksToRun: { task: Task; status: TaskStatus }[] = []
 
-	// Collect unique filepaths from all tasks that will be applied
 	const filesToBackup = new Set<string>()
 
 	for (const task of toApply) {
 		try {
+			const checkStart = performance.now()
 			const status = await Effect.runPromise(
 				Effect.tryPromise({
 					try: (_signal) => task.check(cwd, profile),
@@ -62,16 +66,23 @@ async function runApply(
 						}),
 				}),
 			)
-			if (status === 'skip') continue
+			const checkMs = performance.now() - checkStart
+			if (status === 'skip') {
+				perTask.push({ id: task.id, label: task.label, checkMs })
+				continue
+			}
 			if (status === 'conflict' && !includeConflicts) {
 				logInfo(`Skipping conflict: ${task.label} (${task.id})`)
 				continue
 			}
+			const dryRunStart = performance.now()
 			const diffs = await task.dryRun(cwd, profile)
+			const dryRunMs = performance.now() - dryRunStart
 			for (const diff of diffs) {
 				filesToBackup.add(diff.filepath)
 			}
 			tasksToRun.push({ task, status })
+			perTask.push({ id: task.id, label: task.label, checkMs, dryRunMs })
 		} catch (error) {
 			const message = error instanceof Error ? error.message : String(error)
 			logError(`Failed to check/dryRun ${task.id}: ${message}`)
@@ -88,6 +99,7 @@ async function runApply(
 
 	for (const { task, status } of tasksToRun) {
 		try {
+			const applyStartTime = performance.now()
 			s?.start(`Applying ${task.label}`)
 			await Effect.runPromise(
 				Effect.tryPromise({
@@ -103,7 +115,10 @@ async function runApply(
 					},
 				}),
 			)
+			const applyMs = performance.now() - applyStartTime
 			applied++
+			const entry = perTask.find((t) => t.id === task.id)
+			if (entry) entry.applyMs = applyMs
 			s?.stop(`${statusTag(status)} ${task.label}`)
 		} catch (error) {
 			const message = error instanceof Error ? error.message : String(error)
@@ -117,6 +132,7 @@ async function runApply(
 	}
 
 	const skipped = toApply.length - applied - errors.length
+	const applyMs = performance.now() - applyStart
 	console.log('')
-	return { applied, skipped, errors }
+	return { applied, skipped, errors, timing: { applyMs, tasks: perTask } }
 }

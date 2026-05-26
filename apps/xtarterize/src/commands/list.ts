@@ -2,6 +2,7 @@ import { pc, statusTag } from '@xtarterize/core'
 import { defineCommand } from 'citty'
 import { formatListResult } from '@/ui/json-formatter.js'
 import { resolveCliContext, scanProject } from '@/utils/project.js'
+import { printTiming } from '@/utils/timing-display.js'
 
 export const listCommand = defineCommand({
 	meta: {
@@ -16,10 +17,10 @@ export const listCommand = defineCommand({
 	},
 	async run({ args }) {
 		const ctx = resolveCliContext(args)
-		const { profile, tasks, statuses } = await scanProject(ctx)
+		const { profile, tasks, statuses, timing } = await scanProject(ctx)
 
 		if (ctx.json) {
-			console.log(formatListResult(profile, tasks, statuses))
+			console.log(formatListResult(profile, tasks, statuses, timing))
 			return
 		}
 
@@ -48,5 +49,6 @@ export const listCommand = defineCommand({
 		}
 
 		console.log('')
+		printTiming(timing)
 	},
 })

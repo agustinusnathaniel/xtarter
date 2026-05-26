@@ -1,6 +1,7 @@
 import type {
 	DiagnosticCheck,
 	ProjectProfile,
+	ResolveTiming,
 	Task,
 	TaskStatus,
 } from '@xtarterize/core'
@@ -28,22 +29,26 @@ export function formatCheckResult(
 	tasks: Task[],
 	statuses: Map<string, TaskStatus>,
 	diagnostics: DiagnosticCheck[],
+	timing?: ResolveTiming,
 ): string {
 	const conformant = tasks.filter((t) => statuses.get(t.id) === 'skip').length
-	return JSON.stringify({
+	const result: Record<string, unknown> = {
 		ok: true,
 		summary: { conformant, total: tasks.length },
 		tasks: formatTaskList(tasks, statuses),
 		diagnostics,
-	})
+	}
+	if (timing) result.timing = timing
+	return JSON.stringify(result)
 }
 
 export function formatListResult(
 	profile: ProjectProfile,
 	tasks: Task[],
 	statuses: Map<string, TaskStatus>,
+	timing?: ResolveTiming,
 ): string {
-	return JSON.stringify({
+	const result: Record<string, unknown> = {
 		ok: true,
 		profile: {
 			framework: profile.framework,
@@ -52,7 +57,9 @@ export function formatListResult(
 			typescript: profile.typescript,
 		},
 		tasks: formatTaskList(tasks, statuses),
-	})
+	}
+	if (timing) result.timing = timing
+	return JSON.stringify(result)
 }
 
 export function formatDoctorResult(diagnostics: DiagnosticCheck[]): string {

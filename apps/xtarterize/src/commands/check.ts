@@ -8,6 +8,7 @@ import { defineCommand } from 'citty'
 import { formatCheckResult } from '@/ui/json-formatter.js'
 import { diagnosticIcon } from '@/utils/display.js'
 import { resolveCliContext, scanProject } from '@/utils/project.js'
+import { printTiming } from '@/utils/timing-display.js'
 
 export const checkCommand = defineCommand({
 	meta: {
@@ -26,14 +27,14 @@ export const checkCommand = defineCommand({
 	},
 	async run({ args }) {
 		const ctx = resolveCliContext(args)
-		const { tasks, statuses } = await scanProject(ctx)
+		const { tasks, statuses, timing } = await scanProject(ctx)
 
 		const conflictChecks = await runConflictChecks(ctx.cwd)
 		const installChecks = await runToolInstallationChecks(ctx.cwd)
 		const diagnostics = [...installChecks, ...conflictChecks]
 
 		if (ctx.json) {
-			console.log(formatCheckResult(tasks, statuses, diagnostics))
+			console.log(formatCheckResult(tasks, statuses, diagnostics, timing))
 			return
 		}
 
@@ -75,6 +76,7 @@ export const checkCommand = defineCommand({
 			}
 
 			console.log('')
+			printTiming(timing)
 		} else {
 			console.log(`${conformant}/${total} conformant`)
 		}
