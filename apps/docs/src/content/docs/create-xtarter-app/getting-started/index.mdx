@@ -37,12 +37,21 @@ The interactive CLI will guide you through:
 5. **CI/CD cleanup** — whether to remove pre-configured CI configs
 
 :::note
-You can skip all prompts with `--yes` / `-y` to use the defaults (pnpm, git init, no CI cleanup).
+Use `--yes` / `-y` to skip prompts with defaults (pnpm, git init, no CI cleanup). Any explicit flag like `--pm bun` or `--clean` takes priority over `--yes`.
 :::
 
 ```bash
 # Scaffold with defaults
 pnpm create xtarter-app my-app --yes
+
+# Scaffold into current directory
+pnpm create xtarter-app . -t vite-tailwind
+
+# Overwrite existing directory
+pnpm create xtarter-app my-app -t vite-tailwind --force
+
+# Pin to a specific template version
+pnpm create xtarter-app my-app --ref v1.0.0
 ```
 
 ## What you get

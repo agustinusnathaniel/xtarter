@@ -22,13 +22,20 @@ npx create-xtarter-app@latest [project-name] [options]
 | Option | Alias | Type | Default | Description |
 |--------|-------|------|---------|-------------|
 | `--template` | `-t` | string | — | Template ID to use (skips prompt). See [Templates](/create-xtarter-app/guide/templates/) |
-| `--preview` | `-P` | boolean | — | Preview template details without scaffolding |
 | `--pm` | `-p` | string | — | Package manager (`pnpm`, `npm`, `bun`, `yarn`) |
 | `--no-git` | — | boolean | — | Skip git initialization |
 | `--clean` | — | boolean | — | Remove CI/CD config files after scaffolding |
+| `--force` | `-f` | boolean | — | Overwrite existing target directory |
+| `--ref` | — | string | — | Git ref (branch, tag, or commit SHA) to download |
 | `--yes` | `-y` | boolean | — | Use defaults for all prompts |
 | `--help` | `-h` | boolean | — | Show help text |
 | `--version` | `-v` | boolean | — | Show version |
+
+## Subcommands
+
+| Command | Description |
+|---------|-------------|
+| `preview [template]` | Preview template details without scaffolding |
 
 ## Package managers
 
@@ -51,14 +58,23 @@ npx create-xtarter-app@latest [project-name] [options]
   # Quick start with defaults
   pnpm create xtarter-app my-app --yes
 
+  # Scaffold in current directory
+  pnpm create xtarter-app . -t vite-tailwind
+
   # Pick a template
   pnpm create xtarter-app my-app --template vite-tailwind
 
   # Specific package manager, no git
   pnpm create xtarter-app my-app --pm bun --no-git
 
+  # Overwrite existing directory
+  pnpm create xtarter-app my-app -t vite-tailwind --force
+
+  # Download a specific tag
+  pnpm create xtarter-app my-app --ref v1.0.0
+
   # Preview a template
-  pnpm create xtarter-app --preview --template next-tailwind
+  pnpm create xtarter-app preview next-tailwind
   ```
 
   </TabItem>
@@ -68,6 +84,7 @@ npx create-xtarter-app@latest [project-name] [options]
   npm create xtarter-app@latest
   npm create xtarter-app@latest my-app --yes
   npm create xtarter-app@latest my-app --template vite-tailwind
+  npm create xtarter-app@latest my-app --template vite-tailwind --force
   ```
 
   </TabItem>
@@ -95,10 +112,11 @@ npx create-xtarter-app@latest [project-name] [options]
 
 - **Invalid template ID** — prints all valid template IDs and exits
 - **Invalid package manager** — prints valid options and exits
-- **Target directory exists** — cancels with an error (won't overwrite)
+- **Target directory exists** — cancels with an error unless `--force` is used
 - **Invalid project name** — validation fails during prompt
 - **Download failure** — retries up to 3 times, then exits with error
-- **Install failure** — exits with the command's exit code
+- **Install failure** — cleans up created directory (if scaffolded to a new path), then exits
+- **Partial scaffold** — if any step after download fails, created directories are cleaned up automatically
 
 ## Programmatic API
 
