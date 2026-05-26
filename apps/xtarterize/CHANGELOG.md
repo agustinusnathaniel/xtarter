@@ -1,5 +1,16 @@
 # xtarterize
 
+## 1.13.11
+
+### Patch Changes
+
+- [#53](https://github.com/agustinusnathaniel/xtarter/pull/53) [`e6ee639`](https://github.com/agustinusnathaniel/xtarter/commit/e6ee639237787260dd13616bc45c0482851e5437) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - refactor: add per-command timing instrumentation
+
+  Adds timing measurement for each phase of command execution (detection,
+  resolution, apply) with per-task breakdown available via the new `--timing`
+  global flag. Timing summary is displayed at the end of every command in
+  terminal output, and included in JSON output for `--json` mode.
+
 ## 1.13.10
 
 ## 1.13.9
