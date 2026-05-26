@@ -5,6 +5,12 @@ import {
 	resolvePath,
 } from '@/utils/fs.js'
 import { readPackageJson } from '@/utils/pkg.js'
+import {
+	computeFingerprint,
+	isCacheValid,
+	readProfileCache,
+	writeProfileCache,
+} from './detect/cache.js'
 import type {
 	Bundler,
 	Framework,
@@ -335,9 +341,9 @@ async function computeBaseProfile(cwd: string): Promise<{
 	}
 }
 
-// ── Main detection entry point ──
+// ── Internal detection logic (no caching) ──
 
-export async function detectProject(cwd: string): Promise<ProjectProfile> {
+async function computeProjectProfile(cwd: string): Promise<ProjectProfile> {
 	const base = await computeBaseProfile(cwd)
 	const pkg = await readPackageJson(cwd)
 
@@ -380,4 +386,28 @@ export async function detectProject(cwd: string): Promise<ProjectProfile> {
 		vitePlus: detectVitePlus(allDeps),
 		...base,
 	}
+}
+
+// ── Cached detection entry point ──
+
+export async function detectProject(cwd: string): Promise<ProjectProfile> {
+	const fingerprint = await computeFingerprint(cwd)
+	const cached = await readProfileCache(cwd)
+	if (cached && isCacheValid(cached, fingerprint)) {
+		return cached.profile
+	}
+
+	const start = performance.now()
+	const profile = await computeProjectProfile(cwd)
+	const durationMs = performance.now() - start
+
+	await writeProfileCache(cwd, {
+		version: 1,
+		fingerprint,
+		profile,
+		computedAt: new Date().toISOString(),
+		durationMs,
+	})
+
+	return profile
 }
