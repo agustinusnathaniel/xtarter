@@ -47,7 +47,7 @@ export const pathsTask = createJsonMergeTask({
 	group: 'TypeScript',
 	applicable: (profile) => profile.typescript,
 	filepath: 'tsconfig.json',
-	checkFn: async (_cwd, profile, fullPath, content) => {
+	checkFn: async ({ profile, fullPath, content }) => {
 		if (!fullPath || !content) return 'new'
 		const status = getPathStatus(content, profile)
 		if (status === 'match') return 'skip'

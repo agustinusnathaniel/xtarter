@@ -1,5 +1,5 @@
-import type { ProjectProfile, TaskStatus } from '@xtarterize/core'
-import { createFileTask } from '@/factory'
+import type { TaskStatus } from '@xtarterize/core'
+import { type CheckFnContext, createFileTask } from '@/factory'
 import { renderReleaseWorkflow } from '@/templates/workflows/release-yml.js'
 
 function hasReleaseJob(content: string): boolean {
@@ -10,12 +10,10 @@ function usesChangesetsAction(content: string): boolean {
 	return /changesets\/action@v1/.test(content)
 }
 
-async function checkReleaseWorkflow(
-	_cwd: string,
-	profile: ProjectProfile,
-	_filepath: string | null,
-	content: string | null,
-): Promise<TaskStatus> {
+async function checkReleaseWorkflow({
+	profile,
+	content,
+}: CheckFnContext): Promise<TaskStatus> {
 	if (!content) return 'new'
 
 	const expected = renderReleaseWorkflow(profile, content)

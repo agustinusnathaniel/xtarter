@@ -42,17 +42,34 @@ interface RunCommandOptions {
 	confirmMessage: string
 }
 
-async function applyAndReport(
-	tasks: Task[],
-	cwd: string,
-	profile: Awaited<ReturnType<typeof detectProjectWithAmbiguity>>,
-	timing: ResolveTiming,
-	selectedIds?: string[],
-	includeConflicts?: boolean,
-	quiet?: boolean,
-	recordTiming?: boolean,
-): Promise<void> {
-	const result = await applyTasks(tasks, cwd, profile, selectedIds, {
+interface ApplyAndReportOptions {
+	selectedIds?: string[]
+	includeConflicts?: boolean
+	quiet?: boolean
+	recordTiming?: boolean
+}
+
+interface ApplyAndReportInput {
+	tasks: Task[]
+	cwd: string
+	profile: Awaited<ReturnType<typeof detectProjectWithAmbiguity>>
+	timing: ResolveTiming
+	options: ApplyAndReportOptions
+}
+
+async function applyAndReport({
+	tasks,
+	cwd,
+	profile,
+	timing,
+	options,
+}: ApplyAndReportInput): Promise<void> {
+	const { selectedIds, includeConflicts, quiet, recordTiming } = options
+	const result = await applyTasks({
+		tasks,
+		cwd,
+		profile,
+		selectedIds,
 		includeConflicts,
 		quiet: quiet ?? isCI(),
 	})
@@ -64,24 +81,30 @@ async function applyAndReport(
 			logError(`  - ${error}`)
 		}
 	}
-	if (!quiet) printTiming(timing, result.timing, recordTiming)
+	const quietFlag = quiet ?? isCI()
+	if (!quietFlag) printTiming(timing, result.timing, recordTiming)
+}
+
+interface ResolveActionableTasksOptions {
+	actionableStatuses: TaskStatus[]
+	skip?: string
+	only?: string
 }
 
 function resolveActionableTasks(
 	tasks: Task[],
 	statuses: Map<string, TaskStatus>,
-	options: RunCommandOptions,
-	args: CommandArgs,
+	options: ResolveActionableTasksOptions,
 ): Task[] {
 	let filteredTasks = tasks
 
-	if (args.skip) {
-		const skipIds = args.skip.split(',').map((s) => s.trim())
+	if (options.skip) {
+		const skipIds = options.skip.split(',').map((s) => s.trim())
 		filteredTasks = filteredTasks.filter((t) => !skipIds.includes(t.id))
 	}
 
-	if (args.only) {
-		const onlyIds = args.only.split(',').map((s) => s.trim())
+	if (options.only) {
+		const onlyIds = options.only.split(',').map((s) => s.trim())
 		filteredTasks = filteredTasks.filter((t) => onlyIds.includes(t.id))
 	}
 
@@ -91,13 +114,16 @@ function resolveActionableTasks(
 	})
 }
 
-async function handleDryRun(
-	tasks: Task[],
-	cwd: string,
-	profile: Awaited<ReturnType<typeof detectProjectWithAmbiguity>>,
-	timing: ResolveTiming,
-	format: string = 'terminal',
-): Promise<void> {
+interface DryRunOptions {
+	tasks: Task[]
+	cwd: string
+	profile: Awaited<ReturnType<typeof detectProjectWithAmbiguity>>
+	timing: ResolveTiming
+	format?: string
+}
+
+async function handleDryRun(options: DryRunOptions): Promise<void> {
+	const { tasks, cwd, profile, timing, format } = options
 	const diffs: FileDiff[] = []
 	for (const task of tasks) {
 		const taskDiffs = await task.dryRun(cwd, profile)
@@ -108,17 +134,21 @@ async function handleDryRun(
 	printTiming(timing)
 }
 
-async function promptAndApply(
-	actionableTasks: Task[],
-	cwd: string,
-	profile: Awaited<ReturnType<typeof detectProjectWithAmbiguity>>,
-	statuses: Map<string, TaskStatus>,
-	timing: ResolveTiming,
-	args: CommandArgs,
-	options: RunCommandOptions,
-): Promise<void> {
+interface PromptAndApplyOptions {
+	actionableTasks: Task[]
+	cwd: string
+	profile: Awaited<ReturnType<typeof detectProjectWithAmbiguity>>
+	statuses: Map<string, TaskStatus>
+	timing: ResolveTiming
+	args: CommandArgs
+	runOptions: RunCommandOptions
+}
+
+async function promptAndApply(options: PromptAndApplyOptions): Promise<void> {
+	const { actionableTasks, cwd, profile, statuses, timing, args, runOptions } =
+		options
 	const action = await select({
-		message: options.confirmMessage,
+		message: runOptions.confirmMessage,
 		options: [
 			{ value: 'apply-all', label: 'Apply all' },
 			{ value: 'select', label: 'Select tasks' },
@@ -135,7 +165,13 @@ async function promptAndApply(
 	}
 
 	if (action === 'dry-run') {
-		await handleDryRun(actionableTasks, cwd, profile, timing, args.format)
+		await handleDryRun({
+			tasks: actionableTasks,
+			cwd,
+			profile,
+			timing,
+			format: args.format,
+		})
 		return
 	}
 
@@ -146,30 +182,34 @@ async function promptAndApply(
 			return
 		}
 
-		await applyAndReport(
-			actionableTasks,
+		await applyAndReport({
+			tasks: actionableTasks,
 			cwd,
 			profile,
 			timing,
-			selected,
-			args.includeConflicts,
-			args.quiet,
-			args.timing,
-		)
+			options: {
+				selectedIds: selected,
+				includeConflicts: args.includeConflicts,
+				quiet: args.quiet,
+				recordTiming: args.timing,
+			},
+		})
 		return
 	}
 
 	const selectedIds = actionableTasks.map((task) => task.id)
-	await applyAndReport(
-		actionableTasks,
+	await applyAndReport({
+		tasks: actionableTasks,
 		cwd,
 		profile,
 		timing,
-		selectedIds,
-		args.includeConflicts,
-		args.quiet,
-		args.timing,
-	)
+		options: {
+			selectedIds,
+			includeConflicts: args.includeConflicts,
+			quiet: args.quiet,
+			recordTiming: args.timing,
+		},
+	})
 }
 
 export async function runCommand(
@@ -190,7 +230,11 @@ export async function runCommand(
 	const profile = await detectProjectWithAmbiguity(cwd, quiet, baseProfile)
 	if (!quiet) printProjectProfile(profile)
 
-	const actionableTasks = resolveActionableTasks(tasks, statuses, options, args)
+	const actionableTasks = resolveActionableTasks(tasks, statuses, {
+		actionableStatuses: options.actionableStatuses,
+		skip: args.skip,
+		only: args.only,
+	})
 
 	if (actionableTasks.length === 0) {
 		logSuccess(options.emptyMessage)
@@ -201,33 +245,36 @@ export async function runCommand(
 	if (!quiet) displayPlan(actionableTasks, statuses)
 
 	if (args.dryRun) {
-		await handleDryRun(actionableTasks, cwd, profile, timing, args.format)
+		await handleDryRun({
+			tasks: actionableTasks,
+			cwd,
+			profile,
+			timing,
+			format: args.format,
+		})
 		return
 	}
 
 	if (args.yes || quiet) {
-		await applyAndReport(
-			actionableTasks,
+		await applyAndReport({
+			tasks: actionableTasks,
 			cwd,
 			profile,
 			timing,
-			undefined,
-			undefined,
-			quiet,
-			args.timing,
-		)
+			options: { quiet, recordTiming: args.timing },
+		})
 		return
 	}
 
-	await promptAndApply(
+	await promptAndApply({
 		actionableTasks,
 		cwd,
 		profile,
 		statuses,
 		timing,
 		args,
-		options,
-	)
+		runOptions: options,
+	})
 }
 
 export const sharedRunArgs = {

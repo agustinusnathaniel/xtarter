@@ -14,12 +14,17 @@ function getConfigLabel(configPath: string): string {
 	return CONFIG_FILE_NAMES[basenameName] || basenameName
 }
 
+export interface InjectVitePluginOptions {
+	configPath: string
+	importPath: string
+	importName: string
+	pluginExpression: string
+}
+
 export async function injectVitePlugin(
-	configPath: string,
-	importPath: string,
-	importName: string,
-	pluginExpression: string,
+	options: InjectVitePluginOptions,
 ): Promise<{ success: boolean; fallback?: string }> {
+	const { configPath, importPath, importName, pluginExpression } = options
 	const configLabel = getConfigLabel(configPath)
 
 	try {

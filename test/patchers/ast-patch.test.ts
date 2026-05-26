@@ -16,12 +16,12 @@ describe('injectVitePlugin', () => {
 			`import { defineConfig } from 'vite'\n\nexport default defineConfig({\n  plugins: [],\n})\n`,
 		)
 
-		const result = await injectVitePlugin(
+		const result = await injectVitePlugin({
 			configPath,
-			'vite-plugin-checker',
-			'checker',
-			'checker({ typescript: true })',
-		)
+			importPath: 'vite-plugin-checker',
+			importName: 'checker',
+			pluginExpression: 'checker({ typescript: true })',
+		})
 		expect(result.success).toBe(true)
 
 		const content = await fs.readFile(configPath, 'utf-8')
@@ -39,12 +39,12 @@ describe('injectVitePlugin', () => {
 			`import { defineConfig } from 'vite'\nimport checker from 'vite-plugin-checker'\n\nexport default defineConfig({\n  plugins: [checker()],\n})\n`,
 		)
 
-		const result = await injectVitePlugin(
+		const result = await injectVitePlugin({
 			configPath,
-			'vite-plugin-checker',
-			'checker',
-			'checker({ typescript: true })',
-		)
+			importPath: 'vite-plugin-checker',
+			importName: 'checker',
+			pluginExpression: 'checker({ typescript: true })',
+		})
 		expect(result.success).toBe(true)
 
 		const content = await fs.readFile(configPath, 'utf-8')
@@ -61,12 +61,12 @@ describe('injectVitePlugin', () => {
 			`import { defineConfig } from 'vite'\n\nexport default defineConfig(() => ({\n  plugins: [],\n}))\n`,
 		)
 
-		const result = await injectVitePlugin(
+		const result = await injectVitePlugin({
 			configPath,
-			'vite-plugin-checker',
-			'checker',
-			'checker({ typescript: true })',
-		)
+			importPath: 'vite-plugin-checker',
+			importName: 'checker',
+			pluginExpression: 'checker({ typescript: true })',
+		})
 		// magicast may or may not detect function-style configs depending on AST representation
 		expect(result).toBeDefined()
 

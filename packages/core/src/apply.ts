@@ -11,6 +11,7 @@ import { statusTag } from '@/utils/tags.js'
 export interface ApplyOptions {
 	includeConflicts?: boolean
 	quiet?: boolean
+	selectedIds?: string[]
 }
 
 export interface ApplyResult {
@@ -20,30 +21,43 @@ export interface ApplyResult {
 	timing?: ApplyTiming
 }
 
-export function applyTasks(
-	tasks: Task[],
-	cwd: string,
-	profile: ProjectProfile,
-	selectedIds?: string[],
-	options: ApplyOptions = {},
-): Promise<ApplyResult> {
+export interface ApplyTasksOptions {
+	tasks: Task[]
+	cwd: string
+	profile: ProjectProfile
+	selectedIds?: string[]
+	includeConflicts?: boolean
+	quiet?: boolean
+}
+
+export function applyTasks(options: ApplyTasksOptions): Promise<ApplyResult> {
+	const selectedIds = options.selectedIds
 	const toApply = selectedIds
-		? tasks.filter((t) => selectedIds.includes(t.id))
-		: tasks
+		? options.tasks.filter((t) => selectedIds.includes(t.id))
+		: options.tasks
 
 	const includeConflicts = options.includeConflicts ?? false
 	const quiet = options.quiet ?? false
 
-	return runApply(toApply, cwd, profile, includeConflicts, quiet)
+	return runApply({
+		tasks: toApply,
+		cwd: options.cwd,
+		profile: options.profile,
+		includeConflicts,
+		quiet,
+	})
 }
 
-async function runApply(
-	toApply: Task[],
-	cwd: string,
-	profile: ProjectProfile,
-	includeConflicts: boolean,
-	quiet: boolean,
-): Promise<ApplyResult> {
+interface RunApplyOptions {
+	tasks: Task[]
+	cwd: string
+	profile: ProjectProfile
+	includeConflicts: boolean
+	quiet: boolean
+}
+
+async function runApply(options: RunApplyOptions): Promise<ApplyResult> {
+	const { tasks: toApply, cwd, profile, includeConflicts, quiet } = options
 	const applyStart = performance.now()
 	const perTask: TaskTiming[] = []
 	const s = quiet ? null : spinner()

@@ -49,8 +49,7 @@ const agentsMdTask = createFileTask({
 	applicable: () => true,
 	filepath: 'AGENTS.md',
 	render: (profile) => renderAgentsMd(profile),
-	checkFn: async (_cwd, _profile, _fullPath, content) =>
-		content ? 'skip' : 'new',
+	checkFn: async ({ content }) => (content ? 'skip' : 'new'),
 })
 
 const skillsTask = createFileTask({
@@ -61,8 +60,7 @@ const skillsTask = createFileTask({
 	filepath: '.agents/skills/project-context.md',
 	render: (profile) => renderProjectContext(profile),
 	ensureParentDir: true,
-	checkFn: async (_cwd, _profile, _fullPath, content) =>
-		content ? 'skip' : 'new',
+	checkFn: async ({ content }) => (content ? 'skip' : 'new'),
 })
 
 export {

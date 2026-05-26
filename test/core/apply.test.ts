@@ -30,7 +30,7 @@ describe('applyTasks', () => {
 			},
 		}
 
-		const result = await applyTasks([mockTask], tmpDir, profile)
+		const result = await applyTasks({ tasks: [mockTask], cwd: tmpDir, profile })
 		expect(result.errors).toHaveLength(0)
 		expect(result.applied).toBe(1)
 
@@ -58,7 +58,7 @@ describe('applyTasks', () => {
 			apply: async () => {},
 		}
 
-		const result = await applyTasks([mockTask], tmpDir, profile)
+		const result = await applyTasks({ tasks: [mockTask], cwd: tmpDir, profile })
 		expect(result.skipped).toBe(1)
 		expect(result.applied).toBe(0)
 
@@ -90,7 +90,12 @@ describe('applyTasks', () => {
 			},
 		}
 
-		const result = await applyTasks([mockTask], tmpDir, profile, [mockTask.id])
+		const result = await applyTasks({
+			tasks: [mockTask],
+			cwd: tmpDir,
+			profile,
+			selectedIds: [mockTask.id],
+		})
 		expect(result.errors).toHaveLength(0)
 		expect(result.applied).toBe(1)
 
@@ -135,25 +140,32 @@ describe('applyTasks', () => {
 			},
 		}
 
-		const skipped = await applyTasks([mockTask], tmpDir, profile)
+		const skipped = await applyTasks({
+			tasks: [mockTask],
+			cwd: tmpDir,
+			profile,
+		})
 		expect(skipped.skipped).toBe(1)
 		expect(skipped.applied).toBe(0)
 		expect(applied).toBe(false)
 
-		const withSelectedIds = await applyTasks([mockTask], tmpDir, profile, [
-			mockTask.id,
-		])
+		const withSelectedIds = await applyTasks({
+			tasks: [mockTask],
+			cwd: tmpDir,
+			profile,
+			selectedIds: [mockTask.id],
+		})
 		expect(withSelectedIds.skipped).toBe(1)
 		expect(withSelectedIds.applied).toBe(0)
 		expect(applied).toBe(false)
 
-		const withIncludeConflicts = await applyTasks(
-			[mockTask],
-			tmpDir,
+		const withIncludeConflicts = await applyTasks({
+			tasks: [mockTask],
+			cwd: tmpDir,
 			profile,
-			[mockTask.id],
-			{ includeConflicts: true },
-		)
+			selectedIds: [mockTask.id],
+			includeConflicts: true,
+		})
 		expect(withIncludeConflicts.skipped).toBe(0)
 		expect(withIncludeConflicts.applied).toBe(1)
 		expect(applied).toBe(true)
@@ -186,7 +198,10 @@ describe('applyTasks', () => {
 			},
 		}
 
-		const result = await applyTasks([mockTask], tmpDir, profile, undefined, {
+		const result = await applyTasks({
+			tasks: [mockTask],
+			cwd: tmpDir,
+			profile,
 			includeConflicts: true,
 		})
 		expect(result.applied).toBe(1)
@@ -230,7 +245,11 @@ describe('applyTasks', () => {
 			},
 		}
 
-		const result = await applyTasks([failingTask, goodTask], tmpDir, profile)
+		const result = await applyTasks({
+			tasks: [failingTask, goodTask],
+			cwd: tmpDir,
+			profile,
+		})
 		expect(result.applied).toBe(1)
 		expect(result.errors).toHaveLength(1)
 		expect(result.errors[0]).toContain('intentional failure')

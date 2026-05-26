@@ -34,7 +34,7 @@ export const checkCommand = defineCommand({
 		const diagnostics = [...installChecks, ...conflictChecks]
 
 		if (ctx.json) {
-			console.log(formatCheckResult(tasks, statuses, diagnostics, timing))
+			console.log(formatCheckResult({ tasks, statuses, diagnostics, timing }))
 			return
 		}
 

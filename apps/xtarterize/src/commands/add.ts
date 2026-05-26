@@ -108,7 +108,13 @@ export const addCommand = defineCommand({
 			if (!proceed) return
 		}
 
-		const result = await applyTasks([task], cwd, profile, [task.id], { quiet })
+		const result = await applyTasks({
+			tasks: [task],
+			cwd,
+			profile,
+			selectedIds: [task.id],
+			quiet,
+		})
 		if (result.errors.length > 0) {
 			logError(`${result.errors.length} errors`)
 			for (const error of result.errors) {

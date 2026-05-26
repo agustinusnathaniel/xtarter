@@ -20,7 +20,7 @@ export const listCommand = defineCommand({
 		const { profile, tasks, statuses, timing } = await scanProject(ctx)
 
 		if (ctx.json) {
-			console.log(formatListResult(profile, tasks, statuses, timing))
+			console.log(formatListResult({ profile, tasks, statuses, timing }))
 			return
 		}
 
