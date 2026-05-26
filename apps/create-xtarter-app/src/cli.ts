@@ -1,5 +1,4 @@
 #!/usr/bin/env node
-import { existsSync } from 'node:fs'
 import { resolve } from 'node:path'
 import { cancel, intro, note, outro } from '@clack/prompts'
 import { logWarn, pc } from '@xtarterize/core'
@@ -10,16 +9,18 @@ import { promptPackageManager } from '@/prompts/package-manager'
 import { previewTemplate } from '@/prompts/preview'
 import { promptProjectName } from '@/prompts/project-name'
 import { promptTemplate } from '@/prompts/template'
+import {
+	prepareProjectDir,
+	resolveProjectPath,
+	scaffoldProject,
+} from '@/scaffold'
 import type { PackageManager } from '@/types'
-import { downloadTemplateFiles } from '@/utils/download'
-import { initializeGit, isGitInstalled } from '@/utils/git'
-import { installDependencies } from '@/utils/install'
-import { cleanCIConfigs, modifyPackageJson } from '@/utils/modify-package'
+import { isGitInstalled } from '@/utils/git'
 
 const scaffoldArgs = {
 	name: {
 		type: 'positional',
-		description: 'Project name',
+		description: 'Project name (use "." for current directory)',
 		required: false,
 	},
 	template: {
@@ -42,6 +43,17 @@ const scaffoldArgs = {
 	clean: {
 		type: 'boolean',
 		description: 'Remove CI/CD configs',
+		required: false,
+	},
+	force: {
+		type: 'boolean',
+		alias: 'f',
+		description: 'Overwrite existing directory',
+		required: false,
+	},
+	ref: {
+		type: 'string',
+		description: 'Git ref (branch/tag/commit) to download',
 		required: false,
 	},
 	yes: {
@@ -108,40 +120,50 @@ const mainCommand = defineCommand({
 
 		const useDefaults = args.yes === true
 		const defaultPackageManager: PackageManager = 'pnpm'
-		const defaultGitInit = !args.noGit
-		const defaultCleanCI = false
 
 		try {
 			intro(`${APP_NAME} - Let's create your project!`)
 
 			let projectName = args.name
+			let projectPath: string
+
 			if (!projectName) {
 				projectName = await promptProjectName()
+				projectPath = resolve(process.cwd(), projectName)
+			} else if (projectName === '.') {
+				const resolved = resolveProjectPath('.')
+				projectName = resolved.projectName
+				projectPath = resolved.projectPath
+			} else {
+				const resolved = resolveProjectPath(projectName)
+				projectName = resolved.projectName
+				projectPath = resolved.projectPath
 			}
 
-			const projectPath = resolve(process.cwd(), projectName)
-
-			if (existsSync(projectPath)) {
-				const files = await import('node:fs').then((m) =>
-					m.readdirSync(projectPath),
-				)
-				if (files.length > 0) {
-					cancel(
-						`Directory "${projectName}" already exists and is not empty. Please choose a different name.`,
-					)
-					process.exit(1)
-				}
-			}
+			await prepareProjectDir(projectName, projectPath, args.force)
 
 			const template = await promptTemplate(args.template as string | undefined)
 
-			const packageManager = useDefaults
-				? defaultPackageManager
-				: await promptPackageManager(args.pm as PackageManager | undefined)
+			const packageManager =
+				args.pm !== undefined
+					? await promptPackageManager(args.pm as PackageManager | undefined)
+					: useDefaults
+						? defaultPackageManager
+						: await promptPackageManager()
 
-			const shouldInitGit = useDefaults
-				? defaultGitInit
-				: await promptGitInit(args.noGit)
+			const shouldCleanCI =
+				args.clean !== undefined
+					? await promptCleanCI(args.clean)
+					: useDefaults
+						? false
+						: await promptCleanCI()
+
+			const shouldInitGit =
+				args.noGit !== undefined
+					? false
+					: useDefaults
+						? true
+						: await promptGitInit()
 
 			if (shouldInitGit) {
 				const gitInstalled = await isGitInstalled()
@@ -149,10 +171,6 @@ const mainCommand = defineCommand({
 					logWarn('Git is not installed. Skipping git initialization.')
 				}
 			}
-
-			const shouldCleanCI = useDefaults
-				? defaultCleanCI
-				: await promptCleanCI(args.clean)
 
 			note(
 				[
@@ -165,37 +183,24 @@ const mainCommand = defineCommand({
 				'Scaffolding with these settings',
 			)
 
-			await downloadTemplateFiles({
-				template,
-				targetPath: projectPath,
-			})
-
-			await modifyPackageJson({
-				projectPath,
+			await scaffoldProject({
 				projectName,
-			})
-
-			if (shouldCleanCI) {
-				await cleanCIConfigs({ projectPath })
-			}
-
-			await installDependencies({
-				packageManager,
 				projectPath,
+				template,
+				packageManager,
+				cleanCI: shouldCleanCI,
+				initGit: shouldInitGit,
+				ref: args.ref,
 			})
-
-			if (shouldInitGit) {
-				const gitInstalled = await isGitInstalled()
-				if (gitInstalled) {
-					await initializeGit({ projectPath })
-				}
-			}
 
 			outro(pc.green(`Successfully created ${pc.cyan(projectName)}!`))
 
+			const cdCommand =
+				args.name === '.'
+					? ''
+					: `  ${pc.dim('1.')} ${pc.cyan(`cd ${projectName}`)}\n`
 			console.log(`\n${pc.bold('Next steps:')}
-  ${pc.dim('1.')} ${pc.cyan(`cd ${projectName}`)}
-  ${pc.dim('2.')} ${pc.cyan(`${packageManager} dev`)}
+${cdCommand}  ${pc.dim('2.')} ${pc.cyan(`${packageManager} dev`)}
   ${pc.dim('3.')} Open ${pc.cyan('http://localhost:3000')} (or the port shown)
 
 ${pc.bold('Template:')} ${template.name}
