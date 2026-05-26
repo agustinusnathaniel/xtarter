@@ -35,6 +35,8 @@ describe('Constants', () => {
 			expect(HELP_TEXT).toContain('--pm')
 			expect(HELP_TEXT).toContain('--no-git')
 			expect(HELP_TEXT).toContain('--clean')
+			expect(HELP_TEXT).toContain('--force')
+			expect(HELP_TEXT).toContain('--ref')
 			expect(HELP_TEXT).toContain('--yes')
 		})
 	})

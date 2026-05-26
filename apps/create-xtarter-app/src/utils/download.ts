@@ -4,6 +4,8 @@ import type { TemplateConfig } from '@/templates/registry'
 
 export interface DownloadOptions {
 	offline?: boolean
+	/** Git ref (branch/tag/commit) to download. Overrides template.branch. */
+	ref?: string
 	targetPath: string
 	template: TemplateConfig
 }
@@ -19,6 +21,7 @@ export async function downloadTemplateFiles({
 	template,
 	targetPath,
 	offline = false,
+	ref,
 }: DownloadOptions): Promise<void> {
 	const logger = consola.withTag('download')
 
@@ -30,7 +33,8 @@ export async function downloadTemplateFiles({
 				`Downloading template ${template.name}...${attempt > 1 ? ` (attempt ${attempt}/${MAX_RETRIES})` : ''}`,
 			)
 
-			const source = `github:${template.repo}#${template.branch}`
+			const resolvedRef = ref || template.branch
+			const source = `github:${template.repo}#${resolvedRef}`
 
 			await downloadTemplate(source, {
 				dir: targetPath,
