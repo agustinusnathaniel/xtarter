@@ -1,5 +1,13 @@
 # @xtarterize/tasks
 
+## 1.13.11
+
+### Patch Changes
+
+- Updated dependencies [[`e6ee639`](https://github.com/agustinusnathaniel/xtarter/commit/e6ee639237787260dd13616bc45c0482851e5437)]:
+  - @xtarterize/core@1.13.11
+  - @xtarterize/patchers@1.13.11
+
 ## 1.13.10
 
 ### Patch Changes
