@@ -34,9 +34,9 @@ const LOCKFILE_NAMES = [
 
 const CONFIG_DIRS = ['.github', '.vscode', '.changeset']
 
-function statPath(
+function statOrFail(
 	filePath: string,
-): Effect.Effect<PathFingerprint | null, never> {
+): Effect.Effect<PathFingerprint, FileSystemError> {
 	return Effect.tryPromise({
 		try: () =>
 			fs.stat(filePath).then(
@@ -48,31 +48,21 @@ function statPath(
 					}) as PathFingerprint,
 			),
 		catch: (cause) => new FileSystemError({ path: filePath, cause }),
-	}).pipe(Effect.orElseSucceed(() => null))
+	})
+}
+
+function statPath(
+	filePath: string,
+): Effect.Effect<PathFingerprint | null, never> {
+	return statOrFail(filePath).pipe(Effect.orElseSucceed(() => null))
 }
 
 function findLockfile(
 	cwd: string,
 ): Effect.Effect<PathFingerprint | null, never> {
-	return Effect.tryPromise({
-		try: async () => {
-			for (const name of LOCKFILE_NAMES) {
-				const filePath = resolvePath(cwd, name)
-				try {
-					const s = await fs.stat(filePath)
-					return {
-						path: filePath,
-						mtimeMs: s.mtimeMs,
-						size: s.size,
-					} as PathFingerprint
-				} catch {
-					// not this lockfile, try next
-				}
-			}
-			return null
-		},
-		catch: (cause) => new FileSystemError({ path: cwd, cause }),
-	}).pipe(Effect.orElseSucceed(() => null))
+	return Effect.firstSuccessOf(
+		LOCKFILE_NAMES.map((name) => statOrFail(resolvePath(cwd, name))),
+	).pipe(Effect.orElseSucceed(() => null))
 }
 
 function fingerprintConfigDirs(
@@ -191,23 +181,20 @@ export function writeProfileCache(
 		Effect.gen(function* () {
 			const filePath = cacheFilePath(cwd)
 			const dir = dirname(filePath)
-			yield* Effect.tryPromise({
-				try: () => fs.mkdir(dir, { recursive: true }).then(() => undefined),
-				catch: (cause) => new FileSystemError({ path: dir, cause }),
-			}).pipe(Effect.orElseSucceed(() => undefined))
+			yield* Effect.tryPromise(() =>
+				fs.mkdir(dir, { recursive: true }).then(() => undefined),
+			).pipe(Effect.orElseSucceed(() => undefined))
 
 			const tempPath = `${filePath}.${process.pid}.${Date.now()}.tmp`
 			const data = `${JSON.stringify(entry, null, 2)}\n`
 
-			yield* Effect.tryPromise({
-				try: () => fs.writeFile(tempPath, data, 'utf-8'),
-				catch: (cause) => new FileSystemError({ path: tempPath, cause }),
-			}).pipe(Effect.orElseSucceed(() => undefined))
+			yield* Effect.tryPromise(() =>
+				fs.writeFile(tempPath, data, 'utf-8'),
+			).pipe(Effect.orElseSucceed(() => undefined))
 
-			yield* Effect.tryPromise({
-				try: () => fs.rename(tempPath, filePath),
-				catch: (cause) => new FileSystemError({ path: filePath, cause }),
-			}).pipe(Effect.orElseSucceed(() => undefined))
+			yield* Effect.tryPromise(() => fs.rename(tempPath, filePath)).pipe(
+				Effect.orElseSucceed(() => undefined),
+			)
 		}),
 	)
 }
