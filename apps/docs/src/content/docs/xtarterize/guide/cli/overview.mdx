@@ -25,7 +25,8 @@ The xtarterize CLI provides commands to detect, apply, and maintain conformance 
 | [`xtarterize diff`](#diff) | Show pending changes without applying |
 | [`xtarterize check`](#check) | Audit current conformance status |
 | [`xtarterize doctor`](#doctor) | Run environment, tools, and project diagnostics |
-| [`xtarterize add <task-id>`](#add) | Apply a single conformance task |
+| [`xtarterize add [task-id]`](#add) | Apply a single task, or pick interactively |
+| [`xtarterize undo`](#undo) | Undo the last run by restoring backed-up files |
 | [`xtarterize restore <file>`](#restore) | Restore a file from backup |
 | [`xtarterize list`](#list) | List all available tasks with status |
 
@@ -175,10 +176,12 @@ Audit which tasks are conformant and which need attention. Also runs diagnostics
 |--------|-------------|
 | `--verbose` | Show tool installation and conflict checks |
 | `--quiet` | Suppress verbose output |
+| `--badge <path>` | Generate a conformance badge SVG (use `-` for stdout) |
 
 ```bash
 npx xtarterize check
 npx xtarterize check --verbose
+npx xtarterize check --badge conformance.svg
 ```
 
 Output shows:
@@ -197,7 +200,9 @@ In verbose mode, `check` also displays diagnostics for:
 
 ## `add`
 
-Apply a single conformance task.
+Apply a single conformance task, or pick interactively from a grouped menu.
+
+When called **with a task ID**, applies that specific task after showing a diff preview and confirmation. When called **without a task ID**, shows a grouped multi-select menu of all applicable tasks with their current status.
 
 ### Options
 
@@ -205,11 +210,38 @@ Apply a single conformance task.
 |--------|-------------|
 | `--quiet` | Suppress interactive prompts |
 
+<Tabs>
+  <TabItem label="Specific task">
+    ```bash
+    npx xtarterize add lint/biome
+    npx xtarterize add ci/release
+    ```
+  </TabItem>
+  <TabItem label="Interactive">
+    ```bash
+    npx xtarterize add
+    ```
+    Browse tasks by category, select multiple, and apply with per-task confirmation.
+  </TabItem>
+</Tabs>
+
+## `undo`
+
+Undo the last `init`, `sync`, or `add` run by restoring all files that were backed up. Reads the run manifest (`.xtarterize/backups/last-run.json`) written during apply to identify which files to restore.
+
+### Options
+
+| Option | Description |
+|--------|-------------|
+| `--quiet` | Skip confirmation prompt |
+
 ```bash
-npx xtarterize add lint/biome
-npx xtarterize add ci/release
-npx xtarterize add codegen/plop
+npx xtarterize undo
 ```
+
+<Aside type="tip">
+  The <code>undo</code> command restores all files from the most recent run in one step. For single-file restores, use <code>xtarterize restore &lt;file&gt;</code> instead.
+</Aside>
 
 ## `restore`
 
@@ -247,10 +279,10 @@ Each task reports one of four statuses:
 
 ## Backup System
 
-Before any file is modified, xtarterize creates a timestamped backup in `.xtarterize/backups/`. You can restore any file using the `restore` command.
+Before any file is modified, xtarterize creates a timestamped backup in `.xtarterize/backups/`. A run manifest (`last-run.json`) is also written so `undo` can restore all files from a run in one step.
 
 <Aside type="tip">
-  Backups are stored with timestamps in `.xtarterize/backups/` and indexed in `.xtarterize/backups/.index.json`. Use `xtarterize restore <file>` to revert any change.
+  Backups are stored with timestamps in `.xtarterize/backups/` and indexed in `.xtarterize/backups/.index.json`. Use <code>xtarterize undo</code> to revert an entire run, or <code>xtarterize restore &lt;file&gt;</code> to revert a single file.
 </Aside>
 
 ## Command Relationships
@@ -262,12 +294,15 @@ flowchart TD
     B -->|find patches| D[sync]
     D -->|preview| C
     A -->|add one| E[add]
-    A -->|undo| F[restore]
+    A -->|undo last| H[undo]
+    H -->|single file| F[restore]
     B -->|view all| G[list]
+    B -->|badge| I[badge SVG]
     
     style A fill:#6366f1,color:#fff
     style D fill:#f59e0b,color:#fff
     style E fill:#22c55e,color:#fff
+    style H fill:#ef4444,color:#fff
 ```
 
 ## References

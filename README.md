@@ -41,7 +41,8 @@ npx xtarterize init
 | `npx xtarterize sync` | Update existing configurations to latest templates |
 | `npx xtarterize diff` | Show pending changes without applying anything |
 | `npx xtarterize check` | Audit current conformance status |
-| `npx xtarterize add <task>` | Apply a specific task (e.g., `lint/biome`) |
+| `npx xtarterize add [task]` | Apply a specific task, or pick interactively |
+| `npx xtarterize undo` | Undo the last run by restoring backed-up files |
 | `npx xtarterize restore <file>` | Restore a file from backup |
 | `npx xtarterize list` | List all available tasks and their status |
 
