@@ -1,4 +1,5 @@
 import fs from 'node:fs/promises'
+import path from 'node:path'
 import {
 	pc,
 	runConflictChecks,
@@ -45,10 +46,14 @@ export const checkCommand = defineCommand({
 
 		if (args.badge) {
 			const svg = generateBadgeSvg({ conformant, total })
-			const badgePath = String(args.badge)
+			let badgePath = String(args.badge)
 			if (badgePath === '-') {
 				process.stdout.write(svg)
 			} else {
+				const stat = await fs.stat(badgePath).catch(() => null)
+				if (stat?.isDirectory()) {
+					badgePath = path.join(badgePath, 'conformance.svg')
+				}
 				await fs.writeFile(badgePath, svg, 'utf-8')
 				console.log(`Badge written to ${badgePath}`)
 			}
