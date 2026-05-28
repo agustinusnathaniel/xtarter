@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import {
+	logSuccess,
 	pc,
 	runConflictChecks,
 	runToolInstallationChecks,
@@ -55,9 +56,8 @@ export const checkCommand = defineCommand({
 					badgePath = path.join(badgePath, 'conformance.svg')
 				}
 				await fs.writeFile(badgePath, svg, 'utf-8')
-				console.log(`Badge written to ${badgePath}`)
+				logSuccess(`Badge written to ${badgePath}`)
 			}
-			return
 		}
 
 		if (ctx.json) {
