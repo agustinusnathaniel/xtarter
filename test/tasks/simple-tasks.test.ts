@@ -3,45 +3,11 @@ import os from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { detectProject } from '@xtarterize/core'
-import {
-	editorconfigTask,
-	lintStagedTask,
-	npmrcTask,
-	nvmrcTask,
-} from '@xtarterize/tasks'
+import { lintStagedTask, npmrcTask } from '@xtarterize/tasks'
 import { describe, expect, it } from 'vite-plus/test'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const fixtures = path.resolve(__dirname, '../fixtures')
-
-describe('editorconfigTask', () => {
-	it('applies to any project', () => {
-		expect(editorconfigTask.applicable({} as never)).toBe(true)
-	})
-
-	it('returns new on clean fixture', async () => {
-		const profile = await detectProject(
-			path.join(fixtures, 'react-vite-tailwind'),
-		)
-		const status = await editorconfigTask.check(
-			path.join(fixtures, 'react-vite-tailwind'),
-			profile,
-		)
-		expect(status).toBe('new')
-	})
-
-	it('returns expected content in dryRun', async () => {
-		const profile = await detectProject(
-			path.join(fixtures, 'react-vite-tailwind'),
-		)
-		const diffs = await editorconfigTask.dryRun(
-			path.join(fixtures, 'react-vite-tailwind'),
-			profile,
-		)
-		expect(diffs[0].filepath).toBe('.editorconfig')
-		expect(diffs[0].after).toContain('indent_style = space')
-	})
-})
 
 describe('npmrcTask', () => {
 	it('applies to any project', () => {
@@ -69,35 +35,6 @@ describe('npmrcTask', () => {
 		)
 		expect(diffs[0].filepath).toBe('.npmrc')
 		expect(diffs[0].after).toContain('save-exact=true')
-	})
-})
-
-describe('nvmrcTask', () => {
-	it('applies to any project', () => {
-		expect(nvmrcTask.applicable({} as never)).toBe(true)
-	})
-
-	it('returns new on clean fixture', async () => {
-		const profile = await detectProject(
-			path.join(fixtures, 'react-vite-tailwind'),
-		)
-		const status = await nvmrcTask.check(
-			path.join(fixtures, 'react-vite-tailwind'),
-			profile,
-		)
-		expect(status).toBe('new')
-	})
-
-	it('returns expected content in dryRun', async () => {
-		const profile = await detectProject(
-			path.join(fixtures, 'react-vite-tailwind'),
-		)
-		const diffs = await nvmrcTask.dryRun(
-			path.join(fixtures, 'react-vite-tailwind'),
-			profile,
-		)
-		expect(diffs[0].filepath).toBe('.nvmrc')
-		expect(diffs[0].after).toContain('lts/*')
 	})
 })
 

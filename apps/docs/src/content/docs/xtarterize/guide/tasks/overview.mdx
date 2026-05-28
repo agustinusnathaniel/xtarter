@@ -87,7 +87,7 @@ For projects using [**pnpm**](https://pnpm.io/), CI workflows automatically incl
 
 | Task ID | Description | Applicable When |
 |---------|-------------|-----------------|
-| `codegen/plop` | Install [Plop](https://plopjs.com/), write [`plopfile.ts`](https://plopjs.com/documentation/#getting-started) with framework-specific [generators](https://plopjs.com/documentation/#setgenerator) | Always |
+| `codegen/plop` | Install [Plop](https://plopjs.com/), write [`plopfile.ts`](https://plopjs.com/documentation/#getting-started) with framework-specific [generators](https://plopjs.com/documentation/#setgenerator) | Framework detected |
 
 ## Monorepo
 
@@ -99,7 +99,6 @@ For projects using [**pnpm**](https://pnpm.io/), CI workflows automatically incl
 
 | Task ID | Description | Applicable When |
 |---------|-------------|-----------------|
-| `editor/editorconfig` | Write [`.editorconfig`](https://editorconfig.org/) with consistent indentation, charset, and line endings | Always |
 | `editor/vscode` | Write/merge [`.vscode/settings.json`](https://code.visualstudio.com/docs/getstarted/settings#_settingsjson) and [`.vscode/extensions.json`](https://code.visualstudio.com/docs/editor/extension-marketplace#_workspace-recommended-extensions) | Always |
 
 ### Additive Extension Merging
@@ -110,8 +109,7 @@ When `.vscode/extensions.json` already exists, xtarterize **adds** its recommend
 
 | Task ID | Description | Applicable When |
 |---------|-------------|-----------------|
-| `agent/agents-md` | Write [`AGENTS.md`](https://docs.opencode.ai/agents) with framework-specific AI agent instructions | Always |
-| `agent/skills` | Scaffold [`.agents/skills/`](https://docs.opencode.ai/skills) directory with project context | TypeScript detected |
+| `agent/agents-md` | Write [`AGENTS.md`](https://docs.opencode.ai/agents) with project description and commands | Always |
 | `agent/skills-install` | Install relevant [agent skills](https://skills.sh) via `npx skills@latest add` for your stack | TypeScript detected |
 
 ### Skills Install
@@ -144,7 +142,6 @@ The `agent/skills-install` task automatically installs [agent skills](https://sk
 | Task ID | Description | Applicable When |
 |---------|-------------|-----------------|
 | `scripts/package-scripts` | Patch [`package.json`](https://docs.npmjs.com/cli/v10/configuring-npm/package-json) [`scripts`](https://docs.npmjs.com/cli/v10/using-npm/scripts) with `lint`, `format`, `typecheck`, etc. | Always |
-| `scripts/nvmrc` | Write [`.nvmrc`](https://github.com/nvm-sh/nvm#nvmrc) with `lts/*` to pin Node.js version | Always |
 | `scripts/npmrc` | Write [`.npmrc`](https://docs.npmjs.com/cli/v10/configuring-npm/npmrc) with `save-exact`, `strict-peer-dependencies`, and `auto-install-peers` | Always |
 
 ## Idempotency
@@ -216,7 +213,7 @@ Tasks only run when their conditions are met:
 - [Knip Documentation](https://knip.dev/) — Find unused files, dependencies, and exports
 
 ### Code Generation
-- [Plop Documentation](https://plopjs.com/documentation/) — Micro-generator framework
+- [Plop Documentation](https://plopjs.com/documentation/) — Micro-generator framework (only for projects with a detected framework)
 
 ### Monorepo
 - [Turborepo Documentation](https://turbo.build/repo/docs) — Monorepo task orchestration

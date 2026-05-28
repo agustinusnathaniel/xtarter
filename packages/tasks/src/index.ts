@@ -5,7 +5,6 @@ import { ciWorkflowTask } from '@/ci/ci.js'
 import { releaseWorkflowTask } from '@/ci/release.js'
 import { plopTask } from '@/codegen/plop.js'
 import { renovateTask } from '@/deps/renovate.js'
-import { editorconfigTask } from '@/editor/editorconfig.js'
 import { vscodeTask } from '@/editor/vscode.js'
 import { createFileTask } from '@/factory'
 import { packageScriptsTask } from '@/factory/package-scripts.js'
@@ -13,7 +12,7 @@ import { biomeTask } from '@/lint/biome.js'
 import { oxfmtTask, oxlintTask } from '@/lint/oxlint.js'
 import { turboTask } from '@/monorepo/turbo.js'
 import { npmrcTask } from '@/npmrc.js'
-import { nvmrcTask } from '@/nvmrc.js'
+
 import { knipTask } from '@/quality/knip.js'
 import { lintStagedTask } from '@/quality/lint-staged.js'
 import { catVersionTask } from '@/release/cat-version.js'
@@ -21,7 +20,6 @@ import { commitlintTask } from '@/release/commitlint.js'
 import { czgTask } from '@/release/czg.js'
 import { gitHooksTask } from '@/release/git-hooks.js'
 import { renderAgentsMd } from '@/templates/agents-md.js'
-import { renderProjectContext } from '@/templates/project-context.js'
 import { renderReleaseWorkflow } from '@/templates/workflows/release-yml.js'
 import { gitignoreTsbuildinfoTask } from '@/ts/gitignore-tsbuildinfo.js'
 import { incrementalTask } from '@/ts/incremental.js'
@@ -41,7 +39,7 @@ export {
 	writeTaskDiffs,
 } from '@/factory/index.js'
 
-// Inline agent task definitions (was agent/module.ts + agents-md.ts + skills.ts)
+// Inline agent task definitions
 const agentsMdTask = createFileTask({
 	id: 'agent/agents-md',
 	label: 'AGENTS.md',
@@ -49,17 +47,6 @@ const agentsMdTask = createFileTask({
 	applicable: () => true,
 	filepath: 'AGENTS.md',
 	render: (profile) => renderAgentsMd(profile),
-	checkFn: async ({ content }) => (content ? 'skip' : 'new'),
-})
-
-const skillsTask = createFileTask({
-	id: 'agent/skills',
-	label: 'AI Skills directory',
-	group: 'Agent',
-	applicable: (profile) => profile.typescript,
-	filepath: '.agents/skills/project-context.md',
-	render: (profile) => renderProjectContext(profile),
-	ensureParentDir: true,
 	checkFn: async ({ content }) => (content ? 'skip' : 'new'),
 })
 
@@ -71,14 +58,12 @@ export {
 	ciWorkflowTask,
 	commitlintTask,
 	czgTask,
-	editorconfigTask,
 	gitHooksTask,
 	gitignoreTsbuildinfoTask,
 	incrementalTask,
 	knipTask,
 	lintStagedTask,
 	npmrcTask,
-	nvmrcTask,
 	oxfmtTask,
 	oxlintTask,
 	packageScriptsTask,
@@ -88,7 +73,6 @@ export {
 	renderReleaseWorkflow,
 	renovateTask,
 	skillsInstallTask,
-	skillsTask,
 	strictTask,
 	turboTask,
 	viteCheckerTask,
@@ -123,13 +107,10 @@ export function getAllTasks(): Task[] {
 			plopTask,
 			turboTask,
 			vscodeTask,
-			editorconfigTask,
 			agentsMdTask,
-			skillsTask,
 			skillsInstallTask,
 			packageScriptsTask,
 			npmrcTask,
-			nvmrcTask,
 		]
 	}
 	return _allTasks

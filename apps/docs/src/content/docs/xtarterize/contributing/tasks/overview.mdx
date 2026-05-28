@@ -66,9 +66,7 @@ classDiagram
 <FileTree>
 - packages/tasks/src/
   - agent/
-    - agents-md.ts
-    - module.ts
-    - skills.ts
+    - skills-install.ts
   - ci/
     - auto-update.ts
     - ci.ts
@@ -108,7 +106,7 @@ classDiagram
 
 Most tasks are created through factory functions in [`factory.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/tasks/src/factory.ts) that eliminate boilerplate:
 
-- **`createFileTask`** — For tasks that write a single file (CI workflows, [renovate](https://docs.renovatebot.com/), [commitlint](https://commitlint.js.org/), [knip](https://knip.dev/), [`.editorconfig`](https://editorconfig.org/), [`.gitignore`](https://git-scm.com/docs/gitignore), AI skills). Supports exact-match comparison with `normalizeLineEndings` and optional custom `checkFn`.
+- **`createFileTask`** — For tasks that write a single file (CI workflows, [renovate](https://docs.renovatebot.com/), [commitlint](https://commitlint.js.org/), [knip](https://knip.dev/), [`.gitignore`](https://git-scm.com/docs/gitignore), `AGENTS.md`). Supports exact-match comparison with `normalizeLineEndings` and optional custom `checkFn`.
 - **`createMultiFileTask`** — For tasks that write multiple text files with optional dependency install (e.g. [plop](https://plopjs.com/) writes both `plopfile.ts` and `plop/*.hbs` template files)
 - **`createJsonMergeTask`** — For tasks that deep-merge JSON configs ([`tsconfig.json`](https://www.typescriptlang.org/tsconfig/), [`biome.json`](https://biomejs.dev/reference/configuration/), [`turbo.json`](https://turbo.build/repo/docs/reference/configuration)). Uses shared JSON mutation helpers in [`factory-config.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/tasks/src/factory-config.ts)
 - **`createMultiFileJsonMergeTask`** — For tasks that merge multiple JSON files ([`.vscode/settings.json`](https://code.visualstudio.com/docs/getstarted/settings#_settingsjson) + [`.vscode/extensions.json`](https://code.visualstudio.com/docs/editor/extension-marketplace#_workspace-recommended-extensions)). Supports custom per-file merge functions and reuses [`factory-config.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/tasks/src/factory-config.ts)
