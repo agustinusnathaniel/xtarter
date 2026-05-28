@@ -1,4 +1,4 @@
-@layer base, starlight, theme, components, utilities, lucode;
+@layer base, starlight, theme, components, utilities;
 
 @import "@astrojs/starlight-tailwind";
 @import "tailwindcss/theme.css" layer(theme);
@@ -8,39 +8,39 @@
 @import "@fontsource-variable/geist-mono";
 
 @theme {
-	--font-heading: "Lora", serif;
-	--font-sans: "Atkinson Hyperlegible Next Variable", sans-serif;
-	--font-mono: "Geist Mono Variable", monospace;
+  --font-heading: "Lora", serif;
+  --font-sans: "Atkinson Hyperlegible Next Variable", sans-serif;
+  --font-mono: "Geist Mono Variable", monospace;
 
-	/* https://starlight.astro.build/guides/css-and-tailwind/#color-theme-editor */
-	/* Generated accent color palettes. */
-	--color-accent-200: #feb3a6;
-	--color-accent-600: #a60a00;
-	--color-accent-900: #640300;
-	--color-accent-950: #460b05;
-	/* Generated gray color palettes. */
-	--color-gray-100: #f9f5f5;
-	--color-gray-200: #f3ecea;
-	--color-gray-300: #c8c0be;
-	--color-gray-400: #978784;
-	--color-gray-500: #635451;
-	--color-gray-700: #423432;
-	--color-gray-800: #302321;
-	--color-gray-900: #1d1715;
+  /* https://starlight.astro.build/guides/css-and-tailwind/#color-theme-editor */
+  /* Generated accent color palettes. */
+  --color-accent-200: #e9beac;
+  --color-accent-600: #8c3400;
+  --color-accent-900: #532109;
+  --color-accent-950: #391a0c;
+  /* Generated gray color palettes. */
+  --color-gray-100: #f9f5f5;
+  --color-gray-200: #f3ecea;
+  --color-gray-300: #c8c0be;
+  --color-gray-400: #978784;
+  --color-gray-500: #635451;
+  --color-gray-700: #423432;
+  --color-gray-800: #302321;
+  --color-gray-900: #1d1715;
 }
 
 :root {
-	--sl-font: var(--font-sans);
-	--sl-font-mono: var(--font-mono);
-	--sl-color-accent: #f97316;
-	--sl-color-accent-high: #fb923c;
-	--sl-color-accent-low: #ea580c;
+  --sl-font: var(--font-sans);
+  --sl-font-mono: var(--font-mono);
+  --sl-color-accent: #f97316;
+  --sl-color-accent-high: #fb923c;
+  --sl-color-accent-low: #ea580c;
 }
 
 :root[data-theme="dark"] {
-	--sl-color-accent: #fb923c;
-	--sl-color-accent-high: #fdba74;
-	--sl-color-accent-low: #f97316;
+  --sl-color-accent: #fb923c;
+  --sl-color-accent-high: #fdba74;
+  --sl-color-accent-low: #f97316;
 }
 
 h1,
@@ -49,66 +49,63 @@ h3,
 h4,
 h5,
 h6 {
-	font-family: var(--font-heading);
+  font-family: var(--font-heading);
 }
 
 /* ============================================
-   LANDING PAGE - HERO SECTION (lucode-starlight override)
+   LANDING PAGE - HERO SECTION (Starlight native)
    ============================================ */
 
-/* Hero title - larger, bolder, sans-serif with gradient */
-/* #_top beats Astro scoped [data-astro-cid-*] selectors (0,1,0,0 vs 0,0,1,1) */
-#_top {
-	font-size: clamp(2.5rem, 6vw, 4rem);
-	font-weight: 800;
-	line-height: 1.1;
-	letter-spacing: -0.03em;
-	font-family: var(--font-sans);
-	margin-bottom: 1.5rem;
-
-	background: linear-gradient(
-		135deg,
-		var(--sl-color-white) 0%,
-		var(--sl-color-white) 45%,
-		var(--sl-color-accent) 50%,
-		#fbbf24 75%,
-		var(--sl-color-accent-high) 100%
-	);
-	-webkit-background-clip: text;
-	-webkit-text-fill-color: transparent;
-	background-clip: text;
+/* Starlight splash hero wrapper */
+.hero {
+  position: relative;
+  text-align: center;
+  padding: 4rem 1rem 2rem;
 }
 
-/* Hero tagline — use [data-layout] to beat Astro scoped selectors */
-.hero[data-layout] .tagline {
-	font-size: clamp(1.1rem, 2vw, 1.35rem);
-	color: var(--sl-color-gray-2);
-	max-width: 640px;
-	margin: 0 auto 2rem;
-	line-height: 1.6;
+/* Hero title - larger, bolder, sans-serif */
+body .hero h1 {
+  font-size: clamp(2.5rem, 6vw, 4rem);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  font-family: var(--font-sans);
+  margin-bottom: 1.5rem;
 }
 
-/* Hero action buttons — lucode uses .link-button not .sl-link-button */
-.hero[data-layout] .actions .link-button {
-	font-size: 1.125rem;
-	padding: 0.75rem 1.75rem;
+/* Gradient text for "JavaScript & TypeScript" */
+body .hero h1 {
+  background: linear-gradient(
+    135deg,
+    var(--sl-color-white) 0%,
+    var(--sl-color-white) 45%,
+    var(--sl-color-accent) 50%,
+    #fbbf24 75%,
+    var(--sl-color-accent-high) 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Hero tagline - Starlight uses .tagline div, not <p> */
+body .hero .tagline {
+  font-size: clamp(1.1rem, 2vw, 1.35rem);
+  color: var(--sl-color-gray-2);
+  max-width: 640px;
+  margin: 0 auto 2rem;
+  line-height: 1.6;
+}
+
+/* Hero action buttons */
+body .hero .sl-link-button {
+  font-size: 1.125rem;
+  padding: 0.75rem 1.75rem;
 }
 
 /* Hero image area (if used) */
 .hero .hero-html {
-	margin-top: 2rem;
-}
-
-/* ============================================
-   SPLASH PAGE CONTENT — wraps markdown below hero on splash pages
-   lucode-starlight PageFrame doesn't container-wrap non-sidebar content
-   ============================================ */
-
-main > .markdown-wrapper {
-	max-width: 1024px;
-	margin: 0 auto;
-	padding: 2rem 1.5rem 4rem;
-	width: 100%;
+  margin-top: 2rem;
 }
 
 /* ============================================
@@ -116,61 +113,61 @@ main > .markdown-wrapper {
    ============================================ */
 
 .features-grid {
-	display: grid;
-	grid-template-columns: repeat(3, 1fr);
-	gap: 1.5rem;
-	margin: 2.5rem 0;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  margin: 2.5rem 0;
 }
 
 .feature-card {
-	margin: 0;
-	display: flex;
-	flex-direction: column;
-	padding: 1.75rem;
-	border-radius: 12px;
-	border: 1px solid var(--sl-color-gray-5);
-	background: var(--sl-color-gray-6, rgba(0, 0, 0, 0.02));
-	transition:
-		transform 0.2s ease,
-		box-shadow 0.2s ease,
-		border-color 0.2s ease;
-	height: 100%;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 1.75rem;
+  border-radius: 12px;
+  border: 1px solid var(--sl-color-gray-5);
+  background: var(--sl-color-gray-6, rgba(0, 0, 0, 0.02));
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+  height: 100%;
 }
 
 .feature-card:hover {
-	transform: translateY(-2px);
-	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-	border-color: var(--sl-color-accent-low);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  border-color: var(--sl-color-accent-low);
 }
 
 [data-theme="dark"] .feature-card {
-	background: var(--sl-color-gray-6, rgba(255, 255, 255, 0.02));
+  background: var(--sl-color-gray-6, rgba(255, 255, 255, 0.02));
 }
 
 [data-theme="dark"] .feature-card:hover {
-	box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
 }
 
 .feature-icon {
-	font-size: 1.75rem;
-	margin-bottom: 1rem;
-	line-height: 1;
+  font-size: 1.75rem;
+  margin-bottom: 1rem;
+  line-height: 1;
 }
 
 .feature-card h3 {
-	font-size: 1.05rem;
-	margin: 0 0 0.5rem;
-	font-family: var(--font-sans);
-	font-weight: 600;
-	letter-spacing: -0.01em;
+  font-size: 1.05rem;
+  margin: 0 0 0.5rem;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
 .feature-card p {
-	margin: 0;
-	color: var(--sl-color-gray-2);
-	line-height: 1.6;
-	font-size: 0.95rem;
-	flex: 1;
+  margin: 0;
+  color: var(--sl-color-gray-2);
+  line-height: 1.6;
+  font-size: 0.95rem;
+  flex: 1;
 }
 
 /* ============================================
@@ -178,15 +175,15 @@ main > .markdown-wrapper {
    ============================================ */
 
 @media (max-width: 900px) {
-	.features-grid {
-		grid-template-columns: repeat(2, 1fr);
-	}
+  .features-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 }
 
 @media (max-width: 600px) {
-	.features-grid {
-		grid-template-columns: 1fr;
-	}
+  .features-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* ============================================
@@ -194,18 +191,18 @@ main > .markdown-wrapper {
    ============================================ */
 
 hr {
-	margin: 3rem 0;
-	border: none;
-	border-top: 1px solid var(--sl-color-gray-5);
+  margin: 3rem 0;
+  border: none;
+  border-top: 1px solid var(--sl-color-gray-5);
 }
 
 /* ============================================
    CTA BUTTONS
    ============================================ */
 
-.hero .actions .link-button {
-	font-size: 1.125rem;
-	padding: 0.75rem 1.75rem;
+.sl-markdown-content .hero-buttons .sl-link-button {
+  font-size: 1.125rem;
+  padding: 0.75rem 1.75rem;
 }
 
 /* ============================================
@@ -213,7 +210,7 @@ hr {
    ============================================ */
 
 .sl-markdown-content pre {
-	position: relative;
+  position: relative;
 }
 
 /* ============================================
@@ -221,10 +218,14 @@ hr {
    ============================================ */
 
 @media (max-width: 640px) {
-	.hero[data-layout] .actions {
-		flex-direction: column;
-		align-items: center;
-	}
+  .hero-section {
+    padding: 2rem 0.5rem 2rem;
+  }
+
+  .hero-buttons {
+    flex-direction: column;
+    align-items: center;
+  }
 }
 
 /* ============================================
@@ -232,28 +233,28 @@ hr {
    ============================================ */
 
 .badge {
-	display: inline-flex;
-	align-items: center;
-	gap: 0.35rem;
-	padding: 0.15rem 0.55rem;
-	border-radius: 6px;
-	font-size: 0.7rem;
-	font-weight: 700;
-	font-family: var(--font-mono);
-	letter-spacing: 0.02em;
-	text-transform: uppercase;
-	line-height: 1.4;
-	vertical-align: middle;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.15rem 0.55rem;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  line-height: 1.4;
+  vertical-align: middle;
 }
 
 .badge-cxa {
-	background: #6366f1;
-	color: #fff;
+  background: #6366f1;
+  color: #fff;
 }
 
 .badge-xtz {
-	background: #f97316;
-	color: #fff;
+  background: #f97316;
+  color: #fff;
 }
 
 /* ============================================
@@ -261,50 +262,73 @@ hr {
    ============================================ */
 
 .product-grid {
-	display: grid;
-	grid-template-columns: repeat(2, 1fr);
-	gap: 1.5rem;
-	margin: 1.5rem 0;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+  margin: 1.5rem 0;
 }
 
 .product-card {
-	margin: 0;
-	padding: 2rem;
-	border-radius: 12px;
-	border: 1px solid var(--sl-color-gray-5);
-	background: var(--sl-color-gray-6);
-	display: flex;
-	flex-direction: column;
-	gap: 0.75rem;
+  margin: 0;
+  padding: 2rem;
+  border-radius: 12px;
+  border: 1px solid var(--sl-color-gray-5);
+  background: var(--sl-color-gray-6);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  text-decoration: none;
+  color: inherit;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.product-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  border-color: var(--sl-color-accent-low);
 }
 
 .product-card h2 {
-	margin: 0;
-	font-size: 1.25rem;
-	font-weight: 700;
-	font-family: var(--font-sans);
-	display: flex;
-	align-items: center;
-	gap: 0.5rem;
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  font-family: var(--font-sans);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .product-card h2 svg {
-	color: var(--sl-color-accent);
-	flex-shrink: 0;
+  color: var(--sl-color-accent);
+  flex-shrink: 0;
 }
 
 .product-card p {
-	margin: 0;
-	color: var(--sl-color-gray-2);
-	line-height: 1.6;
-	font-size: 0.95rem;
-	flex: 1;
+  margin: 0;
+  color: var(--sl-color-gray-2);
+  line-height: 1.6;
+  font-size: 0.95rem;
+  flex: 1;
+}
+
+.product-card-link {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--sl-color-accent);
+}
+
+.product-card:focus-visible {
+  outline: 2px solid var(--sl-color-accent);
+  outline-offset: 2px;
 }
 
 @media (max-width: 640px) {
-	.product-grid {
-		grid-template-columns: 1fr;
-	}
+  .product-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* ============================================
@@ -312,7 +336,7 @@ hr {
    ============================================ */
 
 html {
-	scroll-behavior: smooth;
+  scroll-behavior: smooth;
 }
 
 /* ============================================
@@ -320,8 +344,8 @@ html {
    ============================================ */
 
 ::selection {
-	background: var(--sl-color-accent-low);
-	color: var(--sl-color-white);
+  background: var(--sl-color-accent-low);
+  color: var(--sl-color-white);
 }
 
 /* ============================================
@@ -329,20 +353,20 @@ html {
    ============================================ */
 
 ::-webkit-scrollbar {
-	width: 8px;
+  width: 8px;
 }
 
 ::-webkit-scrollbar-track {
-	background: transparent;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-	background: var(--sl-color-gray-5);
-	border-radius: 4px;
+  background: var(--sl-color-gray-5);
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-	background: var(--sl-color-gray-4);
+  background: var(--sl-color-gray-4);
 }
 
 /* ============================================
@@ -350,7 +374,7 @@ html {
    ============================================ */
 
 .sl-markdown-content a.template-card {
-	text-decoration: none;
+  text-decoration: none;
 }
 
 /* ============================================
@@ -358,5 +382,5 @@ html {
    ============================================ */
 
 .splash hr {
-	opacity: 0.5;
+  opacity: 0.5;
 }

@@ -2,7 +2,6 @@ import starlight from '@astrojs/starlight'
 import tailwindcss from '@tailwindcss/vite'
 import { defineConfig } from 'astro/config'
 import astroMermaid from 'astro-mermaid'
-import lucode from 'lucode-starlight'
 
 export default defineConfig({
 	site: 'https://xtarter.sznm.dev',
@@ -24,20 +23,7 @@ export default defineConfig({
 			customCss: ['./src/styles/global.css'],
 			components: {
 				Head: './src/components/StarlightHead.astro',
-				PageFrame: './src/components/override/PageFrame.astro',
 			},
-			plugins: [
-				lucode({
-					navLinks: [
-						{ label: 'xtarterize', link: '/xtarterize/' },
-						{ label: 'create-xtarter-app', link: '/create-xtarter-app/' },
-						{
-							label: 'GitHub',
-							link: 'https://github.com/agustinusnathaniel/xtarterize',
-						},
-					],
-				}),
-			],
 			head: [
 				{
 					tag: 'meta',
