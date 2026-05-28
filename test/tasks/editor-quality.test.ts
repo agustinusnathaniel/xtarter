@@ -6,7 +6,6 @@ import { detectProject } from '@xtarterize/core'
 import {
 	agentsMdTask,
 	knipTask,
-	skillsTask,
 	turboTask,
 	vscodeTask,
 } from '@xtarterize/tasks'
@@ -169,7 +168,7 @@ describe('agentsMdTask', () => {
 		expect(status).toBe('new')
 	})
 
-	it('renders framework guidance', async () => {
+	it('renders minimal root with commands', async () => {
 		const profile = await detectProject(
 			path.join(fixtures, 'react-vite-tailwind'),
 		)
@@ -178,59 +177,9 @@ describe('agentsMdTask', () => {
 			profile,
 		)
 
-		expect(diff.after).toContain('## Framework Guidance')
-		expect(diff.after).toContain('Keep components small')
-		expect(diff.after).toContain('Keep package scripts additive')
-	})
-})
-
-describe('skillsTask', () => {
-	it('is applicable to TS projects only', async () => {
-		const tsProfile = await detectProject(
-			path.join(fixtures, 'react-vite-tailwind'),
-		)
-		expect(skillsTask.applicable(tsProfile)).toBe(true)
-
-		const nonTsProfile = await detectProject(
-			path.join(fixtures, 'monorepo-turbo'),
-		)
-		expect(skillsTask.applicable(nonTsProfile)).toBe(false)
-	})
-
-	it('returns new when project-context is missing', async () => {
-		const profile = await detectProject(
-			path.join(fixtures, 'react-vite-tailwind'),
-		)
-		const status = await skillsTask.check(
-			path.join(fixtures, 'react-vite-tailwind'),
-			profile,
-		)
-		expect(status).toBe('new')
-	})
-
-	it('returns skip when project-context already exists', async () => {
-		const tmpDir = await fs.mkdtemp(
-			path.join(os.tmpdir(), 'xtarterize-skills-'),
-		)
-		await fs.writeFile(
-			path.join(tmpDir, 'package.json'),
-			JSON.stringify({
-				name: 'skills-check',
-				version: '1.0.0',
-				devDependencies: { typescript: '^5.0.0' },
-			}),
-		)
-		await fs.mkdir(path.join(tmpDir, '.agents', 'skills'), { recursive: true })
-		await fs.writeFile(
-			path.join(tmpDir, '.agents', 'skills', 'project-context.md'),
-			'# Existing context\n',
-		)
-
-		const profile = await detectProject(tmpDir)
-		const status = await skillsTask.check(tmpDir, profile)
-		expect(status).toBe('skip')
-
-		await fs.rm(tmpDir, { recursive: true, force: true })
+		expect(diff.after).toContain('## Commands')
+		expect(diff.after).toContain('pnpm install')
+		expect(diff.after).not.toContain('## Framework Guidance')
 	})
 })
 
