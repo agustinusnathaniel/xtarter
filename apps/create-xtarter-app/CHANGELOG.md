@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.14.0
+
+### Minor Changes
+
+- [#56](https://github.com/agustinusnathaniel/xtarter/pull/56) [`e973326`](https://github.com/agustinusnathaniel/xtarter/commit/e973326f9dd96e9a3e9f483fd35c5d177d0858ac) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - feat: add --force, --ref flags, cwd scaffold, better --yes behavior, and error recovery
+
+  - New `--force` / `-f` flag overwrites existing directories
+  - New `--ref` flag pins template version to a git ref
+  - `create-xtarter-app .` scaffolds into current directory
+  - `--yes` no longer overrides explicit flags like `--pm bun`
+  - Partial scaffold failures clean up created directories
+  - Banner alignment fixed (was off by 2-4 chars per line)
+
 ## 1.13.6
 
 ### Patch Changes
