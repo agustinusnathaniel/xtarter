@@ -1,5 +1,13 @@
 # xtarterize
 
+## 1.14.1
+
+### Patch Changes
+
+- [`f805556`](https://github.com/agustinusnathaniel/xtarter/commit/f805556aa43083099883c7561fb72df8592176a6) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - fix(add): make taskId positional arg optional
+
+  `xtarterize add` without a task ID now enters interactive mode directly instead of requiring a task ID or empty string.
+
 ## 1.14.0
 
 ### Minor Changes
