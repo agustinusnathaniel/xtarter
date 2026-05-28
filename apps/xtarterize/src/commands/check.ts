@@ -1,3 +1,4 @@
+import fs from 'node:fs/promises'
 import {
 	pc,
 	runConflictChecks,
@@ -5,6 +6,7 @@ import {
 	statusTag,
 } from '@xtarterize/core'
 import { defineCommand } from 'citty'
+import { generateBadgeSvg } from '@/ui/badge.js'
 import { formatCheckResult } from '@/ui/json-formatter.js'
 import { diagnosticIcon } from '@/utils/display.js'
 import { resolveCliContext, scanProject } from '@/utils/project.js'
@@ -24,6 +26,11 @@ export const checkCommand = defineCommand({
 			type: 'boolean',
 			description: 'Suppress verbose output',
 		},
+		badge: {
+			type: 'string',
+			description:
+				'Generate conformance badge SVG (provide output path, or - for stdout)',
+		},
 	},
 	async run({ args }) {
 		const ctx = resolveCliContext(args)
@@ -33,13 +40,25 @@ export const checkCommand = defineCommand({
 		const installChecks = await runToolInstallationChecks(ctx.cwd)
 		const diagnostics = [...installChecks, ...conflictChecks]
 
+		const conformant = tasks.filter((t) => statuses.get(t.id) === 'skip').length
+		const total = tasks.length
+
+		if (args.badge) {
+			const svg = generateBadgeSvg({ conformant, total })
+			const badgePath = String(args.badge)
+			if (badgePath === '-') {
+				process.stdout.write(svg)
+			} else {
+				await fs.writeFile(badgePath, svg, 'utf-8')
+				console.log(`Badge written to ${badgePath}`)
+			}
+			return
+		}
+
 		if (ctx.json) {
 			console.log(formatCheckResult({ tasks, statuses, diagnostics, timing }))
 			return
 		}
-
-		const conformant = tasks.filter((t) => statuses.get(t.id) === 'skip').length
-		const total = tasks.length
 
 		if (!ctx.quiet) {
 			console.log('')
