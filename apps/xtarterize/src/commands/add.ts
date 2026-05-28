@@ -29,6 +29,7 @@ export const addCommand = defineCommand({
 		taskId: {
 			type: 'positional',
 			description: 'Task ID (e.g., lint/biome). Omit to pick interactively.',
+			required: false,
 		},
 		quiet: {
 			type: 'boolean',
