@@ -2,6 +2,12 @@ import starlight from '@astrojs/starlight'
 import tailwindcss from '@tailwindcss/vite'
 import { defineConfig } from 'astro/config'
 import astroMermaid from 'astro-mermaid'
+import starlightAutoSidebar from 'starlight-auto-sidebar'
+import starlightBlog from 'starlight-blog'
+import starlightLinksValidator from 'starlight-links-validator'
+import starlightLlmsTxt from 'starlight-llms-txt'
+import starlightPageActions from 'starlight-page-actions'
+import starlightSidebarSwipe from 'starlight-sidebar-swipe'
 
 export default defineConfig({
 	site: 'https://xtarter.sznm.dev',
@@ -21,6 +27,22 @@ export default defineConfig({
 			// },
 			// favicon: '/favicon.svg',
 			customCss: ['./src/styles/global.css'],
+			plugins: [
+				starlightLinksValidator(),
+				starlightLlmsTxt({
+					projectName: 'xtarter',
+					description:
+						'Production-grade starter templates and conformance tooling for JavaScript/TypeScript projects. Includes xtarterize (conformance CLI) and create-xtarter-app (scaffolding CLI).',
+				}),
+				starlightPageActions({
+					share: true,
+					prompt:
+						'You are an expert on xtarterize and create-xtarter-app. Read {url} and help me understand how to use this tool effectively.',
+				}),
+				starlightBlog(),
+				starlightAutoSidebar(),
+				starlightSidebarSwipe(),
+			],
 			components: {
 				Head: './src/components/StarlightHead.astro',
 			},
