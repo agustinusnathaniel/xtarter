@@ -1,5 +1,21 @@
 # @xtarterize/tasks
 
+## 1.14.0
+
+### Patch Changes
+
+- [#59](https://github.com/agustinusnathaniel/xtarter/pull/59) [`07caf22`](https://github.com/agustinusnathaniel/xtarter/commit/07caf22d6eca92bbae24c43c4a08314f846b2c59) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Remove editorconfig, nvmrc, and agent/skills tasks; simplify AGENTS.md to minimal root; make plop framework-aware
+
+  - Drop `editor/editorconfig` — redundant with linters + VSCode settings
+  - Drop `scripts/nvmrc` — `lts/*` too vague to be meaningful
+  - Drop `agent/skills` — not a real skill structure, duplicated AGENTS.md content
+  - Simplify `agent/agents-md` template to minimal root (description + commands only)
+  - Change `codegen/plop` applicable condition to require a detected framework
+
+- Updated dependencies [[`7ddedae`](https://github.com/agustinusnathaniel/xtarter/commit/7ddedaeda4360653ba8bb959e2d9a6164741c17d)]:
+  - @xtarterize/core@1.14.0
+  - @xtarterize/patchers@1.14.0
+
 ## 1.13.11
 
 ### Patch Changes

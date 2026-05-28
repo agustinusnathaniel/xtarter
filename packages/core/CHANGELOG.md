@@ -1,5 +1,16 @@
 # @xtarterize/core
 
+## 1.14.0
+
+### Minor Changes
+
+- [`7ddedae`](https://github.com/agustinusnathaniel/xtarter/commit/7ddedaeda4360653ba8bb959e2d9a6164741c17d) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - feat: add undo command, interactive add, and conformance badge
+
+  - `xtarterize undo` reverts the last run by restoring all backed-up files in one command
+  - `xtarterize add` without a task ID shows a grouped multi-select menu for interactive task selection
+  - `xtarterize check --badge <path>` generates an SVG conformance badge
+  - Add RunManifest type and writeRunManifest/readRunManifest/listAllBackups to core backup module
+
 ## 1.13.11
 
 ### Patch Changes
