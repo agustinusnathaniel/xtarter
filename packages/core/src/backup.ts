@@ -99,3 +99,49 @@ export function restoreBackup(cwd: string, backup: Backup): Promise<void> {
 		),
 	)
 }
+
+export interface RunManifest {
+	timestamp: string
+	files: string[]
+}
+
+export async function writeRunManifest(
+	cwd: string,
+	files: string[],
+): Promise<void> {
+	const manifestPath = resolvePath(cwd, BACKUP_DIR, 'last-run.json')
+	const manifest: RunManifest = {
+		timestamp: new Date().toISOString(),
+		files,
+	}
+	await fs.mkdir(resolvePath(cwd, BACKUP_DIR), { recursive: true })
+	await fs.writeFile(
+		manifestPath,
+		`${JSON.stringify(manifest, null, 2)}\n`,
+		'utf-8',
+	)
+}
+
+export async function readRunManifest(
+	cwd: string,
+): Promise<RunManifest | null> {
+	const manifestPath = resolvePath(cwd, BACKUP_DIR, 'last-run.json')
+	try {
+		const content = await fs.readFile(manifestPath, 'utf-8')
+		return JSON.parse(content) as RunManifest
+	} catch {
+		return null
+	}
+}
+
+export async function listAllBackups(
+	cwd: string,
+): Promise<Record<string, Backup[]>> {
+	const indexPath = resolvePath(cwd, BACKUP_DIR, '.index.json')
+	try {
+		const content = await fs.readFile(indexPath, 'utf-8')
+		return JSON.parse(content) as Record<string, Backup[]>
+	} catch {
+		return {}
+	}
+}

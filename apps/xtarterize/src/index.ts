@@ -9,6 +9,7 @@ import { initCommand } from '@/commands/init.js'
 import { listCommand } from '@/commands/list.js'
 import { restoreCommand } from '@/commands/restore.js'
 import { syncCommand } from '@/commands/sync.js'
+import { undoCommand } from '@/commands/undo.js'
 
 process.on('SIGINT', () => process.exit(0))
 process.on('SIGTERM', () => process.exit(0))
@@ -41,6 +42,7 @@ const main = defineCommand({
 		doctor: doctorCommand,
 		add: addCommand,
 		restore: restoreCommand,
+		undo: undoCommand,
 		list: listCommand,
 	},
 })

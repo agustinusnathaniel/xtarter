@@ -1,7 +1,7 @@
 import { spinner } from '@clack/prompts'
 import { Effect } from 'effect'
 import type { Task, TaskStatus } from '@/_base.js'
-import { backupFile } from '@/backup.js'
+import { backupFile, writeRunManifest } from '@/backup.js'
 import type { ProjectProfile } from '@/detect.js'
 import { TaskError } from '@/errors.js'
 import type { ApplyTiming, TaskTiming } from '@/timing.js'
@@ -106,6 +106,11 @@ async function runApply(options: RunApplyOptions): Promise<ApplyResult> {
 	// Backup each unique file only once before applying any tasks
 	for (const filepath of filesToBackup) {
 		await backupFile(cwd, filepath)
+	}
+
+	// Write manifest so `undo` can restore all files from this run
+	if (filesToBackup.size > 0) {
+		await writeRunManifest(cwd, [...filesToBackup])
 	}
 
 	let applied = 0

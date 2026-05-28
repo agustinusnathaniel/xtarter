@@ -8,8 +8,15 @@ export type {
 } from '@/_base.js'
 export type { ApplyOptions, ApplyResult } from '@/apply.js'
 export { applyTasks } from '@/apply.js'
-export type { Backup } from '@/backup.js'
-export { backupFile, listBackups, restoreBackup } from '@/backup.js'
+export type { Backup, RunManifest } from '@/backup.js'
+export {
+	backupFile,
+	listAllBackups,
+	listBackups,
+	readRunManifest,
+	restoreBackup,
+	writeRunManifest,
+} from '@/backup.js'
 // Detection types
 export type {
 	Bundler,

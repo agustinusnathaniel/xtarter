@@ -1,7 +1,13 @@
 import fs from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
-import { backupFile, listBackups } from '@xtarterize/core'
+import {
+	backupFile,
+	listAllBackups,
+	listBackups,
+	readRunManifest,
+	writeRunManifest,
+} from '@xtarterize/core'
 import { describe, expect, it } from 'vite-plus/test'
 
 describe('backup', () => {
@@ -20,6 +26,65 @@ describe('backup', () => {
 
 		expect(backups.length).toBe(1)
 		expect(backups[0]?.filepath).toBe('foo.txt')
+		await fs.rm(tmpDir, { recursive: true, force: true })
+	})
+})
+
+describe('run manifest', () => {
+	it('writes and reads a run manifest', async () => {
+		const tmpDir = await fs.mkdtemp(
+			path.join(os.tmpdir(), 'xtarterize-manifest-'),
+		)
+
+		await writeRunManifest(tmpDir, ['tsconfig.json', 'biome.json'])
+		const manifest = await readRunManifest(tmpDir)
+
+		expect(manifest).not.toBeNull()
+		expect(manifest?.files).toEqual(['tsconfig.json', 'biome.json'])
+		expect(manifest?.timestamp).toBeTruthy()
+
+		await fs.rm(tmpDir, { recursive: true, force: true })
+	})
+
+	it('returns null when no manifest exists', async () => {
+		const tmpDir = await fs.mkdtemp(
+			path.join(os.tmpdir(), 'xtarterize-manifest-'),
+		)
+
+		const manifest = await readRunManifest(tmpDir)
+		expect(manifest).toBeNull()
+
+		await fs.rm(tmpDir, { recursive: true, force: true })
+	})
+})
+
+describe('listAllBackups', () => {
+	it('returns all backups grouped by filepath', async () => {
+		const tmpDir = await fs.mkdtemp(
+			path.join(os.tmpdir(), 'xtarterize-backup-'),
+		)
+		await fs.writeFile(path.join(tmpDir, 'a.txt'), 'a', 'utf-8')
+		await fs.writeFile(path.join(tmpDir, 'b.txt'), 'b', 'utf-8')
+
+		await backupFile(tmpDir, 'a.txt')
+		await backupFile(tmpDir, 'b.txt')
+
+		const all = await listAllBackups(tmpDir)
+		expect(Object.keys(all).sort()).toEqual(['a.txt', 'b.txt'])
+		expect(all['a.txt']?.length).toBe(1)
+		expect(all['b.txt']?.length).toBe(1)
+
+		await fs.rm(tmpDir, { recursive: true, force: true })
+	})
+
+	it('returns empty object when no index exists', async () => {
+		const tmpDir = await fs.mkdtemp(
+			path.join(os.tmpdir(), 'xtarterize-backup-'),
+		)
+
+		const all = await listAllBackups(tmpDir)
+		expect(all).toEqual({})
+
 		await fs.rm(tmpDir, { recursive: true, force: true })
 	})
 })
