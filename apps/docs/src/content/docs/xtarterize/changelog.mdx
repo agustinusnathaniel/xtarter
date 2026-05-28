@@ -7,6 +7,17 @@ import { Aside, Tabs, TabItem, CardGrid, Card, LinkButton, Steps } from '@astroj
 
 Latest updates and feature releases for xtarterize.
 
+## v1.14 — May 29, 2026
+
+<Aside type="note" title="New `undo` command">
+  `xtarterize undo` reverts the last run by restoring all backed-up files in one command — no need to manually cherry-pick individual file restores.
+</Aside>
+
+- `xtarterize add` without a task ID now shows a grouped multi-select menu for interactive task selection
+- `xtarterize check --badge <path>` generates an SVG conformance badge with score, progress bar, and status
+- Removed `editorconfig`, `nvmrc`, and `agent/skills` tasks — editorconfig is redundant with linters + VS Code settings, nvmrc `lts/*` too vague, and agent/skills duplicated AGENTS.md content
+- `codegen/plop` task now requires a detected framework to be applicable
+
 ## v1.13 — May 17, 2026
 
 <Aside type="note" title="Oxlint & Oxfmt support">
