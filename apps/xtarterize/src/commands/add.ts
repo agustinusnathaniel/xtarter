@@ -203,8 +203,14 @@ async function runInteractive(options: {
 
 	const tasksWithStatus: TaskWithStatus[] = []
 	for (const task of applicable) {
-		const status = await task.check(cwd, profile)
-		tasksWithStatus.push({ task, status })
+		try {
+			const status = await task.check(cwd, profile)
+			tasksWithStatus.push({ task, status })
+		} catch (error) {
+			const message = error instanceof Error ? error.message : String(error)
+			logError(`Failed to check ${task.id}: ${message}`)
+			tasksWithStatus.push({ task, status: 'conflict' })
+		}
 	}
 	s.stop('Tasks checked')
 

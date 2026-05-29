@@ -1,4 +1,4 @@
-import { type FileDiff, logSuccess } from '@xtarterize/core'
+import { type FileDiff, logError, logSuccess } from '@xtarterize/core'
 import { defineCommand } from 'citty'
 import { displayDiffs } from '@/ui/diff-display.js'
 import { mergeFileDiffs } from '@/ui/merge-file-diffs.js'
@@ -32,8 +32,13 @@ export const diffCommand = defineCommand({
 		for (const task of tasks) {
 			const status = statuses.get(task.id)
 			if (status === 'new' || status === 'patch') {
-				const taskDiffs = await task.dryRun(ctx.cwd, profile)
-				diffs.push(...taskDiffs)
+				try {
+					const taskDiffs = await task.dryRun(ctx.cwd, profile)
+					diffs.push(...taskDiffs)
+				} catch (error) {
+					const message = error instanceof Error ? error.message : String(error)
+					logError(`Failed to dryRun ${task.id}: ${message}`)
+				}
 			}
 		}
 

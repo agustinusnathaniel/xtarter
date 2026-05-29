@@ -41,8 +41,13 @@ export const restoreCommand = defineCommand({
 		}
 
 		if (backups.length === 1) {
-			await restoreBackup(cwd, backups[0])
-			logSuccess(`Restored ${filepath} from backup`)
+			try {
+				await restoreBackup(cwd, backups[0])
+				logSuccess(`Restored ${filepath} from backup`)
+			} catch (error) {
+				const message = error instanceof Error ? error.message : String(error)
+				logError(`Failed to restore: ${message}`)
+			}
 			return
 		}
 
@@ -56,7 +61,12 @@ export const restoreCommand = defineCommand({
 
 		abortIfCancelled(selected)
 
-		await restoreBackup(cwd, selected)
-		logSuccess(`Restored ${filepath} from backup`)
+		try {
+			await restoreBackup(cwd, selected)
+			logSuccess(`Restored ${filepath} from backup`)
+		} catch (error) {
+			const message = error instanceof Error ? error.message : String(error)
+			logError(`Failed to restore: ${message}`)
+		}
 	},
 })

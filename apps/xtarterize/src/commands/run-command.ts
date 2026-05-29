@@ -99,13 +99,21 @@ function resolveActionableTasks(
 	let filteredTasks = tasks
 
 	if (options.skip) {
-		const skipIds = options.skip.split(',').map((s) => s.trim())
+		const skipIds = options.skip
+			.split(',')
+			.map((s) => s.trim())
+			.filter(Boolean)
 		filteredTasks = filteredTasks.filter((t) => !skipIds.includes(t.id))
 	}
 
 	if (options.only) {
-		const onlyIds = options.only.split(',').map((s) => s.trim())
-		filteredTasks = filteredTasks.filter((t) => onlyIds.includes(t.id))
+		const onlyIds = options.only
+			.split(',')
+			.map((s) => s.trim())
+			.filter(Boolean)
+		if (onlyIds.length > 0) {
+			filteredTasks = filteredTasks.filter((t) => onlyIds.includes(t.id))
+		}
 	}
 
 	return filteredTasks.filter((t) => {
@@ -126,8 +134,13 @@ async function handleDryRun(options: DryRunOptions): Promise<void> {
 	const { tasks, cwd, profile, timing, format } = options
 	const diffs: FileDiff[] = []
 	for (const task of tasks) {
-		const taskDiffs = await task.dryRun(cwd, profile)
-		diffs.push(...taskDiffs)
+		try {
+			const taskDiffs = await task.dryRun(cwd, profile)
+			diffs.push(...taskDiffs)
+		} catch (error) {
+			const message = error instanceof Error ? error.message : String(error)
+			logError(`Failed to dryRun ${task.id}: ${message}`)
+		}
 	}
 	const resolvedFormat: DisplayFormat = format === 'json' ? 'json' : 'terminal'
 	displayDiffs(mergeFileDiffs(diffs), resolvedFormat)

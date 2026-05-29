@@ -49,13 +49,53 @@ export const doctorCommand = defineCommand({
 		s.start('Running diagnostics...')
 
 		const diagStart = performance.now()
-		const [envChecks, installChecks, healthChecks, conflictChecks] =
-			await Promise.all([
-				runEnvironmentChecks(cwd),
-				runToolInstallationChecks(cwd),
-				runProjectHealthChecks(cwd),
-				runConflictChecks(cwd),
-			])
+		const results = await Promise.allSettled([
+			runEnvironmentChecks(cwd),
+			runToolInstallationChecks(cwd),
+			runProjectHealthChecks(cwd),
+			runConflictChecks(cwd),
+		])
+
+		const envChecks =
+			results[0].status === 'fulfilled'
+				? results[0].value
+				: ([
+						{
+							name: 'Environment',
+							status: 'fail' as const,
+							message: 'Failed to run environment checks',
+						},
+					] as DiagnosticCheck[])
+		const installChecks =
+			results[1].status === 'fulfilled'
+				? results[1].value
+				: ([
+						{
+							name: 'Tools',
+							status: 'fail' as const,
+							message: 'Failed to run tool checks',
+						},
+					] as DiagnosticCheck[])
+		const healthChecks =
+			results[2].status === 'fulfilled'
+				? results[2].value
+				: ([
+						{
+							name: 'Project',
+							status: 'fail' as const,
+							message: 'Failed to run project health checks',
+						},
+					] as DiagnosticCheck[])
+		const conflictChecks =
+			results[3].status === 'fulfilled'
+				? results[3].value
+				: ([
+						{
+							name: 'Configuration',
+							status: 'fail' as const,
+							message: 'Failed to run conflict checks',
+						},
+					] as DiagnosticCheck[])
 
 		const groups: DiagnosticGroup[] = [
 			{ title: 'Environment', checks: envChecks },
