@@ -60,7 +60,6 @@ export function detectFramework(deps: Record<string, string>): Framework {
 	const hasSvelte = !!deps.svelte
 	const hasSolid = !!deps['solid-js']
 
-	if (hasReactNative && hasReact) return null
 	if (hasReactNative) return 'react-native'
 	if (hasReact) return 'react'
 	if (hasVue) return 'vue'
@@ -183,7 +182,7 @@ async function detectGitHubWorkflows(cwd: string): Promise<string[]> {
 	return entries
 		.filter(
 			(e): e is string =>
-				(typeof e === 'string' && e.endsWith('.yml')) || e.endsWith('.yaml'),
+				typeof e === 'string' && (e.endsWith('.yml') || e.endsWith('.yaml')),
 		)
 		.map((e) => e.replace(/\.(yml|yaml)$/, ''))
 }

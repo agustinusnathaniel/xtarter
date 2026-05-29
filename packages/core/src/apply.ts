@@ -65,6 +65,7 @@ async function runApply(options: RunApplyOptions): Promise<ApplyResult> {
 	const tasksToRun: { task: Task; status: TaskStatus }[] = []
 
 	const filesToBackup = new Set<string>()
+	let skippedInCheck = 0
 
 	for (const task of toApply) {
 		try {
@@ -83,14 +84,26 @@ async function runApply(options: RunApplyOptions): Promise<ApplyResult> {
 			const checkMs = performance.now() - checkStart
 			if (status === 'skip') {
 				perTask.push({ id: task.id, label: task.label, checkMs })
+				skippedInCheck++
 				continue
 			}
 			if (status === 'conflict' && !includeConflicts) {
 				logInfo(`Skipping conflict: ${task.label} (${task.id})`)
+				skippedInCheck++
 				continue
 			}
 			const dryRunStart = performance.now()
-			const diffs = await task.dryRun(cwd, profile)
+			const diffs = await Effect.runPromise(
+				Effect.tryPromise({
+					try: (_signal) => task.dryRun(cwd, profile),
+					catch: (cause) =>
+						new TaskError({
+							taskId: task.id,
+							message: `Failed to dryRun ${task.id}`,
+							cause,
+						}),
+				}),
+			)
 			const dryRunMs = performance.now() - dryRunStart
 			for (const diff of diffs) {
 				filesToBackup.add(diff.filepath)
@@ -150,7 +163,7 @@ async function runApply(options: RunApplyOptions): Promise<ApplyResult> {
 		}
 	}
 
-	const skipped = toApply.length - applied - errors.length
+	const skipped = skippedInCheck
 	const applyMs = performance.now() - applyStart
 	console.log('')
 	return { applied, skipped, errors, timing: { applyMs, tasks: perTask } }

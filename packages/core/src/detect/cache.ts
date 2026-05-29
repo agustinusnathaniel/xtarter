@@ -163,14 +163,29 @@ export function readProfileCache(
 ): Promise<ProfileCacheEntry | null> {
 	return Effect.runPromise(
 		Effect.tryPromise({
-			try: () =>
-				fs
-					.readFile(cacheFilePath(cwd), 'utf-8')
-					.then((c) => JSON.parse(c) as ProfileCacheEntry),
+			try: async () => {
+				const content = await fs.readFile(cacheFilePath(cwd), 'utf-8')
+				const parsed = JSON.parse(content) as unknown
+				if (!isValidCacheEntry(parsed)) return null
+				return parsed
+			},
 			catch: (cause) =>
 				new FileSystemError({ path: cacheFilePath(cwd), cause }),
 		}).pipe(Effect.orElseSucceed(() => null)),
 	)
+}
+
+function isValidCacheEntry(value: unknown): value is ProfileCacheEntry {
+	if (typeof value !== 'object' || value === null) return false
+	const entry = value as Record<string, unknown>
+	if (entry.version !== 1) return false
+	if (typeof entry.fingerprint !== 'object' || entry.fingerprint === null)
+		return false
+	if (typeof entry.profile !== 'object' || entry.profile === null) return false
+	const fp = entry.fingerprint as Record<string, unknown>
+	if (typeof fp.packageJson !== 'object' || fp.packageJson === null)
+		return false
+	return true
 }
 
 export function writeProfileCache(
@@ -192,9 +207,14 @@ export function writeProfileCache(
 				fs.writeFile(tempPath, data, 'utf-8'),
 			).pipe(Effect.orElseSucceed(() => undefined))
 
-			yield* Effect.tryPromise(() => fs.rename(tempPath, filePath)).pipe(
-				Effect.orElseSucceed(() => undefined),
-			)
+			yield* Effect.tryPromise(async () => {
+				try {
+					await fs.rename(tempPath, filePath)
+				} catch (error) {
+					await fs.unlink(tempPath).catch(() => {})
+					throw error
+				}
+			})
 		}),
 	)
 }

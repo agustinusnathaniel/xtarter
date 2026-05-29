@@ -71,7 +71,12 @@ function writeIndexAtomically(
 			`${JSON.stringify(indexContent, null, 2)}\n`,
 			'utf-8',
 		)
-		await fs.rename(tempPath, indexPath)
+		try {
+			await fs.rename(tempPath, indexPath)
+		} catch (error) {
+			await fs.unlink(tempPath).catch(() => {})
+			throw error
+		}
 	})
 }
 
@@ -81,11 +86,19 @@ export function listBackups(cwd: string, filepath: string): Promise<Backup[]> {
 		Effect.orElseSucceed(
 			tryIo(indexPath, async () => {
 				const content = await fs.readFile(indexPath, 'utf-8')
-				const index = JSON.parse(content) as Record<string, Backup[]>
-				if (!index[filepath]) return [] as Backup[]
-				return index[filepath].sort((a, b) =>
-					b.timestamp.localeCompare(a.timestamp),
-				)
+				const index = JSON.parse(content) as Record<string, unknown>
+				if (!index[filepath] || !Array.isArray(index[filepath]))
+					return [] as Backup[]
+				return (index[filepath] as unknown[])
+					.filter(
+						(entry): entry is Backup =>
+							typeof entry === 'object' &&
+							entry !== null &&
+							typeof (entry as Backup).filepath === 'string' &&
+							typeof (entry as Backup).backupPath === 'string' &&
+							typeof (entry as Backup).timestamp === 'string',
+					)
+					.sort((a, b) => b.timestamp.localeCompare(a.timestamp))
 			}),
 			() => [] as Backup[],
 		),
@@ -93,6 +106,14 @@ export function listBackups(cwd: string, filepath: string): Promise<Backup[]> {
 }
 
 export function restoreBackup(cwd: string, backup: Backup): Promise<void> {
+	if (!backup.backupPath || !backup.filepath) {
+		return Promise.reject(
+			new BackupError({
+				path: backup.backupPath ?? 'unknown',
+				cause: new Error('Invalid backup: missing filepath or backupPath'),
+			}),
+		)
+	}
 	return Effect.runPromise(
 		tryIo(backup.backupPath, () =>
 			fs.cp(backup.backupPath, resolvePath(cwd, backup.filepath)),
