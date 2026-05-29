@@ -1,5 +1,6 @@
 import { multiselect } from '@clack/prompts'
 import type { Task, TaskStatus } from '@xtarterize/core'
+import { abortIfCancelled } from '@xtarterize/core'
 
 export async function selectTasks(
 	tasks: Task[],
@@ -23,6 +24,8 @@ export async function selectTasks(
 		options,
 		initialValues: defaultSelected,
 	})
+
+	abortIfCancelled(selected)
 
 	if (Array.isArray(selected)) {
 		return selected as string[]

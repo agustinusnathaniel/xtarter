@@ -32,7 +32,13 @@ export function mergeFileDiffs(diffs: FileDiff[]): FileDiff[] {
 			}
 			result = { filepath, before, after }
 		} else {
-			result = list[list.length - 1]
+			// For non-JSON files with multiple diffs, concatenate all diffs
+			// Use the first task's before as the base, last task's after as final
+			result = {
+				filepath,
+				before: list[0].before,
+				after: list[list.length - 1].after,
+			}
 		}
 
 		merged.push(enhanceDiff(result))

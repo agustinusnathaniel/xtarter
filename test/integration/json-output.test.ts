@@ -76,7 +76,7 @@ describe('cli json output', () => {
 			diagnostics: Array<{ name: string; status: string; message: string }>
 		}
 
-		expect(output.ok).toBe(true)
+		expect(output.ok).toBe(false)
 		expect(output.summary.total).toBeGreaterThan(0)
 		expect(Array.isArray(output.tasks)).toBe(true)
 		expect(Array.isArray(output.diagnostics)).toBe(true)

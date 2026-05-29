@@ -35,8 +35,9 @@ interface CheckResultOptions {
 export function formatCheckResult(options: CheckResultOptions): string {
 	const { tasks, statuses, diagnostics, timing } = options
 	const conformant = tasks.filter((t) => statuses.get(t.id) === 'skip').length
+	const hasFailures = diagnostics.some((d) => d.status === 'fail')
 	const result: Record<string, unknown> = {
-		ok: true,
+		ok: !hasFailures && conformant === tasks.length,
 		summary: { conformant, total: tasks.length },
 		tasks: formatTaskList(tasks, statuses),
 		diagnostics,
@@ -75,5 +76,5 @@ export function formatDoctorResult(diagnostics: DiagnosticCheck[]): string {
 		fail: diagnostics.filter((d) => d.status === 'fail').length,
 		total: diagnostics.length,
 	}
-	return JSON.stringify({ ok: true, summary, diagnostics })
+	return JSON.stringify({ ok: summary.fail === 0, summary, diagnostics })
 }
