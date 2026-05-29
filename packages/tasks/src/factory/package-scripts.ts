@@ -253,7 +253,7 @@ export const packageScriptsTask = createPackageJsonTask({
 
 		return scripts
 	},
-	async checkFn(cwd, profile, pkg) {
+	async checkFn(_cwd, profile, pkg) {
 		const existingScripts = (pkg.scripts as Record<string, string>) ?? {}
 		const hasExistingScripts = Object.keys(existingScripts).length > 0
 
