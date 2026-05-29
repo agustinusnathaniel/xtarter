@@ -1,6 +1,6 @@
 import { existsSync } from 'node:fs'
-import { mkdir, rm } from 'node:fs/promises'
-import { resolve } from 'node:path'
+import { mkdir, readdir, rm } from 'node:fs/promises'
+import { basename, resolve } from 'node:path'
 import { logWarn } from '@xtarterize/core'
 import type { TemplateConfig } from '@/templates/registry'
 import type { PackageManager } from '@/types'
@@ -39,9 +39,7 @@ export async function prepareProjectDir(
 	force?: boolean,
 ): Promise<void> {
 	if (existsSync(projectPath)) {
-		const files = await import('node:fs').then((m) =>
-			m.readdirSync(projectPath),
-		)
+		const files = await readdir(projectPath)
 		if (files.length > 0) {
 			if (force) {
 				logWarn(
@@ -146,7 +144,7 @@ export function resolveProjectPath(name: string): {
 	}
 	if (name === '.') {
 		const cwd = resolve(process.cwd())
-		return { projectName: cwd.split('/').pop() || 'app', projectPath: cwd }
+		return { projectName: basename(cwd) || 'app', projectPath: cwd }
 	}
 	const projectPath = resolve(process.cwd(), name)
 	return { projectName: name, projectPath }

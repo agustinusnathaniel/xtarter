@@ -1,7 +1,6 @@
 import { access, readFile, rm, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { consola } from '@xtarterize/core'
-import { glob } from 'tinyglobby'
 
 export interface ModifyPackageOptions {
 	projectName: string
@@ -37,11 +36,16 @@ export async function modifyPackageJson({
 		const content = await readFile(packageJsonPath, 'utf-8')
 		const packageJson = JSON.parse(content)
 
-		packageJson.name = projectName.toLowerCase().replace(/[^a-z0-9-]/g, '-')
+		packageJson.name = projectName
+			.toLowerCase()
+			.replace(/[^a-z0-9-]/g, '-')
+			.replace(/-+/g, '-')
+			.replace(/^-|-$/g, '')
 
 		if (packageJson.pnpm?.overrides) {
 			for (const key of Object.keys(packageJson.pnpm.overrides)) {
-				if (packageJson.pnpm.overrides[key].includes('workspace:')) {
+				const value = packageJson.pnpm.overrides[key]
+				if (typeof value === 'string' && value.includes('workspace:')) {
 					delete packageJson.pnpm.overrides[key]
 				}
 			}
@@ -97,17 +101,6 @@ export async function cleanCIConfigs({
 				await rm(fullPath, { recursive: true, force: true })
 				removedCount++
 			}
-		}
-
-		const workflowFiles = await glob('.github/workflows/**/*', {
-			cwd: projectPath,
-			onlyFiles: true,
-		})
-
-		for (const file of workflowFiles) {
-			const fullPath = join(projectPath, file)
-			await rm(fullPath, { recursive: true, force: true })
-			removedCount++
 		}
 
 		if (removedCount > 0) {

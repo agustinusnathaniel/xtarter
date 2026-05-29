@@ -2,8 +2,8 @@ import { confirm } from '@clack/prompts'
 import { abortIfCancelled } from '@xtarterize/core'
 
 export async function promptGitInit(skipGit?: boolean): Promise<boolean> {
-	if (skipGit) {
-		return false
+	if (skipGit !== undefined) {
+		return !skipGit
 	}
 
 	const result = await confirm({
@@ -17,8 +17,8 @@ export async function promptGitInit(skipGit?: boolean): Promise<boolean> {
 }
 
 export async function promptCleanCI(cleanMode?: boolean): Promise<boolean> {
-	if (cleanMode) {
-		return true
+	if (cleanMode !== undefined) {
+		return cleanMode
 	}
 
 	const result = await confirm({
