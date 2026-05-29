@@ -125,12 +125,16 @@ export function createFileTask(options: FileTaskOptions): Task {
 				const actual = await readFile(fullPath)
 
 				if (options.merge) {
-					const actualJson = parseJsonc(actual) as object
-					const expectedJson = JSON5.parse(expected)
-					const merged = mergeJson(actualJson, expectedJson)
-					if (JSON.stringify(actualJson) === JSON.stringify(merged))
-						return 'skip'
-					return 'patch'
+					try {
+						const actualJson = parseJsonc(actual) as object
+						const expectedJson = JSON5.parse(expected)
+						const merged = mergeJson(actualJson, expectedJson)
+						if (JSON.stringify(actualJson) === JSON.stringify(merged))
+							return 'skip'
+						return 'patch'
+					} catch {
+						return 'conflict'
+					}
 				}
 
 				if (
@@ -401,7 +405,7 @@ export function createVitePluginTask(options: VitePluginTaskOptions): Task {
 					'vite.config',
 					VITE_CONFIG_EXTENSIONS,
 				)
-				if (!configPath) return 'conflict'
+				if (!configPath) return 'new'
 
 				const content = await readFile(configPath)
 				if (content.includes(options.checkString)) return 'skip'
@@ -531,12 +535,21 @@ export function createMultiFileJsonMergeTask(
 							merge: f.merge,
 						})
 
+						if (entryStatus === 'conflict') {
+							status = 'conflict'
+							continue
+						}
+
 						if (entryStatus === 'patch') {
 							status = 'patch'
 							continue
 						}
 
-						if (entryStatus === 'new' && status !== 'patch') {
+						if (
+							entryStatus === 'new' &&
+							status !== 'patch' &&
+							status !== 'conflict'
+						) {
 							status = 'new'
 						}
 					}

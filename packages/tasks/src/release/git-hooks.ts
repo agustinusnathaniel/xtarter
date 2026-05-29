@@ -2,8 +2,8 @@ import type { ProjectProfile } from '@xtarterize/core'
 import { readPackageJson } from '@xtarterize/core'
 import { createPackageJsonTask } from '@/factory'
 
-function commitMsgHook(): string {
-	return 'pnpm commitlint --edit $1\n'
+function commitMsgHook(pm: string): string {
+	return `${pm} commitlint --edit $1\n`
 }
 
 async function preCommitHook(
@@ -38,7 +38,7 @@ export const gitHooksTask = createPackageJsonTask({
 		{
 			filepath: (profile) =>
 				profile.vitePlus ? '.vite-hooks/commit-msg' : '.husky/commit-msg',
-			render: () => commitMsgHook(),
+			render: (_cwd, profile) => commitMsgHook(profile.packageManager),
 		},
 		{
 			filepath: (profile) =>

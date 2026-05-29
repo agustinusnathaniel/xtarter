@@ -254,11 +254,47 @@ export const packageScriptsTask = createPackageJsonTask({
 		return scripts
 	},
 	async checkFn(cwd, profile, pkg) {
-		const scripts = await this.getScripts?.(cwd, profile)
-		const existingScripts = pkg.scripts ?? {}
+		const existingScripts = (pkg.scripts as Record<string, string>) ?? {}
 		const hasExistingScripts = Object.keys(existingScripts).length > 0
 
-		if (scripts?.length === 0) {
+		const pm = profile.packageManager
+		const scriptsMap: ScriptsMap = {}
+		for (const [key, value] of Object.entries(existingScripts)) {
+			if (value !== undefined) scriptsMap[key] = value
+		}
+
+		const pkgDeps = pkg.dependencies as Record<string, string> | undefined
+		const pkgDevDeps = pkg.devDependencies as Record<string, string> | undefined
+		const hasBiomeDep = !!(
+			pkgDevDeps?.['@biomejs/biome'] ?? pkgDeps?.['@biomejs/biome']
+		)
+		const useUltracite = !!(pkgDevDeps?.ultracite || pkgDeps?.ultracite)
+		const oxlintPlugins = oxlintPluginFlags(profile)
+		const lintTool = resolveLintTool({
+			existingEslint: profile.existing.eslint,
+			useUltracite,
+			hasBiomeDep,
+			existingOxlint: profile.existing.oxlint,
+			existingOxfmt: profile.existing.oxfmt,
+			vitePlus: profile.vitePlus,
+		})
+
+		const scripts: ScriptEntry[] = []
+		pushAllIfMissing(
+			scripts,
+			scriptsMap,
+			lintToolScripts(lintTool, oxlintPlugins),
+		)
+		pushIfMissing(scripts, scriptsMap, {
+			script: 'test',
+			value: 'vitest run',
+		})
+		pushIfMissing(scripts, scriptsMap, {
+			script: 'upgrade',
+			value: getUpgradeCommand(pm),
+		})
+
+		if (scripts.length === 0) {
 			return 'skip'
 		}
 
