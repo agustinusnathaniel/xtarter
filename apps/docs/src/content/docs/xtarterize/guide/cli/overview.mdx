@@ -13,6 +13,7 @@ The xtarterize CLI provides commands to detect, apply, and maintain conformance 
 |--------|-------------|
 | `--cwd <path>` | Target directory (default: current working directory) |
 | `--json` | Output machine-readable JSON |
+| `--timing` | Show detailed per-task timing breakdown |
 | `--help` | Show help for a command |
 | `--version` | Show version number |
 
@@ -91,6 +92,8 @@ Full conformance setup. Detects your project stack, shows a plan, and applies ch
 | `--skip <task-id>` | Exclude a specific task (comma-separated) |
 | `--only <task-id>` | Apply only a specific task (comma-separated) |
 | `--quiet` | Suppress interactive prompts and verbose output |
+| `--format <format>` | Output format (`terminal` or `json`) |
+| `--timing` | Show detailed per-task timing breakdown |
 
 <Tabs>
   <TabItem label="Basic">
@@ -133,6 +136,8 @@ Update existing project configs to match the latest conformance templates. Only 
 | `--skip <task-id>` | Exclude a specific task (comma-separated) |
 | `--only <task-id>` | Apply only a specific task (comma-separated) |
 | `--quiet` | Suppress interactive prompts and verbose output |
+| `--format <format>` | Output format (`terminal` or `json`) |
+| `--timing` | Show detailed per-task timing breakdown |
 
 ```bash
 npx xtarterize sync
@@ -153,6 +158,7 @@ Show pending changes for all tasks with `new`, `patch`, or `conflict` status, wi
 | Option | Description |
 |--------|-------------|
 | `--quiet` | Suppress verbose output |
+| `--format <format>` | Output format (`terminal` or `json`) |
 
 ```bash
 npx xtarterize diff
@@ -209,6 +215,8 @@ When called **with a task ID**, applies that specific task after showing a diff 
 | Option | Description |
 |--------|-------------|
 | `--quiet` | Suppress interactive prompts |
+| `--format <format>` | Output format (`terminal` or `json`) |
+| `--timing` | Show detailed per-task timing breakdown |
 
 <Tabs>
   <TabItem label="Specific task">

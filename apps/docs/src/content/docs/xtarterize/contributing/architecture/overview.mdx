@@ -15,7 +15,7 @@ xtarterize is organized as a monorepo using [Turborepo](https://turbo.build/repo
   - patchers/ — [`@xtarterize/patchers`](https://github.com/agustinusnathaniel/xtarterize/tree/main/packages/patchers) — [`json-merge.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/patchers/src/json-merge.ts), [`ast-patch.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/patchers/src/ast-patch.ts)
   - tasks/ — [`@xtarterize/tasks`](https://github.com/agustinusnathaniel/xtarterize/tree/main/packages/tasks) — [`factory.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/tasks/src/factory.ts), [`factory-config.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/tasks/src/factory-config.ts), [`factory-ops.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/tasks/src/factory-ops.ts), all task implementations
 - apps/
-  - cli/ — **xtarterize** — CLI binary ([citty](https://github.com/unjs/citty) + [@clack/prompts](https://github.com/natemoo-re/clack))
+  - xtarterize/ — **xtarterize** — CLI binary ([citty](https://github.com/unjs/citty) + [@clack/prompts](https://github.com/natemoo-re/clack))
   - docs/ — @xtarterize/docs — This documentation site ([Astro](https://astro.build/)/[Starlight](https://starlight.astro.build/))
 - test/
   - fixtures/ — Test fixtures for various project types
@@ -25,7 +25,7 @@ xtarterize is organized as a monorepo using [Turborepo](https://turbo.build/repo
 
 ```mermaid
 flowchart TD
-    CLI["xtarterize<br/>apps/cli"] --> Core["@xtarterize/core"]
+    CLI["xtarterize<br/>apps/xtarterize"] --> Core["@xtarterize/core"]
     CLI --> Tasks["@xtarterize/tasks"]
     Tasks --> Core
     Tasks --> Patchers["@xtarterize/patchers"]
@@ -102,19 +102,19 @@ flowchart TD
 
 ```mermaid
 flowchart LR
-    Tasks["@xtarterize/tasks"] --> Lint["lint/<br/>biome"]
+    Tasks["@xtarterize/tasks"] --> Lint["lint/<br/>biome, oxlint, oxfmt"]
     Tasks --> TS["ts/<br/>incremental"]
     Tasks --> Gitignore["gitignore/<br/>tsbuildinfo"]
     Tasks --> Vite["vite/<br/>checker, visualizer"]
     Tasks --> CI["ci/<br/>release, auto-update, ci"]
     Tasks --> Deps["deps/<br/>renovate"]
-    Tasks --> Release["release/<br/>commitlint, czg, cat-version"]
-    Tasks --> Quality["quality/<br/>knip"]
+    Tasks --> Release["release/<br/>commitlint, czg, cat-version, git-hooks"]
+    Tasks --> Quality["quality/<br/>knip, lint-staged"]
     Tasks --> Codegen["codegen/<br/>plop"]
     Tasks --> Monorepo["monorepo/<br/>turbo"]
     Tasks --> Editor["editor/<br/>vscode (settings + extensions)"]
     Tasks --> Agent["agent/<br/>agents-md, skills-install"]
-    Tasks --> Scripts["scripts/<br/>package-scripts"]
+    Tasks --> Scripts["scripts/<br/>package-scripts, npmrc"]
     Tasks --> Factory["factory.ts + factory-*<br/>task creation helpers"]
     
     style Tasks fill:#6366f1,color:#fff

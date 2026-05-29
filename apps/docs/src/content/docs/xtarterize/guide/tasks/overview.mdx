@@ -65,7 +65,7 @@ For projects using [**pnpm**](https://pnpm.io/), CI workflows automatically incl
 
 | Task ID | Description | Applicable When |
 |---------|-------------|-----------------|
-| `deps/renovate` | Write [`renovate.json`](https://docs.renovatebot.com/configuration-options/) with [`extends: ["config:base"]`](https://docs.renovatebot.com/presets-config/#configbase), [`automerge`](https://docs.renovatebot.com/key-concepts/automerge/), and [`stabilityDays: 2`](https://docs.renovatebot.com/configuration-options/#stabilitydays) | Always |
+| `deps/renovate` | Write [`renovate.json`](https://docs.renovatebot.com/configuration-options/) with [`extends: ["config:base"]`](https://docs.renovatebot.com/presets-config/#configbase), [`automerge`](https://docs.renovatebot.com/key-concepts/automerge/), and [`stabilityDays: 2`](https://docs.renovatebot.com/configuration-options/#stabilitydays) | [GitHub](https://github.com/) detected |
 
 ## Release
 
@@ -81,7 +81,7 @@ For projects using [**pnpm**](https://pnpm.io/), CI workflows automatically incl
 | Task ID | Description | Applicable When |
 |---------|-------------|-----------------|
 | `quality/knip` | Install [Knip](https://knip.dev/), write [`knip.json`](https://knip.dev/reference/configuration) with framework-aware [`entry`](https://knip.dev/reference/configuration#entry) and [`project`](https://knip.dev/reference/configuration#project) paths | Always (JSON format if no TypeScript) |
-| `quality/lint-staged` | Install [lint-staged](https://github.com/okonet/lint-staged), write [`.lintstagedrc.json`](https://github.com/okonet/lint-staged#configuration) running Biome on staged files | Always |
+| `quality/lint-staged` | Install [lint-staged](https://github.com/okonet/lint-staged), write [`.lintstagedrc.json`](https://github.com/okonet/lint-staged#configuration) running Biome on staged files | Non-Vite+ projects |
 
 ## Code Generation
 

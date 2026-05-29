@@ -9,7 +9,7 @@ xtarterize applies conformance configuration through discrete, independently app
 
 ## Task Interface
 
-All tasks implement the [`Task`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/types.ts) interface from `@xtarterize/core`:
+All tasks implement the [`Task`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/_base.ts) interface from `@xtarterize/core`:
 
 ```typescript
 interface Task {
@@ -66,6 +66,7 @@ classDiagram
 <FileTree>
 - packages/tasks/src/
   - agent/
+    - skill-catalog.ts
     - skills-install.ts
   - ci/
     - auto-update.ts
@@ -77,21 +78,34 @@ classDiagram
     - renovate.ts
   - editor/
     - vscode.ts
-  - factory-config.ts
-  - factory-ops.ts
-  - factory.ts
+  - factory/
+    - equivalence.ts
+    - index.ts
+    - json-config.ts
+    - ops.ts
+    - package-scripts.ts
+    - scripts.ts
+    - task.ts
+    - utils.ts
   - lint/
     - biome.ts
+    - oxlint.ts
   - monorepo/
     - turbo.ts
+  - npmrc.ts
   - quality/
     - knip.ts
+    - lint-staged.ts
   - release/
     - cat-version.ts
     - commitlint.ts
     - czg.ts
+    - git-hooks.ts
   - scripts/
     - package-scripts.ts
+  - templates/
+    - agents-md.ts
+    - workflows/
   - ts/
     - strict.ts
     - paths.ts
@@ -104,12 +118,12 @@ classDiagram
 
 ## Task Factory
 
-Most tasks are created through factory functions in [`factory.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/tasks/src/factory.ts) that eliminate boilerplate:
+Most tasks are created through factory functions in [`factory/index.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/tasks/src/factory/index.ts) that eliminate boilerplate:
 
 - **`createFileTask`** — For tasks that write a single file (CI workflows, [renovate](https://docs.renovatebot.com/), [commitlint](https://commitlint.js.org/), [knip](https://knip.dev/), [`.gitignore`](https://git-scm.com/docs/gitignore), `AGENTS.md`). Supports exact-match comparison with `normalizeLineEndings` and optional custom `checkFn`.
 - **`createMultiFileTask`** — For tasks that write multiple text files with optional dependency install (e.g. [plop](https://plopjs.com/) writes both `plopfile.ts` and `plop/*.hbs` template files)
-- **`createJsonMergeTask`** — For tasks that deep-merge JSON configs ([`tsconfig.json`](https://www.typescriptlang.org/tsconfig/), [`biome.json`](https://biomejs.dev/reference/configuration/), [`turbo.json`](https://turbo.build/repo/docs/reference/configuration)). Uses shared JSON mutation helpers in [`factory-config.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/tasks/src/factory-config.ts)
-- **`createMultiFileJsonMergeTask`** — For tasks that merge multiple JSON files ([`.vscode/settings.json`](https://code.visualstudio.com/docs/getstarted/settings#_settingsjson) + [`.vscode/extensions.json`](https://code.visualstudio.com/docs/editor/extension-marketplace#_workspace-recommended-extensions)). Supports custom per-file merge functions and reuses [`factory-config.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/tasks/src/factory-config.ts)
+- **`createJsonMergeTask`** — For tasks that deep-merge JSON configs ([`tsconfig.json`](https://www.typescriptlang.org/tsconfig/), [`biome.json`](https://biomejs.dev/reference/configuration/), [`turbo.json`](https://turbo.build/repo/docs/reference/configuration)). Uses shared JSON mutation helpers in [`factory/json-config.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/tasks/src/factory/json-config.ts)
+- **`createMultiFileJsonMergeTask`** — For tasks that merge multiple JSON files ([`.vscode/settings.json`](https://code.visualstudio.com/docs/getstarted/settings#_settingsjson) + [`.vscode/extensions.json`](https://code.visualstudio.com/docs/editor/extension-marketplace#_workspace-recommended-extensions)). Supports custom per-file merge functions and reuses [`factory/json-config.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/tasks/src/factory/json-config.ts)
 - **`createVitePluginTask`** — For injecting plugins into [`vite.config.ts`](https://vitejs.dev/config/) ([`vite-plugin-checker`](https://vite-plugin-checker.netlify.app/checkers/typescript.html), [`rollup-plugin-visualizer`](https://github.com/btd/rollup-plugin-visualizer))
 - **`createPackageJsonTask`** — For tasks that add scripts, deps, and extra files via [`package.json`](https://docs.npmjs.com/cli/v10/configuring-npm/package-json) ([`czg`](https://cz-git.qbb.sh/cli/), [`commit-and-tag-version`](https://github.com/absolute-version/commit-and-tag-version), package scripts)
 
@@ -117,9 +131,9 @@ This reduces most tasks from 40-80 lines to 10-15 lines of declarative configura
 
 Shared implementation seams used by the factory layer:
 
-- [`factory-config.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/tasks/src/factory-config.ts) — centralized JSON config `check`/`dryRun` logic
-- [`factory-ops.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/tasks/src/factory-ops.ts) — shared dependency install and write operations
-- [`agent/module.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/tasks/src/agent/module.ts) — shared agent task creation patterns
+- [`factory/json-config.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/tasks/src/factory/json-config.ts) — centralized JSON config `check`/`dryRun` logic
+- [`factory/ops.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/tasks/src/factory/ops.ts) — shared dependency install and write operations
+- [`factory/equivalence.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/tasks/src/factory/equivalence.ts) — shared equivalence detection helpers (`deepEqual`, `normalizeExtends`, `hasScriptValue`)
 
 ### Helper Functions
 
