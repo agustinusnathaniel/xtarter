@@ -76,11 +76,11 @@ try {
 
 {
   templates.length === 0 ? (
-    <p class="no-templates">Unable to load templates. <a href={`https://github.com/${GITHUB_USER}?tab=repositories&q=&type=source`} target="_blank" rel="noopener noreferrer">Browse on GitHub →</a></p>
+    <p class="no-templates">Unable to load templates. <a href={`https://github.com/${GITHUB_USER}?tab=repositories&q=&type=source`} target="_blank" rel="noopener noreferrer" data-umami-event="github_browse_click">Browse on GitHub →</a></p>
   ) : (
     <div class="template-gallery">
       {templates.map((t) => (
-        <a href={t.url} target="_blank" rel="noopener noreferrer" class="template-card">
+        <a href={t.url} target="_blank" rel="noopener noreferrer" class="template-card" data-umami-event="template_click" data-umami-event-template_name={t.name} data-umami-event-stars={String(t.stars)}>
           <div class="template-header">
             <h3 class="template-name">{t.name}</h3>
             <span class="template-stars">

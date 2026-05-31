@@ -1,6 +1,7 @@
 ---
-// Centralized Umami event tracking via event delegation.
-// No data attributes needed on MDX — selectors + text matching handle everything.
+// Centralized Umami event tracking via event delegation and attribute-based tracking.
+// data-umami-event attributes are used where we control the HTML (more reliable for navigation).
+// JS handlers cover elements we can't annotate (hero CTAs, theme, search, social links).
 ---
 
 <script>
@@ -16,62 +17,95 @@ function getHref(el: Element | null): string {
   return (el as HTMLAnchorElement)?.href ?? '';
 }
 
-// Hero CTA clicks
+const TRACKED_EXTERNAL_DOMAINS = [
+  'github.com',
+  'biomejs.dev',
+  'typescriptlang.org',
+  'vitejs.dev',
+  'react.dev',
+  'skills.sh',
+  'astro.build',
+  'viteplus.dev',
+];
+
+function isTrackedDomain(hostname: string): boolean {
+  return TRACKED_EXTERNAL_DOMAINS.some(d => hostname === d || hostname.endsWith('.' + d));
+}
+
 document.addEventListener('click', (e) => {
-  const link = (e.target as HTMLElement).closest('.hero a');
-  if (link) {
-    const text = getText(link);
-    if (text.includes('Browse Templates')) {
-      track('hero_cta_browse');
-    } else if (text.includes('Get Started')) {
-      track('hero_cta_get_started');
-    } else if (text.includes('View CLI Reference')) {
-      track('hero_cta_cli_reference');
-    }
+  const target = e.target as HTMLElement;
+
+  // Hero CTA clicks (YAML frontmatter — can't add data attributes)
+  const heroLink = target.closest('.hero a');
+  if (heroLink) {
+    const text = getText(heroLink);
+    if (text.includes('Browse Templates')) track('hero_cta_browse');
+    else if (text.includes('Get Started')) track('hero_cta_get_started');
+    else if (text.includes('View CLI Reference')) track('hero_cta_cli_reference');
     return;
   }
 
-  // Product card clicks (homepage tooling grid)
-  const productCard = (e.target as HTMLElement).closest('.product-card');
-  if (productCard) {
-    const href = getHref(productCard);
-    const product = href.includes('create-xtarter-app') ? 'create-xtarter-app' : 'xtarterize';
-    track('product_card_click', { product });
+  // Page action: copy markdown button
+  const actionBtn = target.closest('.action-button');
+  if (actionBtn) {
+    const text = getText(actionBtn);
+    if (text.includes('Copy')) track('page_action', { action: 'copy' });
     return;
   }
 
-  // Template card clicks (TemplateGallery)
-  const templateCard = (e.target as HTMLElement).closest('.template-card');
-  if (templateCard) {
-    const name = getText(templateCard.querySelector('.template-name'));
-    const stars = getText(templateCard.querySelector('.template-stars'));
-    track('template_click', { template_name: name, template_stars: stars });
+  // Page action: share / AI prompt dropdown items
+  const dropdownItem = target.closest('.dropdown-item');
+  if (dropdownItem) {
+    const text = getText(dropdownItem);
+    if (text.includes('Share')) track('page_action', { action: 'share' });
+    else if (text.includes('Open')) track('page_action', { action: 'ai_prompt' });
     return;
   }
 
-  // Starlight page actions (share / AI prompt)
-  const pageAction = (e.target as HTMLElement).closest('[class*="page-action"] a, .sl-page-actions a');
-  if (pageAction) {
-    const text = getText(pageAction);
-    if (text.includes('Share') || text.includes('Copy')) {
-      track('page_action', { action: 'share' });
-    } else if (text.includes('Ask') || text.includes('Prompt') || text.includes('AI')) {
-      track('page_action', { action: 'ai_prompt' });
-    }
+  // Social icon links (header — starlight SocialIcons renders <a rel="me">)
+  const socialLink = target.closest('a[rel="me"]');
+  if (socialLink) {
+    const href = getHref(socialLink);
+    const domain = href.includes('github.com') ? 'github' : 'other';
+    track('social_click', { domain });
     return;
   }
 
-  // External link clicks (GitHub, docs, etc.)
-  const extLink = (e.target as HTMLElement).closest('a[href^="http"]');
-  if (extLink) {
+  // Search opened
+  const searchBtn = target.closest('button[data-open-modal]');
+  if (searchBtn) {
+    track('search_open');
+    return;
+  }
+
+  // Search result clicked (Pagefind)
+  const searchResult = target.closest('.pagefind-ui__result-link');
+  if (searchResult) {
+    const text = getText(searchResult);
+    track('search_result_click', { title: text.slice(0, 120) });
+    return;
+  }
+
+  // External link clicks to tracked domains (skip links already handled by data-umami-event)
+  const extLink = target.closest('a[href^="http"]');
+  if (extLink && !extLink.hasAttribute('data-umami-event')) {
     const href = getHref(extLink);
-    const isGithub = href.includes('github.com');
-    const isDocs = href.includes('docs.') || href.includes('biomejs') || href.includes('typescriptlang') || href.includes('vitejs');
-    if (isGithub) {
-      track('external_link', { domain: 'github', path: new URL(href).pathname });
-    } else if (isDocs) {
-      track('external_link', { domain: new URL(href).hostname, path: new URL(href).pathname });
+    try {
+      const { hostname, pathname } = new URL(href);
+      if (isTrackedDomain(hostname)) {
+        track('external_link', { domain: hostname, path: pathname });
+      }
+    } catch {
+      // invalid URL, skip
     }
+  }
+});
+
+// Theme toggle (select change event)
+document.addEventListener('change', (e) => {
+  const select = (e.target as HTMLElement).closest('starlight-theme-select select') as HTMLSelectElement | null;
+  if (select?.value) {
+    track('theme_toggle', { theme: select.value });
   }
 });
 </script>
