@@ -1,0 +1,77 @@
+---
+// Centralized Umami event tracking via event delegation.
+// No data attributes needed on MDX — selectors + text matching handle everything.
+---
+
+<script>
+function track(event: string, data?: Record<string, string>) {
+  window.umami?.track(event, data);
+}
+
+function getText(el: Element | null): string {
+  return (el?.textContent ?? '').trim();
+}
+
+function getHref(el: Element | null): string {
+  return (el as HTMLAnchorElement)?.href ?? '';
+}
+
+// Hero CTA clicks
+document.addEventListener('click', (e) => {
+  const link = (e.target as HTMLElement).closest('.hero a');
+  if (link) {
+    const text = getText(link);
+    if (text.includes('Browse Templates')) {
+      track('hero_cta_browse');
+    } else if (text.includes('Get Started')) {
+      track('hero_cta_get_started');
+    } else if (text.includes('View CLI Reference')) {
+      track('hero_cta_cli_reference');
+    }
+    return;
+  }
+
+  // Product card clicks (homepage tooling grid)
+  const productCard = (e.target as HTMLElement).closest('.product-card');
+  if (productCard) {
+    const href = getHref(productCard);
+    const product = href.includes('create-xtarter-app') ? 'create-xtarter-app' : 'xtarterize';
+    track('product_card_click', { product });
+    return;
+  }
+
+  // Template card clicks (TemplateGallery)
+  const templateCard = (e.target as HTMLElement).closest('.template-card');
+  if (templateCard) {
+    const name = getText(templateCard.querySelector('.template-name'));
+    const stars = getText(templateCard.querySelector('.template-stars'));
+    track('template_click', { template_name: name, template_stars: stars });
+    return;
+  }
+
+  // Starlight page actions (share / AI prompt)
+  const pageAction = (e.target as HTMLElement).closest('[class*="page-action"] a, .sl-page-actions a');
+  if (pageAction) {
+    const text = getText(pageAction);
+    if (text.includes('Share') || text.includes('Copy')) {
+      track('page_action', { action: 'share' });
+    } else if (text.includes('Ask') || text.includes('Prompt') || text.includes('AI')) {
+      track('page_action', { action: 'ai_prompt' });
+    }
+    return;
+  }
+
+  // External link clicks (GitHub, docs, etc.)
+  const extLink = (e.target as HTMLElement).closest('a[href^="http"]');
+  if (extLink) {
+    const href = getHref(extLink);
+    const isGithub = href.includes('github.com');
+    const isDocs = href.includes('docs.') || href.includes('biomejs') || href.includes('typescriptlang') || href.includes('vitejs');
+    if (isGithub) {
+      track('external_link', { domain: 'github', path: new URL(href).pathname });
+    } else if (isDocs) {
+      track('external_link', { domain: new URL(href).hostname, path: new URL(href).pathname });
+    }
+  }
+});
+</script>

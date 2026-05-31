@@ -6,5 +6,5 @@ const umamiWebsiteId = import.meta.env.UMAMI_WEBSITE_ID
 ---
 
 {umamiSrc && umamiWebsiteId && (
-  <script defer src={umamiSrc} data-website-id={umamiWebsiteId} />
+  <script defer src={umamiSrc} data-website-id={umamiWebsiteId} data-performance="true" />
 )}
