@@ -1,0 +1,5 @@
+name = "xtarter-docs"
+pages_build_output_dir = "./dist"
+
+[vars]
+  COREPACK_INTEGRITY_KEYS = "0"
