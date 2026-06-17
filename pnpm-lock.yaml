@@ -75,7 +75,7 @@ importers:
         specifier: ^6.26.1
         version: 6.26.1
       node:
-        specifier: runtime:^24.16.0
+        specifier: runtime:24.16.0
         version: runtime:24.16.0
       turbo:
         specifier: ^2.9.12
