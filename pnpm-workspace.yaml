@@ -2,6 +2,11 @@ packages:
   - packages/*
   - apps/*
 
+allowBuilds:
+  esbuild: true
+  msgpackr-extract: false
+  sharp: true
+
 catalog:
   typescript: ^6.0.3
   "@types/node": ^25.7.0
