@@ -9,6 +9,7 @@ on:
       - "**/CHANGELOG.md"
       - "**/package.json"
       - ".github/workflows/release.yml"
+      - "pnpm-lock.yml"
   pull_request:
     types:
       - opened
