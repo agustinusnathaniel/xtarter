@@ -1,5 +1,5 @@
 {
-	"name": "xtarterize",
+	"name": "xtarter",
 	"version": "0.1.0",
 	"private": true,
 	"scripts": {
@@ -43,7 +43,14 @@
 		"vite-plus": "catalog:"
 	},
 	"engines": {
-		"node": ">=24"
+		"node": ">=24.16.x"
+	},
+	"devEngines": {
+		"runtime": {
+			"name": "node",
+			"version": "^24.16.0",
+			"onFail": "download"
+		}
 	},
 	"packageManager": "pnpm@10.33.4"
 }
