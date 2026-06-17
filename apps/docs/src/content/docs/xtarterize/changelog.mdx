@@ -7,6 +7,17 @@ import { Aside, Tabs, TabItem, CardGrid, Card, LinkButton, Steps } from '@astroj
 
 Latest updates and feature releases for xtarterize.
 
+## v1.14.2 — June 17, 2026
+
+Edge-case hardening across the entire pipeline — no new features, but significantly improved stability for all commands and surfaces.
+
+- **CLI (`init`, `sync`, `diff`, `add`, `doctor`, `restore`):** try/catch guards prevent crashes on individual task failures; `--skip`/`--only` no longer filters phantom empty-string values; `doctor` uses `Promise.allSettled` for resilient diagnostics when one check fails
+- **Core (backup, cache, detect, apply):** robust error handling for atomic writes with temp file cleanup; schema validation guards against corrupted cache entries; fixed React Native + React co-detection returning `null`; skipped count now correctly tracks explicit skips from check phase
+- **Tasks (package-scripts, git-hooks, factory):** fixed `this.getScripts` undefined crash in `packageScriptsTask`; `commitMsgHook` now accepts a package manager parameter instead of hardcoding pnpm; corrected `check()` return values for `conflict` vs `new` status detection
+- **UI (diffs, JSON output, interactive menus):** merged multi-diff view preserves all diffs instead of dropping earlier ones; JSON `ok` field now reflects actual conformance state not intention; multiselect cancel properly aborts via `abortIfCancelled`
+- **create-xtarter-app:** Windows-compatible path handling; fixed pnpm overrides crash; async `readdir` replaces sync `readdirSync`; improved project name sanitization; proper handling of explicit `false` CLI flag values
+- **Documentation:** outdated content refreshed — Node.js minimum bumped to 24; missing `--timing` and `--format` flags documented; Rspack added to detected bundlers; task applicability fixed for renovate/lint-staged; CLI path corrected from `apps/cli` to `apps/xtarterize`
+
 ## v1.14 — May 29, 2026
 
 <Aside type="note" title="New `undo` command">
