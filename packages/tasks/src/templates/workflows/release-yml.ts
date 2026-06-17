@@ -15,20 +15,23 @@ function renderTagPushWorkflow(profile: ProjectProfile): string {
 	const steps: YamlStep[] = [{ uses: ACTION_VERSIONS.CHECKOUT }]
 
 	if (pm === 'pnpm') {
-		steps.push({ uses: ACTION_VERSIONS.PNPM_SETUP, with: { cache: 'true' } })
+		steps.push({
+			uses: ACTION_VERSIONS.PNPM_SETUP,
+			with: { cache: 'true' },
+		})
 	}
 
-	steps.push(
-		{
+	if (pm !== 'pnpm') {
+		steps.push({
 			uses: ACTION_VERSIONS.SETUP_NODE,
 			with: {
 				'node-version': profile.nodeVersion,
 				...(pm !== 'bun' ? { cache: pm } : {}),
 			},
-		},
-		{ run: installCmd },
-		{ run: runLint },
-	)
+		})
+	}
+
+	steps.push({ run: installCmd }, { run: runLint })
 
 	if (profile.typescript) {
 		steps.push({ run: runTypecheck })
@@ -66,7 +69,7 @@ function renderChangesetWorkflow(profile: ProjectProfile): string {
 
 	if (pm === 'bun') {
 		steps.push({ uses: 'oven-sh/setup-bun@v2' })
-	} else {
+	} else if (pm !== 'pnpm') {
 		steps.push({
 			uses: ACTION_VERSIONS.SETUP_NODE,
 			with: {
@@ -77,7 +80,10 @@ function renderChangesetWorkflow(profile: ProjectProfile): string {
 	}
 
 	if (pm === 'pnpm') {
-		steps.push({ uses: ACTION_VERSIONS.PNPM_SETUP, with: { cache: 'true' } })
+		steps.push({
+			uses: ACTION_VERSIONS.PNPM_SETUP,
+			with: { cache: 'true' },
+		})
 	}
 
 	steps.push(

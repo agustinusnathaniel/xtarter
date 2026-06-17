@@ -16,17 +16,23 @@ export function renderAutoUpdateWorkflow(profile: ProjectProfile): string {
 	const steps: YamlStep[] = [{ uses: ACTION_VERSIONS.CHECKOUT }]
 
 	if (pm === 'pnpm') {
-		steps.push({ uses: ACTION_VERSIONS.PNPM_SETUP, with: { cache: 'true' } })
+		steps.push({
+			uses: ACTION_VERSIONS.PNPM_SETUP,
+			with: { cache: 'true' },
+		})
 	}
 
-	steps.push(
-		{
+	if (pm !== 'pnpm') {
+		steps.push({
 			uses: ACTION_VERSIONS.SETUP_NODE,
 			with: {
 				'node-version': profile.nodeVersion,
 				...(pm !== 'bun' ? { cache: pm } : {}),
 			},
-		},
+		})
+	}
+
+	steps.push(
 		{
 			name: 'Update dependencies',
 			run: `${installCmd}\n${updateCmd}\n${dedupeCmd}`,

@@ -13,37 +13,37 @@ export function renderCiWorkflow(profile: ProjectProfile): string {
 	const steps: YamlStep[] = [{ uses: ACTION_VERSIONS.CHECKOUT }]
 
 	if (pm === 'pnpm') {
-		steps.push({ uses: ACTION_VERSIONS.PNPM_SETUP, with: { cache: 'true' } })
+		steps.push({
+			uses: ACTION_VERSIONS.PNPM_SETUP,
+			with: { cache: 'true' },
+		})
 	}
 
 	if (profile.vitePlus) {
-		steps.push(
-			{
+		if (pm !== 'pnpm') {
+			steps.push({
 				uses: ACTION_VERSIONS.SETUP_NODE,
 				with: {
 					'node-version': profile.nodeVersion,
 					...(pm !== 'bun' ? { cache: pm } : {}),
 				},
-			},
-			{ run: installCmd },
-			{ run: runCheck },
-		)
+			})
+		}
+		steps.push({ run: installCmd }, { run: runCheck })
 	} else {
 		const runLint = runScriptCommand(pm, 'lint')
 		const runTypecheck = runScriptCommand(pm, 'typecheck')
 
-		steps.push(
-			{
+		if (pm !== 'pnpm') {
+			steps.push({
 				uses: ACTION_VERSIONS.SETUP_NODE,
 				with: {
 					'node-version': profile.nodeVersion,
 					...(pm !== 'bun' ? { cache: pm } : {}),
 				},
-			},
-			{ run: installCmd },
-			{ run: runLint },
-			{ run: runCheck },
-		)
+			})
+		}
+		steps.push({ run: installCmd }, { run: runLint }, { run: runCheck })
 
 		if (profile.typescript) {
 			steps.push({ run: runTypecheck })
