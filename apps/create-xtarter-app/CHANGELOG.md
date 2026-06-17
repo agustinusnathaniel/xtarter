@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.14.1
+
+### Patch Changes
+
+- [`c637a36`](https://github.com/agustinusnathaniel/xtarter/commit/c637a3686e1c32e5a0cb658c2030201dcb5c32b1) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Edge-case fixes for project scaffolding:
+
+  - Windows-compatible path handling (use `basename()` instead of `split('/')`)
+  - Fixed pnpm overrides crash with type-check before `.includes()` call
+  - Async `readdir` from `fs/promises` replaces sync `readdirSync`
+  - Improved project name sanitization (collapse consecutive hyphens, trim leading/trailing)
+  - Handle explicit `false` values from CLI flags in prompt functions
+  - Runtime validation of `packageManager` in `installDependencies`
+  - Removed dead code referencing already-deleted `.github` directory
+
 ## 1.14.0
 
 ### Minor Changes
