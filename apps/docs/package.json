@@ -18,7 +18,7 @@
 		"@fontsource-variable/geist-mono": "^5.2.8",
 		"@fontsource/lora": "^5.2.8",
 		"@tailwindcss/vite": "4.2.2",
-		"astro": "6.3.2",
+		"astro": "6.4.6",
 		"astro-mermaid": "^2.0.1",
 		"mermaid": "^11.15.0",
 		"starlight-auto-sidebar": "^0.4.0",
