@@ -65,8 +65,7 @@ describe('skillsInstallTask', () => {
 		expect(after).toContain('grill-me')
 		expect(after).toContain('handoff')
 		expect(after).toContain('improve-codebase-architecture')
-		expect(after).toContain('write-a-skill')
-		expect(after).toContain('caveman')
+		expect(after).toContain('writing-great-skills')
 	})
 
 	it('dryRun includes vue and frontend skills for vue projects', async () => {
@@ -229,7 +228,7 @@ describe('skillsInstallTask', () => {
 		expect(diffs.length).toBe(1)
 		const after = diffs[0].after ?? ''
 		expect(after).toContain('opensrc')
-		expect(after).toContain('caveman')
+		expect(after).toContain('writing-great-skills')
 	})
 
 	it('returns patch when some skills are already installed', async () => {

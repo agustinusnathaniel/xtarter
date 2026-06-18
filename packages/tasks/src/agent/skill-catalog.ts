@@ -51,12 +51,7 @@ export const SKILL_CATALOG: SkillDefinition[] = [
 	},
 	{
 		source: 'mattpocock/skills',
-		skill: 'write-a-skill',
-		condition: () => true,
-	},
-	{
-		source: 'mattpocock/skills',
-		skill: 'caveman',
+		skill: 'writing-great-skills',
 		condition: () => true,
 	},
 
