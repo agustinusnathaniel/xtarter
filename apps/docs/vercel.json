@@ -28,7 +28,7 @@
 				},
 				{
 					"key": "Content-Security-Policy",
-					"value": "default-src 'self'; script-src 'self' 'unsafe-inline' umami.sznm.dev; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://og.sznm.dev; font-src 'self'; connect-src 'self' https://umami.sznm.dev https://api.github.com; frame-ancestors 'none'; form-action 'self'; base-uri 'self'"
+					"value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval' umami.sznm.dev; style-src 'self' 'unsafe-inline'; img-src 'self' data: https://og.sznm.dev; font-src 'self'; connect-src 'self' https://umami.sznm.dev https://api.github.com; frame-ancestors 'none'; form-action 'self'; base-uri 'self'"
 				}
 			]
 		}
