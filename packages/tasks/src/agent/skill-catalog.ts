@@ -117,18 +117,18 @@ export const SKILL_CATALOG: SkillDefinition[] = [
 	//  Next.js
 	// ═════════════════════════════════════════════════════════════════
 	{
-		source: 'vercel-labs/next-skills',
-		skill: 'next-best-practices',
+		source: 'vercel/next.js',
+		skill: 'next-dev-loop',
 		condition: (p) => p.bundler === 'nextjs',
 	},
 	{
-		source: 'vercel-labs/next-skills',
-		skill: 'next-cache-components',
+		source: 'vercel/next.js',
+		skill: 'next-cache-components-optimizer',
 		condition: (p) => p.bundler === 'nextjs',
 	},
 	{
-		source: 'vercel-labs/next-skills',
-		skill: 'next-upgrade',
+		source: 'vercel/next.js',
+		skill: 'next-cache-components-adoption',
 		condition: (p) => p.bundler === 'nextjs',
 	},
 
