@@ -61,9 +61,6 @@ jobs:
       - name: Run tests
         run: pnpm test
 
-      - name: Build packages (for typecheck)
-        run: pnpm build --filter=@xtarterize/tasks...
-
       - name: Type check
         run: pnpm typecheck
 
