@@ -147,6 +147,28 @@ describe('vscodeTask', () => {
 
 		await fs.rm(tmpDir, { recursive: true })
 	})
+
+	it('apply writes the expected file', async () => {
+		const tmpDir = await fs.mkdtemp(
+			path.join(os.tmpdir(), 'xtarterize-vsc-apply-'),
+		)
+		await fs.writeFile(
+			path.join(tmpDir, 'package.json'),
+			JSON.stringify({
+				name: 'apply-test',
+				devDependencies: { typescript: '^5.3.0' },
+			}),
+		)
+		const profile = await detectProject(tmpDir)
+		await vscodeTask.apply(tmpDir, profile)
+		const settingsPath = path.join(tmpDir, '.vscode', 'settings.json')
+		const exists = await fs
+			.access(settingsPath)
+			.then(() => true)
+			.catch(() => false)
+		expect(exists).toBe(true)
+		await fs.rm(tmpDir, { recursive: true, force: true })
+	})
 })
 
 describe('agentsMdTask', () => {

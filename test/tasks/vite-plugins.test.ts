@@ -1,3 +1,5 @@
+import fs from 'node:fs/promises'
+import os from 'node:os'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { detectProject } from '@xtarterize/core'
@@ -39,6 +41,31 @@ describe('viteCheckerTask', () => {
 		)
 		expect(diffs.length).toBe(1)
 		expect(diffs[0].filepath).toBe('vite.config')
+	})
+
+	it('apply writes the expected file', async () => {
+		const tmpDir = await fs.mkdtemp(
+			path.join(os.tmpdir(), 'xtarterize-vp-apply-'),
+		)
+		await fs.writeFile(
+			path.join(tmpDir, 'package.json'),
+			JSON.stringify({
+				name: 'apply-test',
+				devDependencies: { vite: '^5.0.0' },
+			}),
+		)
+		await fs.writeFile(
+			path.join(tmpDir, 'vite.config.ts'),
+			`import { defineConfig } from 'vite'\nexport default defineConfig({})`,
+		)
+		const profile = await detectProject(tmpDir)
+		await viteCheckerTask.apply(tmpDir, profile)
+		const content = await fs.readFile(
+			path.join(tmpDir, 'vite.config.ts'),
+			'utf-8',
+		)
+		expect(content).toContain('vite-plugin-checker')
+		await fs.rm(tmpDir, { recursive: true, force: true })
 	})
 })
 

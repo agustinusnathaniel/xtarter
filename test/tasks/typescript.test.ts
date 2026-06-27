@@ -158,6 +158,31 @@ describe('strictTask', () => {
 
 		await fs.rm(tmpDir, { recursive: true })
 	})
+
+	it('apply writes the expected file', async () => {
+		const tmpDir = await fs.mkdtemp(
+			path.join(os.tmpdir(), 'xtarterize-ts-apply-'),
+		)
+		await fs.writeFile(
+			path.join(tmpDir, 'package.json'),
+			JSON.stringify({
+				name: 'apply-test',
+				devDependencies: { typescript: '^5.3.0' },
+			}),
+		)
+		await fs.writeFile(
+			path.join(tmpDir, 'tsconfig.json'),
+			JSON.stringify({ compilerOptions: { target: 'ES2020' } }),
+		)
+		const profile = await detectProject(tmpDir)
+		await strictTask.apply(tmpDir, profile)
+		const content = await fs.readFile(
+			path.join(tmpDir, 'tsconfig.json'),
+			'utf-8',
+		)
+		expect(JSON.parse(content).compilerOptions.strict).toBe(true)
+		await fs.rm(tmpDir, { recursive: true, force: true })
+	})
 })
 
 describe('pathsTask', () => {

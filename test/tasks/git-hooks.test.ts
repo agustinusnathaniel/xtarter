@@ -94,4 +94,24 @@ describe('gitHooksTask', () => {
 			await fs.rm(tmpDir, { recursive: true, force: true })
 		}
 	})
+
+	it('apply writes the expected file', async () => {
+		const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'xtarterize-'))
+		try {
+			await fs.writeFile(
+				path.join(tmpDir, 'package.json'),
+				JSON.stringify({ name: 'hooks-test', scripts: {} }),
+			)
+			const profile = await detectProject(tmpDir)
+			await gitHooksTask.apply(tmpDir, profile)
+			const commitMsgPath = path.join(tmpDir, '.husky', 'commit-msg')
+			const exists = await fs
+				.access(commitMsgPath)
+				.then(() => true)
+				.catch(() => false)
+			expect(exists).toBe(true)
+		} finally {
+			await fs.rm(tmpDir, { recursive: true, force: true })
+		}
+	})
 })
