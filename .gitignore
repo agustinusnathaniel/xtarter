@@ -13,3 +13,4 @@ packages/tasks/src/templates/_biome-config.generated.d.ts
 test/fixtures/**/.xtarterize/
 
 **/10x/**/*
+plans

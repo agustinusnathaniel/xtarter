@@ -29,12 +29,17 @@ import { viteCheckerTask } from '@/vite/checker.js'
 import { viteVisualizerTask } from '@/vite/visualizer.js'
 
 export {
+	areEquivalent,
 	checkJsonConfigTask,
 	dryRunJsonConfigTask,
 	ensureTaskDependency,
 	ensureTaskParentDir,
+	extractTool,
+	findEquivalentScriptKey,
+	hasScriptWithEquivalentValue,
 	isExecutableFile,
 	lintToolScripts,
+	normalizeCommand,
 	resolveLintTool,
 	writeTaskDiffs,
 } from '@/factory/index.js'

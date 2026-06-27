@@ -1,21 +1,13 @@
-import type { ProjectProfile } from '@xtarterize/core'
+import type { SkillDefinition, SkillEntry, SkillProfile } from './types.js'
 
-export interface SkillEntry {
-	source: string
-	skill: string
-}
-
-export interface SkillDefinition {
-	source: string
-	skill: string
-	condition: (profile: ProjectProfile, deps: Record<string, string>) => boolean
-}
-
-function hasDep(deps: Record<string, string>, dep: string): boolean {
+export function hasDep(deps: Record<string, string>, dep: string): boolean {
 	return dep in deps
 }
 
-function hasAnyDep(deps: Record<string, string>, depNames: string[]): boolean {
+export function hasAnyDep(
+	deps: Record<string, string>,
+	depNames: string[],
+): boolean {
 	return depNames.some((dep) => hasDep(deps, dep))
 }
 
@@ -322,8 +314,11 @@ export const SKILL_CATALOG: SkillDefinition[] = [
 	},
 ]
 
+/**
+ * Filter the full catalog to only skills that apply to the given project.
+ */
 export function getSkillsToInstall(
-	profile: ProjectProfile,
+	profile: SkillProfile,
 	deps: Record<string, string>,
 ): SkillEntry[] {
 	return SKILL_CATALOG.filter((s) => s.condition(profile, deps)).map((s) => ({

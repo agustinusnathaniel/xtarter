@@ -14,13 +14,13 @@ import {
 	logSuccess,
 	resolveProjectTasks,
 } from '@xtarterize/core'
-import { getAllTasks } from '@xtarterize/tasks'
 import { type DisplayFormat, displayDiffs } from '@/ui/diff-display.js'
 import { mergeFileDiffs } from '@/ui/merge-file-diffs.js'
 import { displayPlan } from '@/ui/plan-display.js'
 import { selectTasks } from '@/ui/select-menu.js'
 import {
 	detectProjectWithAmbiguity,
+	getAllTasksWithPlugins,
 	printProjectProfile,
 } from '@/utils/project.js'
 import { printTiming } from '@/utils/timing-display.js'
@@ -233,7 +233,7 @@ export async function runCommand(
 	const ci = isCI()
 	const quiet = args.quiet || ci
 
-	const allTasks = getAllTasks()
+	const allTasks = await getAllTasksWithPlugins(cwd)
 	const {
 		profile: baseProfile,
 		tasks,

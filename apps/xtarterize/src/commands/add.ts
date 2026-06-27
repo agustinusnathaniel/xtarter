@@ -12,11 +12,11 @@ import {
 	runPreflight,
 	statusTag,
 } from '@xtarterize/core'
-import { getAllTasks } from '@xtarterize/tasks'
 import { defineCommand } from 'citty'
 import { displayDiffs } from '@/ui/diff-display.js'
 import { resolveCwd } from '@/utils/cwd.js'
 import { handlePreflightFailure } from '@/utils/preflight.js'
+import { getAllTasksWithPlugins } from '@/utils/project.js'
 import { resolveRuntimeFlags } from '@/utils/runtime-flags.js'
 import { printTiming } from '@/utils/timing-display.js'
 
@@ -63,7 +63,7 @@ export const addCommand = defineCommand({
 		const detectionMs = performance.now() - detectionStart
 		s.stop('Project scanned')
 
-		const allTasks = getAllTasks()
+		const allTasks = await getAllTasksWithPlugins(cwd)
 
 		if (args.taskId) {
 			await runSingleTask({

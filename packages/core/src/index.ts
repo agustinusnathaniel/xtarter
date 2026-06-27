@@ -43,6 +43,13 @@ export {
 	runToolInstallationChecks,
 } from '@/diagnostics.js'
 export { BackupError, FileSystemError, TaskError } from '@/errors.js'
+// Plugin/extension system (design spike)
+export type { PluginConfig } from '@/plugins.js'
+export {
+	loadPluginConfig,
+	loadPluginTasks,
+	resolveExternalTasks,
+} from '@/plugins.js'
 export type { PreflightError, PreflightResult } from '@/preflight.js'
 export { runPreflight } from '@/preflight.js'
 export {
