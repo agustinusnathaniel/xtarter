@@ -9,7 +9,7 @@ on:
       - "**/CHANGELOG.md"
       - "**/package.json"
       - ".github/workflows/release.yml"
-      - "pnpm-lock.yml"
+      - "pnpm-lock.yaml"
   pull_request:
     types:
       - opened
@@ -48,6 +48,21 @@ jobs:
       - uses: pnpm/setup@v1
         with:
           cache: true
+
+      - name: Cache node_modules
+        uses: actions/cache@v4
+        with:
+          path: node_modules
+          key: node-modules-${{ hashFiles('pnpm-lock.yaml') }}
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run tests
+        run: pnpm test
+
+      - name: Type check
+        run: pnpm typecheck
 
       - name: Build all packages
         run: pnpm build:cli
