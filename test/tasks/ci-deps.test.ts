@@ -30,7 +30,7 @@ describe('ciWorkflowTask', () => {
 			profile,
 		)
 
-		expect(diff.after).toContain('cache: pnpm')
+		expect(diff.after).toContain('cache: true')
 		expect(diff.after).toContain('pnpm run lint')
 		expect(diff.after).toContain('pnpm run check')
 		expect(diff.after).toContain('pnpm run typecheck')

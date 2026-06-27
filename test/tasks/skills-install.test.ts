@@ -101,9 +101,9 @@ describe('skillsInstallTask', () => {
 		expect(diffs.length).toBe(1)
 		const after = diffs[0].after ?? ''
 		// Next.js skills
-		expect(after).toContain('next-best-practices')
-		expect(after).toContain('next-cache-components')
-		expect(after).toContain('next-upgrade')
+		expect(after).toContain('next-dev-loop')
+		expect(after).toContain('next-cache-components-optimizer')
+		expect(after).toContain('next-cache-components-adoption')
 		// React skills (Next.js is React)
 		expect(after).toContain('vercel-react-best-practices')
 		expect(after).toContain('react-dev')
