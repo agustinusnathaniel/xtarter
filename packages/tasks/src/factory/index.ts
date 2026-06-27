@@ -183,8 +183,21 @@ export function createFileTask(options: FileTaskOptions): Task {
 					await ensureTaskParentDir(cwd, options.filepath)
 				}
 
-				const diffs = await this.dryRun(cwd, profile)
-				await writeTaskDiffs(cwd, diffs)
+				const fullPath = await resolveTaskFile(
+					cwd,
+					options.filepath,
+					options.extensions,
+				)
+
+				const exists = fullPath !== null && (await fileExists(fullPath))
+				const before = exists ? await readFile(fullPath) : null
+				const filepath = exists
+					? relative(cwd, fullPath)
+					: getDefaultFilepath(options.filepath, options.extensions)
+
+				const after = options.render(profile, before)
+
+				await writeTaskDiffs(cwd, [{ filepath, before, after }])
 			})
 		},
 	}
@@ -368,7 +381,24 @@ export function createMultiFileTask(options: MultiFileTaskOptions): Task {
 					installDev: options.installDev,
 				})
 
-				const diffs = await this.dryRun(cwd, profile)
+				const files = options.files(profile)
+				const diffs: FileDiff[] = []
+
+				for (const f of files) {
+					const fullPath = resolvePath(cwd, f.filepath)
+					const exists = await fileExists(fullPath)
+					const before = exists ? await readFile(fullPath) : null
+					const after = f.content(profile)
+
+					if (!exists || before?.trim() !== after.trim()) {
+						diffs.push({
+							filepath: relative(cwd, fullPath),
+							before,
+							after,
+						})
+					}
+				}
+
 				await writeTaskDiffs(cwd, diffs)
 			})
 		},
@@ -415,10 +445,6 @@ export function createVitePluginTask(options: VitePluginTaskOptions): Task {
 
 		async dryRun(cwd, _profile): Promise<FileDiff[]> {
 			return wrapTask(options.id, 'createVitePluginTask.dryRun', async () => {
-				const { generateCode, loadFile, parseExpression } = await import(
-					'magicast'
-				)
-
 				const configPath = await findConfigFile(
 					cwd,
 					'vite.config',
@@ -426,29 +452,30 @@ export function createVitePluginTask(options: VitePluginTaskOptions): Task {
 				)
 				if (!configPath) return []
 
-				const before = await readFile(configPath)
-				const mod = await loadFile(configPath)
-
-				if (mod.$code.includes(options.checkString)) {
-					return [{ filepath: 'vite.config', before, after: before }]
-				}
-
-				const defaultExport = mod.exports.default
-				if (!defaultExport || !Array.isArray(defaultExport.plugins)) {
-					return [{ filepath: 'vite.config', before, after: before }]
-				}
-
-				const plugins: unknown[] = defaultExport.plugins as unknown[]
-				plugins.push(parseExpression(options.pluginCall))
-
-				const { code: after } = generateCode(mod)
-				const importDecl =
+				const importSpecifier =
 					options.importStyle === 'named'
-						? `import { ${options.importName} } from '${options.depName}'\n`
-						: `import ${options.importName} from '${options.depName}'\n`
-				const finalAfter = `${importDecl}${after}`
+						? `{ ${options.importName} }`
+						: options.importName
 
-				return [{ filepath: 'vite.config', before, after: finalAfter }]
+				const result = await injectVitePlugin({
+					configPath,
+					importPath: options.depName,
+					importName: importSpecifier,
+					pluginExpression: options.pluginCall,
+					dryRun: true,
+				})
+
+				if (!result.success) {
+					return []
+				}
+
+				return [
+					{
+						filepath: 'vite.config',
+						before: result.beforeCode ?? null,
+						after: result.generatedCode ?? result.beforeCode ?? null,
+					},
+				]
 			})
 		},
 
