@@ -60,7 +60,7 @@
 		"vite-plus": "catalog:"
 	},
 	"engines": {
-		"node": ">=18"
+		"node": ">=24"
 	},
 	"inlinedDependencies": {
 		"consola": "3.4.2",
