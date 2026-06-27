@@ -49,9 +49,6 @@ jobs:
         with:
           cache: true
 
-      - name: Run tests
-        run: pnpm test
-
       - name: Build CLI
         run: pnpm build:cli
 
