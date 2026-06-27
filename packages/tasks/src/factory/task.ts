@@ -283,6 +283,7 @@ export function createPackageJsonTask(options: PackageJsonTaskOptions): Task {
 
 				for (const dep of neededDeps) {
 					await installDependency(cwd, dep.depName, dep.installDev ?? true)
+					invalidatePackageJsonCache(cwd)
 				}
 
 				for (const f of options.files ?? []) {

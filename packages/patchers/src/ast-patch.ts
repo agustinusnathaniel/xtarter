@@ -1,4 +1,4 @@
-import { writeFile } from 'node:fs/promises'
+import { readFile, writeFile } from 'node:fs/promises'
 import { generateCode, loadFile, parseExpression } from 'magicast'
 import { basename } from 'pathe'
 
@@ -49,15 +49,14 @@ export async function injectVitePlugin(
 	const configLabel = getConfigLabel(configPath)
 
 	try {
-		const before = dryRun
-			? await import('node:fs/promises').then((m) =>
-					m.readFile(configPath, 'utf-8'),
-				)
-			: undefined
+		const before = dryRun ? await readFile(configPath, 'utf-8') : undefined
 		const mod = await loadFile(configPath)
 		const code = mod.$code
 
 		if (code.includes(importPath) || code.includes(importName)) {
+			if (dryRun) {
+				return { success: true, beforeCode: code, generatedCode: code }
+			}
 			return { success: true }
 		}
 

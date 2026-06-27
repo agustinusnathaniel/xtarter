@@ -39,7 +39,13 @@ export async function loadPluginConfig(
 		const path = await findConfigFile(cwd, basename, [''])
 		if (path) {
 			const content = await readFile(path)
-			const config = JSON.parse(content) as PluginConfig
+			let config: PluginConfig | null = null
+			try {
+				config = JSON.parse(content) as PluginConfig
+			} catch {
+				logWarn('Failed to parse .xtarterizerc')
+				return { plugins: [] }
+			}
 			if (
 				!config ||
 				typeof config !== 'object' ||
