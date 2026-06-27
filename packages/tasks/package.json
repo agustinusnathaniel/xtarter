@@ -17,8 +17,6 @@
 	"scripts": {
 		"build": "vp pack",
 		"dev": "vp pack --watch",
-		"gen:biome-types": "node scripts/gen-biome-types.mjs",
-		"postinstall": "node scripts/gen-biome-types.mjs",
 		"typecheck": "tsc --noEmit"
 	},
 	"dependencies": {
@@ -35,7 +33,6 @@
 	"devDependencies": {
 		"@biomejs/biome": "^2.4.15",
 		"@types/node": "catalog:",
-		"json-schema-to-typescript": "^15.0.4",
 		"oxlint": "^1.63.0",
 		"typescript": "catalog:",
 		"vite-plus": "catalog:"

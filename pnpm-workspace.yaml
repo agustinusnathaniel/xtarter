@@ -24,6 +24,9 @@ catalog:
   giget: ^3.2.0
   tinyglobby: ^0.2.16
   effect: 4.0.0-beta.70
+  picocolors: ^1.1.1
+  diff: ^9.0.0
+  pkg-types: ^2.3.1
 
 minimumReleaseAgeExclude:
   - '@astrojs/markdown-satteri@0.3.2'
