@@ -50,7 +50,7 @@ describe('gitHooksTask', () => {
 			profile,
 		)
 		const prePush = diffs.find((d) => d.filepath.includes('pre-push'))
-		expect(prePush?.after).toContain('pnpm check:turbo')
+		expect(prePush?.after).toContain('pnpm run check:turbo')
 	})
 
 	it('returns skip when hooks already exist', async () => {

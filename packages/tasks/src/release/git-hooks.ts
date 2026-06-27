@@ -1,9 +1,9 @@
 import type { ProjectProfile } from '@xtarterize/core'
 import { readPackageJson } from '@xtarterize/core'
-import { dlxCommand, runScriptCommand } from 'nypm'
+import { dlxCommand, type PackageManagerName, runScriptCommand } from 'nypm'
 import { createPackageJsonTask } from '@/factory'
 
-function commitMsgHook(pm: string): string {
+function commitMsgHook(pm: PackageManagerName): string {
 	return `${dlxCommand(pm, 'commitlint', { short: true })} --edit $1\n`
 }
 

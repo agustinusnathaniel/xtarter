@@ -28,6 +28,7 @@
 		"magicast": "catalog:",
 		"nypm": "catalog:",
 		"pathe": "catalog:",
+		"pkg-types": "catalog:",
 		"tinyexec": "catalog:"
 	},
 	"devDependencies": {

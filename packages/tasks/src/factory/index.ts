@@ -473,7 +473,7 @@ export function createVitePluginTask(options: VitePluginTaskOptions): Task {
 					{
 						filepath: 'vite.config',
 						before: result.beforeCode ?? null,
-						after: result.generatedCode ?? result.beforeCode ?? null,
+						after: result.generatedCode ?? result.beforeCode ?? '',
 					},
 				]
 			})
