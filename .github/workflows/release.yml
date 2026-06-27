@@ -58,6 +58,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Build packages for test resolution
+        run: pnpm build --filter=@xtarterize/tasks...
+
       - name: Run tests
         run: pnpm test
 
