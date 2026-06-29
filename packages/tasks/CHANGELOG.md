@@ -1,5 +1,19 @@
 # @xtarterize/tasks
 
+## 1.15.1
+
+### Patch Changes
+
+- [`3c68470`](https://github.com/agustinusnathaniel/xtarter/commit/3c684707e7b252dfc5da8c1fc4496436efa40331) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - fix: make profile cache write resilient to concurrent cleanup
+
+  The `writeProfileCache` function now re-creates the cache directory before
+  rename, preventing ENOENT errors when parallel processes clean up the
+  `.xtarterize/cache` directory between steps.
+
+- Updated dependencies [[`3c68470`](https://github.com/agustinusnathaniel/xtarter/commit/3c684707e7b252dfc5da8c1fc4496436efa40331)]:
+  - @xtarterize/core@1.15.1
+  - @xtarterize/patchers@1.15.1
+
 ## 1.15.0
 
 ### Patch Changes
