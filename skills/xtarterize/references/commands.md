@@ -215,7 +215,7 @@ npx xtarterize query "react testing" --json --threshold 0.2
       ]
     }
   ],
-  "timing": { "scan": 12, "resolve": 3 }
+  "timing": { "detectionMs": 23, "resolutionMs": 14, "resolutionSumMs": 37 }
 }
 ```
 

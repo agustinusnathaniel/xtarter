@@ -27,9 +27,7 @@ A query is any natural language description of the tooling setup you're looking 
 
 ### Global options
 
-| Option | Description |
-|--------|-------------|
-| `--quiet` | Suppress verbose output |
+This command does not support global formatting or output flags (`--quiet`, `--format`). Use `--json` for machine-readable output.
 
 ## Examples
 
@@ -39,20 +37,19 @@ A query is any natural language description of the tooling setup you're looking 
 xtarterize query "strict typescript"
 ```
 
-Outputs tasks ranked by relevance, grouped into tiers:
+Outputs tasks grouped by domain bundle with per-group actionable add commands:
 
 ```
-Query: "strict typescript"
+✻ xtarterize query "strict typescript" — 2 groups · 4 tasks
 
-EXACT MATCHES
-  ████████░ 80%  tsconfig - strict: true              ts/strict
-  ███████░░ 70%  tsconfig - path aliases               ts/paths
+  TypeScript
+  ts/strict                80%  tsconfig - strict: true             tsconfig.json
+  ts/paths                 52%  tsconfig - path aliases             tsconfig.json
+  ts/incremental           24%  tsconfig — incremental: true        tsconfig.json
+  gitignore/tsbuildinfo    14%  .gitignore — tsbuildinfo             .gitignore
 
-STRONG MATCHES
-  █████░░░░ 52%  tsconfig — incremental: true          ts/incremental
-
-RELATED
-  ██░░░░░░░ 24%  .gitignore — tsbuildinfo              gitignore/tsbuildinfo
+  xtarterize add ts/strict ts/paths ts/incremental gitignore/tsbuildinfo
+  xtarterize add scripts/package-scripts
 ```
 
 ### Search for linting and formatting
@@ -105,10 +102,10 @@ This reorders tasks so the most relevant ones appear first in the interactive pl
 The scoring engine operates in five steps:
 
 1. **Tokenize** — The query is split into words; stopwords (a, the, want, need, project, etc.) and short words are filtered out
-2. **Expand** — Content words are expanded through a domain-specific synonym map (e.g. "lint" → "linter", "static-analysis", "check"; "typescript" → "ts", "type-safe", "strict")
-3. **Score** — Each expanded token is matched against 5 signals on every task (label, id, group, keywords, config targets) using tiered match levels: exact (1.0), stem-match (0.95), fuzzy (0.85), prefix (0.75), substring (0.55)
-4. **Aggregate** — Signal scores are weighted and averaged; synonym hits receive a 0.85 discount; multi-token queries get a coverage bonus
-5. **Rank** — Tasks are sorted by relevance score (0.0 - 1.0) and grouped into tiers
+2. **Expand** — Content words are expanded through a domain-specific synonym map with bidirectional transitive reverse-lookup (e.g. "lint" → "linter", "static-analysis", "check"; "typescript" → "ts", "type-safe", "strict")
+3. **Score** — For each original token, find the best match across all 5 signals (label, id, group, keywords, config targets) using the highest signal score among all terms (original + expanded synonyms). Uses tiered match levels: exact (1.0), stem-match (0.95), fuzzy (0.85), prefix (0.75), substring (0.55)
+4. **Aggregate** — Signal scores are weighted and averaged; multi-token queries receive a coverage bonus that increases with the proportion of tokens matched
+5. **Group** — Results are organized by task group/domain bundle, with per-group actionable `xtarterize add` commands
 
 <Aside type="note">
   The scoring engine is entirely algorithmic — zero AI model calls, zero API dependencies.
