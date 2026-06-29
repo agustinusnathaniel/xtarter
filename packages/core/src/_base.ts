@@ -31,11 +31,21 @@ export interface FileDiff {
 	semantic?: SemanticEntry
 }
 
+export interface TaskSearchMeta {
+	/** Descriptive tags/categories for search, e.g. ["type-safe", "compiler-options"] */
+	tags: string[]
+	/** Config files this task modifies, e.g. ["tsconfig.json", "biome.json"] */
+	configTargets: string[]
+	/** Extra keywords for search not obvious from label/id, e.g. ["types", "type-safe", "strict"] */
+	keywords: string[]
+}
+
 export interface Task {
 	id: string
 	label: string
 	group: string
 	scope?: TaskScope
+	searchMeta?: TaskSearchMeta
 	applicable: (profile: ProjectProfile) => boolean
 	check: (cwd: string, profile: ProjectProfile) => Promise<TaskStatus>
 	dryRun: (cwd: string, profile: ProjectProfile) => Promise<FileDiff[]>
