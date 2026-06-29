@@ -86,9 +86,7 @@ export function displayQueryResults(
 		console.log('')
 		for (const group of groups) {
 			const ids = group.tasks.map((t) => t.taskId)
-			console.log(
-				`  ${pc.dim('→')} ${pc.dim(`xtarterize add ${ids.join(' ')}`)}`,
-			)
+			console.log(`  ${pc.dim(`xtarterize add ${ids.join(' ')}`)}`)
 		}
 	}
 
