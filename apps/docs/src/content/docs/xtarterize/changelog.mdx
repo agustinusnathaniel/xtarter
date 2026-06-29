@@ -7,6 +7,23 @@ import { Aside, Tabs, TabItem, CardGrid, Card, LinkButton, Steps } from '@astroj
 
 Latest updates and feature releases for xtarterize.
 
+## v1.15.2 — June 29, 2026
+
+### Monorepo-aware task filtering
+
+Running `xtarterize` in a monorepo now shows only relevant tasks for where you're running from:
+
+- Running from the monorepo root? You'll see CI/CD, release tooling, turbo, renovate, and editor config tasks — not package-level tsconfig or Vite plugin tasks.
+- Running inside a workspace package? You'll see tsconfig path aliases, `vite-plugin-checker`, and `rollup-plugin-visualizer` — not root-level CI or release tasks.
+- Tasks that apply everywhere continue to work as before.
+
+Also fixes a detection bug where Node.js projects using Vite for build orchestration were misidentified as `runtime: 'browser'` instead of `runtime: 'node'`.
+
+### Fixes
+
+- **No more cache collisions in parallel runs.** Running `xtarterize` concurrently (e.g., across multiple workspace packages) no longer crashes with spurious file-not-found errors.
+- **CI pipeline hardened.** Tests are now more resilient to transient failures and version drift in external tools.
+
 ## v1.15.0
 
 _June 29, 2026_
