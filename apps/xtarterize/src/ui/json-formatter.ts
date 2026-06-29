@@ -1,10 +1,12 @@
 import type {
 	DiagnosticCheck,
+	InquiryResult,
 	ProjectProfile,
 	ResolveTiming,
 	Task,
 	TaskStatus,
 } from '@xtarterize/core'
+import { formatTimingJson } from '@/utils/timing-display.js'
 
 export interface TaskJson {
 	id: string
@@ -67,6 +69,33 @@ export function formatListResult(options: ListResultOptions): string {
 	}
 	if (timing) result.timing = timing
 	return JSON.stringify(result)
+}
+
+interface QueryResultOptions {
+	results: InquiryResult[]
+	query: string
+	timing: ResolveTiming
+}
+
+export function formatQueryResult(options: QueryResultOptions): string {
+	const { results, query, timing } = options
+	return JSON.stringify(
+		{
+			type: 'query',
+			query,
+			count: results.length,
+			results: results.map((r) => ({
+				taskId: r.taskId,
+				label: r.task.label,
+				group: r.task.group,
+				relevance: r.relevance,
+				signals: r.signals,
+			})),
+			timing: formatTimingJson(timing),
+		},
+		null,
+		2,
+	)
 }
 
 export function formatDoctorResult(diagnostics: DiagnosticCheck[]): string {

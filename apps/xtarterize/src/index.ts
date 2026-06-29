@@ -7,6 +7,7 @@ import { diffCommand } from '@/commands/diff.js'
 import { doctorCommand } from '@/commands/doctor.js'
 import { initCommand } from '@/commands/init.js'
 import { listCommand } from '@/commands/list.js'
+import { queryCommand } from '@/commands/query.js'
 import { restoreCommand } from '@/commands/restore.js'
 import { syncCommand } from '@/commands/sync.js'
 import { undoCommand } from '@/commands/undo.js'
@@ -36,6 +37,7 @@ const main = defineCommand({
 	},
 	subCommands: {
 		init: initCommand,
+		query: queryCommand,
 		sync: syncCommand,
 		diff: diffCommand,
 		check: checkCommand,
