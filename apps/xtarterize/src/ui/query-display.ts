@@ -19,8 +19,9 @@ function signalBreakdown(signals: { name: string; score: number }[]): string {
 export function displayQueryResults(
 	results: InquiryResult[],
 	query: string,
-	statuses: Map<string, TaskStatus>,
+	statuses?: Map<string, TaskStatus>,
 ): void {
+	const statusMap = statuses ?? new Map()
 	console.log('')
 	console.log(pc.bold(`Query: "${query}"`))
 	console.log(pc.dim('\u2500'.repeat(50)))
@@ -35,7 +36,7 @@ export function displayQueryResults(
 		console.log(pc.green(pc.bold('EXACT MATCHES')))
 		console.log('')
 		for (const result of exact) {
-			const status = statuses.get(result.taskId)
+			const status = statusMap.get(result.taskId)
 			const bar = relevanceBar(result.relevance)
 			const signals = signalBreakdown(result.signals)
 			console.log(
@@ -50,7 +51,7 @@ export function displayQueryResults(
 		console.log(pc.cyan(pc.bold('STRONG MATCHES')))
 		console.log('')
 		for (const result of strong) {
-			const status = statuses.get(result.taskId)
+			const status = statusMap.get(result.taskId)
 			const bar = relevanceBar(result.relevance)
 			const signals = signalBreakdown(result.signals)
 			console.log(
@@ -65,7 +66,7 @@ export function displayQueryResults(
 		console.log(pc.dim(pc.bold('RELATED')))
 		console.log('')
 		for (const result of related) {
-			const status = statuses.get(result.taskId)
+			const status = statusMap.get(result.taskId)
 			const bar = relevanceBar(result.relevance)
 			console.log(
 				`  ${bar}  ${result.task.label.padEnd(38)} ${pc.dim(result.taskId)} ${status ? statusTag(status) : ''}`,

@@ -2,8 +2,7 @@ import { scoreTasks, tokenize } from '@xtarterize/core'
 import { defineCommand } from 'citty'
 import { formatQueryResult } from '@/ui/json-formatter.js'
 import { displayQueryResults } from '@/ui/query-display.js'
-import { resolveCliContext, scanProject } from '@/utils/project.js'
-import { printTiming } from '@/utils/timing-display.js'
+import { getAllTasksWithPlugins, resolveCliContext } from '@/utils/project.js'
 
 export const queryCommand = defineCommand({
 	meta: {
@@ -25,14 +24,10 @@ export const queryCommand = defineCommand({
 			type: 'string',
 			description: 'Minimum relevance score 0-1 (default: 0.1)',
 		},
-		timing: {
-			type: 'boolean',
-			description: 'Show detailed per-task timing breakdown',
-		},
 	},
 	async run({ args }) {
 		const ctx = resolveCliContext(args)
-		const { tasks, statuses, timing } = await scanProject(ctx)
+		const tasks = await getAllTasksWithPlugins(ctx.cwd)
 
 		const queryStr = String(args.query)
 		const limit =
@@ -50,7 +45,7 @@ export const queryCommand = defineCommand({
 		})
 
 		if (ctx.json) {
-			console.log(formatQueryResult({ results, query: queryStr, timing }))
+			console.log(formatQueryResult({ results, query: queryStr }))
 			return
 		}
 
@@ -66,7 +61,6 @@ export const queryCommand = defineCommand({
 			return
 		}
 
-		displayQueryResults(results, queryStr, statuses)
-		if (args.timing) printTiming(timing)
+		displayQueryResults(results, queryStr)
 	},
 })

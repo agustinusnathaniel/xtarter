@@ -74,28 +74,25 @@ export function formatListResult(options: ListResultOptions): string {
 interface QueryResultOptions {
 	results: InquiryResult[]
 	query: string
-	timing: ResolveTiming
+	timing?: ResolveTiming
 }
 
 export function formatQueryResult(options: QueryResultOptions): string {
 	const { results, query, timing } = options
-	return JSON.stringify(
-		{
-			type: 'query',
-			query,
-			count: results.length,
-			results: results.map((r) => ({
-				taskId: r.taskId,
-				label: r.task.label,
-				group: r.task.group,
-				relevance: r.relevance,
-				signals: r.signals,
-			})),
-			timing: formatTimingJson(timing),
-		},
-		null,
-		2,
-	)
+	const data: Record<string, unknown> = {
+		type: 'query',
+		query,
+		count: results.length,
+		results: results.map((r) => ({
+			taskId: r.taskId,
+			label: r.task.label,
+			group: r.task.group,
+			relevance: r.relevance,
+			signals: r.signals,
+		})),
+	}
+	if (timing) data.timing = formatTimingJson(timing)
+	return JSON.stringify(data, null, 2)
 }
 
 export function formatDoctorResult(diagnostics: DiagnosticCheck[]): string {
