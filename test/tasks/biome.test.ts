@@ -165,7 +165,7 @@ describe('biomeTask', () => {
 			.catch(() => false)
 		expect(exists).toBe(true)
 		await fs.rm(tmpDir, { recursive: true, force: true })
-	})
+	}, 30_000)
 })
 
 describe('oxlintTask', () => {

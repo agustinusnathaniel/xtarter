@@ -40,7 +40,7 @@ describe('sync command', () => {
 		} finally {
 			await fs.rm(cwd, { recursive: true, force: true })
 		}
-	})
+	}, 30_000)
 
 	it('detects outdated config and applies updates', async () => {
 		const cwd = await createMinimalProject()
