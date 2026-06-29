@@ -1,6 +1,7 @@
 import { addDependency } from 'nypm'
 import { type PackageJson, readPackageJSON, writePackageJSON } from 'pkg-types'
 import { fileExists, resolvePath } from '@/utils/fs.js'
+import { logWarn } from '@/utils/logger.js'
 
 export async function readPackageJson(cwd: string) {
 	const pkgPath = resolvePath(cwd, 'package.json')
@@ -55,9 +56,13 @@ export async function installDependency(
 		resolvePath(cwd, 'pnpm-workspace.yaml'),
 	)
 
-	await addDependency([depName], {
-		cwd,
-		dev,
-		workspace: isPnpmWorkspaceRoot || undefined,
-	})
+	try {
+		await addDependency([depName], {
+			cwd,
+			dev,
+			workspace: isPnpmWorkspaceRoot || undefined,
+		})
+	} catch {
+		logWarn(`Failed to install ${depName}, continuing without it`)
+	}
 }

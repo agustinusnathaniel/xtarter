@@ -21,6 +21,13 @@ describe('initializeGit', () => {
 		const dir = await createTempDir()
 		await writeFile(join(dir, 'README.md'), '# test')
 
+		await exec('git', ['config', 'user.email', 'test@test.com'], {
+			nodeOptions: { cwd: dir },
+		})
+		await exec('git', ['config', 'user.name', 'Test User'], {
+			nodeOptions: { cwd: dir },
+		})
+
 		await initializeGit({ projectPath: dir })
 
 		const log = await exec('git', ['log', '--oneline'], {

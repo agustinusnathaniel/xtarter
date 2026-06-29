@@ -133,7 +133,7 @@ export const doctorCommand = defineCommand({
 			return
 		}
 
-		if (quiet) {
+		if (quiet && !verbose) {
 			console.log(
 				`${summary.pass} passed, ${summary.warn} warnings, ${summary.fail} failed`,
 			)
