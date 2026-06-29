@@ -399,16 +399,27 @@ describe('detectProject', () => {
 	})
 })
 
+const detectTestFixtures = [
+	'empty',
+	'react-vite-tailwind',
+	'next-chakra',
+	'vite-chakra',
+	'vite-hero',
+	'eslint-project',
+	'oxlint-standalone',
+	'biome-standalone',
+	'bun-monorepo',
+	'astro-monorepo',
+	'yarn-monorepo',
+]
+
 afterAll(async () => {
-	const entries = await fs.readdir(fixtures, { withFileTypes: true })
 	await Promise.all(
-		entries
-			.filter((e) => e.isDirectory())
-			.map((e) =>
-				fs.rm(path.join(fixtures, e.name, '.xtarterize'), {
-					recursive: true,
-					force: true,
-				}),
-			),
+		detectTestFixtures.map((name) =>
+			fs.rm(path.join(fixtures, name, '.xtarterize'), {
+				recursive: true,
+				force: true,
+			}),
+		),
 	)
 })

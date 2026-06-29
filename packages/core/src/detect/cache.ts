@@ -216,17 +216,17 @@ export function writeProfileCache(
 			const dir = dirname(filePath)
 			yield* Effect.tryPromise(() =>
 				fs.mkdir(dir, { recursive: true }).then(() => undefined),
-			).pipe(Effect.orElseSucceed(() => undefined))
+			)
 
 			const tempPath = `${filePath}.${process.pid}.${Date.now()}.tmp`
 			const data = `${JSON.stringify(entry, null, 2)}\n`
 
-			yield* Effect.tryPromise(() =>
-				fs.writeFile(tempPath, data, 'utf-8'),
-			).pipe(Effect.orElseSucceed(() => undefined))
+			yield* Effect.tryPromise(() => fs.writeFile(tempPath, data, 'utf-8'))
 
 			yield* Effect.tryPromise(async () => {
 				try {
+					// Re-ensure dir exists (may have been cleaned up by parallel process)
+					await fs.mkdir(dir, { recursive: true })
 					await fs.rename(tempPath, filePath)
 				} catch (error) {
 					await fs.unlink(tempPath).catch(() => {})
