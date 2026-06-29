@@ -40,16 +40,25 @@ describe('tokenize', () => {
 		expect(result.tokens).toContain('typescript')
 	})
 
-	it('preserves hyphenated terms', () => {
+	it('normalizes hyphens to spaces', () => {
 		const result = tokenize('static-analysis tool')
-		expect(result.tokens).toContain('static-analysis')
+		expect(result.tokens).toContain('static')
+		expect(result.tokens).toContain('analysis')
 		expect(result.tokens).toContain('tool')
+		expect(result.tokens).not.toContain('static-analysis')
 	})
 
 	it('strips non-ASCII characters', () => {
 		const result = tokenize('über strict')
 		// 'ü' is stripped (not \w); remaining 'ber' passes through
 		expect(result.tokens).toEqual(['ber', 'strict'])
+	})
+
+	it('normalizes hyphens to spaces so hyphenated queries match spaced terms', () => {
+		const result = tokenize('agent-skills setup')
+		expect(result.tokens).toContain('agent')
+		expect(result.tokens).toContain('skills')
+		expect(result.tokens).not.toContain('agent-skills')
 	})
 
 	it('removes common setup-related stopwords', () => {
