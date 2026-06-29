@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.14.2
+
+### Patch Changes
+
+- [#67](https://github.com/agustinusnathaniel/xtarter/pull/67) [`20cceb2`](https://github.com/agustinusnathaniel/xtarter/commit/20cceb2e9846ab0e9402da4c1e69738961796a35) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - fix: align engines.node to >=24 for clear error messaging
+
 ## 1.14.1
 
 ### Patch Changes
