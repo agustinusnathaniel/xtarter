@@ -1,5 +1,18 @@
 # xtarterize
 
+## 1.14.4
+
+### Patch Changes
+
+- [`ec142cb`](https://github.com/agustinusnathaniel/xtarter/commit/ec142cbb6e48297f6b12a4729676f283d8a0537d) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - fix: handle package install failures gracefully and fix CI test stability
+
+  - installDependency now catches nypm errors and logs a warning instead of
+    throwing, preventing package install failures from blocking config
+    modifications
+  - doctor --verbose now correctly overrides CI-forced quiet mode
+  - Explicit turbo dependencies ensure build outputs exist before tests run
+  - Increase test timeouts for slow pnpm installs in CI
+
 ## 1.14.3
 
 ### Patch Changes
