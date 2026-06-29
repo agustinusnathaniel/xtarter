@@ -120,7 +120,7 @@ export function restoreBackup(cwd: string, backup: Backup): Promise<void> {
 	const resolvedDest = resolvePath(cwd, backup.filepath)
 	const resolvedCwd = resolvePath(cwd)
 	if (
-		!resolvedDest.startsWith(resolvedCwd + '/') &&
+		!resolvedDest.startsWith(`${resolvedCwd}/`) &&
 		resolvedDest !== resolvedCwd
 	) {
 		return Promise.reject(

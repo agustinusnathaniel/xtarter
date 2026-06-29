@@ -47,7 +47,10 @@ describe('backup', () => {
 		const backups = await listBackups(tmpDir, filePath)
 		expect(backups.length).toBe(1)
 
-		await restoreBackup(tmpDir, backups[0]!)
+		const backup = backups[0]
+		expect(backup).toBeDefined()
+		// biome-ignore lint/style/noNonNullAssertion: guarded by toBeDefined above
+		await restoreBackup(tmpDir, backup!)
 
 		const restoredContent = await fs.readFile(fullPath, 'utf-8')
 		expect(restoredContent).toBe(originalContent)

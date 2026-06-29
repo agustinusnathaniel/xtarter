@@ -28,9 +28,9 @@ async function captureOutput(run: () => Promise<void>): Promise<string> {
 		return true
 	}
 
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	// biome-ignore lint/suspicious/noExplicitAny: stdout mock needs any cast
 	process.stdout.write = collect as any
-	// eslint-disable-next-line @typescript-eslint/no-explicit-any
+	// biome-ignore lint/suspicious/noExplicitAny: stderr mock needs any cast
 	process.stderr.write = collect as any
 
 	const originalLevel = consola.level

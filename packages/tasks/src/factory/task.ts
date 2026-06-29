@@ -25,7 +25,8 @@ import {
 const __pkgCache = new Map<string, PackageJson | null>()
 
 async function getPackageJson(cwd: string): Promise<PackageJson | null> {
-	if (__pkgCache.has(cwd)) return __pkgCache.get(cwd)!
+	const cached = __pkgCache.get(cwd)
+	if (cached !== undefined) return cached
 	const pkg = await readPackageJson(cwd)
 	__pkgCache.set(cwd, pkg)
 	return pkg
