@@ -8,8 +8,8 @@ The **xtarter stack** gives you two complementary tools:
 
 | Tool | Phase | Purpose |
 |------|-------|---------|
-| [**create-xtarter-app**](https://github.com/agustinusnathaniel/create-xtarter-app) | Day 0 | Scaffold a new project from curated templates with best practices baked in |
-| **xtarterize** | Day 1+ | Detect your stack and apply production-grade conformance to any existing project |
+| [**create-xtarter-app**](https://xtarter.sznm.dev/create-xtarter-app) | Day 0 | Scaffold a new project from curated templates with best practices baked in |
+| [**xtarterize**](https://xtarter.sznm.dev/xtarterize) | Day 1+ | Detect your stack and apply production-grade conformance to any existing project |
 
 ## Quick Start
 
