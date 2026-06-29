@@ -27,7 +27,10 @@ npx create-xtarter-app@latest [project-name] [options]
 | `--clean` | — | boolean | — | Remove CI/CD config files after scaffolding |
 | `--force` | `-f` | boolean | — | Overwrite existing target directory |
 | `--ref` | — | string | — | Git ref (branch, tag, or commit SHA) to download |
-| `--yes` | `-y` | boolean | — | Use defaults for all prompts |
+| `--yes` | `-y` | boolean | — | Use defaults for all prompts (defaults to `next-chakra` template when `-t` is omitted) |
+| `--quiet` | — | boolean | — | Suppress banners, spinners, and decorative output |
+| `--json` | — | boolean | — | Output scaffold result as JSON (also suppresses banners and spinners) |
+| `--no-color` | — | boolean | — | Disable colorized output |
 | `--help` | `-h` | boolean | — | Show help text |
 | `--version` | `-v` | boolean | — | Show version |
 
@@ -85,6 +88,38 @@ npx create-xtarter-app@latest [project-name] [options]
   npm create xtarter-app@latest my-app --yes
   npm create xtarter-app@latest my-app --template vite-tailwind
   npm create xtarter-app@latest my-app --template vite-tailwind --force
+  ```
+
+  </TabItem>
+  <TabItem label="JSON output">
+
+  ```bash
+  # Scaffold and get machine-readable result
+  pnpm create xtarter-app my-app --yes --json
+  ```
+
+  Output:
+
+  ```json
+  {
+    "success": true,
+    "projectPath": "./my-app",
+    "template": "next-chakra",
+    "packageManager": "pnpm",
+    "gitInitialized": true,
+    "dependenciesInstalled": true,
+    "ciConfigsCleaned": false,
+    "nextSteps": [
+      "cd my-app",
+      "pnpm dev"
+    ]
+  }
+  ```
+
+  On failure, the output is written to stderr:
+
+  ```json
+  { "success": false, "error": "message" }
   ```
 
   </TabItem>

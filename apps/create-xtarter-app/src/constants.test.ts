@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vite-plus/test'
-import { HELP_TEXT, SUPPORTED_PACKAGE_MANAGERS } from '@/constants'
+import { SUPPORTED_PACKAGE_MANAGERS } from '@/constants'
 
 describe('Constants', () => {
 	describe('SUPPORTED_PACKAGE_MANAGERS', () => {
@@ -21,23 +21,6 @@ describe('Constants', () => {
 			expect(SUPPORTED_PACKAGE_MANAGERS.npm.execCommand).toBe('npm')
 			expect(SUPPORTED_PACKAGE_MANAGERS.bun.execCommand).toBe('bun')
 			expect(SUPPORTED_PACKAGE_MANAGERS.yarn.execCommand).toBe('yarn')
-		})
-	})
-
-	describe('HELP_TEXT', () => {
-		it('should include usage examples', () => {
-			expect(HELP_TEXT).toContain('Usage:')
-			expect(HELP_TEXT).toContain('Examples:')
-		})
-
-		it('should document all options', () => {
-			expect(HELP_TEXT).toContain('--template')
-			expect(HELP_TEXT).toContain('--pm')
-			expect(HELP_TEXT).toContain('--no-git')
-			expect(HELP_TEXT).toContain('--clean')
-			expect(HELP_TEXT).toContain('--force')
-			expect(HELP_TEXT).toContain('--ref')
-			expect(HELP_TEXT).toContain('--yes')
 		})
 	})
 })

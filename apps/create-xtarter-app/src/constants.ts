@@ -41,36 +41,4 @@ export const SUPPORTED_PACKAGE_MANAGERS = {
 	},
 } as const
 
-export const HELP_TEXT: string = `
-${pc.bold('Usage:')}
-  ${pc.cyan('npx create-xtarter-app@latest')} [project-name] [options]
-
-${pc.bold('Options:')}
-  ${pc.cyan('--template, -t')} <name>     Template to use (skips prompt)
-  ${pc.cyan('--pm, -p')} <manager>        Package manager (pnpm|npm|bun|yarn)
-  ${pc.cyan('--no-git')}                  Skip git initialization
-  ${pc.cyan('--clean')}                   Remove CI/CD configs after scaffold
-  ${pc.cyan('--force, -f')}               Overwrite existing directory
-  ${pc.cyan('--ref')} <ref>               Git ref (branch/tag/commit) to download
-  ${pc.cyan('--yes, -y')}                 Use defaults (pnpm, git init, no clean)
-  ${pc.cyan('--help, -h')}                Show this help message
-  ${pc.cyan('--version, -v')}             Show version number
-
-${pc.bold('Subcommands:')}
-  ${pc.cyan('preview')} [template]        Preview template details
-
-${pc.bold('Examples:')}
-  ${pc.dim('# Preview a template')}
-  ${pc.cyan('npx create-xtarter-app@latest preview vite-tailwind')}
-
-  ${pc.dim('# Interactive mode')}
-  ${pc.cyan('npx create-xtarter-app@latest')}
-
-  ${pc.dim('# Quick scaffold with defaults')}
-  ${pc.cyan('npx create-xtarter-app@latest my-app -y')}
-
-  ${pc.dim('# Full control')}
-  ${pc.cyan('npx create-xtarter-app@latest my-app -t vite-chakra -p pnpm --no-git')}
-`
-
 export const VERSION: string = version

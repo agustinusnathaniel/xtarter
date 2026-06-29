@@ -36,6 +36,10 @@ export const doctorCommand = defineCommand({
 			type: 'boolean',
 			description: 'Show additional system information',
 		},
+		json: {
+			type: 'boolean',
+			description: 'Output machine-readable JSON',
+		},
 	},
 	async run({ args }) {
 		const cwd = resolveCwd(args)

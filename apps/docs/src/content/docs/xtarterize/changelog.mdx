@@ -7,6 +7,31 @@ import { Aside, Tabs, TabItem, CardGrid, Card, LinkButton, Steps } from '@astroj
 
 Latest updates and feature releases for xtarterize.
 
+## v1.15.0
+
+_June 29, 2026_
+
+### CLI
+
+- `restore --yes`: skip confirmation, restore latest backup
+- `restore --quiet`: suppress verbose output
+- `add --all`: apply all new and patch tasks without interaction
+- `doctor --json`: now visible in command-level `--help`
+
+### create-xtarter-app
+
+- `--quiet`: suppress banners, progress output, and decorative text
+- `--json`: output scaffold result as structured JSON
+- `--no-color`: disable colorized output
+- `--yes`: now defaults to `next-chakra` template when `-t` is omitted
+- Migrated from hand-rolled `HELP_TEXT` to citty auto-generated help
+
+### Docs
+
+- Document new CLI flags in Starlight reference docs
+- Update agent skills for accurate flag references
+- Fix JSON output example to match actual output shape
+
 ## v1.14.3 — June 29, 2026
 
 ### Fixes

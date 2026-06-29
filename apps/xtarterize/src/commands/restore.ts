@@ -1,4 +1,5 @@
 import { select } from '@clack/prompts'
+import type { Backup } from '@xtarterize/core'
 import {
 	abortIfCancelled,
 	createSpinner,
@@ -20,16 +21,27 @@ export const restoreCommand = defineCommand({
 			type: 'positional',
 			description: 'File to restore (e.g., tsconfig.json)',
 		},
+		yes: {
+			type: 'boolean',
+			description: 'Skip confirmation, restore latest backup',
+		},
+		quiet: {
+			type: 'boolean',
+			description: 'Suppress verbose output',
+		},
 	},
 	async run({ args }) {
 		const cwd = resolveCwd(args)
 		const filepath = args.filepath
+		const yes = args.yes === true
+		const quiet = args.quiet === true
+
 		if (!filepath) {
 			logError('File path required. Usage: xtarterize restore <filepath>')
 			return
 		}
 
-		const s = createSpinner(false)
+		const s = createSpinner(quiet)
 		s.start('Loading backups...')
 
 		const backups = await listBackups(cwd, filepath)
@@ -40,26 +52,20 @@ export const restoreCommand = defineCommand({
 			return
 		}
 
-		if (backups.length === 1) {
-			try {
-				await restoreBackup(cwd, backups[0])
-				logSuccess(`Restored ${filepath} from backup`)
-			} catch (error) {
-				const message = error instanceof Error ? error.message : String(error)
-				logError(`Failed to restore: ${message}`)
-			}
-			return
+		let selected: Backup
+		if (backups.length === 1 || yes) {
+			selected = backups[0]
+		} else {
+			const result = await select({
+				message: 'Select backup to restore:',
+				options: backups.map((b) => ({
+					value: b,
+					label: `${b.timestamp} - ${b.backupPath}`,
+				})),
+			})
+			abortIfCancelled(result)
+			selected = result
 		}
-
-		const selected = await select({
-			message: 'Select backup to restore:',
-			options: backups.map((b) => ({
-				value: b,
-				label: `${b.timestamp} - ${b.backupPath}`,
-			})),
-		})
-
-		abortIfCancelled(selected)
 
 		try {
 			await restoreBackup(cwd, selected)

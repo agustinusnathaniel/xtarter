@@ -9,6 +9,7 @@ import {
 	logError,
 	logInfo,
 	logSuccess,
+	logWarn,
 	runPreflight,
 	statusTag,
 } from '@xtarterize/core'
@@ -43,6 +44,11 @@ export const addCommand = defineCommand({
 			type: 'boolean',
 			description: 'Show detailed per-task timing breakdown',
 		},
+		all: {
+			type: 'boolean',
+			description:
+				'Apply all applicable new and patch tasks without interaction',
+		},
 	},
 	async run({ args }) {
 		const cwd = resolveCwd(args)
@@ -65,7 +71,24 @@ export const addCommand = defineCommand({
 
 		const allTasks = await getAllTasksWithPlugins(cwd)
 
-		if (args.taskId) {
+		if (args.all && args.taskId) {
+			logWarn(
+				'Both --all and a task ID were specified. The task ID will be ignored.',
+			)
+		}
+
+		if (args.all) {
+			await runInteractive({
+				allTasks,
+				profile,
+				cwd,
+				quiet,
+				format,
+				detectionMs,
+				recordTiming,
+				all: true,
+			})
+		} else if (args.taskId) {
 			await runSingleTask({
 				taskId: args.taskId,
 				allTasks,
@@ -188,9 +211,18 @@ async function runInteractive(options: {
 	format: import('@/ui/diff-display.js').DisplayFormat
 	detectionMs: number
 	recordTiming: boolean
+	all?: boolean
 }) {
-	const { allTasks, profile, cwd, quiet, format, detectionMs, recordTiming } =
-		options
+	const {
+		allTasks,
+		profile,
+		cwd,
+		quiet,
+		format,
+		detectionMs,
+		recordTiming,
+		all: allFlag,
+	} = options
 
 	const applicable = allTasks.filter((t) => t.applicable(profile))
 	if (applicable.length === 0) {
@@ -214,14 +246,18 @@ async function runInteractive(options: {
 	}
 	s.stop('Tasks checked')
 
-	if (quiet) {
+	if (quiet && !allFlag) {
 		logInfo('Interactive mode requires a terminal. Use a task ID instead.')
 		return
 	}
 
-	const selectedIds = await selectTasksGrouped(tasksWithStatus)
+	const selectedIds = allFlag
+		? tasksWithStatus
+				.filter((t) => t.status === 'new' || t.status === 'patch')
+				.map((t) => t.task.id)
+		: await selectTasksGrouped(tasksWithStatus)
 	if (selectedIds.length === 0) {
-		logInfo('No tasks selected')
+		logInfo('No tasks to apply')
 		return
 	}
 
@@ -234,13 +270,15 @@ async function runInteractive(options: {
 		if (!entry) continue
 
 		const diffs = await entry.task.dryRun(cwd, profile)
-		displayDiffs(diffs, format)
+		if (!allFlag) displayDiffs(diffs, format)
 
-		const proceed = await confirm({
-			message: `Apply ${entry.task.label}?`,
-		})
-		abortIfCancelled(proceed, 'Add cancelled')
-		if (!proceed) continue
+		if (!allFlag) {
+			const proceed = await confirm({
+				message: `Apply ${entry.task.label}?`,
+			})
+			abortIfCancelled(proceed, 'Add cancelled')
+			if (!proceed) continue
+		}
 
 		const result = await applyTasks({
 			tasks: [entry.task],

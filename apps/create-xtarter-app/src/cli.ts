@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 import { resolve } from 'node:path'
 import { cancel, intro, note, outro } from '@clack/prompts'
-import { logWarn, pc } from '@xtarterize/core'
+import { consola, logWarn, pc } from '@xtarterize/core'
 import { defineCommand, runMain } from 'citty'
-import { APP_NAME, BANNER, HELP_TEXT, VERSION } from '@/constants'
+import { APP_NAME, BANNER, DEFAULT_TEMPLATE, VERSION } from '@/constants'
 import { promptCleanCI, promptGitInit } from '@/prompts/options'
 import { promptPackageManager } from '@/prompts/package-manager'
 import { previewTemplate } from '@/prompts/preview'
@@ -62,17 +62,23 @@ const scaffoldArgs = {
 		description: 'Use defaults (pnpm, git init, no clean)',
 		required: false,
 	},
-	help: {
+	quiet: {
 		type: 'boolean',
-		alias: 'h',
-		description: 'Show help message',
+		description: 'Suppress banners, progress output, and decorative text',
 		required: false,
+		default: false,
 	},
-	version: {
+	json: {
 		type: 'boolean',
-		alias: 'v',
-		description: 'Show version',
+		description: 'Output scaffold result as JSON',
 		required: false,
+		default: false,
+	},
+	noColor: {
+		type: 'boolean',
+		description: 'Disable colorized output',
+		required: false,
+		default: false,
 	},
 } as const
 
@@ -106,23 +112,27 @@ const mainCommand = defineCommand({
 	async run(ctx) {
 		const args = ctx.args
 
-		if (args.help) {
-			console.log(HELP_TEXT)
-			return
+		if (args.noColor) {
+			process.env.NO_COLOR = '1'
 		}
 
-		if (args.version) {
-			console.log(VERSION)
-			return
-		}
+		const quiet = args.quiet || args.json
+		const json = args.json
 
-		console.log(BANNER)
+		if (quiet) {
+			consola.level = 0
+		}
+		if (!quiet) {
+			console.log(BANNER)
+		}
 
 		const useDefaults = args.yes === true
 		const defaultPackageManager: PackageManager = 'pnpm'
 
 		try {
-			intro(`${APP_NAME} - Let's create your project!`)
+			if (!quiet) {
+				intro(`${APP_NAME} - Let's create your project!`)
+			}
 
 			let projectName = args.name
 			let projectPath: string
@@ -142,7 +152,11 @@ const mainCommand = defineCommand({
 
 			await prepareProjectDir(projectName, projectPath, args.force)
 
-			const template = await promptTemplate(args.template as string | undefined)
+			const template = await promptTemplate(
+				args.yes && !args.template
+					? DEFAULT_TEMPLATE
+					: (args.template as string | undefined),
+			)
 
 			const packageManager =
 				args.pm !== undefined
@@ -172,16 +186,18 @@ const mainCommand = defineCommand({
 				}
 			}
 
-			note(
-				[
-					`Project: ${pc.cyan(projectName)}`,
-					`Template: ${pc.cyan(template.name)}`,
-					`Package Manager: ${pc.cyan(packageManager)}`,
-					`Git Init: ${pc.cyan(shouldInitGit ? 'Yes' : 'No')}`,
-					`Clean CI/CD: ${pc.cyan(shouldCleanCI ? 'Yes' : 'No')}`,
-				].join('\n'),
-				'Scaffolding with these settings',
-			)
+			if (!quiet) {
+				note(
+					[
+						`Project: ${pc.cyan(projectName)}`,
+						`Template: ${pc.cyan(template.name)}`,
+						`Package Manager: ${pc.cyan(packageManager)}`,
+						`Git Init: ${pc.cyan(shouldInitGit ? 'Yes' : 'No')}`,
+						`Clean CI/CD: ${pc.cyan(shouldCleanCI ? 'Yes' : 'No')}`,
+					].join('\n'),
+					'Scaffolding with these settings',
+				)
+			}
 
 			await scaffoldProject({
 				projectName,
@@ -193,22 +209,50 @@ const mainCommand = defineCommand({
 				ref: args.ref,
 			})
 
-			outro(pc.green(`Successfully created ${pc.cyan(projectName)}!`))
+			if (!quiet) {
+				outro(pc.green(`Successfully created ${pc.cyan(projectName)}!`))
+			}
 
-			const cdCommand =
-				args.name === '.'
-					? ''
-					: `  ${pc.dim('1.')} ${pc.cyan(`cd ${projectName}`)}\n`
-			console.log(`\n${pc.bold('Next steps:')}
+			if (json) {
+				const cdCommand = args.name === '.' ? '' : `cd ${projectName}`
+				const result = {
+					success: true as const,
+					projectPath,
+					template: template.id,
+					packageManager,
+					gitInitialized: shouldInitGit,
+					dependenciesInstalled: true, // scaffoldProject throws on failure, so always true on success
+					ciConfigsCleaned: shouldCleanCI,
+					nextSteps: [
+						...(cdCommand ? [cdCommand] : []),
+						`${packageManager} dev`,
+					],
+				}
+				process.stdout.write(`${JSON.stringify(result, null, 2)}\n`)
+			} else if (!quiet) {
+				const cdCommand =
+					args.name === '.'
+						? ''
+						: `  ${pc.dim('1.')} ${pc.cyan(`cd ${projectName}`)}\n`
+				console.log(`\n${pc.bold('Next steps:')}
 ${cdCommand}  ${pc.dim('2.')} ${pc.cyan(`${packageManager} dev`)}
   ${pc.dim('3.')} Open ${pc.cyan('http://localhost:3000')} (or the port shown)
 
 ${pc.bold('Template:')} ${template.name}
 ${pc.bold('Docs:')} ${pc.underline(`https://github.com/${template.repo}`)}
 `)
+			}
 		} catch (error) {
 			const message = error instanceof Error ? error.message : 'Unknown error'
-			cancel(`${pc.red('Error:')} ${message}`)
+			if (json) {
+				const errorResult = {
+					success: false as const,
+					error: message,
+				}
+				process.stderr.write(`${JSON.stringify(errorResult, null, 2)}\n`)
+			} else {
+				cancel(`${pc.red('Error:')} ${message}`)
+			}
 			process.exit(1)
 		}
 	},
