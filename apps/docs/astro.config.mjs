@@ -116,7 +116,11 @@ export default defineConfig({
 						},
 						{
 							label: 'CLI Reference',
-							link: '/xtarterize/guide/cli/overview/',
+							collapsed: false,
+							items: [
+								{ label: 'Overview', link: '/xtarterize/guide/cli/overview/' },
+								{ label: 'Query', link: '/xtarterize/guide/cli/query/' },
+							],
 						},
 						{
 							label: 'Conformance Tasks',
