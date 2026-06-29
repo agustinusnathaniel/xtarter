@@ -1,4 +1,4 @@
-import { writeFile } from 'node:fs/promises'
+import { readFile, writeFile } from 'node:fs/promises'
 import { generateCode, loadFile, parseExpression } from 'magicast'
 import { basename } from 'pathe'
 
@@ -14,24 +14,49 @@ function getConfigLabel(configPath: string): string {
 	return CONFIG_FILE_NAMES[basenameName] || basenameName
 }
 
+function parseImportSpecifier(specifier: string): {
+	imported: string
+	local: string
+} {
+	const trimmed = specifier.trim()
+	if (trimmed.startsWith('{') && trimmed.endsWith('}')) {
+		const name = trimmed.slice(1, -1).trim()
+		return { imported: name, local: name }
+	}
+	return { imported: 'default', local: trimmed }
+}
+
 export interface InjectVitePluginOptions {
 	configPath: string
 	importPath: string
 	importName: string
 	pluginExpression: string
+	dryRun?: boolean
+}
+
+export interface InjectVitePluginResult {
+	success: boolean
+	fallback?: string
+	generatedCode?: string
+	beforeCode?: string
 }
 
 export async function injectVitePlugin(
 	options: InjectVitePluginOptions,
-): Promise<{ success: boolean; fallback?: string }> {
-	const { configPath, importPath, importName, pluginExpression } = options
+): Promise<InjectVitePluginResult> {
+	const { configPath, importPath, importName, pluginExpression, dryRun } =
+		options
 	const configLabel = getConfigLabel(configPath)
 
 	try {
+		const before = dryRun ? await readFile(configPath, 'utf-8') : undefined
 		const mod = await loadFile(configPath)
 		const code = mod.$code
 
 		if (code.includes(importPath) || code.includes(importName)) {
+			if (dryRun) {
+				return { success: true, beforeCode: code, generatedCode: code }
+			}
 			return { success: true }
 		}
 
@@ -67,15 +92,26 @@ export async function injectVitePlugin(
 			}
 		}
 
+		const { imported, local } = parseImportSpecifier(importName)
 		mod.imports.$prepend({
 			from: importPath,
-			imported: importName === '{ visualizer }' ? 'visualizer' : 'default',
-			local: importName === '{ visualizer }' ? 'visualizer' : importName,
+			imported,
+			local,
 		})
 
 		plugins.push(parseExpression(pluginExpression))
 
 		const { code: generatedCode } = generateCode(mod)
+
+		if (dryRun) {
+			return {
+				success: true,
+				generatedCode,
+				beforeCode: before,
+				fallback: undefined,
+			}
+		}
+
 		await writeFile(configPath, generatedCode)
 
 		return { success: true }

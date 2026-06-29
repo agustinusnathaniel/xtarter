@@ -1,9 +1,10 @@
 import type { ProjectProfile } from '@xtarterize/core'
 import { readPackageJson } from '@xtarterize/core'
+import { dlxCommand, type PackageManagerName, runScriptCommand } from 'nypm'
 import { createPackageJsonTask } from '@/factory'
 
-function commitMsgHook(pm: string): string {
-	return `${pm} commitlint --edit $1\n`
+function commitMsgHook(pm: PackageManagerName): string {
+	return `${dlxCommand(pm, 'commitlint', { short: true })} --edit $1\n`
 }
 
 async function preCommitHook(
@@ -15,13 +16,19 @@ async function preCommitHook(
 	const hasLintStaged = !!(
 		pkg?.devDependencies?.['lint-staged'] || pkg?.dependencies?.['lint-staged']
 	)
-	return hasLintStaged ? 'npx lint-staged\n' : 'pnpm biome check --write\n'
+	const pm = profile.packageManager
+	return hasLintStaged
+		? `${dlxCommand(pm, 'lint-staged', { short: true })}\n`
+		: `${dlxCommand(pm, 'biome', { short: true })} check --write\n`
 }
 
 function prePushHook(profile: ProjectProfile): string {
-	if (profile.monorepoTool === 'turbo') return 'pnpm check:turbo\n'
-	if (profile.typescript) return 'pnpm typecheck && pnpm test\n'
-	return 'pnpm test\n'
+	const pm = profile.packageManager
+	if (profile.monorepoTool === 'turbo')
+		return `${runScriptCommand(pm, 'check:turbo')}\n`
+	if (profile.typescript)
+		return `${runScriptCommand(pm, 'typecheck')} && ${runScriptCommand(pm, 'test')}\n`
+	return `${runScriptCommand(pm, 'test')}\n`
 }
 
 export const gitHooksTask = createPackageJsonTask({

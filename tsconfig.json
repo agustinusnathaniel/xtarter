@@ -12,6 +12,7 @@
 		"esModuleInterop": true,
 		"skipLibCheck": true,
 		"paths": {
+			"@xtarterize/agent-catalog": ["./packages/agent-catalog/src/index.ts"],
 			"@xtarterize/core": ["./packages/core/src/index.ts"],
 			"@xtarterize/patchers": ["./packages/patchers/src/index.ts"],
 			"@xtarterize/tasks": ["./packages/tasks/src/index.ts"],
@@ -20,6 +21,7 @@
 	},
 	"include": ["test"],
 	"references": [
+		{ "path": "packages/agent-catalog" },
 		{ "path": "packages/core" },
 		{ "path": "packages/patchers" },
 		{ "path": "packages/tasks" },

@@ -9,7 +9,7 @@ on:
       - "**/CHANGELOG.md"
       - "**/package.json"
       - ".github/workflows/release.yml"
-      - "pnpm-lock.yml"
+      - "pnpm-lock.yaml"
   pull_request:
     types:
       - opened
@@ -49,7 +49,7 @@ jobs:
         with:
           cache: true
 
-      - name: Build all packages
+      - name: Build CLI
         run: pnpm build:cli
 
       - name: Verify CLI binaries have shebangs

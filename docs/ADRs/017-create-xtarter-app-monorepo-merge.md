@@ -42,7 +42,7 @@ apps/create-xtarter-app/
 
 ### Node engine relaxation
 
-`engines.node` relaxed from `^24.11.x` to `>=18` to match the monorepo.
+`engines.node` relaxed from `^24.11.x` to `>=24` to match the monorepo.
 
 ## Rationale
 
@@ -68,7 +68,7 @@ apps/create-xtarter-app/
 
 ## Consequences
 
-- `create-xtarter-app` inherits the monorepo's `node >=18` engine requirement.
+- `create-xtarter-app` inherits the monorepo's `node >=24` engine requirement.
 - The old GitHub repo (`agustinusnathaniel/create-xtarter-app`) remains active until the first successful npm publish from the monorepo confirms the trusted publisher migration.
 - npm trusted publisher must be configured for `agustinusnathaniel/xtarterize` (workflow: `release.yml`) before the first publish.
 - Changesets become the versioning mechanism; manual version bumps via workflow_dispatch are still supported.

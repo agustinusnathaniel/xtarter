@@ -2,10 +2,12 @@ import fs from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 import {
+	BackupError,
 	backupFile,
 	listAllBackups,
 	listBackups,
 	readRunManifest,
+	restoreBackup,
 	writeRunManifest,
 } from '@xtarterize/core'
 import { describe, expect, it } from 'vite-plus/test'
@@ -26,6 +28,59 @@ describe('backup', () => {
 
 		expect(backups.length).toBe(1)
 		expect(backups[0]?.filepath).toBe('foo.txt')
+		await fs.rm(tmpDir, { recursive: true, force: true })
+	})
+
+	it('backup → modify → restore round-trip preserves original content', async () => {
+		const tmpDir = await fs.mkdtemp(
+			path.join(os.tmpdir(), 'xtarterize-roundtrip-'),
+		)
+		const filePath = 'test.txt'
+		const originalContent = 'original content'
+		const fullPath = path.join(tmpDir, filePath)
+		await fs.writeFile(fullPath, originalContent, 'utf-8')
+
+		await backupFile(tmpDir, filePath)
+
+		await fs.writeFile(fullPath, 'modified content', 'utf-8')
+
+		const backups = await listBackups(tmpDir, filePath)
+		expect(backups.length).toBe(1)
+
+		const backup = backups[0]
+		expect(backup).toBeDefined()
+		// biome-ignore lint/style/noNonNullAssertion: guarded by toBeDefined above
+		await restoreBackup(tmpDir, backup!)
+
+		const restoredContent = await fs.readFile(fullPath, 'utf-8')
+		expect(restoredContent).toBe(originalContent)
+
+		await fs.rm(tmpDir, { recursive: true, force: true })
+	})
+
+	it('backupFile handles non-existent source file gracefully', async () => {
+		const tmpDir = await fs.mkdtemp(
+			path.join(os.tmpdir(), 'xtarterize-nonexistent-'),
+		)
+
+		await expect(backupFile(tmpDir, 'nonexistent.txt')).resolves.toBeUndefined()
+
+		await fs.rm(tmpDir, { recursive: true, force: true })
+	})
+
+	it('restoreBackup with missing backup file reports error', async () => {
+		const tmpDir = await fs.mkdtemp(
+			path.join(os.tmpdir(), 'xtarterize-badrestore-'),
+		)
+
+		const invalidBackup = {
+			filepath: 'some-file.txt',
+			backupPath: path.join(tmpDir, '.xtarterize', 'backups', 'no-such-backup'),
+			timestamp: new Date().toISOString(),
+		}
+
+		await expect(restoreBackup(tmpDir, invalidBackup)).rejects.toThrow()
+
 		await fs.rm(tmpDir, { recursive: true, force: true })
 	})
 })
@@ -84,6 +139,26 @@ describe('listAllBackups', () => {
 
 		const all = await listAllBackups(tmpDir)
 		expect(all).toEqual({})
+
+		await fs.rm(tmpDir, { recursive: true, force: true })
+	})
+})
+
+describe('restoreBackup security', () => {
+	it('restoreBackup with traversal path throws BackupError', async () => {
+		const tmpDir = await fs.mkdtemp(
+			path.join(os.tmpdir(), 'xtarterize-traversal-'),
+		)
+
+		const traversalBackup = {
+			filepath: '../../../etc/passwd',
+			backupPath: path.join(tmpDir, '.xtarterize', 'backups', 'some-backup'),
+			timestamp: new Date().toISOString(),
+		}
+
+		await expect(restoreBackup(tmpDir, traversalBackup)).rejects.toThrow(
+			BackupError,
+		)
 
 		await fs.rm(tmpDir, { recursive: true, force: true })
 	})

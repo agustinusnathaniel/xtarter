@@ -50,7 +50,7 @@ describe('gitHooksTask', () => {
 			profile,
 		)
 		const prePush = diffs.find((d) => d.filepath.includes('pre-push'))
-		expect(prePush?.after).toContain('pnpm check:turbo')
+		expect(prePush?.after).toContain('pnpm run check:turbo')
 	})
 
 	it('returns skip when hooks already exist', async () => {
@@ -90,6 +90,26 @@ describe('gitHooksTask', () => {
 			const profile = await detectProject(tmpDir)
 			const status = await gitHooksTask.check(tmpDir, profile)
 			expect(status).toBe('patch')
+		} finally {
+			await fs.rm(tmpDir, { recursive: true, force: true })
+		}
+	})
+
+	it('apply writes the expected file', async () => {
+		const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'xtarterize-'))
+		try {
+			await fs.writeFile(
+				path.join(tmpDir, 'package.json'),
+				JSON.stringify({ name: 'hooks-test', scripts: {} }),
+			)
+			const profile = await detectProject(tmpDir)
+			await gitHooksTask.apply(tmpDir, profile)
+			const commitMsgPath = path.join(tmpDir, '.husky', 'commit-msg')
+			const exists = await fs
+				.access(commitMsgPath)
+				.then(() => true)
+				.catch(() => false)
+			expect(exists).toBe(true)
 		} finally {
 			await fs.rm(tmpDir, { recursive: true, force: true })
 		}

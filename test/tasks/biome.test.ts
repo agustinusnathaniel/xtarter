@@ -145,6 +145,27 @@ describe('biomeTask', () => {
 		const config = JSON.parse(diffs[0].after ?? '{}')
 		expect(config.css).toBeUndefined()
 	})
+
+	it('apply writes the expected file', async () => {
+		const tmpDir = await fs.mkdtemp(
+			path.join(os.tmpdir(), 'xtarterize-bio-apply-'),
+		)
+		await fs.writeFile(
+			path.join(tmpDir, 'package.json'),
+			JSON.stringify({
+				name: 'apply-test',
+				devDependencies: { '@biomejs/biome': '^2.4.0' },
+			}),
+		)
+		const profile = await detectProject(tmpDir)
+		await biomeTask.apply(tmpDir, profile)
+		const exists = await fs
+			.access(path.join(tmpDir, 'biome.json'))
+			.then(() => true)
+			.catch(() => false)
+		expect(exists).toBe(true)
+		await fs.rm(tmpDir, { recursive: true, force: true })
+	})
 })
 
 describe('oxlintTask', () => {

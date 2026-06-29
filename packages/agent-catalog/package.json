@@ -1,6 +1,6 @@
 {
-	"name": "@xtarterize/core",
-	"version": "1.14.2",
+	"name": "@xtarterize/agent-catalog",
+	"version": "0.0.0",
 	"private": true,
 	"type": "module",
 	"engines": {
@@ -19,18 +19,7 @@
 		"dev": "vp pack --watch",
 		"typecheck": "tsc --noEmit"
 	},
-	"dependencies": {
-		"@clack/prompts": "catalog:",
-		"consola": "catalog:",
-		"diff": "catalog:",
-		"effect": "catalog:",
-		"json5": "catalog:",
-		"nypm": "catalog:",
-		"pathe": "catalog:",
-		"picocolors": "catalog:",
-		"pkg-types": "catalog:",
-		"tinyexec": "catalog:"
-	},
+	"dependencies": {},
 	"devDependencies": {
 		"@types/node": "catalog:",
 		"typescript": "catalog:",

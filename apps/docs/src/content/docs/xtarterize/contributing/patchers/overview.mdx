@@ -78,12 +78,12 @@ const merged = mergeYaml(existing, incoming)
 ```typescript
 import { injectVitePlugin } from '@xtarterize/patchers'
 
-const result = await injectVitePlugin(
-  '/path/to/vite.config.ts',
-  'vite-plugin-checker',    // import path
-  'checker',                // import name
-  'checker({ typescript: true })'  // plugin expression
-)
+const result = await injectVitePlugin({
+  configPath: '/path/to/vite.config.ts',
+  importPath: 'vite-plugin-checker',
+  importName: 'checker',
+  pluginExpression: 'checker({ typescript: true })',
+})
 
 if (!result.success) {
   console.log(result.fallback) // Manual instructions if AST structure is unsupported

@@ -73,6 +73,7 @@ async function resolveStatusesWithTiming(
 export async function resolveProjectTasks(
 	cwd: string,
 	allTasks: Task[],
+	externalTasks?: Task[],
 ): Promise<{
 	profile: ProjectProfile
 	tasks: Task[]
@@ -83,7 +84,14 @@ export async function resolveProjectTasks(
 	const profile = await detectProject(cwd)
 	const detectionMs = performance.now() - detectionStart
 
-	const applicableTasks = resolveTasks(profile, allTasks)
+	const mergedTasks: Task[] = externalTasks
+		? [
+				...new Map(
+					[...allTasks, ...externalTasks].map((t) => [t.id, t]),
+				).values(),
+			]
+		: allTasks
+	const applicableTasks = resolveTasks(profile, mergedTasks)
 
 	const resolutionStart = performance.now()
 	const { statuses, checkSumMs } = await resolveStatusesWithTiming(

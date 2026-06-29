@@ -11,6 +11,7 @@ import {
 	detectProject,
 	pc,
 	readPackageJson,
+	resolveExternalTasks,
 	resolveProjectTasks,
 	runPreflight,
 } from '@xtarterize/core'
@@ -41,6 +42,17 @@ export function resolveCliContext(args: {
 	return { cwd, json, quiet, format, timing: args.timing === true }
 }
 
+/**
+ * Combine built-in tasks with external plugin tasks.
+ * External tasks are loaded from the project's plugin config
+ * (`.xtarterizerc` or `"xtarterize"` key in `package.json`).
+ */
+export async function getAllTasksWithPlugins(cwd: string): Promise<Task[]> {
+	const internal = getAllTasks()
+	const external = await resolveExternalTasks(cwd)
+	return external.length > 0 ? [...internal, ...external] : internal
+}
+
 export interface ScanResult {
 	profile: ProjectProfile
 	tasks: Task[]
@@ -55,7 +67,7 @@ export async function scanProject(ctx: CliContext): Promise<ScanResult> {
 	const s = createSpinner(ctx.quiet)
 	s.start('Scanning project...')
 
-	const allTasks = getAllTasks()
+	const allTasks = await getAllTasksWithPlugins(ctx.cwd)
 	const result = await resolveProjectTasks(ctx.cwd, allTasks)
 
 	s.stop('Project scanned')

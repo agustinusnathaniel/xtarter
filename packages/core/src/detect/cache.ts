@@ -72,21 +72,39 @@ function fingerprintConfigDirs(
 		try: () =>
 			Promise.all(
 				CONFIG_DIRS.map(async (dir) => {
-					const filePath = resolvePath(cwd, dir)
+					const dirPath = resolvePath(cwd, dir)
 					try {
-						const s = await fs.stat(filePath)
-						return {
-							path: filePath,
-							mtimeMs: s.mtimeMs,
-							size: s.size,
-						} as PathFingerprint
+						const entries = await fs.readdir(dirPath, {
+							recursive: true,
+							withFileTypes: true,
+						})
+						const entryStats: PathFingerprint[] = []
+						for (const entry of entries) {
+							if (entry.isFile()) {
+								const fullPath = resolvePath(dirPath, entry.name)
+								const s = await fs.stat(fullPath)
+								entryStats.push({
+									path: fullPath,
+									mtimeMs: s.mtimeMs,
+									size: s.size,
+								})
+							}
+						}
+						// If directory is empty, stat the directory itself so it still appears in the fingerprint
+						if (entryStats.length === 0) {
+							const s = await fs.stat(dirPath)
+							entryStats.push({
+								path: dirPath,
+								mtimeMs: s.mtimeMs,
+								size: s.size,
+							})
+						}
+						return entryStats
 					} catch {
-						return null
+						return [] as PathFingerprint[]
 					}
 				}),
-			).then((results) =>
-				results.filter((r): r is PathFingerprint => r !== null),
-			),
+			).then((results) => results.flat()),
 		catch: (cause) => new FileSystemError({ path: cwd, cause }),
 	}).pipe(Effect.orElseSucceed(() => []))
 }

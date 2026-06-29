@@ -38,7 +38,10 @@ export function backupFile(cwd: string, filepath: string): Promise<void> {
 			yield* tryIo(backupDir, () => fs.mkdir(backupDir, { recursive: true }))
 
 			const timestamp = new Date().toISOString().replace(/[:.]/g, '-')
-			const safeName = normalize(filepath).replace(/[/\\]/g, '__')
+			const safeName = normalize(filepath)
+				.replace(/_/g, '__') // escape underscore first
+				.replace(/\//g, '_s') // slash → _s
+				.replace(/\\/g, '_b') // backslash → _b
 			const backupName = `${safeName}.${timestamp}`
 			const backupPath = join(backupDir, backupName)
 
@@ -114,10 +117,22 @@ export function restoreBackup(cwd: string, backup: Backup): Promise<void> {
 			}),
 		)
 	}
+	const resolvedDest = resolvePath(cwd, backup.filepath)
+	const resolvedCwd = resolvePath(cwd)
+	if (
+		!resolvedDest.startsWith(`${resolvedCwd}/`) &&
+		resolvedDest !== resolvedCwd
+	) {
+		return Promise.reject(
+			new BackupError({
+				path: backup.filepath,
+				cause: new Error(`Path traversal detected: ${backup.filepath}`),
+			}),
+		)
+	}
+
 	return Effect.runPromise(
-		tryIo(backup.backupPath, () =>
-			fs.cp(backup.backupPath, resolvePath(cwd, backup.filepath)),
-		),
+		tryIo(backup.backupPath, () => fs.cp(backup.backupPath, resolvedDest)),
 	)
 }
 

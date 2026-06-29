@@ -197,4 +197,60 @@ describe('detect cache', () => {
 
 		await fs.rm(dir, { recursive: true, force: true })
 	})
+
+	it('includes files from config directories in fingerprint', async () => {
+		const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'cache-cfgdirs-'))
+		await createMinimalProject(dir)
+
+		await fs.mkdir(path.join(dir, '.vscode'), { recursive: true })
+		await fs.writeFile(
+			path.join(dir, '.vscode', 'settings.json'),
+			JSON.stringify({}),
+		)
+
+		await fs.mkdir(path.join(dir, '.github'), { recursive: true })
+
+		await detectProject(dir)
+		const cached = await readCache(dir)
+		const cfgPaths = cached.fingerprint.configDirs.map(
+			(d: { path: string }) => d.path,
+		)
+
+		expect(
+			cfgPaths.some((p: string) => p.endsWith('.vscode/settings.json')),
+		).toBe(true)
+		expect(cfgPaths.some((p: string) => p.endsWith('.github'))).toBe(true)
+
+		await fs.rm(dir, { recursive: true, force: true })
+	})
+
+	it('invalidates cache when config dir file is modified', async () => {
+		const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'cache-cfgdir-mod-'))
+		await createMinimalProject(dir)
+
+		await fs.mkdir(path.join(dir, '.vscode'), { recursive: true })
+		await fs.writeFile(
+			path.join(dir, '.vscode', 'settings.json'),
+			JSON.stringify({}),
+		)
+
+		const first = await detectProject(dir)
+		expect(first.framework).toBe('react')
+
+		// Modify a file inside a config directory
+		await fs.writeFile(
+			path.join(dir, '.vscode', 'settings.json'),
+			JSON.stringify({ editor: { fontSize: 14 } }),
+		)
+
+		// Should still detect correctly, proving cache was recomputed
+		const second = await detectProject(dir)
+		expect(second.framework).toBe('react')
+		// The second call should have a different computedAt timestamp
+		// (indicating cache was invalidated and recomputed)
+		const cached = await readCache(dir)
+		expect(cached.fingerprint.configDirs.length).toBeGreaterThan(0)
+
+		await fs.rm(dir, { recursive: true, force: true })
+	})
 })

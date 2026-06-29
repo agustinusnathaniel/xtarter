@@ -14,12 +14,27 @@ import {
 	writePackageJson,
 } from '@xtarterize/core'
 import { patchJson } from '@xtarterize/patchers'
+import type { PackageJson } from 'pkg-types'
 import { wrapTask } from './ops.js'
 import {
 	filterMissingScripts,
 	mergeScripts,
 	resolveScripts,
 } from './scripts.js'
+
+const __pkgCache = new Map<string, PackageJson | null>()
+
+async function getPackageJson(cwd: string): Promise<PackageJson | null> {
+	const cached = __pkgCache.get(cwd)
+	if (cached !== undefined) return cached
+	const pkg = await readPackageJson(cwd)
+	__pkgCache.set(cwd, pkg)
+	return pkg
+}
+
+function invalidatePackageJsonCache(cwd: string): void {
+	__pkgCache.delete(cwd)
+}
 
 export interface PackageJsonScriptEntry {
 	script: string
@@ -98,7 +113,7 @@ async function getMissingDeps(
 	cwd: string,
 	profile: ProjectProfile,
 ): Promise<PackageJsonTaskDep[]> {
-	const pkg = await readPackageJson(cwd)
+	const pkg = await getPackageJson(cwd)
 	if (!pkg) return []
 	const allDeps = await resolveDeps(options, cwd, profile)
 	return allDeps.filter(
@@ -126,7 +141,7 @@ export function createPackageJsonTask(options: PackageJsonTaskOptions): Task {
 
 		async check(cwd, profile): Promise<TaskStatus> {
 			return wrapTask(options.id, 'createPackageJsonTask.check', async () => {
-				const pkg = await readPackageJson(cwd)
+				const pkg = await getPackageJson(cwd)
 				if (!pkg) return 'conflict'
 
 				if (options.checkFn) {
@@ -197,7 +212,7 @@ export function createPackageJsonTask(options: PackageJsonTaskOptions): Task {
 				const pkgExists = await fileExists(pkgPath)
 				if (pkgExists) {
 					const before = await readFile(pkgPath)
-					const pkg = await readPackageJson(cwd)
+					const pkg = await getPackageJson(cwd)
 					if (pkg) {
 						const scripts = await resolveScripts(options, cwd, profile)
 						const scriptsMap = pkg.scripts ?? {}
@@ -255,7 +270,7 @@ export function createPackageJsonTask(options: PackageJsonTaskOptions): Task {
 		async apply(cwd, profile): Promise<void> {
 			return wrapTask(options.id, 'createPackageJsonTask.apply', async () => {
 				const scripts = await resolveScripts(options, cwd, profile)
-				const rawExisting = (await readPackageJson(cwd))?.scripts ?? {}
+				const rawExisting = (await getPackageJson(cwd))?.scripts ?? {}
 				const existingScripts: Record<string, string> = {}
 				for (const [key, value] of Object.entries(rawExisting)) {
 					if (value !== undefined) {
@@ -269,6 +284,7 @@ export function createPackageJsonTask(options: PackageJsonTaskOptions): Task {
 
 				for (const dep of neededDeps) {
 					await installDependency(cwd, dep.depName, dep.installDev ?? true)
+					invalidatePackageJsonCache(cwd)
 				}
 
 				for (const f of options.files ?? []) {
@@ -280,7 +296,7 @@ export function createPackageJsonTask(options: PackageJsonTaskOptions): Task {
 					}
 				}
 
-				const pkg = await readPackageJson(cwd)
+				const pkg = await getPackageJson(cwd)
 				if (pkg) {
 					if (missingScripts.length > 0) {
 						const incomingScripts: Record<string, string> = {}
@@ -289,6 +305,7 @@ export function createPackageJsonTask(options: PackageJsonTaskOptions): Task {
 						}
 						pkg.scripts = mergeScripts(pkg.scripts, missingScripts)
 						await writePackageJson(cwd, pkg)
+						invalidatePackageJsonCache(cwd)
 					}
 				}
 			})

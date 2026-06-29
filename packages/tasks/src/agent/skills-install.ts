@@ -1,3 +1,4 @@
+import { getSkillsToInstall, type SkillEntry } from '@xtarterize/agent-catalog'
 import type { FileDiff, Task, TaskStatus } from '@xtarterize/core'
 import {
 	fileExists,
@@ -8,7 +9,6 @@ import {
 } from '@xtarterize/core'
 import { x } from 'tinyexec'
 import { wrapTask } from '../factory/ops.js'
-import { getSkillsToInstall, type SkillEntry } from './skill-catalog.js'
 
 function getAllDeps(pkg: Record<string, unknown>): Record<string, string> {
 	const deps: Record<string, string> = {}
