@@ -13,6 +13,7 @@
 			"!**/*.generated.d.ts",
 			"!.agents",
 			"!.claude",
+			"!.xtarterize/cache",
 			"!**/*.css",
 			"!**/*.astro"
 		]
