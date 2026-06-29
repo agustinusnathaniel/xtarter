@@ -147,6 +147,18 @@ export const skillsInstallTask: Task = {
 	group: 'Agent',
 	scope: 'both',
 
+	searchMeta: {
+		tags: ['ai', 'agent', 'skills', 'setup', 'tools'],
+		configTargets: ['.xtarterize/skills-install.log'],
+		keywords: [
+			'skills',
+			'agent skills',
+			'ai tools',
+			'opencode skills',
+			'install',
+		],
+	},
+
 	applicable: (profile) => profile.typescript,
 
 	async check(cwd, profile): Promise<TaskStatus> {

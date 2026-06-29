@@ -45,6 +45,17 @@ export const pathsTask = createJsonMergeTask({
 	id: 'ts/paths',
 	label: 'tsconfig - path aliases',
 	group: 'TypeScript',
+	searchMeta: {
+		tags: ['typescript', 'paths', 'aliases', 'imports'],
+		configTargets: ['tsconfig.json'],
+		keywords: [
+			'path aliases',
+			'import paths',
+			'@ alias',
+			'module resolution',
+			'tsconfig',
+		],
+	},
 	scope: 'package',
 	applicable: (profile) => profile.typescript,
 	filepath: 'tsconfig.json',

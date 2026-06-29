@@ -3,6 +3,7 @@ import type {
 	ProjectProfile,
 	Task,
 	TaskScope,
+	TaskSearchMeta,
 	TaskStatus,
 } from '@xtarterize/core'
 import {
@@ -76,6 +77,7 @@ export interface FileTaskOptions {
 	label: string
 	group: string
 	scope?: TaskScope
+	searchMeta?: TaskSearchMeta
 	applicable: (profile: ProjectProfile) => boolean
 	filepath: string
 	extensions?: string[]
@@ -94,6 +96,7 @@ export function createFileTask(options: FileTaskOptions): Task {
 		id: options.id,
 		label: options.label,
 		group: options.group,
+		searchMeta: options.searchMeta,
 		scope: options.scope,
 		applicable: options.applicable,
 
@@ -213,6 +216,7 @@ export interface JsonMergeTaskOptions {
 	label: string
 	group: string
 	scope?: TaskScope
+	searchMeta?: TaskSearchMeta
 	applicable: (profile: ProjectProfile) => boolean
 	filepath: string
 	extensions?: string[]
@@ -228,6 +232,7 @@ export function createJsonMergeTask(options: JsonMergeTaskOptions): Task {
 		id: options.id,
 		label: options.label,
 		group: options.group,
+		searchMeta: options.searchMeta,
 		scope: options.scope,
 		applicable: options.applicable,
 
@@ -307,6 +312,7 @@ export interface MultiFileTaskOptions {
 	label: string
 	group: string
 	scope?: TaskScope
+	searchMeta?: TaskSearchMeta
 	applicable: (profile: ProjectProfile) => boolean
 	files: (profile: ProjectProfile) => MultiFileEntry[]
 	depName?: string
@@ -318,6 +324,7 @@ export function createMultiFileTask(options: MultiFileTaskOptions): Task {
 		id: options.id,
 		label: options.label,
 		group: options.group,
+		searchMeta: options.searchMeta,
 		scope: options.scope,
 		applicable: options.applicable,
 
@@ -419,6 +426,7 @@ export interface VitePluginTaskOptions {
 	label: string
 	group: string
 	scope?: TaskScope
+	searchMeta?: TaskSearchMeta
 	applicable: (profile: ProjectProfile) => boolean
 	depName: string
 	importName: string
@@ -434,6 +442,7 @@ export function createVitePluginTask(options: VitePluginTaskOptions): Task {
 		id: options.id,
 		label: options.label,
 		group: options.group,
+		searchMeta: options.searchMeta,
 		scope: options.scope,
 		applicable: options.applicable,
 
@@ -545,6 +554,7 @@ export interface MultiFileJsonMergeTaskOptions {
 	label: string
 	group: string
 	scope?: TaskScope
+	searchMeta?: TaskSearchMeta
 	applicable: (profile: ProjectProfile) => boolean
 	files: MultiFileJsonMergeEntry[]
 }
@@ -556,6 +566,7 @@ export function createMultiFileJsonMergeTask(
 		id: options.id,
 		label: options.label,
 		group: options.group,
+		searchMeta: options.searchMeta,
 		scope: options.scope,
 		applicable: options.applicable,
 

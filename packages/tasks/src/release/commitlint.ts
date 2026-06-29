@@ -5,6 +5,16 @@ export const commitlintTask = createFileTask({
 	id: 'release/commitlint',
 	label: 'Commitlint config',
 	group: 'Release',
+	searchMeta: {
+		tags: ['commit', 'linting', 'conventional-commits'],
+		configTargets: ['commitlint.config.ts'],
+		keywords: [
+			'commitlint',
+			'commit message',
+			'conventional commits',
+			'lint commit',
+		],
+	},
 	scope: 'root',
 	applicable: () => true,
 	filepath: 'commitlint.config',

@@ -40,6 +40,7 @@ interface RunCommandOptions {
 	actionableStatuses: TaskStatus[]
 	emptyMessage: string
 	confirmMessage: string
+	orderedTasks?: Task[]
 }
 
 interface ApplyAndReportOptions {
@@ -233,7 +234,7 @@ export async function runCommand(
 	const ci = isCI()
 	const quiet = args.quiet || ci
 
-	const allTasks = await getAllTasksWithPlugins(cwd)
+	const allTasks = options.orderedTasks ?? (await getAllTasksWithPlugins(cwd))
 	const {
 		profile: baseProfile,
 		tasks,

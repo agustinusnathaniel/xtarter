@@ -3,6 +3,7 @@ import type {
 	ProjectProfile,
 	Task,
 	TaskScope,
+	TaskSearchMeta,
 	TaskStatus,
 } from '@xtarterize/core'
 import {
@@ -53,6 +54,7 @@ export interface PackageJsonTaskOptions {
 	label: string
 	group: string
 	scope?: TaskScope
+	searchMeta?: TaskSearchMeta
 	applicable: (profile: ProjectProfile) => boolean
 	scripts?: PackageJsonScriptEntry[]
 	getScripts?: (
@@ -139,6 +141,7 @@ export function createPackageJsonTask(options: PackageJsonTaskOptions): Task {
 		id: options.id,
 		label: options.label,
 		group: options.group,
+		searchMeta: options.searchMeta,
 		scope: options.scope,
 		applicable: options.applicable,
 

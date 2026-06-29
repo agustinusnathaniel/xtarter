@@ -25,6 +25,17 @@ export const strictTask = createJsonMergeTask({
 	id: 'ts/strict',
 	label: 'tsconfig - strict: true',
 	group: 'TypeScript',
+	searchMeta: {
+		tags: ['typescript', 'strict', 'type-checking', 'quality'],
+		configTargets: ['tsconfig.json'],
+		keywords: [
+			'strict',
+			'typescript strict',
+			'type checking',
+			'strict mode',
+			'type safety',
+		],
+	},
 	applicable: (profile) => profile.typescript,
 	filepath: 'tsconfig.json',
 	checkFn: async ({ fullPath, content }) => {

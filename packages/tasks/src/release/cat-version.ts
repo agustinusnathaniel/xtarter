@@ -19,6 +19,17 @@ export const catVersionTask = createPackageJsonTask({
 	id: 'release/cat-version',
 	label: 'commit-and-tag-version',
 	group: 'Release',
+	searchMeta: {
+		tags: ['release', 'version', 'changelog', 'semver'],
+		configTargets: ['.versionrc'],
+		keywords: [
+			'commit-and-tag-version',
+			'version bump',
+			'changelog',
+			'release',
+			'semver',
+		],
+	},
 	scope: 'root',
 	applicable: () => true,
 	scripts: [{ script: 'release', value: 'commit-and-tag-version' }],

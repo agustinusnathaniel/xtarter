@@ -5,6 +5,7 @@ export type {
 	SemanticEntry,
 	Task,
 	TaskScope,
+	TaskSearchMeta,
 	TaskStatus,
 } from '@/_base.js'
 export type { ApplyOptions, ApplyResult } from '@/apply.js'
@@ -44,6 +45,19 @@ export {
 	runToolInstallationChecks,
 } from '@/diagnostics.js'
 export { BackupError, FileSystemError, TaskError } from '@/errors.js'
+// Task inquiry/query engine
+export {
+	expandQuery,
+	scoreTasks,
+	similarity,
+	tokenize,
+} from '@/inquiry/index.js'
+export type {
+	InquiryOptions,
+	InquiryResult,
+	RelevanceSignal,
+	WeightConfig,
+} from '@/inquiry/types.js'
 // Plugin/extension system (design spike)
 export type { PluginConfig } from '@/plugins.js'
 export {

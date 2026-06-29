@@ -35,6 +35,17 @@ export const gitHooksTask = createPackageJsonTask({
 	id: 'release/git-hooks',
 	label: 'Git hooks (commit-msg, pre-commit, pre-push)',
 	group: 'Release',
+	searchMeta: {
+		tags: ['git', 'hooks', 'husky', 'quality'],
+		configTargets: ['.husky/commit-msg', '.husky/pre-commit'],
+		keywords: [
+			'git hooks',
+			'husky',
+			'pre-commit',
+			'commit-msg',
+			'quality gates',
+		],
+	},
 	scope: 'root',
 	applicable: () => true,
 	depName: 'husky',

@@ -11,7 +11,7 @@ Scans any JS/TS project and applies curated configs via a task-based engine. **A
 
 This skill is activated when the user asks about project conformance, linting setup, CI, or any xtarterize task. Upon loading:
 
-1. **Assess the ask** — is the user requesting a full setup (`init`), a single task (`add`), a status check (`check`), or diagnostics (`doctor`)?
+1. **Assess the ask** — is the user requesting a full setup (`init`), a single task (`add`), a status check (`check`), a task search (`query`), or diagnostics (`doctor`)?
 2. **Check current state first** — run `check --format json` to understand what's already configured before proposing changes
 3. **Never guess task IDs** — load the task reference before using `add`
 4. **Always use `--format json`** — parse structured output, never terminal text
@@ -22,6 +22,7 @@ This skill is activated when the user asks about project conformance, linting se
 npx xtarterize check --format json   # { tasks: [{ id, label, group, status }] }
 npx xtarterize diff --format json    # FileDiff[]
 npx xtarterize list --format json    # { profile, tasks }
+npx xtarterize query "strict typescript" --format json  # { type: "query", results: [...] }
 npx xtarterize doctor --format json  # { diagnostics: [{ name, status, message }] }
 npx xtarterize add lint/biome --format json
 npx xtarterize init --format json --yes
@@ -42,17 +43,21 @@ After each command, parse the JSON to decide the next action:
 | `list --format json` | `profile` | Understand the detected stack (framework, bundler, etc.) |
 | `doctor --format json` | `diagnostics[].status` | Any `"fail"` needs fixing; `"warn"` is advisory |
 | `init --format json` | `ok` | If `false`, something went wrong — check stderr |
+| `query --format json` | `results[].relevance` | Score >= threshold means relevant. Use `results[].signals` to see which fields matched strongest |
+| `query --format json` | `results[].taskId` | Pass to `add` to apply the matched task |
+| `query --format json` | `count` | If 0, no tasks met the threshold — broaden query or lower `--threshold` |
 
 ## All commands
 
 | Command | Purpose | Flags (always add `--format json`) |
 |---------|---------|-----------------------------------|
-| `init` | Apply all applicable tasks | `--yes`, `--dry-run`, `--skip <ids>`, `--only <ids>`, `--include-conflicts`, `--cwd <path>` |
+| `init` | Apply all applicable tasks | `--yes`, `--dry-run`, `--skip <ids>`, `--only <ids>`, `--include-conflicts`, `--compose <query>`, `--cwd <path>` |
 | `sync` | Update existing configs | Same flags as `init` |
 | `diff` | Preview pending changes | `--cwd <path>` |
 | `check` | Audit conformance per task | `--verbose`, `--cwd <path>` |
 | `add <id>` | Apply one task | `--cwd <path>` |
 | `list` | List tasks with statuses | `--cwd <path>` |
+| `query <query>` | Search tasks by natural language | `--limit <n>`, `--threshold <n>`, `--cwd <path>` |
 | `restore <file>` | Recover from backup | Interactive only |
 | `doctor` | Environment diagnostics | `--verbose`, `--cwd <path>` |
 
@@ -98,6 +103,7 @@ out=$(npx xtarterize doctor --format json --cwd "$dir")
 | `doctor` shows tool not installed | Missing dep | xtarterize only writes configs; user may need to install separately |
 | Task shows `"conflict"` | Config differs | **Never auto-apply** — present to user, only with `--include-conflicts` |
 | `--cwd` fails preflight | No `package.json` | Verify path exists and is a JS/TS project |
+| `query` returns empty results | Query too narrow or no matching tasks | Broaden query, try synonyms, or lower `--threshold` |
 
 ## Anti-patterns
 

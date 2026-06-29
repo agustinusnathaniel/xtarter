@@ -7,6 +7,20 @@ import { Aside, Tabs, TabItem, CardGrid, Card, LinkButton, Steps } from '@astroj
 
 Latest updates and feature releases for xtarterize.
 
+## v1.16.0 — 2026-06-29
+
+### Natural language task query
+
+New `xtarterize query <query>` command that discovers tasks using a pure-algorithmic scoring engine (no AI). Five weighted signals (label, id, group, keywords, config) with Levenshtein fuzzy matching, domain-specific synonym expansion, and coverage-based ranking.
+
+Results are grouped by domain bundle (e.g. TypeScript, CI/CD) with per-group actionable `xtarterize add` commands.
+
+New `xtarterize init --compose <query>` flag that reorders init tasks by relevance.
+
+### Task metadata enrichment
+
+New optional `searchMeta` field on the Task interface (`tags`, `configTargets`, `keywords`) enables richer search. All 26 built-in tasks include search metadata.
+
 ## v1.15.2 — June 29, 2026
 
 ### Monorepo-aware task filtering

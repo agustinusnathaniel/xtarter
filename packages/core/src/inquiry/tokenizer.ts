@@ -1,0 +1,110 @@
+const STOPWORDS = new Set([
+	'a',
+	'an',
+	'the',
+	'is',
+	'it',
+	'to',
+	'for',
+	'of',
+	'in',
+	'on',
+	'at',
+	'by',
+	'with',
+	'from',
+	'as',
+	'and',
+	'or',
+	'but',
+	'not',
+	'so',
+	'if',
+	'then',
+	'else',
+	'when',
+	'where',
+	'how',
+	'what',
+	'which',
+	'who',
+	'why',
+	'i',
+	'me',
+	'my',
+	'we',
+	'our',
+	'you',
+	'your',
+	'they',
+	'them',
+	'their',
+	'this',
+	'that',
+	'these',
+	'those',
+	'want',
+	'need',
+	'get',
+	'set',
+	'use',
+	'make',
+	'do',
+	'have',
+	'like',
+	'just',
+	'also',
+	'very',
+	'much',
+	'more',
+	'most',
+	'some',
+	'any',
+	'all',
+	'each',
+	'every',
+	'both',
+	'no',
+	'none',
+	'about',
+	'over',
+	'into',
+	'through',
+	'during',
+	'before',
+	'after',
+	'above',
+	'below',
+	'up',
+	'down',
+	'out',
+	'off',
+	'under',
+	'again',
+	'further',
+	'once',
+	'project',
+	'setup',
+	'setting',
+	'configure',
+	'config',
+])
+
+export interface TokenizedQuery {
+	tokens: string[]
+	original: string
+}
+
+export function tokenize(query: string): TokenizedQuery {
+	// Note: strips non-ASCII characters (accented, CJK, emoji).
+	// The engine targets English-language tooling queries.
+	// Normalize hyphens to spaces so hyphenated query terms match spaced labels.
+	const normalized = query.replace(/-/g, ' ')
+	const cleaned = normalized.replace(/[^\w\s]/g, ' ').trim()
+	const words = cleaned.split(/\s+/).filter(Boolean)
+	const tokens = words.filter((w) => {
+		const lower = w.toLowerCase()
+		return lower.length >= 2 && !STOPWORDS.has(lower)
+	})
+	return { tokens, original: query }
+}
