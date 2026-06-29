@@ -81,6 +81,23 @@ Tasks are gated on the detected profile:
 - CI tasks only run when `hasGitHub === true`
 - TypeScript tasks only run when `typescript === true`
 
+### Monorepo scope filtering
+
+When running inside a monorepo, xtarterize further filters tasks based on
+their **scope**. Each task declares one of three scopes:
+
+- **`root`** — The task applies only at the monorepo root.
+- **`package`** — The task applies only inside a workspace package.
+- **`both`** (default) — The task applies everywhere.
+
+At the monorepo root (`workspaceRoot: true`), package-scoped tasks are
+hidden. Inside a workspace package (`workspaceRoot: false`), root-scoped
+tasks are hidden. Tasks without an explicit scope (or with `scope: 'both'`)
+are visible in both positions.
+
+In non-monorepo projects, scope filtering is disabled — all tasks that
+pass the `applicable()` check are shown regardless of their declared scope.
+
 ## Parameterized Templates
 
 All templates adapt to the detected profile:

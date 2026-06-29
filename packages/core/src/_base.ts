@@ -2,6 +2,8 @@ import type { ProjectProfile } from '@/detect.js'
 
 export type TaskStatus = 'new' | 'patch' | 'skip' | 'conflict'
 
+export type TaskScope = 'root' | 'package' | 'both'
+
 export interface DiffHunk {
 	header: string
 	lines: string[]
@@ -33,6 +35,7 @@ export interface Task {
 	id: string
 	label: string
 	group: string
+	scope?: TaskScope
 	applicable: (profile: ProjectProfile) => boolean
 	check: (cwd: string, profile: ProjectProfile) => Promise<TaskStatus>
 	dryRun: (cwd: string, profile: ProjectProfile) => Promise<FileDiff[]>

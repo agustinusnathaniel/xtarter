@@ -52,6 +52,7 @@ export const turboTask = createJsonMergeTask({
 	id: 'monorepo/turbo',
 	label: 'Turbo',
 	group: 'Monorepo',
+	scope: 'root',
 	applicable: (profile) =>
 		profile.monorepoTool === 'turbo' || profile.existing.turbo,
 	filepath: 'turbo.json',

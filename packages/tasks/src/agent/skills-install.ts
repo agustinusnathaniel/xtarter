@@ -145,6 +145,7 @@ export const skillsInstallTask: Task = {
 	id: 'agent/skills-install',
 	label: 'Install agent skills',
 	group: 'Agent',
+	scope: 'both',
 
 	applicable: (profile) => profile.typescript,
 

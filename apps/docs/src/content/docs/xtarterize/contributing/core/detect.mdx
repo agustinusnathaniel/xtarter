@@ -83,6 +83,12 @@ interface ProjectProfile {
 }
 ```
 
+The `workspaceRoot` field is set to `true` when the current directory
+itself contains monorepo markers (`pnpm-workspace.yaml`, `turbo.json`,
+etc.). It is `false` when running from inside a workspace package
+discovered via parent-directory walk-up. In non-monorepos,
+`workspaceRoot` has the same value as `monorepo`.
+
 ## Detection Logic
 
 ### Detection modules

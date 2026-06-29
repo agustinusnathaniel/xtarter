@@ -19,6 +19,7 @@ export const catVersionTask = createPackageJsonTask({
 	id: 'release/cat-version',
 	label: 'commit-and-tag-version',
 	group: 'Release',
+	scope: 'root',
 	applicable: () => true,
 	scripts: [{ script: 'release', value: 'commit-and-tag-version' }],
 	depName: 'commit-and-tag-version',

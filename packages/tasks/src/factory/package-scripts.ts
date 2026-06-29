@@ -164,6 +164,7 @@ export const packageScriptsTask = createPackageJsonTask({
 	id: 'scripts/package-scripts',
 	label: 'package.json scripts',
 	group: 'Scripts',
+	scope: 'root',
 	applicable: () => true,
 	getScripts: async (cwd, profile) => {
 		const pm = profile.packageManager

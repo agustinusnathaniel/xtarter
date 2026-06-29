@@ -45,6 +45,7 @@ export const pathsTask = createJsonMergeTask({
 	id: 'ts/paths',
 	label: 'tsconfig - path aliases',
 	group: 'TypeScript',
+	scope: 'package',
 	applicable: (profile) => profile.typescript,
 	filepath: 'tsconfig.json',
 	checkFn: async ({ profile, fullPath, content }) => {

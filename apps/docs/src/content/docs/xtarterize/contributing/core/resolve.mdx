@@ -24,6 +24,29 @@ const applicable = resolveTasks(profile, getAllTasks())
 // → only tasks whose conditions are met
 ```
 
+### Scope filtering
+
+In addition to `applicable()`, `resolveTasks()` applies a **scope
+filter** when the project is a monorepo. Each task can declare a
+`scope` field:
+
+```typescript
+type TaskScope = 'root' | 'package' | 'both'
+```
+
+The scope filter checks the task's scope against the monorepo
+position:
+
+```
+profile.monorepo === true
+├─ profile.workspaceRoot === true  → exclude tasks with scope: 'package'
+└─ profile.workspaceRoot === false → exclude tasks with scope: 'root'
+```
+
+In non-monorepo projects, scope filtering is skipped entirely. Tasks
+without an explicit scope default to `'both'` (included everywhere),
+preserving backward compatibility for external plugins.
+
 ### `resolveTaskStatuses(tasks, cwd, profile)`
 
 Runs `task.check()` for each applicable task in parallel and returns a `Map<taskId, TaskStatus>`. Each task determines its own status by inspecting the filesystem.

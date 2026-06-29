@@ -4,6 +4,7 @@ export type {
 	FileDiff,
 	SemanticEntry,
 	Task,
+	TaskScope,
 	TaskStatus,
 } from '@/_base.js'
 export type { ApplyOptions, ApplyResult } from '@/apply.js'

@@ -35,6 +35,7 @@ export const gitHooksTask = createPackageJsonTask({
 	id: 'release/git-hooks',
 	label: 'Git hooks (commit-msg, pre-commit, pre-push)',
 	group: 'Release',
+	scope: 'root',
 	applicable: () => true,
 	depName: 'husky',
 	depCondition: (profile) => !profile.vitePlus,

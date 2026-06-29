@@ -4,7 +4,9 @@ export const viteVisualizerTask = createVitePluginTask({
 	id: 'vite/visualizer',
 	label: 'rollup-plugin-visualizer',
 	group: 'Vite Plugins',
-	applicable: (profile) => profile.bundler === 'vite',
+	scope: 'package',
+	applicable: (profile) =>
+		profile.bundler === 'vite' && profile.runtime !== 'node',
 	depName: 'rollup-plugin-visualizer',
 	importName: 'visualizer',
 	importStyle: 'named',

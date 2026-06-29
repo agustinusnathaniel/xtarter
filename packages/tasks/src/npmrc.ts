@@ -13,6 +13,7 @@ export const npmrcTask = createFileTask({
 	id: 'scripts/npmrc',
 	label: '.npmrc — package manager config',
 	group: 'Scripts',
+	scope: 'root',
 	applicable: () => true,
 	filepath: '.npmrc',
 	render: () => npmrcContent(),

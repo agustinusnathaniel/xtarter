@@ -9,7 +9,18 @@ export function resolveTasks(
 	profile: ProjectProfile,
 	allTasks: Task[],
 ): Task[] {
-	return allTasks.filter((task) => task.applicable(profile))
+	return allTasks.filter((task) => {
+		if (!task.applicable(profile)) return false
+
+		// Scope filtering for monorepos
+		if (profile.monorepo) {
+			const scope = task.scope ?? 'both'
+			if (profile.workspaceRoot && scope === 'package') return false
+			if (!profile.workspaceRoot && scope === 'root') return false
+		}
+
+		return true
+	})
 }
 
 export function resolveTaskStatuses(

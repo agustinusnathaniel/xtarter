@@ -34,6 +34,7 @@ export const releaseWorkflowTask = createFileTask({
 	id: 'ci/release',
 	label: 'GitHub release workflow',
 	group: 'CI/CD',
+	scope: 'root',
 	applicable: (profile) => profile.hasGitHub,
 	filepath: '.github/workflows/release.yml',
 	render: (profile, existing) => renderReleaseWorkflow(profile, existing),
