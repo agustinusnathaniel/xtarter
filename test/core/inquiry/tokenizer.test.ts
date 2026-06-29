@@ -46,6 +46,12 @@ describe('tokenize', () => {
 		expect(result.tokens).toContain('tool')
 	})
 
+	it('strips non-ASCII characters', () => {
+		const result = tokenize('über strict')
+		// 'ü' is stripped (not \w); remaining 'ber' passes through
+		expect(result.tokens).toEqual(['ber', 'strict'])
+	})
+
 	it('removes common setup-related stopwords', () => {
 		const result = tokenize('configure project setup')
 		// 'configure', 'project', 'setup' are all stopwords

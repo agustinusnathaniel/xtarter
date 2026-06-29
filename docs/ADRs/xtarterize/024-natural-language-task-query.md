@@ -24,6 +24,8 @@ Add an optional `searchMeta` field to the `Task` interface and a pure-function s
 
 The scoring engine uses 5 weighted signals (label 35%, id 25%, keywords 20%, group 10%, config 10%) with Levenshtein-based fuzzy matching, a domain-specific synonym expansion map, and tokenization with stopword filtering. No AI model or external dependencies are used — the algorithm is pure keyword + fuzzy matching.
 
+Note: The config signal falls back to `tags` when `configTargets` is undefined on a task's `searchMeta`. This ensures tasks with only tags metadata still participate in config-target matching.
+
 ### Module layout
 
 ```

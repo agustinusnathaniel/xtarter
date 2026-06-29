@@ -52,6 +52,19 @@ describe('expandQuery', () => {
 		expect(result).toContain('typecheck')
 	})
 
+	it('handles uppercase query terms', () => {
+		const result = expandQuery(['LINT'])
+		expect(result).toContain('lint')
+		expect(result).toContain('linter')
+		expect(result).toContain('static-analysis')
+	})
+
+	it('transitively expands reverse-lookup matches', () => {
+		const result = expandQuery(['code'])
+		expect(result).toContain('vscode')
+		expect(result).toContain('editor')
+	})
+
 	it('returns original tokens when no synonyms are found', () => {
 		const result = expandQuery(['unknownword'])
 		expect(result).toEqual(['unknownword'])

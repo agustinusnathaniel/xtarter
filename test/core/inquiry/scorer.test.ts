@@ -107,6 +107,16 @@ const mockTasks: Task[] = [
 	},
 ]
 
+const taskNoMeta: Task = {
+	id: 'example/no-meta',
+	label: 'Example task without metadata',
+	group: 'Example',
+	applicable: () => true,
+	check: async () => 'new' as const,
+	dryRun: async () => [],
+	apply: async () => {},
+}
+
 describe('scoreTasks', () => {
 	it('returns "strict typescript" with ts/strict as top result', () => {
 		const results = scoreTasks(mockTasks, 'strict typescript')
@@ -221,5 +231,37 @@ describe('scoreTasks', () => {
 		expect(weightedResults.length).toBeGreaterThan(0)
 		// With higher keyword weight, lint/biome should still be on top
 		expect(weightedResults[0].taskId).toBe('lint/biome')
+	})
+
+	it('scores tasks without searchMeta using label/id/group', () => {
+		const results = scoreTasks([taskNoMeta, ...mockTasks], 'example', {
+			minScore: 0,
+		})
+		const noMetaResult = results.find((r) => r.taskId === 'example/no-meta')
+		expect(noMetaResult).toBeDefined()
+		expect(noMetaResult?.relevance).toBeGreaterThan(0)
+		// Should score from label match ("example") alone
+		expect(
+			noMetaResult?.signals.find((s) => s.name === 'label')?.score,
+		).toBeGreaterThan(0)
+		// Keywords and config should be 0 since searchMeta is undefined
+		expect(
+			noMetaResult?.signals.find((s) => s.name === 'keywords')?.score,
+		).toBe(0)
+		expect(noMetaResult?.signals.find((s) => s.name === 'config')?.score).toBe(
+			0,
+		)
+	})
+
+	it('returns all results with minScore: 0', () => {
+		const results = scoreTasks(mockTasks, 'strict', { minScore: 0 })
+		// Should include ts/strict AND any other task with even marginal relevance
+		expect(results.find((r) => r.taskId === 'ts/strict')).toBeDefined()
+	})
+
+	it('returns all results with maxResults: 0 (unlimited)', () => {
+		const results = scoreTasks(mockTasks, 'lint', { maxResults: 0 })
+		// All matching tasks should be included (not capped)
+		expect(results.length).toBeGreaterThanOrEqual(1)
 	})
 })

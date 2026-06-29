@@ -101,7 +101,7 @@ export function tokenize(query: string): TokenizedQuery {
 	const cleaned = query.replace(/[^\w\s-]/g, ' ').trim()
 	const words = cleaned.split(/\s+/).filter(Boolean)
 	const tokens = words.filter((w) => {
-		const lower = w.toLowerCase().trim()
+		const lower = w.toLowerCase()
 		return lower.length >= 2 && !STOPWORDS.has(lower)
 	})
 	return { tokens, original: query }

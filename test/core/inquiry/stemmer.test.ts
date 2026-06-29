@@ -49,6 +49,16 @@ describe('stem', () => {
 		expect(stem('Libraries')).toBe('library')
 	})
 
+	it('strips -tion suffix', () => {
+		expect(stem('configuration')).toBe('configura')
+		expect(stem('detection')).toBe('detec')
+	})
+
+	it('strips -ied suffix', () => {
+		expect(stem('studied')).toBe('stud')
+		expect(stem('applied')).toBe('appl')
+	})
+
 	it('does not modify words shorter than 3 chars after suffix removal', () => {
 		// 'ing' itself should not be stemmed to empty string
 		expect(stem('ing')).toBe('ing')

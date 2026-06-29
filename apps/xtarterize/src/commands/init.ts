@@ -17,6 +17,10 @@ export const initCommand = defineCommand({
 			description:
 				'Natural language query to compose a targeted task plan (e.g. "strict TypeScript with CI")',
 		},
+		threshold: {
+			type: 'string',
+			description: 'Minimum relevance score 0-1 for compose (default: 0.1)',
+		},
 	},
 	async run({ args }) {
 		const cwd = resolveCwd(args)
@@ -25,7 +29,12 @@ export const initCommand = defineCommand({
 		if (args.compose) {
 			const composeQuery = String(args.compose)
 			const allTasks = await getAllTasksWithPlugins(cwd)
-			const scored = scoreTasks(allTasks, composeQuery, { minScore: 0.1 })
+			const composeThreshold = args.threshold
+				? Math.min(1, Math.max(0, parseFloat(String(args.threshold)) || 0.1))
+				: 0.1
+			const scored = scoreTasks(allTasks, composeQuery, {
+				minScore: composeThreshold,
+			})
 
 			const rankedIds = new Map(scored.map((r, i) => [r.taskId, i]))
 			orderedTasks = [...allTasks].sort((a, b) => {

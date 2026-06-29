@@ -51,7 +51,7 @@ function bestMatchInArray(token: string, arr: string[] | undefined): MatchTier {
 function matchTaskToToken(token: string, task: Task) {
 	return {
 		label: bestMatchTier(token, task.label),
-		id: bestMatchTier(token, task.id.replace('/', ' ')),
+		id: bestMatchTier(token, task.id.replace(/\//g, ' ')),
 		group: bestMatchTier(token, task.group),
 		keywords: bestMatchInArray(token, task.searchMeta?.keywords),
 		config: bestMatchInArray(
