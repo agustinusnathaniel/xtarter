@@ -1,5 +1,23 @@
 # Changelog
 
+## 1.15.0
+
+### Minor Changes
+
+- [#69](https://github.com/agustinusnathaniel/xtarter/pull/69) [`7ce1d7e`](https://github.com/agustinusnathaniel/xtarter/commit/7ce1d7e6b54424afaa49579ef3bf27106b77af2b) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - feat: add --quiet, --json, and --no-color flags
+
+  - `--quiet` suppresses banners, spinners, and decorative output
+  - `--json` outputs scaffold result as structured JSON
+  - `--no-color` disables colorized output
+
+  feat: improve --yes flag behavior
+
+  - `--yes` now defaults to next-chakra template when -t is omitted
+
+  feat: migrate to citty built-in help and version handling
+
+  - Removes hand-rolled HELP_TEXT constant in favor of citty auto-generation
+
 ## 1.14.2
 
 ### Patch Changes

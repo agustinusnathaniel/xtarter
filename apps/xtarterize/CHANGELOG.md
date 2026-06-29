@@ -1,5 +1,22 @@
 # xtarterize
 
+## 1.15.0
+
+### Minor Changes
+
+- [#69](https://github.com/agustinusnathaniel/xtarter/pull/69) [`331efa4`](https://github.com/agustinusnathaniel/xtarter/commit/331efa4b2d94862c8c7d629b4829df5e1150cfe8) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - feat: add --yes and --quiet flags to restore command
+
+  - `restore --yes` skips confirmation and selects latest backup automatically
+  - `restore --quiet` suppresses verbose output
+
+  feat: add --all flag to add command
+
+  - `add --all` applies all new and patch tasks without interaction
+
+  feat: expose --json flag in doctor command args
+
+  - `doctor --json` now appears in command-level help output
+
 ## 1.14.4
 
 ### Patch Changes
