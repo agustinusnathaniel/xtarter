@@ -203,13 +203,12 @@ describe('scoreTasks', () => {
 	})
 
 	it('handles queries that match no tasks gracefully', () => {
-		const results = scoreTasks(mockTasks, 'zzzznotfound')
-		// Should still return results (with 0 or very low scores) or empty array
-		expect(results).toBeDefined()
+		const results = scoreTasks(mockTasks, 'zzzznotfoundblah')
+		expect(Array.isArray(results)).toBe(true)
+		expect(results).toHaveLength(0)
 	})
 
 	it('allows custom weight configuration', () => {
-		const defaultResults = scoreTasks(mockTasks, 'lint')
 		const weightedResults = scoreTasks(mockTasks, 'lint', {
 			weights: {
 				keywords: 0.5,

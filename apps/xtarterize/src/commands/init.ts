@@ -3,7 +3,7 @@ import { scoreTasks } from '@xtarterize/core'
 import { defineCommand } from 'citty'
 import { runCommand, sharedRunArgs } from '@/commands/run-command.js'
 import { resolveCwd } from '@/utils/cwd.js'
-import { getAllTasksWithPlugins } from '@/utils/project.js'
+import { getAllTasksWithPlugins, resolveCliContext } from '@/utils/project.js'
 
 export const initCommand = defineCommand({
 	meta: {
@@ -34,15 +34,18 @@ export const initCommand = defineCommand({
 				return aScore - bScore
 			})
 
-			console.log('')
-			console.log(`Composing plan for: "${composeQuery}"`)
-			if (scored.length > 0) {
-				const topTask = scored[0].task
-				console.log(
-					`Best match: ${topTask.label} (${(scored[0].relevance * 100).toFixed(0)}% relevance)`,
-				)
+			const ctx = resolveCliContext(args)
+			if (!ctx.json) {
+				console.log('')
+				console.log(`Composing plan for: "${composeQuery}"`)
+				if (scored.length > 0) {
+					const topTask = scored[0].task
+					console.log(
+						`Best match: ${topTask.label} (${(scored[0].relevance * 100).toFixed(0)}% relevance)`,
+					)
+				}
+				console.log(`Tasks ranked by relevance across ${scored.length} matches`)
 			}
-			console.log(`Tasks ranked by relevance across ${scored.length} matches`)
 		}
 
 		await runCommand(cwd, args, {

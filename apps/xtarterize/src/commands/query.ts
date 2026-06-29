@@ -31,8 +31,12 @@ export const queryCommand = defineCommand({
 		const { tasks, statuses, timing } = await scanProject(ctx)
 
 		const queryStr = String(args.query)
-		const limit = args.limit ? parseInt(String(args.limit), 10) : 20
-		const threshold = args.threshold ? parseFloat(String(args.threshold)) : 0.1
+		const limit = args.limit
+			? Math.max(1, parseInt(String(args.limit), 10) || 20)
+			: 20
+		const threshold = args.threshold
+			? Math.min(1, Math.max(0, parseFloat(String(args.threshold)) || 0.1))
+			: 0.1
 
 		const results = scoreTasks(tasks, queryStr, {
 			maxResults: limit,

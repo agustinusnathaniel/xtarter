@@ -96,6 +96,8 @@ export interface TokenizedQuery {
 }
 
 export function tokenize(query: string): TokenizedQuery {
+	// Note: strips non-ASCII characters (accented, CJK, emoji).
+	// The engine targets English-language tooling queries.
 	const cleaned = query.replace(/[^\w\s-]/g, ' ').trim()
 	const words = cleaned.split(/\s+/).filter(Boolean)
 	const tokens = words.filter((w) => {

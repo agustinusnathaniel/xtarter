@@ -18,7 +18,7 @@ const DEFAULT_WEIGHTS: WeightConfig = {
 	config: 0.1,
 }
 
-type MatchTier = 0.0 | 0.3 | 0.55 | 0.75 | 0.85 | 0.95 | 1.0
+type MatchTier = 0.0 | 0.55 | 0.75 | 0.85 | 0.95 | 1.0
 
 function bestMatchTier(token: string, field: string | undefined): MatchTier {
 	if (!field) return 0.0
@@ -141,7 +141,7 @@ export function scoreTasks(
 			expanded,
 			weights,
 		})
-		if (score >= minScore) {
+		if (score > minScore) {
 			results.push({ taskId: task.id, task, relevance: score, signals })
 		}
 	}
