@@ -1,5 +1,17 @@
 # @xtarterize/patchers
 
+## 1.14.3
+
+### Patch Changes
+
+- [`0941ef3`](https://github.com/agustinusnathaniel/xtarter/commit/0941ef3e1dd9a3eb31ba031c201b0d36a33995b4) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - fix: correct broken skill references in agent skill catalog
+  fix: git hooks now work on npm, yarn, and bun package managers
+  fix: engines.node raised to >=24 for clear error on unsupported Node versions
+  fix: resolve backup filename collision that could cause silent data loss
+  fix: add path traversal validation to backup restore for security hardening
+  fix: align Vite plugin dryRun output with apply output for reliable diffs
+  fix: improve detection cache fingerprint to detect config file changes
+
 ## 1.14.2
 
 ### Patch Changes
