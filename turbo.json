@@ -19,7 +19,12 @@
 			"dependsOn": ["^build"]
 		},
 		"//#test": {
-			"dependsOn": ["^build"],
+			"dependsOn": [
+				"^build",
+				"@xtarterize/core#build",
+				"@xtarterize/patchers#build",
+				"@xtarterize/tasks#build"
+			],
 			"inputs": ["vitest.config.ts", "test/"]
 		}
 	}
