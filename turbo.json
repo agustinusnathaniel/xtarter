@@ -23,7 +23,8 @@
 				"^build",
 				"@xtarterize/core#build",
 				"@xtarterize/patchers#build",
-				"@xtarterize/tasks#build"
+				"@xtarterize/tasks#build",
+				"create-xtarter-app#build"
 			],
 			"inputs": ["vitest.config.ts", "test/"]
 		}
