@@ -51,7 +51,7 @@ describe('biome config validation', () => {
 
 			try {
 				execSync(
-					`npx -y @biomejs/biome@latest check --config-path=${tmpDir} --no-errors-on-unmatched ${join(tmpDir, 'test.js')}`,
+					`npx -y @biomejs/biome@2.4.16 check --config-path=${tmpDir} --no-errors-on-unmatched ${join(tmpDir, 'test.js')}`,
 					{ cwd: tmpDir, stdio: 'pipe', timeout: toolTimeout },
 				)
 			} catch (e: unknown) {

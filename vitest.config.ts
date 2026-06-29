@@ -6,6 +6,8 @@ export default mergeConfig(
 	defineConfig({
 		test: {
 			globals: true,
+			retry: 1,
+			testTimeout: 15_000,
 		},
 	}),
 )

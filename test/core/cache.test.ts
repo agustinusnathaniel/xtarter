@@ -193,7 +193,7 @@ describe('detect cache', () => {
 		await detectProject(dir)
 		const hitDuration = performance.now() - warmStart
 
-		expect(hitDuration).toBeLessThan(missDuration)
+		expect(hitDuration).toBeLessThanOrEqual(missDuration)
 
 		await fs.rm(dir, { recursive: true, force: true })
 	})

@@ -414,12 +414,10 @@ const detectTestFixtures = [
 ]
 
 afterAll(async () => {
-	await Promise.all(
-		detectTestFixtures.map((name) =>
-			fs.rm(path.join(fixtures, name, '.xtarterize'), {
-				recursive: true,
-				force: true,
-			}),
-		),
-	)
+	for (const name of detectTestFixtures) {
+		await fs.rm(path.join(fixtures, name, '.xtarterize'), {
+			recursive: true,
+			force: true,
+		})
+	}
 })

@@ -85,7 +85,7 @@ describe('oxlint config validation', () => {
 
 			try {
 				execSync(
-					`npx -y oxlint@latest --config ${join(tmpDir, 'oxlint.config.json')} ${join(tmpDir, 'test.ts')}`,
+					`npx -y oxlint@1.70.0 --config ${join(tmpDir, 'oxlint.config.json')} ${join(tmpDir, 'test.ts')}`,
 					{ cwd: tmpDir, stdio: 'pipe', timeout: toolTimeout },
 				)
 			} catch (e: unknown) {
