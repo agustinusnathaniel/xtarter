@@ -33,12 +33,22 @@ export const SKILL_CATALOG: SkillDefinition[] = [
 	},
 	{
 		source: 'mattpocock/skills',
+		skill: 'grill-with-docs',
+		condition: () => true,
+	},
+	{
+		source: 'mattpocock/skills',
 		skill: 'handoff',
 		condition: () => true,
 	},
 	{
 		source: 'mattpocock/skills',
 		skill: 'improve-codebase-architecture',
+		condition: () => true,
+	},
+	{
+		source: 'shadcn/improve',
+		skill: 'improve',
 		condition: () => true,
 	},
 	{
