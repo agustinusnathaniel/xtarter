@@ -81,11 +81,16 @@ export function displayQueryResults(
 		}
 	}
 
-	// Footer hint
-	console.log('')
-	console.log(
-		`  ${pc.dim('→')} ${pc.dim('xtarterize add <task-id> to apply a task')}`,
-	)
+	// Footer hint — bundled command per group
+	if (results.length > 0) {
+		console.log('')
+		for (const group of groups) {
+			const ids = group.tasks.map((t) => t.taskId)
+			console.log(
+				`  ${pc.dim('→')} ${pc.dim(`xtarterize add ${ids.join(' ')}`)}`,
+			)
+		}
+	}
 
 	console.log('')
 }
