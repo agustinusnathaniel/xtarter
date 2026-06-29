@@ -5,49 +5,8 @@ import { addCommand } from '@xtarterize/app/commands/add.js'
 import { restoreCommand } from '@xtarterize/app/commands/restore.js'
 import { syncCommand } from '@xtarterize/app/commands/sync.js'
 import { undoCommand } from '@xtarterize/app/commands/undo.js'
-import {
-	backupFile,
-	consola,
-	readRunManifest,
-	writeRunManifest,
-} from '@xtarterize/core'
+import { backupFile, readRunManifest, writeRunManifest } from '@xtarterize/core'
 import { describe, expect, it } from 'vite-plus/test'
-
-// ---------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------
-
-/** Capture all stdout + stderr from a command (including consola output). */
-async function captureOutput(run: () => Promise<void>): Promise<string> {
-	const chunks: Buffer[] = []
-	const originalOut = process.stdout.write.bind(process.stdout)
-	const originalErr = process.stderr.write.bind(process.stderr)
-
-	function collect(chunk: string | Uint8Array): boolean {
-		chunks.push(Buffer.from(chunk))
-		return true
-	}
-
-	// biome-ignore lint/suspicious/noExplicitAny: stdout mock needs any cast
-	process.stdout.write = collect as any
-	// biome-ignore lint/suspicious/noExplicitAny: stderr mock needs any cast
-	process.stderr.write = collect as any
-
-	const originalLevel = consola.level
-	consola.level = 5
-
-	try {
-		await run()
-	} finally {
-		// eslint-disable-next-line @typescript-eslint/unbound-method
-		process.stdout.write = originalOut
-		// eslint-disable-next-line @typescript-eslint/unbound-method
-		process.stderr.write = originalErr
-		consola.level = originalLevel
-	}
-
-	return Buffer.concat(chunks).toString('utf-8')
-}
 
 async function createMinimalProject(): Promise<string> {
 	const tmpDir = await fs.mkdtemp(
@@ -95,11 +54,12 @@ describe('sync command', () => {
 				}),
 			)
 
-			const output = await captureOutput(async () => {
-				await syncCommand.run?.({ args: { cwd, yes: true } } as never)
-			})
-			// Should have applied tasks
-			expect(output).toMatch(/Applied|patch/)
+			await syncCommand.run?.({ args: { cwd, yes: true } } as never)
+
+			const biome = JSON.parse(
+				await fs.readFile(path.join(cwd, 'biome.json'), 'utf-8'),
+			)
+			expect(biome.vcs).toBeDefined()
 		} finally {
 			await fs.rm(cwd, { recursive: true, force: true })
 		}

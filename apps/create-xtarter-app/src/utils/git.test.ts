@@ -21,14 +21,22 @@ describe('initializeGit', () => {
 		const dir = await createTempDir()
 		await writeFile(join(dir, 'README.md'), '# test')
 
-		await exec('git', ['config', 'user.email', 'test@test.com'], {
-			nodeOptions: { cwd: dir },
-		})
-		await exec('git', ['config', 'user.name', 'Test User'], {
-			nodeOptions: { cwd: dir },
-		})
-
-		await initializeGit({ projectPath: dir })
+		const prevAuthorName = process.env.GIT_AUTHOR_NAME
+		const prevAuthorEmail = process.env.GIT_AUTHOR_EMAIL
+		const prevCommitterName = process.env.GIT_COMMITTER_NAME
+		const prevCommitterEmail = process.env.GIT_COMMITTER_EMAIL
+		process.env.GIT_AUTHOR_NAME = 'Test User'
+		process.env.GIT_AUTHOR_EMAIL = 'test@test.com'
+		process.env.GIT_COMMITTER_NAME = 'Test User'
+		process.env.GIT_COMMITTER_EMAIL = 'test@test.com'
+		try {
+			await initializeGit({ projectPath: dir })
+		} finally {
+			process.env.GIT_AUTHOR_NAME = prevAuthorName
+			process.env.GIT_AUTHOR_EMAIL = prevAuthorEmail
+			process.env.GIT_COMMITTER_NAME = prevCommitterName
+			process.env.GIT_COMMITTER_EMAIL = prevCommitterEmail
+		}
 
 		const log = await exec('git', ['log', '--oneline'], {
 			nodeOptions: { cwd: dir },
