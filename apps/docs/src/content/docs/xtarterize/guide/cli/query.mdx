@@ -1,0 +1,121 @@
+---
+title: query
+description: Search and discover xtarterize tasks using natural language queries.
+---
+
+import { Aside, Tabs, TabItem } from '@astrojs/starlight/components'
+
+The `query` command lets you search xtarterize tasks using natural language — no need to remember exact task IDs. It uses a pure algorithmic scoring engine (no AI) to rank tasks by relevance to your query.
+
+## Usage
+
+```bash frame="none"
+xtarterize query "<query>" [options]
+```
+
+A query is any natural language description of the tooling setup you're looking for.
+
+### Options
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `--json` | Output machine-readable JSON | `false` |
+| `--limit <n>` | Maximum number of results to show | `20` |
+| `--threshold <n>` | Minimum relevance score (0-1) | `0.1` |
+| `--cwd <path>` | Target directory | current directory |
+
+### Global options
+
+| Option | Description |
+|--------|-------------|
+| `--timing` | Show detailed per-task timing breakdown |
+| `--quiet` | Suppress verbose output |
+
+## Examples
+
+### Find tasks by description
+
+```bash
+xtarterize query "strict typescript"
+```
+
+Outputs tasks ranked by relevance, grouped into tiers:
+
+```
+Query: "strict typescript"
+
+EXACT MATCHES
+  ████████░ 80%  tsconfig - strict: true              ts/strict
+  ███████░░ 70%  tsconfig - path aliases               ts/paths
+
+STRONG MATCHES
+  █████░░░░ 52%  tsconfig - incremental build          ts/incremental
+
+RELATED
+  ██░░░░░░░ 24%  .gitignore — tsbuildinfo              gitignore/tsbuildinfo
+```
+
+### Search for linting and formatting
+
+```bash
+xtarterize query "linting and formatting tool" --limit 5
+```
+
+### Machine-readable output
+
+```bash
+xtarterize query "ci pipeline" --json
+```
+
+```json
+{
+  "type": "query",
+  "query": "ci pipeline",
+  "count": 3,
+  "results": [
+    {
+      "taskId": "ci/ci",
+      "label": "GitHub CI workflow",
+      "group": "CI/CD",
+      "relevance": 0.85,
+      "signals": [
+        { "name": "label", "score": 1.0 },
+        { "name": "id", "score": 0.85 },
+        { "name": "keywords", "score": 0.9 },
+        { "name": "config", "score": 1.0 },
+        { "name": "group", "score": 1.0 }
+      ]
+    }
+  ]
+}
+```
+
+### Compose an init plan
+
+Combine query with the init workflow to get a ranked task plan:
+
+```bash
+xtarterize init --compose "react project with ci and linting"
+```
+
+This reorders tasks so the most relevant ones appear first in the interactive plan, without excluding any applicable tasks.
+
+## How It Works
+
+The scoring engine operates in five steps:
+
+1. **Tokenize** — The query is split into words; stopwords (a, the, want, need, project, etc.) and short words are filtered out
+2. **Expand** — Content words are expanded through a domain-specific synonym map (e.g. "lint" → "linter", "static-analysis", "check"; "typescript" → "ts", "type-safe", "strict")
+3. **Score** — Each expanded token is matched against 5 signals on every task (label, id, group, keywords, config targets) using tiered match levels: exact (1.0), stem-match (0.95), fuzzy (0.85), prefix (0.75), substring (0.55)
+4. **Aggregate** — Signal scores are weighted and averaged; synonym hits receive a 0.85 discount; multi-token queries get a coverage bonus
+5. **Rank** — Tasks are sorted by relevance score (0.0 - 1.0) and grouped into tiers
+
+<Aside type="note">
+  The scoring engine is entirely algorithmic — zero AI model calls, zero API dependencies.
+  It runs offline and completes in milliseconds.
+</Aside>
+
+## See Also
+
+- [CLI Overview](/xtarterize/guide/cli/overview/) — full command reference
+- [Tasks Overview](/xtarterize/guide/tasks/overview/) — understanding tasks and their metadata

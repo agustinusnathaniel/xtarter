@@ -23,6 +23,7 @@ npx xtarterize init --json --yes              # Non-interactive (CI-safe)
 npx xtarterize init --json --only ts/strict   # Apply only specific tasks
 npx xtarterize init --json --skip lint/biome  # Exclude specific tasks
 npx xtarterize init --json --dry-run          # Preview only (same as diff)
+npx xtarterize init --json --compose "strict TypeScript with CI"  # Rank tasks by relevance, then apply
 ```
 
 | Flag | Description |
@@ -33,6 +34,7 @@ npx xtarterize init --json --dry-run          # Preview only (same as diff)
 | `--only <ids>` | Apply only specific tasks (comma-separated) |
 | `--quiet` | Suppress interactive prompts and verbose output |
 | `--include-conflicts` | Include conflicting tasks when applying |
+| `--compose <query>` | Natural language query to compose a targeted task plan (e.g. `"strict TypeScript with CI"`). Tasks are ranked by relevance before stepping through the normal init workflow. |
 | `--format <fmt>` | Output format: `terminal` (default) or `json` |
 
 Without `--yes`, opens an interactive task selection menu. In CI or with `--yes`, applies all applicable tasks non-interactively.
@@ -172,6 +174,54 @@ npx xtarterize list --json --cwd ../project
 ```
 
 Without `--json`, groups tasks by category (Agent, CI, Lint, TypeScript, etc.) with status icons.
+
+---
+
+## `query <query>` — Search tasks by natural language
+
+A pure-algorithmic scoring engine (no AI) that ranks xtarterize tasks by relevance to a natural language query. Uses tokenization, stemming, fuzzy matching, and synonym expansion to match against task labels, IDs, groups, keywords, and config targets.
+
+```bash
+npx xtarterize query "strict typescript" --json
+npx xtarterize query "ci with linting" --json --limit 10
+npx xtarterize query "react testing" --json --threshold 0.2
+```
+
+| Flag | Description |
+|------|-------------|
+| `--limit <n>` | Maximum results (default: 20) |
+| `--threshold <n>` | Minimum relevance score 0-1 (default: 0.1) |
+| `--quiet` | Suppress verbose output |
+| `--json` | Output machine-readable JSON |
+
+**Output shape:**
+```json
+{
+  "type": "query",
+  "query": "strict typescript",
+  "count": 3,
+  "results": [
+    {
+      "taskId": "ts/strict",
+      "label": "Strict TypeScript configuration",
+      "group": "TypeScript",
+      "relevance": 0.92,
+      "signals": [
+        { "name": "label", "score": 0.95 },
+        { "name": "id", "score": 0.75 },
+        { "name": "group", "score": 1.0 },
+        { "name": "keywords", "score": 0.85 },
+        { "name": "config", "score": 0.55 }
+      ]
+    }
+  ],
+  "timing": { "scan": 12, "resolve": 3 }
+}
+```
+
+Signal names: `label`, `id`, `group`, `keywords`, `config`. Each represents how strongly that field matched the query.
+
+If no results meet the threshold, `count` is 0 and `results` is an empty array.
 
 ---
 

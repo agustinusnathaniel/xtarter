@@ -30,6 +30,7 @@ The xtarterize CLI provides commands to detect, apply, and maintain conformance 
 | [`xtarterize undo`](#undo) | Undo the last run by restoring backed-up files |
 | [`xtarterize restore <file>`](#restore) | Restore a file from backup |
 | [`xtarterize list`](#list) | List all available tasks with status |
+| [`xtarterize query`](#query) | Search tasks by natural language query |
 
 ## `doctor`
 
@@ -90,6 +91,7 @@ Full conformance setup. Detects your project stack, shows a plan, and applies ch
 |--------|-------------|
 | `--dry-run` | Preview all changes without applying |
 | `--yes` | Skip all confirmations, apply all changes automatically |
+| `--compose <query>` | Rank tasks by relevance to a natural language query |
 | `--skip <task-id>` | Exclude a specific task (comma-separated) |
 | `--only <task-id>` | Apply only a specific task (comma-separated) |
 | `--quiet` | Suppress interactive prompts and verbose output |
@@ -295,6 +297,28 @@ List all registered tasks grouped by category, with current status.
 ```bash
 npx xtarterize list
 ```
+
+## `query`
+
+Search tasks by natural language query. No need to remember exact task IDs — just describe what you're looking for.
+
+### Options
+
+| Option | Description | Default |
+|--------|-------------|---------|
+| `--limit <n>` | Maximum number of results to show | `20` |
+| `--threshold <n>` | Minimum relevance score (0-1) | `0.1` |
+| `--json` | Output machine-readable JSON | `false` |
+
+```bash
+npx xtarterize query "strict typescript"
+npx xtarterize query "ci pipeline" --json
+npx xtarterize query "linting and formatting tool" --limit 5
+```
+
+<Aside type="tip">
+  For a full reference, see the [query command page](/xtarterize/guide/cli/query/).
+</Aside>
 
 ## Task Status Values
 
