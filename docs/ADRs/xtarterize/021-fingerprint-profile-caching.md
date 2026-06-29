@@ -26,12 +26,12 @@ The fingerprint covers all inputs that affect the profile:
 |-----------|--------|-----------|
 | `package.json` | path, mtimeMs, size | Dep changes, version bumps |
 | Lockfile | path, mtimeMs, size | Dep install/update |
-| Config dirs | path, mtimeMs, size per dir | `.github/`, `.vscode/`, `.changeset/` |
+| Config dirs | path, mtimeMs, size per file (recursive, sorted) | `.github/`, `.vscode/`, `.changeset/` |
 
 We use **mtime + size** instead of content hashing because:
 - stat() is ~1 syscall vs reading+digesting the full file
 - False positives (mtime changes without content change) are rare and only trigger a re-compute — no correctness risk
-- Directory mtime on macOS/Linux changes when files are added/removed, which is sufficient for existence-based config detection
+- Config directory contents are fingerprinted recursively — each file's mtimeMs and size are recorded in a sorted list. This detects file additions, removals, and content modifications within config directories.
 
 ### Cache storage
 
@@ -113,4 +113,4 @@ The original detection body was extracted into `computeProjectProfile()` as a pr
 ### Negative
 - ⚠️ Adds `.xtarterize/cache/` directory to projects (gitignored if `.xtarterize/` is in root `.gitignore`)
 - ⚠️ mtime comparisons can produce false positives on some filesystems (e.g., NFS, CI clone) — harmless but triggers unnecessary re-computation
-- ⚠️ Config directory mtime doesn't change on file modification, only addition/removal — sufficient for current existence-based checks, but would miss content changes in e.g., `.github/workflows/`
+- ⚠️ Resolved in implementation: recursive per-file fingerprinting now detects content changes. See `fingerprintConfigDirs()` in `cache.ts`.
