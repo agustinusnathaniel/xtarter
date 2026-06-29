@@ -20,7 +20,9 @@ This skill is activated when the user asks to create a new project, scaffold an 
 
 ```bash
 npx create-xtarter-app@latest                          # Interactive mode
-npx create-xtarter-app@latest my-app --yes              # Defaults (pnpm, git, no clean)
+npx create-xtarter-app@latest my-app --yes              # Defaults (pnpm, git, no clean, default template)
+npx create-xtarter-app@latest my-app --yes --quiet      # Non-interactive, minimal output
+npx create-xtarter-app@latest my-app --yes --json        # Non-interactive, JSON result
 npx create-xtarter-app@latest my-app -t vite-tailwind   # Specific template
 npx create-xtarter-app@latest preview                   # Show all templates
 npx create-xtarter-app@latest preview vite-tailwind     # Show one template
@@ -54,7 +56,10 @@ npx create-xtarter-app@latest [project-name] [options]
 | `--pm <manager>` | `-p` | Package manager: `pnpm`, `npm`, `bun`, `yarn` |
 | `--no-git` | | Skip git init |
 | `--clean` | | Remove GitHub Actions CI workflows |
-| `--yes` | `-y` | Defaults: pnpm, git init, no clean |
+| `--yes` | `-y` | Use defaults: pnpm, git init, no clean. Without `--template`, uses default template |
+| `--quiet` | | Suppress banners, spinners, and decorative output |
+| `--json` | | Output scaffold result as JSON (also suppresses banners/spinners) |
+| `--no-color` | | Disable colorized output |
 | `--help` | `-h` | Show help |
 | `--version` | `-v` | Show version |
 

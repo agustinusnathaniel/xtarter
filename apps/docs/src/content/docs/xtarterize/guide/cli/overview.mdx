@@ -48,6 +48,7 @@ Run comprehensive project diagnostics. Checks are grouped into four categories:
 |--------|-------------|
 | `--verbose` | Show system information (OS, architecture, CPU count, RAM) |
 | `--quiet` | Suppress detailed output, show summary only |
+| `--json` | Output machine-readable JSON diagnostics |
 
 ```bash
 npx xtarterize doctor
@@ -217,6 +218,7 @@ When called **with a task ID**, applies that specific task after showing a diff 
 | `--quiet` | Suppress interactive prompts |
 | `--format <format>` | Output format (`terminal` or `json`) |
 | `--timing` | Show detailed per-task timing breakdown |
+| `--all` | Apply all applicable new and patch tasks without interaction |
 
 <Tabs>
   <TabItem label="Specific task">
@@ -230,6 +232,12 @@ When called **with a task ID**, applies that specific task after showing a diff 
     npx xtarterize add
     ```
     Browse tasks by category, select multiple, and apply with per-task confirmation.
+  </TabItem>
+  <TabItem label="All tasks">
+    ```bash
+    npx xtarterize add --all
+    ```
+    Apply all applicable new and patch tasks in one pass with no interaction.
   </TabItem>
 </Tabs>
 
@@ -253,11 +261,25 @@ npx xtarterize undo
 
 ## `restore`
 
-Restore a file from a previous backup. If multiple backups exist, you'll be prompted to select one.
+Restore a file from a previous backup. If multiple backups exist, you'll be prompted to select one. Use `--yes` to automatically restore the latest backup without prompting.
+
+### Arguments
+
+| Argument | Required | Description |
+|----------|----------|-------------|
+| `filepath` | Yes | Path to the file to restore |
+
+### Options
+
+| Option | Description |
+|--------|-------------|
+| `--yes` | Skip confirmation, restore latest backup when multiple exist |
+| `--quiet` | Suppress verbose output |
 
 ```bash
 npx xtarterize restore tsconfig.json
-npx xtarterize restore biome.json
+npx xtarterize restore biome.json --yes
+npx xtarterize restore tsconfig.json --quiet
 ```
 
 ## `list`
