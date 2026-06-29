@@ -9,6 +9,11 @@ export const plopTask = createMultiFileTask({
 	id: 'codegen/plop',
 	label: 'Plop (code generator)',
 	group: 'Codegen',
+	searchMeta: {
+		tags: ['codegen', 'scaffold', 'generator', 'templates'],
+		configTargets: ['plopfile.ts'],
+		keywords: ['plop', 'code generator', 'scaffold', 'templates', 'codegen'],
+	},
 	applicable: (profile) => profile.framework !== null,
 	depName: 'plop',
 	installDev: true,

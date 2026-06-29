@@ -49,6 +49,11 @@ const agentsMdTask = createFileTask({
 	id: 'agent/agents-md',
 	label: 'AGENTS.md',
 	group: 'Agent',
+	searchMeta: {
+		tags: ['ai', 'agent', 'documentation', 'setup'],
+		configTargets: ['AGENTS.md'],
+		keywords: ['agents', 'ai', 'claude', 'opencode', 'agent config', 'llm'],
+	},
 	applicable: () => true,
 	filepath: 'AGENTS.md',
 	render: (profile) => renderAgentsMd(profile),

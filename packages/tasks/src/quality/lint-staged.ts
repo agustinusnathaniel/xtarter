@@ -13,6 +13,17 @@ export const lintStagedTask = createPackageJsonTask({
 	id: 'quality/lint-staged',
 	label: 'lint-staged config',
 	group: 'Quality',
+	searchMeta: {
+		tags: ['git-hooks', 'pre-commit', 'linting', 'quality'],
+		configTargets: ['.lintstagedrc.json'],
+		keywords: [
+			'lint-staged',
+			'staged files',
+			'pre-commit',
+			'git hook',
+			'quality gate',
+		],
+	},
 	applicable: (profile) => !profile.vitePlus,
 	depName: 'lint-staged',
 	installDev: true,

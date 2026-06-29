@@ -34,6 +34,18 @@ export const releaseWorkflowTask = createFileTask({
 	id: 'ci/release',
 	label: 'GitHub release workflow',
 	group: 'CI/CD',
+	searchMeta: {
+		tags: ['ci', 'cd', 'release', 'github-actions'],
+		configTargets: ['.github/workflows/release.yml'],
+		keywords: [
+			'release',
+			'publish',
+			'npm publish',
+			'github release',
+			'cd',
+			'deploy',
+		],
+	},
 	scope: 'root',
 	applicable: (profile) => profile.hasGitHub,
 	filepath: '.github/workflows/release.yml',

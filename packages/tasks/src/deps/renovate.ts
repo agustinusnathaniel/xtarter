@@ -28,6 +28,17 @@ export const renovateTask = createJsonMergeTask({
 	id: 'deps/renovate',
 	label: 'Renovate config',
 	group: 'Dependencies',
+	searchMeta: {
+		tags: ['dependencies', 'updates', 'maintenance', 'automation'],
+		configTargets: ['renovate.json'],
+		keywords: [
+			'renovate',
+			'dependencies',
+			'dependency updates',
+			'dependabot',
+			'auto',
+		],
+	},
 	scope: 'root',
 	applicable: (profile) => profile.hasGitHub,
 	filepath: 'renovate.json',

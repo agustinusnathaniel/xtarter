@@ -4,6 +4,17 @@ export const viteVisualizerTask = createVitePluginTask({
 	id: 'vite/visualizer',
 	label: 'rollup-plugin-visualizer',
 	group: 'Vite Plugins',
+	searchMeta: {
+		tags: ['vite', 'plugin', 'bundle', 'analysis'],
+		configTargets: ['vite.config.ts'],
+		keywords: [
+			'visualizer',
+			'bundle analysis',
+			'vite plugin',
+			'rollup',
+			'size',
+		],
+	},
 	scope: 'package',
 	applicable: (profile) =>
 		profile.bundler === 'vite' && profile.runtime !== 'node',

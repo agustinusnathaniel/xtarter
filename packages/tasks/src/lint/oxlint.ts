@@ -10,6 +10,11 @@ export const oxlintTask = createFileTask({
 	id: 'lint/oxlint',
 	label: 'Oxlint config',
 	group: 'Linting & Formatting',
+	searchMeta: {
+		tags: ['linting', 'rust', 'performance', 'quality'],
+		configTargets: ['oxlint.config.ts'],
+		keywords: ['oxlint', 'linter', 'rust', 'static analysis', 'fast'],
+	},
 	applicable: (profile) =>
 		!profile.existing.eslint &&
 		!profile.existing.biome &&
@@ -56,6 +61,11 @@ export const oxfmtTask = createFileTask({
 	id: 'lint/oxfmt',
 	label: 'Oxfmt config',
 	group: 'Linting & Formatting',
+	searchMeta: {
+		tags: ['formatting', 'rust', 'style'],
+		configTargets: ['oxfmt.config.ts'],
+		keywords: ['oxfmt', 'formatter', 'rust', 'format', 'style'],
+	},
 	applicable: (profile) =>
 		!profile.existing.eslint &&
 		!profile.existing.biome &&

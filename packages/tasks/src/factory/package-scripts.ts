@@ -164,6 +164,17 @@ export const packageScriptsTask = createPackageJsonTask({
 	id: 'scripts/package-scripts',
 	label: 'package.json scripts',
 	group: 'Scripts',
+	searchMeta: {
+		tags: ['scripts', 'package.json', 'commands'],
+		configTargets: ['package.json'],
+		keywords: [
+			'scripts',
+			'npm scripts',
+			'package.json scripts',
+			'task commands',
+			'build scripts',
+		],
+	},
 	scope: 'root',
 	applicable: () => true,
 	getScripts: async (cwd, profile) => {
