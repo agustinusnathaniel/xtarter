@@ -1,11 +1,11 @@
 ---
-'@xtarterize/core': minor
-'@xtarterize/patchers': minor
-'@xtarterize/tasks': minor
-'xtarterize': minor
+'@xtarterize/core': patch
+'@xtarterize/patchers': patch
+'@xtarterize/tasks': patch
+'xtarterize': patch
 ---
 
-Add TaskScope system for monorepo-aware task filtering
+Refactor task resolution with TaskScope system for monorepo-aware task filtering
 
 Introduces a `TaskScope` type (`'root' | 'package' | 'both'`) that each task can declare. When running in a monorepo:
 
