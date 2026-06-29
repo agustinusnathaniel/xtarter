@@ -2,6 +2,7 @@ import type {
 	FileDiff,
 	ProjectProfile,
 	Task,
+	TaskScope,
 	TaskStatus,
 } from '@xtarterize/core'
 import {
@@ -51,6 +52,7 @@ export interface PackageJsonTaskOptions {
 	id: string
 	label: string
 	group: string
+	scope?: TaskScope
 	applicable: (profile: ProjectProfile) => boolean
 	scripts?: PackageJsonScriptEntry[]
 	getScripts?: (
@@ -137,6 +139,7 @@ export function createPackageJsonTask(options: PackageJsonTaskOptions): Task {
 		id: options.id,
 		label: options.label,
 		group: options.group,
+		scope: options.scope,
 		applicable: options.applicable,
 
 		async check(cwd, profile): Promise<TaskStatus> {

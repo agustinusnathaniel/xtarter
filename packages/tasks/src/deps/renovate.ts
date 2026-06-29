@@ -28,6 +28,7 @@ export const renovateTask = createJsonMergeTask({
 	id: 'deps/renovate',
 	label: 'Renovate config',
 	group: 'Dependencies',
+	scope: 'root',
 	applicable: (profile) => profile.hasGitHub,
 	filepath: 'renovate.json',
 	extensions: ['.json', '.json5'],

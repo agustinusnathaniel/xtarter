@@ -7,6 +7,12 @@ import { Aside, LinkButton } from '@astrojs/starlight/components'
 
 xtarterize applies conformance configuration through discrete, independently applicable tasks. Each task detects whether it's needed and only applies changes if necessary.
 
+In monorepos, tasks are further filtered by their **scope**. Root-scoped
+tasks (CI/CD, release tooling, editor config, etc.) only appear when
+running from the monorepo root. Package-scoped tasks (Vite plugins,
+tsconfig paths) only appear inside workspace packages. See the
+[Monorepo guide](/xtarterize/guide/monorepo) for details.
+
 ## Linting & Formatting
 
 | Task ID | Description | Applicable When |

@@ -78,6 +78,28 @@ npx xtarterize init
   </TabItem>
 </Tabs>
 
+## Monorepo projects
+
+When you run `xtarterize init` in a monorepo, the set of offered tasks
+depends on where you run it:
+
+- **At the monorepo root** — You'll see root-level tasks: CI/CD workflows,
+  release tooling (commitlint, czg, git hooks), turbo configuration,
+  editor settings, and root package scripts. Package-level tasks (Vite
+  plugin configuration, tsconfig path aliases) are excluded.
+
+- **Inside a workspace package** — You'll see package-level tasks:
+  Vite plugin configuration, tsconfig path aliases, and other
+  per-package tooling. Root-level tasks (CI/CD, release tooling,
+  turbo) are excluded.
+
+This ensures you always see tasks relevant to your current position
+in the monorepo, without being offered tasks that belong at a different
+level.
+
+See the [Monorepo guide](/xtarterize/guide/monorepo) for a complete
+reference of which tasks are scoped to which level.
+
 ## What Gets Applied
 
 The `init` command applies all tasks that are applicable to your detected stack:

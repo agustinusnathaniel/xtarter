@@ -2,6 +2,7 @@ import type {
 	FileDiff,
 	ProjectProfile,
 	Task,
+	TaskScope,
 	TaskStatus,
 } from '@xtarterize/core'
 import {
@@ -74,6 +75,7 @@ export interface FileTaskOptions {
 	id: string
 	label: string
 	group: string
+	scope?: TaskScope
 	applicable: (profile: ProjectProfile) => boolean
 	filepath: string
 	extensions?: string[]
@@ -92,6 +94,7 @@ export function createFileTask(options: FileTaskOptions): Task {
 		id: options.id,
 		label: options.label,
 		group: options.group,
+		scope: options.scope,
 		applicable: options.applicable,
 
 		async check(cwd, profile): Promise<TaskStatus> {
@@ -209,6 +212,7 @@ export interface JsonMergeTaskOptions {
 	id: string
 	label: string
 	group: string
+	scope?: TaskScope
 	applicable: (profile: ProjectProfile) => boolean
 	filepath: string
 	extensions?: string[]
@@ -224,6 +228,7 @@ export function createJsonMergeTask(options: JsonMergeTaskOptions): Task {
 		id: options.id,
 		label: options.label,
 		group: options.group,
+		scope: options.scope,
 		applicable: options.applicable,
 
 		async check(cwd, profile): Promise<TaskStatus> {
@@ -301,6 +306,7 @@ export interface MultiFileTaskOptions {
 	id: string
 	label: string
 	group: string
+	scope?: TaskScope
 	applicable: (profile: ProjectProfile) => boolean
 	files: (profile: ProjectProfile) => MultiFileEntry[]
 	depName?: string
@@ -312,6 +318,7 @@ export function createMultiFileTask(options: MultiFileTaskOptions): Task {
 		id: options.id,
 		label: options.label,
 		group: options.group,
+		scope: options.scope,
 		applicable: options.applicable,
 
 		async check(cwd, profile): Promise<TaskStatus> {
@@ -411,6 +418,7 @@ export interface VitePluginTaskOptions {
 	id: string
 	label: string
 	group: string
+	scope?: TaskScope
 	applicable: (profile: ProjectProfile) => boolean
 	depName: string
 	importName: string
@@ -426,6 +434,7 @@ export function createVitePluginTask(options: VitePluginTaskOptions): Task {
 		id: options.id,
 		label: options.label,
 		group: options.group,
+		scope: options.scope,
 		applicable: options.applicable,
 
 		async check(cwd, _profile): Promise<TaskStatus> {
@@ -535,6 +544,7 @@ export interface MultiFileJsonMergeTaskOptions {
 	id: string
 	label: string
 	group: string
+	scope?: TaskScope
 	applicable: (profile: ProjectProfile) => boolean
 	files: MultiFileJsonMergeEntry[]
 }
@@ -546,6 +556,7 @@ export function createMultiFileJsonMergeTask(
 		id: options.id,
 		label: options.label,
 		group: options.group,
+		scope: options.scope,
 		applicable: options.applicable,
 
 		async check(cwd, profile): Promise<TaskStatus> {

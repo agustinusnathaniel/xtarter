@@ -16,12 +16,18 @@ interface Task {
   id: string
   label: string
   group: string
+  scope?: TaskScope           // 'root' | 'package' | 'both'
   applicable: (profile: ProjectProfile) => boolean
   check: (cwd: string, profile: ProjectProfile) => Promise<TaskStatus>
   dryRun: (cwd: string, profile: ProjectProfile) => Promise<FileDiff[]>
   apply: (cwd: string, profile: ProjectProfile) => Promise<void>
 }
 ```
+
+- **`scope`** — Controls where the task is offered in monorepos:
+  `'root'` (monorepo root only), `'package'` (workspace packages
+  only), or `'both'` (everywhere). Defaults to `'both'` when
+  omitted. Ignored in non-monorepo projects.
 
 ## Task Architecture
 
@@ -128,6 +134,18 @@ Most tasks are created through factory functions in [`factory/index.ts`](https:/
 - **`createPackageJsonTask`** — For tasks that add scripts, deps, and extra files via [`package.json`](https://docs.npmjs.com/cli/v10/configuring-npm/package-json) ([`czg`](https://cz-git.qbb.sh/cli/), [`commit-and-tag-version`](https://github.com/absolute-version/commit-and-tag-version), package scripts)
 
 This reduces most tasks from 40-80 lines to 10-15 lines of declarative configuration.
+
+All factory option types accept an optional `scope` parameter, which
+is passed through to the constructed `Task`. For example:
+
+```typescript
+createFileTask({
+  id: 'my-task',
+  label: 'My Task',
+  scope: 'root',  // only offered at monorepo root
+  // ... other options
+})
+```
 
 Shared implementation seams used by the factory layer:
 

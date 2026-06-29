@@ -17,6 +17,7 @@ export const vscodeTask = createMultiFileJsonMergeTask({
 	id: 'editor/vscode',
 	label: 'VSCode settings + extensions',
 	group: 'Editor',
+	scope: 'root',
 	applicable: () => true,
 	files: [
 		{

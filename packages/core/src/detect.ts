@@ -76,9 +76,10 @@ function detectRuntime(
 	if (bundler === 'expo') return 'native'
 	if (bundler === 'nextjs') return 'edge'
 	if (bundler === 'tanstack-start') return 'edge'
+	// Node framework takes precedence over bundler detection
+	if (framework === 'node') return 'node'
 	if (bundler === 'vite' || bundler === 'webpack' || bundler === 'rspack')
 		return 'browser'
-	if (framework === 'node') return 'node'
 	return 'browser'
 }
 

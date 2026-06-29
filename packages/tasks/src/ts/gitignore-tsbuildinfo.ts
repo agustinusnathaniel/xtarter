@@ -6,6 +6,7 @@ export const gitignoreTsbuildinfoTask = createFileTask({
 	id: 'gitignore/tsbuildinfo',
 	label: '.gitignore — tsbuildinfo',
 	group: 'TypeScript',
+	scope: 'root',
 	applicable: (profile) => profile.typescript,
 	filepath: '.gitignore',
 	render: (_profile, existing) => {

@@ -5,6 +5,7 @@ export const autoUpdateWorkflowTask = createFileTask({
 	id: 'ci/auto-update',
 	label: 'GitHub auto-update workflow',
 	group: 'CI/CD',
+	scope: 'root',
 	applicable: (profile) => profile.hasGitHub,
 	filepath: '.github/workflows/auto-update.yml',
 	render: (profile) => renderAutoUpdateWorkflow(profile),
