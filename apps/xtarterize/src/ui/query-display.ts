@@ -1,77 +1,91 @@
 import type { InquiryResult, TaskStatus } from '@xtarterize/core'
-import { pc, statusTag } from '@xtarterize/core'
+import { pc } from '@xtarterize/core'
 
-function relevanceBar(score: number, width = 10): string {
-	const filled = Math.round(score * width)
-	const empty = width - filled
-	const bar = '\u2588'.repeat(filled) + '\u2591'.repeat(empty)
-	const pct = (score * 100).toFixed(0)
-	return `${bar} ${pc.bold(pct.padStart(3))}%`
+interface GroupedResults {
+	group: string
+	tasks: InquiryResult[]
 }
 
-function signalBreakdown(signals: { name: string; score: number }[]): string {
-	return signals
-		.filter((s) => s.score > 0)
-		.map((s) => `${s.name}: ${(s.score * 100).toFixed(0)}%`)
-		.join(', ')
+function relevanceColor(score: number): string {
+	const pct = `${(score * 100).toFixed(0)}%`.padStart(4)
+	if (score >= 0.7) return pc.green(pc.bold(pct))
+	if (score >= 0.4) return pc.yellow(pc.bold(pct))
+	return pc.dim(pct)
+}
+
+function getConfigTarget(result: InquiryResult): string {
+	return result.task.searchMeta?.configTargets?.[0] ?? ''
 }
 
 export function displayQueryResults(
 	results: InquiryResult[],
 	query: string,
-	statuses?: Map<string, TaskStatus>,
+	_statuses?: Map<string, TaskStatus>,
 ): void {
-	const statusMap = statuses ?? new Map()
+	// Group by task.group
+	const groupMap = new Map<string, InquiryResult[]>()
+	for (const r of results) {
+		const g = r.task.group
+		if (!groupMap.has(g)) groupMap.set(g, [])
+		groupMap.get(g)?.push(r)
+	}
+
+	// Sort groups by their best task's relevance, then sort tasks within groups
+	const groups: GroupedResults[] = Array.from(groupMap.entries())
+		.map(([group, tasks]) => ({
+			group,
+			tasks: tasks.sort((a, b) => b.relevance - a.relevance),
+		}))
+		.sort((a, b) => b.tasks[0].relevance - a.tasks[0].relevance)
+
+	const totalTasks = results.length
+
+	// Header
 	console.log('')
-	console.log(pc.bold(`Query: "${query}"`))
-	console.log(pc.dim('\u2500'.repeat(50)))
+	console.log(
+		`✻ ${pc.bold(`xtarterize query "${query}"`)} ${pc.dim(`— ${groups.length} group${groups.length !== 1 ? 's' : ''} · ${totalTasks} task${totalTasks !== 1 ? 's' : ''}`)}`,
+	)
+
+	// Determine column widths
+	const maxIdLen = Math.max(...results.map((r) => r.taskId.length))
+	const termWidth = process.stdout.columns ?? 80
+
+	// Each group
+	for (const group of groups) {
+		console.log('')
+		console.log(`  ${pc.bold(group.group)}`)
+
+		for (const r of group.tasks) {
+			const id = r.taskId.padEnd(maxIdLen)
+			const label = r.task.label
+			const target = getConfigTarget(r)
+			const relevance = relevanceColor(r.relevance)
+
+			// Build the full line with ANSI-styled segments
+			const line = `  ${pc.dim(id)}  ${relevance}  ${label}  ${pc.dim(target)}`
+
+			// Check if line exceeds terminal width (approx — ANSI codes inflate .length slightly)
+			if (line.length > termWidth) {
+				const overhead = 2 + maxIdLen + 2 + 4 + 2 + 2 + target.length + 2
+				const maxLabelLen = Math.max(10, termWidth - overhead - 4)
+				const truncated =
+					label.length > maxLabelLen
+						? `${label.slice(0, Math.max(1, maxLabelLen - 1))}…`
+						: label
+				console.log(
+					`  ${pc.dim(id)}  ${relevance}  ${truncated}  ${pc.dim(target)}`,
+				)
+			} else {
+				console.log(line)
+			}
+		}
+	}
+
+	// Footer hint
 	console.log('')
+	console.log(
+		`  ${pc.dim('→')} ${pc.dim('xtarterize add <task-id> to apply a task')}`,
+	)
 
-	// Group by relevance tiers
-	const exact = results.filter((r) => r.relevance >= 0.8)
-	const strong = results.filter((r) => r.relevance >= 0.5 && r.relevance < 0.8)
-	const related = results.filter((r) => r.relevance < 0.5)
-
-	if (exact.length > 0) {
-		console.log(pc.green(pc.bold('EXACT MATCHES')))
-		console.log('')
-		for (const result of exact) {
-			const status = statusMap.get(result.taskId)
-			const bar = relevanceBar(result.relevance)
-			const signals = signalBreakdown(result.signals)
-			console.log(
-				`  ${bar}  ${pc.bold(result.task.label.padEnd(38))} ${pc.dim(result.taskId)} ${status ? statusTag(status) : ''}`,
-			)
-			if (signals) console.log(`  ${pc.dim(signals)}`)
-			console.log('')
-		}
-	}
-
-	if (strong.length > 0) {
-		console.log(pc.cyan(pc.bold('STRONG MATCHES')))
-		console.log('')
-		for (const result of strong) {
-			const status = statusMap.get(result.taskId)
-			const bar = relevanceBar(result.relevance)
-			const signals = signalBreakdown(result.signals)
-			console.log(
-				`  ${bar}  ${pc.bold(result.task.label.padEnd(38))} ${pc.dim(result.taskId)} ${status ? statusTag(status) : ''}`,
-			)
-			if (signals) console.log(`  ${pc.dim(signals)}`)
-			console.log('')
-		}
-	}
-
-	if (related.length > 0) {
-		console.log(pc.dim(pc.bold('RELATED')))
-		console.log('')
-		for (const result of related) {
-			const status = statusMap.get(result.taskId)
-			const bar = relevanceBar(result.relevance)
-			console.log(
-				`  ${bar}  ${result.task.label.padEnd(38)} ${pc.dim(result.taskId)} ${status ? statusTag(status) : ''}`,
-			)
-			console.log('')
-		}
-	}
+	console.log('')
 }

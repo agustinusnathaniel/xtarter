@@ -67,25 +67,40 @@ function scoreTaskForQuery(
 ): { signals: RelevanceSignal[]; score: number } {
 	const { tokens, expanded, weights } = queryTerms
 	const allTerms = [...new Set([...tokens, ...expanded])]
-	const directTokens = new Set(tokens.map((t) => t.toLowerCase()))
 
+	// For each original token, find the BEST match per signal across
+	// all terms (original + synonyms). Then average over original tokens
+	// only — avoids dilution from low-scoring synonyms.
 	let labelSum = 0
 	let idSum = 0
 	let groupSum = 0
 	let kwSum = 0
 	let configSum = 0
 
-	for (const term of allTerms) {
-		const match = matchTaskToToken(term, task)
-		const discount = directTokens.has(term.toLowerCase()) ? 1.0 : 0.85
-		labelSum += match.label * discount
-		idSum += match.id * discount
-		groupSum += match.group * discount
-		kwSum += match.keywords * discount
-		configSum += match.config * discount
+	for (const _token of tokens) {
+		let bestLabel = 0
+		let bestId = 0
+		let bestGroup = 0
+		let bestKw = 0
+		let bestConfig = 0
+
+		for (const term of allTerms) {
+			const match = matchTaskToToken(term, task)
+			if (match.label > bestLabel) bestLabel = match.label
+			if (match.id > bestId) bestId = match.id
+			if (match.group > bestGroup) bestGroup = match.group
+			if (match.keywords > bestKw) bestKw = match.keywords
+			if (match.config > bestConfig) bestConfig = match.config
+		}
+
+		labelSum += bestLabel
+		idSum += bestId
+		groupSum += bestGroup
+		kwSum += bestKw
+		configSum += bestConfig
 	}
 
-	const n = allTerms.length || 1
+	const n = tokens.length || 1
 	const labelScore = labelSum / n
 	const idScore = idSum / n
 	const groupScore = groupSum / n
