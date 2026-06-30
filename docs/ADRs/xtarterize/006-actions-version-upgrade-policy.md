@@ -1,7 +1,8 @@
 # ADR-006: GitHub Actions Version Upgrade Policy
 
 **Status:** Accepted  
-**Date:** 2026-04-29
+**Date:** 2026-04-29  
+**Last updated:** 2026-07-01
 
 ## Decision
 
@@ -11,10 +12,11 @@ xtarterize workflow templates will track **latest major versions** of third-part
 
 | Action                            | Template Version | Rationale                                                                              |
 | --------------------------------- | ---------------- | -------------------------------------------------------------------------------------- |
-| `actions/checkout`                | `v6`             | Node 24 support, credential persistence changes                                        |
-| `actions/setup-node`              | `v6`             | Auto-caching limited to npm by default - we explicitly set `cache: pnpm` so unaffected |
+| `actions/checkout`                | `v7`             | Latest major                                                                           |
+| `actions/setup-node`              | `v6`             | Still used for non-pnpm projects (npm, yarn, bun fallback)                             |
+| `pnpm/setup`                      | `v1`             | Unified action replacing `pnpm/action-setup` + `setup-node`; reads `packageManager`; handles runtime + caching |
+| `actions/cache`                   | `v6`             | Used for Turborepo cache persistence in release workflow                               |
 | `peter-evans/create-pull-request` | `v8`             | Requires Actions Runner v2.327.1+ - GitHub-hosted runners already compatible           |
-| `pnpm/action-setup`               | `v4`             | Latest stable, reads `packageManager` field                                            |
 
 ## Rationale
 
@@ -24,7 +26,7 @@ Using outdated action versions creates security and maintenance debt. GitHub Act
 
 1. Check the action's release notes for breaking changes.
 2. Verify our template's usage pattern is not affected (we use standard inputs only).
-3. Update templates in `packages/tasks/src/templates/workflows/`.
+3. Update `packages/tasks/src/templates/workflows/` (the `versions.ts` constant or the template files directly).
 4. Rebuild packages and verify tests pass.
 
 ## Consequences
