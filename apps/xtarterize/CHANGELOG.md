@@ -1,5 +1,11 @@
 # xtarterize
 
+## 1.16.1
+
+### Patch Changes
+
+- [`bf0eddb`](https://github.com/agustinusnathaniel/xtarter/commit/bf0eddbe7b36690c68851ad9dfd5d943b28abc58) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Show package-manager-aware command prefix in query suggestions; fix resolveCwd treating positional args as directory paths; add missing preflight checks and cwd arg forwarding to all subcommands
+
 ## 1.16.0
 
 ### Minor Changes
