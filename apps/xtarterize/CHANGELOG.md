@@ -1,5 +1,11 @@
 # xtarterize
 
+## 1.16.2
+
+### Patch Changes
+
+- [#78](https://github.com/agustinusnathaniel/xtarter/pull/78) [`f5c701b`](https://github.com/agustinusnathaniel/xtarter/commit/f5c701bd4d29a33b9f168e71334b950183ea034a) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Fix task status resolution not to abort on first failure; surface check/dryRun errors in ApplyResult; fix Node engine version range parsing in doctor
+
 ## 1.16.1
 
 ### Patch Changes
@@ -13,6 +19,7 @@
 - [#75](https://github.com/agustinusnathaniel/xtarter/pull/75) [`be651f3`](https://github.com/agustinusnathaniel/xtarter/commit/be651f3aa5e6bac9098fc145fd0a3651f7b4fbbb) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - feat: add natural language task query engine with `query` command and `init --compose`
 
   New features:
+
   - `xtarterize query <query>` - search and discover tasks using natural language with a pure-algorithmic scoring engine
   - `xtarterize init --compose <query>` - compose a targeted task plan by ranking tasks by relevance
   - Task metadata enrichment: new optional `searchMeta` field on the Task interface with `tags`, `configTargets`, and `keywords` supports richer search results
@@ -30,6 +37,7 @@
 - [#73](https://github.com/agustinusnathaniel/xtarter/pull/73) [`aec3c0a`](https://github.com/agustinusnathaniel/xtarter/commit/aec3c0a4d289c5984183d738d99727555b84c602) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Refactor task resolution with TaskScope system for monorepo-aware task filtering
 
   Introduces a `TaskScope` type (`'root' | 'package' | 'both'`) that each task can declare. When running in a monorepo:
+
   - **Root-scoped tasks** (CI/CD, release tooling, turbo, renovate, editor config, npmrc, gitignore, package scripts) are excluded when running inside a workspace package.
   - **Package-scoped tasks** (tsconfig path aliases, vite-plugin-checker, rollup-plugin-visualizer) are excluded when running from the monorepo root.
   - Tasks without explicit scope (or with `scope: 'both'`) are included everywhere, preserving backward compatibility.
@@ -51,13 +59,16 @@
 ### Minor Changes
 
 - [#69](https://github.com/agustinusnathaniel/xtarter/pull/69) [`331efa4`](https://github.com/agustinusnathaniel/xtarter/commit/331efa4b2d94862c8c7d629b4829df5e1150cfe8) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - feat: add --yes and --quiet flags to restore command
+
   - `restore --yes` skips confirmation and selects latest backup automatically
   - `restore --quiet` suppresses verbose output
 
   feat: add --all flag to add command
+
   - `add --all` applies all new and patch tasks without interaction
 
   feat: expose --json flag in doctor command args
+
   - `doctor --json` now appears in command-level help output
 
 ## 1.14.4
@@ -150,6 +161,7 @@
 
   Rather than making every function return `Effect<A, E>` (which would require
   all callers to understand Effect), we apply Effect at two levels:
+
   1. **Internal composition** - async workflows use `Effect.gen` + `yield*`,
      `Effect.all` for concurrency, and `Effect.tryPromise` with typed error
      handlers. This gives us structured error handling without changing
@@ -161,6 +173,7 @@
   **What changed (26 files, +1857/-1571):**
 
   Tagged errors and Effect composition:
+
   - `packages/core/src/errors.ts` (new) - consolidated `Data.TaggedError`
     types: `FileSystemError` (read/write/parse failures), `BackupError`
     (backup operations), `TaskError` (task check/apply failures)
@@ -185,6 +198,7 @@
     with `Equal.equals` from Effect
 
   Reducing Effect ceremony:
+
   - `packages/tasks/src/factory/ops.ts` - added `wrapTask(taskId, method, fn)`
     internal helper collapsing the 6-line `Effect.runPromise(Effect.tryPromise)`
     pattern into 1 line
@@ -196,6 +210,7 @@
     removed `Effect` import, fixed hardcoded task IDs in error metadata
 
   **Trade-offs.**
+
   - Added Effect v4 beta as a dependency (~44 MB install size, 10 transitive
     deps). Beta stability risk is mitigated by pinning the exact version in
     `pnpm-workspace.yaml` catalog.
@@ -242,6 +257,7 @@
 - [`f1069d6`](https://github.com/agustinusnathaniel/xtarter/commit/f1069d6bea26aabece3ed030303642e1d3f14693) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - refactor: enrich oxlint and biome config templates with additional lint rules
 
   Add non-recommended rules mapped from typical ESLint configs:
+
   - Oxlint: max-params, eqeqeq, prefer-const, no-var, prefer-template, no-shadow, consistent-type-definitions, array-type, react rules, vitest overrides, unicorn relaxations, import rules
   - Biome: noExcessiveCognitiveComplexity, useMaxParams, useConsistentTypeDefinitions, useConsistentTestIt overrides
 
@@ -309,6 +325,7 @@
 ### Patch Changes
 
 - [`82e1d9f`](https://github.com/agustinusnathaniel/xtarterize/commit/82e1d9f24fd223a8f3c15c0b516c89fe5537c105) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Update .gitignore
+
   - Add missing ignore patterns for better monorepo hygiene
 
 - [`82e1d9f`](https://github.com/agustinusnathaniel/xtarterize/commit/82e1d9f24fd223a8f3c15c0b516c89fe5537c105) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Refactor CLI run-command to extract seams
@@ -327,6 +344,7 @@
 ### Patch Changes
 
 - [`658c504`](https://github.com/agustinusnathaniel/xtarterize/commit/658c50470e462b958f0bcbc6a0eaeb92ed15acd0) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Refactor internal architecture by deepening module seams in project detection and task execution.
+
   - modularize core detection into focused adapters (framework, bundler, router, styling, package manager, monorepo)
   - centralize JSON config mutation flow in shared task helpers
   - consolidate agent task behavior behind a dedicated agent module seam
@@ -407,6 +425,7 @@
 - [`ccd9287`](https://github.com/agustinusnathaniel/xtarterize/commit/ccd9287afd967ed1ea0ef0c64b4a4a468e95b550) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - feat: add `patchJson` for surgical JSON text edits using `jsonc-parser`
 
   Replaced `JSON.stringify(mergeJson(...), null, 2)` with `patchJson`, which performs byte-level text edits via Microsoft's [`jsonc-parser`](https://github.com/microsoft/node-jsonc-parser). This preserves:
+
   - Comments (`// inline` and `/* block */`)
   - Key ordering
   - Whitespace and indentation style
