@@ -85,8 +85,10 @@ export function runEnvironmentChecks(cwd: string): Promise<DiagnosticCheck[]> {
 					nodeVersion.slice(1).split('.')[0],
 					10,
 				)
-				const cleanRange = engineNode.replace(/[>=<^~ ]/g, '').split('.')[0]
-				const engineMajor = Number.parseInt(cleanRange, 10)
+				const majorMatch = engineNode.match(/(\d+)/)
+				const engineMajor = majorMatch
+					? Number.parseInt(majorMatch[1], 10)
+					: NaN
 				if (!Number.isNaN(engineMajor)) {
 					nodeSatisfies = nodeMajor >= engineMajor
 				}
