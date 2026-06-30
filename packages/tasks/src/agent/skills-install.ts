@@ -8,7 +8,7 @@ import {
 	TaskError,
 } from '@xtarterize/core'
 import { x } from 'tinyexec'
-import { createExecTask } from '../factory/exec.js'
+import { createExecTask } from '@/factory/exec.js'
 
 function getAllDeps(pkg: Record<string, unknown>): Record<string, string> {
 	const deps: Record<string, string> = {}
