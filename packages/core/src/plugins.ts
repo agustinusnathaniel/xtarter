@@ -66,7 +66,7 @@ export async function loadPluginConfig(
 			return pkg.xtarterize
 		}
 	} catch {
-		// Not a package.json or no such key — that's fine
+		// Not a package.json or no such key - that's fine
 	}
 
 	return null

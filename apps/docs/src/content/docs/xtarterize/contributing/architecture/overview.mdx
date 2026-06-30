@@ -11,14 +11,14 @@ xtarterize is organized as a monorepo using [Turborepo](https://turbo.build/repo
 
 <FileTree>
 - packages/
-  - core/ — [`@xtarterize/core`](https://github.com/agustinusnathaniel/xtarterize/tree/main/packages/core) — [`detect.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/detect.ts) + [`detect/`](https://github.com/agustinusnathaniel/xtarterize/tree/main/packages/core/src/detect), [`resolve.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/resolve.ts), [`apply.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/apply.ts), [`backup.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/backup.ts), [`preflight.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/preflight.ts)
-  - patchers/ — [`@xtarterize/patchers`](https://github.com/agustinusnathaniel/xtarterize/tree/main/packages/patchers) — [`json-merge.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/patchers/src/json-merge.ts), [`ast-patch.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/patchers/src/ast-patch.ts)
-  - tasks/ — [`@xtarterize/tasks`](https://github.com/agustinusnathaniel/xtarterize/tree/main/packages/tasks) — [`factory.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/tasks/src/factory.ts), [`factory-config.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/tasks/src/factory-config.ts), [`factory-ops.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/tasks/src/factory-ops.ts), all task implementations
+  - core/ - [`@xtarterize/core`](https://github.com/agustinusnathaniel/xtarterize/tree/main/packages/core) - [`detect.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/detect.ts) + [`detect/`](https://github.com/agustinusnathaniel/xtarterize/tree/main/packages/core/src/detect), [`resolve.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/resolve.ts), [`apply.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/apply.ts), [`backup.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/backup.ts), [`preflight.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/preflight.ts)
+  - patchers/ - [`@xtarterize/patchers`](https://github.com/agustinusnathaniel/xtarterize/tree/main/packages/patchers) - [`json-merge.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/patchers/src/json-merge.ts), [`ast-patch.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/patchers/src/ast-patch.ts)
+  - tasks/ - [`@xtarterize/tasks`](https://github.com/agustinusnathaniel/xtarterize/tree/main/packages/tasks) - [`factory.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/tasks/src/factory.ts), [`factory-config.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/tasks/src/factory-config.ts), [`factory-ops.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/tasks/src/factory-ops.ts), all task implementations
 - apps/
-  - xtarterize/ — **xtarterize** — CLI binary ([citty](https://github.com/unjs/citty) + [@clack/prompts](https://github.com/natemoo-re/clack))
-  - docs/ — @xtarterize/docs — This documentation site ([Astro](https://astro.build/)/[Starlight](https://starlight.astro.build/))
+  - xtarterize/ - **xtarterize** - CLI binary ([citty](https://github.com/unjs/citty) + [@clack/prompts](https://github.com/natemoo-re/clack))
+  - docs/ - @xtarterize/docs - This documentation site ([Astro](https://astro.build/)/[Starlight](https://starlight.astro.build/))
 - test/
-  - fixtures/ — Test fixtures for various project types
+  - fixtures/ - Test fixtures for various project types
 </FileTree>
 
 ## Package Dependencies
@@ -37,7 +37,7 @@ flowchart TD
 ```
 
 <Aside>
-  `@xtarterize/patchers` and `@xtarterize/core` have no internal workspace dependencies — they are leaf packages that can be used independently.
+  `@xtarterize/patchers` and `@xtarterize/core` have no internal workspace dependencies - they are leaf packages that can be used independently.
 </Aside>
 
 ## How It Works
@@ -75,13 +75,13 @@ sequenceDiagram
 
 ## Key Design Decisions
 
-- **Detection lives in core** — No CLI dependency, reusable by other consumers
-- **Tasks are independent** — Each task can run standalone via `add <task-id>`
-- **Dry-run is exact** — `dryRun()` output is bit-for-bit identical to what `apply()` writes
-- **Idempotency is non-negotiable** — Running twice produces no changes on second run
-- **Templates are parameterized** — All templates receive `ProjectProfile` and adapt accordingly
-- **Factory-based task creation** — Most tasks use `createFileTask`, `createJsonMergeTask`, or `createMultiFileTask` to eliminate boilerplate, with shared seams in `json-config.ts` and `ops.ts`
-- **Shared command orchestration** — `init` and `sync` share a `runCommand()` helper in the CLI layer
+- **Detection lives in core** - No CLI dependency, reusable by other consumers
+- **Tasks are independent** - Each task can run standalone via `add <task-id>`
+- **Dry-run is exact** - `dryRun()` output is bit-for-bit identical to what `apply()` writes
+- **Idempotency is non-negotiable** - Running twice produces no changes on second run
+- **Templates are parameterized** - All templates receive `ProjectProfile` and adapt accordingly
+- **Factory-based task creation** - Most tasks use `createFileTask`, `createJsonMergeTask`, or `createMultiFileTask` to eliminate boilerplate, with shared seams in `json-config.ts` and `ops.ts`
+- **Shared command orchestration** - `init` and `sync` share a `runCommand()` helper in the CLI layer
 
 ## Core Modules
 
@@ -170,16 +170,16 @@ flowchart LR
 
 ## References
 
-- [Vite Plus Documentation](https://viteplus.dev/guide/) — Unified toolchain for the web
-- [Turborepo Documentation](https://turbo.build/repo/docs) — Monorepo task orchestration
-- [pnpm Workspaces](https://pnpm.io/workspaces) — Workspace and monorepo management
-- [citty](https://github.com/unjs/citty) — Elegant CLI framework for Node.js
-- [@clack/prompts](https://github.com/natemoo-re/clack) — Interactive command-line prompts
-- [Astro](https://astro.build/) — Content-focused web framework
-- [Starlight](https://starlight.astro.build/) — Documentation framework for Astro
-- [defu](https://github.com/unjs/defu) — Deep merge utility
-- [magicast](https://github.com/unjs/magicast) — AST manipulation for JavaScript/TypeScript
-- [picocolors](https://github.com/alexeyraspopov/picocolors) — Tiny terminal colors library
-- [pkg-types](https://github.com/unjs/pkg-types) — Package.json type definitions and utilities
+- [Vite Plus Documentation](https://viteplus.dev/guide/) - Unified toolchain for the web
+- [Turborepo Documentation](https://turbo.build/repo/docs) - Monorepo task orchestration
+- [pnpm Workspaces](https://pnpm.io/workspaces) - Workspace and monorepo management
+- [citty](https://github.com/unjs/citty) - Elegant CLI framework for Node.js
+- [@clack/prompts](https://github.com/natemoo-re/clack) - Interactive command-line prompts
+- [Astro](https://astro.build/) - Content-focused web framework
+- [Starlight](https://starlight.astro.build/) - Documentation framework for Astro
+- [defu](https://github.com/unjs/defu) - Deep merge utility
+- [magicast](https://github.com/unjs/magicast) - AST manipulation for JavaScript/TypeScript
+- [picocolors](https://github.com/alexeyraspopov/picocolors) - Tiny terminal colors library
+- [pkg-types](https://github.com/unjs/pkg-types) - Package.json type definitions and utilities
 
 <LinkButton href="/xtarterize/contributing/core/detect/">Explore project detection →</LinkButton>

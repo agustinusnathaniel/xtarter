@@ -37,8 +37,8 @@ npx xtarterize init
 
     ✔ Biome (lint + format)              lint/biome           [new]
     ✔ vite-plugin-checker                vite/checker         [new]
-    ~ tsconfig — incremental: true       ts/incremental       [patch]
-    = Turbo                              monorepo/turbo       [skip — no monorepo]
+    ~ tsconfig - incremental: true       ts/incremental       [patch]
+    = Turbo                              monorepo/turbo       [skip - no monorepo]
 
   [A] Apply all   [S] Select items   [D] Dry-run   [Q] Quit
 ```
@@ -83,12 +83,12 @@ npx xtarterize init
 When you run `xtarterize init` in a monorepo, the set of offered tasks
 depends on where you run it:
 
-- **At the monorepo root** — You'll see root-level tasks: CI/CD workflows,
+- **At the monorepo root** - You'll see root-level tasks: CI/CD workflows,
   release tooling (commitlint, czg, git hooks), turbo configuration,
   editor settings, and root package scripts. Package-level tasks (Vite
   plugin configuration, tsconfig path aliases) are excluded.
 
-- **Inside a workspace package** — You'll see package-level tasks:
+- **Inside a workspace package** - You'll see package-level tasks:
   Vite plugin configuration, tsconfig path aliases, and other
   per-package tooling. Root-level tasks (CI/CD, release tooling,
   turbo) are excluded.
@@ -104,18 +104,18 @@ reference of which tasks are scoped to which level.
 
 The `init` command applies all tasks that are applicable to your detected stack:
 
-- **Linting & Formatting** — [Biome](https://biomejs.dev/) (non-Vite+) or [Oxlint](https://oxc.rs/) + [Oxfmt](https://oxc.rs/) (Vite+), with [Ultracite](https://ultracite.ai/) presets installed automatically and configs extended/imported from Ultracite
-- **TypeScript** — [`strict: true`](https://www.typescriptlang.org/tsconfig/#strict), [`paths`](https://www.typescriptlang.org/tsconfig/#paths) aliases, [`incremental: true`](https://www.typescriptlang.org/tsconfig/#incremental) + [`tsBuildInfoFile`](https://www.typescriptlang.org/tsconfig/#tsBuildInfoFile), [`.gitignore`](https://git-scm.com/docs/gitignore) `*.tsbuildinfo` entries and `.tsbuildinfo/` directory
-- **Vite Plugins** — [`vite-plugin-checker`](https://vite-plugin-checker.netlify.app/) ([`checker()`](https://vite-plugin-checker.netlify.app/checkers/typescript.html) for TypeScript), [`rollup-plugin-visualizer`](https://github.com/btd/rollup-plugin-visualizer)
-- **CI/CD** — [GitHub Actions](https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions) workflows ([`on.push.tags`](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#running-your-workflow-when-a-push-of-a-specific-tag-occurs) for release, [`schedule.cron`](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#schedule) for auto-updates, [`on.pull_request`](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#pull_request) for CI) with [`pnpm/action-setup@v4`](https://github.com/pnpm/action-setup) for pnpm projects
-- **Dependencies** — [Renovate](https://docs.renovatebot.com/) config ([`extends: config:base`](https://docs.renovatebot.com/presets-config/#configbase), [`automerge`](https://docs.renovatebot.com/key-concepts/automerge/))
-- **Release** — [Commitlint](https://commitlint.js.org/) ([`@commitlint/config-conventional`](https://commitlint.js.org/reference/rules.html)), [czg](https://cz-git.qbb.sh/cli/) ([`commitizen`](https://commitizen.github.io/cz-cli/)), [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version), [simple-git-hooks](https://github.com/toplenboren/simple-git-hooks) (commit-msg, pre-commit, pre-push hooks)
-- **Quality** — [Knip](https://knip.dev/) ([`entry`](https://knip.dev/reference/configuration#entry) / [`project`](https://knip.dev/reference/configuration#project) detection), [lint-staged](https://github.com/okonet/lint-staged) (runs linters on staged files, non-Vite+ projects)
-- **Codegen** — [Plop](https://plopjs.com/) ([`plopfile.ts`](https://plopjs.com/documentation/#getting-started) scaffolds, only for projects with a detected framework)
-- **Monorepo** — [Turborepo](https://turbo.build/repo/docs/reference/configuration) ([`turbo.json`](https://turbo.build/repo/docs/reference/configuration) pipeline)
-- **Editor** — [VS Code](https://code.visualstudio.com/) [`settings.json`](https://code.visualstudio.com/docs/getstarted/settings#_settingsjson) and [`extensions.json`](https://code.visualstudio.com/docs/editor/extension-marketplace#_workspace-recommended-extensions) (additive merging preserves your existing extensions)
-- **Agent** — `AGENTS.md` and install relevant [agent skills](https://skills.sh) via `npx skills@latest add` for your detected stack
-- **Scripts** — [`package.json` `scripts`](https://docs.npmjs.com/cli/v10/using-npm/scripts) (uses [Ultracite](https://www.ultracite.ai/)-aware lint/check/fix scripts when Ultracite is in dependencies), [`.npmrc`](https://docs.npmjs.com/cli/v10/configuring-npm/npmrc) with `save-exact`, `strict-peer-dependencies`, and `auto-install-peers`
+- **Linting & Formatting** - [Biome](https://biomejs.dev/) (non-Vite+) or [Oxlint](https://oxc.rs/) + [Oxfmt](https://oxc.rs/) (Vite+), with [Ultracite](https://ultracite.ai/) presets installed automatically and configs extended/imported from Ultracite
+- **TypeScript** - [`strict: true`](https://www.typescriptlang.org/tsconfig/#strict), [`paths`](https://www.typescriptlang.org/tsconfig/#paths) aliases, [`incremental: true`](https://www.typescriptlang.org/tsconfig/#incremental) + [`tsBuildInfoFile`](https://www.typescriptlang.org/tsconfig/#tsBuildInfoFile), [`.gitignore`](https://git-scm.com/docs/gitignore) `*.tsbuildinfo` entries and `.tsbuildinfo/` directory
+- **Vite Plugins** - [`vite-plugin-checker`](https://vite-plugin-checker.netlify.app/) ([`checker()`](https://vite-plugin-checker.netlify.app/checkers/typescript.html) for TypeScript), [`rollup-plugin-visualizer`](https://github.com/btd/rollup-plugin-visualizer)
+- **CI/CD** - [GitHub Actions](https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions) workflows ([`on.push.tags`](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#running-your-workflow-when-a-push-of-a-specific-tag-occurs) for release, [`schedule.cron`](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#schedule) for auto-updates, [`on.pull_request`](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#pull_request) for CI) with [`pnpm/action-setup@v4`](https://github.com/pnpm/action-setup) for pnpm projects
+- **Dependencies** - [Renovate](https://docs.renovatebot.com/) config ([`extends: config:base`](https://docs.renovatebot.com/presets-config/#configbase), [`automerge`](https://docs.renovatebot.com/key-concepts/automerge/))
+- **Release** - [Commitlint](https://commitlint.js.org/) ([`@commitlint/config-conventional`](https://commitlint.js.org/reference/rules.html)), [czg](https://cz-git.qbb.sh/cli/) ([`commitizen`](https://commitizen.github.io/cz-cli/)), [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version), [simple-git-hooks](https://github.com/toplenboren/simple-git-hooks) (commit-msg, pre-commit, pre-push hooks)
+- **Quality** - [Knip](https://knip.dev/) ([`entry`](https://knip.dev/reference/configuration#entry) / [`project`](https://knip.dev/reference/configuration#project) detection), [lint-staged](https://github.com/okonet/lint-staged) (runs linters on staged files, non-Vite+ projects)
+- **Codegen** - [Plop](https://plopjs.com/) ([`plopfile.ts`](https://plopjs.com/documentation/#getting-started) scaffolds, only for projects with a detected framework)
+- **Monorepo** - [Turborepo](https://turbo.build/repo/docs/reference/configuration) ([`turbo.json`](https://turbo.build/repo/docs/reference/configuration) pipeline)
+- **Editor** - [VS Code](https://code.visualstudio.com/) [`settings.json`](https://code.visualstudio.com/docs/getstarted/settings#_settingsjson) and [`extensions.json`](https://code.visualstudio.com/docs/editor/extension-marketplace#_workspace-recommended-extensions) (additive merging preserves your existing extensions)
+- **Agent** - `AGENTS.md` and install relevant [agent skills](https://skills.sh) via `npx skills@latest add` for your detected stack
+- **Scripts** - [`package.json` `scripts`](https://docs.npmjs.com/cli/v10/using-npm/scripts) (uses [Ultracite](https://www.ultracite.ai/)-aware lint/check/fix scripts when Ultracite is in dependencies), [`.npmrc`](https://docs.npmjs.com/cli/v10/configuring-npm/npmrc) with `save-exact`, `strict-peer-dependencies`, and `auto-install-peers`
 
 <Aside>
   Each task checks if it's already applied and skips if conformant. Running `init` twice produces no changes on the second run.
@@ -123,23 +123,23 @@ The `init` command applies all tasks that are applicable to your detected stack:
 
 ## Ultracite
 
-[Ultracite](https://ultracite.ai/) is installed automatically alongside any lint tool (Biome, Oxlint, or Oxfmt). The generated configs extend or import Ultracite presets by default — no separate `ultracite init` step needed.
+[Ultracite](https://ultracite.ai/) is installed automatically alongside any lint tool (Biome, Oxlint, or Oxfmt). The generated configs extend or import Ultracite presets by default - no separate `ultracite init` step needed.
 
 xtarterize overlays its own conventions on top of Ultracite defaults where they differ (e.g., kebab-case filenames, single quotes, generic array types). You can further customize by editing the generated config files directly.
 
 ## References
 
-- [Biome Configuration](https://biomejs.dev/reference/configuration/) — Full `biome.json` reference
-- [TypeScript tsconfig Reference](https://www.typescriptlang.org/tsconfig/) — All compiler options explained
-- [Vite Plugin Checker](https://vite-plugin-checker.netlify.app/) — Type-checking during development
-- [GitHub Actions Documentation](https://docs.github.com/en/actions) — Workflow syntax and features
-- [Renovate Configuration Options](https://docs.renovatebot.com/configuration-options/) — Dependency automation reference
-- [Commitlint Rules](https://commitlint.js.org/reference/rules.html) — Conventional commit validation
-- [Knip Documentation](https://knip.dev/) — Finding unused files, dependencies, and exports
-- [Plop Documentation](https://plopjs.com/documentation/) — Code scaffolding and generators
-- [Turborepo Documentation](https://turbo.build/repo/docs) — Monorepo task orchestration
-- [Ultracite](https://www.ultracite.ai/) — Strict Biome preset for code quality
-- [Agent Skills](https://skills.sh) — Open ecosystem of reusable AI agent capabilities
+- [Biome Configuration](https://biomejs.dev/reference/configuration/) - Full `biome.json` reference
+- [TypeScript tsconfig Reference](https://www.typescriptlang.org/tsconfig/) - All compiler options explained
+- [Vite Plugin Checker](https://vite-plugin-checker.netlify.app/) - Type-checking during development
+- [GitHub Actions Documentation](https://docs.github.com/en/actions) - Workflow syntax and features
+- [Renovate Configuration Options](https://docs.renovatebot.com/configuration-options/) - Dependency automation reference
+- [Commitlint Rules](https://commitlint.js.org/reference/rules.html) - Conventional commit validation
+- [Knip Documentation](https://knip.dev/) - Finding unused files, dependencies, and exports
+- [Plop Documentation](https://plopjs.com/documentation/) - Code scaffolding and generators
+- [Turborepo Documentation](https://turbo.build/repo/docs) - Monorepo task orchestration
+- [Ultracite](https://www.ultracite.ai/) - Strict Biome preset for code quality
+- [Agent Skills](https://skills.sh) - Open ecosystem of reusable AI agent capabilities
 
 ## Init Flow
 

@@ -5,7 +5,7 @@ description: Search and discover xtarterize tasks using natural language queries
 
 import { Aside, Tabs, TabItem } from '@astrojs/starlight/components'
 
-The `query` command lets you search xtarterize tasks using natural language — no need to remember exact task IDs. It uses a pure algorithmic scoring engine (no AI) to rank tasks by relevance to your query.
+The `query` command lets you search xtarterize tasks using natural language - no need to remember exact task IDs. It uses a pure algorithmic scoring engine (no AI) to rank tasks by relevance to your query.
 
 ## Usage
 
@@ -40,13 +40,13 @@ xtarterize query "strict typescript"
 Outputs tasks grouped by domain bundle with per-group actionable add commands:
 
 ```
-✻ xtarterize query "strict typescript" — 2 groups · 4 tasks
+✻ xtarterize query "strict typescript" - 2 groups · 4 tasks
 
   TypeScript
   ts/strict                80%  tsconfig - strict: true             tsconfig.json
   ts/paths                 52%  tsconfig - path aliases             tsconfig.json
-  ts/incremental           24%  tsconfig — incremental: true        tsconfig.json
-  gitignore/tsbuildinfo    14%  .gitignore — tsbuildinfo             .gitignore
+  ts/incremental           24%  tsconfig - incremental: true        tsconfig.json
+  gitignore/tsbuildinfo    14%  .gitignore - tsbuildinfo             .gitignore
 
   xtarterize add ts/strict ts/paths ts/incremental gitignore/tsbuildinfo
   xtarterize add scripts/package-scripts
@@ -101,18 +101,18 @@ This reorders tasks so the most relevant ones appear first in the interactive pl
 
 The scoring engine operates in five steps:
 
-1. **Tokenize** — The query is split into words; stopwords (a, the, want, need, project, etc.) and short words are filtered out
-2. **Expand** — Content words are expanded through a domain-specific synonym map with bidirectional transitive reverse-lookup (e.g. "lint" → "linter", "static-analysis", "check"; "typescript" → "ts", "type-safe", "strict")
-3. **Score** — For each original token, find the best match across all 5 signals (label, id, group, keywords, config targets) using the highest signal score among all terms (original + expanded synonyms). Uses tiered match levels: exact (1.0), stem-match (0.95), fuzzy (0.85), prefix (0.75), substring (0.55)
-4. **Aggregate** — Signal scores are weighted and averaged; multi-token queries receive a coverage bonus that increases with the proportion of tokens matched
-5. **Group** — Results are organized by task group/domain bundle, with per-group actionable `xtarterize add` commands
+1. **Tokenize** - The query is split into words; stopwords (a, the, want, need, project, etc.) and short words are filtered out
+2. **Expand** - Content words are expanded through a domain-specific synonym map with bidirectional transitive reverse-lookup (e.g. "lint" → "linter", "static-analysis", "check"; "typescript" → "ts", "type-safe", "strict")
+3. **Score** - For each original token, find the best match across all 5 signals (label, id, group, keywords, config targets) using the highest signal score among all terms (original + expanded synonyms). Uses tiered match levels: exact (1.0), stem-match (0.95), fuzzy (0.85), prefix (0.75), substring (0.55)
+4. **Aggregate** - Signal scores are weighted and averaged; multi-token queries receive a coverage bonus that increases with the proportion of tokens matched
+5. **Group** - Results are organized by task group/domain bundle, with per-group actionable `xtarterize add` commands
 
 <Aside type="note">
-  The scoring engine is entirely algorithmic — zero AI model calls, zero API dependencies.
+  The scoring engine is entirely algorithmic - zero AI model calls, zero API dependencies.
   It runs offline and completes in milliseconds.
 </Aside>
 
 ## See Also
 
-- [CLI Overview](/xtarterize/guide/cli/overview/) — full command reference
-- [Tasks Overview](/xtarterize/guide/tasks/overview/) — understanding tasks and their metadata
+- [CLI Overview](/xtarterize/guide/cli/overview/) - full command reference
+- [Tasks Overview](/xtarterize/guide/tasks/overview/) - understanding tasks and their metadata

@@ -299,7 +299,7 @@ describe('skillsInstallTask', () => {
 			profile,
 		)
 		const after = diffs[0].after ?? ''
-		// expo/skills has 8 skills — they should appear in a single command
+		// expo/skills has 8 skills - they should appear in a single command
 		const expoLine = after.split('\n').find((l) => l.includes('expo/skills'))
 		expect(expoLine).toBeDefined()
 		expect(expoLine).toContain('--skill expo-tailwind-setup')

@@ -147,8 +147,8 @@ export function runProjectHealthChecks(
 					'Lockfile',
 					lockfileDetected ? 'pass' : 'warn',
 					lockfileDetected
-						? 'Lockfile found — dependencies are locked'
-						: 'No lockfile found — dependencies may not be reproducible',
+						? 'Lockfile found - dependencies are locked'
+						: 'No lockfile found - dependencies may not be reproducible',
 				),
 			)
 
@@ -174,7 +174,7 @@ export function runProjectHealthChecks(
 				makeCheck(
 					'README',
 					hasReadme ? 'pass' : 'warn',
-					hasReadme ? 'README.md found' : 'No README.md — consider adding one',
+					hasReadme ? 'README.md found' : 'No README.md - consider adding one',
 				),
 			)
 
@@ -187,7 +187,7 @@ export function runProjectHealthChecks(
 					hasGitignore ? 'pass' : 'warn',
 					hasGitignore
 						? '.gitignore found'
-						: 'No .gitignore — generated files may be tracked',
+						: 'No .gitignore - generated files may be tracked',
 				),
 			)
 
@@ -224,7 +224,7 @@ export function runConflictChecks(cwd: string): Promise<DiagnosticCheck[]> {
 					makeCheck(
 						'Conflicting tools',
 						'warn',
-						'Both Biome and Prettier are configured. Biome includes formatting — Prettier may be redundant.',
+						'Both Biome and Prettier are configured. Biome includes formatting - Prettier may be redundant.',
 					),
 				)
 			}

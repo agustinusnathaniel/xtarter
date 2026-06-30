@@ -149,10 +149,10 @@ The CLI checks if `git` is installed. If not, git init is skipped automatically.
 
 The CLI runs `<package-manager> install` after downloading. If the install fails
 (e.g., network issues), the process exits with an error. The template files are
-still downloaded — you can run the install manually.
+still downloaded - you can run the install manually.
 
 ## What's modified after download
 
-- **`package.json` name** — updated to your project name (lowercased, special chars stripped)
-- **Workspace references** — any `workspace:*` entries in `pnpm.overrides` are removed
-- **CI/CD files** — removed if `--clean` is enabled
+- **`package.json` name** - updated to your project name (lowercased, special chars stripped)
+- **Workspace references** - any `workspace:*` entries in `pnpm.overrides` are removed
+- **CI/CD files** - removed if `--clean` is enabled

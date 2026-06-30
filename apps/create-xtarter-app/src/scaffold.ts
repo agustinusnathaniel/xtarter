@@ -17,7 +17,7 @@ export interface ScaffoldOptions {
 	projectPath: string
 	template: TemplateConfig
 	ref?: string
-	/** Skip download step — use when projectPath already has template files */
+	/** Skip download step - use when projectPath already has template files */
 	skipDownload?: boolean
 }
 

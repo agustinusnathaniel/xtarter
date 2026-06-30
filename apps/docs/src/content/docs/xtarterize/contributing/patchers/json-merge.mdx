@@ -97,7 +97,7 @@ const existing = { plugins: ['pluginA'] }
 const incoming = { plugins: ['pluginB'] }
 
 const merged = mergeJson(existing, incoming)
-// { plugins: ['pluginB'] } — incoming replaces existing array
+// { plugins: ['pluginB'] } - incoming replaces existing array
 ```
 
 For cases where arrays need to be combined (like [VS Code extension recommendations](https://code.visualstudio.com/docs/editor/extension-marketplace#_workspace-recommended-extensions)), use a custom merge function instead of `mergeJson`.
@@ -175,8 +175,8 @@ const result = patchJson(existing, incoming)
 
 ## References
 
-- [defu GitHub Repository](https://github.com/unjs/defu) — Deep merge utility
-- [TypeScript tsconfig Reference](https://www.typescriptlang.org/tsconfig/) — Compiler configuration options
-- [Biome Configuration Reference](https://biomejs.dev/reference/configuration/) — `biome.json` schema
-- [VS Code Settings](https://code.visualstudio.com/docs/getstarted/settings) — Editor configuration documentation
-- [VS Code Extension Recommendations](https://code.visualstudio.com/docs/editor/extension-marketplace#_workspace-recommended-extensions) — Workspace recommended extensions
+- [defu GitHub Repository](https://github.com/unjs/defu) - Deep merge utility
+- [TypeScript tsconfig Reference](https://www.typescriptlang.org/tsconfig/) - Compiler configuration options
+- [Biome Configuration Reference](https://biomejs.dev/reference/configuration/) - `biome.json` schema
+- [VS Code Settings](https://code.visualstudio.com/docs/getstarted/settings) - Editor configuration documentation
+- [VS Code Extension Recommendations](https://code.visualstudio.com/docs/editor/extension-marketplace#_workspace-recommended-extensions) - Workspace recommended extensions

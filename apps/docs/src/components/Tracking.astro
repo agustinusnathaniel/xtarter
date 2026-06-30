@@ -35,7 +35,7 @@ function isTrackedDomain(hostname: string): boolean {
 document.addEventListener('click', (e) => {
   const target = e.target as HTMLElement;
 
-  // Hero CTA clicks (YAML frontmatter — can't add data attributes)
+  // Hero CTA clicks (YAML frontmatter - can't add data attributes)
   const heroLink = target.closest('.hero a');
   if (heroLink) {
     const text = getText(heroLink);
@@ -62,7 +62,7 @@ document.addEventListener('click', (e) => {
     return;
   }
 
-  // Social icon links (header — starlight SocialIcons renders <a rel="me">)
+  // Social icon links (header - starlight SocialIcons renders <a rel="me">)
   const socialLink = target.closest('a[rel="me"]');
   if (socialLink) {
     const href = getHref(socialLink);

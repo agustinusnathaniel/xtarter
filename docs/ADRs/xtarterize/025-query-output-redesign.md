@@ -16,27 +16,27 @@ the scoring engine (ADR 024) but has proven too noisy for everyday use.
 
 ### Problems with the current output
 
-1. **Signal breakdown per result** — every result prints a second line with
+1. **Signal breakdown per result** - every result prints a second line with
    per-signal scores (label: 100%, id: 75%, ...). This is debugging detail,
    not actionable information.
 
-2. **Relevance bars are visual noise** — the ████░ bar takes 10 characters per
+2. **Relevance bars are visual noise** - the ████░ bar takes 10 characters per
    row and adds no information beyond the percentage. A colored percentage alone
    is faster to scan.
 
-3. **Tier headers add little value** — "EXACT MATCHES", "STRONG MATCHES",
+3. **Tier headers add little value** - "EXACT MATCHES", "STRONG MATCHES",
    "RELATED" partition results into three groups but the relevance percentage
    already encodes this signal. The tiers force the user to read two things
    (tier + percentage) instead of one.
 
-4. **No config target shown** — the most useful context for deciding whether a
+4. **No config target shown** - the most useful context for deciding whether a
    result is relevant ("what file does this touch?") is buried in the task's
    `searchMeta` and never displayed.
 
-5. **No actionable next step** — after seeing results, the user has no hint
+5. **No actionable next step** - after seeing results, the user has no hint
    about how to apply them.
 
-6. **No count in header** — the user can't tell at a glance how many results
+6. **No count in header** - the user can't tell at a glance how many results
    were found.
 
 ### Design goals
@@ -52,7 +52,7 @@ the scoring engine (ADR 024) but has proven too noisy for everyday use.
 - `--json` output (already clean, machine-readable, includes signals)
 - The scoring engine itself
 - `xtarterize init --compose` which uses the scoring engine internally
-- The `InquiryResult` type — signals remain in the data model for debugging
+- The `InquiryResult` type - signals remain in the data model for debugging
 
 ## Decision
 
@@ -60,7 +60,7 @@ Replace `displayQueryResults` in `apps/xtarterize/src/ui/query-display.ts` with
 a new terminal layout consisting of:
 
 1. **Header**: icon + query + result count
-2. **Body**: single line per result — dimmed task ID | colored relevance |
+2. **Body**: single line per result - dimmed task ID | colored relevance |
    label | dimmed config target
 3. **Footer**: hint with the `xtarterize add` command
 
@@ -75,32 +75,32 @@ The existing `formatQueryResult` (JSON) path is unchanged.
 
 Each row has four zones:
 
-| Zone | Content | Style | Width |
-|---|---|---|---|
-| 1 | Task ID, right-padded | `pc.dim()` | max(taskId.length) + 2 |
-| 2 | Relevance " XX%" | `pc.bold()` + color | 4 chars fixed (RHS) |
-| 3 | Label | normal | remaining width (config column subtracts) |
-| 4 | Config target, left-padded | `pc.dim()` | computed per row |
+| Zone | Content                    | Style               | Width                                     |
+| ---- | -------------------------- | ------------------- | ----------------------------------------- |
+| 1    | Task ID, right-padded      | `pc.dim()`          | max(taskId.length) + 2                    |
+| 2    | Relevance " XX%"           | `pc.bold()` + color | 4 chars fixed (RHS)                       |
+| 3    | Label                      | normal              | remaining width (config column subtracts) |
+| 4    | Config target, left-padded | `pc.dim()`          | computed per row                          |
 
 ### Color rules for relevance
 
-| Range | Color | Style |
-|---|---|---|
-| ≥70% | `pc.green()` + `pc.bold()` | "strong match" |
+| Range  | Color                       | Style           |
+| ------ | --------------------------- | --------------- |
+| ≥70%   | `pc.green()` + `pc.bold()`  | "strong match"  |
 | 40–69% | `pc.yellow()` + `pc.bold()` | "partial match" |
-| <40% | `pc.dim()` | "weak match" |
+| <40%   | `pc.dim()`                  | "weak match"    |
 
 ### States
 
 **Normal (≥1 result):**
 
 ```
-✻ xtarterize query "strict typescript" — 4 matches
+✻ xtarterize query "strict typescript" - 4 matches
 
   ts/strict                80%  tsconfig - strict: true             tsconfig.json
   ts/paths                 52%  tsconfig - path aliases             tsconfig.json
-  ts/incremental           24%  tsconfig — incremental: true        tsconfig.json
-  gitignore/tsbuildinfo    14%  .gitignore — tsbuildinfo             .gitignore
+  ts/incremental           24%  tsconfig - incremental: true        tsconfig.json
+  gitignore/tsbuildinfo    14%  .gitignore - tsbuildinfo             .gitignore
 
   → xtarterize add <task-id> to apply a task
 ```
@@ -108,7 +108,7 @@ Each row has four zones:
 **Zero results:**
 
 ```
-✻ xtarterize query "strict typescript" — no matches
+✻ xtarterize query "strict typescript" - no matches
 
   No tasks matched your query.
     • try broader terms (e.g. "typescript" instead of "strict typescript")
@@ -119,7 +119,7 @@ Each row has four zones:
 **Entirely stopwords (tokenizes to empty):**
 
 ```
-✻ xtarterize query "need help with" — no matches
+✻ xtarterize query "need help with" - no matches
 
   Your query "need help with" consists entirely of common words.
     • try specific tool names (e.g. "biome", "tsconfig", "vite")
@@ -129,7 +129,7 @@ Each row has four zones:
 ### Single result (slim variant):
 
 ```
-✻ xtarterize query "biome formatting" — 1 match
+✻ xtarterize query "biome formatting" - 1 match
 
   lint/biome              89%  Biome (lint + format)               biome.json
 
@@ -141,10 +141,11 @@ Note: the footer hint changes to the specific task ID when there's one result.
 ### Column width logic
 
 1. Compute `maxIdLen = max(results, r => r.taskId.length)`
-2. Each row: indent(2) + taskId.padEnd(maxIdLen + 2) + relevance(4) + "  " + label + right-aligned configTarget
+2. Each row: indent(2) + taskId.padEnd(maxIdLen + 2) + relevance(4) + " " + label + right-aligned configTarget
 
 For the label + config target area, use the terminal width (process.stdout.columns)
 to determine available space. If the row would exceed terminal width:
+
 - Truncate the label first (append "…")
 - If still too wide, truncate the config target
 
@@ -158,10 +159,10 @@ to determine available space. If the row would exceed terminal width:
 
 ### Retained paths
 
-- **`--json`**: unchanged — `formatQueryResult` in `json-formatter.ts` remains
+- **`--json`**: unchanged - `formatQueryResult` in `json-formatter.ts` remains
   as-is. JSON output still includes the full `signals` array.
 - **`--verbose`** (future): if users need signal breakdown, add a `--verbose`
-  flag to print the second line. Not implemented in this change — defer until
+  flag to print the second line. Not implemented in this change - defer until
   someone asks.
 
 ## Consequences
@@ -192,7 +193,7 @@ to determine available space. If the row would exceed terminal width:
 
 - **Very long config targets**: `.github/workflows/ci.yml` (26 chars) combined
   with a long task ID and label could exceed terminal width on narrow terminals.
-  Mitigated by truncation logic — label is truncated first, then config target.
+  Mitigated by truncation logic - label is truncated first, then config target.
 - **Emoji/icon rendering**: `✻` may not render well in all terminals. The icon
   is decorative (no information loss if it doesn't render). Fallback: remove
   the icon if `NO_COLOR` or `CI` env var is set.
@@ -202,7 +203,7 @@ to determine available space. If the row would exceed terminal width:
 ### Keep tier headers, remove signal breakdown only
 
 Rejected because tier headers add visual weight without commensurate value.
-The relevance percentage is a continuous value — discretizing it into three
+The relevance percentage is a continuous value - discretizing it into three
 buckets loses information. Color coding preserves the continuum.
 
 ### Two-column layout (task ID + relevance, no config target)
@@ -213,7 +214,7 @@ user to look it up elsewhere.
 
 ### Multi-line block format (astryx-style)
 
-Rejected by explicit constraint — the format must be distinguishable from
+Rejected by explicit constraint - the format must be distinguishable from
 astryx's approach. One line per result is the clearest distinction.
 
 ### Drop percentage, show only color
@@ -224,7 +225,7 @@ The percentage is the universal signal.
 
 ### Related Decisions
 
-- ADR 024: Natural Language Task Query Engine — defines the scoring engine
+- ADR 024: Natural Language Task Query Engine - defines the scoring engine
   and original output format that this ADR replaces
 
 ## Unresolved Questions
@@ -233,4 +234,3 @@ The percentage is the universal signal.
   requests it.
 - Should the footer hint be shown every time, or only on first query in a
   session? Start with always shown; remove if it feels patronizing.
-

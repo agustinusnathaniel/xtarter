@@ -44,7 +44,7 @@ export function generateBadgeSvg(options: BadgeOptions): string {
 
 <!-- Score -->
 <text x="14" y="40" fill="#f5f5f5" font-family="Verdana,Geneva,DejaVu Sans,sans-serif" font-size="20" font-weight="bold">${conformant}/${total}</text>
-<text x="14" y="55" fill="${color}" font-family="Verdana,Geneva,DejaVu Sans,sans-serif" font-size="10">${percentage}% — ${status}</text>
+<text x="14" y="55" fill="${color}" font-family="Verdana,Geneva,DejaVu Sans,sans-serif" font-size="10">${percentage}% - ${status}</text>
 
 <!-- Progress bar background -->
 <rect x="110" y="28" width="80" height="10" rx="5" fill="#313244"/>

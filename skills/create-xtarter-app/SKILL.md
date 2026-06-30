@@ -11,10 +11,10 @@ Scaffolds production-grade JS/TS projects from curated starter templates. Every 
 
 This skill is activated when the user asks to create a new project, scaffold an app, or mentions a template name. Upon loading:
 
-1. **Determine the stack** — ask the user about their framework (Next.js vs Vite) and UI library preference before picking a template
-2. **Use the decision table** — match the user's stack description to the correct template ID
-3. **Never guess template names** — only the 5 listed IDs are valid
-4. **Check the target directory** — verify it doesn't already exist and isn't non-empty
+1. **Determine the stack** - ask the user about their framework (Next.js vs Vite) and UI library preference before picking a template
+2. **Use the decision table** - match the user's stack description to the correct template ID
+3. **Never guess template names** - only the 5 listed IDs are valid
+4. **Check the target directory** - verify it doesn't already exist and isn't non-empty
 
 ## Quick reference
 
@@ -41,8 +41,8 @@ Parse the user's stack description to pick a template:
 | "Vite SPA" + "Hero UI" | Client SPA + modern UI | `vite-hero` |
 | "Next.js" (no UI lib) | SSR framework | Ask "Chakra UI or Tailwind?" |
 | "Vite" (no UI lib) | Client SPA | Ask "Chakra UI, Tailwind, or Hero UI?" |
-| No framework preference | — | Ask "SSR/static (Next.js) or client SPA (Vite)?" |
-| No UI lib preference | — | Show options via `preview` (no args) |
+| No framework preference | - | Ask "SSR/static (Next.js) or client SPA (Vite)?" |
+| No UI lib preference | - | Show options via `preview` (no args) |
 
 ## CLI reference
 
@@ -83,7 +83,7 @@ Omit template name to list all available templates. Shows description, repo, and
 | `vite-tailwind` | Vite + React + Tailwind | Vite+ + TanStack Router + Tailwind CSS v4 |
 | `vite-hero` | Vite + React + Hero UI | Vite+ + TanStack Router + Hero UI |
 
-**MANDATORY — Load** [references/templates.md](references/templates.md) **before using `--template`**. Only these 5 IDs are valid. Inventing template names fails.
+**MANDATORY - Load** [references/templates.md](references/templates.md) **before using `--template`**. Only these 5 IDs are valid. Inventing template names fails.
 
 ## Agent workflows
 
@@ -134,7 +134,7 @@ npx create-xtarter-app@latest my-app --yes
 
 ## Anti-patterns
 
-- **NEVER** scaffold into an existing non-empty directory — CLI rejects it
-- **NEVER** use `--clean` unless user asks — it removes CI, which is unexpected
-- **NEVER** invent template names — only the 5 above. Run `preview` if unsure
-- **NEVER** ignore `--pm` if user has a preference — pnpm is default but not universal
+- **NEVER** scaffold into an existing non-empty directory - CLI rejects it
+- **NEVER** use `--clean` unless user asks - it removes CI, which is unexpected
+- **NEVER** invent template names - only the 5 above. Run `preview` if unsure
+- **NEVER** ignore `--pm` if user has a preference - pnpm is default but not universal

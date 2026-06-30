@@ -53,7 +53,7 @@ export function displayQueryResults(
 	// Header
 	console.log('')
 	console.log(
-		`✻ ${pc.bold(`xtarterize query "${query}"`)} ${pc.dim(`— ${groups.length} group${groups.length !== 1 ? 's' : ''} · ${totalTasks} task${totalTasks !== 1 ? 's' : ''}`)}`,
+		`✻ ${pc.bold(`xtarterize query "${query}"`)} ${pc.dim(`- ${groups.length} group${groups.length !== 1 ? 's' : ''} · ${totalTasks} task${totalTasks !== 1 ? 's' : ''}`)}`,
 	)
 
 	// Determine column widths
@@ -74,7 +74,7 @@ export function displayQueryResults(
 			// Build the full line with ANSI-styled segments
 			const line = `  ${pc.dim(id)}  ${relevance}  ${label}  ${pc.dim(target)}`
 
-			// Check if line exceeds terminal width (approx — ANSI codes inflate .length slightly)
+			// Check if line exceeds terminal width (approx - ANSI codes inflate .length slightly)
 			if (line.length > termWidth) {
 				const overhead = 2 + maxIdLen + 2 + 4 + 2 + 2 + target.length + 2
 				const maxLabelLen = Math.max(10, termWidth - overhead - 4)
@@ -91,7 +91,7 @@ export function displayQueryResults(
 		}
 	}
 
-	// Footer hint — bundled command per group
+	// Footer hint - bundled command per group
 	if (results.length > 0) {
 		const prefix = getDlxPrefix(packageManager)
 		console.log('')

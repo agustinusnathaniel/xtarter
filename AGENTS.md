@@ -43,14 +43,14 @@
 
 5. **Implementation & Testing**
    - Run `vp test`, `pnpm typecheck`, `pnpm build`, `pnpm lint`, `pnpm check`
-   - Ensure idempotency — running the same operation twice produces the same result
+   - Ensure idempotency - running the same operation twice produces the same result
    - Tasks must follow the interface: `applicable`, `check`, `dryRun`, `apply`
    - Add tests in `test/tasks/`, `test/patchers/`, or `test/core/` for new behavior
 
 6. **Dependency Updates**
    - Run `npx taze minor --write -r` for safe updates; `pnpm install && pnpm dedupe` afterward
    - `@tailwindcss/vite` is pinned at 4.2.2 (4.2.4 breaks Vite 8 build)
-   - If a dep update fails verification, revert that package — don't fix the breakage inline
+   - If a dep update fails verification, revert that package - don't fix the breakage inline
 
 7. **Committing**
    - Create a changeset if user-facing: `pnpm changeset`

@@ -53,43 +53,46 @@ catalog:
 
 Dependencies used by only one package are not cataloged:
 
-| Dep | Package | Reason |
-|-----|---------|--------|
-| `@clack/prompts` | cli | CLI-specific |
-| `citty` | cli | CLI-specific |
-| `cli-table3` | cli | CLI-specific |
-| `consola` | core | Only core uses it (but cataloged for forward compatibility) |
-| `defu` | patchers | Only patchers uses it (but cataloged for forward compatibility) |
-| `diff` | core | Single consumer |
-| `picocolors` | core | Single consumer |
-| `pkg-types` | core | Single consumer |
-| `@astrojs/starlight*` | docs | Docs-only |
-| `astro` | docs | Docs-only |
+| Dep                   | Package  | Reason                                                          |
+| --------------------- | -------- | --------------------------------------------------------------- |
+| `@clack/prompts`      | cli      | CLI-specific                                                    |
+| `citty`               | cli      | CLI-specific                                                    |
+| `cli-table3`          | cli      | CLI-specific                                                    |
+| `consola`             | core     | Only core uses it (but cataloged for forward compatibility)     |
+| `defu`                | patchers | Only patchers uses it (but cataloged for forward compatibility) |
+| `diff`                | core     | Single consumer                                                 |
+| `picocolors`          | core     | Single consumer                                                 |
+| `pkg-types`           | core     | Single consumer                                                 |
+| `@astrojs/starlight*` | docs     | Docs-only                                                       |
+| `astro`               | docs     | Docs-only                                                       |
 
 ## Rationale
 
-- **Single source of truth** — version ranges defined once in `pnpm-workspace.yaml`
-- **Atomic updates** — bump a catalog entry once, all packages get the update on `pnpm install`
-- **Consistency** — no risk of two packages resolving to different minor versions of the same dep
-- **pnpm native** — no tooling overhead, works with standard pnpm commands
+- **Single source of truth** - version ranges defined once in `pnpm-workspace.yaml`
+- **Atomic updates** - bump a catalog entry once, all packages get the update on `pnpm install`
+- **Consistency** - no risk of two packages resolving to different minor versions of the same dep
+- **pnpm native** - no tooling overhead, works with standard pnpm commands
 
 ## Alternatives Considered
 
 ### Root `package.json` devDependencies only
+
 - Only works for devDependencies, not runtime dependencies
 - Doesn't enforce version consistency across packages
 
 ### `pnpm.overrides` in root
+
 - Forces a single version everywhere, but overrides semver ranges
-- Less transparent — packages look like they depend on one version but get another
+- Less transparent - packages look like they depend on one version but get another
 
 ### Manual version coordination
+
 - Error-prone, doesn't scale
 - Already proven problematic as the workspace grew to 5 packages
 
 ## Consequences
 
 - Adding a new shared dependency requires adding it to both `pnpm-workspace.yaml` (catalog) and the consuming `package.json` (with `"catalog:"`)
-- Package-local deps can still use literal versions — no strict enforcement
+- Package-local deps can still use literal versions - no strict enforcement
 - Catalog versions should be reviewed during dependency update cycles (section 6 of AGENTS.md)
 - The catalog is the default; contributors should prefer `"catalog:"` over literal versions for any dependency used by 2+ packages

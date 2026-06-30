@@ -86,7 +86,7 @@ describe('add command', () => {
 	it('handles invalid task ID gracefully', async () => {
 		const cwd = await createMinimalProject()
 		try {
-			// Should not throw — just logs an error
+			// Should not throw - just logs an error
 			await addCommand.run?.({
 				args: { cwd, taskId: 'nonexistent/task', quiet: true },
 			} as never)
@@ -107,7 +107,7 @@ describe('add command', () => {
 				await fs.readFile(path.join(cwd, 'package.json'), 'utf-8'),
 			)
 
-			// Apply again — should be idempotent
+			// Apply again - should be idempotent
 			await addCommand.run?.({
 				args: { cwd, taskId: 'release/czg', quiet: true },
 			} as never)
@@ -146,7 +146,7 @@ describe('undo command', () => {
 			const manifest = await readRunManifest(cwd)
 			expect(manifest).toBeNull()
 
-			// Should not throw — just logs an error
+			// Should not throw - just logs an error
 			await undoCommand.run?.({ args: { cwd, quiet: true } } as never)
 		} finally {
 			await fs.rm(cwd, { recursive: true, force: true })
@@ -179,7 +179,7 @@ describe('restore command', () => {
 	it('handles missing backups gracefully', async () => {
 		const cwd = await createMinimalProject()
 		try {
-			// Should not throw — just logs an error
+			// Should not throw - just logs an error
 			await restoreCommand.run?.({
 				args: { cwd, filepath: 'nonexistent.txt' },
 			} as never)

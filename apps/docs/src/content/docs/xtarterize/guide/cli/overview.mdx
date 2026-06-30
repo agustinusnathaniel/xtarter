@@ -21,7 +21,7 @@ The xtarterize CLI provides commands to detect, apply, and maintain conformance 
 
 | Command | Description |
 |---------|-------------|
-| [`xtarterize init`](#init) | Full conformance setup — detect, plan, apply |
+| [`xtarterize init`](#init) | Full conformance setup - detect, plan, apply |
 | [`xtarterize sync`](#sync) | Update existing configs to latest templates |
 | [`xtarterize diff`](#diff) | Show pending changes without applying |
 | [`xtarterize check`](#check) | Audit current conformance status |
@@ -197,15 +197,15 @@ Output shows:
 
 | Icon | Status | Meaning |
 |------|--------|---------|
-| ✔ | `skip` | Conformant — no action needed |
-| ~ | `patch` | Needs update — will be patched |
-| ✗ | `new` | Missing entirely — will be created |
-| ⚠ | `conflict` | Incompatible config — needs manual resolution |
+| ✔ | `skip` | Conformant - no action needed |
+| ~ | `patch` | Needs update - will be patched |
+| ✗ | `new` | Missing entirely - will be created |
+| ⚠ | `conflict` | Incompatible config - needs manual resolution |
 
 In verbose mode, `check` also displays diagnostics for:
-- **Conflicting tools** — Biome + ESLint/Prettier detected together
-- **Legacy configs** — ESLint flat config migration recommendations
-- **Tool installations** — Tools in package.json but not installed locally
+- **Conflicting tools** - Biome + ESLint/Prettier detected together
+- **Legacy configs** - ESLint flat config migration recommendations
+- **Tool installations** - Tools in package.json but not installed locally
 
 ## `add`
 
@@ -300,7 +300,7 @@ npx xtarterize list
 
 ## `query`
 
-Search tasks by natural language query. No need to remember exact task IDs — just describe what you're looking for.
+Search tasks by natural language query. No need to remember exact task IDs - just describe what you're looking for.
 
 ### Options
 
@@ -361,7 +361,7 @@ flowchart TD
 
 ## References
 
-- [GNU Diff Unified Format](https://www.gnu.org/software/diffutils/manual/html_node/Detailed-Unified.html) — How unified diffs work
-- [GitHub Actions Documentation](https://docs.github.com/en/actions) — CI/CD workflow reference
+- [GNU Diff Unified Format](https://www.gnu.org/software/diffutils/manual/html_node/Detailed-Unified.html) - How unified diffs work
+- [GitHub Actions Documentation](https://docs.github.com/en/actions) - CI/CD workflow reference
 
 <LinkButton href="/xtarterize/guide/tasks/overview/">Explore conformance tasks →</LinkButton>

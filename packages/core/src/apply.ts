@@ -156,7 +156,7 @@ async function runApply(options: RunApplyOptions): Promise<ApplyResult> {
 			const message = error instanceof Error ? error.message : String(error)
 			errors.push(`${task.id}: ${message}`)
 			if (s) {
-				s.stop(`${pc.red('✗')} ${task.label} — ${message}`)
+				s.stop(`${pc.red('✗')} ${task.label} - ${message}`)
 			} else {
 				logError(`Failed to apply ${task.id}: ${message}`)
 			}

@@ -46,7 +46,7 @@ export function isCompositeCommand(cmd: string): boolean {
 	return norm.startsWith('turbo run') || norm.startsWith('turborepo run')
 }
 
-// Tool aliases — canonical tool name maps to known aliases
+// Tool aliases - canonical tool name maps to known aliases
 const TOOL_ALIASES: Record<string, string[]> = {
 	release: ['commit-and-tag-version', 'standard-version', 'release-it'],
 	lint: ['eslint', 'biome', 'oxlint', 'prettier', 'rome'],

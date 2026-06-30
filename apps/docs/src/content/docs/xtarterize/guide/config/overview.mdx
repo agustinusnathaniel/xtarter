@@ -11,14 +11,14 @@ xtarterize doesn't require a config file. It detects your project's stack automa
 
 When you run `init`, xtarterize scans your project to build a `ProjectProfile`:
 
-- **Framework** — [React](https://react.dev/), [Vue](https://vuejs.org/), [Svelte](https://svelte.dev/), [Solid](https://www.solidjs.com/), [React Native](https://reactnative.dev/), or [Node](https://nodejs.org/) (from `package.json` deps)
-- **Bundler** — [Vite](https://vitejs.dev/), [Next.js](https://nextjs.org/), [TanStack Start](https://tanstack.com/start/latest), [Expo](https://expo.dev/), [Webpack](https://webpack.js.org/), [Rspack](https://rspack.dev/), or none
-- **Router** — [TanStack Router](https://tanstack.com/router/latest), [React Router](https://reactrouter.com/), [Vue Router](https://router.vuejs.org/), [Expo Router](https://docs.expo.dev/router/introduction/), or none
-- **Styling** — [Tailwind CSS](https://tailwindcss.com/), [CSS Modules](https://github.com/css-modules/css-modules), [Styled Components](https://styled-components.com/), [Vanilla Extract](https://vanilla-extract.style/), [NativeWind](https://www.nativewind.dev/), or Vanilla
-- **Package Manager** — [pnpm](https://pnpm.io/), [npm](https://www.npmjs.com/), [yarn](https://yarnpkg.com/), or [bun](https://bun.sh/) (from lockfiles or `packageManager` field)
-- **Monorepo** — Detected via [`pnpm-workspace.yaml`](https://pnpm.io/pnpm-workspace_yaml), [`turbo.json`](https://turbo.build/repo/docs/reference/configuration), `packages/` + `apps/` dirs
-- **GitHub** — [`.github/`](https://docs.github.com/en/actions/using-workflows/about-workflows) directory presence
-- **Existing Configs** — Checks for [`biome.json`](https://biomejs.dev/reference/configuration/), [`tsconfig.json`](https://www.typescriptlang.org/tsconfig/), [`renovate.json`](https://docs.renovatebot.com/configuration-options/), [`vite.config.*`](https://vitejs.dev/config/), [`.versionrc`](https://github.com/absolute-version/commit-and-tag-version#configuration), [`.gitignore`](https://git-scm.com/docs/gitignore), etc.
+- **Framework** - [React](https://react.dev/), [Vue](https://vuejs.org/), [Svelte](https://svelte.dev/), [Solid](https://www.solidjs.com/), [React Native](https://reactnative.dev/), or [Node](https://nodejs.org/) (from `package.json` deps)
+- **Bundler** - [Vite](https://vitejs.dev/), [Next.js](https://nextjs.org/), [TanStack Start](https://tanstack.com/start/latest), [Expo](https://expo.dev/), [Webpack](https://webpack.js.org/), [Rspack](https://rspack.dev/), or none
+- **Router** - [TanStack Router](https://tanstack.com/router/latest), [React Router](https://reactrouter.com/), [Vue Router](https://router.vuejs.org/), [Expo Router](https://docs.expo.dev/router/introduction/), or none
+- **Styling** - [Tailwind CSS](https://tailwindcss.com/), [CSS Modules](https://github.com/css-modules/css-modules), [Styled Components](https://styled-components.com/), [Vanilla Extract](https://vanilla-extract.style/), [NativeWind](https://www.nativewind.dev/), or Vanilla
+- **Package Manager** - [pnpm](https://pnpm.io/), [npm](https://www.npmjs.com/), [yarn](https://yarnpkg.com/), or [bun](https://bun.sh/) (from lockfiles or `packageManager` field)
+- **Monorepo** - Detected via [`pnpm-workspace.yaml`](https://pnpm.io/pnpm-workspace_yaml), [`turbo.json`](https://turbo.build/repo/docs/reference/configuration), `packages/` + `apps/` dirs
+- **GitHub** - [`.github/`](https://docs.github.com/en/actions/using-workflows/about-workflows) directory presence
+- **Existing Configs** - Checks for [`biome.json`](https://biomejs.dev/reference/configuration/), [`tsconfig.json`](https://www.typescriptlang.org/tsconfig/), [`renovate.json`](https://docs.renovatebot.com/configuration-options/), [`vite.config.*`](https://vitejs.dev/config/), [`.versionrc`](https://github.com/absolute-version/commit-and-tag-version#configuration), [`.gitignore`](https://git-scm.com/docs/gitignore), etc.
 
 ## Detection Flow
 
@@ -86,16 +86,16 @@ Tasks are gated on the detected profile:
 When running inside a monorepo, xtarterize further filters tasks based on
 their **scope**. Each task declares one of three scopes:
 
-- **`root`** — The task applies only at the monorepo root.
-- **`package`** — The task applies only inside a workspace package.
-- **`both`** (default) — The task applies everywhere.
+- **`root`** - The task applies only at the monorepo root.
+- **`package`** - The task applies only inside a workspace package.
+- **`both`** (default) - The task applies everywhere.
 
 At the monorepo root (`workspaceRoot: true`), package-scoped tasks are
 hidden. Inside a workspace package (`workspaceRoot: false`), root-scoped
 tasks are hidden. Tasks without an explicit scope (or with `scope: 'both'`)
 are visible in both positions.
 
-In non-monorepo projects, scope filtering is disabled — all tasks that
+In non-monorepo projects, scope filtering is disabled - all tasks that
 pass the `applicable()` check are shown regardless of their declared scope.
 
 ## Parameterized Templates
@@ -128,20 +128,20 @@ npx xtarterize restore tsconfig.json
 
 ## References
 
-- [React](https://react.dev/) — UI library
-- [Vue.js](https://vuejs.org/) — Progressive JavaScript framework
-- [Svelte](https://svelte.dev/) — Cybernetically enhanced web apps
-- [Solid](https://www.solidjs.com/) — Simple and performant reactivity
-- [React Native](https://reactnative.dev/) — Native apps with React
-- [Vite](https://vitejs.dev/) — Next-generation frontend tooling
-- [Next.js](https://nextjs.org/) — React framework for production
-- [TanStack Start](https://tanstack.com/start/latest) — Full-stack React framework
-- [Expo](https://expo.dev/) — React Native framework
-- [Webpack](https://webpack.js.org/) — Module bundler
-- [Tailwind CSS](https://tailwindcss.com/) — Utility-first CSS framework
-- [pnpm Workspaces](https://pnpm.io/workspaces) — Monorepo support
-- [Turborepo](https://turbo.build/repo/docs) — Monorepo task runner
-- [Bun](https://bun.sh/) — Fast JavaScript runtime and package manager
+- [React](https://react.dev/) - UI library
+- [Vue.js](https://vuejs.org/) - Progressive JavaScript framework
+- [Svelte](https://svelte.dev/) - Cybernetically enhanced web apps
+- [Solid](https://www.solidjs.com/) - Simple and performant reactivity
+- [React Native](https://reactnative.dev/) - Native apps with React
+- [Vite](https://vitejs.dev/) - Next-generation frontend tooling
+- [Next.js](https://nextjs.org/) - React framework for production
+- [TanStack Start](https://tanstack.com/start/latest) - Full-stack React framework
+- [Expo](https://expo.dev/) - React Native framework
+- [Webpack](https://webpack.js.org/) - Module bundler
+- [Tailwind CSS](https://tailwindcss.com/) - Utility-first CSS framework
+- [pnpm Workspaces](https://pnpm.io/workspaces) - Monorepo support
+- [Turborepo](https://turbo.build/repo/docs) - Monorepo task runner
+- [Bun](https://bun.sh/) - Fast JavaScript runtime and package manager
 
 ## Backup Architecture
 

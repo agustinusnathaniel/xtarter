@@ -2,7 +2,7 @@ import { createJsonMergeTask } from '@/factory'
 
 export const incrementalTask = createJsonMergeTask({
 	id: 'ts/incremental',
-	label: 'tsconfig — incremental: true',
+	label: 'tsconfig - incremental: true',
 	group: 'TypeScript',
 	searchMeta: {
 		tags: ['typescript', 'performance', 'build-speed'],

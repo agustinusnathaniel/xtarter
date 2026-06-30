@@ -42,7 +42,7 @@ and Oxfmt tasks. Every task that sets up one of these tools will also install
 - **Zero friction**: Users who want Ultracite presets get them automatically
   without knowing about Ultracite. Users who don't want them can modify the
   generated config.
-- **Low maintenance**: Ultracite presets are pure config imports — no tracking
+- **Low maintenance**: Ultracite presets are pure config imports - no tracking
   of CLI behavior or initialization flows.
 - **Feature parity with user templates**: xtarterize should produce configs
   that match what experienced users ship.
@@ -94,7 +94,7 @@ merged (JSON format), while new projects get`oxlint.config.ts`.
 
 - Users who explicitly don't want Ultracite must add overrides to their config.
 - The `extends` field in `biome.json` means rules live in `node_modules`, not
-  inline — users must look at the Ultracite source to understand rule behavior.
+  inline - users must look at the Ultracite source to understand rule behavior.
 - Install time increases slightly (additional package download).
 
 ### Risks
@@ -129,11 +129,11 @@ merged (JSON format), while new projects get`oxlint.config.ts`.
 ## Related Decisions
 
 - **ADR-004**: Superseded by this ADR.
-- **ADR-007**: Array replacement in JSON merge — relevant for understanding how
+- **ADR-007**: Array replacement in JSON merge - relevant for understanding how
   `extends` arrays behave during merge.
-- **ADR-009**: Framework-aware Biome config — extended by this ADR to use
+- **ADR-009**: Framework-aware Biome config - extended by this ADR to use
   Ultracite extends instead of inline rules.
-- **ADR-014**: Vite+ migration — oxlint/oxfmt tasks are now Vite+-aware and
+- **ADR-014**: Vite+ migration - oxlint/oxfmt tasks are now Vite+-aware and
   generate their full configs.
 
 ## References

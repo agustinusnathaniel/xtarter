@@ -11,10 +11,10 @@ Scans any JS/TS project and applies curated configs via a task-based engine. **A
 
 This skill is activated when the user asks about project conformance, linting setup, CI, or any xtarterize task. Upon loading:
 
-1. **Assess the ask** — is the user requesting a full setup (`init`), a single task (`add`), a status check (`check`), a task search (`query`), or diagnostics (`doctor`)?
-2. **Check current state first** — run `check --format json` to understand what's already configured before proposing changes
-3. **Never guess task IDs** — load the task reference before using `add`
-4. **Always use `--format json`** — parse structured output, never terminal text
+1. **Assess the ask** - is the user requesting a full setup (`init`), a single task (`add`), a status check (`check`), a task search (`query`), or diagnostics (`doctor`)?
+2. **Check current state first** - run `check --format json` to understand what's already configured before proposing changes
+3. **Never guess task IDs** - load the task reference before using `add`
+4. **Always use `--format json`** - parse structured output, never terminal text
 
 ## Quick reference
 
@@ -42,10 +42,10 @@ After each command, parse the JSON to decide the next action:
 | `list --format json` | `tasks[].status` | Find the right task ID to pass to `add` |
 | `list --format json` | `profile` | Understand the detected stack (framework, bundler, etc.) |
 | `doctor --format json` | `diagnostics[].status` | Any `"fail"` needs fixing; `"warn"` is advisory |
-| `init --format json` | `ok` | If `false`, something went wrong — check stderr |
+| `init --format json` | `ok` | If `false`, something went wrong - check stderr |
 | `query --format json` | `results[].relevance` | Score >= threshold means relevant. Use `results[].signals` to see which fields matched strongest |
 | `query --format json` | `results[].taskId` | Pass to `add` to apply the matched task |
-| `query --format json` | `count` | If 0, no tasks met the threshold — broaden query or lower `--threshold` |
+| `query --format json` | `count` | If 0, no tasks met the threshold - broaden query or lower `--threshold` |
 
 ## All commands
 
@@ -61,7 +61,7 @@ After each command, parse the JSON to decide the next action:
 | `restore <file>` | Recover from backup | Interactive only |
 | `doctor` | Environment diagnostics | `--verbose`, `--cwd <path>` |
 
-Task statuses: `"new"` (will create), `"patch"` (will update), `"skip"` (conformant), `"conflict"` (needs review — require `--include-conflicts`).
+Task statuses: `"new"` (will create), `"patch"` (will update), `"skip"` (conformant), `"conflict"` (needs review - require `--include-conflicts`).
 
 ## Agent workflows
 
@@ -70,11 +70,11 @@ Task statuses: `"new"` (will create), `"patch"` (will update), `"skip"` (conform
 ```bash
 # 1. Check state
 out=$(npx xtarterize check --format json --cwd "$dir")
-# Parse out.tasks[].status — if all "skip", skip init
+# Parse out.tasks[].status - if all "skip", skip init
 
 # 2. Preview
 out=$(npx xtarterize diff --format json --cwd "$dir")
-# Parse out — if empty array, nothing to do
+# Parse out - if empty array, nothing to do
 
 # 3. Apply
 out=$(npx xtarterize init --format json --yes --cwd "$dir")
@@ -83,7 +83,7 @@ out=$(npx xtarterize init --format json --yes --cwd "$dir")
 ### Add one task
 
 ```bash
-# MANDATORY — Load references/tasks.md first to find exact task ID
+# MANDATORY - Load references/tasks.md first to find exact task ID
 out=$(npx xtarterize add ts/strict --format json --cwd "$dir")
 ```
 
@@ -91,7 +91,7 @@ out=$(npx xtarterize add ts/strict --format json --cwd "$dir")
 
 ```bash
 out=$(npx xtarterize doctor --format json --cwd "$dir")
-# Parse out.diagnostics — any { "status": "fail" } needs attention
+# Parse out.diagnostics - any { "status": "fail" } needs attention
 # Common fails: "Biome not installed", "Node version too old"
 ```
 
@@ -101,19 +101,19 @@ out=$(npx xtarterize doctor --format json --cwd "$dir")
 |--------|-------------|-----|
 | `add <id>` → "Task not found" | Wrong task ID | `list --format json`, parse `tasks[].id` |
 | `doctor` shows tool not installed | Missing dep | xtarterize only writes configs; user may need to install separately |
-| Task shows `"conflict"` | Config differs | **Never auto-apply** — present to user, only with `--include-conflicts` |
+| Task shows `"conflict"` | Config differs | **Never auto-apply** - present to user, only with `--include-conflicts` |
 | `--cwd` fails preflight | No `package.json` | Verify path exists and is a JS/TS project |
 | `query` returns empty results | Query too narrow or no matching tasks | Broaden query, try synonyms, or lower `--threshold` |
 
 ## Anti-patterns
 
 - **NEVER** run `init --yes` without `diff --format json` first on existing projects
-- **NEVER** edit `.xtarterize/backups/` — use `restore` to recover
+- **NEVER** edit `.xtarterize/backups/` - use `restore` to recover
 - **NEVER** use `--include-conflicts` without user approval
-- **NEVER** parse terminal output — always use `--format json`
-- **NEVER** guess task IDs — load [references/tasks.md](references/tasks.md) first
+- **NEVER** parse terminal output - always use `--format json`
+- **NEVER** guess task IDs - load [references/tasks.md](references/tasks.md) first
 
 ## Reference files
 
-- **Load** [references/tasks.md](references/tasks.md) **before `add`** — find exact task IDs. **MANDATORY — READ ENTIRE FILE.**
-- **Load** [references/commands.md](references/commands.md) for detailed flag descriptions and JSON output shapes. **Do NOT load** for basic usage — covered above.
+- **Load** [references/tasks.md](references/tasks.md) **before `add`** - find exact task IDs. **MANDATORY - READ ENTIRE FILE.**
+- **Load** [references/commands.md](references/commands.md) for detailed flag descriptions and JSON output shapes. **Do NOT load** for basic usage - covered above.

@@ -1,5 +1,5 @@
 /**
- * Minimal project profile — a subset of @xtarterize/core's ProjectProfile.
+ * Minimal project profile - a subset of @xtarterize/core's ProjectProfile.
  *
  * Only the fields that skill conditions actually inspect are declared here
  * so the catalog package stays dependency-free while remaining structurally
@@ -17,7 +17,7 @@ export interface SkillProfile {
 }
 
 /**
- * A resolved skill entry — source + name, no condition.
+ * A resolved skill entry - source + name, no condition.
  */
 export interface SkillEntry {
 	source: string

@@ -5,7 +5,7 @@ description: How xtarterize detects your project's stack and builds a ProjectPro
 
 import { Aside, Tabs, TabItem } from '@astrojs/starlight/components'
 
-The `@xtarterize/core` package provides the `detectProject()` function — the foundation of xtarterize's context-aware behavior. It analyzes your project directory to build a [`ProjectProfile`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/detect.ts) that drives which conformance tasks are applicable.
+The `@xtarterize/core` package provides the `detectProject()` function - the foundation of xtarterize's context-aware behavior. It analyzes your project directory to build a [`ProjectProfile`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/detect.ts) that drives which conformance tasks are applicable.
 
 `detectProject()` now acts as an orchestration layer in [`packages/core/src/detect.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/detect.ts), while concrete detection adapters live in [`packages/core/src/detect/`](https://github.com/agustinusnathaniel/xtarterize/tree/main/packages/core/src/detect) (framework, bundler, router, styling, package manager, and monorepo).
 
@@ -17,7 +17,7 @@ Project detection is the first step in every xtarterize command. It analyzes you
 
 Detection results are cached to avoid redundant I/O on repeated invocations. The cache is stored in `.xtarterize/cache/profile-fingerprint.json` and keyed by a fingerprint of `package.json`, lockfile, and config directories (`.github/`, `.vscode/`, `.changeset/`).
 
-The cache is invalidated when any of these inputs change (mtime or size). Corrupt or missing cache files fall through to full re-computation — the cache is always best-effort. A cache hit typically completes in under 1ms vs 50-150ms for a full detection run.
+The cache is invalidated when any of these inputs change (mtime or size). Corrupt or missing cache files fall through to full re-computation - the cache is always best-effort. A cache hit typically completes in under 1ms vs 50-150ms for a full detection run.
 
 See the file `docs/ADRs/xtarterize/021-fingerprint-profile-caching.md` for the full design.
 
@@ -93,13 +93,13 @@ discovered via parent-directory walk-up. In non-monorepos,
 
 ### Detection modules
 
-- [`framework.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/detect/framework.ts) — framework/runtime/vite-plus detection
-- [`bundler.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/detect/bundler.ts) — bundler detection from deps and config files
-- [`router.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/detect/router.ts) — router detection from bundler + deps
-- [`styling.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/detect/styling.ts) — styling solution detection
-- [`package-manager.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/detect/package-manager.ts) — lockfile/nypm package manager detection
-- [`monorepo.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/detect/monorepo.ts) — workspace/monorepo detection
-- [`types.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/detect/types.ts) + [`utils.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/detect/utils.ts) — shared detection types and guards
+- [`framework.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/detect/framework.ts) - framework/runtime/vite-plus detection
+- [`bundler.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/detect/bundler.ts) - bundler detection from deps and config files
+- [`router.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/detect/router.ts) - router detection from bundler + deps
+- [`styling.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/detect/styling.ts) - styling solution detection
+- [`package-manager.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/detect/package-manager.ts) - lockfile/nypm package manager detection
+- [`monorepo.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/detect/monorepo.ts) - workspace/monorepo detection
+- [`types.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/detect/types.ts) + [`utils.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/detect/utils.ts) - shared detection types and guards
 
 ```mermaid
 flowchart TD
@@ -182,21 +182,21 @@ if (profile.monorepo && profile.monorepoTool === 'turbo') {
 
 ## References
 
-- [npm package.json Documentation](https://docs.npmjs.com/cli/v10/configuring-npm/package-json) — Package manifest format
-- [React](https://react.dev/) — UI library for web and native apps
-- [Vue.js](https://vuejs.org/) — Progressive JavaScript framework
-- [React Native](https://reactnative.dev/) — Native app development with React
-- [Vite](https://vitejs.dev/) — Next-generation frontend build tool
-- [Next.js](https://nextjs.org/) — React framework for production
-- [TanStack Router](https://tanstack.com/router/latest) — Type-safe routing for React
-- [React Router](https://reactrouter.com/) — Declarative routing for React
-- [Vue Router](https://router.vuejs.org/) — Official router for Vue.js
-- [Expo](https://expo.dev/) — React Native framework
-- [Webpack](https://webpack.js.org/) — Module bundler
-- [Rspack](https://rspack.dev/) — Fast Rust-based web bundler
-- [Tailwind CSS](https://tailwindcss.com/) — Utility-first CSS framework
-- [Styled Components](https://styled-components.com/) — CSS-in-JS for React
-- [NativeWind](https://www.nativewind.dev/) — Tailwind CSS for React Native
-- [pnpm Workspaces](https://pnpm.io/workspaces) — Monorepo workspace support
-- [Turborepo](https://turbo.build/repo/docs) — Monorepo task runner
-- [TypeScript tsconfig](https://www.typescriptlang.org/tsconfig/) — Compiler configuration
+- [npm package.json Documentation](https://docs.npmjs.com/cli/v10/configuring-npm/package-json) - Package manifest format
+- [React](https://react.dev/) - UI library for web and native apps
+- [Vue.js](https://vuejs.org/) - Progressive JavaScript framework
+- [React Native](https://reactnative.dev/) - Native app development with React
+- [Vite](https://vitejs.dev/) - Next-generation frontend build tool
+- [Next.js](https://nextjs.org/) - React framework for production
+- [TanStack Router](https://tanstack.com/router/latest) - Type-safe routing for React
+- [React Router](https://reactrouter.com/) - Declarative routing for React
+- [Vue Router](https://router.vuejs.org/) - Official router for Vue.js
+- [Expo](https://expo.dev/) - React Native framework
+- [Webpack](https://webpack.js.org/) - Module bundler
+- [Rspack](https://rspack.dev/) - Fast Rust-based web bundler
+- [Tailwind CSS](https://tailwindcss.com/) - Utility-first CSS framework
+- [Styled Components](https://styled-components.com/) - CSS-in-JS for React
+- [NativeWind](https://www.nativewind.dev/) - Tailwind CSS for React Native
+- [pnpm Workspaces](https://pnpm.io/workspaces) - Monorepo workspace support
+- [Turborepo](https://turbo.build/repo/docs) - Monorepo task runner
+- [TypeScript tsconfig](https://www.typescriptlang.org/tsconfig/) - Compiler configuration

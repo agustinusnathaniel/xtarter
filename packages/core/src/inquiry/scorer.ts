@@ -70,7 +70,7 @@ function scoreTaskForQuery(
 
 	// For each original token, find the BEST match per signal across
 	// all terms (original + synonyms). Then average over original tokens
-	// only — avoids dilution from low-scoring synonyms.
+	// only - avoids dilution from low-scoring synonyms.
 	let labelSum = 0
 	let idSum = 0
 	let groupSum = 0

@@ -9,12 +9,12 @@ xtarterize workflow templates will track **latest major versions** of third-part
 
 ## Current Versions
 
-| Action | Template Version | Rationale |
-|--------|-----------------|-----------|
-| `actions/checkout` | `v6` | Node 24 support, credential persistence changes |
-| `actions/setup-node` | `v6` | Auto-caching limited to npm by default — we explicitly set `cache: pnpm` so unaffected |
-| `peter-evans/create-pull-request` | `v8` | Requires Actions Runner v2.327.1+ — GitHub-hosted runners already compatible |
-| `pnpm/action-setup` | `v4` | Latest stable, reads `packageManager` field |
+| Action                            | Template Version | Rationale                                                                              |
+| --------------------------------- | ---------------- | -------------------------------------------------------------------------------------- |
+| `actions/checkout`                | `v6`             | Node 24 support, credential persistence changes                                        |
+| `actions/setup-node`              | `v6`             | Auto-caching limited to npm by default - we explicitly set `cache: pnpm` so unaffected |
+| `peter-evans/create-pull-request` | `v8`             | Requires Actions Runner v2.327.1+ - GitHub-hosted runners already compatible           |
+| `pnpm/action-setup`               | `v4`             | Latest stable, reads `packageManager` field                                            |
 
 ## Rationale
 

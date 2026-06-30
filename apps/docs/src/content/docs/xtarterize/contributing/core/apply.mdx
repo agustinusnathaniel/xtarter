@@ -17,11 +17,11 @@ tasks + profile → check each → backup files → apply each → report result
 
 The [`applyTasks`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/apply.ts) function orchestrates the entire process:
 
-1. **Filter** — Uses `selectedIds` when the user picks specific tasks; otherwise applies all
-2. **Check** — Re-runs `task.check()` to get current status (skips `skip` tasks, optionally includes `conflict`)
-3. **Backup** — Collects all unique filepaths from `task.dryRun()` and backs them up once before writing anything
-4. **Apply** — Executes `task.apply()` for each task sequentially
-5. **Report** — Returns `{ applied, skipped, errors }` counts
+1. **Filter** - Uses `selectedIds` when the user picks specific tasks; otherwise applies all
+2. **Check** - Re-runs `task.check()` to get current status (skips `skip` tasks, optionally includes `conflict`)
+3. **Backup** - Collects all unique filepaths from `task.dryRun()` and backs them up once before writing anything
+4. **Apply** - Executes `task.apply()` for each task sequentially
+5. **Report** - Returns `{ applied, skipped, errors }` counts
 
 ```typescript
 import { applyTasks } from '@xtarterize/core'
@@ -58,15 +58,15 @@ Before any file is modified, the engine creates timestamped backups in `.xtarter
 
 Errors are collected and reported without aborting the entire run:
 
-- **Check/dryRun failures** — Logged as errors; the file is not backed up and the task is skipped
-- **Apply failures** — Logged with the task ID and error message; subsequent tasks continue
-- **Backup failures** — Caught internally; the apply continues but the file may not be restorable
+- **Check/dryRun failures** - Logged as errors; the file is not backed up and the task is skipped
+- **Apply failures** - Logged with the task ID and error message; subsequent tasks continue
+- **Backup failures** - Caught internally; the apply continues but the file may not be restorable
 
 The function always returns a result object rather than throwing, making it safe for CLI use.
 
 ## Ordering
 
-Tasks are applied in registration order (the order they appear in `getAllTasks()`). There is no dependency graph — each task is independent and idempotent. This means any subset of tasks can be applied in any order without producing different results.
+Tasks are applied in registration order (the order they appear in `getAllTasks()`). There is no dependency graph - each task is independent and idempotent. This means any subset of tasks can be applied in any order without producing different results.
 
 ## References
 

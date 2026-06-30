@@ -6,8 +6,8 @@ All commands run via `npx xtarterize <command> [options]`. Replace `npx` with `p
 
 ## Global flags
 
-| Flag | Description |
-|------|-------------|
+| Flag           | Description                         |
+| -------------- | ----------------------------------- |
 | `--cwd <path>` | Target directory (default: current) |
 
 ---
@@ -26,16 +26,16 @@ npx xtarterize init --json --dry-run          # Preview only (same as diff)
 npx xtarterize init --json --compose "strict TypeScript with CI"  # Rank tasks by relevance, then apply
 ```
 
-| Flag | Description |
-|------|-------------|
-| `--dry-run` | Preview changes without applying |
-| `--yes` / `-y` | Skip all confirmations, apply all |
-| `--skip <ids>` | Exclude tasks (comma-separated IDs, e.g. `lint/biome,ts/strict`) |
-| `--only <ids>` | Apply only specific tasks (comma-separated) |
-| `--quiet` | Suppress interactive prompts and verbose output |
-| `--include-conflicts` | Include conflicting tasks when applying |
-| `--compose <query>` | Natural language query to compose a targeted task plan (e.g. `"strict TypeScript with CI"`). Tasks are ranked by relevance before stepping through the normal init workflow. |
-| `--format <fmt>` | Output format: `terminal` (default) or `json` |
+| Flag                  | Description                                                                                                                                                                  |
+| --------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--dry-run`           | Preview changes without applying                                                                                                                                             |
+| `--yes` / `-y`        | Skip all confirmations, apply all                                                                                                                                            |
+| `--skip <ids>`        | Exclude tasks (comma-separated IDs, e.g. `lint/biome,ts/strict`)                                                                                                             |
+| `--only <ids>`        | Apply only specific tasks (comma-separated)                                                                                                                                  |
+| `--quiet`             | Suppress interactive prompts and verbose output                                                                                                                              |
+| `--include-conflicts` | Include conflicting tasks when applying                                                                                                                                      |
+| `--compose <query>`   | Natural language query to compose a targeted task plan (e.g. `"strict TypeScript with CI"`). Tasks are ranked by relevance before stepping through the normal init workflow. |
+| `--format <fmt>`      | Output format: `terminal` (default) or `json`                                                                                                                                |
 
 Without `--yes`, opens an interactive task selection menu. In CI or with `--yes`, applies all applicable tasks non-interactively.
 
@@ -63,20 +63,28 @@ npx xtarterize diff --json
 npx xtarterize diff --json --cwd ../project
 ```
 
-| Flag | Description |
-|------|-------------|
-| `--quiet` | Suppress verbose output |
-| `--json` | Output machine-readable JSON |
+| Flag             | Description                         |
+| ---------------- | ----------------------------------- |
+| `--quiet`        | Suppress verbose output             |
+| `--json`         | Output machine-readable JSON        |
 | `--format <fmt>` | Output format: `terminal` or `json` |
 
 **Output shape (when `--json`):**
+
 ```json
 [
   {
     "filepath": "tsconfig.json",
     "before": "{ ...existing content... }",
     "after": "{ ...new content... }",
-    "hunks": [{ "header": "@@ ... @@", "lines": ["-old", "+new"], "added": 1, "removed": 1 }],
+    "hunks": [
+      {
+        "header": "@@ ... @@",
+        "lines": ["-old", "+new"],
+        "added": 1,
+        "removed": 1
+      }
+    ],
     "stats": { "added": 5, "removed": 2 },
     "semantic": { "added": { "compilerOptions.strict": "true" } }
   }
@@ -97,23 +105,27 @@ npx xtarterize check --json --cwd ../project
 npx xtarterize check --json --verbose    # Include tool/diagnostic checks
 ```
 
-| Flag | Description |
-|------|-------------|
+| Flag        | Description                                |
+| ----------- | ------------------------------------------ |
 | `--verbose` | Show tool installation and conflict checks |
-| `--quiet` | Suppress verbose output |
-| `--json` | Output machine-readable JSON |
+| `--quiet`   | Suppress verbose output                    |
+| `--json`    | Output machine-readable JSON               |
 
 **Output shape:**
+
 ```json
 {
   "ok": true,
   "summary": { "conformant": 8, "total": 14 },
   "tasks": [
-    { "id": "lint/biome", "label": "Biome linting", "group": "Lint", "status": "new" }
+    {
+      "id": "lint/biome",
+      "label": "Biome linting",
+      "group": "Lint",
+      "status": "new"
+    }
   ],
-  "diagnostics": [
-    { "name": "Node.js", "status": "pass", "message": "v24.0.0" }
-  ]
+  "diagnostics": [{ "name": "Node.js", "status": "pass", "message": "v24.0.0" }]
 }
 ```
 
@@ -130,11 +142,11 @@ npx xtarterize add lint/biome --json
 npx xtarterize add ts/strict --json
 ```
 
-| Flag | Description |
-|------|-------------|
-| `--all` | Apply all applicable new and patch tasks without interaction |
-| `--quiet` | Suppress interactive prompts |
-| `--format <fmt>` | Output format: `terminal` or `json` |
+| Flag             | Description                                                  |
+| ---------------- | ------------------------------------------------------------ |
+| `--all`          | Apply all applicable new and patch tasks without interaction |
+| `--quiet`        | Suppress interactive prompts                                 |
+| `--format <fmt>` | Output format: `terminal` or `json`                          |
 
 Shows a diff preview before applying. If the task status is `skip`, outputs a message and exits without changes. If no task ID is provided, lists all available tasks.
 
@@ -151,12 +163,13 @@ npx xtarterize list --json
 npx xtarterize list --json --cwd ../project
 ```
 
-| Flag | Description |
-|------|-------------|
-| `--quiet` | Suppress verbose output |
-| `--json` | Output machine-readable JSON |
+| Flag      | Description                  |
+| --------- | ---------------------------- |
+| `--quiet` | Suppress verbose output      |
+| `--json`  | Output machine-readable JSON |
 
 **Output shape:**
+
 ```json
 {
   "ok": true,
@@ -167,8 +180,18 @@ npx xtarterize list --json --cwd ../project
     "typescript": true
   },
   "tasks": [
-    { "id": "lint/biome", "label": "Biome linting", "group": "Lint", "status": "new" },
-    { "id": "ts/strict", "label": "Strict mode", "group": "TypeScript", "status": "skip" }
+    {
+      "id": "lint/biome",
+      "label": "Biome linting",
+      "group": "Lint",
+      "status": "new"
+    },
+    {
+      "id": "ts/strict",
+      "label": "Strict mode",
+      "group": "TypeScript",
+      "status": "skip"
+    }
   ]
 }
 ```
@@ -177,7 +200,7 @@ Without `--json`, groups tasks by category (Agent, CI, Lint, TypeScript, etc.) w
 
 ---
 
-## `query <query>` — Search tasks by natural language
+## `query <query>` - Search tasks by natural language
 
 A pure-algorithmic scoring engine (no AI) that ranks xtarterize tasks by relevance to a natural language query. Uses tokenization, stemming, fuzzy matching, and synonym expansion to match against task labels, IDs, groups, keywords, and config targets.
 
@@ -187,14 +210,15 @@ npx xtarterize query "ci with linting" --json --limit 10
 npx xtarterize query "react testing" --json --threshold 0.2
 ```
 
-| Flag | Description |
-|------|-------------|
-| `--limit <n>` | Maximum results (default: 20) |
+| Flag              | Description                                |
+| ----------------- | ------------------------------------------ |
+| `--limit <n>`     | Maximum results (default: 20)              |
 | `--threshold <n>` | Minimum relevance score 0-1 (default: 0.1) |
-| `--quiet` | Suppress verbose output |
-| `--json` | Output machine-readable JSON |
+| `--quiet`         | Suppress verbose output                    |
+| `--json`          | Output machine-readable JSON               |
 
 **Output shape:**
+
 ```json
 {
   "type": "query",
@@ -235,10 +259,10 @@ npx xtarterize restore vite.config.ts
 npx xtarterize restore tsconfig.json --yes   # Non-interactive, restore latest
 ```
 
-| Flag | Description |
-|------|-------------|
+| Flag           | Description                                  |
+| -------------- | -------------------------------------------- |
 | `--yes` / `-y` | Skip selection prompt, restore latest backup |
-| `--quiet` | Suppress verbose output |
+| `--quiet`      | Suppress verbose output                      |
 
 If multiple backups exist, prompts to select which version. Use `--yes` to skip the prompt and restore the latest backup automatically (non-interactive/CI-safe). Use `--quiet` for compact output.
 
@@ -254,13 +278,14 @@ npx xtarterize doctor --json --cwd ../project
 npx xtarterize doctor --json --verbose    # Include system info
 ```
 
-| Flag | Description |
-|------|-------------|
-| `--quiet` | Suppress detailed output |
+| Flag        | Description                                             |
+| ----------- | ------------------------------------------------------- |
+| `--quiet`   | Suppress detailed output                                |
 | `--verbose` | Show additional system information (platform, CPU, RAM) |
-| `--json` | Output machine-readable JSON |
+| `--json`    | Output machine-readable JSON                            |
 
 **Output shape:**
+
 ```json
 {
   "ok": true,
@@ -272,4 +297,4 @@ npx xtarterize doctor --json --verbose    # Include system info
 }
 ```
 
-Checks: environment (Node version, pnpm), tools (Biome, TypeScript), project health (valid package.json, git), and configuration conflicts (multiple linters, legacy configs). Parse `diagnostics[].status` — any `"fail"` needs attention.
+Checks: environment (Node version, pnpm), tools (Biome, TypeScript), project health (valid package.json, git), and configuration conflicts (multiple linters, legacy configs). Parse `diagnostics[].status` - any `"fail"` needs attention.

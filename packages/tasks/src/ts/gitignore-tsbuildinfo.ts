@@ -4,7 +4,7 @@ const ENTRIES = ['*.tsbuildinfo', '.tsbuildinfo/']
 
 export const gitignoreTsbuildinfoTask = createFileTask({
 	id: 'gitignore/tsbuildinfo',
-	label: '.gitignore — tsbuildinfo',
+	label: '.gitignore - tsbuildinfo',
 	group: 'TypeScript',
 	searchMeta: {
 		tags: ['typescript', 'gitignore', 'build-output'],

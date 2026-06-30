@@ -27,13 +27,14 @@ In `renderBiomeJson`, check `profile.styling` for `'tailwind'` or `'nativewind'`
 
 ```typescript
 if (hasTailwind) {
-  config.css = { parser: { tailwindDirectives: true } }
+  config.css = { parser: { tailwindDirectives: true } };
 }
 ```
 
 ## Future Extensions
 
 This pattern should extend to other framework-specific parser needs:
+
 - Vue SFC syntax (`*.vue` files)
 - SCSS/Less preprocessing directives
 - CSS Modules `:local` / `:global` pseudo-selectors
@@ -41,5 +42,5 @@ This pattern should extend to other framework-specific parser needs:
 ## Consequences
 
 - Projects using Tailwind CSS get a Biome config that parses their CSS correctly out of the box.
-- Non-Tailwind projects are unaffected — no extra CSS parser config added.
+- Non-Tailwind projects are unaffected - no extra CSS parser config added.
 - As Biome adds more framework-specific parser options, this detection pattern should expand.

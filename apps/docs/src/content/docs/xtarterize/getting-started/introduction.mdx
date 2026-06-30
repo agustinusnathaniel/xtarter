@@ -6,7 +6,7 @@ description: Learn what xtarterize is and how it automates conformance configura
 import { Aside, Steps, LinkButton } from '@astrojs/starlight/components'
 
 <Aside type="caution" title="Current focus: Vite + React + TypeScript">
-  The deepest task coverage is for projects using **Vite**, **React**, and **TypeScript**. Other stacks (Vue, Svelte, Solid, Node CLI, Bun, etc.) are detected and partially supported, but their conformance tasks are **experimental** — fewer tasks may apply and coverage is less mature.
+  The deepest task coverage is for projects using **Vite**, **React**, and **TypeScript**. Other stacks (Vue, Svelte, Solid, Node CLI, Bun, etc.) are detected and partially supported, but their conformance tasks are **experimental** - fewer tasks may apply and coverage is less mature.
 </Aside>
 
 xtarterize is an adaptive CLI tool that automates the setup, enforcement, and ongoing synchronization of developer conformance configurations across [JavaScript](https://developer.mozilla.org/en-US/docs/Web/JavaScript)/[TypeScript](https://www.typescriptlang.org/) projects.
@@ -15,10 +15,10 @@ xtarterize is an adaptive CLI tool that automates the setup, enforcement, and on
 
 Modern JS/TS projects require a large and growing set of tooling configuration: [linters](https://biomejs.dev/), [formatters](https://biomejs.dev/), [bundler plugins](https://vitejs.dev/guide/using-plugins.html), [TypeScript settings](https://www.typescriptlang.org/tsconfig/), [CI/CD workflows](https://docs.github.com/en/actions), [release automation](https://github.com/absolute-version/commit-and-tag-version), [dependency management](https://docs.renovatebot.com/), [editor settings](https://code.visualstudio.com/docs/getstarted/settings), and [AI agent skills](https://skills.sh). Setting these up consistently across projects is:
 
-- **Repetitive** — the same configs are rewritten or copy-pasted project to project
-- **Error-prone** — manual patching of [`package.json`](https://docs.npmjs.com/cli/v10/configuring-npm/package-json), [`tsconfig.json`](https://www.typescriptlang.org/tsconfig/), or [`vite.config.ts`](https://vitejs.dev/config/) often misses edge cases
-- **Inconsistent** — configs diverge between projects over time as standards evolve
-- **Context-blind** — a [React](https://react.dev/) project needs different config than a [React Native](https://reactnative.dev/) or [Vue](https://vuejs.org/) project
+- **Repetitive** - the same configs are rewritten or copy-pasted project to project
+- **Error-prone** - manual patching of [`package.json`](https://docs.npmjs.com/cli/v10/configuring-npm/package-json), [`tsconfig.json`](https://www.typescriptlang.org/tsconfig/), or [`vite.config.ts`](https://vitejs.dev/config/) often misses edge cases
+- **Inconsistent** - configs diverge between projects over time as standards evolve
+- **Context-blind** - a [React](https://react.dev/) project needs different config than a [React Native](https://reactnative.dev/) or [Vue](https://vuejs.org/) project
 
 xtarterize solves this by being detection-first, context-aware, non-destructive, idempotent, and evolvable.
 
@@ -26,11 +26,11 @@ xtarterize solves this by being detection-first, context-aware, non-destructive,
 
 <Steps>
 
-1. **Detect** — Scans your project to build a full [`ProjectProfile`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/detect.ts) (framework, bundler, styling, package manager, monorepo status, existing configs)
-2. **Resolve** — Maps the profile to applicable conformance tasks (e.g., [Vite](https://vitejs.dev/) tasks only for Vite projects)
-3. **Check** — Determines each task's status: `new` (file doesn't exist), `patch` (needs merging), `skip` (already conformant), or `conflict` (incompatible)
-4. **Plan** — Displays a conformance plan table for review
-5. **Apply** — Backs up files, then applies changes using [deep merge](https://github.com/unjs/defu) or [AST manipulation](https://github.com/unjs/magicast)
+1. **Detect** - Scans your project to build a full [`ProjectProfile`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/detect.ts) (framework, bundler, styling, package manager, monorepo status, existing configs)
+2. **Resolve** - Maps the profile to applicable conformance tasks (e.g., [Vite](https://vitejs.dev/) tasks only for Vite projects)
+3. **Check** - Determines each task's status: `new` (file doesn't exist), `patch` (needs merging), `skip` (already conformant), or `conflict` (incompatible)
+4. **Plan** - Displays a conformance plan table for review
+5. **Apply** - Backs up files, then applies changes using [deep merge](https://github.com/unjs/defu) or [AST manipulation](https://github.com/unjs/magicast)
 
 </Steps>
 
@@ -77,13 +77,13 @@ npx xtarterize init
 
 ## References
 
-- [TypeScript Documentation](https://www.typescriptlang.org/docs/) — Learn about TypeScript compiler options and configuration
-- [Biome](https://biomejs.dev/) — Fast linter and formatter for JavaScript/TypeScript
-- [Vite](https://vitejs.dev/) — Next-generation frontend build tool
-- [GitHub Actions](https://docs.github.com/en/actions) — CI/CD automation platform
-- [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) — Automated versioning and changelog generation
-- [Renovate](https://docs.renovatebot.com/) — Automated dependency updates
-- [VS Code Settings](https://code.visualstudio.com/docs/getstarted/settings) — Editor configuration documentation
-- [Agent Skills](https://skills.sh) — Open ecosystem of reusable AI agent capabilities
+- [TypeScript Documentation](https://www.typescriptlang.org/docs/) - Learn about TypeScript compiler options and configuration
+- [Biome](https://biomejs.dev/) - Fast linter and formatter for JavaScript/TypeScript
+- [Vite](https://vitejs.dev/) - Next-generation frontend build tool
+- [GitHub Actions](https://docs.github.com/en/actions) - CI/CD automation platform
+- [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) - Automated versioning and changelog generation
+- [Renovate](https://docs.renovatebot.com/) - Automated dependency updates
+- [VS Code Settings](https://code.visualstudio.com/docs/getstarted/settings) - Editor configuration documentation
+- [Agent Skills](https://skills.sh) - Open ecosystem of reusable AI agent capabilities
 
 <LinkButton href="/xtarterize/getting-started/installation/">Install xtarterize →</LinkButton>

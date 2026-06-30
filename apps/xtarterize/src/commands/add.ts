@@ -329,7 +329,7 @@ async function selectTasksGrouped(
 		const hint = getStatusHint(entry.status)
 		groups[group].push({
 			value: entry.task.id,
-			label: `${entry.task.label} (${entry.task.id})${hint ? ` — ${hint}` : ''}`,
+			label: `${entry.task.label} (${entry.task.id})${hint ? ` - ${hint}` : ''}`,
 		})
 	}
 

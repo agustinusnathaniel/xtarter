@@ -11,7 +11,7 @@ The `@xtarterize/patchers` package provides utilities for safely modifying confi
 
 | Patcher | Description |
 |---------|-------------|
-| `mergeJson` | Deep merge JSON objects using [`defu`](https://github.com/unjs/defu) — existing keys take precedence |
+| `mergeJson` | Deep merge JSON objects using [`defu`](https://github.com/unjs/defu) - existing keys take precedence |
 | `mergeYaml` | Deep merge YAML objects using [`defu`](https://github.com/unjs/defu) and [`js-yaml`](https://github.com/nodeca/js-yaml) |
 | `injectVitePlugin` | AST-based plugin injection into `vite.config.ts` using [`magicast`](https://github.com/unjs/magicast) |
 
@@ -47,7 +47,7 @@ const merged = mergeJson(existing, incoming)
 ```
 
 <Aside type="tip">
-  The [`defu`](https://github.com/unjs/defu) library ensures that existing user configuration is never overwritten — incoming values only fill gaps. Learn more in the [JSON Merge](/xtarterize/contributing/patchers/json-merge/) reference.
+  The [`defu`](https://github.com/unjs/defu) library ensures that existing user configuration is never overwritten - incoming values only fill gaps. Learn more in the [JSON Merge](/xtarterize/contributing/patchers/json-merge/) reference.
 </Aside>
 
 ## YAML Merge
@@ -92,11 +92,11 @@ if (!result.success) {
 
 <Steps>
 
-1. **Parse** — Parses `vite.config.ts` using `magicast`
-2. **Check** — Checks if the plugin is already imported (idempotent)
-3. **Insert import** — Inserts the import at the top of the file
-4. **Append plugin** — Appends the plugin call to the `plugins` array
-5. **Write** — Writes the file back
+1. **Parse** - Parses `vite.config.ts` using `magicast`
+2. **Check** - Checks if the plugin is already imported (idempotent)
+3. **Insert import** - Inserts the import at the top of the file
+4. **Append plugin** - Appends the plugin call to the `plugins` array
+5. **Write** - Writes the file back
 
 </Steps>
 
@@ -106,7 +106,7 @@ if (!result.success) {
 
 ## References
 
-- [defu](https://github.com/unjs/defu) — Deep merge utility for JavaScript objects
-- [js-yaml](https://github.com/nodeca/js-yaml) — YAML parser and serializer for JavaScript
-- [magicast](https://github.com/unjs/magicast) — AST manipulation library for JavaScript/TypeScript
-- [Vite Plugin API](https://vitejs.dev/guide/api-plugin.html) — How Vite plugins work
+- [defu](https://github.com/unjs/defu) - Deep merge utility for JavaScript objects
+- [js-yaml](https://github.com/nodeca/js-yaml) - YAML parser and serializer for JavaScript
+- [magicast](https://github.com/unjs/magicast) - AST manipulation library for JavaScript/TypeScript
+- [Vite Plugin API](https://vitejs.dev/guide/api-plugin.html) - How Vite plugins work

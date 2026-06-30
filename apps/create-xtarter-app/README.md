@@ -10,12 +10,12 @@ Quickly scaffold new projects from curated starter templates with a beautiful in
 
 ## Features
 
-- **Beautiful UI** — Powered by [`@clack/prompts`](https://github.com/bombshell-dev/clack) for a delightful terminal experience
-- **Fast Downloads** — Uses [`giget`](https://github.com/unjs/giget) for efficient template downloads (no git dependency required)
-- **Type-Safe** — Built with TypeScript for reliability
-- **Modern Stack** — Leverages [`tinyexec`](https://github.com/tinylibs/tinyexec) for lightweight process execution
-- **Flexible** — Support for multiple templates and package managers
-- **Clean Mode** — Optionally remove CI/CD configs for fresh projects
+- **Beautiful UI** - Powered by [`@clack/prompts`](https://github.com/bombshell-dev/clack) for a delightful terminal experience
+- **Fast Downloads** - Uses [`giget`](https://github.com/unjs/giget) for efficient template downloads (no git dependency required)
+- **Type-Safe** - Built with TypeScript for reliability
+- **Modern Stack** - Leverages [`tinyexec`](https://github.com/tinylibs/tinyexec) for lightweight process execution
+- **Flexible** - Support for multiple templates and package managers
+- **Clean Mode** - Optionally remove CI/CD configs for fresh projects
 
 ## Quick Start
 
@@ -52,21 +52,22 @@ Options:
 
 ### Available Templates
 
-| Template | Description | Source |
-|----------|-------------|--------|
-| `next-chakra` | Next.js + Chakra UI v3, Biome, Turborepo | [nextarter-chakra](https://github.com/agustinusnathaniel/nextarter-chakra) |
-| `next-tailwind` | Next.js + Tailwind CSS v4 | [nextarter-tailwind](https://github.com/agustinusnathaniel/nextarter-tailwind) |
-| `vite-chakra` | Vite + React + Chakra UI v3, TanStack Router | [vite-react-chakra-starter](https://github.com/agustinusnathaniel/vite-react-chakra-starter) |
+| Template        | Description                                     | Source                                                                                           |
+| --------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `next-chakra`   | Next.js + Chakra UI v3, Biome, Turborepo        | [nextarter-chakra](https://github.com/agustinusnathaniel/nextarter-chakra)                       |
+| `next-tailwind` | Next.js + Tailwind CSS v4                       | [nextarter-tailwind](https://github.com/agustinusnathaniel/nextarter-tailwind)                   |
+| `vite-chakra`   | Vite + React + Chakra UI v3, TanStack Router    | [vite-react-chakra-starter](https://github.com/agustinusnathaniel/vite-react-chakra-starter)     |
 | `vite-tailwind` | Vite + React + Tailwind CSS v4, TanStack Router | [vite-react-tailwind-starter](https://github.com/agustinusnathaniel/vite-react-tailwind-starter) |
-| `vite-hero` | Vite + React + Hero UI | [vite-react-hero-starter](https://github.com/agustinusnathaniel/vite-react-hero-starter) |
+| `vite-hero`     | Vite + React + Hero UI                          | [vite-react-hero-starter](https://github.com/agustinusnathaniel/vite-react-hero-starter)         |
 
 ### Package Managers
 
 Supported package managers:
-- **pnpm** (recommended) — Fast, disk-efficient package management
-- **npm** — Default Node.js package manager
-- **bun** — Ultra-fast JavaScript runtime and package manager
-- **yarn** — Classic alternative
+
+- **pnpm** (recommended) - Fast, disk-efficient package management
+- **npm** - Default Node.js package manager
+- **bun** - Ultra-fast JavaScript runtime and package manager
+- **yarn** - Classic alternative
 
 ## Examples
 
@@ -79,6 +80,7 @@ npx create-xtarter-app@latest
 ```
 
 You'll be prompted for:
+
 1. Project name
 2. Template selection
 3. Package manager
@@ -100,13 +102,13 @@ npx create-xtarter-app@latest my-app -t next-chakra --yes
 ### Programmatic Usage
 
 ```typescript
-import { downloadTemplateFiles, getTemplateById } from 'create-xtarter-app';
+import { downloadTemplateFiles, getTemplateById } from "create-xtarter-app";
 
-const template = getTemplateById('vite-tailwind');
+const template = getTemplateById("vite-tailwind");
 if (template) {
   await downloadTemplateFiles({
     template,
-    targetPath: './my-project',
+    targetPath: "./my-project",
   });
 }
 ```
@@ -134,7 +136,7 @@ Then open your browser to the URL shown (usually `http://localhost:3000`).
 
 ### Next Step: Apply Production-Grade Configs
 
-Already have a project (from any source) and want to add Biome, CI/CD, Renovate, commitlint, VS Code settings, and more? Check out [**xtarterize**](https://github.com/agustinusnathaniel/xtarterize) — it detects your stack and applies curated configurations non-destructively.
+Already have a project (from any source) and want to add Biome, CI/CD, Renovate, commitlint, VS Code settings, and more? Check out [**xtarterize**](https://github.com/agustinusnathaniel/xtarterize) - it detects your stack and applies curated configurations non-destructively.
 
 ```bash
 npx xtarterize init
@@ -142,10 +144,10 @@ npx xtarterize init
 
 ## Related Tools
 
-| Tool | When to Use |
-|------|-------------|
-| **create-xtarter-app** | Day 0 — Start a new project from a curated template |
-| **xtarterize** | Day 1+ — Add production configs to an existing project (any stack) |
+| Tool                   | When to Use                                                        |
+| ---------------------- | ------------------------------------------------------------------ |
+| **create-xtarter-app** | Day 0 - Start a new project from a curated template                |
+| **xtarterize**         | Day 1+ - Add production configs to an existing project (any stack) |
 
 > Both tools live in the [xtarterize monorepo](https://github.com/agustinusnathaniel/xtarterize).
 
@@ -167,13 +169,13 @@ node apps/create-xtarter-app/dist/cli.mjs /tmp/my-app -t vite-tailwind --yes
 
 ## Tech Stack
 
-| Tool | Purpose |
-|------|---------|
-| [`@clack/prompts`](https://npmjs.com/package/@clack/prompts) | Interactive prompts |
-| [`citty`](https://npmjs.com/package/citty) | Command-line argument parsing |
-| [`consola`](https://npmjs.com/package/consola) | Console logging |
-| [`giget`](https://npmjs.com/package/giget) | Template downloads |
-| [`tinyexec`](https://npmjs.com/package/tinyexec) | Process execution |
+| Tool                                                         | Purpose                       |
+| ------------------------------------------------------------ | ----------------------------- |
+| [`@clack/prompts`](https://npmjs.com/package/@clack/prompts) | Interactive prompts           |
+| [`citty`](https://npmjs.com/package/citty)                   | Command-line argument parsing |
+| [`consola`](https://npmjs.com/package/consola)               | Console logging               |
+| [`giget`](https://npmjs.com/package/giget)                   | Template downloads            |
+| [`tinyexec`](https://npmjs.com/package/tinyexec)             | Process execution             |
 
 ## Architecture Decisions
 
@@ -183,12 +185,12 @@ See [docs/ADRs/create-xtarter-app/](../../docs/ADRs/create-xtarter-app/) for arc
 
 This CLI uses [`giget`](https://github.com/unjs/giget) instead of the more common `degit` because:
 
-- **Zero dependencies** — No reliance on local git or tar commands
-- **Better performance** — Fast cloning using tarball gzip
-- **Offline support** — Works offline with disk cache
-- **Actively maintained** — Regular updates (degit last update: 2021)
-- **Multi-provider** — Works with GitHub, GitLab, Bitbucket, Sourcehut
-- **Sparse checkout** — Extract subdirectories without full repo download
+- **Zero dependencies** - No reliance on local git or tar commands
+- **Better performance** - Fast cloning using tarball gzip
+- **Offline support** - Works offline with disk cache
+- **Actively maintained** - Regular updates (degit last update: 2021)
+- **Multi-provider** - Works with GitHub, GitLab, Bitbucket, Sourcehut
+- **Sparse checkout** - Extract subdirectories without full repo download
 
 ## License
 

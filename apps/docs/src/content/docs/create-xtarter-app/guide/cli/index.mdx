@@ -1,6 +1,6 @@
 ---
 title: CLI Reference
-description: Complete command reference for create-xtarter-app — all arguments, options, and usage examples.
+description: Complete command reference for create-xtarter-app - all arguments, options, and usage examples.
 ---
 
 import { Tabs, TabItem } from '@astrojs/starlight/components'
@@ -21,18 +21,18 @@ npx create-xtarter-app@latest [project-name] [options]
 
 | Option | Alias | Type | Default | Description |
 |--------|-------|------|---------|-------------|
-| `--template` | `-t` | string | — | Template ID to use (skips prompt). See [Templates](/create-xtarter-app/guide/templates/) |
-| `--pm` | `-p` | string | — | Package manager (`pnpm`, `npm`, `bun`, `yarn`) |
-| `--no-git` | — | boolean | — | Skip git initialization |
-| `--clean` | — | boolean | — | Remove CI/CD config files after scaffolding |
-| `--force` | `-f` | boolean | — | Overwrite existing target directory |
-| `--ref` | — | string | — | Git ref (branch, tag, or commit SHA) to download |
-| `--yes` | `-y` | boolean | — | Use defaults for all prompts (defaults to `next-chakra` template when `-t` is omitted) |
-| `--quiet` | — | boolean | — | Suppress banners, spinners, and decorative output |
-| `--json` | — | boolean | — | Output scaffold result as JSON (also suppresses banners and spinners) |
-| `--no-color` | — | boolean | — | Disable colorized output |
-| `--help` | `-h` | boolean | — | Show help text |
-| `--version` | `-v` | boolean | — | Show version |
+| `--template` | `-t` | string | - | Template ID to use (skips prompt). See [Templates](/create-xtarter-app/guide/templates/) |
+| `--pm` | `-p` | string | - | Package manager (`pnpm`, `npm`, `bun`, `yarn`) |
+| `--no-git` | - | boolean | - | Skip git initialization |
+| `--clean` | - | boolean | - | Remove CI/CD config files after scaffolding |
+| `--force` | `-f` | boolean | - | Overwrite existing target directory |
+| `--ref` | - | string | - | Git ref (branch, tag, or commit SHA) to download |
+| `--yes` | `-y` | boolean | - | Use defaults for all prompts (defaults to `next-chakra` template when `-t` is omitted) |
+| `--quiet` | - | boolean | - | Suppress banners, spinners, and decorative output |
+| `--json` | - | boolean | - | Output scaffold result as JSON (also suppresses banners and spinners) |
+| `--no-color` | - | boolean | - | Disable colorized output |
+| `--help` | `-h` | boolean | - | Show help text |
+| `--version` | `-v` | boolean | - | Show version |
 
 ## Subcommands
 
@@ -45,9 +45,9 @@ npx create-xtarter-app@latest [project-name] [options]
 | Manager | Command | Note |
 |---------|---------|------|
 | `pnpm` | (default) | Fast, disk-efficient |
-| `npm` | — | Default Node.js |
-| `bun` | — | Ultra-fast runtime |
-| `yarn` | — | Classic choice |
+| `npm` | - | Default Node.js |
+| `bun` | - | Ultra-fast runtime |
+| `yarn` | - | Classic choice |
 
 ## Examples
 
@@ -55,7 +55,7 @@ npx create-xtarter-app@latest [project-name] [options]
   <TabItem label="pnpm">
 
   ```bash
-  # Interactive — prompts for everything
+  # Interactive - prompts for everything
   pnpm create xtarter-app
 
   # Quick start with defaults
@@ -145,13 +145,13 @@ npx create-xtarter-app@latest [project-name] [options]
 
 ## Error handling
 
-- **Invalid template ID** — prints all valid template IDs and exits
-- **Invalid package manager** — prints valid options and exits
-- **Target directory exists** — cancels with an error unless `--force` is used
-- **Invalid project name** — validation fails during prompt
-- **Download failure** — retries up to 3 times, then exits with error
-- **Install failure** — cleans up created directory (if scaffolded to a new path), then exits
-- **Partial scaffold** — if any step after download fails, created directories are cleaned up automatically
+- **Invalid template ID** - prints all valid template IDs and exits
+- **Invalid package manager** - prints valid options and exits
+- **Target directory exists** - cancels with an error unless `--force` is used
+- **Invalid project name** - validation fails during prompt
+- **Download failure** - retries up to 3 times, then exits with error
+- **Install failure** - cleans up created directory (if scaffolded to a new path), then exits
+- **Partial scaffold** - if any step after download fails, created directories are cleaned up automatically
 
 ## Programmatic API
 

@@ -15,9 +15,8 @@
 - [#75](https://github.com/agustinusnathaniel/xtarter/pull/75) [`be651f3`](https://github.com/agustinusnathaniel/xtarter/commit/be651f3aa5e6bac9098fc145fd0a3651f7b4fbbb) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - feat: add natural language task query engine with `query` command and `init --compose`
 
   New features:
-
-  - `xtarterize query <query>` — search and discover tasks using natural language with a pure-algorithmic scoring engine
-  - `xtarterize init --compose <query>` — compose a targeted task plan by ranking tasks by relevance
+  - `xtarterize query <query>` - search and discover tasks using natural language with a pure-algorithmic scoring engine
+  - `xtarterize init --compose <query>` - compose a targeted task plan by ranking tasks by relevance
   - Task metadata enrichment: new optional `searchMeta` field on the Task interface with `tags`, `configTargets`, and `keywords` supports richer search results
   - All 26 built-in tasks now include search metadata
   - Query output redesigned with domain-bundle grouping, compact one-liners, and per-group actionable add commands
@@ -39,7 +38,6 @@
 - [#73](https://github.com/agustinusnathaniel/xtarter/pull/73) [`aec3c0a`](https://github.com/agustinusnathaniel/xtarter/commit/aec3c0a4d289c5984183d738d99727555b84c602) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Refactor task resolution with TaskScope system for monorepo-aware task filtering
 
   Introduces a `TaskScope` type (`'root' | 'package' | 'both'`) that each task can declare. When running in a monorepo:
-
   - **Root-scoped tasks** (CI/CD, release tooling, turbo, renovate, editor config, npmrc, gitignore, package scripts) are excluded when running inside a workspace package.
   - **Package-scoped tasks** (tsconfig path aliases, vite-plugin-checker, rollup-plugin-visualizer) are excluded when running from the monorepo root.
   - Tasks without explicit scope (or with `scope: 'both'`) are included everywhere, preserving backward compatibility.
@@ -100,12 +98,11 @@
 ### Patch Changes
 
 - [`c637a36`](https://github.com/agustinusnathaniel/xtarter/commit/c637a3686e1c32e5a0cb658c2030201dcb5c32b1) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Edge-case hardening across CLI, core, tasks, and UI layers:
-
-  - **CLI** — try/catch guards on `init`, `sync`, `diff`, `add`, `doctor`, and `restore` prevent crashes from individual task failures; `--skip`/`--only` no longer matches phantom empty-string values; `doctor` uses `Promise.allSettled` for resilient diagnostics
-  - **Core** — robust atomic writes with temp file cleanup on failure; schema validation guards against corrupted cache entries; fixed React Native + React co-detection; skipped count now correctly tracks explicit skips from check phase
-  - **Tasks** — fixed `this.getScripts` undefined crash in `packageScriptsTask`; `commitMsgHook` accepts a package manager parameter instead of hardcoding pnpm; corrected `check()` status detection for `conflict` vs `new`
-  - **UI** — merged multi-diff preserves earlier diffs instead of dropping them; JSON `ok` field reflects actual conformance state; multiselect cancel properly aborts
-  - **Documentation** — outdated content refreshed (Node.js minimum bumped to 24, missing CLI flags documented, task applicability corrected, path fixes)
+  - **CLI** - try/catch guards on `init`, `sync`, `diff`, `add`, `doctor`, and `restore` prevent crashes from individual task failures; `--skip`/`--only` no longer matches phantom empty-string values; `doctor` uses `Promise.allSettled` for resilient diagnostics
+  - **Core** - robust atomic writes with temp file cleanup on failure; schema validation guards against corrupted cache entries; fixed React Native + React co-detection; skipped count now correctly tracks explicit skips from check phase
+  - **Tasks** - fixed `this.getScripts` undefined crash in `packageScriptsTask`; `commitMsgHook` accepts a package manager parameter instead of hardcoding pnpm; corrected `check()` status detection for `conflict` vs `new`
+  - **UI** - merged multi-diff preserves earlier diffs instead of dropping them; JSON `ok` field reflects actual conformance state; multiselect cancel properly aborts
+  - **Documentation** - outdated content refreshed (Node.js minimum bumped to 24, missing CLI flags documented, task applicability corrected, path fixes)
 
 - Updated dependencies [[`c637a36`](https://github.com/agustinusnathaniel/xtarter/commit/c637a3686e1c32e5a0cb658c2030201dcb5c32b1)]:
   - @xtarterize/core@1.14.2
@@ -124,10 +121,9 @@
 ### Patch Changes
 
 - [#59](https://github.com/agustinusnathaniel/xtarter/pull/59) [`07caf22`](https://github.com/agustinusnathaniel/xtarter/commit/07caf22d6eca92bbae24c43c4a08314f846b2c59) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Remove editorconfig, nvmrc, and agent/skills tasks; simplify AGENTS.md to minimal root; make plop framework-aware
-
-  - Drop `editor/editorconfig` — redundant with linters + VSCode settings
-  - Drop `scripts/nvmrc` — `lts/*` too vague to be meaningful
-  - Drop `agent/skills` — not a real skill structure, duplicated AGENTS.md content
+  - Drop `editor/editorconfig` - redundant with linters + VSCode settings
+  - Drop `scripts/nvmrc` - `lts/*` too vague to be meaningful
+  - Drop `agent/skills` - not a real skill structure, duplicated AGENTS.md content
   - Simplify `agent/agents-md` template to minimal root (description + commands only)
   - Change `codegen/plop` applicable condition to require a detected framework
 
@@ -159,7 +155,6 @@
 
   Adds 6 general-purpose skills to the `SKILL_CATALOG` that are always
   applicable to any TypeScript project:
-
   - `opensrc` (vercel-labs/opensrc)
   - `grill-me` (mattpocock/skills)
   - `handoff` (mattpocock/skills)
@@ -189,7 +184,7 @@
 
   **Why Effect v4.**
 
-  The project's async workflows had ad-hoc error handling — `try/catch` with
+  The project's async workflows had ad-hoc error handling - `try/catch` with
   `new Error(String(cause))` that lost error type context, couldn't distinguish
   error kinds at the type level, and made it impossible to pattern-match on
   failures. Effect v4 provides `Data.TaggedError` (discriminated unions that
@@ -201,56 +196,52 @@
 
   Rather than making every function return `Effect<A, E>` (which would require
   all callers to understand Effect), we apply Effect at two levels:
-
-  1. **Internal composition** — async workflows use `Effect.gen` + `yield*`,
+  1. **Internal composition** - async workflows use `Effect.gen` + `yield*`,
      `Effect.all` for concurrency, and `Effect.tryPromise` with typed error
      handlers. This gives us structured error handling without changing
      how consumers call the library.
-  2. **Promise boundary** — all public API signatures remain `Promise<T>`.
+  2. **Promise boundary** - all public API signatures remain `Promise<T>`.
      `Effect.runPromise` unwraps at the function boundary. Tests require zero
      changes.
 
   **What changed (26 files, +1857/-1571):**
 
   Tagged errors and Effect composition:
-
-  - `packages/core/src/errors.ts` (new) — consolidated `Data.TaggedError`
+  - `packages/core/src/errors.ts` (new) - consolidated `Data.TaggedError`
     types: `FileSystemError` (read/write/parse failures), `BackupError`
     (backup operations), `TaskError` (task check/apply failures)
-  - `packages/core/src/utils/fs.ts` — every FS operation wraps with
+  - `packages/core/src/utils/fs.ts` - every FS operation wraps with
     `Effect.tryPromise` catching as `FileSystemError` instead of generic
     `new Error(String(cause))`
-  - `packages/core/src/backup.ts` — backup workflow uses `Effect.gen` for
+  - `packages/core/src/backup.ts` - backup workflow uses `Effect.gen` for
     sequential steps (access → mkdir → cp → read/write index) with
     `BackupError` typing and atomic index writes
-  - `packages/core/src/diagnostics.ts` — parallel checks via `Effect.all`,
+  - `packages/core/src/diagnostics.ts` - parallel checks via `Effect.all`,
     tool execution with `FileSystemError`, all `tryEffect` helpers upgraded
     to tagged errors; exported `tryReadPackageJson` to eliminate 4 copies
     of the null-guard pattern
-  - `packages/core/src/preflight.ts` — validation orchestration via
+  - `packages/core/src/preflight.ts` - validation orchestration via
     `Effect.gen` with `FileSystemError`; deduplicated `tryEffect` by
     importing from diagnostics
-  - `packages/core/src/resolve.ts` — concurrent task status checks via
+  - `packages/core/src/resolve.ts` - concurrent task status checks via
     `Effect.all`
-  - `packages/core/src/apply.ts` — per-task error handling with `TaskError`,
+  - `packages/core/src/apply.ts` - per-task error handling with `TaskError`,
     same-name tasks continue after failures
-  - `packages/core/src/utils/deep-equal.ts` — custom recursion replaced
+  - `packages/core/src/utils/deep-equal.ts` - custom recursion replaced
     with `Equal.equals` from Effect
 
   Reducing Effect ceremony:
-
-  - `packages/tasks/src/factory/ops.ts` — added `wrapTask(taskId, method, fn)`
+  - `packages/tasks/src/factory/ops.ts` - added `wrapTask(taskId, method, fn)`
     internal helper collapsing the 6-line `Effect.runPromise(Effect.tryPromise)`
     pattern into 1 line
-  - `packages/tasks/src/factory/index.ts` — replaced 15 Effect wrappers,
+  - `packages/tasks/src/factory/index.ts` - replaced 15 Effect wrappers,
     removed `Effect` import
-  - `packages/tasks/src/factory/task.ts` — replaced 3 wrappers, removed
+  - `packages/tasks/src/factory/task.ts` - replaced 3 wrappers, removed
     `Effect` and `TaskError` imports
-  - `packages/tasks/src/agent/skills-install.ts` — replaced 3 wrappers,
+  - `packages/tasks/src/agent/skills-install.ts` - replaced 3 wrappers,
     removed `Effect` import, fixed hardcoded task IDs in error metadata
 
   **Trade-offs.**
-
   - Added Effect v4 beta as a dependency (~44 MB install size, 10 transitive
     deps). Beta stability risk is mitigated by pinning the exact version in
     `pnpm-workspace.yaml` catalog.
@@ -330,7 +321,6 @@
 - [`f1069d6`](https://github.com/agustinusnathaniel/xtarter/commit/f1069d6bea26aabece3ed030303642e1d3f14693) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - refactor: enrich oxlint and biome config templates with additional lint rules
 
   Add non-recommended rules mapped from typical ESLint configs:
-
   - Oxlint: max-params, eqeqeq, prefer-const, no-var, prefer-template, no-shadow, consistent-type-definitions, array-type, react rules, vitest overrides, unicorn relaxations, import rules
   - Biome: noExcessiveCognitiveComplexity, useMaxParams, useConsistentTypeDefinitions, useConsistentTestIt overrides
 
@@ -345,11 +335,10 @@
 - [#31](https://github.com/agustinusnathaniel/xtarter/pull/31) [`76953e4`](https://github.com/agustinusnathaniel/xtarter/commit/76953e423f4e0c652251f6a9c4d5b3eeefa6e9b7) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - feat: add oxlint and oxfmt support with Vite+ auto-detection
 
   When Vite+ is detected, xtarterize now configures oxlint/oxfmt (via `vp`) instead of Biome as the default linting/formatting stack:
-
   - **Scripts**: `vp lint` / `vp check` / `vp check --fix` for Vite+ projects (instead of `biome check .` / `biome check --write .`)
   - **Config**: `.oxlintrc.json` (with `consistent-type-imports`, `import/order`, `no-console` rules) and `.oxfmtrc.json` for Vite+ projects
   - **Standalone oxlint**: Direct `oxlint`/`oxfmt` commands when oxlint/oxfmt config exists without Vite+
-  - **ESLint detection**: Existing ESLint setups are preserved — no lint tasks are applied
+  - **ESLint detection**: Existing ESLint setups are preserved - no lint tasks are applied
   - **CI**: Single `vp check` step for Vite+ projects (handles fmt + lint + typecheck)
   - **Lint-staged**: Skipped for Vite+ projects (uses `vp staged` via git hooks)
   - **Biome**: Config still generated for IDE fallback, but scripts point to `vp` when Vite+ is present
@@ -447,7 +436,6 @@
 ### Minor Changes
 
 - [`82e1d9f`](https://github.com/agustinusnathaniel/xtarterize/commit/82e1d9f24fd223a8f3c15c0b516c89fe5537c105) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Improve script merging and task architecture
-
   - Enhance script merging logic with better conflict resolution
   - Improve task architecture for better maintainability
   - Add tests for scripts and codegen tasks
@@ -466,13 +454,11 @@
 ### Patch Changes
 
 - [`82e1d9f`](https://github.com/agustinusnathaniel/xtarterize/commit/82e1d9f24fd223a8f3c15c0b516c89fe5537c105) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Add ADR for pragmatic script merge strategy
-
   - Document the decision to use data-driven equivalence rules
   - Explain the factory consolidation approach
   - Provide rationale for script merging architecture
 
 - [`890eab5`](https://github.com/agustinusnathaniel/xtarterize/commit/890eab57054e0b953cb42ba0884e0b2c6770bc82) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Fix TypeScript build error for type imports
-
   - Add `type` modifier to `PackageScriptsMap` import in `factory/index.ts`
   - Fixes: `"PackageScriptsMap" is not exported` build error with tsdown/rolldown
 
@@ -582,7 +568,6 @@
 - [`ccd9287`](https://github.com/agustinusnathaniel/xtarterize/commit/ccd9287afd967ed1ea0ef0c64b4a4a468e95b550) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - feat: add `patchJson` for surgical JSON text edits using `jsonc-parser`
 
   Replaced `JSON.stringify(mergeJson(...), null, 2)` with `patchJson`, which performs byte-level text edits via Microsoft's [`jsonc-parser`](https://github.com/microsoft/node-jsonc-parser). This preserves:
-
   - Comments (`// inline` and `/* block */`)
   - Key ordering
   - Whitespace and indentation style
@@ -596,18 +581,17 @@
 
   Tasks now detect equivalence at the **value/content level**, not just by key name. This prevents redundant or conflicting diffs when the same configuration already exists in a different form.
 
-  **Package scripts** — `createPackageJsonTask` skips adding a script if the **exact same command string** already exists under any script name. For example, `"type:check": "tsc --noEmit"` prevents adding `"typecheck": "tsc --noEmit"`.
+  **Package scripts** - `createPackageJsonTask` skips adding a script if the **exact same command string** already exists under any script name. For example, `"type:check": "tsc --noEmit"` prevents adding `"typecheck": "tsc --noEmit"`.
 
-  **JSON config `extends`** — Added `normalizeExtends` helper. `"extends": "config:base"` is now treated as equivalent to `"extends": ["config:base"]"` during comparison. Used by `biomeTask` and `renovateTask`.
+  **JSON config `extends`** - Added `normalizeExtends` helper. `"extends": "config:base"` is now treated as equivalent to `"extends": ["config:base"]"` during comparison. Used by `biomeTask` and `renovateTask`.
 
-  **Text files** — `createSimpleFileTask` now normalizes line endings (`\r\n` → `\n`) before comparing content, preventing false mismatches on CRLF files.
+  **Text files** - `createSimpleFileTask` now normalizes line endings (`\r\n` → `\n`) before comparing content, preventing false mismatches on CRLF files.
 
   **Behavior change:** Tasks that previously returned `conflict` for script mismatches now return `patch` and only add the _missing_ scripts. Existing scripts are never overwritten.
 
 ### Patch Changes
 
 - [`ccd9287`](https://github.com/agustinusnathaniel/xtarterize/commit/ccd9287afd967ed1ea0ef0c64b4a4a468e95b550) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - fix: `renovateTask` and `biomeTask` extends handling
-
   - Converted `renovateTask` from `createSimpleFileTask` to `createJsonMergeTask` so it properly deep-merges with existing `renovate.json` / `renovate.json5` configs instead of conflicting when the file already exists
   - Fixed `biomeTask` to handle string-form `extends` values (e.g., `"extends": "ultracite"`) in addition to arrays
   - Added `checkFn` to `renovateTask` for proper `skip` detection when the config already matches
@@ -617,7 +601,6 @@
   `resolveTaskFile` used `filepath.replace(/\.[^.]+$/, '')` which stripped the `.config` suffix from names like `commitlint.config.ts`, causing the file finder to search for `commitlint.ts` instead of `commitlint.config.ts`. The logic now checks whether the existing extension is in the allowed list before stripping, and falls back to searching with the full filename.
 
 - [`5b93cc4`](https://github.com/agustinusnathaniel/xtarterize/commit/5b93cc443fbe95d6ec777daa1f47e4520e25f3e1) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - chore: update dependencies to latest safe versions
-
   - `@clack/prompts` ^1.2.0 → ^1.3.0
   - `astro` ^6.1.10 → ^6.2.1
   - `sharp` ^0.34.3 → ^0.34.5

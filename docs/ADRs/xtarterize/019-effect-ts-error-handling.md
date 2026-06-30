@@ -1,9 +1,11 @@
 # ADR 019: Effect TS v4 for Internal Error Handling and Workflow Composition
 
 ## Status
+
 Accepted
 
 ## Date
+
 2026-05-21
 
 ## Context
@@ -12,14 +14,14 @@ The xtarterize codebase had ad-hoc error handling scattered across all async
 operations. The dominant pattern was `new Error(String(cause))` inside
 `try/catch` blocks, which:
 
-1. **Lost error type context** — `String(cause)` erased whatever structured
+1. **Lost error type context** - `String(cause)` erased whatever structured
    error the operation produced
-2. **Prevented error discrimination** — consumers couldn't pattern-match on
+2. **Prevented error discrimination** - consumers couldn't pattern-match on
    error kinds; every error was just `Error`
-3. **Mixed concerns** — application errors (file not found), system errors
+3. **Mixed concerns** - application errors (file not found), system errors
    (permissions), and unexpected defects (bugs in dependencies) were all
    treated identically
-4. **No structured concurrency** — parallel operations used `Promise.all`
+4. **No structured concurrency** - parallel operations used `Promise.all`
    which provides no way to aggregate or transform error types from
    heterogeneous operations
 
@@ -47,10 +49,10 @@ consumer (internal packages, tests, CLI commands) to learn Effect.
 
 Three consolidated `Data.TaggedError` classes:
 
-- `FileSystemError` — file read/write/parse/copy failures
-- `BackupError` — backup operation failures (distinct from FS because
+- `FileSystemError` - file read/write/parse/copy failures
+- `BackupError` - backup operation failures (distinct from FS because
   backup is a separate domain concern with its own recovery semantics)
-- `TaskError` — task check/dryRun/apply failures
+- `TaskError` - task check/dryRun/apply failures
 
 These replace the previous pattern where every error was `new Error(String(cause))`
 with no type-level distinction.
@@ -70,26 +72,26 @@ with no type-level distinction.
 
 Affected packages and their approach:
 
-| Package | Files | Approach |
-|---------|-------|----------|
-| `core/src/` | 8 files | Full boundary pattern with tagged errors |
-| `tasks/src/` | 3 files | `Effect.tryPromise` boundaries + `TaskError` |
-| `patchers/src/` | 0 files | Pure functions, no async — no Effect needed |
-| CLI apps | 0 files | Already at the Promise boundary — no change |
+| Package         | Files   | Approach                                     |
+| --------------- | ------- | -------------------------------------------- |
+| `core/src/`     | 8 files | Full boundary pattern with tagged errors     |
+| `tasks/src/`    | 3 files | `Effect.tryPromise` boundaries + `TaskError` |
+| `patchers/src/` | 0 files | Pure functions, no async - no Effect needed  |
+| CLI apps        | 0 files | Already at the Promise boundary - no change  |
 
 ## Consequences
 
 ### Positive
 
-- ✅ **Type-safe error handling** — every catch handler produces a
+- ✅ **Type-safe error handling** - every catch handler produces a
   `Data.TaggedError` that can be discriminated by tag
-- ✅ **Structured concurrency** — `Effect.all` aggregates errors from
+- ✅ **Structured concurrency** - `Effect.all` aggregates errors from
   parallel operations; one failure doesn't silently swallow others
-- ✅ **Preserved test compatibility** — all 323 existing tests pass
+- ✅ **Preserved test compatibility** - all 323 existing tests pass
   without changes
-- ✅ **Incremental adoption** — the boundary pattern means packages that
+- ✅ **Incremental adoption** - the boundary pattern means packages that
   don't import Effect yet (patchers, CLI) can remain untouched
-- ✅ **Reduced boilerplate** — `Equal.equals` replaces 200 lines of
+- ✅ **Reduced boilerplate** - `Equal.equals` replaces 200 lines of
   custom recursive `deepEqual` with a single import
 
 ### Negative

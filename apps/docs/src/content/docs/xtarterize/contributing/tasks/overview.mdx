@@ -24,7 +24,7 @@ interface Task {
 }
 ```
 
-- **`scope`** — Controls where the task is offered in monorepos:
+- **`scope`** - Controls where the task is offered in monorepos:
   `'root'` (monorepo root only), `'package'` (workspace packages
   only), or `'both'` (everywhere). Defaults to `'both'` when
   omitted. Ignored in non-monorepo projects.
@@ -126,12 +126,12 @@ classDiagram
 
 Most tasks are created through factory functions in [`factory/index.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/tasks/src/factory/index.ts) that eliminate boilerplate:
 
-- **`createFileTask`** — For tasks that write a single file (CI workflows, [renovate](https://docs.renovatebot.com/), [commitlint](https://commitlint.js.org/), [knip](https://knip.dev/), [`.gitignore`](https://git-scm.com/docs/gitignore), `AGENTS.md`). Supports exact-match comparison with `normalizeLineEndings` and optional custom `checkFn`.
-- **`createMultiFileTask`** — For tasks that write multiple text files with optional dependency install (e.g. [plop](https://plopjs.com/) writes both `plopfile.ts` and `plop/*.hbs` template files)
-- **`createJsonMergeTask`** — For tasks that deep-merge JSON configs ([`tsconfig.json`](https://www.typescriptlang.org/tsconfig/), [`biome.json`](https://biomejs.dev/reference/configuration/), [`turbo.json`](https://turbo.build/repo/docs/reference/configuration)). Uses shared JSON mutation helpers in [`factory/json-config.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/tasks/src/factory/json-config.ts)
-- **`createMultiFileJsonMergeTask`** — For tasks that merge multiple JSON files ([`.vscode/settings.json`](https://code.visualstudio.com/docs/getstarted/settings#_settingsjson) + [`.vscode/extensions.json`](https://code.visualstudio.com/docs/editor/extension-marketplace#_workspace-recommended-extensions)). Supports custom per-file merge functions and reuses [`factory/json-config.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/tasks/src/factory/json-config.ts)
-- **`createVitePluginTask`** — For injecting plugins into [`vite.config.ts`](https://vitejs.dev/config/) ([`vite-plugin-checker`](https://vite-plugin-checker.netlify.app/checkers/typescript.html), [`rollup-plugin-visualizer`](https://github.com/btd/rollup-plugin-visualizer))
-- **`createPackageJsonTask`** — For tasks that add scripts, deps, and extra files via [`package.json`](https://docs.npmjs.com/cli/v10/configuring-npm/package-json) ([`czg`](https://cz-git.qbb.sh/cli/), [`commit-and-tag-version`](https://github.com/absolute-version/commit-and-tag-version), package scripts)
+- **`createFileTask`** - For tasks that write a single file (CI workflows, [renovate](https://docs.renovatebot.com/), [commitlint](https://commitlint.js.org/), [knip](https://knip.dev/), [`.gitignore`](https://git-scm.com/docs/gitignore), `AGENTS.md`). Supports exact-match comparison with `normalizeLineEndings` and optional custom `checkFn`.
+- **`createMultiFileTask`** - For tasks that write multiple text files with optional dependency install (e.g. [plop](https://plopjs.com/) writes both `plopfile.ts` and `plop/*.hbs` template files)
+- **`createJsonMergeTask`** - For tasks that deep-merge JSON configs ([`tsconfig.json`](https://www.typescriptlang.org/tsconfig/), [`biome.json`](https://biomejs.dev/reference/configuration/), [`turbo.json`](https://turbo.build/repo/docs/reference/configuration)). Uses shared JSON mutation helpers in [`factory/json-config.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/tasks/src/factory/json-config.ts)
+- **`createMultiFileJsonMergeTask`** - For tasks that merge multiple JSON files ([`.vscode/settings.json`](https://code.visualstudio.com/docs/getstarted/settings#_settingsjson) + [`.vscode/extensions.json`](https://code.visualstudio.com/docs/editor/extension-marketplace#_workspace-recommended-extensions)). Supports custom per-file merge functions and reuses [`factory/json-config.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/tasks/src/factory/json-config.ts)
+- **`createVitePluginTask`** - For injecting plugins into [`vite.config.ts`](https://vitejs.dev/config/) ([`vite-plugin-checker`](https://vite-plugin-checker.netlify.app/checkers/typescript.html), [`rollup-plugin-visualizer`](https://github.com/btd/rollup-plugin-visualizer))
+- **`createPackageJsonTask`** - For tasks that add scripts, deps, and extra files via [`package.json`](https://docs.npmjs.com/cli/v10/configuring-npm/package-json) ([`czg`](https://cz-git.qbb.sh/cli/), [`commit-and-tag-version`](https://github.com/absolute-version/commit-and-tag-version), package scripts)
 
 This reduces most tasks from 40-80 lines to 10-15 lines of declarative configuration.
 
@@ -149,9 +149,9 @@ createFileTask({
 
 Shared implementation seams used by the factory layer:
 
-- [`factory/json-config.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/tasks/src/factory/json-config.ts) — centralized JSON config `check`/`dryRun` logic
-- [`factory/ops.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/tasks/src/factory/ops.ts) — shared dependency install and write operations
-- [`factory/equivalence.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/tasks/src/factory/equivalence.ts) — shared equivalence detection helpers (`deepEqual`, `normalizeExtends`, `hasScriptValue`)
+- [`factory/json-config.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/tasks/src/factory/json-config.ts) - centralized JSON config `check`/`dryRun` logic
+- [`factory/ops.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/tasks/src/factory/ops.ts) - shared dependency install and write operations
+- [`factory/equivalence.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/tasks/src/factory/equivalence.ts) - shared equivalence detection helpers (`deepEqual`, `normalizeExtends`, `hasScriptValue`)
 
 ### Helper Functions
 
@@ -185,10 +185,10 @@ Package script tasks skip adding a script not only when the key exists, but also
 4. Add tests in `test/tasks/`
 
 Each task must implement:
-- `applicable(profile)` — Should this task run for this project?
-- `check(cwd, profile)` — What's the current status?
-- `dryRun(cwd, profile)` — What would change?
-- `apply(cwd, profile)` — Make the changes
+- `applicable(profile)` - Should this task run for this project?
+- `check(cwd, profile)` - What's the current status?
+- `dryRun(cwd, profile)` - What would change?
+- `apply(cwd, profile)` - Make the changes
 
 ## Conflict Detection Pattern
 
@@ -204,18 +204,18 @@ This prevents infinite loops when a user explicitly sets a value that differs fr
 
 ## References
 
-- [defu](https://github.com/unjs/defu) — Deep merge utility used by JSON merge tasks
-- [magicast](https://github.com/unjs/magicast) — AST manipulation for Vite plugin injection
-- [TypeScript tsconfig](https://www.typescriptlang.org/tsconfig/) — Compiler configuration reference
-- [Biome Configuration](https://biomejs.dev/reference/configuration/) — `biome.json` schema
-- [Turborepo Configuration](https://turbo.build/repo/docs/reference/configuration) — `turbo.json` schema
-- [commitlint Rules](https://commitlint.js.org/reference/rules.html) — Commit message validation rules
-- [czg Documentation](https://cz-git.qbb.sh/cli/) — Interactive commit helper
-- [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) — Automated versioning
-- [Knip Documentation](https://knip.dev/) — Unused code detection
-- [Plop Documentation](https://plopjs.com/documentation/) — Code scaffolding
-- [VS Code Settings](https://code.visualstudio.com/docs/getstarted/settings) — Editor configuration
-- [VS Code Extensions](https://code.visualstudio.com/docs/editor/extension-marketplace#_workspace-recommended-extensions) — Workspace recommendations
-- [Renovate Configuration](https://docs.renovatebot.com/configuration-options/) — Dependency automation
+- [defu](https://github.com/unjs/defu) - Deep merge utility used by JSON merge tasks
+- [magicast](https://github.com/unjs/magicast) - AST manipulation for Vite plugin injection
+- [TypeScript tsconfig](https://www.typescriptlang.org/tsconfig/) - Compiler configuration reference
+- [Biome Configuration](https://biomejs.dev/reference/configuration/) - `biome.json` schema
+- [Turborepo Configuration](https://turbo.build/repo/docs/reference/configuration) - `turbo.json` schema
+- [commitlint Rules](https://commitlint.js.org/reference/rules.html) - Commit message validation rules
+- [czg Documentation](https://cz-git.qbb.sh/cli/) - Interactive commit helper
+- [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) - Automated versioning
+- [Knip Documentation](https://knip.dev/) - Unused code detection
+- [Plop Documentation](https://plopjs.com/documentation/) - Code scaffolding
+- [VS Code Settings](https://code.visualstudio.com/docs/getstarted/settings) - Editor configuration
+- [VS Code Extensions](https://code.visualstudio.com/docs/editor/extension-marketplace#_workspace-recommended-extensions) - Workspace recommendations
+- [Renovate Configuration](https://docs.renovatebot.com/configuration-options/) - Dependency automation
 
 <LinkButton href="/xtarterize/contributing/architecture/overview/">Learn about the overall architecture →</LinkButton>

@@ -52,7 +52,7 @@ export default defineConfig({
 					attrs: {
 						property: 'og:title',
 						content:
-							'xtarter — Production-grade JS/TS starters & conformance tooling',
+							'xtarter - Production-grade JS/TS starters & conformance tooling',
 					},
 				},
 				{
@@ -60,7 +60,7 @@ export default defineConfig({
 					attrs: {
 						property: 'og:description',
 						content:
-							'Scaffold new projects or bring conformance to existing ones. Biome, TypeScript strict, CI, editor configs — ready in seconds.',
+							'Scaffold new projects or bring conformance to existing ones. Biome, TypeScript strict, CI, editor configs - ready in seconds.',
 					},
 				},
 				{

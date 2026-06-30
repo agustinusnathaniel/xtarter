@@ -59,9 +59,9 @@ This enables Biome to parse [Tailwind v4 directives](https://tailwindcss.com/doc
 
 | Task ID | Description | Applicable When |
 |---------|-------------|-----------------|
-| `ci/release` | Write [`.github/workflows/release.yml`](https://docs.github.com/en/actions/using-workflows/about-workflows) — triggers on [`push.tags`](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#running-your-workflow-when-a-push-of-a-specific-tag-occurs) | [GitHub](https://github.com/) detected |
-| `ci/auto-update` | Write [`.github/workflows/auto-update.yml`](https://docs.github.com/en/actions/using-workflows/about-workflows) — [`schedule.cron`](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#schedule) for weekly dependency updates | GitHub detected |
-| `ci/ci` | Write [`.github/workflows/ci.yml`](https://docs.github.com/en/actions/using-workflows/about-workflows) — lint, typecheck, test on [`pull_request`](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#pull_request) | GitHub detected |
+| `ci/release` | Write [`.github/workflows/release.yml`](https://docs.github.com/en/actions/using-workflows/about-workflows) - triggers on [`push.tags`](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#running-your-workflow-when-a-push-of-a-specific-tag-occurs) | [GitHub](https://github.com/) detected |
+| `ci/auto-update` | Write [`.github/workflows/auto-update.yml`](https://docs.github.com/en/actions/using-workflows/about-workflows) - [`schedule.cron`](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#schedule) for weekly dependency updates | GitHub detected |
+| `ci/ci` | Write [`.github/workflows/ci.yml`](https://docs.github.com/en/actions/using-workflows/about-workflows) - lint, typecheck, test on [`pull_request`](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#pull_request) | GitHub detected |
 
 ### Conditional pnpm Setup
 
@@ -158,13 +158,13 @@ The `agent/skills-install` task automatically installs [agent skills](https://sk
 
 Each task implements `check()`, `dryRun()`, and `apply()`:
 
-- **`check()`** — Returns `new`, `patch`, `skip`, or `conflict` based on current state
-- **`dryRun()`** — Returns exact diffs without writing anything
-- **`apply()`** — Writes changes, backing up files first
+- **`check()`** - Returns `new`, `patch`, `skip`, or `conflict` based on current state
+- **`dryRun()`** - Returns exact diffs without writing anything
+- **`apply()`** - Writes changes, backing up files first
 
 ### Smart Equivalence Detection
 
-xtarterize doesn't just check key names — it also detects when an equivalent value already exists under a different key. This prevents redundant entries:
+xtarterize doesn't just check key names - it also detects when an equivalent value already exists under a different key. This prevents redundant entries:
 
 | Scenario | Existing | xtarterize Action |
 |----------|----------|-------------------|
@@ -186,46 +186,46 @@ Tasks only run when their conditions are met:
 ## References
 
 ### Linting & Formatting
-- [Biome Documentation](https://biomejs.dev/) — Fast linter and formatter for JavaScript/TypeScript
-- [Ultracite](https://www.ultracite.ai/) — Strict Biome preset for code quality
-- [Tailwind CSS Directives](https://tailwindcss.com/docs/functions-and-directives) — `@theme`, `@apply`, and other directives
+- [Biome Documentation](https://biomejs.dev/) - Fast linter and formatter for JavaScript/TypeScript
+- [Ultracite](https://www.ultracite.ai/) - Strict Biome preset for code quality
+- [Tailwind CSS Directives](https://tailwindcss.com/docs/functions-and-directives) - `@theme`, `@apply`, and other directives
 
 ### TypeScript
-- [TypeScript tsconfig Reference](https://www.typescriptlang.org/tsconfig/) — All compiler options
-- [strict](https://www.typescriptlang.org/tsconfig/#strict) — Enable all strict type-checking options
-- [paths](https://www.typescriptlang.org/tsconfig/#paths) — Module resolution path mapping
-- [incremental](https://www.typescriptlang.org/tsconfig/#incremental) — Incremental compilation
+- [TypeScript tsconfig Reference](https://www.typescriptlang.org/tsconfig/) - All compiler options
+- [strict](https://www.typescriptlang.org/tsconfig/#strict) - Enable all strict type-checking options
+- [paths](https://www.typescriptlang.org/tsconfig/#paths) - Module resolution path mapping
+- [incremental](https://www.typescriptlang.org/tsconfig/#incremental) - Incremental compilation
 
 ### Vite
-- [Vite Documentation](https://vitejs.dev/) — Next-generation build tool
-- [vite-plugin-checker](https://vite-plugin-checker.netlify.app/) — Type-checking in development
-- [rollup-plugin-visualizer](https://github.com/btd/rollup-plugin-visualizer) — Bundle visualization
+- [Vite Documentation](https://vitejs.dev/) - Next-generation build tool
+- [vite-plugin-checker](https://vite-plugin-checker.netlify.app/) - Type-checking in development
+- [rollup-plugin-visualizer](https://github.com/btd/rollup-plugin-visualizer) - Bundle visualization
 
 ### CI/CD
-- [GitHub Actions Documentation](https://docs.github.com/en/actions) — Workflow syntax and features
-- [actions/checkout](https://github.com/actions/checkout) — Check out repository
-- [actions/setup-node](https://github.com/actions/setup-node) — Set up Node.js
-- [pnpm/action-setup](https://github.com/pnpm/action-setup) — Set up pnpm
+- [GitHub Actions Documentation](https://docs.github.com/en/actions) - Workflow syntax and features
+- [actions/checkout](https://github.com/actions/checkout) - Check out repository
+- [actions/setup-node](https://github.com/actions/setup-node) - Set up Node.js
+- [pnpm/action-setup](https://github.com/pnpm/action-setup) - Set up pnpm
 
 ### Dependencies
-- [Renovate Documentation](https://docs.renovatebot.com/) — Automated dependency updates
+- [Renovate Documentation](https://docs.renovatebot.com/) - Automated dependency updates
 
 ### Release
-- [commitlint](https://commitlint.js.org/) — Lint commit messages
-- [czg](https://cz-git.qbb.sh/cli/) — Interactive commit message helper
-- [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) — Automated versioning
+- [commitlint](https://commitlint.js.org/) - Lint commit messages
+- [czg](https://cz-git.qbb.sh/cli/) - Interactive commit message helper
+- [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) - Automated versioning
 
 ### Code Quality
-- [Knip Documentation](https://knip.dev/) — Find unused files, dependencies, and exports
+- [Knip Documentation](https://knip.dev/) - Find unused files, dependencies, and exports
 
 ### Code Generation
-- [Plop Documentation](https://plopjs.com/documentation/) — Micro-generator framework (only for projects with a detected framework)
+- [Plop Documentation](https://plopjs.com/documentation/) - Micro-generator framework (only for projects with a detected framework)
 
 ### Monorepo
-- [Turborepo Documentation](https://turbo.build/repo/docs) — Monorepo task orchestration
+- [Turborepo Documentation](https://turbo.build/repo/docs) - Monorepo task orchestration
 
 ### Editor
-- [VS Code Settings](https://code.visualstudio.com/docs/getstarted/settings) — Editor configuration
-- [VS Code Extension Recommendations](https://code.visualstudio.com/docs/editor/extension-marketplace#_workspace-recommended-extensions) — Workspace extensions
+- [VS Code Settings](https://code.visualstudio.com/docs/getstarted/settings) - Editor configuration
+- [VS Code Extension Recommendations](https://code.visualstudio.com/docs/editor/extension-marketplace#_workspace-recommended-extensions) - Workspace extensions
 
 <LinkButton href="/xtarterize/contributing/tasks/overview/">Learn how to contribute a new task →</LinkButton>

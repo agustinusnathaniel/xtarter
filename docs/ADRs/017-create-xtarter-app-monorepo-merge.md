@@ -46,23 +46,26 @@ apps/create-xtarter-app/
 
 ## Rationale
 
-- **Single CI pipeline** — one release workflow, one test suite, one set of dependency updates.
-- **Unified toolchain** — biome + changesets + vp across all packages.
-- **Canonical docs** — the xtarterize documentation site already describes the scaffold-then-configure workflow; the merged structure eliminates doc drift.
-- **Simpler npm publishing** — both packages publish from the same GitHub Actions workflow with provenance support.
-- **No breaking changes** — the npm package name, CLI binary name, and API surface are unchanged.
+- **Single CI pipeline** - one release workflow, one test suite, one set of dependency updates.
+- **Unified toolchain** - biome + changesets + vp across all packages.
+- **Canonical docs** - the xtarterize documentation site already describes the scaffold-then-configure workflow; the merged structure eliminates doc drift.
+- **Simpler npm publishing** - both packages publish from the same GitHub Actions workflow with provenance support.
+- **No breaking changes** - the npm package name, CLI binary name, and API surface are unchanged.
 
 ## Alternatives Considered
 
 ### Keep as separate repo, link from docs
+
 - Simpler to execute, but perpetuates tooling divergence and coordination overhead.
 - Does not solve the trusted publisher migration question (eventually one repo must own publishing).
 
 ### Merge into packages/ instead of apps/
+
 - `packages/` is for libraries consumed by other workspace packages.
-- `create-xtarter-app` is an end-user CLI, not a library — `apps/` is correct.
+- `create-xtarter-app` is an end-user CLI, not a library - `apps/` is correct.
 
 ### Make create-xtarter-app part of the fixed[] array
+
 - Would force synchronous version bumps with xtarterize core packages.
 - Rejected because scaffolding and conformance configuration have different release rhythms.
 

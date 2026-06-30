@@ -1,6 +1,6 @@
 # @xtarter/create
 
-> Curated starter templates for modern web apps — powered by Vite+.
+> Curated starter templates for modern web apps - powered by Vite+.
 
 ## Usage
 
@@ -24,5 +24,5 @@ vp create @xtarter:vite-tailwind
 
 ## Related
 
-- [`create-xtarter-app`](https://www.npmjs.com/package/create-xtarter-app) — full-featured CLI (npm, git init, deps install)
-- [`xtarterize`](https://www.npmjs.com/package/xtarterize) — add production configs to existing projects
+- [`create-xtarter-app`](https://www.npmjs.com/package/create-xtarter-app) - full-featured CLI (npm, git init, deps install)
+- [`xtarterize`](https://www.npmjs.com/package/xtarterize) - add production configs to existing projects

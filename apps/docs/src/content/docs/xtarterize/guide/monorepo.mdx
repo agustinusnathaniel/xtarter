@@ -7,7 +7,7 @@ import { Steps } from '@astrojs/starlight/components'
 
 xtarterize has built-in support for monorepos. When you run commands
 inside a monorepo, tasks are automatically filtered based on their
-scope — root-level tasks vs package-level tasks — so you always see
+scope - root-level tasks vs package-level tasks - so you always see
 what's relevant to your current position.
 
 ## Monorepo detection
@@ -52,7 +52,7 @@ see:
 - Cross-cutting tooling (Biome, TypeScript strict mode, Knip, Plop)
 
 Package-level tasks like Vite plugin configuration and tsconfig path
-aliases are hidden — those belong inside individual workspace packages.
+aliases are hidden - those belong inside individual workspace packages.
 
 ## Running inside a workspace package
 
@@ -65,7 +65,7 @@ under `packages/`, `apps/`, or `services/`), you'll see:
 - Cross-cutting tooling (Biome, TypeScript strict mode, Knip, Plop)
 
 Root-level tasks like CI/CD workflows, release tooling, and turbo
-configuration are hidden — those are configured once at the root.
+configuration are hidden - those are configured once at the root.
 
 ## Non-monorepo projects
 
@@ -91,7 +91,7 @@ offered regardless of their declared scope.
 | Git hooks | `release/git-hooks` | Release |
 | package.json scripts | `scripts/package-scripts` | Scripts |
 | .npmrc | `scripts/npmrc` | Scripts |
-| .gitignore — tsbuildinfo | `gitignore/tsbuildinfo` | TypeScript |
+| .gitignore - tsbuildinfo | `gitignore/tsbuildinfo` | TypeScript |
 
 ### Package-scoped tasks
 
@@ -103,7 +103,7 @@ offered regardless of their declared scope.
 
 ### Cross-cutting tasks (both)
 
-These tasks appear everywhere — at the monorepo root and inside
+These tasks appear everywhere - at the monorepo root and inside
 workspace packages:
 
 Biome, Oxlint config, Oxfmt config, TypeScript strict mode,

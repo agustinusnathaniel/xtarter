@@ -22,7 +22,7 @@ The `@xtarterize/core` package has clean package boundaries, pure utilities, and
 
 Add an optional `searchMeta` field to the `Task` interface and a pure-function scoring engine in `packages/core/src/inquiry/`. Expose two CLI surfaces: `xtarterize query <query>` for task discovery and `xtarterize init --compose <query>` for ranked composition plans.
 
-The scoring engine uses 5 weighted signals (label 35%, id 25%, keywords 20%, group 10%, config 10%) with Levenshtein-based fuzzy matching, a domain-specific synonym expansion map, and tokenization with stopword filtering. No AI model or external dependencies are used — the algorithm is pure keyword + fuzzy matching.
+The scoring engine uses 5 weighted signals (label 35%, id 25%, keywords 20%, group 10%, config 10%) with Levenshtein-based fuzzy matching, a domain-specific synonym expansion map, and tokenization with stopword filtering. No AI model or external dependencies are used - the algorithm is pure keyword + fuzzy matching.
 
 Note: The config signal falls back to `tags` when `configTargets` is undefined on a task's `searchMeta`. This ensures tasks with only tags metadata still participate in config-target matching.
 
@@ -32,11 +32,11 @@ Note: The config signal falls back to `tags` when `configTargets` is undefined o
 packages/core/src/inquiry/
   index.ts          # Barrel exports: scoreTasks, tokenize, similarity, expandQuery
   types.ts          # InquiryResult, RelevanceSignal, WeightConfig, InquiryOptions
-  fuzzy.ts          # levenshtein(), similarity() — pure, no deps
-  stemmer.ts        # stem() — simple suffix-stripping stemmer
-  tokenizer.ts      # tokenize() — query tokenization with stopword filter
-  synonyms.ts       # SYNONYM_MAP — domain-specific expansion for tooling terms
-  scorer.ts         # scoreTasks() — main scoring engine
+  fuzzy.ts          # levenshtein(), similarity() - pure, no deps
+  stemmer.ts        # stem() - simple suffix-stripping stemmer
+  tokenizer.ts      # tokenize() - query tokenization with stopword filter
+  synonyms.ts       # SYNONYM_MAP - domain-specific expansion for tooling terms
+  scorer.ts         # scoreTasks() - main scoring engine
 ```
 
 ### Task interface changes
@@ -45,14 +45,14 @@ An optional `searchMeta` field was added to the `Task` interface:
 
 ```typescript
 interface TaskSearchMeta {
-  tags: string[]
-  configTargets: string[]
-  keywords: string[]
+  tags: string[];
+  configTargets: string[];
+  keywords: string[];
 }
 
 interface Task {
   // ... existing fields unchanged
-  searchMeta?: TaskSearchMeta
+  searchMeta?: TaskSearchMeta;
 }
 ```
 
@@ -60,8 +60,8 @@ All 6 task factory functions and all 26 built-in tasks have been updated with se
 
 ### CLI changes
 
-- `xtarterize query <query>` — New command for task discovery by natural language. Supports `--limit`, `--threshold`, and `--json`.
-- `xtarterize init --compose <query>` — Existing init command extended with a `--compose` flag that reorders tasks by relevance before presentation.
+- `xtarterize query <query>` - New command for task discovery by natural language. Supports `--limit`, `--threshold`, and `--json`.
+- `xtarterize init --compose <query>` - Existing init command extended with a `--compose` flag that reorders tasks by relevance before presentation.
 
 ## Consequences
 
@@ -69,14 +69,14 @@ All 6 task factory functions and all 26 built-in tasks have been updated with se
 
 - Users can discover tasks by natural language without knowing IDs
 - Plugin tasks automatically participate in scoring through the Task interface
-- All scoring logic is pure functions — testable, dependency-free, fast
-- Existing commands unchanged — fully backward compatible
+- All scoring logic is pure functions - testable, dependency-free, fast
+- Existing commands unchanged - fully backward compatible
 - Tasks without `searchMeta` are still scored on label, id, and group
 
 ### Trade-offs
 
-- Every built-in task (26) needs `searchMeta` added — mechanical but one-time work
-- Scoring is algorithmic and will never match the nuance of AI — this is by design
+- Every built-in task (26) needs `searchMeta` added - mechanical but one-time work
+- Scoring is algorithmic and will never match the nuance of AI - this is by design
 - Synonym map is hardcoded and may need periodic updates as the task catalog grows
 
 ## Alternatives Considered
