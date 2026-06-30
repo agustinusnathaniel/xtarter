@@ -28,6 +28,9 @@ export interface ApplyTasksOptions {
 	selectedIds?: string[]
 	includeConflicts?: boolean
 	quiet?: boolean
+	/** Optional precomputed task statuses from the resolve phase.
+	 * When provided, the apply pipeline skips redundant task.check() calls. */
+	statuses?: ReadonlyMap<string, TaskStatus>
 }
 
 export function applyTasks(options: ApplyTasksOptions): Promise<ApplyResult> {
@@ -45,6 +48,7 @@ export function applyTasks(options: ApplyTasksOptions): Promise<ApplyResult> {
 		profile: options.profile,
 		includeConflicts,
 		quiet,
+		statuses: options.statuses,
 	})
 }
 
@@ -54,10 +58,18 @@ interface RunApplyOptions {
 	profile: ProjectProfile
 	includeConflicts: boolean
 	quiet: boolean
+	statuses?: ReadonlyMap<string, TaskStatus>
 }
 
 async function runApply(options: RunApplyOptions): Promise<ApplyResult> {
-	const { tasks: toApply, cwd, profile, includeConflicts, quiet } = options
+	const {
+		tasks: toApply,
+		cwd,
+		profile,
+		includeConflicts,
+		quiet,
+		statuses,
+	} = options
 	const applyStart = performance.now()
 	const perTask: TaskTiming[] = []
 	const s = quiet ? null : spinner()
@@ -70,17 +82,19 @@ async function runApply(options: RunApplyOptions): Promise<ApplyResult> {
 	for (const task of toApply) {
 		try {
 			const checkStart = performance.now()
-			const status = await Effect.runPromise(
-				Effect.tryPromise({
-					try: (_signal) => task.check(cwd, profile),
-					catch: (cause) =>
-						new TaskError({
-							taskId: task.id,
-							message: `Failed to check ${task.id}`,
-							cause,
-						}),
-				}),
-			)
+			const status =
+				statuses?.get(task.id) ??
+				(await Effect.runPromise(
+					Effect.tryPromise({
+						try: (_signal) => task.check(cwd, profile),
+						catch: (cause) =>
+							new TaskError({
+								taskId: task.id,
+								message: `Failed to check ${task.id}`,
+								cause,
+							}),
+					}),
+				))
 			const checkMs = performance.now() - checkStart
 			if (status === 'skip') {
 				perTask.push({ id: task.id, label: task.label, checkMs })
