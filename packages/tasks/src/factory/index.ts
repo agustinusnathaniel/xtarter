@@ -39,6 +39,8 @@ export {
 	normalizeCommand,
 	type PackageScriptsMap,
 } from './equivalence.js'
+export type { ExecTaskOptions } from './exec.js'
+export { createExecTask } from './exec.js'
 export type { JsonConfigTaskOptions } from './json-config.js'
 export { checkJsonConfigTask, dryRunJsonConfigTask } from './json-config.js'
 export {
