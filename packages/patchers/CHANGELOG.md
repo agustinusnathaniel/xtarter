@@ -1,5 +1,11 @@
 # @xtarterize/patchers
 
+## 1.16.2
+
+### Patch Changes
+
+- [#78](https://github.com/agustinusnathaniel/xtarter/pull/78) [`f5c701b`](https://github.com/agustinusnathaniel/xtarter/commit/f5c701bd4d29a33b9f168e71334b950183ea034a) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Fix task status resolution not to abort on first failure; surface check/dryRun errors in ApplyResult; fix Node engine version range parsing in doctor
+
 ## 1.16.1
 
 ## 1.16.0
@@ -9,6 +15,7 @@
 - [#75](https://github.com/agustinusnathaniel/xtarter/pull/75) [`be651f3`](https://github.com/agustinusnathaniel/xtarter/commit/be651f3aa5e6bac9098fc145fd0a3651f7b4fbbb) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - feat: add natural language task query engine with `query` command and `init --compose`
 
   New features:
+
   - `xtarterize query <query>` - search and discover tasks using natural language with a pure-algorithmic scoring engine
   - `xtarterize init --compose <query>` - compose a targeted task plan by ranking tasks by relevance
   - Task metadata enrichment: new optional `searchMeta` field on the Task interface with `tags`, `configTargets`, and `keywords` supports richer search results
@@ -26,6 +33,7 @@
 - [#73](https://github.com/agustinusnathaniel/xtarter/pull/73) [`aec3c0a`](https://github.com/agustinusnathaniel/xtarter/commit/aec3c0a4d289c5984183d738d99727555b84c602) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Refactor task resolution with TaskScope system for monorepo-aware task filtering
 
   Introduces a `TaskScope` type (`'root' | 'package' | 'both'`) that each task can declare. When running in a monorepo:
+
   - **Root-scoped tasks** (CI/CD, release tooling, turbo, renovate, editor config, npmrc, gitignore, package scripts) are excluded when running inside a workspace package.
   - **Package-scoped tasks** (tsconfig path aliases, vite-plugin-checker, rollup-plugin-visualizer) are excluded when running from the monorepo root.
   - Tasks without explicit scope (or with `scope: 'both'`) are included everywhere, preserving backward compatibility.
@@ -173,6 +181,7 @@
 - [`ccd9287`](https://github.com/agustinusnathaniel/xtarterize/commit/ccd9287afd967ed1ea0ef0c64b4a4a468e95b550) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - feat: add `patchJson` for surgical JSON text edits using `jsonc-parser`
 
   Replaced `JSON.stringify(mergeJson(...), null, 2)` with `patchJson`, which performs byte-level text edits via Microsoft's [`jsonc-parser`](https://github.com/microsoft/node-jsonc-parser). This preserves:
+
   - Comments (`// inline` and `/* block */`)
   - Key ordering
   - Whitespace and indentation style
