@@ -1,7 +1,13 @@
-import { scoreTasks, tokenize } from '@xtarterize/core'
+import {
+	detectPackageManager,
+	runPreflight,
+	scoreTasks,
+	tokenize,
+} from '@xtarterize/core'
 import { defineCommand } from 'citty'
 import { formatQueryResult } from '@/ui/json-formatter.js'
 import { displayQueryResults } from '@/ui/query-display.js'
+import { handlePreflightFailure } from '@/utils/preflight.js'
 import { getAllTasksWithPlugins, resolveCliContext } from '@/utils/project.js'
 
 export const queryCommand = defineCommand({
@@ -10,6 +16,10 @@ export const queryCommand = defineCommand({
 		description: 'Search tasks by natural language query',
 	},
 	args: {
+		cwd: {
+			type: 'string',
+			description: 'Target directory (default: current working directory)',
+		},
 		query: {
 			type: 'positional',
 			description:
@@ -27,6 +37,8 @@ export const queryCommand = defineCommand({
 	},
 	async run({ args }) {
 		const ctx = resolveCliContext(args)
+		const preflight = await runPreflight(ctx.cwd)
+		handlePreflightFailure(preflight, ctx.json)
 		const tasks = await getAllTasksWithPlugins(ctx.cwd)
 
 		const queryStr = String(args.query)
@@ -61,6 +73,7 @@ export const queryCommand = defineCommand({
 			return
 		}
 
-		displayQueryResults(results, queryStr)
+		const pm = await detectPackageManager(ctx.cwd)
+		displayQueryResults(results, queryStr, pm)
 	},
 })

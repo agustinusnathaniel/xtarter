@@ -1,4 +1,4 @@
-import type { InquiryResult, TaskStatus } from '@xtarterize/core'
+import type { InquiryResult } from '@xtarterize/core'
 import { pc } from '@xtarterize/core'
 
 interface GroupedResults {
@@ -17,10 +17,20 @@ function getConfigTarget(result: InquiryResult): string {
 	return result.task.searchMeta?.configTargets?.[0] ?? ''
 }
 
+function getDlxPrefix(pm: string): string {
+	const runners: Record<string, string> = {
+		pnpm: 'pnpx xtarterize@latest',
+		npm: 'npx xtarterize@latest',
+		yarn: 'yarn dlx xtarterize@latest',
+		bun: 'bunx xtarterize@latest',
+	}
+	return runners[pm] ?? 'npx xtarterize@latest'
+}
+
 export function displayQueryResults(
 	results: InquiryResult[],
 	query: string,
-	_statuses?: Map<string, TaskStatus>,
+	packageManager = 'npm',
 ): void {
 	// Group by task.group
 	const groupMap = new Map<string, InquiryResult[]>()
@@ -83,10 +93,11 @@ export function displayQueryResults(
 
 	// Footer hint — bundled command per group
 	if (results.length > 0) {
+		const prefix = getDlxPrefix(packageManager)
 		console.log('')
 		for (const group of groups) {
 			const ids = group.tasks.map((t) => t.taskId)
-			console.log(`  ${pc.dim(`xtarterize add ${ids.join(' ')}`)}`)
+			console.log(`  ${pc.dim(`${prefix} add ${ids.join(' ')}`)}`)
 		}
 	}
 
