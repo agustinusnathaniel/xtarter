@@ -14,22 +14,15 @@ on:
     types:
       - opened
       - synchronize
+    paths-ignore:
+      - "apps/docs/**"
+      - "*.md"
+      - "docs/**"
   workflow_dispatch:
-    inputs:
-      version:
-        description: "Version bump type (major, minor, patch). Leave empty for changeset-defined."
-        required: false
-        type: choice
-        default: ''
-        options:
-          - ''
-          - major
-          - minor
-          - patch
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 permissions:
   contents: write
@@ -42,6 +35,8 @@ jobs:
     name: Release
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    env:
+      VITE_GIT_HOOKS: "0"
     steps:
       - uses: actions/checkout@v7
         with:
@@ -50,6 +45,14 @@ jobs:
       - uses: pnpm/setup@v1
         with:
           cache: true
+
+      - name: Restore Turborepo cache
+        uses: actions/cache@v6
+        with:
+          path: .turbo/cache
+          key: turbo-${{ runner.os }}-${{ hashFiles('turbo.json', 'pnpm-lock.yaml') }}
+          restore-keys: |
+            turbo-${{ runner.os }}-
 
       - name: Build CLI
         run: pnpm build:cli

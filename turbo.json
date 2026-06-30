@@ -5,6 +5,10 @@
 			"dependsOn": ["^build", "typecheck"],
 			"outputs": ["dist/**"]
 		},
+		"@xtarter/create#build": {
+			"outputs": [],
+			"cache": false
+		},
 		"dev": {
 			"persistent": true,
 			"cache": false
