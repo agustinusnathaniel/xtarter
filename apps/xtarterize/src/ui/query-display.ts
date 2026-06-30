@@ -1,4 +1,4 @@
-import type { InquiryResult } from '@xtarterize/core'
+import type { InquiryResult, PackageManager } from '@xtarterize/core'
 import { pc } from '@xtarterize/core'
 
 interface GroupedResults {
@@ -17,8 +17,8 @@ function getConfigTarget(result: InquiryResult): string {
 	return result.task.searchMeta?.configTargets?.[0] ?? ''
 }
 
-function getDlxPrefix(pm: string): string {
-	const runners: Record<string, string> = {
+function getDlxPrefix(pm: PackageManager): string {
+	const runners: Record<PackageManager, string> = {
 		pnpm: 'pnpx xtarterize@latest',
 		npm: 'npx xtarterize@latest',
 		yarn: 'yarn dlx xtarterize@latest',
@@ -30,7 +30,7 @@ function getDlxPrefix(pm: string): string {
 export function displayQueryResults(
 	results: InquiryResult[],
 	query: string,
-	packageManager = 'npm',
+	packageManager: PackageManager = 'npm',
 ): void {
 	// Group by task.group
 	const groupMap = new Map<string, InquiryResult[]>()

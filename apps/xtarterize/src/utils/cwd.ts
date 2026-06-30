@@ -1,5 +1,5 @@
 export function resolveCwd(args: {
-	cwd?: string | boolean
+	cwd?: string
 	_?: (string | number)[]
 }): string {
 	if (typeof args.cwd === 'string') return args.cwd

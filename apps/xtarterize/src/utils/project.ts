@@ -33,7 +33,7 @@ export function resolveCliContext(args: {
 	quiet?: boolean | string | number | string[]
 	json?: boolean | string | number | string[]
 	format?: string
-	cwd?: string | boolean
+	cwd?: string
 	timing?: boolean
 	_?: (string | number)[]
 }): CliContext {
