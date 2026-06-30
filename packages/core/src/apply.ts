@@ -78,6 +78,7 @@ async function runApply(options: RunApplyOptions): Promise<ApplyResult> {
 
 	const filesToBackup = new Set<string>()
 	let skippedInCheck = 0
+	const checkErrors: string[] = []
 
 	for (const task of toApply) {
 		try {
@@ -127,6 +128,7 @@ async function runApply(options: RunApplyOptions): Promise<ApplyResult> {
 		} catch (error) {
 			const message = error instanceof Error ? error.message : String(error)
 			logError(`Failed to check/dryRun ${task.id}: ${message}`)
+			checkErrors.push(`${task.id}: ${message}`)
 		}
 	}
 
@@ -180,5 +182,10 @@ async function runApply(options: RunApplyOptions): Promise<ApplyResult> {
 	const skipped = skippedInCheck
 	const applyMs = performance.now() - applyStart
 	console.log('')
-	return { applied, skipped, errors, timing: { applyMs, tasks: perTask } }
+	return {
+		applied,
+		skipped,
+		errors: [...checkErrors, ...errors],
+		timing: { applyMs, tasks: perTask },
+	}
 }

@@ -51,6 +51,9 @@ jobs:
         with:
           cache: true
 
+      - name: Check inlinedDependencies
+        run: node scripts/check-inlined-deps.mjs
+
       - name: Build CLI
         run: pnpm build:cli
 
