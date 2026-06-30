@@ -27,6 +27,10 @@ export const addCommand = defineCommand({
 		description: 'Add a specific task (or pick interactively)',
 	},
 	args: {
+		cwd: {
+			type: 'string',
+			description: 'Target directory (default: current working directory)',
+		},
 		taskId: {
 			type: 'positional',
 			description: 'Task ID (e.g., lint/biome). Omit to pick interactively.',

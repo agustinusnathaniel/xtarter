@@ -7,9 +7,11 @@ import {
 	logError,
 	logSuccess,
 	restoreBackup,
+	runPreflight,
 } from '@xtarterize/core'
 import { defineCommand } from 'citty'
 import { resolveCwd } from '@/utils/cwd.js'
+import { handlePreflightFailure } from '@/utils/preflight.js'
 
 export const restoreCommand = defineCommand({
 	meta: {
@@ -17,6 +19,10 @@ export const restoreCommand = defineCommand({
 		description: 'Restore a file from backup',
 	},
 	args: {
+		cwd: {
+			type: 'string',
+			description: 'Target directory (default: current working directory)',
+		},
 		filepath: {
 			type: 'positional',
 			description: 'File to restore (e.g., tsconfig.json)',
@@ -32,6 +38,8 @@ export const restoreCommand = defineCommand({
 	},
 	async run({ args }) {
 		const cwd = resolveCwd(args)
+		const preflight = await runPreflight(cwd)
+		handlePreflightFailure(preflight, false)
 		const filepath = args.filepath
 		const yes = args.yes === true
 		const quiet = args.quiet === true

@@ -292,6 +292,10 @@ export async function runCommand(
 }
 
 export const sharedRunArgs = {
+	cwd: {
+		type: 'string',
+		description: 'Target directory (default: current working directory)',
+	},
 	dryRun: {
 		type: 'boolean',
 		description: 'Preview changes without applying',

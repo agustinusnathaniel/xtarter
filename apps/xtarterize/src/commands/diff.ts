@@ -11,6 +11,10 @@ export const diffCommand = defineCommand({
 		description: 'Show pending changes without applying',
 	},
 	args: {
+		cwd: {
+			type: 'string',
+			description: 'Target directory (default: current working directory)',
+		},
 		quiet: {
 			type: 'boolean',
 			description: 'Suppress verbose output',

@@ -8,9 +8,11 @@ import {
 	logSuccess,
 	readRunManifest,
 	restoreBackup,
+	runPreflight,
 } from '@xtarterize/core'
 import { defineCommand } from 'citty'
 import { resolveCwd } from '@/utils/cwd.js'
+import { handlePreflightFailure } from '@/utils/preflight.js'
 
 export const undoCommand = defineCommand({
 	meta: {
@@ -18,6 +20,10 @@ export const undoCommand = defineCommand({
 		description: 'Undo the last xtarterize run by restoring backed-up files',
 	},
 	args: {
+		cwd: {
+			type: 'string',
+			description: 'Target directory (default: current working directory)',
+		},
 		quiet: {
 			type: 'boolean',
 			description: 'Suppress interactive prompts (auto-confirm)',
@@ -25,6 +31,8 @@ export const undoCommand = defineCommand({
 	},
 	async run({ args }) {
 		const cwd = resolveCwd(args)
+		const preflight = await runPreflight(cwd)
+		handlePreflightFailure(preflight, false)
 		const quiet = args.quiet === true
 
 		const s = createSpinner(quiet)

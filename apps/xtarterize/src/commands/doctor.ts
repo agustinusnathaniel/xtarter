@@ -28,6 +28,10 @@ export const doctorCommand = defineCommand({
 		description: 'Run environment and project diagnostics',
 	},
 	args: {
+		cwd: {
+			type: 'string',
+			description: 'Target directory (default: current working directory)',
+		},
 		quiet: {
 			type: 'boolean',
 			description: 'Suppress detailed output',

@@ -10,6 +10,10 @@ export const listCommand = defineCommand({
 		description: 'List all available tasks',
 	},
 	args: {
+		cwd: {
+			type: 'string',
+			description: 'Target directory (default: current working directory)',
+		},
 		quiet: {
 			type: 'boolean',
 			description: 'Suppress verbose output',

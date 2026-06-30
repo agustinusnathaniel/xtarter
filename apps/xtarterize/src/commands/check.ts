@@ -20,6 +20,10 @@ export const checkCommand = defineCommand({
 		description: 'Audit current conformance status',
 	},
 	args: {
+		cwd: {
+			type: 'string',
+			description: 'Target directory (default: current working directory)',
+		},
 		verbose: {
 			type: 'boolean',
 			description: 'Show tool installation and conflict checks',
