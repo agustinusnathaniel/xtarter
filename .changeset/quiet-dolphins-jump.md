@@ -1,8 +1,6 @@
 ---
-"@xtarterize/core": minor
-"@xtarterize/patchers": minor
-"@xtarterize/tasks": minor
-"xtarterize": minor
+"@xtarterize/core": patch
+"xtarterize": patch
 ---
 
 Auto-gitignore .xtarterize/ internal artifacts in target projects
