@@ -21,7 +21,11 @@ export function ensureXtarterizeGitignore(
 				try: async (): Promise<EnsureGitignoreResult> => {
 					try {
 						const content = await fs.readFile(gitignorePath, 'utf-8')
-						if (content.includes(GITIGNORE_ENTRY)) {
+						if (
+							content
+								.split('\n')
+								.some((line) => line.trim() === GITIGNORE_ENTRY)
+						) {
 							return { action: 'noop' }
 						}
 						const newContent = content.endsWith('\n')
