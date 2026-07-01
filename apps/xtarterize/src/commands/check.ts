@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises'
 import path from 'node:path'
 import {
+	ensureXtarterizeGitignore,
 	logSuccess,
 	pc,
 	runConflictChecks,
@@ -40,6 +41,7 @@ export const checkCommand = defineCommand({
 	},
 	async run({ args }) {
 		const ctx = resolveCliContext(args)
+		await ensureXtarterizeGitignore(ctx.cwd)
 		const { tasks, statuses, timing } = await scanProject(ctx)
 
 		const conflictChecks = await runConflictChecks(ctx.cwd)

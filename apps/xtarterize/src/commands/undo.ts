@@ -2,6 +2,7 @@ import { confirm } from '@clack/prompts'
 import {
 	abortIfCancelled,
 	createSpinner,
+	ensureXtarterizeGitignore,
 	listBackups,
 	logError,
 	logInfo,
@@ -31,6 +32,7 @@ export const undoCommand = defineCommand({
 	},
 	async run({ args }) {
 		const cwd = resolveCwd(args)
+		await ensureXtarterizeGitignore(cwd)
 		const preflight = await runPreflight(cwd)
 		handlePreflightFailure(preflight, false)
 		const quiet = args.quiet === true

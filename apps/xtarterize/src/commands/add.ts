@@ -5,6 +5,7 @@ import {
 	applyTasks,
 	createSpinner,
 	detectProject,
+	ensureXtarterizeGitignore,
 	isCI,
 	logError,
 	logInfo,
@@ -56,6 +57,7 @@ export const addCommand = defineCommand({
 	},
 	async run({ args }) {
 		const cwd = resolveCwd(args)
+		await ensureXtarterizeGitignore(cwd)
 		const quiet = args.quiet || isCI()
 		const recordTiming = args.timing === true
 		const { format } = resolveRuntimeFlags(args)

@@ -53,6 +53,7 @@ Before any file is modified, the engine creates timestamped backups in `.xtarter
 - Each unique filepath is backed up **once**, even if multiple tasks modify it
 - Backups are indexed in `.xtarterize/backups/.index.json` for the `restore` command
 - The `backupFile()` utility handles directory creation and timestamping
+- The `.xtarterize/` directory is automatically gitignored via ADR 026 — no manual `.gitignore` maintenance needed
 
 ## Error Handling
 

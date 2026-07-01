@@ -44,6 +44,9 @@ export {
 	runProjectHealthChecks,
 	runToolInstallationChecks,
 } from '@/diagnostics.js'
+export type { EnsureGitignoreResult } from '@/ensure-gitignore.js'
+// Gitignore management
+export { ensureXtarterizeGitignore } from '@/ensure-gitignore.js'
 export { BackupError, FileSystemError, TaskError } from '@/errors.js'
 // Task inquiry/query engine
 export {

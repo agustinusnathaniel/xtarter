@@ -333,7 +333,7 @@ Each task reports one of four statuses:
 
 ## Backup System
 
-Before any file is modified, xtarterize creates a timestamped backup in `.xtarterize/backups/`. A run manifest (`last-run.json`) is also written so `undo` can restore all files from a run in one step.
+Before any file is modified, xtarterize creates a timestamped backup in `.xtarterize/backups/`. A run manifest (`last-run.json`) is also written so `undo` can restore all files from a run in one step. The `.xtarterize/` directory is automatically added to your project's `.gitignore`, keeping internal artifacts out of version control.
 
 <Aside type="tip">
   Backups are stored with timestamps in `.xtarterize/backups/` and indexed in `.xtarterize/backups/.index.json`. Use <code>xtarterize undo</code> to revert an entire run, or <code>xtarterize restore &lt;file&gt;</code> to revert a single file.
