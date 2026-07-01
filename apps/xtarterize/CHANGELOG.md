@@ -1,5 +1,11 @@
 # xtarterize
 
+## 1.16.4
+
+### Patch Changes
+
+- [#82](https://github.com/agustinusnathaniel/xtarter/pull/82) [`f90c7b4`](https://github.com/agustinusnathaniel/xtarter/commit/f90c7b437a2cb0fd510f16e749495e163ff48361) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Auto-gitignore .xtarterize/ internal artifacts in target projects
+
 ## 1.16.3
 
 ### Patch Changes
