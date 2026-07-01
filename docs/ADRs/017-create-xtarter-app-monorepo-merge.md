@@ -75,4 +75,4 @@ apps/create-xtarter-app/
 - The old GitHub repo (`agustinusnathaniel/create-xtarter-app`) remains active until the first successful npm publish from the monorepo confirms the trusted publisher migration.
 - npm trusted publisher must be configured for `agustinusnathaniel/xtarterize` (workflow: `release.yml`) before the first publish.
 - Changesets become the versioning mechanism; manual version bumps via workflow_dispatch are still supported.
-- The `create-xtarter-app` binary (`apps/create-xtarter-app/dist/cli.mjs`) is included in `pnpm build:cli` (which excludes only `@xtarterize/docs`).
+- The `create-xtarter-app` binary (`apps/create-xtarter-app/dist/cli.mjs`) is included in `pnpm build:ci` (which excludes only `@xtarterize/docs`).
