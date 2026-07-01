@@ -3,6 +3,7 @@ import type { Backup } from '@xtarterize/core'
 import {
 	abortIfCancelled,
 	createSpinner,
+	ensureXtarterizeGitignore,
 	listBackups,
 	logError,
 	logSuccess,
@@ -38,6 +39,7 @@ export const restoreCommand = defineCommand({
 	},
 	async run({ args }) {
 		const cwd = resolveCwd(args)
+		await ensureXtarterizeGitignore(cwd)
 		const preflight = await runPreflight(cwd)
 		handlePreflightFailure(preflight, false)
 		const filepath = args.filepath

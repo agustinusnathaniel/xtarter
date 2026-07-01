@@ -1,4 +1,4 @@
-import { pc, statusTag } from '@xtarterize/core'
+import { ensureXtarterizeGitignore, pc, statusTag } from '@xtarterize/core'
 import { defineCommand } from 'citty'
 import { formatListResult } from '@/ui/json-formatter.js'
 import { resolveCliContext, scanProject } from '@/utils/project.js'
@@ -21,6 +21,7 @@ export const listCommand = defineCommand({
 	},
 	async run({ args }) {
 		const ctx = resolveCliContext(args)
+		await ensureXtarterizeGitignore(ctx.cwd)
 		const { profile, tasks, statuses, timing } = await scanProject(ctx)
 
 		if (ctx.json) {

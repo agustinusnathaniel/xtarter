@@ -1,4 +1,9 @@
-import { type FileDiff, logError, logSuccess } from '@xtarterize/core'
+import {
+	ensureXtarterizeGitignore,
+	type FileDiff,
+	logError,
+	logSuccess,
+} from '@xtarterize/core'
 import { defineCommand } from 'citty'
 import { displayDiffs } from '@/ui/diff-display.js'
 import { mergeFileDiffs } from '@/ui/merge-file-diffs.js'
@@ -30,6 +35,7 @@ export const diffCommand = defineCommand({
 	},
 	async run({ args }) {
 		const ctx = resolveCliContext(args)
+		await ensureXtarterizeGitignore(ctx.cwd)
 		const { profile, tasks, statuses, timing } = await scanProject(ctx)
 
 		const diffs: FileDiff[] = []
