@@ -42,17 +42,7 @@ jobs:
         with:
           fetch-depth: 0
 
-      - uses: pnpm/setup@v1
-        with:
-          cache: true
-
-      - name: Restore Turborepo cache
-        uses: actions/cache@v6
-        with:
-          path: .turbo/cache
-          key: turbo-${{ runner.os }}-${{ hashFiles('turbo.json', 'pnpm-lock.yaml') }}
-          restore-keys: |
-            turbo-${{ runner.os }}-
+      - uses: ./.github/actions/setup
 
       - name: Build CLI
         run: pnpm build:cli
