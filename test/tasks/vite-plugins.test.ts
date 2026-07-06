@@ -51,7 +51,10 @@ describe('viteCheckerTask', () => {
 			path.join(tmpDir, 'package.json'),
 			JSON.stringify({
 				name: 'apply-test',
-				devDependencies: { vite: '^5.0.0' },
+				devDependencies: {
+					vite: '^5.0.0',
+					'vite-plugin-checker': '*',
+				},
 			}),
 		)
 		await fs.writeFile(
