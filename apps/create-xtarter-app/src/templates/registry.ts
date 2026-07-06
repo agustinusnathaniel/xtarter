@@ -13,7 +13,6 @@ export interface TemplateConfig {
 
 // IMPORTANT: When adding or removing templates here, also update the
 // matching entry in apps/xtarter-create/package.json (createConfig.templates).
-// The CI job `validate-template-registry-sync` enforces this.
 export const TEMPLATES: TemplateConfig[] = [
 	{
 		id: 'next-chakra',

@@ -19,45 +19,16 @@ permissions:
   contents: read
 
 jobs:
-  lint:
-    name: Lint
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          fetch-depth: 1
-      - uses: ./.github/actions/setup
-      - name: Run linter
-        run: pnpm lint
-
-  typecheck:
-    name: Typecheck
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-      - uses: ./.github/actions/setup
-      - name: Run typecheck
-        run: pnpm typecheck
-
-  build-test-verify:
-    name: Build + Test + Verify
-    needs: [typecheck]
+  check-and-test:
+    name: Check and Test
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
         with:
           fetch-depth: 0
+
       - uses: ./.github/actions/setup
-      - name: Validate template registry sync
-        run: node scripts/validate-template-sync.mjs
-      - name: Build (without docs)
-        run: pnpm build:ci
-      - name: Run tests
-        run: pnpm test
-      - name: Verify shebangs
-        run: pnpm verify:shebangs
+
+      - name: Check (lint + typecheck + build + test + verify:shebangs)
+        run: pnpm check:ci
