@@ -288,11 +288,6 @@ export function createPackageJsonTask(options: PackageJsonTaskOptions): Task {
 				const allDeps = await resolveDeps(options, cwd, profile)
 				const neededDeps = filterDepsByMissingScripts(allDeps, missingScripts)
 
-				for (const dep of neededDeps) {
-					await installDependency(cwd, dep.depName, dep.installDev ?? true)
-					invalidatePackageJsonCache(cwd)
-				}
-
 				for (const f of options.files ?? []) {
 					const fp = resolveFilepath(f.filepath, profile)
 					const fullPath = resolvePath(cwd, fp)
@@ -312,6 +307,18 @@ export function createPackageJsonTask(options: PackageJsonTaskOptions): Task {
 						pkg.scripts = mergeScripts(pkg.scripts, missingScripts)
 						await writePackageJson(cwd, pkg)
 						invalidatePackageJsonCache(cwd)
+					}
+				}
+
+				for (const dep of neededDeps) {
+					try {
+						await installDependency(cwd, dep.depName, dep.installDev ?? true)
+					} catch (error) {
+						const message =
+							error instanceof Error ? error.message : String(error)
+						console.error(
+							`Failed to install dependency ${dep.depName}: ${message}`,
+						)
 					}
 				}
 			})
