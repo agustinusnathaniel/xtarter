@@ -7,6 +7,13 @@ import { Aside, Tabs, TabItem, CardGrid, Card, LinkButton, Steps } from '@astroj
 
 Latest updates and feature releases for xtarterize.
 
+## v1.18.0 — 2026-07-06
+
+- New `mergeYaml` / `parseYaml` functions in `@xtarterize/patchers` for deep-merging configuration into YAML files. Existing keys are preserved, incoming keys fill gaps. Works with GitHub Actions workflows, Renovate configs, and any YAML-based config file.
+- Plugin specifier validation `(ADR 026)`: Plugin specifiers in `.xtarterizerc` and `package.json` `xtarterize.plugins` are now validated as npm package names. Relative paths (`../../malicious.js`), absolute paths (`/etc/passwd`), and URL specifiers are rejected — preventing arbitrary code execution from attacker-controlled paths.
+- `installDependency` now throws an error when installation fails, instead of silently logging a warning and continuing.
+- Backup source path traversal protection: restored files from `xtarterize undo` are now validated to resolve within the backup directory.
+
 ## v1.17.0 — 2026-07-01
 
 - The `.xtarterize/` directory (backups, cache) is now automatically added to `.gitignore` when running any `xtarterize` command. No more untracked files in `git status`. (ADR 026)
