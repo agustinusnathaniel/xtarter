@@ -224,18 +224,6 @@ importers:
         specifier: 'catalog:'
         version: 0.2.1(@types/node@26.0.1)(esbuild@0.28.1)(jiti@2.7.0)(typescript@6.0.3)(vite@8.1.0(@types/node@26.0.1)(esbuild@0.28.1)(jiti@2.7.0)(yaml@2.9.0))(yaml@2.9.0)
 
-  packages/agent-catalog:
-    devDependencies:
-      '@types/node':
-        specifier: 'catalog:'
-        version: 26.0.1
-      typescript:
-        specifier: 'catalog:'
-        version: 6.0.3
-      vite-plus:
-        specifier: 'catalog:'
-        version: 0.2.1(@types/node@26.0.1)(esbuild@0.28.1)(jiti@2.7.0)(typescript@6.0.3)(vite@8.1.0(@types/node@26.0.1)(esbuild@0.28.1)(jiti@2.7.0)(yaml@2.9.0))(yaml@2.9.0)
-
   packages/core:
     dependencies:
       '@clack/prompts':
@@ -284,6 +272,9 @@ importers:
       defu:
         specifier: 'catalog:'
         version: 6.1.7
+      js-yaml:
+        specifier: ^5.2.1
+        version: 5.2.1
       json5:
         specifier: 'catalog:'
         version: 2.2.3
@@ -297,6 +288,9 @@ importers:
         specifier: 'catalog:'
         version: 2.0.3
     devDependencies:
+      '@types/js-yaml':
+        specifier: ^4.0.9
+        version: 4.0.9
       '@types/node':
         specifier: 'catalog:'
         version: 26.0.1
@@ -309,9 +303,6 @@ importers:
 
   packages/tasks:
     dependencies:
-      '@xtarterize/agent-catalog':
-        specifier: workspace:*
-        version: link:../agent-catalog
       '@xtarterize/core':
         specifier: workspace:*
         version: link:../core
@@ -3437,6 +3428,10 @@ packages:
 
   js-yaml@4.1.1:
     resolution: {integrity: sha512-qQKT4zQxXl8lLwBtHMWwaTcGfFOZviOJet3Oy/xmGk2gZH677CJM9EvtfdSkgWcATZhj/55JZ0rmy3myCT5lsA==}
+    hasBin: true
+
+  js-yaml@5.2.1:
+    resolution: {integrity: sha512-zfLtNfQqxVqq3uaTqSkh4x4hZw3KHobGUA0fJUj4wawW8bsQLTVqpHdXSIzidh7o+4lEW36tANuAGdaFx6Zgnw==}
     hasBin: true
 
   json-fixer@1.6.15:
@@ -8152,6 +8147,10 @@ snapshots:
       esprima: 4.0.1
 
   js-yaml@4.1.1:
+    dependencies:
+      argparse: 2.0.1
+
+  js-yaml@5.2.1:
     dependencies:
       argparse: 2.0.1
 

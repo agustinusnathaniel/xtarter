@@ -3,7 +3,7 @@ export type PackageScriptsMap = Record<string, string | undefined>
 const PM_SCRIPT_REF_PATTERN = /^(?:pnpm|npm|yarn|bun)(?:\s+run)?\s+(\S+)/
 const RUNNER_PATTERN = /^(npx|yarn|bun)(?:\s+)(.+)$/i
 const TOOL_PATTERN =
-	/^(biome|eslint|oxlint|oxfmt|prettier|rome|tsc|vitest|jest|mocha|vite|webpack|rollup|astro|next|nuxt|plop|knip|commitizen|changeset|ultracite|standard-version|release-it|hygen|depcheck|npm-check-updates|ncu|commit-and-tag-version)(?:\s|$)/i
+	/^(biome|eslint|oxlint|oxfmt|prettier|rome|tsc|vitest|jest|mocha|vite|webpack|rollup|astro|next|nuxt|plop|knip|commitizen|changeset|ultracite|vp|standard-version|release-it|hygen|depcheck|npm-check-updates|ncu|commit-and-tag-version)(?:\s|$)/i
 
 export function normalizeCommand(cmd: string): string {
 	return cmd.replace(/\s+/g, ' ').trim()
@@ -104,8 +104,8 @@ function buildContext(a: string, b: string): EquivalenceContext {
 	const hasShellOpB = /[&|;]/.test(b)
 	const toolA = extractTool(normA)
 	const toolB = extractTool(normB)
-	const argsA = normA.slice(toolA?.length ?? 0)
-	const argsB = normB.slice(toolB?.length ?? 0)
+	const argsA = normA.slice(toolA?.length ?? 0).trimStart()
+	const argsB = normB.slice(toolB?.length ?? 0).trimStart()
 	const refA = extractScriptRef(normA)
 	const refB = extractScriptRef(normB)
 

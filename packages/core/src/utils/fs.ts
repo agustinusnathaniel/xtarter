@@ -55,11 +55,12 @@ export async function findConfigFile(
 	baseName: string,
 	extensions: string[],
 ): Promise<string | null> {
-	for (const ext of extensions) {
+	const candidates = extensions.map((ext) => {
 		const filePath = resolvePath(cwd, `${baseName}${ext}`)
-		if (await fileExists(filePath)) return filePath
-	}
-	return null
+		return fileExists(filePath).then((exists) => (exists ? filePath : null))
+	})
+	const results = await Promise.all(candidates)
+	return results.find((r): r is string => r !== null) ?? null
 }
 
 export async function readJson<T = Record<string, unknown>>(

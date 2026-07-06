@@ -131,8 +131,25 @@ export function restoreBackup(cwd: string, backup: Backup): Promise<void> {
 		)
 	}
 
+	// Validate source path (backupPath) is within the backup directory
+	const backupDir = resolvePath(cwd, BACKUP_DIR)
+	const resolvedSource = resolvePath(backupDir, backup.backupPath)
+	if (
+		!resolvedSource.startsWith(`${backupDir}/`) &&
+		resolvedSource !== backupDir
+	) {
+		return Promise.reject(
+			new BackupError({
+				path: backup.backupPath,
+				cause: new Error(
+					`Source path traversal detected: ${backup.backupPath}`,
+				),
+			}),
+		)
+	}
+
 	return Effect.runPromise(
-		tryIo(backup.backupPath, () => fs.cp(backup.backupPath, resolvedDest)),
+		tryIo(resolvedSource, () => fs.cp(resolvedSource, resolvedDest)),
 	)
 }
 

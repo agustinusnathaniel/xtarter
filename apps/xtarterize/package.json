@@ -67,6 +67,7 @@
 		"diff": "9.0.0",
 		"effect": "4.0.0-beta.91",
 		"exsolve": "1.0.8",
+		"js-yaml": "5.2.1",
 		"json5": "2.2.3",
 		"magicast": "0.5.3",
 		"nypm": "0.6.7",

@@ -8,6 +8,7 @@ export default mergeConfig(
 			globals: true,
 			retry: 1,
 			testTimeout: 15_000,
+			exclude: ['**/node_modules/**', '**/dist/**'],
 		},
 	}),
 )

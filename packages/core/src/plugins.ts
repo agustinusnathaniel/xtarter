@@ -12,8 +12,19 @@ const CONFIG_BASENAMES = [
 	'.xtarterizerc.json5',
 ]
 
+/**
+ * @internal Plugin configuration.
+ *
+ * The plugin system loads external task packages from npm.
+ * Plugin specifiers are validated against npm package name patterns
+ * (local paths and URLs are rejected — see `validatePluginSpecifier`).
+ *
+ * @remarks This API is stable but has not been tested in production.
+ * Plugin specifiers are validated to prevent arbitrary code execution
+ * via dynamic import of attacker-controlled paths.
+ */
 export interface PluginConfig {
-	/** npm package names (or relative paths) exporting tasks */
+	/** npm package names exporting tasks */
 	plugins?: string[]
 }
 
@@ -73,6 +84,30 @@ export async function loadPluginConfig(
 }
 
 /**
+ * Validate that a plugin specifier is a safe npm package name.
+ *
+ * Only bare npm package names are allowed (optionally scoped).
+ * Local paths (`./`, `../`), absolute paths (`/`, drive letters),
+ * URLs (`https://`, `file://`), and other non-package specifiers
+ * are rejected.
+ *
+ * This prevents arbitrary code execution via dynamic import
+ * of attacker-controlled paths (e.g. from a PR-supplied config).
+ *
+ * Valid: `@xtarterize/some-plugin`, `eslint-plugin-foo`, `@scope/pkg`
+ * Invalid: `../../malicious.js`, `/etc/passwd`, `https://evil.com/pwn.js`
+ */
+function validatePluginSpecifier(specifier: string): boolean {
+	// npm package name pattern:
+	//   - optional scope: @scope/ (alphanumeric, hyphens, dots, underscores, tildes)
+	//   - required name: same charset, at least one char
+	//   - no leading dots, no leading hyphens, no consecutive dots
+	return /^(?:@[a-z0-9~][a-z0-9-._~]*\/)?[a-z0-9~][a-z0-9-._~]*$/.test(
+		specifier,
+	)
+}
+
+/**
  * Given a plugin config, dynamically import each plugin package and
  * collect the tasks they export.
  *
@@ -88,6 +123,13 @@ export async function loadPluginTasks(config: PluginConfig): Promise<Task[]> {
 	const seen = new Set<string>()
 
 	for (const specifier of config.plugins) {
+		if (!validatePluginSpecifier(specifier)) {
+			logWarn(
+				`Invalid xtarterize plugin specifier "${specifier}" — must be an npm package name. Skipping.`,
+			)
+			continue
+		}
+
 		try {
 			const mod = await import(/* @vite-ignore */ specifier)
 

@@ -5,6 +5,19 @@ import { fileURLToPath } from 'node:url'
 import { detectProject } from '@xtarterize/core'
 import { skillsInstallTask } from '@xtarterize/tasks'
 import { describe, expect, it } from 'vite-plus/test'
+import { vi } from 'vitest'
+
+const { mockX } = vi.hoisted(() => ({
+	mockX: vi.fn().mockResolvedValue({ exitCode: 0 }),
+}))
+
+// Use a path-based mock for tinyexec because pnpm installs it in
+// packages/tasks/node_modules/tinyexec — a different resolution path
+// than the test file's dependency graph. A bare specifier mock
+// ('tinyexec') would intercept the wrong copy of the module.
+vi.mock('/packages/tasks/node_modules/tinyexec/dist/main.mjs', () => ({
+	x: mockX,
+}))
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const fixtures = path.resolve(__dirname, '../fixtures')
@@ -370,5 +383,141 @@ describe('skillsInstallTask', () => {
 
 		expect(diffs.length).toBe(1)
 		expect(after).toContain('--skill react-dev')
+	})
+})
+
+describe('skillsInstallTask apply', () => {
+	it('constructs the correct npx command for a react project', async () => {
+		const tmpDir = await fs.mkdtemp(
+			path.join(os.tmpdir(), 'xtarterize-skills-apply-'),
+		)
+
+		try {
+			await fs.writeFile(
+				path.join(tmpDir, 'package.json'),
+				JSON.stringify(
+					{
+						name: 'skills-apply-fixture',
+						private: true,
+						type: 'module',
+						dependencies: { react: '^19.0.0' },
+						devDependencies: {
+							typescript: '^5.8.0',
+							vite: '^7.0.0',
+						},
+					},
+					null,
+					2,
+				),
+			)
+			await fs.writeFile(
+				path.join(tmpDir, 'tsconfig.json'),
+				JSON.stringify({ compilerOptions: { target: 'ES2022' } }, null, 2),
+			)
+
+			const profile = await detectProject(tmpDir)
+			await skillsInstallTask.apply(tmpDir, profile)
+
+			expect(mockX).toHaveBeenCalled()
+			const callArgs = mockX.mock.calls[0]
+			expect(callArgs[0]).toBe('npx')
+			expect(callArgs[1]).toEqual(
+				expect.arrayContaining(['--yes', 'skills@latest', 'add']),
+			)
+			expect(callArgs[1]).toEqual(
+				expect.arrayContaining(['--skill', 'opensrc']),
+			)
+		} finally {
+			await fs.rm(tmpDir, { recursive: true, force: true })
+		}
+	})
+
+	it('throws TaskError when the npx command fails', async () => {
+		mockX.mockResolvedValue({ exitCode: 1 })
+
+		const tmpDir = await fs.mkdtemp(
+			path.join(os.tmpdir(), 'xtarterize-skills-apply-fail-'),
+		)
+
+		try {
+			await fs.writeFile(
+				path.join(tmpDir, 'package.json'),
+				JSON.stringify(
+					{
+						name: 'skills-apply-fail-fixture',
+						private: true,
+						type: 'module',
+						dependencies: { react: '^19.0.0' },
+						devDependencies: {
+							typescript: '^5.8.0',
+							vite: '^7.0.0',
+						},
+					},
+					null,
+					2,
+				),
+			)
+			await fs.writeFile(
+				path.join(tmpDir, 'tsconfig.json'),
+				JSON.stringify({ compilerOptions: { target: 'ES2022' } }, null, 2),
+			)
+
+			const profile = await detectProject(tmpDir)
+			await expect(skillsInstallTask.apply(tmpDir, profile)).rejects.toThrow(
+				/Failed to install skills from/,
+			)
+		} finally {
+			await fs.rm(tmpDir, { recursive: true, force: true })
+		}
+	})
+
+	it('only installs missing skills when some are already installed', async () => {
+		mockX.mockClear()
+		mockX.mockResolvedValue({ exitCode: 0 })
+
+		const tmpDir = await fs.mkdtemp(
+			path.join(os.tmpdir(), 'xtarterize-skills-partial-apply-'),
+		)
+
+		try {
+			await fs.writeFile(
+				path.join(tmpDir, 'package.json'),
+				JSON.stringify(
+					{
+						name: 'skills-partial-fixture',
+						private: true,
+						type: 'module',
+						dependencies: { react: '^19.0.0' },
+						devDependencies: {
+							typescript: '^5.8.0',
+							vite: '^7.0.0',
+						},
+					},
+					null,
+					2,
+				),
+			)
+			await fs.writeFile(
+				path.join(tmpDir, 'tsconfig.json'),
+				JSON.stringify({ compilerOptions: { target: 'ES2022' } }, null, 2),
+			)
+
+			// Simulate one skill already installed
+			await fs.mkdir(path.join(tmpDir, '.agents', 'skills', 'opensrc'), {
+				recursive: true,
+			})
+			await fs.writeFile(
+				path.join(tmpDir, '.agents', 'skills', 'opensrc', 'SKILL.md'),
+				'# Opensrc\n',
+			)
+
+			const profile = await detectProject(tmpDir)
+			await skillsInstallTask.apply(tmpDir, profile)
+
+			// Should still call x for remaining skills
+			expect(mockX).toHaveBeenCalled()
+		} finally {
+			await fs.rm(tmpDir, { recursive: true, force: true })
+		}
 	})
 })

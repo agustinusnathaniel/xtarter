@@ -12,22 +12,32 @@ export async function detectMonorepo(cwd: string): Promise<MonorepoDetection> {
 	const packageDirs = ['apps/', 'packages/', 'services/']
 
 	const hasMonorepoMarkers = async (dir: string): Promise<boolean> => {
-		for (const marker of markers) {
-			if (await fileExists(resolvePath(dir, marker))) return true
-		}
-		const hasPackagesDir = await fileExists(resolvePath(dir, 'packages'))
-		const hasAppsDir = await fileExists(resolvePath(dir, 'apps'))
+		const results = await Promise.all(
+			markers.map((marker) => fileExists(resolvePath(dir, marker))),
+		)
+		if (results.some(Boolean)) return true
+		const [hasPackagesDir, hasAppsDir] = await Promise.all([
+			fileExists(resolvePath(dir, 'packages')),
+			fileExists(resolvePath(dir, 'apps')),
+		])
 		return hasPackagesDir && hasAppsDir
 	}
 
-	const hasPnpmWorkspace = await fileExists(
-		resolvePath(cwd, 'pnpm-workspace.yaml'),
-	)
-	const hasTurboJson = await fileExists(resolvePath(cwd, 'turbo.json'))
-	const hasNxJson = await fileExists(resolvePath(cwd, 'nx.json'))
-	const hasLernaJson = await fileExists(resolvePath(cwd, 'lerna.json'))
-	const hasPackagesDir = await fileExists(resolvePath(cwd, 'packages'))
-	const hasAppsDir = await fileExists(resolvePath(cwd, 'apps'))
+	const [
+		hasPnpmWorkspace,
+		hasTurboJson,
+		hasNxJson,
+		hasLernaJson,
+		hasPackagesDir,
+		hasAppsDir,
+	] = await Promise.all([
+		fileExists(resolvePath(cwd, 'pnpm-workspace.yaml')),
+		fileExists(resolvePath(cwd, 'turbo.json')),
+		fileExists(resolvePath(cwd, 'nx.json')),
+		fileExists(resolvePath(cwd, 'lerna.json')),
+		fileExists(resolvePath(cwd, 'packages')),
+		fileExists(resolvePath(cwd, 'apps')),
+	])
 
 	const monorepo =
 		hasPnpmWorkspace ||
@@ -50,13 +60,18 @@ export async function detectMonorepo(cwd: string): Promise<MonorepoDetection> {
 					rel.startsWith(prefix),
 				)
 				if (inWorkspacePackage) {
+					const [hasTurbo, hasNx, hasLerna] = await Promise.all([
+						fileExists(resolvePath(current, 'turbo.json')),
+						fileExists(resolvePath(current, 'nx.json')),
+						fileExists(resolvePath(current, 'lerna.json')),
+					])
 					return {
 						monorepo: true,
-						monorepoTool: (await fileExists(resolvePath(current, 'turbo.json')))
+						monorepoTool: hasTurbo
 							? 'turbo'
-							: (await fileExists(resolvePath(current, 'nx.json')))
+							: hasNx
 								? 'nx'
-								: (await fileExists(resolvePath(current, 'lerna.json')))
+								: hasLerna
 									? 'lerna'
 									: null,
 						workspaceRoot: false,

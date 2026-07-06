@@ -43,7 +43,7 @@ export function resolveTaskStatuses(
 					Effect.map((status) => [task.id, status] as [string, TaskStatus]),
 				),
 			),
-			{ concurrency: 'unbounded' },
+			{ concurrency: 8 },
 		).pipe(Effect.map((entries) => new Map(entries))),
 	)
 }
@@ -74,7 +74,7 @@ async function resolveStatusesWithTiming(
 					Effect.map((status) => [task.id, status] as [string, TaskStatus]),
 				),
 			),
-			{ concurrency: 'unbounded' },
+			{ concurrency: 8 },
 		).pipe(Effect.map((entries) => new Map(entries))),
 	)
 	return {

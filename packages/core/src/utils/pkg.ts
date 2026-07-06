@@ -1,8 +1,6 @@
 import { addDependency } from 'nypm'
 import { type PackageJson, readPackageJSON, writePackageJSON } from 'pkg-types'
 import { fileExists, resolvePath } from '@/utils/fs.js'
-import { logWarn } from '@/utils/logger.js'
-
 export async function readPackageJson(cwd: string) {
 	const pkgPath = resolvePath(cwd, 'package.json')
 	const exists = await fileExists(pkgPath)
@@ -44,6 +42,15 @@ export function getNodeVersion(pkg: {
 	return '20'
 }
 
+/**
+ * Install a dependency via the project's package manager.
+ *
+ * Skips installation if the dependency already exists in package.json.
+ * Throws if the `nypm` addDependency call fails (network error, resolution
+ * failure, permissions, etc.).
+ *
+ * @throws {Error} With a message including the dependency name and underlying error.
+ */
 export async function installDependency(
 	cwd: string,
 	depName: string,
@@ -62,7 +69,8 @@ export async function installDependency(
 			dev,
 			workspace: isPnpmWorkspaceRoot || undefined,
 		})
-	} catch {
-		logWarn(`Failed to install ${depName}, continuing without it`)
+	} catch (cause) {
+		const message = cause instanceof Error ? cause.message : String(cause)
+		throw new Error(`Failed to install dependency '${depName}': ${message}`)
 	}
 }

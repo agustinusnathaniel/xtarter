@@ -150,25 +150,22 @@ describe('areEquivalent', () => {
 	})
 
 	describe('EQUIVALENT_SUBCOMMANDS rule', () => {
-		// Note: the equivalent-subcommands rule has a known bug where args
-		// extracted after the tool name include a leading space, preventing the
-		// subcommand pattern from matching. These tests document current behavior.
-		it('returns false due to leading-space bug in args extraction', () => {
-			expect(areEquivalent('biome check .', 'biome lint .')).toBe(false)
+		it('detects equivalent biome subcommands', () => {
+			expect(areEquivalent('biome check .', 'biome lint .')).toBe(true)
 		})
 
-		it('returns false for biome subcommands with --write', () => {
+		it('detects equivalent biome subcommands with --write', () => {
 			expect(
 				areEquivalent('biome check --write .', 'biome format --write .'),
-			).toBe(false)
+			).toBe(true)
 		})
 
-		it('returns false for ultracite subcommands', () => {
-			expect(areEquivalent('ultracite check', 'ultracite fix')).toBe(false)
+		it('detects equivalent ultracite subcommands', () => {
+			expect(areEquivalent('ultracite check', 'ultracite fix')).toBe(true)
 		})
 
-		it('returns false for vp subcommands', () => {
-			expect(areEquivalent('vp lint', 'vp check')).toBe(false)
+		it('detects equivalent vp subcommands', () => {
+			expect(areEquivalent('vp lint', 'vp check')).toBe(true)
 		})
 	})
 

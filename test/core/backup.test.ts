@@ -162,4 +162,22 @@ describe('restoreBackup security', () => {
 
 		await fs.rm(tmpDir, { recursive: true, force: true })
 	})
+
+	it('restoreBackup with source path traversal throws BackupError', async () => {
+		const tmpDir = await fs.mkdtemp(
+			path.join(os.tmpdir(), 'xtarterize-source-traversal-'),
+		)
+
+		const traversalBackup = {
+			filepath: 'target.txt',
+			backupPath: '../../../etc/passwd',
+			timestamp: new Date().toISOString(),
+		}
+
+		await expect(restoreBackup(tmpDir, traversalBackup)).rejects.toThrow(
+			BackupError,
+		)
+
+		await fs.rm(tmpDir, { recursive: true, force: true })
+	})
 })
