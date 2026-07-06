@@ -1,6 +1,4 @@
-// Auto-generated from agent-catalog. Edit the source at
-// packages/agent-catalog/src/catalog.ts if regenerating from external source,
-// or edit this file directly if the catalog is maintained in-tree.
+// Skill catalog for xtarterize tasks. Edit this file directly.
 
 /**
  * Minimal project profile - a subset of @xtarterize/core's ProjectProfile.
