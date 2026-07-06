@@ -86,18 +86,24 @@ export function createJsonMergeTask(options: JsonMergeTaskOptions): Task {
 
 		async apply(cwd, profile): Promise<void> {
 			return wrapTask(options.id, 'createJsonMergeTask.apply', async () => {
+				const diffs = await this.dryRun(cwd, profile)
+				await writeTaskDiffs(cwd, diffs)
+
 				const deps =
 					options.depNames ?? (options.depName ? [options.depName] : [])
 				for (const dep of deps) {
-					await ensureTaskDependency({
-						cwd,
-						depName: dep,
-						installDev: options.installDev,
-					})
+					try {
+						await ensureTaskDependency({
+							cwd,
+							depName: dep,
+							installDev: options.installDev,
+						})
+					} catch (error) {
+						const message =
+							error instanceof Error ? error.message : String(error)
+						console.error(`Failed to install dependency ${dep}: ${message}`)
+					}
 				}
-
-				const diffs = await this.dryRun(cwd, profile)
-				await writeTaskDiffs(cwd, diffs)
 			})
 		},
 	}
