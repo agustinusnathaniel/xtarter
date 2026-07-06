@@ -5,6 +5,14 @@
 ---
 
 <script>
+declare global {
+  interface Window {
+    umami?: {
+      track: (event: string, data?: Record<string, string>) => void;
+    };
+  }
+}
+
 function track(event: string, data?: Record<string, string>) {
   window.umami?.track(event, data);
 }
