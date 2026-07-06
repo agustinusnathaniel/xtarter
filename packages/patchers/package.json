@@ -21,12 +21,14 @@
 	},
 	"dependencies": {
 		"defu": "catalog:",
+		"js-yaml": "^5.2.1",
 		"json5": "catalog:",
 		"jsonc-parser": "catalog:",
 		"magicast": "catalog:",
 		"pathe": "catalog:"
 	},
 	"devDependencies": {
+		"@types/js-yaml": "^4.0.9",
 		"@types/node": "catalog:",
 		"typescript": "catalog:",
 		"vite-plus": "catalog:"

@@ -11,6 +11,8 @@ export interface TemplateConfig {
 	repo: string
 }
 
+// IMPORTANT: When adding or removing templates here, also update the
+// matching entry in apps/xtarter-create/package.json (createConfig.templates).
 export const TEMPLATES: TemplateConfig[] = [
 	{
 		id: 'next-chakra',

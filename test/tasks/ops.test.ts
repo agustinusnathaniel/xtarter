@@ -125,3 +125,49 @@ describe('ensureTaskDependency', () => {
 		}
 	})
 })
+
+describe('ensureTaskDependency error propagation', () => {
+	it('throws when installDependency fails', async () => {
+		const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'xtarterize-'))
+		try {
+			await fs.writeFile(
+				path.join(tmpDir, 'package.json'),
+				JSON.stringify({
+					name: 'test',
+					private: true,
+				}),
+			)
+
+			await expect(
+				ensureTaskDependency({
+					cwd: tmpDir,
+					depName: 'this-package-definitely-does-not-exist-12345',
+				}),
+			).rejects.toThrow()
+		} finally {
+			await fs.rm(tmpDir, { recursive: true, force: true })
+		}
+	})
+
+	it('error message includes the dependency name', async () => {
+		const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'xtarterize-'))
+		try {
+			await fs.writeFile(
+				path.join(tmpDir, 'package.json'),
+				JSON.stringify({
+					name: 'test',
+					private: true,
+				}),
+			)
+
+			await expect(
+				ensureTaskDependency({
+					cwd: tmpDir,
+					depName: 'this-package-definitely-does-not-exist-12345',
+				}),
+			).rejects.toThrow(/this-package-definitely-does-not-exist-12345/)
+		} finally {
+			await fs.rm(tmpDir, { recursive: true, force: true })
+		}
+	})
+})
