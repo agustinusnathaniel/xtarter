@@ -10,7 +10,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const fixtures = path.resolve(__dirname, '../fixtures')
 
 const EXPECTED_DEV_ENGINES = {
-	runtime: { name: 'node', version: '>=20' },
+	runtime: { name: 'node', version: '>=24' },
 	packageManager: { name: 'pnpm', version: '>=9' },
 }
 

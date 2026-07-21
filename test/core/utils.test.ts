@@ -167,8 +167,8 @@ describe('getNodeVersion', () => {
 		expect(getNodeVersion(pkg)).toBe('>=18')
 	})
 
-	it('defaults to 20 when no engines', () => {
-		expect(getNodeVersion({})).toBe('20')
+	it('defaults to 22 when no engines', () => {
+		expect(getNodeVersion({})).toBe('22')
 	})
 })
 

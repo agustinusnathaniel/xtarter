@@ -197,7 +197,7 @@ describe('detectProject', () => {
 		)
 
 		const profile = await detectProject(tmpDir)
-		expect(profile.nodeVersion).toBe('20')
+		expect(profile.nodeVersion).toBe('22')
 	})
 
 	it('nodeVersion reads from .nvmrc', async () => {
