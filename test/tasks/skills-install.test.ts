@@ -4,8 +4,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { detectProject } from '@xtarterize/core'
 import { skillsInstallTask } from '@xtarterize/tasks'
-import { describe, expect, it } from 'vite-plus/test'
-import { vi } from 'vitest'
+import { describe, expect, it, vi } from 'vite-plus/test'
 
 const { mockX } = vi.hoisted(() => ({
 	mockX: vi.fn().mockResolvedValue({ exitCode: 0 }),

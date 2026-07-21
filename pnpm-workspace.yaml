@@ -18,7 +18,7 @@ catalog:
   magicast: ^0.5.3
   consola: ^3.4.2
   defu: ^6.1.7
-  vite-plus: ^0.2.5
+  vite-plus: 0.2.5
   "@biomejs/biome": "2.4.16"
   "@clack/prompts": ^1.7.0
   citty: ^0.2.2
@@ -28,6 +28,7 @@ catalog:
   picocolors: ^1.1.1
   diff: ^9.0.0
   pkg-types: ^2.3.1
+  vite: npm:@voidzero-dev/vite-plus-core@0.2.5
 
 minimumReleaseAgeExclude:
   - "@astrojs/markdown-satteri@0.3.2"
@@ -37,3 +38,10 @@ minimumReleaseAgeExclude:
 onlyBuiltDependencies:
   - esbuild
   - sharp
+overrides:
+  vite: 'catalog:'
+peerDependencyRules:
+  allowAny:
+    - vite
+  allowedVersions:
+    vite: '*'

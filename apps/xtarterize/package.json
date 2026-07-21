@@ -50,6 +50,7 @@
 		"@xtarterize/patchers": "workspace:*",
 		"@xtarterize/tasks": "workspace:*",
 		"typescript": "catalog:",
+		"vite": "catalog:",
 		"vite-plus": "catalog:"
 	},
 	"engines": {
