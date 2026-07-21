@@ -1,5 +1,11 @@
 # @xtarterize/patchers
 
+## 1.17.0
+
+### Patch Changes
+
+- [#84](https://github.com/agustinusnathaniel/xtarter/pull/84) [`52b0735`](https://github.com/agustinusnathaniel/xtarter/commit/52b07351865c8d080d1e2b6e9e07a745c9394c60) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - New `mergeYaml` / `parseYaml` public exports in `@xtarterize/patchers` for YAML config merging. Plugin specifier validation to prevent arbitrary code execution from malicious `.xtarterizerc` entries. `installDependency` now throws on failure instead of silently logging warnings.
+
 ## 1.16.4
 
 ## 1.16.3
