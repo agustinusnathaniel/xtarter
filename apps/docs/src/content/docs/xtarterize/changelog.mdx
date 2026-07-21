@@ -11,22 +11,21 @@ Latest updates and feature releases for xtarterize.
 
 ### Added
 
-- `quality/package-engines` task: adds `devEngines` to package.json for Node >=24 and detected package manager (version inferred from `packageManager` field)
-- `workspace/pnpm-workspace` task: generates `pnpm-workspace.yaml` for pnpm projects (with packages definition for monorepos, minimal stub for single-package projects)
-- `release/versionrc` task: generates `.versionrc.json` for changelog section customization with commit-and-tag-version
+- New `quality/package-engines` task: records Node >=24 and your project's package manager version in `package.json`, so tools know what runtime you expect
+- New `workspace/pnpm-workspace` task: generates `pnpm-workspace.yaml` for pnpm projects — monorepos get the standard package layout, single-package projects get a minimal placeholder
+- New `release/versionrc` task: generates `.versionrc.json` so commit-and-tag-version only includes meaningful change types in your changelog
 
 ### Changed
 
-- `ts/strict`: now manages `noUnusedLocals`, `noUnusedParameters`, and `verbatimModuleSyntax` alongside `strict: true`
-- `release/git-hooks`: added `prepare-commit-msg` hook for czg/commitizen integration
-- `editor/vscode`: enhanced settings with TanStack Router routeTree.gen.ts exclusion, TypeScript auto-acquisition settings, and formatOnPaste disabled
-- Node.js fallback version bumped from 20 to 22 in CI workflow templates and detection engine
-- `pnpm-workspace` task now generates conditional content (packages definition only for monorepos)
+- `ts/strict` now enforces `noUnusedLocals`, `noUnusedParameters`, and `verbatimModuleSyntax` alongside `strict: true` — catches dead code and ensures proper type imports
+- `release/git-hooks` adds a `prepare-commit-msg` hook: if you use czg or commitizen, commits will prompt you interactively
+- `editor/vscode`: format on paste is now off by default, generated TanStack Router files are hidden from the explorer, and TypeScript acquisition is better configured
+- CI workflow templates now default to Node 22 instead of 20
 
 ### Fixed
 
-- `pnpm-workspace` task now detects content drift (previously returned `skip` for any existing file)
-- `package-engines` task now uses the project's detected package manager instead of hardcoding pnpm
+- `workspace/pnpm-workspace` no longer ignores changes to an existing workspace file
+- `quality/package-engines` now respects your project's actual package manager instead of always assuming pnpm
 
 ## v1.18.0 — 2026-07-06
 
