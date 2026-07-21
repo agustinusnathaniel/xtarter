@@ -1,5 +1,11 @@
 # xtarterize
 
+## 1.17.1
+
+### Patch Changes
+
+- [#90](https://github.com/agustinusnathaniel/xtarter/pull/90) [`c96b053`](https://github.com/agustinusnathaniel/xtarter/commit/c96b053ebc3999393ce7261aefda0423e8110ae6) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - update deps to latest
+
 ## 1.17.0
 
 ### Minor Changes
