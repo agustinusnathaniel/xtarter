@@ -124,7 +124,14 @@ export default defineConfig({
 						},
 						{
 							label: 'Conformance Tasks',
-							link: '/xtarterize/guide/tasks/overview/',
+							collapsed: false,
+							items: [
+								{
+									autogenerate: {
+										directory: 'xtarterize/guide/tasks',
+									},
+								},
+							],
 						},
 						{
 							label: 'Configuration',

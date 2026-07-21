@@ -1,0 +1,31 @@
+---
+title: workspace/pnpm-workspace
+description: Generate pnpm-workspace.yaml for pnpm monorepos.
+---
+
+import { Aside } from '@astrojs/starlight/components'
+
+Generates a `pnpm-workspace.yaml` file for projects using pnpm as their
+package manager. The file defines the workspace globs that pnpm uses to
+discover packages.
+
+```yaml
+packages:
+  - 'apps/*'
+  - 'packages/*'
+```
+
+## Details
+
+| Property | Value |
+|----------|-------|
+| **Task ID** | `workspace/pnpm-workspace` |
+| **Group** | Monorepo |
+| **Scope** | Root (monorepo root only) |
+| **Applicable When** | `packageManager` is `pnpm` |
+| **Config Target** | `pnpm-workspace.yaml` |
+
+<Aside type="tip">
+  This task only applies when `pnpm` is the detected package manager.
+  Non-pnpm projects do not need a `pnpm-workspace.yaml`.
+</Aside>

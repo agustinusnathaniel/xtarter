@@ -1,0 +1,53 @@
+---
+title: editor/vscode
+description: Configure .vscode/settings.json and .vscode/extensions.json for consistent editor behavior.
+---
+
+import { Aside } from '@astrojs/starlight/components'
+
+Writes or merges VS Code workspace settings and extension recommendations.
+
+## Settings (.vscode/settings.json)
+
+Applies a set of opinionated defaults:
+
+- **Formatter**: Biome as default formatter for TS, JS, JSON, JSONC
+- **Format on save**: Enabled
+- **Format on paste**: Disabled (avoids unwanted formatting during paste)
+- **Code actions on save**: Biome fix and organize imports (explicit)
+- **Import module specifier**: Non-relative (`@/` paths)
+- **Update imports on file move**: Always (TS and JS)
+
+Conditional settings based on detected tools:
+
+| Detected | Settings Added |
+|----------|----------------|
+| **Monorepo** | `typescript.tsdk` set to workspace TypeScript; `search.exclude` for node_modules, .turbo, dist |
+| **Vite** | `files.associations` maps `.css` to Tailwind CSS language mode |
+| **Vue** | `vue.server.hybridMode: true`; Vue formatter |
+| **React Native** | `typescript.tsserver.watchOptions` for fs events |
+| **Next.js** | `typescript.tsdk`; Emmet JSX include languages |
+| **TanStack Router** | `files.exclude` hides `routeTree.gen.ts` from file explorer |
+| **Tailwind CSS** | CVA/CN class regex patterns for IntelliSense |
+| **TypeScript** | `typescript.disableAutomaticTypeAcquisition: true`; `typescript.enablePromptUseWorkspaceTsdk: true` |
+
+## Extensions (.vscode/extensions.json)
+
+Recommends `biomejs.biome` and `ms-vscode.vscode-typescript-next`, plus
+framework-specific extensions when detected (Tailwind CSS, Vue, React Native).
+
+<Aside type="tip">
+  Extension recommendations are **merged** with any existing
+  `recommendations` array in your file. Your custom extensions are never
+  removed.
+</Aside>
+
+## Details
+
+| Property | Value |
+|----------|-------|
+| **Task ID** | `editor/vscode` |
+| **Group** | Editor |
+| **Scope** | Root (monorepo root only) |
+| **Applicable When** | Always |
+| **Config Targets** | `.vscode/settings.json`, `.vscode/extensions.json` |

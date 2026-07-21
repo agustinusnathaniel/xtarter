@@ -1,0 +1,52 @@
+---
+title: release/versionrc
+description: Generate .versionrc.json for commit-and-tag-version / standard-version changelog customization.
+---
+
+import { Aside } from '@astrojs/starlight/components'
+
+Generates a `.versionrc.json` configuration file for
+[commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version)
+(and standard-version-compatible tools) that maps conventional commit types to
+changelog sections.
+
+```json
+{
+  "bumpFiles": ["package.json"],
+  "types": [
+    { "type": "feat", "section": "Features" },
+    { "type": "fix", "section": "Bug Fixes" },
+    { "type": "refactor", "section": "Code Refactoring" },
+    { "type": "perf", "section": "Performance Improvements" },
+    { "type": "docs", "section": "Documentation", "hidden": true },
+    { "type": "style", "section": "Styles", "hidden": true },
+    { "type": "test", "section": "Tests", "hidden": true },
+    { "type": "chore", "section": "Chores", "hidden": true },
+    { "type": "ci", "section": "CI/CD", "hidden": true },
+    { "type": "build", "section": "Build System", "hidden": true },
+    { "type": "revert", "section": "Reverts", "hidden": true }
+  ]
+}
+```
+
+**Visible sections** (appear in changelog): `feat`, `fix`, `refactor`, `perf`
+
+**Hidden sections** (excluded from changelog): `docs`, `style`, `test`, `chore`, `ci`, `build`, `revert`
+
+## Details
+
+| Property | Value |
+|----------|-------|
+| **Task ID** | `release/versionrc` |
+| **Group** | Release |
+| **Scope** | Root (monorepo root only) |
+| **Applicable When** | Always |
+| **Config Target** | `.versionrc.json` |
+
+<Aside type="tip">
+  This task is separate from `release/cat-version`. The `cat-version` task
+  installs the `commit-and-tag-version` dependency and generates a
+  `.versionrc` file (JSONC, legacy format). The `versionrc` task generates
+  `.versionrc.json` (strict JSON, more feature-complete). You can use both
+  in combination, or only `versionrc` if you install the tool separately.
+</Aside>

@@ -1,6 +1,8 @@
 ---
 title: Conformance Tasks
 description: All available conformance tasks and what they do.
+sidebar:
+  order: 1
 ---
 
 import { Aside, LinkButton } from '@astrojs/starlight/components'
@@ -43,7 +45,7 @@ This enables Biome to parse [Tailwind v4 directives](https://tailwindcss.com/doc
 
 | Task ID | Description | Applicable When |
 |---------|-------------|-----------------|
-| `ts/strict` | Patch [`tsconfig.json`](https://www.typescriptlang.org/tsconfig/) with [`strict: true`](https://www.typescriptlang.org/tsconfig/#strict) (skips if explicitly `false`) | TypeScript detected |
+| `ts/strict` | Patch [`tsconfig.json`](https://www.typescriptlang.org/tsconfig/) with 4 compiler options: [`strict: true`](https://www.typescriptlang.org/tsconfig/#strict), [`noUnusedLocals: true`](https://www.typescriptlang.org/tsconfig/#noUnusedLocals), [`noUnusedParameters: true`](https://www.typescriptlang.org/tsconfig/#noUnusedParameters), [`verbatimModuleSyntax: true`](https://www.typescriptlang.org/tsconfig/#verbatimModuleSyntax) (each checked independently) | TypeScript detected |
 | `ts/paths` | Patch `tsconfig.json` with [`baseUrl`](https://www.typescriptlang.org/tsconfig/#baseUrl) and [`paths`](https://www.typescriptlang.org/tsconfig/#paths) aliases (`@/*` → [`./src/*`](https://www.typescriptlang.org/tsconfig/#paths)) | TypeScript detected |
 | `ts/incremental` | Patch `tsconfig.json` with [`incremental: true`](https://www.typescriptlang.org/tsconfig/#incremental) and [`tsBuildInfoFile: ".tsbuildinfo"`](https://www.typescriptlang.org/tsconfig/#tsBuildInfoFile) | TypeScript detected |
 | `gitignore/tsbuildinfo` | Add `*.tsbuildinfo` and `.tsbuildinfo/` to [`.gitignore`](https://git-scm.com/docs/gitignore) | TypeScript detected |
@@ -67,6 +69,18 @@ This enables Biome to parse [Tailwind v4 directives](https://tailwindcss.com/doc
 
 For projects using [**pnpm**](https://pnpm.io/), CI workflows automatically include [`pnpm/action-setup@v4`](https://github.com/pnpm/action-setup) with [`package_json_file`](https://github.com/pnpm/action-setup#inputs) before [`actions/setup-node@v6`](https://github.com/actions/setup-node). This ensures reproducible pnpm versions across runs. [npm](https://www.npmjs.com/) and [yarn](https://yarnpkg.com/) projects are unaffected.
 
+### Monorepo Workspace Config
+
+When running in a pnpm monorepo, the `workspace/pnpm-workspace` task generates a `pnpm-workspace.yaml` file:
+
+```yaml
+packages:
+  - 'apps/*'
+  - 'packages/*'
+```
+
+This is the standard pnpm workspace layout. The task only applies when the detected package manager is pnpm.
+
 ## Dependencies
 
 | Task ID | Description | Applicable When |
@@ -80,7 +94,8 @@ For projects using [**pnpm**](https://pnpm.io/), CI workflows automatically incl
 | `release/commitlint` | Install [commitlint](https://commitlint.js.org/) with [`@commitlint/config-conventional`](https://commitlint.js.org/reference/rules.html), write [`commitlint.config.ts`](https://commitlint.js.org/reference/configuration.html) | [Git](https://git-scm.com/) detected |
 | `release/czg` | Install [czg](https://cz-git.qbb.sh/cli/) ([Commitizen](https://commitizen.github.io/cz-cli/) adapter), add [`commit`](https://docs.npmjs.com/cli/v10/using-npm/scripts) script to `package.json` | Always |
 | `release/cat-version` | Install [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version), write [`.versionrc`](https://github.com/absolute-version/commit-and-tag-version#configuration) | Always |
-| `release/git-hooks` | Install [simple-git-hooks](https://github.com/toplenboren/simple-git-hooks), wire `commit-msg` hook to commitlint, add `prepare` script | Always |
+| `release/git-hooks` | Install [husky](https://typicode.github.io/husky/), wire 4 hooks: `commit-msg` (commitlint), `prepare-commit-msg` (czg/commitizen integration), `pre-commit` (lint-staged / biome), `pre-push` (typecheck + test / turbo) | Always |
+| `release/versionrc` | Write [`.versionrc.json`](https://github.com/absolute-version/commit-and-tag-version#configuration) mapping conventional commit types to changelog sections (feat/fix/refactor/perf visible, others hidden) | Always |
 
 ## Code Quality
 
@@ -88,6 +103,7 @@ For projects using [**pnpm**](https://pnpm.io/), CI workflows automatically incl
 |---------|-------------|-----------------|
 | `quality/knip` | Install [Knip](https://knip.dev/), write [`knip.json`](https://knip.dev/reference/configuration) with framework-aware [`entry`](https://knip.dev/reference/configuration#entry) and [`project`](https://knip.dev/reference/configuration#project) paths | Always (JSON format if no TypeScript) |
 | `quality/lint-staged` | Install [lint-staged](https://github.com/okonet/lint-staged), write [`.lintstagedrc.json`](https://github.com/okonet/lint-staged#configuration) running Biome on staged files | Non-Vite+ projects |
+| `quality/package-engines` | Add [`devEngines`](https://docs.npmjs.com/cli/v10/configuring-npm/package-json#devengines) to `package.json` with Node >=24 and detected package manager version constraint | Always |
 
 ## Code Generation
 
@@ -100,16 +116,50 @@ For projects using [**pnpm**](https://pnpm.io/), CI workflows automatically incl
 | Task ID | Description | Applicable When |
 |---------|-------------|-----------------|
 | `monorepo/turbo` | Install [Turborepo](https://turbo.build/), write [`turbo.json`](https://turbo.build/repo/docs/reference/configuration) with [`pipeline`](https://turbo.build/repo/docs/reference/configuration#pipeline) for build/lint/test | Monorepo detected |
+| `workspace/pnpm-workspace` | Generate [`pnpm-workspace.yaml`](https://pnpm.io/pnpm-workspace_yaml) with `apps/*` and `packages/*` globs | `packageManager` is `pnpm` |
 
 ## Editor
 
 | Task ID | Description | Applicable When |
 |---------|-------------|-----------------|
-| `editor/vscode` | Write/merge [`.vscode/settings.json`](https://code.visualstudio.com/docs/getstarted/settings#_settingsjson) and [`.vscode/extensions.json`](https://code.visualstudio.com/docs/editor/extension-marketplace#_workspace-recommended-extensions) | Always |
+| `editor/vscode` | Write/merge [`.vscode/settings.json`](https://code.visualstudio.com/docs/getstarted/settings#_settingsjson) (Biome formatter, save/on-paste actions, per-framework config) and [`.vscode/extensions.json`](https://code.visualstudio.com/docs/editor/extension-marketplace#_workspace-recommended-extensions) | Always |
+
+### Git Hooks
+
+The `release/git-hooks` task installs [husky](https://typicode.github.io/husky/) and generates 4 hooks:
+
+| Hook | Action |
+|------|--------|
+| **commit-msg** | Runs `commitlint --edit` on the commit message |
+| **prepare-commit-msg** | Runs `cz --hook` when `czg` or `commitizen` is detected; no-op otherwise |
+| **pre-commit** | Runs `lint-staged` (or `biome check --write`, or `vp staged` for Vite+ projects) |
+| **pre-push** | Runs `typecheck` + `test` (or `check:turbo` for Turborepo monorepos) |
+
+In Vite+ projects, hooks are written to `.vite-hooks/` instead of `.husky/`.
+
+### Changelog Configuration
+
+The `release/versionrc` task generates `.versionrc.json` for [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) with:
+
+- **Visible**: `feat` (Features), `fix` (Bug Fixes), `refactor` (Code Refactoring), `perf` (Performance Improvements)
+- **Hidden**: `docs`, `style`, `test`, `chore`, `ci`, `build`, `revert`
+
+This is separate from the `release/cat-version` task, which generates a legacy `.versionrc` file and installs the `commit-and-tag-version` dependency. The `versionrc` task can be used standalone or in combination with `cat-version`.
 
 ### Additive Extension Merging
 
 When `.vscode/extensions.json` already exists, xtarterize **adds** its recommended extensions to your existing [`recommendations`](https://code.visualstudio.com/docs/editor/extension-marketplace#_workspace-recommended-extensions) array rather than replacing them. Your custom extensions are always preserved.
+
+### devEngines
+
+The `quality/package-engines` task adds a `devEngines` field to `package.json`:
+
+| Field | Value |
+|-------|-------|
+| `runtime.name` | `node` |
+| `runtime.version` | `>=24` |
+| `packageManager.name` | Detected package manager |
+| `packageManager.version` | `>=9` (pnpm) or `>=10` (npm, yarn, bun) |
 
 ## Agent
 
@@ -214,15 +264,18 @@ Tasks only run when their conditions are met:
 - [commitlint](https://commitlint.js.org/) - Lint commit messages
 - [czg](https://cz-git.qbb.sh/cli/) - Interactive commit message helper
 - [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) - Automated versioning
+- [husky](https://typicode.github.io/husky/) - Git hooks manager
 
 ### Code Quality
 - [Knip Documentation](https://knip.dev/) - Find unused files, dependencies, and exports
+- [package.json devEngines](https://docs.npmjs.com/cli/v10/configuring-npm/package-json#devengines) - Development environment requirements
 
 ### Code Generation
 - [Plop Documentation](https://plopjs.com/documentation/) - Micro-generator framework (only for projects with a detected framework)
 
 ### Monorepo
 - [Turborepo Documentation](https://turbo.build/repo/docs) - Monorepo task orchestration
+- [pnpm Workspace](https://pnpm.io/pnpm-workspace_yaml) - pnpm workspace configuration
 
 ### Editor
 - [VS Code Settings](https://code.visualstudio.com/docs/getstarted/settings) - Editor configuration

@@ -36,6 +36,7 @@ describe('gitHooksTask', () => {
 			const diffs = await gitHooksTask.dryRun(tmpDir, profile)
 			const filepaths = diffs.map((d) => d.filepath)
 			expect(filepaths).toContain('.husky/commit-msg')
+			expect(filepaths).toContain('.husky/prepare-commit-msg')
 			expect(filepaths).toContain('.husky/pre-commit')
 			expect(filepaths).toContain('.husky/pre-push')
 		} finally {
@@ -66,6 +67,10 @@ describe('gitHooksTask', () => {
 			)
 			await fs.mkdir(path.join(tmpDir, '.husky'), { recursive: true })
 			await fs.writeFile(path.join(tmpDir, '.husky/commit-msg'), 'content')
+			await fs.writeFile(
+				path.join(tmpDir, '.husky/prepare-commit-msg'),
+				'content',
+			)
 			await fs.writeFile(path.join(tmpDir, '.husky/pre-commit'), 'content')
 			await fs.writeFile(path.join(tmpDir, '.husky/pre-push'), 'content')
 			const profile = await detectProject(tmpDir)
@@ -85,6 +90,10 @@ describe('gitHooksTask', () => {
 			)
 			await fs.mkdir(path.join(tmpDir, '.husky'), { recursive: true })
 			await fs.writeFile(path.join(tmpDir, '.husky/commit-msg'), 'content')
+			await fs.writeFile(
+				path.join(tmpDir, '.husky/prepare-commit-msg'),
+				'content',
+			)
 			await fs.writeFile(path.join(tmpDir, '.husky/pre-commit'), 'content')
 			await fs.writeFile(path.join(tmpDir, '.husky/pre-push'), 'content')
 			const profile = await detectProject(tmpDir)
@@ -110,6 +119,73 @@ describe('gitHooksTask', () => {
 				.then(() => true)
 				.catch(() => false)
 			expect(exists).toBe(true)
+		} finally {
+			await fs.rm(tmpDir, { recursive: true, force: true })
+		}
+	})
+
+	it('prepare-commit-msg is no-op when czg is absent', async () => {
+		const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'xtarterize-'))
+		try {
+			await fs.writeFile(
+				path.join(tmpDir, 'package.json'),
+				JSON.stringify({ name: 'hooks-test', scripts: {} }),
+			)
+			const profile = await detectProject(tmpDir)
+			const diffs = await gitHooksTask.dryRun(tmpDir, profile)
+			const prepareCommitMsg = diffs.find((d) =>
+				d.filepath.includes('prepare-commit-msg'),
+			)
+			expect(prepareCommitMsg?.after).toContain('exit 0')
+			expect(prepareCommitMsg?.after).not.toContain('cz')
+		} finally {
+			await fs.rm(tmpDir, { recursive: true, force: true })
+		}
+	})
+
+	it('prepare-commit-msg runs cz when czg is installed', async () => {
+		const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'xtarterize-'))
+		try {
+			await fs.writeFile(
+				path.join(tmpDir, 'package.json'),
+				JSON.stringify({
+					name: 'hooks-test',
+					scripts: {},
+					devDependencies: { czg: '^1.0.0' },
+				}),
+			)
+			const profile = await detectProject(tmpDir)
+			const diffs = await gitHooksTask.dryRun(tmpDir, profile)
+			const prepareCommitMsg = diffs.find((d) =>
+				d.filepath.includes('prepare-commit-msg'),
+			)
+			expect(prepareCommitMsg?.after).toContain('cz')
+			expect(prepareCommitMsg?.after).toContain('--hook')
+			expect(prepareCommitMsg?.after).toContain('exec < /dev/tty')
+		} finally {
+			await fs.rm(tmpDir, { recursive: true, force: true })
+		}
+	})
+
+	it('prepare-commit-msg runs cz when commitizen is installed', async () => {
+		const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'xtarterize-'))
+		try {
+			await fs.writeFile(
+				path.join(tmpDir, 'package.json'),
+				JSON.stringify({
+					name: 'hooks-test',
+					scripts: {},
+					devDependencies: { commitizen: '^4.0.0' },
+				}),
+			)
+			const profile = await detectProject(tmpDir)
+			const diffs = await gitHooksTask.dryRun(tmpDir, profile)
+			const prepareCommitMsg = diffs.find((d) =>
+				d.filepath.includes('prepare-commit-msg'),
+			)
+			expect(prepareCommitMsg?.after).toContain('cz')
+			expect(prepareCommitMsg?.after).toContain('--hook')
+			expect(prepareCommitMsg?.after).toContain('exec < /dev/tty')
 		} finally {
 			await fs.rm(tmpDir, { recursive: true, force: true })
 		}

@@ -303,7 +303,7 @@ async function detectNodeVersion(cwd: string): Promise<string> {
 		if (match) return match[0]
 	}
 
-	return '20'
+	return '22'
 }
 
 // ── Shared base profile fields ──

@@ -12,13 +12,14 @@ import { biomeTask } from '@/lint/biome.js'
 import { oxfmtTask, oxlintTask } from '@/lint/oxlint.js'
 import { turboTask } from '@/monorepo/turbo.js'
 import { npmrcTask } from '@/npmrc.js'
-
 import { knipTask } from '@/quality/knip.js'
 import { lintStagedTask } from '@/quality/lint-staged.js'
+import { packageEnginesTask } from '@/quality/package-engines.js'
 import { catVersionTask } from '@/release/cat-version.js'
 import { commitlintTask } from '@/release/commitlint.js'
 import { czgTask } from '@/release/czg.js'
 import { gitHooksTask } from '@/release/git-hooks.js'
+import { versionrcTask } from '@/release/versionrc.js'
 import { renderAgentsMd } from '@/templates/agents-md.js'
 import { renderReleaseWorkflow } from '@/templates/workflows/release-yml.js'
 import { gitignoreTsbuildinfoTask } from '@/ts/gitignore-tsbuildinfo.js'
@@ -27,6 +28,7 @@ import { pathsTask } from '@/ts/paths.js'
 import { strictTask } from '@/ts/strict.js'
 import { viteCheckerTask } from '@/vite/checker.js'
 import { viteVisualizerTask } from '@/vite/visualizer.js'
+import { pnpmWorkspaceTask } from '@/workspace/pnpm-workspace.js'
 
 export {
 	areEquivalent,
@@ -76,15 +78,18 @@ export {
 	npmrcTask,
 	oxfmtTask,
 	oxlintTask,
+	packageEnginesTask,
 	packageScriptsTask,
 	pathsTask,
 	plopTask,
+	pnpmWorkspaceTask,
 	releaseWorkflowTask,
 	renderReleaseWorkflow,
 	renovateTask,
 	skillsInstallTask,
 	strictTask,
 	turboTask,
+	versionrcTask,
 	viteCheckerTask,
 	viteVisualizerTask,
 	vscodeTask,
@@ -114,8 +119,11 @@ export function getAllTasks(): Task[] {
 			gitHooksTask,
 			knipTask,
 			lintStagedTask,
+			packageEnginesTask,
 			plopTask,
+			pnpmWorkspaceTask,
 			turboTask,
+			versionrcTask,
 			vscodeTask,
 			agentsMdTask,
 			skillsInstallTask,

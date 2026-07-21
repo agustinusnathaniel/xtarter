@@ -39,7 +39,7 @@ export function getNodeVersion(pkg: {
 	engines?: Record<string, string>
 }): string {
 	if (pkg.engines?.node) return pkg.engines.node
-	return '20'
+	return '22'
 }
 
 /**

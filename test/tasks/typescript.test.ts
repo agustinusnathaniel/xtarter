@@ -159,7 +159,7 @@ describe('strictTask', () => {
 		await fs.rm(tmpDir, { recursive: true })
 	})
 
-	it('apply writes the expected file', async () => {
+	it('writes all strict compiler options on apply', async () => {
 		const tmpDir = await fs.mkdtemp(
 			path.join(os.tmpdir(), 'xtarterize-ts-apply-'),
 		)
@@ -176,11 +176,13 @@ describe('strictTask', () => {
 		)
 		const profile = await detectProject(tmpDir)
 		await strictTask.apply(tmpDir, profile)
-		const content = await fs.readFile(
-			path.join(tmpDir, 'tsconfig.json'),
-			'utf-8',
+		const content = JSON.parse(
+			await fs.readFile(path.join(tmpDir, 'tsconfig.json'), 'utf-8'),
 		)
-		expect(JSON.parse(content).compilerOptions.strict).toBe(true)
+		expect(content.compilerOptions.strict).toBe(true)
+		expect(content.compilerOptions.noUnusedLocals).toBe(true)
+		expect(content.compilerOptions.noUnusedParameters).toBe(true)
+		expect(content.compilerOptions.verbatimModuleSyntax).toBe(true)
 		await fs.rm(tmpDir, { recursive: true, force: true })
 	})
 })

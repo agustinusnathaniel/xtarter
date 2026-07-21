@@ -5,4 +5,4 @@ export const ACTION_VERSIONS = {
 	CREATE_PR: 'peter-evans/create-pull-request@v8',
 } as const
 
-export const NODE_VERSION = 20
+export const NODE_VERSION = 22

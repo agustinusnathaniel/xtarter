@@ -7,6 +7,26 @@ import { Aside, Tabs, TabItem, CardGrid, Card, LinkButton, Steps } from '@astroj
 
 Latest updates and feature releases for xtarterize.
 
+## v1.19.0 — 2026-07-21
+
+### Added
+
+- New `quality/package-engines` task: records Node >=24 and your project's package manager version in `package.json`, so tools know what runtime you expect
+- New `workspace/pnpm-workspace` task: generates `pnpm-workspace.yaml` for pnpm projects — monorepos get the standard package layout, single-package projects get a minimal placeholder
+- New `release/versionrc` task: generates `.versionrc.json` so commit-and-tag-version only includes meaningful change types in your changelog
+
+### Changed
+
+- `ts/strict` now enforces `noUnusedLocals`, `noUnusedParameters`, and `verbatimModuleSyntax` alongside `strict: true` — catches dead code and ensures proper type imports
+- `release/git-hooks` adds a `prepare-commit-msg` hook: if you use czg or commitizen, commits will prompt you interactively
+- `editor/vscode`: format on paste is now off by default, generated TanStack Router files are hidden from the explorer, and TypeScript acquisition is better configured
+- CI workflow templates now default to Node 22 instead of 20
+
+### Fixed
+
+- `workspace/pnpm-workspace` no longer ignores changes to an existing workspace file
+- `quality/package-engines` now respects your project's actual package manager instead of always assuming pnpm
+
 ## v1.18.0 — 2026-07-06
 
 - New `mergeYaml` / `parseYaml` functions in `@xtarterize/patchers` for deep-merging configuration into YAML files. Existing keys are preserved, incoming keys fill gaps. Works with GitHub Actions workflows, Renovate configs, and any YAML-based config file.
