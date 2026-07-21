@@ -33,6 +33,7 @@
 	"devDependencies": {
 		"@types/node": "catalog:",
 		"typescript": "catalog:",
+		"vite": "catalog:",
 		"vite-plus": "catalog:"
 	}
 }
