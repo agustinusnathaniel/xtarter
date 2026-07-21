@@ -54,19 +54,16 @@ describe('pnpmWorkspaceTask', () => {
 		}
 	})
 
-	it('generates packages definition for monorepo pnpm project', async () => {
+	it('dryRun returns expected content', async () => {
 		const tmpDir = await fs.mkdtemp(
-			path.join(os.tmpdir(), 'xtarterize-pnpm-monorepo-'),
+			path.join(os.tmpdir(), 'xtarterize-pnpm-dryrun-'),
 		)
 		try {
 			await fs.writeFile(
 				path.join(tmpDir, 'package.json'),
-				JSON.stringify({ name: 'monorepo-test' }),
+				JSON.stringify({ name: 'dryrun-test' }),
 			)
 			await fs.writeFile(path.join(tmpDir, 'pnpm-lock.yaml'), '')
-			// Create monorepo markers (packages/ + apps/ dirs) so detectProject returns monorepo: true
-			await fs.mkdir(path.join(tmpDir, 'packages'), { recursive: true })
-			await fs.mkdir(path.join(tmpDir, 'apps'), { recursive: true })
 			const profile = await detectProject(tmpDir)
 			const diffs = await pnpmWorkspaceTask.dryRun(tmpDir, profile)
 			expect(diffs.length).toBe(1)
@@ -79,41 +76,17 @@ describe('pnpmWorkspaceTask', () => {
 		}
 	})
 
-	it('generates no packages definition for single-package pnpm project', async () => {
+	it('apply writes the expected file', async () => {
 		const tmpDir = await fs.mkdtemp(
-			path.join(os.tmpdir(), 'xtarterize-pnpm-single-'),
+			path.join(os.tmpdir(), 'xtarterize-pnpm-workspace-'),
 		)
 		try {
 			await fs.writeFile(
 				path.join(tmpDir, 'package.json'),
-				JSON.stringify({ name: 'single-test' }),
+				JSON.stringify({ name: 'apply-test' }),
 			)
+			// Write a pnpm lockfile to trigger pnpm detection
 			await fs.writeFile(path.join(tmpDir, 'pnpm-lock.yaml'), '')
-			const profile = await detectProject(tmpDir)
-			const diffs = await pnpmWorkspaceTask.dryRun(tmpDir, profile)
-			expect(diffs.length).toBe(1)
-			expect(diffs[0].filepath).toBe('pnpm-workspace.yaml')
-			expect(diffs[0].before).toBeNull()
-			expect(diffs[0].after).not.toContain("'apps/*'")
-			expect(diffs[0].after).not.toContain("'packages/*'")
-			expect(diffs[0].after.trim()).toBe('# pnpm workspace config')
-		} finally {
-			await fs.rm(tmpDir, { recursive: true, force: true })
-		}
-	})
-
-	it('apply writes packages definition for monorepo', async () => {
-		const tmpDir = await fs.mkdtemp(
-			path.join(os.tmpdir(), 'xtarterize-pnpm-apply-monorepo-'),
-		)
-		try {
-			await fs.writeFile(
-				path.join(tmpDir, 'package.json'),
-				JSON.stringify({ name: 'apply-monorepo' }),
-			)
-			await fs.writeFile(path.join(tmpDir, 'pnpm-lock.yaml'), '')
-			await fs.mkdir(path.join(tmpDir, 'packages'), { recursive: true })
-			await fs.mkdir(path.join(tmpDir, 'apps'), { recursive: true })
 			const profile = await detectProject(tmpDir)
 			await pnpmWorkspaceTask.apply(tmpDir, profile)
 			const content = await fs.readFile(
@@ -122,30 +95,6 @@ describe('pnpmWorkspaceTask', () => {
 			)
 			expect(content).toContain("'apps/*'")
 			expect(content).toContain("'packages/*'")
-		} finally {
-			await fs.rm(tmpDir, { recursive: true, force: true })
-		}
-	})
-
-	it('apply writes minimal content for single-package pnpm project', async () => {
-		const tmpDir = await fs.mkdtemp(
-			path.join(os.tmpdir(), 'xtarterize-pnpm-apply-single-'),
-		)
-		try {
-			await fs.writeFile(
-				path.join(tmpDir, 'package.json'),
-				JSON.stringify({ name: 'apply-single' }),
-			)
-			await fs.writeFile(path.join(tmpDir, 'pnpm-lock.yaml'), '')
-			const profile = await detectProject(tmpDir)
-			await pnpmWorkspaceTask.apply(tmpDir, profile)
-			const content = await fs.readFile(
-				path.join(tmpDir, 'pnpm-workspace.yaml'),
-				'utf-8',
-			)
-			expect(content).not.toContain("'apps/*'")
-			expect(content).not.toContain("'packages/*'")
-			expect(content.trim()).toBe('# pnpm workspace config')
 		} finally {
 			await fs.rm(tmpDir, { recursive: true, force: true })
 		}

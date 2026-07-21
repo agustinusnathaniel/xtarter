@@ -103,7 +103,7 @@ This is the standard pnpm workspace layout. The task only applies when the detec
 |---------|-------------|-----------------|
 | `quality/knip` | Install [Knip](https://knip.dev/), write [`knip.json`](https://knip.dev/reference/configuration) with framework-aware [`entry`](https://knip.dev/reference/configuration#entry) and [`project`](https://knip.dev/reference/configuration#project) paths | Always (JSON format if no TypeScript) |
 | `quality/lint-staged` | Install [lint-staged](https://github.com/okonet/lint-staged), write [`.lintstagedrc.json`](https://github.com/okonet/lint-staged#configuration) running Biome on staged files | Non-Vite+ projects |
-| `quality/package-engines` | Add [`devEngines`](https://docs.npmjs.com/cli/v10/configuring-npm/package-json#devengines) to `package.json` with Node >=24 and detected package manager version constraint | Always |
+| `quality/package-engines` | Add [`devEngines`](https://docs.npmjs.com/cli/v10/configuring-npm/package-json#devengines) to `package.json` with Node >=20 and detected package manager version constraint | Always |
 
 ## Code Generation
 
@@ -157,7 +157,7 @@ The `quality/package-engines` task adds a `devEngines` field to `package.json`:
 | Field | Value |
 |-------|-------|
 | `runtime.name` | `node` |
-| `runtime.version` | `>=24` |
+| `runtime.version` | `>=20` |
 | `packageManager.name` | Detected package manager |
 | `packageManager.version` | `>=9` (pnpm) or `>=10` (npm, yarn, bun) |
 
