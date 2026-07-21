@@ -49,7 +49,6 @@
 
 6. **Dependency Updates**
    - Run `npx taze minor --write -r` for safe updates; `pnpm install && pnpm dedupe` afterward
-   - `@tailwindcss/vite` is pinned at 4.2.2 (4.2.4 breaks Vite 8 build)
    - If a dep update fails verification, revert that package - don't fix the breakage inline
 
 7. **Committing**
