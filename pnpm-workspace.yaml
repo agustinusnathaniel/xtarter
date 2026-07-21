@@ -9,18 +9,18 @@ allowBuilds:
 
 catalog:
   typescript: ^6.0.3
-  "@types/node": ^26.0.1
+  "@types/node": ^26.1.1
   json5: ^2.2.3
   pathe: ^2.0.3
   tinyexec: ^1.2.4
-  nypm: ^0.6.7
+  nypm: ^0.6.8
   jsonc-parser: ^3.3.1
   magicast: ^0.5.3
   consola: ^3.4.2
   defu: ^6.1.7
-  vite-plus: ^0.2.1
+  vite-plus: ^0.2.5
   "@biomejs/biome": "2.4.16"
-  "@clack/prompts": ^1.6.0
+  "@clack/prompts": ^1.7.0
   citty: ^0.2.2
   giget: ^3.3.0
   tinyglobby: ^0.2.17
@@ -30,8 +30,8 @@ catalog:
   pkg-types: ^2.3.1
 
 minimumReleaseAgeExclude:
-  - '@astrojs/markdown-satteri@0.3.2'
-  - '@astrojs/starlight@0.41.0'
+  - "@astrojs/markdown-satteri@0.3.2"
+  - "@astrojs/starlight@0.41.0"
   - astro@7.0.2
 
 onlyBuiltDependencies:
