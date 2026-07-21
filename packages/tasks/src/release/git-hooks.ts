@@ -31,18 +31,42 @@ function prePushHook(profile: ProjectProfile): string {
 	return `${runScriptCommand(pm, 'test')}\n`
 }
 
+async function prepareCommitMsgHook(
+	_cwd: string,
+	profile: ProjectProfile,
+): Promise<string> {
+	const pkg = await readPackageJson(_cwd)
+	const hasCz = !!(
+		pkg?.devDependencies?.['czg'] ||
+		pkg?.dependencies?.['czg'] ||
+		pkg?.devDependencies?.['commitizen'] ||
+		pkg?.dependencies?.['commitizen']
+	)
+	if (!hasCz) return '# no-op: no commit wizard detected\nexit 0\n'
+	const pm = profile.packageManager
+	return `exec < /dev/tty && ${runScriptCommand(pm, 'cz')} --hook || true\n`
+}
+
 export const gitHooksTask = createPackageJsonTask({
 	id: 'release/git-hooks',
-	label: 'Git hooks (commit-msg, pre-commit, pre-push)',
+	label: 'Git hooks (commit-msg, prepare-commit-msg, pre-commit, pre-push)',
 	group: 'Release',
 	searchMeta: {
 		tags: ['git', 'hooks', 'husky', 'quality'],
-		configTargets: ['.husky/commit-msg', '.husky/pre-commit'],
+		configTargets: [
+			'.husky/commit-msg',
+			'.husky/prepare-commit-msg',
+			'.husky/pre-commit',
+			'.husky/pre-push',
+		],
 		keywords: [
 			'git hooks',
 			'husky',
 			'pre-commit',
 			'commit-msg',
+			'prepare-commit-msg',
+			'commitizen',
+			'czg',
 			'quality gates',
 		],
 	},
@@ -58,6 +82,13 @@ export const gitHooksTask = createPackageJsonTask({
 			filepath: (profile) =>
 				profile.vitePlus ? '.vite-hooks/commit-msg' : '.husky/commit-msg',
 			render: (_cwd, profile) => commitMsgHook(profile.packageManager),
+		},
+		{
+			filepath: (profile) =>
+				profile.vitePlus
+					? '.vite-hooks/prepare-commit-msg'
+					: '.husky/prepare-commit-msg',
+			render: (cwd, profile) => prepareCommitMsgHook(cwd, profile),
 		},
 		{
 			filepath: (profile) =>

@@ -1,0 +1,46 @@
+---
+title: quality/package-engines
+description: Add devEngines to package.json specifying Node and package manager requirements.
+---
+
+import { Aside } from '@astrojs/starlight/components'
+
+Adds a `devEngines` field to `package.json` declaring the expected Node.js and
+package manager versions. Downstream tools (engines-check, IDE plugins, CI
+guards) can read this field to enforce a consistent development environment.
+
+The task generates:
+
+```json
+{
+  "devEngines": {
+    "runtime": {
+      "name": "node",
+      "version": ">=20"
+    },
+    "packageManager": {
+      "name": "pnpm",
+      "version": ">=9"
+    }
+  }
+}
+```
+
+The `packageManager.version` is set based on the detected package manager:
+`>=9` for pnpm, `>=10` for npm, yarn, or bun.
+
+## Details
+
+| Property | Value |
+|----------|-------|
+| **Task ID** | `quality/package-engines` |
+| **Group** | Quality |
+| **Scope** | Root (monorepo root only) |
+| **Applicable When** | Always |
+| **Config Target** | `package.json` |
+
+<Aside type="tip">
+  This task uses `createJsonMergeTask` and will merge into your existing
+  `devEngines` field rather than replacing it. Individual sub-fields
+  (like `runtime.version`) use tristate conflict detection.
+</Aside>

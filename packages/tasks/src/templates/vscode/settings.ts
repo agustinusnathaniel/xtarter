@@ -4,8 +4,7 @@ export function renderVscodeSettings(profile: ProjectProfile): string {
 	const settings: Record<string, unknown> = {
 		'editor.defaultFormatter': 'biomejs.biome',
 		'editor.formatOnSave': true,
-		'editor.formatOnPaste': true,
-		'editor.rulers': [100],
+		'editor.formatOnPaste': false,
 		'editor.codeActionsOnSave': {
 			'source.fixAll.biome': 'explicit',
 			'source.organizeImports.biome': 'explicit',
@@ -55,6 +54,12 @@ export function renderVscodeSettings(profile: ProjectProfile): string {
 		}
 	}
 
+	if (profile.router === 'tanstack-router') {
+		settings['files.exclude'] = {
+			'**/routeTree.gen.ts': true,
+		}
+	}
+
 	if (
 		profile.styling.includes('tailwind') ||
 		profile.styling.includes('nativewind')
@@ -63,6 +68,11 @@ export function renderVscodeSettings(profile: ProjectProfile): string {
 			['cva\\(([^)]*)\\)', '["\'`]([^"\'`]*).*?["\'`]'],
 			['cn\\(([^)]*)\\)', '["\'`]([^"\'`]*).*?["\'`]'],
 		]
+	}
+
+	if (profile.typescript) {
+		settings['typescript.disableAutomaticTypeAcquisition'] = true
+		settings['typescript.enablePromptUseWorkspaceTsdk'] = true
 	}
 
 	return JSON.stringify(settings, null, 2)

@@ -1,0 +1,55 @@
+---
+title: release/git-hooks
+description: Install and configure Git hooks for commit quality and pre-push validation.
+---
+
+import { Aside } from '@astrojs/starlight/components'
+
+Installs [husky](https://typicode.github.io/husky/) and wires four Git hooks
+to enforce commit conventions and run quality gates before pushing.
+
+## Hooks
+
+| Hook | Action | Details |
+|------|--------|---------|
+| **commit-msg** | commitlint check | Runs `commitlint --edit` on the commit message |
+| **prepare-commit-msg** | Commit wizard integration | Runs `cz --hook` if `czg` or `commitizen` is detected; no-op otherwise |
+| **pre-commit** | Staged file check | Runs `lint-staged` if installed, or `biome check --write` otherwise |
+| **pre-push** | Typecheck + tests | Runs `typecheck` + `test` (or `check:turbo` for Turborepo projects) |
+
+### pre-commit behavior
+
+In [Vite+](https://viteplus.dev/) projects, the pre-commit hook uses `vp staged`
+instead of lint-staged or Biome. This delegates to Vite+'s own staging pipeline.
+
+### pre-push behavior
+
+The pre-push hook adapts to the project setup:
+
+| Project Type | Command |
+|-------------|---------|
+| Turborepo monorepo | `pnpm check:turbo` (or equivalent) |
+| TypeScript (non-Turbo) | `pnpm typecheck && pnpm test` |
+| Other | `pnpm test` |
+
+## File Paths
+
+Hooks are written to `.husky/` by default. In Vite+ projects, they are written
+to `.vite-hooks/` instead.
+
+## Details
+
+| Property | Value |
+|----------|-------|
+| **Task ID** | `release/git-hooks` |
+| **Group** | Release |
+| **Scope** | Root (monorepo root only) |
+| **Applicable When** | Always |
+| **Config Targets** | `.husky/commit-msg`, `.husky/prepare-commit-msg`, `.husky/pre-commit`, `.husky/pre-push` |
+| **Dependency** | `husky` (dev) - skipped in Vite+ projects |
+
+<Aside type="tip">
+  The `prepare-commit-msg` hook is a no-op when no commit wizard
+  (`czg` or `commitizen`) is installed, so it won't interfere with your
+  existing workflow.
+</Aside>
