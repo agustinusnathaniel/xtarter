@@ -37,10 +37,10 @@ async function prepareCommitMsgHook(
 ): Promise<string> {
 	const pkg = await readPackageJson(_cwd)
 	const hasCz = !!(
-		pkg?.devDependencies?.['czg'] ||
-		pkg?.dependencies?.['czg'] ||
-		pkg?.devDependencies?.['commitizen'] ||
-		pkg?.dependencies?.['commitizen']
+		pkg?.devDependencies?.czg ||
+		pkg?.dependencies?.czg ||
+		pkg?.devDependencies?.commitizen ||
+		pkg?.dependencies?.commitizen
 	)
 	if (!hasCz) return '# no-op: no commit wizard detected\nexit 0\n'
 	const pm = profile.packageManager
