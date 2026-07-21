@@ -19,7 +19,7 @@ catalog:
   consola: ^3.4.2
   defu: ^6.1.7
   vite-plus: 0.2.5
-  "@biomejs/biome": "2.4.16"
+  "@biomejs/biome": "2.5.4"
   "@clack/prompts": ^1.7.0
   citty: ^0.2.2
   giget: ^3.3.0
