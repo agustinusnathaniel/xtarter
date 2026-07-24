@@ -36,20 +36,10 @@ import { detectMonorepo } from './detect/monorepo.js'
 import {
 	detectFrameworkVersion,
 	detectPackageManager,
+	isStringRecord,
 } from './detect/package-manager.js'
 
 export { detectPackageManager }
-
-// ── Inline type guards (was detect/utils.ts) ──
-
-function isRecord(value: unknown): value is Record<string, unknown> {
-	return typeof value === 'object' && value !== null && !Array.isArray(value)
-}
-
-function isStringRecord(value: unknown): value is Record<string, string> {
-	if (!isRecord(value)) return false
-	return Object.values(value).every((v): v is string => typeof v === 'string')
-}
 
 // ── Inline framework detection (was detect/framework.ts) ──
 
