@@ -27,6 +27,41 @@ export function resolveLintTool(params: {
 	return 'biome'
 }
 
+export interface LintConfig {
+	lintTool: LintTool | null
+	oxlintPlugins: string
+	hasBiomeDep: boolean
+	useUltracite: boolean
+}
+
+function resolveProjectLintConfig(
+	pkg: Record<string, unknown> | null,
+	profile: {
+		existing: { eslint: boolean; oxlint: boolean; oxfmt: boolean }
+		vitePlus: boolean
+		framework: import('@xtarterize/core').Framework
+	},
+): LintConfig {
+	const pkgDeps =
+		(pkg?.dependencies as Record<string, string> | undefined) ?? {}
+	const pkgDevDeps =
+		(pkg?.devDependencies as Record<string, string> | undefined) ?? {}
+	const hasBiomeDep = !!(
+		pkgDevDeps['@biomejs/biome'] ?? pkgDeps['@biomejs/biome']
+	)
+	const useUltracite = !!(pkgDevDeps.ultracite ?? pkgDeps.ultracite)
+	const oxlintPlugins = oxlintPluginFlags({ framework: profile.framework })
+	const lintTool = resolveLintTool({
+		existingEslint: profile.existing.eslint,
+		useUltracite,
+		hasBiomeDep,
+		existingOxlint: profile.existing.oxlint,
+		existingOxfmt: profile.existing.oxfmt,
+		vitePlus: profile.vitePlus,
+	})
+	return { lintTool, oxlintPlugins, hasBiomeDep, useUltracite }
+}
+
 export function lintToolScripts(
 	tool: LintTool | null,
 	oxlintPlugins: string,
@@ -187,22 +222,7 @@ export const packageScriptsTask = createPackageJsonTask({
 			if (value !== undefined) existingScripts[key] = value
 		}
 
-		const hasBiomeDep = !!(
-			pkg?.devDependencies?.['@biomejs/biome'] ??
-			pkg?.dependencies?.['@biomejs/biome']
-		)
-		const useUltracite = !!(
-			pkg?.devDependencies?.ultracite || pkg?.dependencies?.ultracite
-		)
-		const oxlintPlugins = oxlintPluginFlags(profile)
-		const lintTool = resolveLintTool({
-			existingEslint: profile.existing.eslint,
-			useUltracite,
-			hasBiomeDep,
-			existingOxlint: profile.existing.oxlint,
-			existingOxfmt: profile.existing.oxfmt,
-			vitePlus: profile.vitePlus,
-		})
+		const { lintTool, oxlintPlugins } = resolveProjectLintConfig(pkg, profile)
 
 		const scripts: ScriptEntry[] = []
 		pushAllIfMissing(
@@ -275,21 +295,7 @@ export const packageScriptsTask = createPackageJsonTask({
 			if (value !== undefined) scriptsMap[key] = value
 		}
 
-		const pkgDeps = pkg.dependencies as Record<string, string> | undefined
-		const pkgDevDeps = pkg.devDependencies as Record<string, string> | undefined
-		const hasBiomeDep = !!(
-			pkgDevDeps?.['@biomejs/biome'] ?? pkgDeps?.['@biomejs/biome']
-		)
-		const useUltracite = !!(pkgDevDeps?.ultracite || pkgDeps?.ultracite)
-		const oxlintPlugins = oxlintPluginFlags(profile)
-		const lintTool = resolveLintTool({
-			existingEslint: profile.existing.eslint,
-			useUltracite,
-			hasBiomeDep,
-			existingOxlint: profile.existing.oxlint,
-			existingOxfmt: profile.existing.oxfmt,
-			vitePlus: profile.vitePlus,
-		})
+		const { lintTool, oxlintPlugins } = resolveProjectLintConfig(pkg, profile)
 
 		const scripts: ScriptEntry[] = []
 		pushAllIfMissing(
@@ -318,19 +324,7 @@ export const packageScriptsTask = createPackageJsonTask({
 		deps.push({ depName: 'vitest', installDev: true, script: 'test' })
 
 		const pkg = await readPackageJson(cwd)
-		const lintTool = resolveLintTool({
-			existingEslint: profile.existing.eslint,
-			useUltracite: !!(
-				pkg?.devDependencies?.ultracite || pkg?.dependencies?.ultracite
-			),
-			hasBiomeDep: !!(
-				pkg?.devDependencies?.['@biomejs/biome'] ??
-				pkg?.dependencies?.['@biomejs/biome']
-			),
-			existingOxlint: profile.existing.oxlint,
-			existingOxfmt: profile.existing.oxfmt,
-			vitePlus: profile.vitePlus,
-		})
+		const { lintTool } = resolveProjectLintConfig(pkg, profile)
 		if (
 			lintTool === 'biome' &&
 			!(
