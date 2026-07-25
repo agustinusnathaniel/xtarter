@@ -1,19 +1,10 @@
-import { access, readFile, rm, writeFile } from 'node:fs/promises'
+import { readFile, rm, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
-import { consola } from '@xtarterize/core'
+import { consola, fileExists } from '@xtarterize/core'
 
 export interface ModifyPackageOptions {
 	projectName: string
 	projectPath: string
-}
-
-async function pathExists(path: string): Promise<boolean> {
-	try {
-		await access(path)
-		return true
-	} catch {
-		return false
-	}
 }
 
 export async function modifyPackageJson({
@@ -26,7 +17,7 @@ export async function modifyPackageJson({
 
 	try {
 		const packageJsonPath = join(projectPath, 'package.json')
-		const exists = await pathExists(packageJsonPath)
+		const exists = await fileExists(packageJsonPath)
 
 		if (!exists) {
 			logger.warn('package.json not found, skipping update')
@@ -95,7 +86,7 @@ export async function cleanCIConfigs({
 
 		for (const file of filesToRemove) {
 			const fullPath = join(projectPath, file)
-			const exists = await pathExists(fullPath)
+			const exists = await fileExists(fullPath)
 
 			if (exists) {
 				await rm(fullPath, { recursive: true, force: true })
