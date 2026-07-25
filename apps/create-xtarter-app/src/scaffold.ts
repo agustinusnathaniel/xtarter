@@ -38,24 +38,28 @@ export async function prepareProjectDir(
 	projectPath: string,
 	force?: boolean,
 ): Promise<void> {
-	if (existsSync(projectPath)) {
-		const files = await readdir(projectPath)
-		if (files.length > 0) {
-			if (force) {
-				logWarn(
-					`Directory "${projectPath}" exists and is not empty. Overwriting...`,
-				)
-				await rm(projectPath, { recursive: true, force: true })
-				await mkdir(projectPath, { recursive: true })
-			} else {
-				throw new Error(
-					`Directory "${projectName}" already exists and is not empty. Use --force to overwrite.`,
-				)
-			}
-		}
-	} else {
+	if (!existsSync(projectPath)) {
 		await mkdir(projectPath, { recursive: true })
+		return
 	}
+
+	const files = await readdir(projectPath)
+	if (files.length === 0) {
+		return
+	}
+
+	if (force) {
+		logWarn(
+			`Directory "${projectPath}" exists and is not empty. Overwriting...`,
+		)
+		await rm(projectPath, { recursive: true, force: true })
+		await mkdir(projectPath, { recursive: true })
+		return
+	}
+
+	throw new Error(
+		`Directory "${projectName}" already exists and is not empty. Use --force to overwrite.`,
+	)
 }
 
 /**
