@@ -6,6 +6,13 @@ export interface GitInitOptions {
 	projectPath: string
 }
 
+async function runGit(args: string[], cwd: string) {
+	const result = await exec('git', args, {
+		nodeOptions: { cwd, stdio: 'pipe' },
+	})
+	return result
+}
+
 export async function initializeGit({
 	projectPath,
 	message = 'Initial commit from create-xtarter-app',
@@ -15,26 +22,9 @@ export async function initializeGit({
 	logger.start('Initializing git repository...')
 
 	try {
-		await exec('git', ['init'], {
-			nodeOptions: {
-				cwd: projectPath,
-				stdio: 'pipe',
-			},
-		})
-
-		await exec('git', ['add', '.'], {
-			nodeOptions: {
-				cwd: projectPath,
-				stdio: 'pipe',
-			},
-		})
-
-		await exec('git', ['commit', '-m', message], {
-			nodeOptions: {
-				cwd: projectPath,
-				stdio: 'pipe',
-			},
-		})
+		await runGit(['init'], projectPath)
+		await runGit(['add', '.'], projectPath)
+		await runGit(['commit', '-m', message], projectPath)
 
 		logger.success('Git repository initialized')
 	} catch (error) {

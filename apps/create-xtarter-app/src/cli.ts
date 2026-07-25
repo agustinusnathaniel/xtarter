@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { resolve } from 'node:path'
 import { cancel, intro, note, outro } from '@clack/prompts'
-import { consola, logWarn, pc } from '@xtarterize/core'
+import { consola, pc } from '@xtarterize/core'
 import { defineCommand, runMain } from 'citty'
 import { APP_NAME, BANNER, DEFAULT_TEMPLATE, VERSION } from '@/constants'
 import { promptCleanCI, promptGitInit } from '@/prompts/options'
@@ -15,7 +15,6 @@ import {
 	scaffoldProject,
 } from '@/scaffold'
 import type { PackageManager } from '@/types'
-import { isGitInstalled } from '@/utils/git'
 
 // ── Helpers ──
 
@@ -205,21 +204,13 @@ const mainCommand = defineCommand({
 				useDefaults ? false : undefined,
 			)
 
-			const shouldInitGit =
-				args.noGit !== undefined
-					? false
-					: await resolveArg(
-							undefined,
-							promptGitInit,
-							useDefaults ? true : undefined,
-						)
-
-			if (shouldInitGit) {
-				const gitInstalled = await isGitInstalled()
-				if (!gitInstalled) {
-					logWarn('Git is not installed. Skipping git initialization.')
-				}
-			}
+			const shouldInitGit = args.noGit
+				? false
+				: await resolveArg(
+						undefined,
+						promptGitInit,
+						useDefaults ? true : undefined,
+					)
 
 			if (!quiet) {
 				note(
