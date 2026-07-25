@@ -17,6 +17,41 @@ import {
 import type { PackageManager } from '@/types'
 import { isGitInstalled } from '@/utils/git'
 
+// ── Helpers ──
+
+/**
+ * Resolve a CLI argument: use explicit arg value when provided,
+ * fall back to `defaultValue` in --yes mode, otherwise prompt the user.
+ */
+async function resolveArg<T>(
+	argValue: T | undefined,
+	prompt: () => Promise<T>,
+	defaultValue?: T,
+): Promise<T> {
+	if (argValue !== undefined) return argValue
+	if (defaultValue !== undefined) return defaultValue
+	return prompt()
+}
+
+function formatJsonResult(options: {
+	success: true
+	projectPath: string
+	template: string
+	packageManager: string
+	gitInitialized: boolean
+	dependenciesInstalled: boolean
+	ciConfigsCleaned: boolean
+	nextSteps: string[]
+}): string {
+	return JSON.stringify(options, null, 2)
+}
+
+function formatJsonError(message: string): string {
+	return JSON.stringify({ success: false as const, error: message }, null, 2)
+}
+
+// ── Argument definitions ──
+
 const scaffoldArgs = {
 	name: {
 		type: 'positional',
@@ -82,6 +117,8 @@ const scaffoldArgs = {
 	},
 } as const
 
+// ── Sub-commands ──
+
 const previewCommand = defineCommand({
 	meta: {
 		name: 'preview',
@@ -98,6 +135,8 @@ const previewCommand = defineCommand({
 		await previewTemplate(args.template as string | undefined)
 	},
 })
+
+// ── Main command ──
 
 const mainCommand = defineCommand({
 	meta: {
@@ -140,10 +179,6 @@ const mainCommand = defineCommand({
 			if (!projectName) {
 				projectName = await promptProjectName()
 				projectPath = resolve(process.cwd(), projectName)
-			} else if (projectName === '.') {
-				const resolved = resolveProjectPath('.')
-				projectName = resolved.projectName
-				projectPath = resolved.projectPath
 			} else {
 				const resolved = resolveProjectPath(projectName)
 				projectName = resolved.projectName
@@ -158,26 +193,26 @@ const mainCommand = defineCommand({
 					: (args.template as string | undefined),
 			)
 
-			const packageManager =
-				args.pm !== undefined
-					? await promptPackageManager(args.pm as PackageManager | undefined)
-					: useDefaults
-						? defaultPackageManager
-						: await promptPackageManager()
+			const packageManager = await resolveArg(
+				args.pm as PackageManager | undefined,
+				promptPackageManager,
+				useDefaults ? defaultPackageManager : undefined,
+			)
 
-			const shouldCleanCI =
-				args.clean !== undefined
-					? await promptCleanCI(args.clean)
-					: useDefaults
-						? false
-						: await promptCleanCI()
+			const shouldCleanCI = await resolveArg(
+				args.clean,
+				promptCleanCI,
+				useDefaults ? false : undefined,
+			)
 
 			const shouldInitGit =
 				args.noGit !== undefined
 					? false
-					: useDefaults
-						? true
-						: await promptGitInit()
+					: await resolveArg(
+							undefined,
+							promptGitInit,
+							useDefaults ? true : undefined,
+						)
 
 			if (shouldInitGit) {
 				const gitInstalled = await isGitInstalled()
@@ -215,20 +250,21 @@ const mainCommand = defineCommand({
 
 			if (json) {
 				const cdCommand = args.name === '.' ? '' : `cd ${projectName}`
-				const result = {
-					success: true as const,
-					projectPath,
-					template: template.id,
-					packageManager,
-					gitInitialized: shouldInitGit,
-					dependenciesInstalled: true, // scaffoldProject throws on failure, so always true on success
-					ciConfigsCleaned: shouldCleanCI,
-					nextSteps: [
-						...(cdCommand ? [cdCommand] : []),
-						`${packageManager} dev`,
-					],
-				}
-				process.stdout.write(`${JSON.stringify(result, null, 2)}\n`)
+				process.stdout.write(
+					`${formatJsonResult({
+						success: true as const,
+						projectPath,
+						template: template.id,
+						packageManager,
+						gitInitialized: shouldInitGit,
+						dependenciesInstalled: true,
+						ciConfigsCleaned: shouldCleanCI,
+						nextSteps: [
+							...(cdCommand ? [cdCommand] : []),
+							`${packageManager} dev`,
+						],
+					})}\n`,
+				)
 			} else if (!quiet) {
 				const cdCommand =
 					args.name === '.'
@@ -245,11 +281,7 @@ ${pc.bold('Docs:')} ${pc.underline(`https://github.com/${template.repo}`)}
 		} catch (error) {
 			const message = error instanceof Error ? error.message : 'Unknown error'
 			if (json) {
-				const errorResult = {
-					success: false as const,
-					error: message,
-				}
-				process.stderr.write(`${JSON.stringify(errorResult, null, 2)}\n`)
+				process.stderr.write(`${formatJsonError(message)}\n`)
 			} else {
 				cancel(`${pc.red('Error:')} ${message}`)
 			}
