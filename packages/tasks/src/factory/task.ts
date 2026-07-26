@@ -122,6 +122,17 @@ function shouldInstallDep(
 	)
 }
 
+function getMissingDeps(
+	deps: PackageJsonTaskDep[],
+	pkg: PackageJson | null,
+): PackageJsonTaskDep[] {
+	if (!pkg) return []
+	return deps.filter(
+		(dep) =>
+			!pkg.devDependencies?.[dep.depName] && !pkg.dependencies?.[dep.depName],
+	)
+}
+
 interface PackageJsonChanges {
 	missingScripts: PackageJsonScriptEntry[]
 	scripts: PackageJsonScriptEntry[]
@@ -181,11 +192,7 @@ export function createPackageJsonTask(options: PackageJsonTaskOptions): Task {
 				if (options.checkFn) {
 					const status = await options.checkFn(cwd, profile, pkg)
 					if (status === 'skip') {
-						const missingDeps = allDeps.filter(
-							(dep) =>
-								!pkg.devDependencies?.[dep.depName] &&
-								!pkg.dependencies?.[dep.depName],
-						)
+						const missingDeps = getMissingDeps(allDeps, pkg)
 						if (missingDeps.length > 0) return 'patch'
 					}
 					return status
@@ -245,11 +252,7 @@ export function createPackageJsonTask(options: PackageJsonTaskOptions): Task {
 				}
 
 				if (pkg) {
-					const missingDeps = neededDeps.filter(
-						(dep) =>
-							!pkg.devDependencies?.[dep.depName] &&
-							!pkg.dependencies?.[dep.depName],
-					)
+					const missingDeps = getMissingDeps(neededDeps, pkg)
 					if (missingDeps.length > 0) {
 						const devDeps = missingDeps.filter((dep) => dep.installDev ?? true)
 						const prodDeps = missingDeps.filter(
