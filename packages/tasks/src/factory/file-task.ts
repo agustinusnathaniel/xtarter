@@ -36,6 +36,49 @@ export interface CheckFnContext {
 	content: string | null
 }
 
+// ─── Shared helpers ───
+
+async function computeFileDiffs(
+	cwd: string,
+	profile: ProjectProfile,
+	files: MultiFileEntry[],
+): Promise<FileDiff[]> {
+	const diffs: FileDiff[] = []
+	for (const f of files) {
+		const fullPath = resolvePath(cwd, f.filepath)
+		const exists = await fileExists(fullPath)
+		const before = exists ? await readFile(fullPath) : null
+		const after = f.content(profile)
+		if (!exists || before?.trim() !== after.trim()) {
+			diffs.push({
+				filepath: relative(cwd, fullPath),
+				before,
+				after,
+			})
+		}
+	}
+	return diffs
+}
+
+async function computeSingleFileDiff(
+	cwd: string,
+	profile: ProjectProfile,
+	options: FileTaskOptions,
+): Promise<FileDiff> {
+	const fullPath = await resolveTaskFile(
+		cwd,
+		options.filepath,
+		options.extensions,
+	)
+	const exists = fullPath !== null && (await fileExists(fullPath))
+	const before = exists ? await readFile(fullPath) : null
+	const filepath = exists
+		? relative(cwd, fullPath)
+		: getDefaultFilepath(options.filepath, options.extensions)
+	const after = options.render(profile, before)
+	return { filepath, before, after }
+}
+
 // ─── FileTask (text files with optional merge/checkFn) ───
 
 export interface FileTaskOptions {
@@ -120,21 +163,8 @@ export function createFileTask(options: FileTaskOptions): Task {
 
 		async dryRun(cwd, profile): Promise<FileDiff[]> {
 			return wrapTask(options.id, 'createFileTask.dryRun', async () => {
-				const fullPath = await resolveTaskFile(
-					cwd,
-					options.filepath,
-					options.extensions,
-				)
-
-				const exists = fullPath !== null && (await fileExists(fullPath))
-				const before = exists ? await readFile(fullPath) : null
-				const filepath = exists
-					? relative(cwd, fullPath)
-					: getDefaultFilepath(options.filepath, options.extensions)
-
-				const after = options.render(profile, before)
-
-				return [{ filepath, before, after }]
+				const diff = await computeSingleFileDiff(cwd, profile, options)
+				return [diff]
 			})
 		},
 
@@ -155,21 +185,8 @@ export function createFileTask(options: FileTaskOptions): Task {
 					await ensureTaskParentDir(cwd, options.filepath)
 				}
 
-				const fullPath = await resolveTaskFile(
-					cwd,
-					options.filepath,
-					options.extensions,
-				)
-
-				const exists = fullPath !== null && (await fileExists(fullPath))
-				const before = exists ? await readFile(fullPath) : null
-				const filepath = exists
-					? relative(cwd, fullPath)
-					: getDefaultFilepath(options.filepath, options.extensions)
-
-				const after = options.render(profile, before)
-
-				await writeTaskDiffs(cwd, [{ filepath, before, after }])
+				const diff = await computeSingleFileDiff(cwd, profile, options)
+				await writeTaskDiffs(cwd, [diff])
 			})
 		},
 	}
@@ -240,25 +257,7 @@ export function createMultiFileTask(options: MultiFileTaskOptions): Task {
 
 		async dryRun(cwd, profile): Promise<FileDiff[]> {
 			return wrapTask(options.id, 'createMultiFileTask.dryRun', async () => {
-				const files = options.files(profile)
-				const diffs: FileDiff[] = []
-
-				for (const f of files) {
-					const fullPath = resolvePath(cwd, f.filepath)
-					const exists = await fileExists(fullPath)
-					const before = exists ? await readFile(fullPath) : null
-					const after = f.content(profile)
-
-					if (!exists || before?.trim() !== after.trim()) {
-						diffs.push({
-							filepath: relative(cwd, fullPath),
-							before,
-							after,
-						})
-					}
-				}
-
-				return diffs
+				return computeFileDiffs(cwd, profile, options.files(profile))
 			})
 		},
 
@@ -270,24 +269,11 @@ export function createMultiFileTask(options: MultiFileTaskOptions): Task {
 					installDev: options.installDev,
 				})
 
-				const files = options.files(profile)
-				const diffs: FileDiff[] = []
-
-				for (const f of files) {
-					const fullPath = resolvePath(cwd, f.filepath)
-					const exists = await fileExists(fullPath)
-					const before = exists ? await readFile(fullPath) : null
-					const after = f.content(profile)
-
-					if (!exists || before?.trim() !== after.trim()) {
-						diffs.push({
-							filepath: relative(cwd, fullPath),
-							before,
-							after,
-						})
-					}
-				}
-
+				const diffs = await computeFileDiffs(
+					cwd,
+					profile,
+					options.files(profile),
+				)
 				await writeTaskDiffs(cwd, diffs)
 			})
 		},
