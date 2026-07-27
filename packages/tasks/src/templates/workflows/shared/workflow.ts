@@ -1,3 +1,6 @@
+import type { ProjectProfile } from '@xtarterize/core'
+import { ACTION_VERSIONS } from './versions.js'
+
 export interface YamlStep {
 	name?: string
 	uses?: string
@@ -48,6 +51,43 @@ export function renderSteps(steps: YamlStep[], indent: number): string {
 				.join('\n')
 		})
 		.join('\n')
+}
+
+export function createSetupSteps(
+	profile: ProjectProfile,
+	options?: {
+		fetchDepth?: string
+		useBunAction?: boolean
+	},
+): YamlStep[] {
+	const pm = profile.packageManager
+	const steps: YamlStep[] = [
+		{
+			uses: ACTION_VERSIONS.CHECKOUT,
+			...(options?.fetchDepth
+				? { with: { 'fetch-depth': options.fetchDepth } }
+				: {}),
+		},
+	]
+
+	if (pm === 'pnpm') {
+		steps.push({
+			uses: ACTION_VERSIONS.PNPM_SETUP,
+			with: { cache: 'true' },
+		})
+	} else if (pm === 'bun' && options?.useBunAction) {
+		steps.push({ uses: 'oven-sh/setup-bun@v2' })
+	} else {
+		steps.push({
+			uses: ACTION_VERSIONS.SETUP_NODE,
+			with: {
+				'node-version': profile.nodeVersion,
+				...(pm !== 'bun' ? { cache: pm } : {}),
+			},
+		})
+	}
+
+	return steps
 }
 
 export function conditionalScriptStep(

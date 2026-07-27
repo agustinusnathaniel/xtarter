@@ -1,8 +1,11 @@
 import type { ProjectProfile } from '@xtarterize/core'
 import { installDependenciesCommand, runScriptCommand } from 'nypm'
 import { ACTION_VERSIONS } from './shared/versions.js'
-import type { YamlStep } from './shared/workflow.js'
-import { conditionalScriptStep, renderSteps } from './shared/workflow.js'
+import {
+	conditionalScriptStep,
+	createSetupSteps,
+	renderSteps,
+} from './shared/workflow.js'
 
 export function renderAutoUpdateWorkflow(profile: ProjectProfile): string {
 	const pm = profile.packageManager
@@ -13,24 +16,7 @@ export function renderAutoUpdateWorkflow(profile: ProjectProfile): string {
 	const runTypecheck = runScriptCommand(pm, 'typecheck')
 	const runTest = runScriptCommand(pm, 'test')
 
-	const steps: YamlStep[] = [{ uses: ACTION_VERSIONS.CHECKOUT }]
-
-	if (pm === 'pnpm') {
-		steps.push({
-			uses: ACTION_VERSIONS.PNPM_SETUP,
-			with: { cache: 'true' },
-		})
-	}
-
-	if (pm !== 'pnpm') {
-		steps.push({
-			uses: ACTION_VERSIONS.SETUP_NODE,
-			with: {
-				'node-version': profile.nodeVersion,
-				...(pm !== 'bun' ? { cache: pm } : {}),
-			},
-		})
-	}
+	const steps = createSetupSteps(profile)
 
 	steps.push(
 		{
