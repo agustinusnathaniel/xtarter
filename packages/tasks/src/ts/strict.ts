@@ -1,6 +1,6 @@
 import { deepEqual } from '@xtarterize/core'
-import { parseJsonc } from '@xtarterize/patchers'
 import { createJsonMergeTask } from '@/factory'
+import { getCompilerOptions } from './utils.js'
 
 const EXPECTED_OPTIONS = {
 	strict: true,
@@ -10,21 +10,8 @@ const EXPECTED_OPTIONS = {
 } as const
 
 function getCompilerOption(content: string | null, key: string): unknown {
-	if (!content) return undefined
-	const parsed = parseJsonc(content)
-	if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
-		return undefined
-	}
-	const tsconfig = parsed as Record<string, unknown>
-	const compilerOptions = tsconfig.compilerOptions
-	if (
-		typeof compilerOptions !== 'object' ||
-		compilerOptions === null ||
-		Array.isArray(compilerOptions)
-	) {
-		return undefined
-	}
-	const options = compilerOptions as Record<string, unknown>
+	const options = getCompilerOptions(content)
+	if (!options) return undefined
 	if (!Object.hasOwn(options, key)) return undefined
 	return options[key]
 }

@@ -1,26 +1,13 @@
 import type { ProjectProfile } from '@xtarterize/core'
-import { parseJsonc } from '@xtarterize/patchers'
 import { createJsonMergeTask } from '@/factory'
+import { getCompilerOptions } from './utils.js'
 
 function getPathStatus(
 	content: string | null,
 	profile: ProjectProfile,
 ): 'missing' | 'match' | 'mismatch' {
-	if (!content) return 'missing'
-	const parsed = parseJsonc(content)
-	if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
-		return 'missing'
-	}
-	const tsconfig = parsed as Record<string, unknown>
-	const compilerOptions = tsconfig.compilerOptions
-	if (
-		typeof compilerOptions !== 'object' ||
-		compilerOptions === null ||
-		Array.isArray(compilerOptions)
-	) {
-		return 'missing'
-	}
-	const options = compilerOptions as Record<string, unknown>
+	const options = getCompilerOptions(content)
+	if (!options) return 'missing'
 	const paths = options.paths
 	if (typeof paths !== 'object' || paths === null || Array.isArray(paths)) {
 		return 'missing'
