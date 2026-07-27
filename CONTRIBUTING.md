@@ -7,7 +7,7 @@ Thanks for your interest in contributing to xtarterize!
 ```bash
 pnpm install
 pnpm build
-pnpm test:run
+pnpm test
 ```
 
 ## Project Structure
