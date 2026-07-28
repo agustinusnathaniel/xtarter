@@ -27,6 +27,9 @@ That's it. Your project gets Biome, TypeScript incremental builds, Renovate, com
 | `npx xtarterize add <task>`     | Apply a specific task (e.g., `lint/biome`)         |
 | `npx xtarterize restore <file>` | Restore a file from backup                         |
 | `npx xtarterize list`           | List all available tasks and their status          |
+| `npx xtarterize doctor`         | Run environment and project diagnostics            |
+| `npx xtarterize query <query>`  | Search tasks by natural language query             |
+| `npx xtarterize undo`           | Undo the last xtarterize run                       |
 
 ## Supported Stacks
 
