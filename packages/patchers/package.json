@@ -21,7 +21,7 @@
 	},
 	"dependencies": {
 		"defu": "catalog:",
-		"js-yaml": "^5.2.1",
+		"js-yaml": "^5.2.2",
 		"json5": "catalog:",
 		"jsonc-parser": "catalog:",
 		"magicast": "catalog:",
