@@ -1,5 +1,11 @@
 # @xtarterize/patchers
 
+## 1.17.2
+
+### Patch Changes
+
+- [#104](https://github.com/agustinusnathaniel/xtarter/pull/104) [`0f8e694`](https://github.com/agustinusnathaniel/xtarter/commit/0f8e69444bf6f6623fd2401082c40ca5af6fa8f6) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Extract shared helper functions (createSetupSteps, getCompilerOptions, computePackageJsonChanges, computeFileDiffs, resolveProjectLintConfig) to eliminate factory workflow duplication. Simplify create-xtarter-app CLI with reusable helpers. Deduplicate isRecord/isStringRecord type guards. Simplify bundler detection in core.
+
 ## 1.17.1
 
 ## 1.17.0
