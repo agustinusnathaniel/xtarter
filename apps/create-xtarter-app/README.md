@@ -157,11 +157,11 @@ This package is part of the [xtarterize monorepo](https://github.com/agustinusna
 
 ```bash
 # From the monorepo root:
-pnpm install              # Install all workspace dependencies
-pnpm cxa:build            # Build create-xtarter-app
-pnpm cxa:dev              # Build in watch mode
-pnpm cxa:typecheck        # Type check
-pnpm cxa:test             # Run tests
+pnpm install                            # Install all workspace dependencies
+pnpm --filter create-xtarter-app build  # Build create-xtarter-app
+pnpm --filter create-xtarter-app dev    # Build in watch mode
+pnpm --filter create-xtarter-app typecheck  # Type check
+pnpm --filter create-xtarter-app test   # Run tests
 
 # Test scaffolding locally:
 node apps/create-xtarter-app/dist/cli.mjs /tmp/my-app -t vite-tailwind --yes
