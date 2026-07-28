@@ -35,14 +35,15 @@ Each task must implement:
 - `dryRun(cwd, profile)` - What would change?
 - `apply(cwd, profile)` - Make the changes
 
-Use the factory functions in `packages/tasks/src/factory.ts`:
+Use the factory functions in `packages/tasks/src/factory/`:
 
-- `createSimpleFileTask` - For files written once
-- `createFileTask` - For files with merge/check logic
-- `createJsonMergeTask` - For JSON config files that should merge
-- `createPackageJsonTask` - For package.json scripts + deps
-- `createVitePluginTask` - For vite.config plugin injection
+- `createFileTask` - For files with creation and check logic
 - `createMultiFileTask` - For tasks producing multiple files
+- `createJsonMergeTask` - For JSON config files that should merge
+- `createMultiFileJsonMergeTask` - For tasks that merge multiple JSON configs
+- `createPackageJsonTask` - For package.json scripts + deps
+- `createExecTask` - For tasks that run shell commands
+- `createVitePluginTask` - For vite.config plugin injection
 
 ## Quality Standards
 
