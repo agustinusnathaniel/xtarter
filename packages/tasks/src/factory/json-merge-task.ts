@@ -6,10 +6,15 @@ import type {
 	TaskSearchMeta,
 	TaskStatus,
 } from '@xtarterize/core'
-import { fileExists, readFile, readPackageJson } from '@xtarterize/core'
+import { fileExists, readFile } from '@xtarterize/core'
 import type { CheckFnContext } from './file-task.js'
 import { checkJsonConfigTask, dryRunJsonConfigTask } from './json-config.js'
-import { ensureTaskDependency, wrapTask, writeTaskDiffs } from './ops.js'
+import {
+	checkMissingDeps,
+	ensureTaskDependency,
+	wrapTask,
+	writeTaskDiffs,
+} from './ops.js'
 import { resolveTaskFile } from './utils.js'
 
 // ─── JsonMergeTask ───
@@ -57,14 +62,11 @@ export function createJsonMergeTask(options: JsonMergeTaskOptions): Task {
 					return options.checkFn({ cwd, profile, fullPath, content })
 				}
 
-				const pkg = await readPackageJson(cwd)
-				const depNames =
-					options.depNames ?? (options.depName ? [options.depName] : [])
-				for (const dep of depNames) {
-					if (!pkg?.devDependencies?.[dep] && !pkg?.dependencies?.[dep]) {
-						return 'patch'
-					}
-				}
+				const missingDep = await checkMissingDeps(cwd, {
+					depName: options.depName,
+					depNames: options.depNames,
+				})
+				if (missingDep) return missingDep
 
 				return checkJsonConfigTask(cwd, profile, {
 					filepath: options.filepath,

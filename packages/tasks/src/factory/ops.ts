@@ -21,6 +21,26 @@ export function wrapTask<A>(
 	})
 }
 
+/**
+ * Check if required dependencies are missing from package.json.
+ * Returns 'patch' if any dep is missing, null if all present or no deps specified.
+ */
+export async function checkMissingDeps(
+	cwd: string,
+	options: { depName?: string; depNames?: string[] },
+): Promise<'patch' | null> {
+	if (!options.depName && !options.depNames) return null
+	const { readPackageJson } = await import('@xtarterize/core')
+	const pkg = await readPackageJson(cwd)
+	const deps = options.depNames ?? (options.depName ? [options.depName] : [])
+	for (const dep of deps) {
+		if (!pkg?.devDependencies?.[dep] && !pkg?.dependencies?.[dep]) {
+			return 'patch'
+		}
+	}
+	return null
+}
+
 export async function ensureTaskDependency(options: {
 	cwd: string
 	depName?: string

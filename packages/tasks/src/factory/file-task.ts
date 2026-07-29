@@ -6,16 +6,12 @@ import type {
 	TaskSearchMeta,
 	TaskStatus,
 } from '@xtarterize/core'
-import {
-	fileExists,
-	readFile,
-	readPackageJson,
-	resolvePath,
-} from '@xtarterize/core'
+import { fileExists, readFile, resolvePath } from '@xtarterize/core'
 import { mergeJson, parseJsonc } from '@xtarterize/patchers'
 import JSON5 from 'json5'
 import { relative } from 'pathe'
 import {
+	checkMissingDeps,
 	ensureTaskDependency,
 	ensureTaskParentDir,
 	wrapTask,
@@ -127,14 +123,11 @@ export function createFileTask(options: FileTaskOptions): Task {
 					return options.checkFn({ cwd, profile, fullPath, content })
 				}
 
-				const pkg = await readPackageJson(cwd)
-				const deps =
-					options.depNames ?? (options.depName ? [options.depName] : [])
-				for (const dep of deps) {
-					if (!pkg?.devDependencies?.[dep] && !pkg?.dependencies?.[dep]) {
-						return 'patch'
-					}
-				}
+				const missingDep = await checkMissingDeps(cwd, {
+					depName: options.depName,
+					depNames: options.depNames,
+				})
+				if (missingDep) return missingDep
 
 				const expected = options.render(profile, null)
 				const actual = await readFile(fullPath)
@@ -244,11 +237,10 @@ export function createMultiFileTask(options: MultiFileTaskOptions): Task {
 				if (hasMissing) return 'new'
 
 				if (options.depName) {
-					const pkg = await readPackageJson(cwd)
-					const hasDep =
-						pkg?.devDependencies?.[options.depName] ||
-						pkg?.dependencies?.[options.depName]
-					if (!hasDep) return 'patch'
+					const missingDep = await checkMissingDeps(cwd, {
+						depName: options.depName,
+					})
+					if (missingDep) return missingDep
 				}
 
 				return 'skip'
