@@ -64,46 +64,34 @@ export const doctorCommand = defineCommand({
 			runConflictChecks(cwd),
 		])
 
-		const envChecks =
-			results[0].status === 'fulfilled'
-				? results[0].value
-				: ([
-						{
-							name: 'Environment',
-							status: 'fail' as const,
-							message: 'Failed to run environment checks',
-						},
-					] as DiagnosticCheck[])
-		const installChecks =
-			results[1].status === 'fulfilled'
-				? results[1].value
-				: ([
-						{
-							name: 'Tools',
-							status: 'fail' as const,
-							message: 'Failed to run tool checks',
-						},
-					] as DiagnosticCheck[])
-		const healthChecks =
-			results[2].status === 'fulfilled'
-				? results[2].value
-				: ([
-						{
-							name: 'Project',
-							status: 'fail' as const,
-							message: 'Failed to run project health checks',
-						},
-					] as DiagnosticCheck[])
-		const conflictChecks =
-			results[3].status === 'fulfilled'
-				? results[3].value
-				: ([
-						{
-							name: 'Configuration',
-							status: 'fail' as const,
-							message: 'Failed to run conflict checks',
-						},
-					] as DiagnosticCheck[])
+		const envChecks = extractSettledResult(results[0], [
+			{
+				name: 'Environment',
+				status: 'fail' as const,
+				message: 'Failed to run environment checks',
+			},
+		])
+		const installChecks = extractSettledResult(results[1], [
+			{
+				name: 'Tools',
+				status: 'fail' as const,
+				message: 'Failed to run tool checks',
+			},
+		])
+		const healthChecks = extractSettledResult(results[2], [
+			{
+				name: 'Project',
+				status: 'fail' as const,
+				message: 'Failed to run project health checks',
+			},
+		])
+		const conflictChecks = extractSettledResult(results[3], [
+			{
+				name: 'Configuration',
+				status: 'fail' as const,
+				message: 'Failed to run conflict checks',
+			},
+		])
 
 		const groups: DiagnosticGroup[] = [
 			{ title: 'Environment', checks: envChecks },
@@ -171,3 +159,14 @@ export const doctorCommand = defineCommand({
 		printTiming({ detectionMs: diagMs, resolutionMs: 0, resolutionSumMs: 0 })
 	},
 })
+
+/**
+ * Safely extract a value from a `PromiseSettledResult`, returning a fallback
+ * if the promise was rejected.
+ */
+function extractSettledResult<T>(
+	result: PromiseSettledResult<T>,
+	fallback: T,
+): T {
+	return result.status === 'fulfilled' ? result.value : fallback
+}
