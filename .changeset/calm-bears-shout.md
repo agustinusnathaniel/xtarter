@@ -3,9 +3,8 @@
 '@xtarterize/tasks': patch
 ---
 
-refactor: batch dependency installation in apply pipeline
+perf: faster dependency installation when running `xtarterize sync` or `xtarterize add`
 
-Dependencies are now installed in groups (dev/prod) rather than one
-at a time, reducing package manager subprocess calls. The apply
-pipeline also collects deps across all tasks for a single batch
-install before running any apply().
+Dependencies are now installed in batches instead of one at a time,
+significantly reducing the number of package manager calls during
+task application.
