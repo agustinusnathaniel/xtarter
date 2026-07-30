@@ -37,6 +37,10 @@ export function createVitePluginTask(options: VitePluginTaskOptions): Task {
 		scope: options.scope,
 		applicable: options.applicable,
 
+		async getDeps(_cwd, _profile) {
+			return [{ depName: options.depName, dev: true }]
+		},
+
 		async check(cwd, _profile): Promise<TaskStatus> {
 			return wrapTask(options.id, 'createVitePluginTask.check', async () => {
 				const configPath = await findConfigFile(

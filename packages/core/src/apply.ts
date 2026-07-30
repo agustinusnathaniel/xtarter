@@ -6,6 +6,7 @@ import type { ProjectProfile } from '@/detect.js'
 import { TaskError } from '@/errors.js'
 import type { ApplyTiming, TaskTiming } from '@/timing.js'
 import { logError, logInfo, pc } from '@/utils/logger.js'
+import { installDependenciesBatch } from '@/utils/pkg.js'
 import { statusTag } from '@/utils/tags.js'
 
 export interface ApplyOptions {
@@ -140,6 +141,26 @@ async function runApply(options: RunApplyOptions): Promise<ApplyResult> {
 	// Write manifest so `undo` can restore all files from this run
 	if (filesToBackup.size > 0) {
 		await writeRunManifest(cwd, [...filesToBackup])
+	}
+
+	// Phase: batch-install all needed deps across all tasks
+	// This lets pnpm/npm resolve all packages in one go instead
+	// of per-task. Each task's apply() will find deps already
+	// installed and skip them (no-op in installDependenciesBatch).
+	const allDeps: { depName: string; dev: boolean }[] = []
+	for (const { task } of tasksToRun) {
+		if (task.getDeps) {
+			const deps = await task.getDeps(cwd, profile)
+			allDeps.push(...deps)
+		}
+	}
+	if (allDeps.length > 0) {
+		try {
+			await installDependenciesBatch(cwd, allDeps)
+		} catch (error) {
+			const message = error instanceof Error ? error.message : String(error)
+			logError(`Failed to batch-install dependencies: ${message}`)
+		}
 	}
 
 	let applied = 0

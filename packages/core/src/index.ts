@@ -111,6 +111,7 @@ export {
 	getDependencyVersion,
 	getNodeVersion,
 	hasDependency,
+	installDependenciesBatch,
 	installDependency,
 	readPackageJson,
 	writePackageJson,

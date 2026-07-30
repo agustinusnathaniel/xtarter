@@ -8,7 +8,7 @@ import type {
 } from '@xtarterize/core'
 import {
 	fileExists,
-	installDependency,
+	installDependenciesBatch,
 	readFile,
 	readPackageJson,
 	resolvePath,
@@ -182,6 +182,14 @@ export function createPackageJsonTask(options: PackageJsonTaskOptions): Task {
 		scope: options.scope,
 		applicable: options.applicable,
 
+		async getDeps(cwd, profile) {
+			const changes = await computePackageJsonChanges(options, cwd, profile)
+			return changes.neededDeps.map((d) => ({
+				depName: d.depName,
+				dev: d.installDev ?? true,
+			}))
+		},
+
 		async check(cwd, profile): Promise<TaskStatus> {
 			return wrapTask(options.id, 'createPackageJsonTask.check', async () => {
 				const changes = await computePackageJsonChanges(options, cwd, profile)
@@ -295,16 +303,12 @@ export function createPackageJsonTask(options: PackageJsonTaskOptions): Task {
 					invalidatePackageJsonCache(cwd)
 				}
 
-				for (const dep of neededDeps) {
-					try {
-						await installDependency(cwd, dep.depName, dep.installDev ?? true)
-					} catch (error) {
-						const message =
-							error instanceof Error ? error.message : String(error)
-						console.error(
-							`Failed to install dependency ${dep.depName}: ${message}`,
-						)
-					}
+				if (neededDeps.length > 0) {
+					const deps = neededDeps.map((d) => ({
+						depName: d.depName,
+						dev: d.installDev ?? true,
+					}))
+					await installDependenciesBatch(cwd, deps)
 				}
 			})
 		},

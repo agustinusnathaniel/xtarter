@@ -6,15 +6,14 @@ import type {
 	TaskSearchMeta,
 	TaskStatus,
 } from '@xtarterize/core'
-import { fileExists, readFile } from '@xtarterize/core'
+import {
+	fileExists,
+	installDependenciesBatch,
+	readFile,
+} from '@xtarterize/core'
 import type { CheckFnContext } from './file-task.js'
 import { checkJsonConfigTask, dryRunJsonConfigTask } from './json-config.js'
-import {
-	checkMissingDeps,
-	ensureTaskDependency,
-	wrapTask,
-	writeTaskDiffs,
-} from './ops.js'
+import { checkMissingDeps, wrapTask, writeTaskDiffs } from './ops.js'
 import { resolveTaskFile } from './utils.js'
 
 // ─── JsonMergeTask ───
@@ -43,6 +42,15 @@ export function createJsonMergeTask(options: JsonMergeTaskOptions): Task {
 		searchMeta: options.searchMeta,
 		scope: options.scope,
 		applicable: options.applicable,
+
+		async getDeps(_cwd, _profile) {
+			const deps =
+				options.depNames ?? (options.depName ? [options.depName] : [])
+			return deps.map((dep) => ({
+				depName: dep,
+				dev: options.installDev ?? true,
+			}))
+		},
 
 		async check(cwd, profile): Promise<TaskStatus> {
 			return wrapTask(options.id, 'createJsonMergeTask.check', async () => {
@@ -93,18 +101,14 @@ export function createJsonMergeTask(options: JsonMergeTaskOptions): Task {
 
 				const deps =
 					options.depNames ?? (options.depName ? [options.depName] : [])
-				for (const dep of deps) {
-					try {
-						await ensureTaskDependency({
-							cwd,
+				if (deps.length > 0) {
+					await installDependenciesBatch(
+						cwd,
+						deps.map((dep) => ({
 							depName: dep,
-							installDev: options.installDev,
-						})
-					} catch (error) {
-						const message =
-							error instanceof Error ? error.message : String(error)
-						console.error(`Failed to install dependency ${dep}: ${message}`)
-					}
+							dev: options.installDev ?? true,
+						})),
+					)
 				}
 			})
 		},
