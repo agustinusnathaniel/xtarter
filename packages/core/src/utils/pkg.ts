@@ -51,6 +51,68 @@ export function getNodeVersion(pkg: {
  *
  * @throws {Error} With a message including the dependency name and underlying error.
  */
+export interface DepToInstall {
+	depName: string
+	dev: boolean
+}
+
+/**
+ * Install multiple dependencies in batches.
+ *
+ * Groups dependencies by dev/prod and installs each group in a single
+ * `nypm addDependency` call, reducing the number of spawned package
+ * manager subprocesses.
+ *
+ * Skips dependencies already present in package.json.
+ */
+export async function installDependenciesBatch(
+	cwd: string,
+	deps: DepToInstall[],
+): Promise<void> {
+	if (deps.length === 0) return
+
+	// Filter out already-installed deps
+	const pkg = await readPackageJson(cwd)
+	const missing = deps.filter(
+		(d) =>
+			!pkg?.devDependencies?.[d.depName] && !pkg?.dependencies?.[d.depName],
+	)
+	if (missing.length === 0) return
+
+	const isPnpmWorkspaceRoot = await fileExists(
+		resolvePath(cwd, 'pnpm-workspace.yaml'),
+	)
+	const workspace = isPnpmWorkspaceRoot || undefined
+
+	// Group by dev vs prod (nypm's `dev` option applies to ALL names in one call)
+	const devDeps = missing.filter((d) => d.dev).map((d) => d.depName)
+	const prodDeps = missing.filter((d) => !d.dev).map((d) => d.depName)
+
+	const errors: string[] = []
+
+	if (devDeps.length > 0) {
+		try {
+			await addDependency(devDeps, { cwd, dev: true, workspace })
+		} catch (cause) {
+			const msg = cause instanceof Error ? cause.message : String(cause)
+			errors.push(`Failed to install dev dependencies: ${msg}`)
+		}
+	}
+
+	if (prodDeps.length > 0) {
+		try {
+			await addDependency(prodDeps, { cwd, dev: false, workspace })
+		} catch (cause) {
+			const msg = cause instanceof Error ? cause.message : String(cause)
+			errors.push(`Failed to install dependencies: ${msg}`)
+		}
+	}
+
+	if (errors.length > 0) {
+		throw new Error(errors.join('\n'))
+	}
+}
+
 export async function installDependency(
 	cwd: string,
 	depName: string,

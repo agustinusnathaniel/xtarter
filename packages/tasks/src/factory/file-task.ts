@@ -6,7 +6,12 @@ import type {
 	TaskSearchMeta,
 	TaskStatus,
 } from '@xtarterize/core'
-import { fileExists, readFile, resolvePath } from '@xtarterize/core'
+import {
+	fileExists,
+	installDependenciesBatch,
+	readFile,
+	resolvePath,
+} from '@xtarterize/core'
 import { mergeJson, parseJsonc } from '@xtarterize/patchers'
 import JSON5 from 'json5'
 import { relative } from 'pathe'
@@ -105,6 +110,15 @@ export function createFileTask(options: FileTaskOptions): Task {
 		scope: options.scope,
 		applicable: options.applicable,
 
+		async getDeps(_cwd, _profile) {
+			const deps =
+				options.depNames ?? (options.depName ? [options.depName] : [])
+			return deps.map((dep) => ({
+				depName: options.depInstallName ?? dep,
+				dev: options.installDev ?? true,
+			}))
+		},
+
 		async check(cwd, profile): Promise<TaskStatus> {
 			return wrapTask(options.id, 'createFileTask.check', async () => {
 				const fullPath = await resolveTaskFile(
@@ -165,13 +179,12 @@ export function createFileTask(options: FileTaskOptions): Task {
 			return wrapTask(options.id, 'createFileTask.apply', async () => {
 				const deps =
 					options.depNames ?? (options.depName ? [options.depName] : [])
-				for (const dep of deps) {
-					await ensureTaskDependency({
-						cwd,
-						depName: dep,
-						depInstallName: options.depInstallName,
-						installDev: options.installDev,
-					})
+				if (deps.length > 0) {
+					const installDeps = deps.map((dep) => ({
+						depName: options.depInstallName ?? dep,
+						dev: options.installDev ?? true,
+					}))
+					await installDependenciesBatch(cwd, installDeps)
 				}
 
 				if (options.ensureParentDir) {

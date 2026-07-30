@@ -47,6 +47,13 @@ export interface Task {
 	scope?: TaskScope
 	searchMeta?: TaskSearchMeta
 	applicable: (profile: ProjectProfile) => boolean
+	/** Optional: declare dependencies needed by this task.
+	 * When implemented, the applyTasks pipeline batches these across
+	 * all tasks into a single install call before running any apply(). */
+	getDeps?: (
+		cwd: string,
+		profile: ProjectProfile,
+	) => Promise<{ depName: string; dev: boolean }[]>
 	check: (cwd: string, profile: ProjectProfile) => Promise<TaskStatus>
 	dryRun: (cwd: string, profile: ProjectProfile) => Promise<FileDiff[]>
 	apply: (cwd: string, profile: ProjectProfile) => Promise<void>
