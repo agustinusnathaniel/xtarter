@@ -30,7 +30,7 @@
 				"@xtarterize/tasks#build",
 				"create-xtarter-app#build"
 			],
-			"inputs": ["vitest.config.ts", "vite.config.ts", "test/"],
+			"inputs": ["vite.config.ts", "test/"],
 			"outputs": ["node_modules/.vite/vitest/*"]
 		}
 	}
