@@ -10,7 +10,7 @@ The apply engine is the final stage of the conformance pipeline. It runs applica
 ## Apply Pipeline
 
 ```
-tasks + profile → check each → backup files → apply each → report results
+tasks + profile → check each → backup files → install deps → apply each → report results
 ```
 
 ### `applyTasks(tasks, cwd, profile, selectedIds?, options?)`
@@ -20,8 +20,9 @@ The [`applyTasks`](https://github.com/agustinusnathaniel/xtarterize/blob/main/pa
 1. **Filter** - Uses `selectedIds` when the user picks specific tasks; otherwise applies all
 2. **Check** - Re-runs `task.check()` to get current status (skips `skip` tasks, optionally includes `conflict`)
 3. **Backup** - Collects all unique filepaths from `task.dryRun()` and backs them up once before writing anything
-4. **Apply** - Executes `task.apply()` for each task sequentially
-5. **Report** - Returns `{ applied, skipped, errors }` counts
+4. **Batch Install** - After backup, the engine calls `task.getDeps()` on each task (if implemented) to collect all required npm dependencies. These are deduplicated and installed in a single batch operation (grouped by dev/prod). This ensures all packages are available before any `apply()` runs. Each task's `apply()` then finds deps already present and skips re-installation. Errors are logged but don't abort the pipeline.
+5. **Apply** - Executes `task.apply()` for each task sequentially (deps are already installed from the batch phase)
+6. **Report** - Returns `{ applied, skipped, errors }` counts
 
 ```typescript
 import { applyTasks } from '@xtarterize/core'
@@ -60,14 +61,17 @@ Before any file is modified, the engine creates timestamped backups in `.xtarter
 Errors are collected and reported without aborting the entire run:
 
 - **Check/dryRun failures** - Logged as errors; the file is not backed up and the task is skipped
-- **Apply failures** - Logged with the task ID and error message; subsequent tasks continue
 - **Backup failures** - Caught internally; the apply continues but the file may not be restorable
+- **Install failures** - If batch installation fails, the error is logged and the pipeline continues. Individual tasks may fail if required packages are missing, but file-generation tasks (lint configs, editor settings) can proceed.
+- **Apply failures** - Logged with the task ID and error message; subsequent tasks continue
 
 The function always returns a result object rather than throwing, making it safe for CLI use.
 
 ## Ordering
 
 Tasks are applied in registration order (the order they appear in `getAllTasks()`). There is no dependency graph - each task is independent and idempotent. This means any subset of tasks can be applied in any order without producing different results.
+
+Dependencies are collected and installed upfront in a batch phase before any `apply()` runs, so task execution order does not affect dependency availability.
 
 ## References
 
