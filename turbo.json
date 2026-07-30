@@ -31,7 +31,7 @@
 				"create-xtarter-app#build"
 			],
 			"inputs": ["vitest.config.ts", "test/"],
-			"outputs": ["node_modules/.cache/vitest/*"]
+			"outputs": ["node_modules/.vite/vitest/*"]
 		}
 	}
 }
