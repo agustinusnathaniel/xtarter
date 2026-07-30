@@ -1,5 +1,19 @@
 # @xtarterize/tasks
 
+## 1.17.3
+
+### Patch Changes
+
+- [#110](https://github.com/agustinusnathaniel/xtarter/pull/110) [`85cd35c`](https://github.com/agustinusnathaniel/xtarter/commit/85cd35c7b5102087bf25ace198061abce191f18c) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - perf: faster dependency installation when running `xtarterize sync` or `xtarterize add`
+
+  Dependencies are now installed in batches instead of one at a time,
+  significantly reducing the number of package manager calls during
+  task application.
+
+- Updated dependencies [[`85cd35c`](https://github.com/agustinusnathaniel/xtarter/commit/85cd35c7b5102087bf25ace198061abce191f18c)]:
+  - @xtarterize/core@1.17.3
+  - @xtarterize/patchers@1.17.3
+
 ## 1.17.2
 
 ### Patch Changes
