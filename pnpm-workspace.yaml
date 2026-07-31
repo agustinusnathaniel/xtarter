@@ -40,6 +40,8 @@ onlyBuiltDependencies:
   - sharp
 overrides:
   vite: 'catalog:'
+  dompurify: 3.4.12
+  postcss: 8.5.25
 peerDependencyRules:
   allowAny:
     - vite
