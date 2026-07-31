@@ -31,6 +31,7 @@ export interface JsonMergeTaskOptions {
 	depName?: string
 	depNames?: string[]
 	installDev?: boolean
+	depInstallName?: string
 	checkFn?: (context: CheckFnContext) => Promise<TaskStatus>
 }
 
@@ -47,7 +48,7 @@ export function createJsonMergeTask(options: JsonMergeTaskOptions): Task {
 			const deps =
 				options.depNames ?? (options.depName ? [options.depName] : [])
 			return deps.map((dep) => ({
-				depName: dep,
+				depName: options.depInstallName ?? dep,
 				dev: options.installDev ?? true,
 			}))
 		},
@@ -105,7 +106,7 @@ export function createJsonMergeTask(options: JsonMergeTaskOptions): Task {
 					await installDependenciesBatch(
 						cwd,
 						deps.map((dep) => ({
-							depName: dep,
+							depName: options.depInstallName ?? dep,
 							dev: options.installDev ?? true,
 						})),
 					)
