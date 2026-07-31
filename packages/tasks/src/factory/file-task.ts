@@ -214,6 +214,7 @@ export interface MultiFileTaskOptions {
 	applicable: (profile: ProjectProfile) => boolean
 	files: (profile: ProjectProfile) => MultiFileEntry[]
 	depName?: string
+	depInstallName?: string
 	installDev?: boolean
 }
 
@@ -271,6 +272,7 @@ export function createMultiFileTask(options: MultiFileTaskOptions): Task {
 				await ensureTaskDependency({
 					cwd,
 					depName: options.depName,
+					depInstallName: options.depInstallName,
 					installDev: options.installDev,
 				})
 
