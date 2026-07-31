@@ -32,6 +32,21 @@ The xtarterize CLI provides commands to detect, apply, and maintain conformance 
 | [`xtarterize list`](#list) | List all available tasks with status |
 | [`xtarterize query`](#query) | Search tasks by natural language query |
 
+## Exit Codes
+
+The CLI follows the Unix convention: exit code `0` means success, `1` means the command found something that needs attention. This makes `xtarterize` usable as a CI gate.
+
+| Command | Exit 0 | Exit 1 |
+|---------|--------|--------|
+| `check` | Fully conformant, no failing diagnostics | Pending changes or failing diagnostics |
+| `diff` | No pending changes | At least one pending change |
+| `doctor` | All diagnostics pass | At least one diagnostic fails |
+
+```bash
+# Fail CI when the project is not conformant
+npx xtarterize check --quiet || exit 1
+```
+
 ## `doctor`
 
 Run comprehensive project diagnostics. Checks are grouped into four categories:

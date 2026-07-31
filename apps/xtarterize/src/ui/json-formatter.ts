@@ -34,12 +34,21 @@ interface CheckResultOptions {
 	timing?: ResolveTiming
 }
 
+export function computeCheckOk(
+	tasks: Task[],
+	statuses: Map<string, TaskStatus>,
+	diagnostics: DiagnosticCheck[],
+): boolean {
+	const conformant = tasks.filter((t) => statuses.get(t.id) === 'skip').length
+	const hasFailures = diagnostics.some((d) => d.status === 'fail')
+	return !hasFailures && conformant === tasks.length
+}
+
 export function formatCheckResult(options: CheckResultOptions): string {
 	const { tasks, statuses, diagnostics, timing } = options
 	const conformant = tasks.filter((t) => statuses.get(t.id) === 'skip').length
-	const hasFailures = diagnostics.some((d) => d.status === 'fail')
 	const result: Record<string, unknown> = {
-		ok: !hasFailures && conformant === tasks.length,
+		ok: computeCheckOk(tasks, statuses, diagnostics),
 		summary: { conformant, total: tasks.length },
 		tasks: formatTaskList(tasks, statuses),
 		diagnostics,

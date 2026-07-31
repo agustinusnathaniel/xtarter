@@ -42,6 +42,10 @@ export const diffCommand = defineCommand({
 
 		const mergedDiffs = mergeFileDiffs(diffs)
 
+		if (mergedDiffs.length > 0) {
+			process.exitCode = 1
+		}
+
 		if (mergedDiffs.length === 0) {
 			logSuccess('No pending changes')
 			if (!ctx.quiet) printTiming(timing)

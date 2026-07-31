@@ -124,6 +124,10 @@ export const doctorCommand = defineCommand({
 			total: allDiagnostics.length,
 		}
 
+		if (summary.fail > 0) {
+			process.exitCode = 1
+		}
+
 		if (json) {
 			console.log(formatDoctorResult(allDiagnostics))
 			return

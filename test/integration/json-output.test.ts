@@ -81,6 +81,9 @@ describe('cli json output', () => {
 		expect(Array.isArray(output.tasks)).toBe(true)
 		expect(Array.isArray(output.diagnostics)).toBe(true)
 
+		expect(process.exitCode).toBe(1)
+		process.exitCode = 0
+
 		await fs.rm(cwd, { recursive: true, force: true })
 	})
 
@@ -110,5 +113,16 @@ describe('cli json output', () => {
 		}
 
 		await fs.rm(cwd, { recursive: true, force: true })
+	})
+
+	it('diff command exits 1 when pending changes exist', async () => {
+		const cwd = await createProjectFixture()
+		try {
+			await diffCommand.run?.({ args: { cwd, json: true } } as never)
+			expect(process.exitCode).toBe(1)
+		} finally {
+			process.exitCode = 0
+			await fs.rm(cwd, { recursive: true, force: true })
+		}
 	})
 })
