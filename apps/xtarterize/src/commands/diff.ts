@@ -1,13 +1,9 @@
-import {
-	ensureXtarterizeGitignore,
-	type FileDiff,
-	logError,
-	logSuccess,
-} from '@xtarterize/core'
+import { ensureXtarterizeGitignore, logSuccess } from '@xtarterize/core'
 import { defineCommand } from 'citty'
 import { displayDiffs } from '@/ui/diff-display.js'
 import { mergeFileDiffs } from '@/ui/merge-file-diffs.js'
 import { resolveCliContext, scanProject } from '@/utils/project.js'
+import { collectTaskDiffs } from '@/utils/task-diffs.js'
 import { printTiming } from '@/utils/timing-display.js'
 
 export const diffCommand = defineCommand({
@@ -38,19 +34,11 @@ export const diffCommand = defineCommand({
 		await ensureXtarterizeGitignore(ctx.cwd)
 		const { profile, tasks, statuses, timing } = await scanProject(ctx)
 
-		const diffs: FileDiff[] = []
-		for (const task of tasks) {
+		const actionableTasks = tasks.filter((task) => {
 			const status = statuses.get(task.id)
-			if (status === 'new' || status === 'patch') {
-				try {
-					const taskDiffs = await task.dryRun(ctx.cwd, profile)
-					diffs.push(...taskDiffs)
-				} catch (error) {
-					const message = error instanceof Error ? error.message : String(error)
-					logError(`Failed to dryRun ${task.id}: ${message}`)
-				}
-			}
-		}
+			return status === 'new' || status === 'patch'
+		})
+		const diffs = await collectTaskDiffs(actionableTasks, ctx.cwd, profile)
 
 		const mergedDiffs = mergeFileDiffs(diffs)
 
