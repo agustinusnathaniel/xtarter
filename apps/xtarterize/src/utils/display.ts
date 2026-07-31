@@ -1,4 +1,4 @@
-import type { DiagnosticCheck } from '@xtarterize/core'
+import type { DiagnosticCheck, TaskStatus } from '@xtarterize/core'
 import { pc } from '@xtarterize/core'
 
 export function diagnosticIcon(status: DiagnosticCheck['status']): string {
@@ -10,4 +10,11 @@ export function diagnosticIcon(status: DiagnosticCheck['status']): string {
 		case 'fail':
 			return pc.red('✗')
 	}
+}
+
+export function taskStatusIcon(status: TaskStatus, colored = false): string {
+	if (status === 'skip') return colored ? pc.green('✔') : '✔'
+	if (status === 'patch') return colored ? pc.yellow('~') : '~'
+	if (status === 'conflict') return colored ? pc.red('⚠') : '⚠'
+	return colored ? pc.red('✗') : '✗'
 }
