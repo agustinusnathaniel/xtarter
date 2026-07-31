@@ -1,6 +1,7 @@
 import { ensureXtarterizeGitignore, pc, statusTag } from '@xtarterize/core'
 import { defineCommand } from 'citty'
 import { formatListResult } from '@/ui/json-formatter.js'
+import { taskStatusIcon } from '@/utils/display.js'
 import { resolveCliContext, scanProject } from '@/utils/project.js'
 import { printTiming } from '@/utils/timing-display.js'
 
@@ -39,14 +40,7 @@ export const listCommand = defineCommand({
 			}
 
 			const status = statuses.get(task.id) ?? 'new'
-			const icon =
-				status === 'skip'
-					? '✔'
-					: status === 'patch'
-						? '~'
-						: status === 'conflict'
-							? '⚠'
-							: '✗'
+			const icon = taskStatusIcon(status)
 
 			console.log(
 				`  ${icon} ${task.label.padEnd(40)} ${pc.dim(task.id)} ${statusTag(status)}`,

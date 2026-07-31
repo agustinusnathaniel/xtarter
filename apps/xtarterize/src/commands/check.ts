@@ -11,7 +11,7 @@ import {
 import { defineCommand } from 'citty'
 import { generateBadgeSvg } from '@/ui/badge.js'
 import { formatCheckResult } from '@/ui/json-formatter.js'
-import { diagnosticIcon } from '@/utils/display.js'
+import { diagnosticIcon, taskStatusIcon } from '@/utils/display.js'
 import { resolveCliContext, scanProject } from '@/utils/project.js'
 import { printTiming } from '@/utils/timing-display.js'
 
@@ -78,14 +78,7 @@ export const checkCommand = defineCommand({
 
 			for (const task of tasks) {
 				const status = statuses.get(task.id) ?? 'new'
-				const icon =
-					status === 'skip'
-						? pc.green('✔')
-						: status === 'patch'
-							? pc.yellow('~')
-							: status === 'conflict'
-								? pc.red('⚠')
-								: pc.red('✗')
+				const icon = taskStatusIcon(status, true)
 
 				console.log(
 					`  ${icon} ${task.label.padEnd(40)} ${pc.dim(task.id)} ${statusTag(status)}`,
