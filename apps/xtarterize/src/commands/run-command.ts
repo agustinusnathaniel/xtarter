@@ -1,10 +1,5 @@
 import { select } from '@clack/prompts'
-import type {
-	FileDiff,
-	ResolveTiming,
-	Task,
-	TaskStatus,
-} from '@xtarterize/core'
+import type { ResolveTiming, Task, TaskStatus } from '@xtarterize/core'
 import {
 	abortIfCancelled,
 	applyTasks,
@@ -23,6 +18,7 @@ import {
 	getAllTasksWithPlugins,
 	printProjectProfile,
 } from '@/utils/project.js'
+import { collectTaskDiffs } from '@/utils/task-diffs.js'
 import { printTiming } from '@/utils/timing-display.js'
 
 interface CommandArgs {
@@ -133,16 +129,7 @@ interface DryRunOptions {
 
 async function handleDryRun(options: DryRunOptions): Promise<void> {
 	const { tasks, cwd, profile, timing, format } = options
-	const diffs: FileDiff[] = []
-	for (const task of tasks) {
-		try {
-			const taskDiffs = await task.dryRun(cwd, profile)
-			diffs.push(...taskDiffs)
-		} catch (error) {
-			const message = error instanceof Error ? error.message : String(error)
-			logError(`Failed to dryRun ${task.id}: ${message}`)
-		}
-	}
+	const diffs = await collectTaskDiffs(tasks, cwd, profile)
 	const resolvedFormat: DisplayFormat = format === 'json' ? 'json' : 'terminal'
 	displayDiffs(mergeFileDiffs(diffs), resolvedFormat)
 	printTiming(timing)
