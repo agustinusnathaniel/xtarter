@@ -77,6 +77,7 @@ async function applyAndReport({
 		for (const error of result.errors) {
 			logError(`  - ${error}`)
 		}
+		process.exitCode = 1
 	}
 	const quietFlag = quiet ?? isCI()
 	if (!quietFlag) printTiming(timing, result.timing, recordTiming)

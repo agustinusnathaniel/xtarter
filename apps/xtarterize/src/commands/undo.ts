@@ -46,6 +46,7 @@ export const undoCommand = defineCommand({
 		if (!manifest || manifest.files.length === 0) {
 			logError('No previous run found. Nothing to undo.')
 			logInfo('Run `xtarterize init` or `xtarterize add` first.')
+			process.exitCode = 1
 			return
 		}
 
@@ -96,6 +97,7 @@ export const undoCommand = defineCommand({
 			for (const error of errors) {
 				logError(`  - ${error}`)
 			}
+			process.exitCode = 1
 		}
 
 		logSuccess(`Restored ${restored}/${manifest.files.length} files`)

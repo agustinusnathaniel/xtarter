@@ -48,6 +48,7 @@ export const restoreCommand = defineCommand({
 
 		if (!filepath) {
 			logError('File path required. Usage: xtarterize restore <filepath>')
+			process.exitCode = 1
 			return
 		}
 
@@ -59,6 +60,7 @@ export const restoreCommand = defineCommand({
 
 		if (backups.length === 0) {
 			logError(`No backups found for ${filepath}`)
+			process.exitCode = 1
 			return
 		}
 
@@ -83,6 +85,7 @@ export const restoreCommand = defineCommand({
 		} catch (error) {
 			const message = error instanceof Error ? error.message : String(error)
 			logError(`Failed to restore: ${message}`)
+			process.exitCode = 1
 		}
 	},
 })

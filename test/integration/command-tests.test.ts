@@ -33,11 +33,14 @@ async function createMinimalProject(): Promise<string> {
 describe('sync command', () => {
 	it('exits cleanly on unchanged project', async () => {
 		const cwd = await createMinimalProject()
+		process.exitCode = 0
 		try {
 			// On a minimal project all tasks are 'new' or 'skip';
 			// sync only acts on 'patch'/'conflict', so it runs without error.
 			await syncCommand.run?.({ args: { cwd, yes: true } } as never)
+			expect(process.exitCode).toBe(0)
 		} finally {
+			process.exitCode = 0
 			await fs.rm(cwd, { recursive: true, force: true })
 		}
 	}, 30_000)
@@ -69,6 +72,7 @@ describe('sync command', () => {
 describe('add command', () => {
 	it('applies a valid task ID', async () => {
 		const cwd = await createMinimalProject()
+		process.exitCode = 0
 		try {
 			await addCommand.run?.({
 				args: { cwd, taskId: 'release/czg', quiet: true },
@@ -78,7 +82,9 @@ describe('add command', () => {
 				await fs.readFile(path.join(cwd, 'package.json'), 'utf-8'),
 			)
 			expect(pkg.scripts?.commit).toBe('czg')
+			expect(process.exitCode).toBe(0)
 		} finally {
+			process.exitCode = 0
 			await fs.rm(cwd, { recursive: true, force: true })
 		}
 	})
@@ -90,7 +96,9 @@ describe('add command', () => {
 			await addCommand.run?.({
 				args: { cwd, taskId: 'nonexistent/task', quiet: true },
 			} as never)
+			expect(process.exitCode).toBe(1)
 		} finally {
+			process.exitCode = 0
 			await fs.rm(cwd, { recursive: true, force: true })
 		}
 	})
@@ -148,7 +156,9 @@ describe('undo command', () => {
 
 			// Should not throw - just logs an error
 			await undoCommand.run?.({ args: { cwd, quiet: true } } as never)
+			expect(process.exitCode).toBe(1)
 		} finally {
+			process.exitCode = 0
 			await fs.rm(cwd, { recursive: true, force: true })
 		}
 	})
@@ -183,7 +193,9 @@ describe('restore command', () => {
 			await restoreCommand.run?.({
 				args: { cwd, filepath: 'nonexistent.txt' },
 			} as never)
+			expect(process.exitCode).toBe(1)
 		} finally {
+			process.exitCode = 0
 			await fs.rm(cwd, { recursive: true, force: true })
 		}
 	})

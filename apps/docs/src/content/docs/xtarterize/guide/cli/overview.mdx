@@ -41,6 +41,10 @@ The CLI follows the Unix convention: exit code `0` means success, `1` means the 
 | `check` | Fully conformant, no failing diagnostics | Pending changes or failing diagnostics |
 | `diff` | No pending changes | At least one pending change |
 | `doctor` | All diagnostics pass | At least one diagnostic fails |
+| `add` | All requested tasks applied | Task not found, or at least one task failed to apply |
+| `init` / `sync` | All updates applied | At least one task failed to apply |
+| `undo` | All files restored | Nothing to undo, or at least one file failed to restore |
+| `restore` | File restored | No backup found, or restore failed |
 
 ```bash
 # Fail CI when the project is not conformant
