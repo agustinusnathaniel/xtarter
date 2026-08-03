@@ -130,9 +130,9 @@ interface DryRunOptions {
 
 async function handleDryRun(options: DryRunOptions): Promise<void> {
 	const { tasks, cwd, profile, timing, format } = options
-	const diffs = await collectTaskDiffs(tasks, cwd, profile)
+	const { diffs, failures } = await collectTaskDiffs(tasks, cwd, profile)
 	const mergedDiffs = mergeFileDiffs(diffs)
-	if (mergedDiffs.length > 0) {
+	if (mergedDiffs.length > 0 || failures > 0) {
 		process.exitCode = 1
 	}
 	const resolvedFormat: DisplayFormat = format === 'json' ? 'json' : 'terminal'

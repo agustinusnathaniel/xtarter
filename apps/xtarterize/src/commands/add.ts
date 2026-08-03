@@ -249,6 +249,7 @@ async function runInteractive(options: {
 		} catch (error) {
 			const message = error instanceof Error ? error.message : String(error)
 			logError(`Failed to check ${task.id}: ${message}`)
+			process.exitCode = 1
 			tasksWithStatus.push({ task, status: 'conflict' })
 		}
 	}

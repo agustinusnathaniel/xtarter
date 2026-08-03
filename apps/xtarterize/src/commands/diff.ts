@@ -38,11 +38,15 @@ export const diffCommand = defineCommand({
 			const status = statuses.get(task.id)
 			return status === 'new' || status === 'patch'
 		})
-		const diffs = await collectTaskDiffs(actionableTasks, ctx.cwd, profile)
+		const { diffs, failures } = await collectTaskDiffs(
+			actionableTasks,
+			ctx.cwd,
+			profile,
+		)
 
 		const mergedDiffs = mergeFileDiffs(diffs)
 
-		if (mergedDiffs.length > 0) {
+		if (mergedDiffs.length > 0 || failures > 0) {
 			process.exitCode = 1
 		}
 
