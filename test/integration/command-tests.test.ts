@@ -2,6 +2,7 @@ import fs from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
 import { addCommand } from '@xtarterize/app/commands/add.js'
+import { initCommand } from '@xtarterize/app/commands/init.js'
 import { restoreCommand } from '@xtarterize/app/commands/restore.js'
 import { syncCommand } from '@xtarterize/app/commands/sync.js'
 import { undoCommand } from '@xtarterize/app/commands/undo.js'
@@ -64,6 +65,45 @@ describe('sync command', () => {
 			)
 			expect(biome.vcs).toBeDefined()
 		} finally {
+			await fs.rm(cwd, { recursive: true, force: true })
+		}
+	}, 60_000)
+
+	it('dry-run exits 1 when pending changes exist', async () => {
+		const cwd = await createMinimalProject()
+		process.exitCode = 0
+		try {
+			await fs.writeFile(
+				path.join(cwd, 'biome.json'),
+				JSON.stringify({
+					$schema: './node_modules/@biomejs/biome/configuration_schema.json',
+					linter: { enabled: true, rules: { recommended: true } },
+					formatter: { enabled: false },
+				}),
+			)
+
+			await syncCommand.run?.({
+				args: { cwd, dryRun: true, quiet: true },
+			} as never)
+			expect(process.exitCode).toBe(1)
+		} finally {
+			process.exitCode = 0
+			await fs.rm(cwd, { recursive: true, force: true })
+		}
+	}, 60_000)
+})
+
+describe('init command', () => {
+	it('dry-run exits 1 when tasks are pending', async () => {
+		const cwd = await createMinimalProject()
+		process.exitCode = 0
+		try {
+			await initCommand.run?.({
+				args: { cwd, dryRun: true, quiet: true },
+			} as never)
+			expect(process.exitCode).toBe(1)
+		} finally {
+			process.exitCode = 0
 			await fs.rm(cwd, { recursive: true, force: true })
 		}
 	}, 60_000)
