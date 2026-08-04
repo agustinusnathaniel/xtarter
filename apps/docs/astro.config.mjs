@@ -151,6 +151,10 @@ export default defineConfig({
 							collapsed: true,
 							items: [
 								{
+									label: 'Contributors',
+									link: '/xtarterize/contributing/contributors/',
+								},
+								{
 									label: 'Architecture',
 									link: '/xtarterize/contributing/architecture/overview/',
 								},
