@@ -1,5 +1,7 @@
 # @xtarterize/core
 
+## 1.18.0
+
 ## 1.17.3
 
 ### Patch Changes
