@@ -148,6 +148,7 @@ async function runSingleTask(options: {
 		allTasks.forEach((t) => {
 			console.log(`  ${t.id}`)
 		})
+		process.exitCode = 1
 		return
 	}
 
@@ -192,6 +193,7 @@ async function runSingleTask(options: {
 				{ detectionMs, resolutionMs: 0, resolutionSumMs: 0 },
 				result.timing,
 			)
+		process.exitCode = 1
 		return
 	}
 	logSuccess(`${task.id} applied successfully`)
@@ -247,6 +249,7 @@ async function runInteractive(options: {
 		} catch (error) {
 			const message = error instanceof Error ? error.message : String(error)
 			logError(`Failed to check ${task.id}: ${message}`)
+			process.exitCode = 1
 			tasksWithStatus.push({ task, status: 'conflict' })
 		}
 	}
@@ -310,6 +313,7 @@ async function runInteractive(options: {
 	console.log('')
 	if (allErrors.length > 0) {
 		logError(`${allErrors.length} error(s)`)
+		process.exitCode = 1
 	}
 	logSuccess(`${totalApplied}/${selectedIds.length} tasks applied`)
 	if (!quiet && totalTiming) {

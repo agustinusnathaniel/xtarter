@@ -7,6 +7,12 @@ import { Aside, Tabs, TabItem, CardGrid, Card, LinkButton, Steps } from '@astroj
 
 Latest updates and feature releases for xtarterize.
 
+## v1.20.0 — 2026-08-04
+
+### Added
+
+- CI-friendly exit codes: `check` exits 1 when the project has pending changes or failing diagnostics, `diff` exits 1 when at least one change is pending (mirroring `git diff --exit-code`), and `doctor` exits 1 when at least one diagnostic fails. `init`/`sync --dry-run` and other mutating commands also exit 1 on dry-run task failures. This makes `xtarterize` usable as a CI gate — pipelines can now fail builds on non-conformant projects.
+
 ## v1.19.0 — 2026-07-21
 
 ### Added

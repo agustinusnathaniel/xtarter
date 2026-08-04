@@ -101,4 +101,16 @@ describe('doctor command', () => {
 		expect(tsCheck).toBeDefined()
 		expect(tsCheck?.message).toContain('tsconfig.json')
 	})
+
+	it('exits 0 when all diagnostics pass', async () => {
+		const cwd = await createProjectFixture()
+		process.exitCode = 0
+		try {
+			await doctorCommand.run?.({ args: { cwd, json: true } } as never)
+			expect(process.exitCode).toBe(0)
+		} finally {
+			process.exitCode = 0
+			await fs.rm(cwd, { recursive: true, force: true })
+		}
+	})
 })

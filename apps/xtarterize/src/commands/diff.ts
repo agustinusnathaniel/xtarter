@@ -1,4 +1,8 @@
-import { ensureXtarterizeGitignore, logSuccess } from '@xtarterize/core'
+import {
+	ensureXtarterizeGitignore,
+	logError,
+	logSuccess,
+} from '@xtarterize/core'
 import { defineCommand } from 'citty'
 import { displayDiffs } from '@/ui/diff-display.js'
 import { mergeFileDiffs } from '@/ui/merge-file-diffs.js'
@@ -38,12 +42,24 @@ export const diffCommand = defineCommand({
 			const status = statuses.get(task.id)
 			return status === 'new' || status === 'patch'
 		})
-		const diffs = await collectTaskDiffs(actionableTasks, ctx.cwd, profile)
+		const { diffs, failures } = await collectTaskDiffs(
+			actionableTasks,
+			ctx.cwd,
+			profile,
+		)
 
 		const mergedDiffs = mergeFileDiffs(diffs)
 
+		if (mergedDiffs.length > 0 || failures > 0) {
+			process.exitCode = 1
+		}
+
 		if (mergedDiffs.length === 0) {
-			logSuccess('No pending changes')
+			if (failures > 0) {
+				logError(`${failures} task(s) failed to dry-run`)
+			} else {
+				logSuccess('No pending changes')
+			}
 			if (!ctx.quiet) printTiming(timing)
 			return
 		}

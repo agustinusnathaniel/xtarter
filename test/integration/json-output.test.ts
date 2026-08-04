@@ -81,6 +81,9 @@ describe('cli json output', () => {
 		expect(Array.isArray(output.tasks)).toBe(true)
 		expect(Array.isArray(output.diagnostics)).toBe(true)
 
+		expect(process.exitCode).toBe(1)
+		process.exitCode = 0
+
 		await fs.rm(cwd, { recursive: true, force: true })
 	})
 
@@ -101,7 +104,7 @@ describe('cli json output', () => {
 			}>
 		}
 
-		expect(output.ok).toBe(true)
+		expect(output.ok).toBe(false)
 		expect(output.summary.total).toBeGreaterThanOrEqual(0)
 		expect(Array.isArray(output.files)).toBe(true)
 		if (output.files.length > 0) {
@@ -109,6 +112,28 @@ describe('cli json output', () => {
 			expect(typeof output.files[0]?.after).toBe('string')
 		}
 
+		await fs.rm(cwd, { recursive: true, force: true })
+	})
+
+	it('diff command exits 1 when pending changes exist', async () => {
+		const cwd = await createProjectFixture()
+		try {
+			await diffCommand.run?.({ args: { cwd, json: true } } as never)
+			expect(process.exitCode).toBe(1)
+		} finally {
+			process.exitCode = 0
+			await fs.rm(cwd, { recursive: true, force: true })
+		}
+	})
+
+	it('diff command JSON ok field agrees with exit code', async () => {
+		const cwd = await createProjectFixture()
+		const output = (await captureJsonOutput(async () => {
+			await diffCommand.run?.({ args: { cwd, json: true } } as never)
+		})) as { ok: boolean }
+		expect(output.ok).toBe(false)
+		expect(process.exitCode).toBe(1)
+		process.exitCode = 0
 		await fs.rm(cwd, { recursive: true, force: true })
 	})
 })

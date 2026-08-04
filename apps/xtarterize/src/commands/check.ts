@@ -10,7 +10,7 @@ import {
 } from '@xtarterize/core'
 import { defineCommand } from 'citty'
 import { generateBadgeSvg } from '@/ui/badge.js'
-import { formatCheckResult } from '@/ui/json-formatter.js'
+import { computeCheckOk, formatCheckResult } from '@/ui/json-formatter.js'
 import { diagnosticIcon, taskStatusIcon } from '@/utils/display.js'
 import { resolveCliContext, scanProject } from '@/utils/project.js'
 import { printTiming } from '@/utils/timing-display.js'
@@ -47,6 +47,10 @@ export const checkCommand = defineCommand({
 		const conflictChecks = await runConflictChecks(ctx.cwd)
 		const installChecks = await runToolInstallationChecks(ctx.cwd)
 		const diagnostics = [...installChecks, ...conflictChecks]
+
+		if (!computeCheckOk(tasks, statuses, diagnostics)) {
+			process.exitCode = 1
+		}
 
 		const conformant = tasks.filter((t) => statuses.get(t.id) === 'skip').length
 		const total = tasks.length
