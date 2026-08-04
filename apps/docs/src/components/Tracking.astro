@@ -43,7 +43,9 @@ function isTrackedDomain(hostname: string): boolean {
 document.addEventListener('click', (e) => {
   const target = e.target as HTMLElement;
 
-  // Hero CTA clicks (YAML frontmatter - can't add data attributes)
+  // Hero CTA clicks. The three landing heroes are rendered by the LandingHero
+  // override (tracked by text here); DefaultHero routes like 404 still read
+  // their CTAs from YAML frontmatter, which can't carry data attributes.
   const heroLink = target.closest('.hero a');
   if (heroLink) {
     const text = getText(heroLink);

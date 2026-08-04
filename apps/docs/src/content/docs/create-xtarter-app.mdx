@@ -5,56 +5,62 @@ template: splash
 editUrl: false
 lastUpdated: false
 hero:
-  title: "Scaffold projects in seconds"
-  tagline: "Pick a template. Run one command. Get a fully configured project with linting, type checking, CI, and editor settings - ready to ship."
-  actions:
-    - text: Get Started
-      icon: right-arrow
-      link: /create-xtarter-app/getting-started/
-    - text: Browse Templates
-      icon: external
-      variant: minimal
-      link: /#starter-templates
+  # Presence flag only. This route's hero is rendered by
+  # src/components/LandingHero.astro (wired in astro.config.mjs), which
+  # hardcodes the composition; no hero data is read from this file. Keep
+  # the key present and empty: Starlight sets data-has-hero on the page
+  # root from its presence, activating the splash paper backdrop in
+  # global.css.
+  {}
 ---
 
 import { LinkCard, CardGrid, LinkButton } from '@astrojs/starlight/components'
+import TemplateGallery from '../../components/TemplateGallery.astro'
 
-## Why create-xtarter-app?
+<p class="xt-eyebrow xt-section-label">01 · The selection bench</p>
 
-Starting a new JS/TS project means configuring Biome, TypeScript, ESLint, Prettier, GitHub Actions,
-VS Code settings, Tailwind, and more - before writing a single line of code.
+<h2 class="xt-section-title">Five templates, one command</h2>
 
-<div class="features-grid">
+<p class="xt-section-lead">Pick a template, get a fully configured project. Every option below ships with Biome, TypeScript strict, CI, editor settings, and agent skills pre-configured.</p>
 
-<div class="feature-card">
-<div class="feature-icon">⚡</div>
-<h3>One command</h3>
-<p>Run <code>pnpm create xtarter-app</code> and pick your stack. Everything else is handled for you.</p>
+<TemplateGallery />
+
+<p class="xt-note">The catalog above is a static snapshot maintained in the docs app - it renders without any GitHub API request. Source templates live in the <a href="https://github.com/agustinusnathaniel" target="_blank" rel="noopener noreferrer">agustinusnathaniel</a> account on GitHub.</p>
+
+<p class="xt-eyebrow xt-section-label">02 · What ships with every template</p>
+
+<h2 class="xt-section-title">Capability manifest</h2>
+
+<p class="xt-section-lead">The same conformance baseline in every scaffold - no setup required.</p>
+
+<div class="xt-manifest xt-rise">
+  <div class="xt-manifest-row">
+    <h3>Biome</h3>
+    <p>Linting rules, formatting config, VS Code integration.</p>
+  </div>
+  <div class="xt-manifest-row">
+    <h3>TypeScript</h3>
+    <p>Strict mode, path aliases, compiler settings.</p>
+  </div>
+  <div class="xt-manifest-row">
+    <h3>GitHub Actions</h3>
+    <p>CI workflows for lint, type-check, and test.</p>
+  </div>
+  <div class="xt-manifest-row">
+    <h3>VS Code</h3>
+    <p>Editor settings and recommended extensions.</p>
+  </div>
+  <div class="xt-manifest-row">
+    <h3>Agent Skills</h3>
+    <p>AI agent configuration files.</p>
+  </div>
 </div>
 
-<div class="feature-card">
-<div class="feature-icon">📦</div>
-<h3>Curated templates</h3>
-<p>Production-grade starters for Next.js, React + Vite.</p>
-</div>
+<p class="xt-eyebrow xt-section-label">03 · Quick start</p>
 
-<div class="feature-card">
-<div class="feature-icon">🔧</div>
-<h3>Pre-configured tooling</h3>
-<p>Every template ships with Biome linting & formatting, TypeScript strict mode, and CI workflows.</p>
-</div>
+<h2 class="xt-section-title">Quick Start</h2>
 
-<div class="feature-card">
-<div class="feature-icon">🔄</div>
-<h3>Stay in sync</h3>
-<p>After scaffolding, use <strong>xtarterize</strong> to keep your conformance configs up to date.</p>
-</div>
-
-</div>
-
----
-
-## Quick Start
+Scaffold a new project in one command:
 
 ```bash
 # Scaffold a new project
@@ -69,30 +75,41 @@ pnpm create xtarter-app
 #   - Vite + React + Hero UI
 ```
 
-<LinkButton href="/create-xtarter-app/getting-started/" size="lg">Get started →</LinkButton>
+<LinkButton href="/create-xtarter-app/getting-started/" size="lg">Get started &rarr;</LinkButton>
 
----
+<p class="xt-eyebrow xt-section-label">04 · After scaffolding</p>
 
-## Available Templates
+<h2 class="xt-section-title">After scaffolding, use xtarterize</h2>
+
+<p class="xt-section-lead">Scaffolding is day zero. From there, xtarterize keeps your conformance configs in sync as the ecosystem evolves.</p>
+
+<div class="xt-switch">
+  <div class="xt-switch-card">
+    <span class="xt-switch-kicker">Day 0 &middot; Scaffold</span>
+    <h3>create-xtarter-app</h3>
+    <p>Create a new project from a curated template with conformance pre-configured.</p>
+    <code>pnpm create xtarter-app</code>
+  </div>
+  <div class="xt-switch-card">
+    <span class="xt-switch-kicker">Day 1+ &middot; Maintain</span>
+    <h3>xtarterize</h3>
+    <p>Detect, plan, and apply conformance updates to the project as standards evolve.</p>
+    <code>npx xtarterize init</code>
+    <div class="xt-switch-action">
+      <LinkButton href="/xtarterize/" variant="secondary" size="sm">Learn about xtarterize</LinkButton>
+    </div>
+  </div>
+</div>
+
+<p class="xt-eyebrow xt-section-label">05 · Template docs</p>
+
+<h2 class="xt-section-title">Template docs</h2>
 
 <CardGrid>
-  <LinkCard title="Next.js + Chakra UI" href="/#starter-templates" description="Next.js 16, Chakra UI v3, Biome, Turborepo, Playwright." />
-  <LinkCard title="Next.js + Tailwind" href="/#starter-templates" description="Next.js 16, Tailwind CSS v4, Biome, Playwright." />
-  <LinkCard title="Vite + React + Chakra" href="/#starter-templates" description="Vite+ (Vite 8), React 19, Chakra UI v3, TanStack Router & Query, Biome, Vitest." />
-  <LinkCard title="Vite + React + Tailwind" href="/#starter-templates" description="Vite+ (Vite 8), React 19, Tailwind CSS v4, TanStack Router & Query, Biome, Vitest." />
-  <LinkCard title="Vite + React + Hero UI" href="/#starter-templates" description="Vite+ (Vite 8), React 19, Hero UI, TanStack Router, Biome, Vitest." />
+  <LinkCard title="Getting Started" href="/create-xtarter-app/getting-started/" description="Scaffold your first project in minutes." />
+  <LinkCard title="Usage Guide" href="/create-xtarter-app/getting-started/usage/" description="Walk through every prompt and option." />
+  <LinkCard title="CLI Reference" href="/create-xtarter-app/guide/cli/" description="All commands, arguments, and flags." />
+  <LinkCard title="Template Catalog" href="/create-xtarter-app/guide/templates/" description="Detailed descriptions of every template." />
+  <LinkCard title="Vite+ Org Templates" href="/create-xtarter-app/guide/org-templates/" description="Org-level template distribution for Vite+." />
+  <LinkCard title="AI Agent Skills" href="/create-xtarter-app/guide/agent-skills/" description="Reusable agent skills that ship with every template." />
 </CardGrid>
-
----
-
-## After scaffolding? Use xtarterize
-
-Once your project is scaffolded, use **xtarterize** to keep your
-conformance configs in sync as the ecosystem evolves.
-
-| create-xtarter-app | xtarterize |
-|---|---|
-| Day 0 - scaffold new projects | Day 1+ - keep existing projects in shape |
-| `pnpm create xtarter-app` | `npx xtarterize init` |
-
-<LinkButton href="/xtarterize/" variant="secondary">Learn about xtarterize →</LinkButton>

@@ -53,290 +53,1127 @@ h6 {
 }
 
 /* ============================================
-   LANDING PAGE - HERO SECTION (Starlight native)
+   CONFORMANCE WORKBENCH - DESIGN TOKENS
+   Warm paper + charcoal + orange + mono.
+   Light-first: defaults are light, dark overrides follow.
    ============================================ */
 
-/* Starlight splash hero wrapper */
-.hero {
-  position: relative;
-  text-align: center;
-  padding: 4rem 1rem 2rem;
+:root {
+  /* Surfaces */
+  --xt-paper: #faf6f1;
+  --xt-panel: #ffffff;
+  --xt-panel-2: #f6efe7;
+  /* Ink */
+  --xt-ink: #241c15;
+  --xt-muted: #6f6157;
+  /* Lines */
+  --xt-line: #e7ddd1;
+  --xt-line-strong: #d2c3b2;
+  /* Accent (brand orange) */
+  --xt-accent: #f97316;
+  --xt-accent-deep: #c2410c;
+  --xt-accent-soft: rgba(249, 115, 22, 0.1);
+  /* Status */
+  --xt-ok: #15803d;
+  --xt-warn: #b45309;
+  /* Code / terminal (charcoal in both themes) */
+  --xt-code-bg: #f4ede4;
+  --xt-term-bg: #1b1512;
+  --xt-term-ink: #e9e1d8;
+  --xt-term-dim: #9d9085;
+  --xt-term-line: #302720;
+  /* Terminal status markers: fixed light-on-charcoal values because the
+     terminal keeps its charcoal background in both themes. The theme-scoped
+     --xt-ok/--xt-warn drop to ~3.6:1 on charcoal in light mode, so these
+     share the dark-theme-safe hues instead (10.4:1 and 10.8:1 on charcoal). */
+  --xt-term-ok: #4ade80;
+  --xt-term-warn: #fbbf24;
+  /* UI */
+  --xt-focus: #ea580c;
+  --xt-btn-ink: #ffffff;
+  --xt-radius: 10px;
+  --xt-radius-sm: 6px;
+  /* Motion */
+  --xt-ease: ease-out;
+  --xt-dur-entrance: 180ms;
+  --xt-dur-hover: 160ms;
+  --xt-dur-press: 100ms;
 }
 
-/* Hero title - larger, bolder, sans-serif */
-body .hero h1 {
-  font-size: clamp(2.5rem, 6vw, 4rem);
-  font-weight: 800;
-  line-height: 1.1;
-  letter-spacing: -0.03em;
-  font-family: var(--font-sans);
-  margin-bottom: 1.5rem;
+:root[data-theme="dark"] {
+  --xt-paper: #171310;
+  --xt-panel: #1f1915;
+  --xt-panel-2: #27201a;
+  --xt-ink: #f2ece4;
+  --xt-muted: #b1a396;
+  --xt-line: #352c24;
+  --xt-line-strong: #4b3d31;
+  --xt-accent: #fb923c;
+  --xt-accent-deep: #f97316;
+  --xt-accent-soft: rgba(251, 146, 60, 0.14);
+  --xt-ok: #4ade80;
+  --xt-warn: #fbbf24;
+  --xt-code-bg: #241d18;
+  --xt-focus: #fdba74;
+  --xt-btn-ink: #1b1512;
 }
 
-/* Gradient text for "JavaScript & TypeScript" */
-body .hero h1 {
-  background: linear-gradient(
-    135deg,
-    var(--sl-color-white) 0%,
-    var(--sl-color-white) 45%,
-    var(--sl-color-accent) 50%,
-    #fbbf24 75%,
-    var(--sl-color-accent-high) 100%
-  );
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-}
-
-/* Hero tagline - Starlight uses .tagline div, not <p> */
-body .hero .tagline {
-  font-size: clamp(1.1rem, 2vw, 1.35rem);
-  color: var(--sl-color-gray-2);
-  max-width: 640px;
-  margin: 0 auto 2rem;
-  line-height: 1.6;
-}
-
-/* Hero action buttons */
-body .hero .sl-link-button {
-  font-size: 1.125rem;
-  padding: 0.75rem 1.75rem;
-}
-
-/* Hero image area (if used) */
-.hero .hero-html {
-  margin-top: 2rem;
+/* Landing (splash) pages get the warm paper backdrop; docs pages keep
+   Starlight's default surfaces. */
+html[data-has-hero]:not([data-has-sidebar]) main {
+  background: var(--xt-paper);
 }
 
 /* ============================================
-   FEATURE CARDS
+   BASE - overflow & focus discipline
    ============================================ */
 
-.features-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 1.5rem;
-  margin: 2.5rem 0;
+html,
+body {
+  overflow-x: clip;
 }
 
-.feature-card {
+:focus-visible {
+  outline: 2px solid var(--xt-focus);
+  outline-offset: 2px;
+  border-radius: 2px;
+}
+
+/* ============================================
+   LANDING TYPOGRAPHY
+   ============================================ */
+
+.xt-hero h1,
+.xt-section-title,
+.xt-product-card h3,
+.xt-template-name,
+.xt-step-name,
+.xt-guardrail h3,
+.xt-manifest-row h3 {
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+
+.xt-hero-lede,
+.xt-lane-desc,
+.xt-template-desc,
+.xt-product-card p,
+.xt-step-desc,
+.xt-guardrail p,
+.xt-terminal-caption,
+.xt-manifest-row p {
+  text-wrap: pretty;
+}
+
+/* Section headings on landing pages. The h2s are written as JSX in the
+   landing MDX (not markdown headings), so they render as plain block
+   headings without Starlight's anchor-link wrapper. */
+h2.xt-section-title {
+  font-family: var(--font-heading);
+  font-weight: 700;
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  color: var(--xt-ink);
+  margin: 0 0 0.9rem;
+}
+
+p.xt-section-label {
+  margin: 2.5rem 0 0.5rem;
+}
+
+.xt-section-lead {
+  font-size: 1.05rem;
+  line-height: 1.6;
+  color: var(--xt-muted);
+  max-width: 60ch;
+  margin: 0 0 1.5rem;
+}
+
+.xt-note {
+  font-size: 0.88rem;
+  line-height: 1.6;
+  color: var(--xt-muted);
+  max-width: 70ch;
+  margin: 0 0 1.25rem;
+}
+
+.xt-note code {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+}
+
+.xt-note a {
+  color: var(--xt-accent-deep);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+:root[data-theme="dark"] .xt-note a {
+  color: var(--xt-accent);
+}
+
+/* ============================================
+   HERO (custom LandingHero compositions)
+   ============================================ */
+
+.xt-hero {
+  padding: 2.5rem 0 1rem;
+}
+
+.xt-hero-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2.5rem;
+  align-items: start;
+}
+
+.xt-hero-copy {
+  min-width: 0;
+}
+
+.xt-eyebrow {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--xt-accent-deep);
+  margin: 0 0 0.9rem;
+}
+
+:root[data-theme="dark"] .xt-eyebrow {
+  color: var(--xt-accent);
+}
+
+.xt-hero h1 {
+  font-size: clamp(2.1rem, 5vw, 3.4rem);
+  line-height: 1.08;
+  letter-spacing: -0.015em;
+  font-weight: 700;
+  color: var(--xt-ink);
+  margin: 0 0 1.25rem;
+  max-width: 18ch;
+}
+
+.xt-hero-lede {
+  font-size: clamp(1.05rem, 1.6vw, 1.2rem);
+  line-height: 1.6;
+  color: var(--xt-muted);
+  max-width: 58ch;
   margin: 0;
+}
+
+/* ---- Hero action buttons ---- */
+
+.xt-hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.85rem;
+  margin-top: 1.75rem;
+}
+
+.xt-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0.55rem 1.3rem;
+  border-radius: var(--xt-radius-sm);
+  border: 1px solid transparent;
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+  font-weight: 600;
+  line-height: 1.3;
+  text-decoration: none;
+  color: var(--xt-btn-ink);
+  background: var(--xt-accent-deep);
+  transition:
+    transform var(--xt-dur-hover) var(--xt-ease),
+    background-color var(--xt-dur-hover) var(--xt-ease),
+    border-color var(--xt-dur-hover) var(--xt-ease),
+    color var(--xt-dur-hover) var(--xt-ease);
+}
+
+:root[data-theme="dark"] .xt-btn {
+  background: var(--xt-accent);
+}
+
+.xt-btn:hover {
+  text-decoration: none;
+  transform: translateY(-2px);
+}
+
+.xt-btn:active {
+  transform: translateY(1px);
+  transition-duration: var(--xt-dur-press);
+}
+
+.xt-btn-primary {
+  border-color: var(--xt-accent-deep);
+}
+
+:root[data-theme="dark"] .xt-btn-primary {
+  border-color: var(--xt-accent);
+}
+
+.xt-btn-ghost {
+  background: transparent;
+  color: var(--xt-ink);
+  border-color: var(--xt-line-strong);
+}
+
+.xt-btn-ghost:hover {
+  border-color: var(--xt-accent-deep);
+  color: var(--xt-accent-deep);
+  background: var(--xt-accent-soft);
+}
+
+:root[data-theme="dark"] .xt-btn-ghost:hover {
+  border-color: var(--xt-accent);
+  color: var(--xt-accent);
+}
+
+/* ---- Homepage: two-lane workbench ---- */
+
+.xt-lanes {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+}
+
+.xt-lane {
   display: flex;
   flex-direction: column;
-  padding: 1.75rem;
-  border-radius: 12px;
-  border: 1px solid var(--sl-color-gray-5);
-  background: var(--sl-color-gray-6, rgba(0, 0, 0, 0.02));
+  gap: 0.6rem;
+  padding: 1.5rem 1.5rem 1.4rem;
+  border-radius: var(--xt-radius);
+  border: 1px solid var(--xt-line);
+  background: var(--xt-panel);
+  color: inherit;
+  text-decoration: none;
+  min-width: 0;
   transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease,
-    border-color 0.2s ease;
-  height: 100%;
+    transform var(--xt-dur-hover) var(--xt-ease),
+    border-color var(--xt-dur-hover) var(--xt-ease),
+    background-color var(--xt-dur-hover) var(--xt-ease);
 }
 
-.feature-card:hover {
+.xt-lane:hover {
+  text-decoration: none;
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-  border-color: var(--sl-color-accent-low);
+  border-color: var(--xt-accent);
+  background: var(--xt-panel-2);
 }
 
-[data-theme="dark"] .feature-card {
-  background: var(--sl-color-gray-6, rgba(255, 255, 255, 0.02));
+.xt-lane:active {
+  transform: translateY(1px);
+  transition-duration: var(--xt-dur-press);
 }
 
-[data-theme="dark"] .feature-card:hover {
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+.xt-lane-kicker {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--xt-muted);
 }
 
-.feature-icon {
-  font-size: 1.75rem;
-  margin-bottom: 1rem;
-  line-height: 1;
-}
-
-.feature-card h3 {
-  font-size: 1.05rem;
-  margin: 0 0 0.5rem;
-  font-family: var(--font-sans);
+.xt-lane-cmd {
+  font-family: var(--font-mono);
+  font-size: 1rem;
   font-weight: 600;
-  letter-spacing: -0.01em;
+  color: var(--xt-ink);
+  background: var(--xt-code-bg);
+  border-radius: var(--xt-radius-sm);
+  padding: 0.5rem 0.75rem;
+  overflow-wrap: anywhere;
 }
 
-.feature-card p {
+.xt-lane-desc {
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: var(--xt-muted);
   margin: 0;
-  color: var(--sl-color-gray-2);
-  line-height: 1.6;
+}
+
+.xt-lane-cta {
+  font-family: var(--font-sans);
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--xt-accent-deep);
+  margin-top: auto;
+}
+
+:root[data-theme="dark"] .xt-lane-cta {
+  color: var(--xt-accent);
+}
+
+/* ---- Terminal-style evidence panels (charcoal in both themes) ---- */
+
+.xt-command-summary,
+.xt-command-panel,
+.xt-terminal {
+  border-radius: var(--xt-radius);
+  border: 1px solid var(--xt-term-line);
+  background: var(--xt-term-bg);
+  color: var(--xt-term-ink);
+  font-family: var(--font-mono);
+  min-width: 0;
+}
+
+.xt-command-summary {
+  padding: 1.25rem 1.35rem 1.35rem;
+}
+
+.xt-command-summary-label,
+.xt-command-panel-label {
+  display: block;
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--xt-term-dim);
+  margin-bottom: 1rem;
+}
+
+.xt-command-summary-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+}
+
+.xt-command-summary-list li {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+/* ---- create-xtarter-app hero: command panel ---- */
+
+.xt-command-panel {
+  padding: 1.35rem;
+}
+
+.xt-command-line {
+  display: block;
   font-size: 0.95rem;
+  color: var(--xt-term-ink);
+  overflow-wrap: anywhere;
+  margin-bottom: 1.1rem;
+}
+
+.xt-command-prompt {
+  border-top: 1px solid var(--xt-term-line);
+  padding-top: 1.1rem;
+}
+
+.xt-prompt-q {
+  display: block;
+  font-size: 0.85rem;
+  color: var(--xt-accent);
+  margin-bottom: 0.7rem;
+}
+
+.xt-prompt-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  font-size: 0.85rem;
+  color: var(--xt-term-dim);
+}
+
+.xt-prompt-list li::before {
+  content: "·";
+  color: var(--xt-term-dim);
+  margin-right: 0.6rem;
+}
+
+/* ---- Status tags (used on charcoal panels) ---- */
+
+.xt-tag {
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  padding: 0 0.45rem;
+  border-radius: 4px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  line-height: 1.5;
+}
+
+.xt-tag-detect {
+  background: rgba(249, 115, 22, 0.18);
+  color: #fdba74;
+}
+
+.xt-tag-plan {
+  background: rgba(251, 191, 36, 0.16);
+  color: #fcd34d;
+}
+
+.xt-tag-info {
+  background: rgba(148, 163, 184, 0.18);
+  color: #cbd5e1;
+}
+
+.xt-tag-safe {
+  background: rgba(74, 222, 128, 0.16);
+  color: #86efac;
+}
+
+/* ============================================
+   TERMINAL DEMO (xtarterize page)
+   ============================================ */
+
+.xt-terminal {
+  margin: 2rem 0 0.9rem;
+  overflow: hidden;
+}
+
+.xt-terminal-bar {
+  padding: 0.7rem 1.1rem;
+  border-bottom: 1px solid var(--xt-term-line);
+}
+
+.xt-terminal-title {
+  font-size: 0.75rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--xt-term-dim);
+}
+
+.xt-terminal-body {
+  padding: 1.35rem 1.4rem;
+  font-size: 0.85rem;
+  line-height: 1.75;
+  overflow-x: auto;
+  white-space: pre;
+}
+
+.xt-term-line {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  min-width: max-content;
+}
+
+.xt-term-prompt {
+  color: var(--xt-accent);
+  font-weight: 700;
+}
+
+.xt-term-cmd {
+  color: var(--xt-term-ink);
+}
+
+.xt-term-out {
+  padding-left: 1.5ch;
+}
+
+.xt-term-row {
+  padding-left: 3.5ch;
+}
+
+.xt-term-spacer {
+  height: 0.6rem;
+}
+
+.xt-term-dim {
+  color: var(--xt-term-dim);
+}
+
+.xt-term-accent {
+  color: var(--xt-accent);
+}
+
+.xt-term-add {
+  color: var(--xt-term-ok);
+  font-weight: 700;
+}
+
+.xt-term-edit {
+  color: var(--xt-term-warn);
+  font-weight: 700;
+}
+
+.xt-term-file {
+  color: var(--xt-term-dim);
+  font-size: 0.75rem;
+  margin-left: 0.75rem;
+}
+
+.xt-terminal-caption {
+  font-size: 0.88rem;
+  line-height: 1.6;
+  color: var(--xt-muted);
+  max-width: 70ch;
+  margin: 0 0 2rem;
+}
+
+.xt-terminal-caption code {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+}
+
+/* ============================================
+   PRODUCT LANES (homepage - Choose your starting point)
+   ============================================ */
+
+.xt-product-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+  margin: 0;
+}
+
+.xt-product-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.7rem;
+  padding: 1.75rem;
+  border-radius: var(--xt-radius);
+  border: 1px solid var(--xt-line);
+  background: var(--xt-panel);
+  text-decoration: none;
+  color: inherit;
+  min-width: 0;
+  min-height: 44px;
+  transition:
+    transform var(--xt-dur-hover) var(--xt-ease),
+    border-color var(--xt-dur-hover) var(--xt-ease),
+    background-color var(--xt-dur-hover) var(--xt-ease);
+}
+
+.xt-product-card:hover {
+  text-decoration: none;
+  transform: translateY(-2px);
+  border-color: var(--xt-accent);
+  background: var(--xt-panel-2);
+}
+
+.xt-product-card:active {
+  transform: translateY(1px);
+  transition-duration: var(--xt-dur-press);
+}
+
+.xt-product-card h3 {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--xt-ink);
+}
+
+.xt-product-card p {
+  margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  color: var(--xt-muted);
   flex: 1;
 }
 
+.xt-product-cta {
+  font-family: var(--font-sans);
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--xt-accent-deep);
+}
+
+:root[data-theme="dark"] .xt-product-cta {
+  color: var(--xt-accent);
+}
+
 /* ============================================
-   RESPONSIVE FEATURE CARDS
+   STATIC TEMPLATE GALLERY
    ============================================ */
 
-@media (max-width: 900px) {
-  .features-grid {
-    grid-template-columns: repeat(2, 1fr);
+.xt-gallery {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+  margin: 0;
+}
+
+.xt-template-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  padding: 1.5rem;
+  border-radius: var(--xt-radius);
+  border: 1px solid var(--xt-line);
+  background: var(--xt-panel);
+  text-decoration: none;
+  color: inherit;
+  min-width: 0;
+  min-height: 44px;
+  transition:
+    transform var(--xt-dur-hover) var(--xt-ease),
+    border-color var(--xt-dur-hover) var(--xt-ease),
+    background-color var(--xt-dur-hover) var(--xt-ease);
+}
+
+.xt-template-card:hover {
+  text-decoration: none;
+  transform: translateY(-2px);
+  border-color: var(--xt-accent);
+  background: var(--xt-panel-2);
+}
+
+.xt-template-card:active {
+  transform: translateY(1px);
+  transition-duration: var(--xt-dur-press);
+}
+
+.xt-template-card-head {
+  display: flex;
+  align-items: baseline;
+  gap: 0.6rem;
+}
+
+.xt-template-index {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--xt-accent-deep);
+  flex-shrink: 0;
+}
+
+:root[data-theme="dark"] .xt-template-index {
+  color: var(--xt-accent);
+}
+
+.xt-template-name {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--xt-ink);
+}
+
+.xt-template-desc {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: var(--xt-muted);
+  flex: 1;
+}
+
+.xt-template-stack {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.xt-chip {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  line-height: 1.4;
+  padding: 0.15rem 0.5rem;
+  border-radius: var(--xt-radius-sm);
+  border: 1px solid var(--xt-line);
+  background: var(--xt-code-bg);
+  color: var(--xt-muted);
+  white-space: nowrap;
+}
+
+.xt-template-repo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--xt-muted);
+}
+
+.xt-template-repo code {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  overflow-wrap: anywhere;
+}
+
+.xt-arrow {
+  color: var(--xt-accent-deep);
+  flex-shrink: 0;
+}
+
+:root[data-theme="dark"] .xt-arrow {
+  color: var(--xt-accent);
+}
+
+/* ============================================
+   PROGRESSION (homepage - first commit to conformance)
+   ============================================ */
+
+.xt-progression {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  border-top: 1px solid var(--xt-line);
+  padding-top: 1.5rem;
+  margin: 1.5rem 0 0;
+}
+
+.xt-progress-step {
+  min-width: 0;
+}
+
+.xt-progress-step .xt-step-num {
+  color: var(--xt-muted);
+}
+
+.xt-step-num {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  color: var(--xt-accent-deep);
+  margin-bottom: 0.5rem;
+}
+
+:root[data-theme="dark"] .xt-step-num {
+  color: var(--xt-accent);
+}
+
+.xt-progress-cmd {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--xt-ink);
+  overflow-wrap: anywhere;
+  margin-bottom: 0.35rem;
+}
+
+.xt-progress-step p {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: var(--xt-muted);
+}
+
+/* ============================================
+   PIPELINE (xtarterize - Detect/Resolve/Check/Plan/Apply)
+   ============================================ */
+
+.xt-steps {
+  list-style: none;
+  margin: 2rem 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.75rem;
+  border-top: 1px solid var(--xt-line);
+  padding-top: 1.5rem;
+}
+
+.xt-step {
+  min-width: 0;
+}
+
+.xt-step-name {
+  margin: 0 0 0.4rem;
+  font-family: var(--font-sans);
+  font-size: 1.02rem;
+  font-weight: 700;
+  color: var(--xt-ink);
+}
+
+.xt-step-desc {
+  margin: 0;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: var(--xt-muted);
+}
+
+/* ============================================
+   GUARDRAILS (xtarterize)
+   ============================================ */
+
+.xt-guardrails {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+  margin: 0;
+}
+
+.xt-guardrail {
+  padding: 1.5rem;
+  border-radius: var(--xt-radius);
+  border: 1px solid var(--xt-line);
+  background: var(--xt-panel);
+  min-width: 0;
+  transition:
+    transform var(--xt-dur-hover) var(--xt-ease),
+    border-color var(--xt-dur-hover) var(--xt-ease),
+    background-color var(--xt-dur-hover) var(--xt-ease);
+}
+
+.xt-guardrail:hover {
+  transform: translateY(-2px);
+  border-color: var(--xt-accent);
+  background: var(--xt-panel-2);
+}
+
+.xt-guardrail-kicker {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--xt-accent-deep);
+  margin-bottom: 0.5rem;
+}
+
+:root[data-theme="dark"] .xt-guardrail-kicker {
+  color: var(--xt-accent);
+}
+
+.xt-guardrail h3 {
+  margin: 0 0 0.45rem;
+  font-family: var(--font-sans);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--xt-ink);
+}
+
+.xt-guardrail p {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: var(--xt-muted);
+}
+
+/* ============================================
+   CAPABILITY MANIFEST (create-xtarter-app)
+   ============================================ */
+
+.xt-manifest {
+  margin: 0;
+  border: 1px solid var(--xt-line);
+  border-radius: var(--xt-radius);
+  background: var(--xt-panel);
+  overflow: hidden;
+}
+
+.xt-manifest-row {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.2rem 1.5rem;
+  padding: 1.1rem 1.4rem;
+  min-width: 0;
+}
+
+.xt-manifest-row + .xt-manifest-row {
+  border-top: 1px solid var(--xt-line);
+}
+
+.xt-manifest-row h3 {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--xt-ink);
+}
+
+.xt-manifest-row p {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: var(--xt-muted);
+}
+
+/* ============================================
+   CROSS-LINK PANEL (Day 0 / Day 1+)
+   ============================================ */
+
+.xt-switch {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+  margin: 1.5rem 0 0;
+}
+
+.xt-switch-card {
+  padding: 1.5rem;
+  border-radius: var(--xt-radius);
+  border: 1px solid var(--xt-line);
+  background: var(--xt-panel);
+  min-width: 0;
+}
+
+.xt-switch-kicker {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--xt-muted);
+  margin-bottom: 0.6rem;
+}
+
+.xt-switch-card h3 {
+  margin: 0 0 0.45rem;
+  font-family: var(--font-sans);
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--xt-ink);
+}
+
+.xt-switch-card p {
+  margin: 0 0 0.9rem;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  color: var(--xt-muted);
+}
+
+.xt-switch-card .xt-btn {
+  margin-top: 0.25rem;
+}
+
+.xt-switch-card code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+}
+
+.xt-switch-action {
+  margin-top: 0.9rem;
+}
+
+/* ============================================
+   MOTION - restrained, transform/opacity only
+   ============================================ */
+
+/* Section entrance: opacity + translateY(8px), 180ms ease-out.
+   Max stagger 120ms via --xt-delay. */
+.xt-rise {
+  animation: xt-rise var(--xt-dur-entrance) var(--xt-ease) both;
+  animation-delay: var(--xt-delay, 0ms);
+}
+
+@keyframes xt-rise {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
   }
 }
 
-@media (max-width: 600px) {
-  .features-grid {
-    grid-template-columns: 1fr;
+/* Hover lifts are pointer-only; touch devices get no transform. */
+@media (hover: hover) {
+  .xt-lane:hover,
+  .xt-product-card:hover,
+  .xt-template-card:hover,
+  .xt-guardrail:hover,
+  .xt-btn:hover {
+    transform: translateY(-2px);
   }
-}
-
-/* ============================================
-   SECTION DIVIDERS
-   ============================================ */
-
-hr {
-  margin: 3rem 0;
-  border: none;
-  border-top: 1px solid var(--sl-color-gray-5);
-}
-
-/* ============================================
-   CTA BUTTONS
-   ============================================ */
-
-.sl-markdown-content .hero-buttons .sl-link-button {
-  font-size: 1.125rem;
-  padding: 0.75rem 1.75rem;
-}
-
-/* ============================================
-   CODE BLOCKS
-   ============================================ */
-
-.sl-markdown-content pre {
-  position: relative;
 }
 
 /* ============================================
    RESPONSIVE
    ============================================ */
 
-@media (max-width: 640px) {
-  .hero-section {
-    padding: 2rem 0.5rem 2rem;
+@media (min-width: 40rem) {
+  .xt-hero-grid {
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
+    gap: 3rem;
   }
 
-  .hero-buttons {
-    flex-direction: column;
-    align-items: center;
-  }
-}
-
-/* ============================================
-   INLINE BADGES
-   ============================================ */
-
-.badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.35rem;
-  padding: 0.15rem 0.55rem;
-  border-radius: 6px;
-  font-size: 0.7rem;
-  font-weight: 700;
-  font-family: var(--font-mono);
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  line-height: 1.4;
-  vertical-align: middle;
-}
-
-.badge-cxa {
-  background: #6366f1;
-  color: #fff;
-}
-
-.badge-xtz {
-  background: #f97316;
-  color: #fff;
-}
-
-/* ============================================
-   PRODUCT CARDS (hub page)
-   ============================================ */
-
-.product-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 1.5rem;
-  margin: 1.5rem 0;
-}
-
-.product-card {
-  margin: 0;
-  padding: 2rem;
-  border-radius: 12px;
-  border: 1px solid var(--sl-color-gray-5);
-  background: var(--sl-color-gray-6);
-  display: flex;
-  flex-direction: column;
-  gap: 0.75rem;
-  text-decoration: none;
-  color: inherit;
-  transition:
-    transform 0.2s ease,
-    box-shadow 0.2s ease,
-    border-color 0.2s ease;
-}
-
-.product-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-  border-color: var(--sl-color-accent-low);
-}
-
-.product-card h2 {
-  margin: 0;
-  font-size: 1.25rem;
-  font-weight: 700;
-  font-family: var(--font-sans);
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.product-card h2 svg {
-  color: var(--sl-color-accent);
-  flex-shrink: 0;
-}
-
-.product-card p {
-  margin: 0;
-  color: var(--sl-color-gray-2);
-  line-height: 1.6;
-  font-size: 0.95rem;
-  flex: 1;
-}
-
-.product-card-link {
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: var(--sl-color-accent);
-}
-
-.product-card:focus-visible {
-  outline: 2px solid var(--sl-color-accent);
-  outline-offset: 2px;
-}
-
-@media (max-width: 640px) {
-  .product-grid {
+  .xt-hero-home .xt-hero-grid {
     grid-template-columns: 1fr;
+    gap: 2.5rem;
+  }
+
+  .xt-lanes {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .xt-product-grid,
+  .xt-guardrails {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .xt-gallery {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .xt-progression {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .xt-steps {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 1.25rem;
+  }
+
+  .xt-manifest-row {
+    grid-template-columns: minmax(10rem, 0.7fr) 2fr;
+    align-items: baseline;
+  }
+
+  .xt-switch {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (min-width: 64rem) {
+  .xt-progression {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .xt-hero {
+    padding: 2rem 0 0.5rem;
+  }
+
+  .xt-hero-actions {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .xt-hero-actions .xt-btn {
+    width: 100%;
+  }
+}
+
+/* Terminal text stays legible on small screens. */
+@media (max-width: 40rem) {
+  .xt-terminal-body {
+    font-size: 0.75rem;
+    padding: 1.1rem;
   }
 }
 
 /* ============================================
-   SMOOTH SCROLLING
+   SMOOTH SCROLLING (disabled for reduced motion)
    ============================================ */
 
-html {
-  scroll-behavior: smooth;
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
 }
 
 /* ============================================
@@ -370,11 +1207,29 @@ html {
 }
 
 /* ============================================
-   Remove link underline in content cards
+   REDUCED MOTION - no transforms, no animation, no smooth scroll
    ============================================ */
 
-.sl-markdown-content a.template-card {
-  text-decoration: none;
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .xt-lane,
+  .xt-product-card,
+  .xt-template-card,
+  .xt-guardrail,
+  .xt-btn,
+  .xt-rise {
+    transform: none !important;
+  }
 }
 
 /* ============================================

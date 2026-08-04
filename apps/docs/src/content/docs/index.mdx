@@ -5,52 +5,87 @@ template: splash
 editUrl: false
 lastUpdated: false
 hero:
-  title: "xtarter"
-  tagline: "Production-grade starter templates for JavaScript & TypeScript. Scaffold your next project in seconds."
-  actions:
-    - text: Browse Templates
-      icon: right-arrow
-      link: "#starter-templates"
-    - text: Get Started with xtarterize
-      icon: external
-      variant: minimal
-      link: /xtarterize/
+  # Presence flag only. This route's hero is rendered by
+  # src/components/LandingHero.astro (wired in astro.config.mjs), which
+  # hardcodes the composition; no hero data is read from this file. Keep
+  # the key present and empty: Starlight sets data-has-hero on the page
+  # root from its presence, activating the splash paper backdrop in
+  # global.css.
+  {}
 ---
 
-import { LinkCard, CardGrid, LinkButton } from '@astrojs/starlight/components'
+import { LinkCard, CardGrid } from '@astrojs/starlight/components'
 import TemplateGallery from '../../components/TemplateGallery.astro'
 
-## Starter Templates
+<p class="xt-eyebrow xt-section-label">01 · Where do you start?</p>
 
-Every template comes pre-configured with Biome linting & formatting, TypeScript strict mode,
-GitHub Actions CI, VS Code settings, and AI agent skills - ready the moment you scaffold.
+<h2 class="xt-section-title">Choose your starting point</h2>
 
-<TemplateGallery />
+<p class="xt-section-lead">Both tools share one standard: Biome, TypeScript strict, CI, and editor configs - set up the same way in every project. Pick the lane that matches where your code is today.</p>
 
-<LinkButton href="https://github.com/agustinusnathaniel?tab=repositories&q=&type=source&language=" size="lg" data-umami-event="github_browse_click">View all templates on GitHub →</LinkButton>
-
----
-
-## The Tooling
-
-<div class="product-grid">
-  <a href="/create-xtarter-app/" class="product-card" data-umami-event="product_card_click" data-umami-event-product="create-xtarter-app">
-    <h2>
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
-      create-xtarter-app
-      <span class="badge badge-cxa">cxa</span>
-    </h2>
+<div class="xt-product-grid xt-rise">
+  <a href="/create-xtarter-app/" class="xt-product-card" data-umami-event="product_card_click" data-umami-event-product="create-xtarter-app">
+    <h3>create-xtarter-app</h3>
     <p>Scaffold a new project from production-grade templates in a single command. Pick your stack, get a fully configured project.</p>
-    <span class="product-card-link">Learn more →</span>
+    <span class="xt-product-cta">Learn more &rarr;</span>
   </a>
-  <a href="/xtarterize/" class="product-card" data-umami-event="product_card_click" data-umami-event-product="xtarterize">
-    <h2>
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      xtarterize
-      <span class="badge badge-xtz">xtz</span>
-    </h2>
+  <a href="/xtarterize/" class="xt-product-card" data-umami-event="product_card_click" data-umami-event-product="xtarterize">
+    <h3>xtarterize</h3>
     <p>Bring conformance to any existing JS/TS project. Detect your stack, validate configs, sync tooling - with diffs and backups.</p>
-    <span class="product-card-link">Learn more →</span>
+    <span class="xt-product-cta">Learn more &rarr;</span>
   </a>
 </div>
 
+<p class="xt-eyebrow xt-section-label">02 · Curated starters</p>
+
+<h2 id="starter-templates" class="xt-section-title">Starter Templates</h2>
+
+<p class="xt-section-lead">Every template comes pre-configured with Biome linting &amp; formatting, TypeScript strict mode, GitHub Actions CI, VS Code settings, and AI agent skills - ready the moment you scaffold.</p>
+
+<TemplateGallery />
+
+<p class="xt-note">The catalog above is a static snapshot maintained in the docs app - it renders without any GitHub API request. Source templates live in the <a href="https://github.com/agustinusnathaniel" target="_blank" rel="noopener noreferrer">agustinusnathaniel</a> account on GitHub.</p>
+
+<a class="xt-btn xt-btn-ghost" href="https://github.com/agustinusnathaniel?tab=repositories&q=&type=source" target="_blank" rel="noopener noreferrer" data-umami-event="github_browse_click">View all repositories on GitHub &rarr;</a>
+
+<p class="xt-eyebrow xt-section-label">03 · The project lifecycle</p>
+
+<h2 class="xt-section-title">From first commit to conformance</h2>
+
+<p class="xt-section-lead">The two tools map onto the natural lifecycle of a JavaScript/TypeScript project.</p>
+
+<div class="xt-progression xt-rise" style="--xt-delay: 40ms">
+  <div class="xt-progress-step">
+    <span class="xt-step-num">01</span>
+    <code class="xt-progress-cmd">git init</code>
+    <p>First commit. A fresh repository has no standards yet.</p>
+  </div>
+  <div class="xt-progress-step">
+    <span class="xt-step-num">02</span>
+    <code class="xt-progress-cmd">pnpm create xtarter-app</code>
+    <p>Scaffold from a curated template. Biome, TypeScript strict, CI, and editor configs come pre-configured.</p>
+  </div>
+  <div class="xt-progress-step">
+    <span class="xt-step-num">03</span>
+    <code class="xt-progress-cmd">CI &middot; lint, type-check, test</code>
+    <p>Ship. The template's scripts and CI workflows keep every check green.</p>
+  </div>
+  <div class="xt-progress-step">
+    <span class="xt-step-num">04</span>
+    <code class="xt-progress-cmd">npx xtarterize init</code>
+    <p>Stay conformant. Diff and sync keep configs current as the ecosystem evolves.</p>
+  </div>
+</div>
+
+<p class="xt-eyebrow xt-section-label">04 · Read the docs</p>
+
+<h2 class="xt-section-title">Explore the docs</h2>
+
+<CardGrid>
+  <LinkCard title="xtarterize" href="/xtarterize/" description="Bring conformance to an existing JavaScript/TypeScript project." />
+  <LinkCard title="create-xtarter-app" href="/create-xtarter-app/" description="Scaffold a new project from a curated starter template." />
+  <LinkCard title="Starter Templates" href="/create-xtarter-app/guide/templates/" description="Every template, its stack, and its features." />
+  <LinkCard title="Conformance Tasks" href="/xtarterize/guide/tasks/overview/" description="The conformance tasks xtarterize can apply." />
+  <LinkCard title="AI Agent Skills" href="/xtarterize/guide/agent-skills/" description="Reusable agent skills that ship with every template." />
+  <LinkCard title="GitHub" href="https://github.com/agustinusnathaniel/xtarterize" description="Source code, issues, and contributions." />
+</CardGrid>

@@ -5,16 +5,13 @@ template: splash
 editUrl: false
 lastUpdated: false
 hero:
-  title: "The conformance CLI for JavaScript & TypeScript"
-  tagline: "Detect your project's stack. Validate your configs. Keep everything in sync - without overwriting a single file without your say-so."
-  actions:
-    - text: Get Started
-      icon: right-arrow
-      link: /xtarterize/getting-started/installation/
-    - text: View CLI Reference
-      icon: external
-      variant: minimal
-      link: /xtarterize/guide/cli/overview/
+  # Presence flag only. This route's hero is rendered by
+  # src/components/LandingHero.astro (wired in astro.config.mjs), which
+  # hardcodes the composition; no hero data is read from this file. Keep
+  # the key present and empty: Starlight sets data-has-hero on the page
+  # root from its presence, activating the splash paper backdrop in
+  # global.css.
+  {}
 ---
 
 import { Aside, LinkCard, CardGrid, LinkButton } from '@astrojs/starlight/components'
@@ -22,75 +19,76 @@ import TerminalDemo from '../../components/TerminalDemo.astro'
 
 <TerminalDemo />
 
-## Why xtarterize?
+<p class="xt-eyebrow xt-section-label">01 · The pipeline</p>
 
-Every [JavaScript](https://developer.mozilla.org/en-US/docs/Web/JavaScript)/[TypeScript](https://www.typescriptlang.org/) project needs [Biome](https://biomejs.dev/) ([linting](https://biomejs.dev/linter/) + [formatting](https://biomejs.dev/formatter/)), [TypeScript](https://www.typescriptlang.org/tsconfig/) ([strict mode](https://www.typescriptlang.org/tsconfig/#strict)), [CI workflows](https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions) ([GitHub Actions](https://docs.github.com/en/actions)), [editor configs](https://code.visualstudio.com/docs/getstarted/settings#_settingsjson) ([VS Code](https://code.visualstudio.com/)), [AI agent skills](https://skills.sh), and more. Setting them up is tedious. Keeping them consistent across projects is worse.
+<h2 class="xt-section-title">How it works</h2>
 
-<div class="features-grid">
+<p class="xt-section-lead">Every xtarterize run follows the same five steps - from reading your project to applying changes with backups in place.</p>
 
-<div class="feature-card">
-<div class="feature-icon">🔍</div>
-<h3>Detects your stack</h3>
-<p>Scans your project to understand what frameworks, tools, and configs you're using - before touching anything.</p>
-</div>
-
-<div class="feature-card">
-<div class="feature-icon">🎯</div>
-<h3>Applies only what fits</h3>
-<p>Never gets in your way. Only suggests configs that match your detected tooling and project structure.</p>
-</div>
-
-<div class="feature-card">
-<div class="feature-icon">🛡️</div>
-<h3>Never destructive</h3>
-<p>Shows you a diff before any change. Backs up your files. You're always in control.</p>
-</div>
-
-<div class="feature-card">
-<div class="feature-icon">🔄</div>
-<h3>Safe to rerun</h3>
-<p>Idempotent by design. Run it ten times - no duplicates, no corruption, no drift.</p>
-</div>
-
-<div class="feature-card">
-<div class="feature-icon">📈</div>
-<h3>Evolves with you</h3>
-<p>As your project grows, <code>sync</code> and <code>diff</code> keep your configs up to date without manual work.</p>
-</div>
-
-<div class="feature-card">
-<div class="feature-icon">⚡</div>
-<h3>Wide framework support</h3>
-<p>React, Vue, Svelte, Solid, Node, Bun - xtarterize detects your stack and applies what fits.</p>
-</div>
-
-</div>
+<ol class="xt-steps xt-rise">
+  <li class="xt-step">
+    <span class="xt-step-num">01</span>
+    <h3 class="xt-step-name">Detect</h3>
+    <p class="xt-step-desc">Scans your project to build a full profile: framework, bundler, styling, package manager, monorepo status, and existing configs.</p>
+  </li>
+  <li class="xt-step">
+    <span class="xt-step-num">02</span>
+    <h3 class="xt-step-name">Resolve</h3>
+    <p class="xt-step-desc">Maps the profile to the conformance tasks that apply - Vite tasks only for Vite projects, never a generic one-size-fits-all set.</p>
+  </li>
+  <li class="xt-step">
+    <span class="xt-step-num">03</span>
+    <h3 class="xt-step-name">Check</h3>
+    <p class="xt-step-desc">Determines each task's status: new (file missing), patch (needs merging), skip (already conformant), or conflict (incompatible).</p>
+  </li>
+  <li class="xt-step">
+    <span class="xt-step-num">04</span>
+    <h3 class="xt-step-name">Plan</h3>
+    <p class="xt-step-desc">Displays a conformance plan table for review, so you see exactly what would change before anything is written.</p>
+  </li>
+  <li class="xt-step">
+    <span class="xt-step-num">05</span>
+    <h3 class="xt-step-name">Apply</h3>
+    <p class="xt-step-desc">Backs up your files, then applies changes with deep merge or AST manipulation - leaving your originals restorable.</p>
+  </li>
+</ol>
 
 <Aside type="caution" title="Current focus: Vite + React + TypeScript">
   The CLI detects a wide range of frameworks, but the deepest task coverage is for **Vite**, **React**, and **TypeScript** projects. Support for other stacks (Vue, Svelte, Solid, Node CLI, Bun, etc.) works but is **experimental** - tasks may be fewer or less mature. Contributions to expand coverage are welcome.
 </Aside>
 
----
+<p class="xt-eyebrow xt-section-label">02 · Safety rails</p>
 
-## How it works
+<h2 class="xt-section-title">Guardrails by design</h2>
 
-```mermaid
-flowchart LR
-    A["🔍 Detect<br/>Project Stack"] --> B["🎯 Resolve<br/>Applicable Tasks"]
-    B --> C["✅ Check<br/>Task Statuses"]
-    C --> D["📋 Plan<br/>Show Diffs"]
-    D --> E["🚀 Apply<br/>With Backups"]
+<p class="xt-section-lead">Conformance automation is only useful if you trust it. These guarantees hold on every run.</p>
 
-    style A fill:#6366f1,color:#fff
-    style B fill:#8b5cf6,color:#fff
-    style C fill:#a855f7,color:#fff
-    style D fill:#d946ef,color:#fff
-    style E fill:#22c55e,color:#fff
-```
+<div class="xt-guardrails xt-rise">
+  <div class="xt-guardrail">
+    <span class="xt-guardrail-kicker">Safe</span>
+    <h3>Never destructive</h3>
+    <p>Shows you a diff before any change. Backs up your files. You're always in control.</p>
+  </div>
+  <div class="xt-guardrail">
+    <span class="xt-guardrail-kicker">Idempotent</span>
+    <h3>Safe to rerun</h3>
+    <p>Idempotent by design. Run it ten times - no duplicates, no corruption, no drift.</p>
+  </div>
+  <div class="xt-guardrail">
+    <span class="xt-guardrail-kicker">Selective</span>
+    <h3>Applies only what fits</h3>
+    <p>Only suggests configs that match your detected tooling and project structure.</p>
+  </div>
+  <div class="xt-guardrail">
+    <span class="xt-guardrail-kicker">Context-aware</span>
+    <h3>Detects your stack</h3>
+    <p>Scans your project to understand what frameworks, tools, and configs you're using - before touching anything.</p>
+  </div>
+</div>
 
----
+<p class="xt-eyebrow xt-section-label">03 · Quick start</p>
 
-## Quick Start
+<h2 class="xt-section-title">Quick Start</h2>
 
 Get up and running in under a minute:
 
@@ -105,11 +103,11 @@ npx xtarterize check
 npx xtarterize diff
 ```
 
-<LinkButton href="/xtarterize/getting-started/installation/" size="lg">Install xtarterize →</LinkButton>
+<LinkButton href="/xtarterize/getting-started/installation/" size="lg">Install xtarterize &rarr;</LinkButton>
 
----
+<p class="xt-eyebrow xt-section-label">04 · Explore the docs</p>
 
-## Explore the docs
+<h2 class="xt-section-title">Explore the docs</h2>
 
 <CardGrid>
   <LinkCard title="Getting Started" href="/xtarterize/getting-started/introduction/" description="Learn the basics and set up your first project in minutes." />
@@ -121,24 +119,29 @@ npx xtarterize diff
   <LinkCard title="Contributing" href="https://github.com/agustinusnathaniel/xtarterize/blob/main/CONTRIBUTING.md" description="Get involved, report issues, or help build xtarterize." />
 </CardGrid>
 
----
+<p class="xt-eyebrow xt-section-label">05 · New project or existing?</p>
 
-## New project or existing?
+<h2 class="xt-section-title">New project or existing?</h2>
 
-xtarterize works with both:
+<p class="xt-section-lead">xtarterize works with both. If your project does not exist yet, scaffold it first - then bring it up to standard.</p>
 
-| Tool | When to use |
-|------|-------------|
-| **[create-xtarter-app](/create-xtarter-app/)** | Day 0 - Scaffold a new project from curated templates |
-| **[xtarterize](/xtarterize/getting-started/installation/)** | Day 1+ - Bring conformance to any existing project |
-
-## References
-
-- [Biome](https://biomejs.dev/) - Fast linter and formatter
-- [TypeScript](https://www.typescriptlang.org/) - Typed JavaScript
-- [GitHub Actions](https://docs.github.com/en/actions) - CI/CD automation
-- [VS Code](https://code.visualstudio.com/) - Code editor with extensive configuration
-- [Agent Skills](https://skills.sh) - Open ecosystem of reusable AI agent capabilities
-- [Node.js](https://nodejs.org/) - JavaScript runtime
-
-<LinkButton href="/xtarterize/getting-started/installation/">Start now →</LinkButton>
+<div class="xt-switch">
+  <div class="xt-switch-card">
+    <span class="xt-switch-kicker">Day 0 &middot; New project</span>
+    <h3>create-xtarter-app</h3>
+    <p>Scaffold a new project from curated templates. Conformance is pre-configured from the first commit.</p>
+    <code>pnpm create xtarter-app</code>
+    <div class="xt-switch-action">
+      <LinkButton href="/create-xtarter-app/" variant="secondary" size="sm">Learn about create-xtarter-app</LinkButton>
+    </div>
+  </div>
+  <div class="xt-switch-card">
+    <span class="xt-switch-kicker">Day 1+ &middot; Existing project</span>
+    <h3>xtarterize</h3>
+    <p>Bring conformance to any existing JS/TS project - detect, plan, and apply with diffs and backups.</p>
+    <code>npx xtarterize init</code>
+    <div class="xt-switch-action">
+      <LinkButton href="/xtarterize/getting-started/installation/" variant="secondary" size="sm">Install xtarterize</LinkButton>
+    </div>
+  </div>
+</div>
