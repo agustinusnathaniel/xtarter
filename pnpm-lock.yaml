@@ -150,7 +150,7 @@ importers:
       '@fontsource-variable/geist-mono':
         specifier: ^5.3.0
         version: 5.3.0
-      '@fontsource/lora':
+      '@fontsource-variable/rem':
         specifier: ^5.3.0
         version: 5.3.0
       '@tailwindcss/vite':
@@ -929,8 +929,8 @@ packages:
   '@fontsource-variable/geist-mono@5.3.0':
     resolution: {integrity: sha512-vBbuwDEo9AkrqADMXOrlAR3DFcJi4/JxeuU43FoiQERnNwsfXNnvxvReZG02cQKmyk4DZkZdBZX3oTDvy2zBAw==}
 
-  '@fontsource/lora@5.3.0':
-    resolution: {integrity: sha512-OK1g1z01rHVPqO5aw/FOIoDqc46KKYZdgL3NOLkxLWDk6QhDHhdr/h2BV1cke6gTvR1tzpDfdKyUkGsC+sQLeQ==}
+  '@fontsource-variable/rem@5.3.0':
+    resolution: {integrity: sha512-aRAZMGiEPzc8+lhr08y9SHxu0+74SOUivzcOt+BR9wws2U0PnvJzvK15YrR7WDa86Dsh7wAC8AKlrEAsmvE+dQ==}
 
   '@iconify/types@2.0.0':
     resolution: {integrity: sha512-+wluvCrRhXrhyOmRDJ3q8mux9JkKy5SJ/v8ol2tu4FVjyYvtEzkc/3pK15ET6RKg4b4w4BmTk1+gsCUhf21Ykg==}
@@ -5575,7 +5575,7 @@ snapshots:
 
   '@fontsource-variable/geist-mono@5.3.0': {}
 
-  '@fontsource/lora@5.3.0': {}
+  '@fontsource-variable/rem@5.3.0': {}
 
   '@iconify/types@2.0.0': {}
 

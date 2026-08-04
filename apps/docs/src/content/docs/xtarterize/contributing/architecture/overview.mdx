@@ -3,22 +3,46 @@ title: Architecture Overview
 description: Understand how xtarterize is structured and how the packages work together.
 ---
 
-import { Aside, FileTree, Tabs, TabItem, LinkButton } from '@astrojs/starlight/components'
+import {
+  Aside,
+  FileTree,
+  Tabs,
+  TabItem,
+  LinkButton,
+} from "@astrojs/starlight/components";
 
 xtarterize is organized as a monorepo using [Turborepo](https://turbo.build/repo) for task orchestration, [pnpm](https://pnpm.io/) for package management, and [Vite Plus](https://viteplus.dev) for build, test, and development workflows.
 
 ## Package Structure
 
 <FileTree>
-- packages/
-  - core/ - [`@xtarterize/core`](https://github.com/agustinusnathaniel/xtarterize/tree/main/packages/core) - [`detect.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/detect.ts) + [`detect/`](https://github.com/agustinusnathaniel/xtarterize/tree/main/packages/core/src/detect), [`resolve.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/resolve.ts), [`apply.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/apply.ts), [`backup.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/backup.ts), [`preflight.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/preflight.ts)
-  - patchers/ - [`@xtarterize/patchers`](https://github.com/agustinusnathaniel/xtarterize/tree/main/packages/patchers) - [`json-merge.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/patchers/src/json-merge.ts), [`ast-patch.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/patchers/src/ast-patch.ts)
-  - tasks/ - [`@xtarterize/tasks`](https://github.com/agustinusnathaniel/xtarterize/tree/main/packages/tasks) - [`factory.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/tasks/src/factory.ts), [`factory-config.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/tasks/src/factory-config.ts), [`factory-ops.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/tasks/src/factory-ops.ts), all task implementations
-- apps/
-  - xtarterize/ - **xtarterize** - CLI binary ([citty](https://github.com/unjs/citty) + [@clack/prompts](https://github.com/natemoo-re/clack))
-  - docs/ - @xtarterize/docs - This documentation site ([Astro](https://astro.build/)/[Starlight](https://starlight.astro.build/))
-- test/
-  - fixtures/ - Test fixtures for various project types
+  - packages/ - core/ -
+  [`@xtarterize/core`](https://github.com/agustinusnathaniel/xtarterize/tree/main/packages/core)
+  -
+  [`detect.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/detect.ts)
+  +
+  [`detect/`](https://github.com/agustinusnathaniel/xtarterize/tree/main/packages/core/src/detect),
+  [`resolve.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/resolve.ts),
+  [`apply.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/apply.ts),
+  [`backup.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/backup.ts),
+  [`preflight.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/preflight.ts)
+  - patchers/ -
+  [`@xtarterize/patchers`](https://github.com/agustinusnathaniel/xtarterize/tree/main/packages/patchers)
+  -
+  [`json-merge.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/patchers/src/json-merge.ts),
+  [`ast-patch.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/patchers/src/ast-patch.ts)
+  - tasks/ -
+  [`@xtarterize/tasks`](https://github.com/agustinusnathaniel/xtarterize/tree/main/packages/tasks)
+  -
+  [`factory.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/tasks/src/factory.ts),
+  [`factory-config.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/tasks/src/factory-config.ts),
+  [`factory-ops.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/tasks/src/factory-ops.ts),
+  all task implementations - apps/ - xtarterize/ - **xtarterize** - CLI binary
+  ([citty](https://github.com/unjs/citty) +
+  [@clack/prompts](https://github.com/natemoo-re/clack)) - docs/ - @xtarter/docs
+  - This documentation site
+  ([Astro](https://astro.build/)/[Starlight](https://starlight.astro.build/)) -
+  test/ - fixtures/ - Test fixtures for various project types
 </FileTree>
 
 ## Package Dependencies
@@ -29,7 +53,7 @@ flowchart TD
     CLI --> Tasks["@xtarterize/tasks"]
     Tasks --> Core
     Tasks --> Patchers["@xtarterize/patchers"]
-    
+
     style CLI fill:#6366f1,color:#fff
     style Core fill:#22c55e,color:#fff
     style Tasks fill:#f59e0b,color:#fff
@@ -37,7 +61,8 @@ flowchart TD
 ```
 
 <Aside>
-  `@xtarterize/patchers` and `@xtarterize/core` have no internal workspace dependencies - they are leaf packages that can be used independently.
+  `@xtarterize/patchers` and `@xtarterize/core` have no internal workspace
+  dependencies - they are leaf packages that can be used independently.
 </Aside>
 
 ## How It Works
@@ -49,7 +74,7 @@ sequenceDiagram
     participant Core as @xtarterize/core
     participant Tasks as @xtarterize/tasks
     participant Patchers as @xtarterize/patchers
-    
+
     User->>CLI: xtarterize init
     CLI->>Core: runPreflight(cwd)
     Core-->>CLI: PreflightResult
@@ -94,7 +119,7 @@ flowchart TD
     Core --> Preflight["preflight.ts<br/>Pre-flight checks"]
     Core --> Diagnostics["diagnostics.ts<br/>Conflict detection"]
     Core --> Utils["utils/<br/>fs, diff, logger ([picocolors](https://github.com/alexeyraspopov/picocolors)), pkg ([pkg-types](https://github.com/unjs/pkg-types))"]
-    
+
     style Core fill:#6366f1,color:#fff
 ```
 
@@ -116,7 +141,7 @@ flowchart LR
     Tasks --> Agent["agent/<br/>agents-md, skills-install"]
     Tasks --> Scripts["scripts/<br/>package-scripts, npmrc"]
     Tasks --> Factory["factory.ts + factory-*<br/>task creation helpers"]
-    
+
     style Tasks fill:#6366f1,color:#fff
 ```
 
@@ -149,6 +174,7 @@ flowchart LR
     # Type check separately (Turborepo)
     pnpm typecheck
     ```
+
   </TabItem>
   <TabItem label="Develop">
     ```bash
@@ -160,13 +186,13 @@ flowchart LR
 
 ## Toolchain
 
-| Tool | Purpose | Command |
-|------|---------|---------|
-| [Vite Plus](https://viteplus.dev) | Build, test, pack, dev server | `vp build`, `vp test`, `vp pack`, `vp dev` |
-| [Turborepo](https://turbo.build/repo) | Monorepo task orchestration | `turbo run build`, `turbo run typecheck` |
-| [Biome](https://biomejs.dev/) | Linting and formatting | `biome lint .`, `biome check --write .` |
-| [pnpm](https://pnpm.io/) | Package management, workspaces | `pnpm install`, `catalog:` for shared deps |
-| [Changesets](https://github.com/changesets/changesets) | Version management and publishing | `changeset`, `changeset version` |
+| Tool                                                   | Purpose                           | Command                                    |
+| ------------------------------------------------------ | --------------------------------- | ------------------------------------------ |
+| [Vite Plus](https://viteplus.dev)                      | Build, test, pack, dev server     | `vp build`, `vp test`, `vp pack`, `vp dev` |
+| [Turborepo](https://turbo.build/repo)                  | Monorepo task orchestration       | `turbo run build`, `turbo run typecheck`   |
+| [Biome](https://biomejs.dev/)                          | Linting and formatting            | `biome lint .`, `biome check --write .`    |
+| [pnpm](https://pnpm.io/)                               | Package management, workspaces    | `pnpm install`, `catalog:` for shared deps |
+| [Changesets](https://github.com/changesets/changesets) | Version management and publishing | `changeset`, `changeset version`           |
 
 ## References
 
@@ -182,4 +208,6 @@ flowchart LR
 - [picocolors](https://github.com/alexeyraspopov/picocolors) - Tiny terminal colors library
 - [pkg-types](https://github.com/unjs/pkg-types) - Package.json type definitions and utilities
 
-<LinkButton href="/xtarterize/contributing/core/detect/">Explore project detection →</LinkButton>
+<LinkButton href="/xtarterize/contributing/core/detect/">
+  Explore project detection →
+</LinkButton>

@@ -3,13 +3,12 @@
 @import "@astrojs/starlight-tailwind";
 @import "tailwindcss/theme.css" layer(theme);
 @import "tailwindcss/utilities.css" layer(utilities);
-@import "@fontsource/lora/500.css";
-@import "@fontsource/lora/600.css";
+@import "@fontsource-variable/rem";
 @import "@fontsource-variable/atkinson-hyperlegible-next";
 @import "@fontsource-variable/geist-mono";
 
 @theme {
-  --font-heading: "Lora", serif;
+  --font-heading: "REM Variable", sans-serif;
   --font-sans: "Atkinson Hyperlegible Next Variable", sans-serif;
   --font-mono: "Geist Mono Variable", monospace;
 
@@ -143,7 +142,7 @@ body {
 
 /* ============================================
    LANDING TYPOGRAPHY
-   Display: Lora. Body/UI: Atkinson. Labels/artifacts: Geist Mono.
+   Display: REM. Body/UI: Atkinson. Labels/artifacts: Geist Mono.
    ============================================ */
 
 .xt-hero h1,
