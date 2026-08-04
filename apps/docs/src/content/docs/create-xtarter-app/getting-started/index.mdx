@@ -4,7 +4,7 @@ description: Scaffold a new JavaScript/TypeScript project from production-grade 
 ---
 
 import { LinkCard, CardGrid, LinkButton } from '@astrojs/starlight/components'
-import { PackageManagers } from 'starlight-package-managers'
+import AllPackageManagers from '@/components/AllPackageManagers.astro'
 
 ## What is create-xtarter-app?
 
@@ -16,7 +16,7 @@ TypeScript strict mode, GitHub Actions CI, and more - no setup required.
 
 Scaffold a new project in one command:
 
-<PackageManagers type="create" pkg="xtarter-app" />
+<AllPackageManagers type="create" pkg="xtarter-app" />
 
 The interactive CLI will guide you through:
 1. **Project name** - what to call your new project
@@ -29,13 +29,13 @@ The interactive CLI will guide you through:
 Use `--yes` / `-y` to skip prompts with defaults (pnpm, `next-chakra` template, git init, no CI cleanup). Any explicit flag like `--pm bun` or `--clean` takes priority over `--yes`.
 :::
 
-<PackageManagers type="create" pkg="xtarter-app" args="my-app --yes" title="Scaffold with defaults" />
+<AllPackageManagers type="create" pkg="xtarter-app" args="my-app --yes" title="Scaffold with defaults" />
 
-<PackageManagers type="create" pkg="xtarter-app" args=". -t vite-tailwind" title="Scaffold into current directory" />
+<AllPackageManagers type="create" pkg="xtarter-app" args=". -t vite-tailwind" title="Scaffold into current directory" />
 
-<PackageManagers type="create" pkg="xtarter-app" args="my-app -t vite-tailwind --force" title="Overwrite existing directory" />
+<AllPackageManagers type="create" pkg="xtarter-app" args="my-app -t vite-tailwind --force" title="Overwrite existing directory" />
 
-<PackageManagers type="create" pkg="xtarter-app" args="my-app --ref v1.0.0" title="Pin to a specific template version" />
+<AllPackageManagers type="create" pkg="xtarter-app" args="my-app --ref v1.0.0" title="Pin to a specific template version" />
 
 ## What you get
 

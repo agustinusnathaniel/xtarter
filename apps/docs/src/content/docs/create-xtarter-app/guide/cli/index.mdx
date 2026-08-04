@@ -3,7 +3,7 @@ title: CLI Reference
 description: Complete command reference for create-xtarter-app - all arguments, options, and usage examples.
 ---
 
-import { PackageManagers } from 'starlight-package-managers'
+import AllPackageManagers from '@/components/AllPackageManagers.astro'
 
 ## Command
 
@@ -51,21 +51,21 @@ npx create-xtarter-app@latest [project-name] [options]
 
 ## Examples
 
-<PackageManagers type="create" pkg="xtarter-app" title="Interactive" />
+<AllPackageManagers type="create" pkg="xtarter-app" title="Interactive" />
 
-<PackageManagers type="create" pkg="xtarter-app" args="my-app --yes" title="Quick start with defaults" />
+<AllPackageManagers type="create" pkg="xtarter-app" args="my-app --yes" title="Quick start with defaults" />
 
-<PackageManagers type="create" pkg="xtarter-app" args=". -t vite-tailwind" title="Scaffold in current directory" />
+<AllPackageManagers type="create" pkg="xtarter-app" args=". -t vite-tailwind" title="Scaffold in current directory" />
 
-<PackageManagers type="create" pkg="xtarter-app" args="my-app --template vite-tailwind" title="Pick a template" />
+<AllPackageManagers type="create" pkg="xtarter-app" args="my-app --template vite-tailwind" title="Pick a template" />
 
-<PackageManagers type="create" pkg="xtarter-app" args="my-app --pm bun --no-git" title="Specific package manager, no git" />
+<AllPackageManagers type="create" pkg="xtarter-app" args="my-app --pm bun --no-git" title="Specific package manager, no git" />
 
-<PackageManagers type="create" pkg="xtarter-app" args="my-app -t vite-tailwind --force" title="Overwrite existing directory" />
+<AllPackageManagers type="create" pkg="xtarter-app" args="my-app -t vite-tailwind --force" title="Overwrite existing directory" />
 
-<PackageManagers type="create" pkg="xtarter-app" args="my-app --ref v1.0.0" title="Download a specific tag" />
+<AllPackageManagers type="create" pkg="xtarter-app" args="my-app --ref v1.0.0" title="Download a specific tag" />
 
-<PackageManagers type="create" pkg="xtarter-app" args="preview next-tailwind" title="Preview a template" />
+<AllPackageManagers type="create" pkg="xtarter-app" args="preview next-tailwind" title="Preview a template" />
 
 ## Error handling
 

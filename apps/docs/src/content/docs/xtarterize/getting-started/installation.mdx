@@ -4,7 +4,7 @@ description: Install and set up xtarterize.
 ---
 
 import { Aside, Steps, LinkButton } from '@astrojs/starlight/components'
-import { PackageManagers } from 'starlight-package-managers'
+import AllPackageManagers from '@/components/AllPackageManagers.astro'
 
 ## Prerequisites
 
@@ -19,15 +19,15 @@ import { PackageManagers } from 'starlight-package-managers'
 
 You can use xtarterize without installing it globally by using `npx`:
 
-<PackageManagers type="exec" pkg="xtarterize" args="init" pkgManagers={['npm']} />
+<AllPackageManagers type="exec" pkg="xtarterize" args="init" pkgManagers={['npm']} />
 
 This is the recommended approach - you always get the latest version.
 
 ## Verify It Works
 
-<PackageManagers type="exec" pkg="xtarterize" args="--version" pkgManagers={['npm']} />
+<AllPackageManagers type="exec" pkg="xtarterize" args="--version" pkgManagers={['npm']} />
 
-<PackageManagers type="exec" pkg="xtarterize" args="--help" pkgManagers={['npm']} />
+<AllPackageManagers type="exec" pkg="xtarterize" args="--help" pkgManagers={['npm']} />
 
 ## Next Steps
 

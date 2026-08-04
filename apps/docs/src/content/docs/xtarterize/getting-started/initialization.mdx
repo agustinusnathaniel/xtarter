@@ -4,13 +4,13 @@ description: Initialize conformance configuration for a project with xtarterize.
 ---
 
 import { Aside, Steps } from '@astrojs/starlight/components'
-import { PackageManagers } from 'starlight-package-managers'
+import AllPackageManagers from '@/components/AllPackageManagers.astro'
 
 ## Initialize a Project
 
 To apply conformance configuration to a project:
 
-<PackageManagers type="exec" pkg="xtarterize" args="init" pkgManagers={['npm']} />
+<AllPackageManagers type="exec" pkg="xtarterize" args="init" pkgManagers={['npm']} />
 
 <Steps>
 
@@ -54,13 +54,13 @@ To apply conformance configuration to a project:
 
 ## Examples
 
-<PackageManagers type="exec" pkg="xtarterize" args="init --dry-run" title="Preview" pkgManagers={['npm']} />
+<AllPackageManagers type="exec" pkg="xtarterize" args="init --dry-run" title="Preview" pkgManagers={['npm']} />
 
-<PackageManagers type="exec" pkg="xtarterize" args="init --yes" title="Apply all" pkgManagers={['npm']} />
+<AllPackageManagers type="exec" pkg="xtarterize" args="init --yes" title="Apply all" pkgManagers={['npm']} />
 
-<PackageManagers type="exec" pkg="xtarterize" args="init --skip codegen/plop,agent/skills-install" title="Skip tasks" pkgManagers={['npm']} />
+<AllPackageManagers type="exec" pkg="xtarterize" args="init --skip codegen/plop,agent/skills-install" title="Skip tasks" pkgManagers={['npm']} />
 
-<PackageManagers type="exec" pkg="xtarterize" args="init --only lint/biome" title="Only specific" pkgManagers={['npm']} />
+<AllPackageManagers type="exec" pkg="xtarterize" args="init --only lint/biome" title="Only specific" pkgManagers={['npm']} />
 
 ## Monorepo projects
 
