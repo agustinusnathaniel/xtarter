@@ -3,7 +3,8 @@ title: CLI Overview
 description: Complete reference for the xtarterize command-line interface.
 ---
 
-import { Aside, Tabs, TabItem, LinkButton } from '@astrojs/starlight/components'
+import { Aside, LinkButton } from '@astrojs/starlight/components'
+import { PackageManagers } from 'starlight-package-managers'
 
 The xtarterize CLI provides commands to detect, apply, and maintain conformance configuration for [JavaScript](https://developer.mozilla.org/en-US/docs/Web/JavaScript)/[TypeScript](https://www.typescriptlang.org/) projects.
 
@@ -71,10 +72,9 @@ Run comprehensive project diagnostics. Checks are grouped into four categories:
 | `--quiet` | Suppress detailed output, show summary only |
 | `--json` | Output machine-readable JSON diagnostics |
 
-```bash
-npx xtarterize doctor
-npx xtarterize doctor --verbose
-```
+<PackageManagers type="exec" pkg="xtarterize" args="doctor" pkgManagers={['npm']} />
+
+<PackageManagers type="exec" pkg="xtarterize" args="doctor --verbose" title="Verbose" pkgManagers={['npm']} />
 
 With `--verbose`, a **System** group is added displaying platform, OS release, architecture, CPU count, and RAM:
 
@@ -118,33 +118,15 @@ Full conformance setup. Detects your project stack, shows a plan, and applies ch
 | `--format <format>` | Output format (`terminal` or `json`) |
 | `--timing` | Show detailed per-task timing breakdown |
 
-<Tabs>
-  <TabItem label="Basic">
-    ```bash
-    npx xtarterize init
-    ```
-  </TabItem>
-  <TabItem label="Dry run">
-    ```bash
-    npx xtarterize init --dry-run
-    ```
-  </TabItem>
-  <TabItem label="Auto-apply">
-    ```bash
-    npx xtarterize init --yes
-    ```
-  </TabItem>
-  <TabItem label="Skip tasks">
-    ```bash
-    npx xtarterize init --skip lint/oxlint
-    ```
-  </TabItem>
-  <TabItem label="Only specific">
-    ```bash
-    npx xtarterize init --only lint/biome,ts/incremental
-    ```
-  </TabItem>
-</Tabs>
+<PackageManagers type="exec" pkg="xtarterize" args="init" title="Basic" pkgManagers={['npm']} />
+
+<PackageManagers type="exec" pkg="xtarterize" args="init --dry-run" title="Dry run" pkgManagers={['npm']} />
+
+<PackageManagers type="exec" pkg="xtarterize" args="init --yes" title="Auto-apply" pkgManagers={['npm']} />
+
+<PackageManagers type="exec" pkg="xtarterize" args="init --skip lint/oxlint" title="Skip tasks" pkgManagers={['npm']} />
+
+<PackageManagers type="exec" pkg="xtarterize" args="init --only lint/biome,ts/incremental" title="Only specific" pkgManagers={['npm']} />
 
 ## `sync`
 
@@ -162,11 +144,11 @@ Update existing project configs to match the latest conformance templates. Only 
 | `--format <format>` | Output format (`terminal` or `json`) |
 | `--timing` | Show detailed per-task timing breakdown |
 
-```bash
-npx xtarterize sync
-npx xtarterize sync --dry-run
-npx xtarterize sync --yes
-```
+<PackageManagers type="exec" pkg="xtarterize" args="sync" pkgManagers={['npm']} />
+
+<PackageManagers type="exec" pkg="xtarterize" args="sync --dry-run" title="Dry run" pkgManagers={['npm']} />
+
+<PackageManagers type="exec" pkg="xtarterize" args="sync --yes" title="Auto-apply" pkgManagers={['npm']} />
 
 <Aside type="note">
   Unlike `init`, `sync` only targets tasks with `patch` or `conflict` status. It won't re-apply already conformant configs.
@@ -183,9 +165,7 @@ Show pending changes for all tasks with `new`, `patch`, or `conflict` status, wi
 | `--quiet` | Suppress verbose output |
 | `--format <format>` | Output format (`terminal` or `json`) |
 
-```bash
-npx xtarterize diff
-```
+<PackageManagers type="exec" pkg="xtarterize" args="diff" pkgManagers={['npm']} />
 
 <Aside type="tip">
   The <code>diff</code> command shows full file contents for <code>new</code> tasks (files that don't exist yet) and [unified diffs](https://www.gnu.org/software/diffutils/manual/html_node/Detailed-Unified.html) for <code>patch</code> tasks (existing files that need updates).
@@ -207,11 +187,11 @@ Audit which tasks are conformant and which need attention. Also runs diagnostics
 | `--quiet` | Suppress verbose output |
 | `--badge <path>` | Generate a conformance badge SVG (use `-` for stdout) |
 
-```bash
-npx xtarterize check
-npx xtarterize check --verbose
-npx xtarterize check --badge conformance.svg
-```
+<PackageManagers type="exec" pkg="xtarterize" args="check" pkgManagers={['npm']} />
+
+<PackageManagers type="exec" pkg="xtarterize" args="check --verbose" title="Verbose" pkgManagers={['npm']} />
+
+<PackageManagers type="exec" pkg="xtarterize" args="check --badge conformance.svg" title="Badge" pkgManagers={['npm']} />
 
 Output shows:
 
@@ -242,26 +222,15 @@ When called **with a task ID**, applies that specific task after showing a diff 
 | `--timing` | Show detailed per-task timing breakdown |
 | `--all` | Apply all applicable new and patch tasks without interaction |
 
-<Tabs>
-  <TabItem label="Specific task">
-    ```bash
-    npx xtarterize add lint/biome
-    npx xtarterize add ci/release
-    ```
-  </TabItem>
-  <TabItem label="Interactive">
-    ```bash
-    npx xtarterize add
-    ```
-    Browse tasks by category, select multiple, and apply with per-task confirmation.
-  </TabItem>
-  <TabItem label="All tasks">
-    ```bash
-    npx xtarterize add --all
-    ```
-    Apply all applicable new and patch tasks in one pass with no interaction.
-  </TabItem>
-</Tabs>
+<PackageManagers type="exec" pkg="xtarterize" args="add lint/biome" title="Specific task" pkgManagers={['npm']} />
+
+<PackageManagers type="exec" pkg="xtarterize" args="add" title="Interactive" pkgManagers={['npm']} />
+
+Browse tasks by category, select multiple, and apply with per-task confirmation.
+
+<PackageManagers type="exec" pkg="xtarterize" args="add --all" title="All tasks" pkgManagers={['npm']} />
+
+Apply all applicable new and patch tasks in one pass with no interaction.
 
 ## `undo`
 
@@ -273,9 +242,7 @@ Undo the last `init`, `sync`, or `add` run by restoring all files that were back
 |--------|-------------|
 | `--quiet` | Skip confirmation prompt |
 
-```bash
-npx xtarterize undo
-```
+<PackageManagers type="exec" pkg="xtarterize" args="undo" pkgManagers={['npm']} />
 
 <Aside type="tip">
   The <code>undo</code> command restores all files from the most recent run in one step. For single-file restores, use <code>xtarterize restore &lt;file&gt;</code> instead.
@@ -298,11 +265,11 @@ Restore a file from a previous backup. If multiple backups exist, you'll be prom
 | `--yes` | Skip confirmation, restore latest backup when multiple exist |
 | `--quiet` | Suppress verbose output |
 
-```bash
-npx xtarterize restore tsconfig.json
-npx xtarterize restore biome.json --yes
-npx xtarterize restore tsconfig.json --quiet
-```
+<PackageManagers type="exec" pkg="xtarterize" args="restore tsconfig.json" pkgManagers={['npm']} />
+
+<PackageManagers type="exec" pkg="xtarterize" args="restore biome.json --yes" title="Auto-restore" pkgManagers={['npm']} />
+
+<PackageManagers type="exec" pkg="xtarterize" args="restore tsconfig.json --quiet" title="Quiet" pkgManagers={['npm']} />
 
 ## `list`
 
@@ -314,9 +281,7 @@ List all registered tasks grouped by category, with current status.
 |--------|-------------|
 | `--quiet` | Suppress verbose output |
 
-```bash
-npx xtarterize list
-```
+<PackageManagers type="exec" pkg="xtarterize" args="list" pkgManagers={['npm']} />
 
 ## `query`
 
@@ -330,11 +295,11 @@ Search tasks by natural language query. No need to remember exact task IDs - jus
 | `--threshold <n>` | Minimum relevance score (0-1) | `0.1` |
 | `--json` | Output machine-readable JSON | `false` |
 
-```bash
-npx xtarterize query "strict typescript"
-npx xtarterize query "ci pipeline" --json
-npx xtarterize query "linting and formatting tool" --limit 5
-```
+<PackageManagers type="exec" pkg="xtarterize" args='query "strict typescript"' pkgManagers={['npm']} />
+
+<PackageManagers type="exec" pkg="xtarterize" args='query "ci pipeline" --json' title="JSON output" pkgManagers={['npm']} />
+
+<PackageManagers type="exec" pkg="xtarterize" args='query "linting and formatting tool" --limit 5' title="Limit results" pkgManagers={['npm']} />
 
 <Aside type="tip">
   For a full reference, see the [query command page](/xtarterize/guide/cli/query/).

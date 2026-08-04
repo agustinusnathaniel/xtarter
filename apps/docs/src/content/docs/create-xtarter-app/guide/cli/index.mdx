@@ -3,7 +3,7 @@ title: CLI Reference
 description: Complete command reference for create-xtarter-app - all arguments, options, and usage examples.
 ---
 
-import { Tabs, TabItem } from '@astrojs/starlight/components'
+import { PackageManagers } from 'starlight-package-managers'
 
 ## Command
 
@@ -51,97 +51,21 @@ npx create-xtarter-app@latest [project-name] [options]
 
 ## Examples
 
-<Tabs>
-  <TabItem label="pnpm">
+<PackageManagers type="create" pkg="xtarter-app" title="Interactive" />
 
-  ```bash
-  # Interactive - prompts for everything
-  pnpm create xtarter-app
+<PackageManagers type="create" pkg="xtarter-app" args="my-app --yes" title="Quick start with defaults" />
 
-  # Quick start with defaults
-  pnpm create xtarter-app my-app --yes
+<PackageManagers type="create" pkg="xtarter-app" args=". -t vite-tailwind" title="Scaffold in current directory" />
 
-  # Scaffold in current directory
-  pnpm create xtarter-app . -t vite-tailwind
+<PackageManagers type="create" pkg="xtarter-app" args="my-app --template vite-tailwind" title="Pick a template" />
 
-  # Pick a template
-  pnpm create xtarter-app my-app --template vite-tailwind
+<PackageManagers type="create" pkg="xtarter-app" args="my-app --pm bun --no-git" title="Specific package manager, no git" />
 
-  # Specific package manager, no git
-  pnpm create xtarter-app my-app --pm bun --no-git
+<PackageManagers type="create" pkg="xtarter-app" args="my-app -t vite-tailwind --force" title="Overwrite existing directory" />
 
-  # Overwrite existing directory
-  pnpm create xtarter-app my-app -t vite-tailwind --force
+<PackageManagers type="create" pkg="xtarter-app" args="my-app --ref v1.0.0" title="Download a specific tag" />
 
-  # Download a specific tag
-  pnpm create xtarter-app my-app --ref v1.0.0
-
-  # Preview a template
-  pnpm create xtarter-app preview next-tailwind
-  ```
-
-  </TabItem>
-  <TabItem label="npm">
-
-  ```bash
-  npm create xtarter-app@latest
-  npm create xtarter-app@latest my-app --yes
-  npm create xtarter-app@latest my-app --template vite-tailwind
-  npm create xtarter-app@latest my-app --template vite-tailwind --force
-  ```
-
-  </TabItem>
-  <TabItem label="JSON output">
-
-  ```bash
-  # Scaffold and get machine-readable result
-  pnpm create xtarter-app my-app --yes --json
-  ```
-
-  Output:
-
-  ```json
-  {
-    "success": true,
-    "projectPath": "./my-app",
-    "template": "next-chakra",
-    "packageManager": "pnpm",
-    "gitInitialized": true,
-    "dependenciesInstalled": true,
-    "ciConfigsCleaned": false,
-    "nextSteps": [
-      "cd my-app",
-      "pnpm dev"
-    ]
-  }
-  ```
-
-  On failure, the output is written to stderr:
-
-  ```json
-  { "success": false, "error": "message" }
-  ```
-
-  </TabItem>
-  <TabItem label="bun">
-
-  ```bash
-  bun create xtarter-app
-  bun create xtarter-app my-app --yes
-  bun create xtarter-app my-app --template vite-tailwind
-  ```
-
-  </TabItem>
-  <TabItem label="yarn">
-
-  ```bash
-  yarn create xtarter-app
-  yarn create xtarter-app my-app --yes
-  yarn create xtarter-app my-app --template vite-tailwind
-  ```
-
-  </TabItem>
-</Tabs>
+<PackageManagers type="create" pkg="xtarter-app" args="preview next-tailwind" title="Preview a template" />
 
 ## Error handling
 

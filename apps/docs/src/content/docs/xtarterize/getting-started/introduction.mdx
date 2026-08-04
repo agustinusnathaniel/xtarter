@@ -4,6 +4,7 @@ description: Learn what xtarterize is and how it automates conformance configura
 ---
 
 import { Aside, Steps, LinkButton } from '@astrojs/starlight/components'
+import { PackageManagers } from 'starlight-package-managers'
 
 <Aside type="caution" title="Current focus: Vite + React + TypeScript">
   The deepest task coverage is for projects using **Vite**, **React**, and **TypeScript**. Other stacks (Vue, Svelte, Solid, Node CLI, Bun, etc.) are detected and partially supported, but their conformance tasks are **experimental** - fewer tasks may apply and coverage is less mature.
@@ -66,14 +67,17 @@ If you have questions or need help:
 
 If you're bootstrapping a fresh project, consider using [**create-xtarter-app**](https://github.com/agustinusnathaniel/create-xtarter-app) first. It scaffolds curated starter templates (Next.js/Vite + Chakra/Tailwind/Hero UI) in seconds, then you can run `xtarterize init` to layer on additional conformance configs.
 
-```bash
-# Step 1: Scaffold a new project from a template
-npx create-xtarter-app@latest my-app
+### Step 1: Scaffold a new project from a template
 
-# Step 2: Apply additional production-grade configs
+<PackageManagers type="create" pkg="xtarter-app" args="my-app" />
+
+### Step 2: Apply additional production-grade configs
+
+```bash
 cd my-app
-npx xtarterize init
 ```
+
+<PackageManagers type="exec" pkg="xtarterize" args="init" />
 
 ## References
 

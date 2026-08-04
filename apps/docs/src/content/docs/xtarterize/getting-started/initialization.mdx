@@ -3,15 +3,14 @@ title: Initialization
 description: Initialize conformance configuration for a project with xtarterize.
 ---
 
-import { Aside, Steps, Tabs, TabItem } from '@astrojs/starlight/components'
+import { Aside, Steps } from '@astrojs/starlight/components'
+import { PackageManagers } from 'starlight-package-managers'
 
 ## Initialize a Project
 
 To apply conformance configuration to a project:
 
-```bash
-npx xtarterize init
-```
+<PackageManagers type="exec" pkg="xtarterize" args="init" pkgManagers={['npm']} />
 
 <Steps>
 
@@ -55,28 +54,13 @@ npx xtarterize init
 
 ## Examples
 
-<Tabs>
-  <TabItem label="Preview">
-    ```bash
-    npx xtarterize init --dry-run
-    ```
-  </TabItem>
-  <TabItem label="Apply all">
-    ```bash
-    npx xtarterize init --yes
-    ```
-  </TabItem>
-  <TabItem label="Skip tasks">
-    ```bash
-    npx xtarterize init --skip codegen/plop,agent/skills-install
-    ```
-  </TabItem>
-  <TabItem label="Only specific">
-    ```bash
-    npx xtarterize init --only lint/biome
-    ```
-  </TabItem>
-</Tabs>
+<PackageManagers type="exec" pkg="xtarterize" args="init --dry-run" title="Preview" pkgManagers={['npm']} />
+
+<PackageManagers type="exec" pkg="xtarterize" args="init --yes" title="Apply all" pkgManagers={['npm']} />
+
+<PackageManagers type="exec" pkg="xtarterize" args="init --skip codegen/plop,agent/skills-install" title="Skip tasks" pkgManagers={['npm']} />
+
+<PackageManagers type="exec" pkg="xtarterize" args="init --only lint/biome" title="Only specific" pkgManagers={['npm']} />
 
 ## Monorepo projects
 
