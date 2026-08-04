@@ -1,5 +1,16 @@
 # xtarterize
 
+## 1.18.0
+
+### Minor Changes
+
+- [#116](https://github.com/agustinusnathaniel/xtarter/pull/116) [`6aea841`](https://github.com/agustinusnathaniel/xtarter/commit/6aea841c1c459a88f57a3ef4253358be5ed3e3e5) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - feat: add CI-friendly exit codes to check, diff, and doctor commands
+
+  - check: exits 1 when the project has pending changes or failing diagnostics (was always 0)
+  - diff: exits 1 when at least one change is pending, mirroring `git diff --exit-code`
+  - doctor: exits 1 when at least one diagnostic fails
+  - init/sync --dry-run and other mutating commands: exit 1 on dry-run task failures
+
 ## 1.17.3
 
 ## 1.17.2
