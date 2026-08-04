@@ -3,6 +3,8 @@ title: Templates
 description: All available templates for create-xtarter-app - framework, tools, and features for each.
 ---
 
+import AllPackageManagers from '@/components/AllPackageManagers.astro'
+
 Every template is a production-grade starter with Biome linting & formatting,
 TypeScript strict mode, GitHub Actions CI, and VS Code settings pre-configured.
 
@@ -18,9 +20,7 @@ TypeScript strict mode, GitHub Actions CI, and VS Code settings pre-configured.
 
 **Features:** Next.js 16, Chakra UI v3, Biome, Turborepo, TypeScript, Playwright
 
-```bash
-pnpm create xtarter-app my-app --template next-chakra
-```
+<AllPackageManagers type="create" pkg="xtarter-app@latest" args="my-app --template next-chakra" />
 
 ---
 
@@ -34,9 +34,7 @@ pnpm create xtarter-app my-app --template next-chakra
 
 **Features:** Next.js 16, Tailwind CSS v4, Biome, TypeScript, Playwright
 
-```bash
-pnpm create xtarter-app my-app --template next-tailwind
-```
+<AllPackageManagers type="create" pkg="xtarter-app@latest" args="my-app --template next-tailwind" />
 
 ---
 
@@ -50,9 +48,7 @@ pnpm create xtarter-app my-app --template next-tailwind
 
 **Features:** Vite+ (Vite 8), React 19, Chakra UI v3, TanStack Router, TanStack Query, Biome, Vitest
 
-```bash
-pnpm create xtarter-app my-app --template vite-chakra
-```
+<AllPackageManagers type="create" pkg="xtarter-app@latest" args="my-app --template vite-chakra" />
 
 ---
 
@@ -66,9 +62,7 @@ pnpm create xtarter-app my-app --template vite-chakra
 
 **Features:** Vite+ (Vite 8), React 19, Tailwind CSS v4, TanStack Router, TanStack Query, Biome, Vitest
 
-```bash
-pnpm create xtarter-app my-app --template vite-tailwind
-```
+<AllPackageManagers type="create" pkg="xtarter-app@latest" args="my-app --template vite-tailwind" />
 
 ---
 
@@ -82,9 +76,7 @@ pnpm create xtarter-app my-app --template vite-tailwind
 
 **Features:** Vite+ (Vite 8), React 19, Hero UI, TanStack Router, Biome, Vitest
 
-```bash
-pnpm create xtarter-app my-app --template vite-hero
-```
+<AllPackageManagers type="create" pkg="xtarter-app@latest" args="my-app --template vite-hero" />
 
 ---
 

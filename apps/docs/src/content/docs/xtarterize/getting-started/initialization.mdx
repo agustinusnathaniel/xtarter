@@ -3,15 +3,14 @@ title: Initialization
 description: Initialize conformance configuration for a project with xtarterize.
 ---
 
-import { Aside, Steps, Tabs, TabItem } from '@astrojs/starlight/components'
+import { Aside, Steps } from '@astrojs/starlight/components'
+import AllPackageManagers from '@/components/AllPackageManagers.astro'
 
 ## Initialize a Project
 
 To apply conformance configuration to a project:
 
-```bash
-npx xtarterize init
-```
+<AllPackageManagers type="exec" pkg="xtarterize@latest" args="init" />
 
 <Steps>
 
@@ -55,28 +54,13 @@ npx xtarterize init
 
 ## Examples
 
-<Tabs>
-  <TabItem label="Preview">
-    ```bash
-    npx xtarterize init --dry-run
-    ```
-  </TabItem>
-  <TabItem label="Apply all">
-    ```bash
-    npx xtarterize init --yes
-    ```
-  </TabItem>
-  <TabItem label="Skip tasks">
-    ```bash
-    npx xtarterize init --skip codegen/plop,agent/skills-install
-    ```
-  </TabItem>
-  <TabItem label="Only specific">
-    ```bash
-    npx xtarterize init --only lint/biome
-    ```
-  </TabItem>
-</Tabs>
+<AllPackageManagers type="exec" pkg="xtarterize@latest" args="init --dry-run" title="Preview" />
+
+<AllPackageManagers type="exec" pkg="xtarterize@latest" args="init --yes" title="Apply all" />
+
+<AllPackageManagers type="exec" pkg="xtarterize@latest" args="init --skip codegen/plop,agent/skills-install" title="Skip tasks" />
+
+<AllPackageManagers type="exec" pkg="xtarterize@latest" args="init --only lint/biome" title="Only specific" />
 
 ## Monorepo projects
 

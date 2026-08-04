@@ -4,6 +4,7 @@ description: Install and set up xtarterize.
 ---
 
 import { Aside, Steps, LinkButton } from '@astrojs/starlight/components'
+import AllPackageManagers from '@/components/AllPackageManagers.astro'
 
 ## Prerequisites
 
@@ -18,18 +19,15 @@ import { Aside, Steps, LinkButton } from '@astrojs/starlight/components'
 
 You can use xtarterize without installing it globally by using `npx`:
 
-```bash
-npx xtarterize init
-```
+<AllPackageManagers type="exec" pkg="xtarterize@latest" args="init" />
 
 This is the recommended approach - you always get the latest version.
 
 ## Verify It Works
 
-```bash
-npx xtarterize --version
-npx xtarterize --help
-```
+<AllPackageManagers type="exec" pkg="xtarterize@latest" args="--version" />
+
+<AllPackageManagers type="exec" pkg="xtarterize@latest" args="--help" />
 
 ## Next Steps
 

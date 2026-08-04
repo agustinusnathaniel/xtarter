@@ -15,7 +15,7 @@ hero:
 ---
 
 import { Aside } from '@astrojs/starlight/components'
-import { PackageManagers } from 'starlight-package-managers'
+import AllPackageManagers from '@/components/AllPackageManagers.astro'
 
 <h2 class="xt-section-title">The pipeline</h2>
 
@@ -52,11 +52,11 @@ import { PackageManagers } from 'starlight-package-managers'
 
 <p class="xt-section-lead">Three commands cover the common loop.</p>
 
-<PackageManagers type="exec" pkg="xtarterize" args="init" pkgManagers={['npm', 'pnpm', 'yarn', 'bun']} title="Initialize conformance" />
+<AllPackageManagers type="exec" pkg="xtarterize@latest" args="init" title="Initialize conformance" />
 
-<PackageManagers type="exec" pkg="xtarterize" args="check" pkgManagers={['npm', 'pnpm', 'yarn', 'bun']} title="Check conformance" />
+<AllPackageManagers type="exec" pkg="xtarterize@latest" args="check" title="Check conformance" />
 
-<PackageManagers type="exec" pkg="xtarterize" args="diff" pkgManagers={['npm', 'pnpm', 'yarn', 'bun']} title="Preview changes" />
+<AllPackageManagers type="exec" pkg="xtarterize@latest" args="diff" title="Preview changes" />
 
 <ul class="xt-link-cluster" aria-label="Related documentation">
   <li><a class="xt-link" href="/xtarterize/getting-started/installation/">Getting Started</a></li>

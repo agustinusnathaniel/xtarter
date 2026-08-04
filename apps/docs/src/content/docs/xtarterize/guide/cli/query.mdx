@@ -4,6 +4,7 @@ description: Search and discover xtarterize tasks using natural language queries
 ---
 
 import { Aside, Tabs, TabItem } from '@astrojs/starlight/components'
+import AllPackageManagers from '@/components/AllPackageManagers.astro'
 
 The `query` command lets you search xtarterize tasks using natural language - no need to remember exact task IDs. It uses a pure algorithmic scoring engine (no AI) to rank tasks by relevance to your query.
 
@@ -33,9 +34,7 @@ This command does not support global formatting or output flags (`--quiet`, `--f
 
 ### Find tasks by description
 
-```bash
-xtarterize query "strict typescript"
-```
+<AllPackageManagers type="exec" pkg="xtarterize@latest" args='query "strict typescript"' />
 
 Outputs tasks grouped by domain bundle with per-group actionable add commands:
 
@@ -54,15 +53,11 @@ Outputs tasks grouped by domain bundle with per-group actionable add commands:
 
 ### Search for linting and formatting
 
-```bash
-xtarterize query "linting and formatting tool" --limit 5
-```
+<AllPackageManagers type="exec" pkg="xtarterize@latest" args='query "linting and formatting tool" --limit 5' />
 
 ### Machine-readable output
 
-```bash
-xtarterize query "ci pipeline" --json
-```
+<AllPackageManagers type="exec" pkg="xtarterize@latest" args='query "ci pipeline" --json' />
 
 ```json
 {
@@ -91,9 +86,7 @@ xtarterize query "ci pipeline" --json
 
 Combine query with the init workflow to get a ranked task plan:
 
-```bash
-xtarterize init --compose "react project with ci and linting"
-```
+<AllPackageManagers type="exec" pkg="xtarterize@latest" args='init --compose "react project with ci and linting"' />
 
 This reorders tasks so the most relevant ones appear first in the interactive plan, without excluding any applicable tasks.
 

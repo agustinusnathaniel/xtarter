@@ -15,7 +15,7 @@ hero:
 ---
 
 import TemplateGallery from '../../components/TemplateGallery.astro'
-import { PackageManagers } from 'starlight-package-managers'
+import AllPackageManagers from '@/components/AllPackageManagers.astro'
 
 <h2 class="xt-section-title">Five templates, one command</h2>
 
@@ -29,6 +29,6 @@ import { PackageManagers } from 'starlight-package-managers'
 
 <p class="xt-section-lead">Scaffold a new project in one command.</p>
 
-<PackageManagers type="create" pkg="xtarter-app@latest" pkgManagers={['npm', 'pnpm', 'yarn', 'bun']} />
+<AllPackageManagers type="create" pkg="xtarter-app@latest" />
 
 <p class="xt-note">Follow the prompts to pick a template. Next, keep the project conformant as standards evolve: <a class="xt-link" href="/xtarterize/getting-started/installation/">npx xtarterize init</a>.</p>
