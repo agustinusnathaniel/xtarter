@@ -110,7 +110,7 @@ function buildJsonOutput(diffs: FileDiff[]): JsonOutput {
 	const totalStats = computeTotalStats(diffs)
 
 	return {
-		ok: true,
+		ok: diffs.length === 0,
 		summary: {
 			total: diffs.length,
 			stats: totalStats ?? undefined,
