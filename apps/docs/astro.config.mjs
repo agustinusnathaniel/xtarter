@@ -20,11 +20,11 @@ export default defineConfig({
 			title: 'xtarter',
 			description:
 				'Production-grade starter templates and conformance tooling for JavaScript/TypeScript projects.',
-			logo: {
-				light: './src/assets/logo-light.svg',
-				dark: './src/assets/logo-dark.svg',
-				replacesTitle: true,
-			},
+			// logo: {
+			// 	light: './src/assets/logo-light.svg',
+			// 	dark: './src/assets/logo-dark.svg',
+			// 	replacesTitle: true,
+			// },
 			// favicon: '/favicon.svg',
 			customCss: ['./src/styles/global.css'],
 			plugins: [
@@ -45,7 +45,6 @@ export default defineConfig({
 			],
 			components: {
 				Head: './src/components/StarlightHead.astro',
-				Hero: './src/components/LandingHero.astro',
 			},
 			head: [
 				{
@@ -150,10 +149,6 @@ export default defineConfig({
 							label: 'Contributing',
 							collapsed: true,
 							items: [
-								{
-									label: 'Contributors',
-									link: '/xtarterize/contributing/contributors/',
-								},
 								{
 									label: 'Architecture',
 									link: '/xtarterize/contributing/architecture/overview/',

@@ -3,12 +3,12 @@
 @import "@astrojs/starlight-tailwind";
 @import "tailwindcss/theme.css" layer(theme);
 @import "tailwindcss/utilities.css" layer(utilities);
-@import "@fontsource-variable/rem";
+@import "@fontsource/lora";
 @import "@fontsource-variable/atkinson-hyperlegible-next";
 @import "@fontsource-variable/geist-mono";
 
 @theme {
-  --font-heading: "REM Variable", sans-serif;
+  --font-heading: "Lora", serif;
   --font-sans: "Atkinson Hyperlegible Next Variable", sans-serif;
   --font-mono: "Geist Mono Variable", monospace;
 
@@ -53,766 +53,290 @@ h6 {
 }
 
 /* ============================================
-   TOKENS - warm paper + charcoal + orange
-   Light-first: defaults are light, dark overrides follow.
+   LANDING PAGE - HERO SECTION (Starlight native)
    ============================================ */
 
-:root {
-  /* Surfaces */
-  --xt-paper: #faf6f1;
-  --xt-panel: #ffffff;
-  --xt-panel-2: #f6efe7;
-  /* Ink */
-  --xt-ink: #241c15;
-  --xt-muted: #6f6157;
-  /* Lines */
-  --xt-line: #e7ddd1;
-  --xt-line-strong: #d2c3b2;
-  /* Accent (brand orange) */
-  --xt-accent: #f97316;
-  --xt-accent-deep: #c2410c;
-  /* Ghost hover ink on light surfaces: deeper than --xt-accent-deep so it
-     clears 4.5:1 (5.35:1 on the soft tint over paper, 5.72:1 over panel). */
-  --xt-accent-hover: #a83c0a;
-  --xt-accent-soft: rgba(249, 115, 22, 0.1);
-  /* Status */
-  --xt-ok: #15803d;
-  --xt-warn: #b45309;
-  /* Code / terminal (charcoal in both themes) */
-  --xt-code-bg: #f4ede4;
-  --xt-term-bg: #1b1512;
-  --xt-term-ink: #e9e1d8;
-  --xt-term-dim: #9d9085;
-  --xt-term-line: #302720;
-  /* Terminal status markers: fixed light-on-charcoal values because the
-     terminal keeps its charcoal background in both themes. The theme-scoped
-     --xt-ok/--xt-warn drop to ~3.6:1 on charcoal in light mode, so these
-     share the dark-theme-safe hues instead (10.4:1 and 10.8:1 on charcoal). */
-  --xt-term-ok: #4ade80;
-  --xt-term-warn: #fbbf24;
-  /* UI */
-  --xt-focus: #ea580c;
-  --xt-btn-ink: #ffffff;
-  --xt-radius: 10px;
-  --xt-radius-sm: 6px;
-  /* Motion */
-  --xt-ease: ease-out;
-  --xt-dur-hover: 160ms;
-  --xt-dur-press: 100ms;
+/* Starlight splash hero wrapper */
+.hero {
+  position: relative;
+  text-align: center;
+  padding: 4rem 1rem 2rem;
 }
 
-:root[data-theme="dark"] {
-  --xt-paper: #171310;
-  --xt-panel: #1f1915;
-  --xt-panel-2: #27201a;
-  --xt-ink: #f2ece4;
-  --xt-muted: #b1a396;
-  --xt-line: #352c24;
-  --xt-line-strong: #4b3d31;
-  --xt-accent: #fb923c;
-  --xt-accent-deep: #f97316;
-  --xt-accent-soft: rgba(251, 146, 60, 0.14);
-  --xt-ok: #4ade80;
-  --xt-warn: #fbbf24;
-  --xt-code-bg: #241d18;
-  --xt-focus: #fdba74;
-  --xt-btn-ink: #1b1512;
-}
-
-/* Landing (splash) pages get the warm paper backdrop; docs pages keep
-   Starlight's default surfaces. */
-html[data-has-hero]:not([data-has-sidebar]) main {
-  background: var(--xt-paper);
-}
-
-/* ============================================
-   BASE - overflow & focus discipline
-   ============================================ */
-
-html,
-body {
-  overflow-x: clip;
-}
-
-:focus-visible {
-  outline: 2px solid var(--xt-focus);
-  outline-offset: 2px;
-  border-radius: 2px;
-}
-
-/* ============================================
-   LANDING TYPOGRAPHY
-   Display: REM. Body/UI: Atkinson. Labels/artifacts: Geist Mono.
-   ============================================ */
-
-.xt-hero h1,
-.xt-section-title,
-.xt-lifecycle li,
-.xt-pipe-name {
-  text-wrap: balance;
-  overflow-wrap: anywhere;
-  min-width: 0;
-}
-
-.xt-hero-lede,
-.xt-section-lead,
-.xt-pipe-desc,
-.xt-terminal-caption,
-.xt-note {
-  text-wrap: pretty;
-}
-
-/* Section headings on landing pages. The h2s are written as JSX in the
-   landing MDX (not markdown headings), so they render as plain block
-   headings without Starlight's anchor-link wrapper. */
-h2.xt-section-title {
-  font-family: var(--font-heading);
-  font-weight: 600;
-  font-size: clamp(1.5rem, 3vw, 2rem);
-  line-height: 1.2;
-  letter-spacing: -0.01em;
-  color: var(--xt-ink);
-  margin: 0 0 0.9rem;
-}
-
-.xt-section-lead {
-  font-size: 1.05rem;
-  line-height: 1.6;
-  color: var(--xt-muted);
-  max-width: 60ch;
-  margin: 0 0 1.5rem;
-}
-
-.xt-note {
-  font-size: 0.92rem;
-  line-height: 1.6;
-  color: var(--xt-muted);
-  max-width: 70ch;
-  /* Standalone footer lines sit below the gallery / code block, not on it. */
-  margin: 1.5rem 0 0;
-}
-
-.xt-note code {
-  font-family: var(--font-mono);
-  font-size: 0.85em;
-}
-
-/* Inline text links (quick-start clusters, next-step lines). */
-.xt-link {
-  color: var(--xt-accent-deep);
-  text-decoration: underline;
-  text-underline-offset: 2px;
-  text-decoration-color: color-mix(in srgb, var(--xt-accent-deep) 45%, transparent);
-}
-
-.xt-link:hover {
-  text-decoration-color: var(--xt-accent-deep);
-}
-
-:root[data-theme="dark"] .xt-link {
-  color: var(--xt-accent);
-  text-decoration-color: color-mix(in srgb, var(--xt-accent) 45%, transparent);
-}
-
-:root[data-theme="dark"] .xt-link:hover {
-  text-decoration-color: var(--xt-accent);
-}
-
-/* ============================================
-   SECTION RHYTHM (landing pages)
-   Landing content lives in Starlight's markdown container; sections are
-   separated by a clear vertical beat, while the first section keeps its
-   existing hero gap (hero bottom padding + Starlight container margin).
-   Heading-to-content spacing stays tight (see h2.xt-section-title's
-   margin-bottom) so the section beat reads as section-to-section only.
-   ============================================ */
-
-.sl-markdown-content > .xt-section-title {
-  margin-top: clamp(2.5rem, 4.5vw, 3.5rem);
-}
-
-.sl-markdown-content > .xt-section-title:first-of-type {
-  margin-top: 0;
-}
-
-/* Standalone contextual links (e.g. "All source repositories on GitHub")
-   become their own block with rhythm so they stop colliding with the
-   gallery / section above. Inline .xt-link usage inside paragraphs and
-   link clusters is untouched by this direct-child rule. */
-.sl-markdown-content > a.xt-link {
-  display: block;
-  width: fit-content;
-  margin-top: 1.5rem;
-}
-
-/* ============================================
-   HERO
-   ============================================ */
-
-.xt-hero {
-  padding: 2.5rem 0 1rem;
-}
-
-.xt-hero-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 2.5rem;
-  align-items: start;
-}
-
-.xt-hero-copy {
-  min-width: 0;
-}
-
-/* One mono eyebrow per hero - labels, not section numbering. */
-.xt-eyebrow {
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  font-weight: 500;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--xt-accent-deep);
-  margin: 0 0 0.9rem;
-}
-
-:root[data-theme="dark"] .xt-eyebrow {
-  color: var(--xt-accent);
-}
-
-.xt-hero h1 {
-  font-family: var(--font-heading);
-  font-size: clamp(2.1rem, 5vw, 3.3rem);
-  line-height: 1.08;
-  letter-spacing: -0.015em;
-  font-weight: 600;
-  color: var(--xt-ink);
-  margin: 0 0 1.25rem;
-  max-width: 20ch;
-}
-
-.xt-hero-lede {
-  font-size: clamp(1.05rem, 1.6vw, 1.2rem);
-  line-height: 1.6;
-  color: var(--xt-muted);
-  max-width: 58ch;
-  margin: 0;
-}
-
-/* ---- Hero action buttons ---- */
-
-.xt-hero-actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.85rem;
-  margin-top: 1.75rem;
-}
-
-.xt-btn {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 44px;
-  padding: 0.55rem 1.3rem;
-  border-radius: var(--xt-radius-sm);
-  border: 1px solid transparent;
+/* Hero title - larger, bolder, sans-serif */
+body .hero h1 {
+  font-size: clamp(2.5rem, 6vw, 4rem);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
   font-family: var(--font-sans);
-  font-size: 0.95rem;
-  font-weight: 600;
-  line-height: 1.3;
-  text-decoration: none;
-  color: var(--xt-btn-ink);
-  background: var(--xt-accent-deep);
-  transition:
-    transform var(--xt-dur-hover) var(--xt-ease),
-    background-color var(--xt-dur-hover) var(--xt-ease),
-    border-color var(--xt-dur-hover) var(--xt-ease),
-    color var(--xt-dur-hover) var(--xt-ease);
+  margin-bottom: 1.5rem;
 }
 
-:root[data-theme="dark"] .xt-btn {
-  background: var(--xt-accent);
+/* Gradient text for "JavaScript & TypeScript" */
+body .hero h1 {
+  background: linear-gradient(
+    135deg,
+    var(--sl-color-white) 0%,
+    var(--sl-color-white) 45%,
+    var(--sl-color-accent) 50%,
+    #fbbf24 75%,
+    var(--sl-color-accent-high) 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
-.xt-btn:hover {
-  text-decoration: none;
+/* Hero tagline - Starlight uses .tagline div, not <p> */
+body .hero .tagline {
+  font-size: clamp(1.1rem, 2vw, 1.35rem);
+  color: var(--sl-color-gray-2);
+  max-width: 640px;
+  margin: 0 auto 2rem;
+  line-height: 1.6;
 }
 
-.xt-btn:active {
-  transform: translateY(1px);
-  transition-duration: var(--xt-dur-press);
+/* Hero action buttons */
+body .hero .sl-link-button {
+  font-size: 1.125rem;
+  padding: 0.75rem 1.75rem;
 }
 
-.xt-btn-primary {
-  border-color: var(--xt-accent-deep);
-}
-
-:root[data-theme="dark"] .xt-btn-primary {
-  border-color: var(--xt-accent);
-}
-
-.xt-btn-ghost {
-  background: transparent;
-  color: var(--xt-ink);
-  border-color: var(--xt-line-strong);
-}
-
-/* The dark base button rule (:root[data-theme="dark"] .xt-btn, 0,3,0)
-   would paint every button - including ghosts - with the accent background.
-   Keep ghost buttons transparent in dark mode; the dark hover rule below
-   restores the soft tint on hover. */
-:root[data-theme="dark"] .xt-btn-ghost {
-  background: transparent;
-}
-
-.xt-btn-ghost:hover {
-  border-color: var(--xt-accent-deep);
-  color: var(--xt-accent-hover);
-  background: var(--xt-accent-soft);
-}
-
-:root[data-theme="dark"] .xt-btn-ghost:hover {
-  border-color: var(--xt-accent);
-  color: var(--xt-accent);
-  background: var(--xt-accent-soft);
-}
-
-/* Starlight LinkButton primary - light mode only. Starlight paints it
-   white-on-var(--sl-color-text-accent), which resolves to the brand
-   orange #f97316 in light mode (~2.8:1). Use the deep accent so white
-   text clears 4.5:1 (5.18:1). Dark mode keeps Starlight's own
-   accent-high background (10.5:1) untouched. */
-:root[data-theme="light"] .sl-link-button.primary {
-  background: var(--xt-accent-deep);
-  border-color: var(--xt-accent-deep);
-  color: var(--xt-btn-ink);
-}
-
-:root[data-theme="light"] .sl-link-button.primary:hover {
-  color: var(--xt-btn-ink);
+/* Hero image area (if used) */
+.hero .hero-html {
+  margin-top: 2rem;
 }
 
 /* ============================================
-   CHARCOAL ARTIFACTS
-   One dominant charcoal artifact per route, distinct shapes:
-   home = forked command strip, xtz = terminal output,
-   CXA = template-selection prompt.
+   FEATURE CARDS
    ============================================ */
 
-.xt-fork,
-.xt-prompt,
-.xt-terminal {
-  border-radius: var(--xt-radius);
-  border: 1px solid var(--xt-term-line);
-  background: var(--xt-term-bg);
-  color: var(--xt-term-ink);
-  font-family: var(--font-mono);
-  min-width: 0;
+.features-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.5rem;
+  margin: 2.5rem 0;
 }
 
-/* ---- Home: forked command strip ---- */
-
-.xt-fork {
-  padding: 1.35rem 1.4rem 1.25rem;
-}
-
-.xt-fork-row {
-  display: flex;
-  align-items: baseline;
-  gap: 0.65rem;
-  font-size: 0.92rem;
-  line-height: 2.1;
-  min-width: 0;
-}
-
-.xt-fork-branch {
-  color: var(--xt-term-dim);
-  flex-shrink: 0;
-  font-size: 0.82rem;
-}
-
-.xt-fork-prompt {
-  color: var(--xt-accent);
-  font-weight: 700;
-  flex-shrink: 0;
-}
-
-.xt-fork-cmd {
-  overflow-wrap: anywhere;
-}
-
-/* ---- create-xtarter-app: template-selection prompt ---- */
-
-.xt-prompt {
-  padding: 1.35rem 1.4rem 1.3rem;
-  max-width: 26rem;
-}
-
-.xt-prompt-line {
-  display: block;
-  font-size: 0.9rem;
-  overflow-wrap: anywhere;
-  margin-bottom: 1.1rem;
-}
-
-.xt-prompt-q {
-  display: block;
-  font-size: 0.82rem;
-  color: var(--xt-accent);
-  border-top: 1px solid var(--xt-term-line);
-  padding-top: 1.1rem;
-  margin-bottom: 0.7rem;
-}
-
-.xt-prompt-list {
-  list-style: none;
+.feature-card {
   margin: 0;
-  padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.4rem;
-  font-size: 0.85rem;
-}
-
-.xt-prompt-item {
-  display: flex;
-  align-items: baseline;
-  gap: 0.5rem;
-  color: var(--xt-term-dim);
-  overflow-wrap: anywhere;
-}
-
-.xt-prompt-item .xt-prompt-caret {
-  color: var(--xt-accent);
-  flex-shrink: 0;
-  opacity: 0;
-}
-
-.xt-prompt-item.is-selected {
-  color: var(--xt-term-ink);
-}
-
-.xt-prompt-item.is-selected .xt-prompt-caret {
-  opacity: 1;
-}
-
-/* ---- xtarterize: terminal output ---- */
-
-.xt-terminal {
-  overflow: hidden;
-}
-
-.xt-terminal-bar {
-  padding: 0.7rem 1.1rem;
-  border-bottom: 1px solid var(--xt-term-line);
-}
-
-.xt-terminal-title {
-  font-size: 0.72rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--xt-term-dim);
-}
-
-.xt-terminal-body {
-  padding: 1.25rem 1.3rem;
-  font-size: 0.84rem;
-  line-height: 1.75;
-  overflow-x: auto;
-  white-space: pre;
-}
-
-.xt-term-line {
-  display: flex;
-  align-items: baseline;
-  gap: 0.5rem;
-  min-width: max-content;
-}
-
-.xt-term-prompt {
-  color: var(--xt-accent);
-  font-weight: 700;
-}
-
-.xt-term-cmd {
-  color: var(--xt-term-ink);
-}
-
-.xt-term-out {
-  padding-left: 1.5ch;
-}
-
-.xt-term-row {
-  padding-left: 3.5ch;
-}
-
-.xt-term-spacer {
-  height: 0.6rem;
-}
-
-.xt-term-dim {
-  color: var(--xt-term-dim);
-}
-
-.xt-term-accent {
-  color: var(--xt-accent);
-}
-
-.xt-term-add {
-  color: var(--xt-term-ok);
-  font-weight: 700;
-}
-
-.xt-term-edit {
-  color: var(--xt-term-warn);
-  font-weight: 700;
-}
-
-.xt-terminal-caption {
-  font-size: 0.88rem;
-  line-height: 1.6;
-  color: var(--xt-muted);
-  max-width: 70ch;
-  margin: 0.9rem 0 0;
-}
-
-.xt-terminal-caption code {
-  font-family: var(--font-mono);
-  font-size: 0.85em;
-}
-
-/* ---- Status tags (used on charcoal panels) ---- */
-
-.xt-tag {
-  display: inline-flex;
-  align-items: center;
-  flex-shrink: 0;
-  padding: 0 0.45rem;
-  border-radius: 4px;
-  font-size: 0.68rem;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  line-height: 1.5;
-}
-
-.xt-tag-detect {
-  background: rgba(249, 115, 22, 0.18);
-  color: #fdba74;
-}
-
-.xt-tag-plan {
-  background: rgba(251, 191, 36, 0.16);
-  color: #fcd34d;
-}
-
-.xt-tag-safe {
-  background: rgba(74, 222, 128, 0.16);
-  color: #86efac;
-}
-
-/* ============================================
-   LIFECYCLE (home) - one line, Choose -> Scaffold -> Conform -> Ship
-   ============================================ */
-
-.xt-lifecycle {
-  list-style: none;
-  margin: 0;
-  padding: 1.25rem 0;
-  border-top: 1px solid var(--xt-line);
-  border-bottom: 1px solid var(--xt-line);
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0.75rem 0.5rem;
-}
-
-.xt-lifecycle li {
-  font-family: var(--font-mono);
-  font-size: 0.95rem;
-  font-weight: 500;
-  color: var(--xt-muted);
-}
-
-.xt-lifecycle li:not(:last-child)::after {
-  content: "→";
-  margin-left: 0.5rem;
-  color: var(--xt-accent-deep);
-}
-
-:root[data-theme="dark"] .xt-lifecycle li:not(:last-child)::after {
-  color: var(--xt-accent);
-}
-
-.xt-lifecycle a {
-  color: var(--xt-ink);
-  text-decoration: none;
-  border-bottom: 1px solid transparent;
+  padding: 1.75rem;
+  border-radius: 12px;
+  border: 1px solid var(--sl-color-gray-5);
+  background: var(--sl-color-gray-6, rgba(0, 0, 0, 0.02));
   transition:
-    color var(--xt-dur-hover) var(--xt-ease),
-    border-color var(--xt-dur-hover) var(--xt-ease);
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+  height: 100%;
 }
 
-.xt-lifecycle a:hover {
-  color: var(--xt-accent-hover);
-  border-bottom-color: var(--xt-accent-deep);
+.feature-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  border-color: var(--sl-color-accent-low);
 }
 
-:root[data-theme="dark"] .xt-lifecycle a {
-  color: var(--xt-ink);
+[data-theme="dark"] .feature-card {
+  background: var(--sl-color-gray-6, rgba(255, 255, 255, 0.02));
 }
 
-:root[data-theme="dark"] .xt-lifecycle a:hover {
-  color: var(--xt-accent);
-  border-bottom-color: var(--xt-accent);
+[data-theme="dark"] .feature-card:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
 }
 
-/* ============================================
-   PIPELINE (xtarterize) - Detect / Resolve / Check / Plan / Apply
-   ============================================ */
+.feature-icon {
+  font-size: 1.75rem;
+  margin-bottom: 1rem;
+  line-height: 1;
+}
 
-.xt-pipeline {
-  list-style: none;
+.feature-card h3 {
+  font-size: 1.05rem;
+  margin: 0 0 0.5rem;
+  font-family: var(--font-sans);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.feature-card p {
   margin: 0;
-  padding: 0;
-  display: grid;
-  grid-template-columns: 1fr;
-  border-top: 1px solid var(--xt-line);
-  border-bottom: 1px solid var(--xt-line);
+  color: var(--sl-color-gray-2);
+  line-height: 1.6;
+  font-size: 0.95rem;
+  flex: 1;
 }
 
-.xt-pipe {
-  padding: 1.35rem 0.25rem;
-  min-width: 0;
-}
+/* ============================================
+   RESPONSIVE FEATURE CARDS
+   ============================================ */
 
-.xt-pipe + .xt-pipe {
-  border-top: 1px solid var(--xt-line);
-}
-
-.xt-pipe-name {
-  display: block;
-  margin: 0 0 0.4rem;
-  font-family: var(--font-mono);
-  font-size: 0.82rem;
-  font-weight: 500;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--xt-accent-deep);
-}
-
-:root[data-theme="dark"] .xt-pipe-name {
-  color: var(--xt-accent);
-}
-
-.xt-pipe-desc {
-  margin: 0;
-  font-size: 0.9rem;
-  line-height: 1.55;
-  color: var(--xt-muted);
-  max-width: 26ch;
-}
-
-@media (min-width: 64rem) {
-  .xt-pipeline {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
+@media (max-width: 900px) {
+  .features-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
+}
 
-  .xt-pipe {
-    padding: 1.5rem 1.6rem 1.5rem 0;
-  }
-
-  .xt-pipe + .xt-pipe {
-    border-top: 0;
-    border-left: 1px solid var(--xt-line);
-    padding-left: 1.6rem;
+@media (max-width: 600px) {
+  .features-grid {
+    grid-template-columns: 1fr;
   }
 }
 
 /* ============================================
-   QUICK START - inline link cluster
+   SECTION DIVIDERS
    ============================================ */
 
-.xt-link-cluster {
-  list-style: none;
-  margin: 1.25rem 0 0;
-  padding: 0;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.4rem 0.9rem;
-  font-size: 0.92rem;
-}
-
-.xt-link-cluster li + li::before {
-  content: "·";
-  margin-right: 0.9rem;
-  color: var(--xt-line-strong);
+hr {
+  margin: 3rem 0;
+  border: none;
+  border-top: 1px solid var(--sl-color-gray-5);
 }
 
 /* ============================================
-   MOTION - restrained, compositor-safe only
-   Hover lifts are pointer-only; touch devices get no transform.
-   No entrance/exit or decorative motion on landing pages.
+   CTA BUTTONS
    ============================================ */
 
-@media (hover: hover) {
-  .xt-btn:hover {
-    transform: translateY(-2px);
-  }
+.sl-markdown-content .hero-buttons .sl-link-button {
+  font-size: 1.125rem;
+  padding: 0.75rem 1.75rem;
+}
+
+/* ============================================
+   CODE BLOCKS
+   ============================================ */
+
+.sl-markdown-content pre {
+  position: relative;
 }
 
 /* ============================================
    RESPONSIVE
    ============================================ */
 
-@media (min-width: 40rem) {
-  .xt-hero-grid {
-    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
-    gap: 3rem;
-  }
-
-  /* CXA's prompt artifact is a narrow panel; keep the copy column dominant. */
-  .xt-hero-cxa .xt-hero-grid {
-    grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
-  }
-
-  .xt-prompt {
-    max-width: 24rem;
-    justify-self: end;
-  }
-}
-
 @media (max-width: 640px) {
-  .xt-hero {
-    padding: 2rem 0 0.5rem;
+  .hero-section {
+    padding: 2rem 0.5rem 2rem;
   }
 
-  .xt-hero-actions {
+  .hero-buttons {
     flex-direction: column;
-    align-items: stretch;
-  }
-
-  .xt-hero-actions .xt-btn {
-    width: 100%;
-  }
-}
-
-/* Terminal text stays legible on small screens. */
-@media (max-width: 40rem) {
-  .xt-terminal-body {
-    font-size: 0.73rem;
-    padding: 1rem;
+    align-items: center;
   }
 }
 
 /* ============================================
-   SMOOTH SCROLLING (disabled for reduced motion)
+   INLINE BADGES
    ============================================ */
 
-@media (prefers-reduced-motion: no-preference) {
-  html {
-    scroll-behavior: smooth;
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.15rem 0.55rem;
+  border-radius: 6px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  font-family: var(--font-mono);
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  line-height: 1.4;
+  vertical-align: middle;
+}
+
+.badge-cxa {
+  background: #6366f1;
+  color: #fff;
+}
+
+.badge-xtz {
+  background: #f97316;
+  color: #fff;
+}
+
+/* ============================================
+   PRODUCT CARDS (hub page)
+   ============================================ */
+
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+  margin: 1.5rem 0;
+}
+
+.product-card {
+  margin: 0;
+  padding: 2rem;
+  border-radius: 12px;
+  border: 1px solid var(--sl-color-gray-5);
+  background: var(--sl-color-gray-6);
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  text-decoration: none;
+  color: inherit;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease,
+    border-color 0.2s ease;
+}
+
+.product-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  border-color: var(--sl-color-accent-low);
+}
+
+.product-card h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 700;
+  font-family: var(--font-sans);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.product-card h2 svg {
+  color: var(--sl-color-accent);
+  flex-shrink: 0;
+}
+
+.product-card p {
+  margin: 0;
+  color: var(--sl-color-gray-2);
+  line-height: 1.6;
+  font-size: 0.95rem;
+  flex: 1;
+}
+
+.product-card-link {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--sl-color-accent);
+}
+
+.product-card:focus-visible {
+  outline: 2px solid var(--sl-color-accent);
+  outline-offset: 2px;
+}
+
+@media (max-width: 640px) {
+  .product-grid {
+    grid-template-columns: 1fr;
   }
+}
+
+/* ============================================
+   SMOOTH SCROLLING
+   ============================================ */
+
+html {
+  scroll-behavior: smooth;
 }
 
 /* ============================================
@@ -846,24 +370,11 @@ h2.xt-section-title {
 }
 
 /* ============================================
-   REDUCED MOTION - no transforms, no smooth scroll
+   Remove link underline in content cards
    ============================================ */
 
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-delay: 0ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    transition-delay: 0ms !important;
-    scroll-behavior: auto !important;
-  }
-
-  .xt-btn {
-    transform: none !important;
-  }
+.sl-markdown-content a.template-card {
+  text-decoration: none;
 }
 
 /* ============================================

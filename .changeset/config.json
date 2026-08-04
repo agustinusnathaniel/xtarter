@@ -2,9 +2,7 @@
 	"$schema": "https://unpkg.com/@changesets/config@3.1.1/schema.json",
 	"changelog": [
 		"@changesets/changelog-github",
-		{
-			"repo": "agustinusnathaniel/xtarter"
-		}
+		{ "repo": "agustinusnathaniel/xtarter" }
 	],
 	"commit": false,
 	"fixed": [
@@ -19,5 +17,5 @@
 	"access": "public",
 	"baseBranch": "main",
 	"updateInternalDependencies": "patch",
-	"ignore": ["@xtarter/docs"]
+	"ignore": ["@xtarterize/docs"]
 }

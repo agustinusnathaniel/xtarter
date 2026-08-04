@@ -43,16 +43,11 @@ function isTrackedDomain(hostname: string): boolean {
 document.addEventListener('click', (e) => {
   const target = e.target as HTMLElement;
 
-  // Hero CTA clicks. The three landing heroes are rendered by the LandingHero
-  // override (tracked by text here); DefaultHero routes like 404 still read
-  // their CTAs from YAML frontmatter, which can't carry data attributes.
+  // Hero CTA clicks (YAML frontmatter - can't add data attributes)
   const heroLink = target.closest('.hero a');
   if (heroLink) {
     const text = getText(heroLink);
-    // "Start with a template" (home hero primary) and "Browse Templates"
-    // (create-xtarter-app hero secondary) both lead to the template flow;
-    // keep both mapped to hero_cta_browse so the funnel is unchanged.
-    if (text.includes('Browse Templates') || text.includes('Start with a template')) track('hero_cta_browse');
+    if (text.includes('Browse Templates')) track('hero_cta_browse');
     else if (text.includes('Get Started')) track('hero_cta_get_started');
     else if (text.includes('View CLI Reference')) track('hero_cta_cli_reference');
     return;

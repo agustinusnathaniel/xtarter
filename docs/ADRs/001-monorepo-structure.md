@@ -17,7 +17,7 @@ xtarterize/
 ├── apps/
 │   ├── xtarterize/            # xtarterize - conformance CLI
 │   ├── create-xtarter-app/    # create-xtarter-app - project scaffolding CLI
-│   └── docs/                  # @xtarter/docs - Astro + Starlight documentation site
+│   └── docs/                  # @xtarterize/docs - Astro + Starlight documentation site
 ├── test/                      # Shared test fixtures and suites
 └── turbo.json
 ```
