@@ -2,33 +2,36 @@
 // Static template gallery. Renders records from the manually maintained
 // template catalog in src/data/template-catalog.ts - no network, no GitHub
 // API, no star counts. Ownership of the catalog is documented in that file.
+// Rendered as an authored row list (not cards): hairline-separated rows with
+// a clear scan hierarchy - name, description, stack, repo.
 import { TEMPLATE_CATALOG } from '../data/template-catalog'
 ---
 
-<div class="xt-gallery xt-rise">
-	{TEMPLATE_CATALOG.map((t, i) => (
-		<a
-			href={t.url}
-			target="_blank"
-			rel="noopener noreferrer"
-			class="xt-template-card"
-			data-umami-event="template_click"
-			data-umami-event-template_name={t.name}
-		>
-			<div class="xt-template-card-head">
-				<span class="xt-template-index" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
-				<h3 class="xt-template-name">{t.name}</h3>
-			</div>
-			<p class="xt-template-desc">{t.description}</p>
-			<ul class="xt-template-stack">
-				{t.stack.map((item) => (
-					<li class="xt-chip">{item}</li>
-				))}
-			</ul>
-			<span class="xt-template-repo">
-				<code>{t.repo}</code>
-				<span class="xt-arrow" aria-hidden="true">&rarr;</span>
-			</span>
-		</a>
+<ul class="xt-template-list">
+	{TEMPLATE_CATALOG.map((t) => (
+		<li class="xt-template-row">
+			<a
+				href={t.url}
+				target="_blank"
+				rel="noopener noreferrer"
+				class="xt-template-link"
+				data-umami-event="template_click"
+				data-umami-event-template_name={t.name}
+			>
+				<div class="xt-template-main">
+					<h3 class="xt-template-name">{t.name}</h3>
+					<p class="xt-template-desc">{t.description}</p>
+				</div>
+				<ul class="xt-template-stack" aria-label="Stack">
+					{t.stack.map((item) => (
+						<li>{item}</li>
+					))}
+				</ul>
+				<span class="xt-template-repo">
+					<code>{t.repo}</code>
+					<span class="xt-arrow" aria-hidden="true">&rarr;</span>
+				</span>
+			</a>
+		</li>
 	))}
-</div>
+</ul>

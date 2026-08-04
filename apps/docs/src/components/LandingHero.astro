@@ -13,9 +13,18 @@ declare global {
 // Targeted Starlight Hero override for the three docs landing routes.
 // For every other page it renders Starlight's default Hero unchanged, so
 // hero frontmatter on non-target routes (404, future splash pages) keeps
-// working. The `.hero` class and `<h1 id="_top">` are preserved so the
-// existing tracking and page-title behavior stay intact.
+// working. The `.hero` class and `<h1 id="_top" data-page-title>` are
+// preserved so the existing tracking and page-title behavior stay intact.
+//
+// Each route owns one dominant charcoal artifact, with a different shape:
+//   home   -> forked command strip (both entry commands)
+//   xtz    -> the conformance-plan terminal output (TerminalDemo)
+//   CXA    -> a narrow template-selection prompt (static markup)
+// The artifacts are decorative by design and aria-hidden; their content is
+// restated in visible page copy so assistive tech gets the same information.
 import DefaultHero from '@astrojs/starlight/components/Hero.astro'
+import TerminalDemo from './TerminalDemo.astro'
+import { TEMPLATE_CATALOG } from '../data/template-catalog'
 
 const { entry } = Astro.locals.starlightRoute
 const path = Astro.url.pathname.replace(/\/+$/, '') || '/'
@@ -40,42 +49,42 @@ const isCxa = entry.id === 'create-xtarter-app' || path === '/create-xtarter-app
             xtarterize. Biome, TypeScript strict, CI, and editor configs are
             handled either way.
           </p>
+          <div class="xt-hero-actions">
+            <a
+              class="xt-btn xt-btn-primary"
+              href="#starter-templates"
+              data-umami-event="hero_lane_click"
+              data-umami-event-product="create-xtarter-app"
+              >Browse Templates</a
+            >
+            <a
+              class="xt-btn xt-btn-ghost"
+              href="/xtarterize/"
+              data-umami-event="hero_lane_click"
+              data-umami-event-product="xtarterize"
+              >Get Started with xtarterize</a
+            >
+          </div>
         </div>
-        <div class="xt-lanes">
-          <a
-            class="xt-lane"
-            href="/create-xtarter-app/"
-            data-umami-event="hero_lane_click"
-            data-umami-event-product="create-xtarter-app"
-          >
-            <span class="xt-lane-kicker">Day 0 &middot; New project</span>
-            <code class="xt-lane-cmd">pnpm create xtarter-app</code>
-            <span class="xt-lane-desc">Scaffold a fully configured project from a curated template.</span>
-            <span class="xt-lane-cta">create-xtarter-app &rarr;</span>
-          </a>
-          <a
-            class="xt-lane"
-            href="/xtarterize/"
-            data-umami-event="hero_lane_click"
-            data-umami-event-product="xtarterize"
-          >
-            <span class="xt-lane-kicker">Day 1+ &middot; Existing project</span>
-            <code class="xt-lane-cmd">npx xtarterize init</code>
-            <span class="xt-lane-desc">Detect your stack and bring conformance configs up to standard.</span>
-            <span class="xt-lane-cta">xtarterize &rarr;</span>
-          </a>
+        <div class="xt-fork" aria-hidden="true" role="presentation">
+          <div class="xt-fork-row">
+            <span class="xt-fork-branch">├─</span>
+            <span class="xt-fork-prompt">$</span>
+            <code class="xt-fork-cmd">pnpm create xtarter-app</code>
+          </div>
+          <div class="xt-fork-row">
+            <span class="xt-fork-branch">└─</span>
+            <span class="xt-fork-prompt">$</span>
+            <code class="xt-fork-cmd">npx xtarterize init</code>
+          </div>
         </div>
-      </div>
-      <div class="xt-hero-actions">
-        <a class="xt-btn xt-btn-primary" href="#starter-templates">Browse Templates</a>
-        <a class="xt-btn xt-btn-ghost" href="/xtarterize/">Get Started with xtarterize</a>
       </div>
     </div>
   ) : isXtz ? (
     <div class="hero xt-hero xt-hero-xtz">
       <div class="xt-hero-grid">
         <div class="xt-hero-copy">
-          <p class="xt-eyebrow">xtarterize</p>
+          <p class="xt-eyebrow">xtarterize &middot; conformance CLI</p>
           <h1 id="_top" data-page-title>The conformance CLI for JavaScript &amp; TypeScript</h1>
           <p class="xt-hero-lede">
             Detect your project&rsquo;s stack. Validate your configs. Keep everything
@@ -86,30 +95,14 @@ const isCxa = entry.id === 'create-xtarter-app' || path === '/create-xtarter-app
             <a class="xt-btn xt-btn-ghost" href="/xtarterize/guide/cli/overview/">View CLI Reference</a>
           </div>
         </div>
-        <div class="xt-command-summary" aria-hidden="true" role="presentation">
-          <span class="xt-command-summary-label">npx xtarterize init</span>
-          <ul class="xt-command-summary-list">
-            <li>
-              <span class="xt-tag xt-tag-detect">detected</span>
-              <span>react 19 &middot; vite 8 &middot; typescript 5.8</span>
-            </li>
-            <li>
-              <span class="xt-tag xt-tag-plan">plan</span>
-              <span>12 tasks &middot; 8 files</span>
-            </li>
-            <li>
-              <span class="xt-tag xt-tag-safe">backup</span>
-              <span>before any write</span>
-            </li>
-          </ul>
-        </div>
+        <TerminalDemo />
       </div>
     </div>
   ) : (
     <div class="hero xt-hero xt-hero-cxa">
       <div class="xt-hero-grid">
         <div class="xt-hero-copy">
-          <p class="xt-eyebrow">create-xtarter-app</p>
+          <p class="xt-eyebrow">create-xtarter-app &middot; scaffolding CLI</p>
           <h1 id="_top" data-page-title>Scaffold projects in seconds</h1>
           <p class="xt-hero-lede">
             Pick a template. Run one command. Get a fully configured project with
@@ -120,19 +113,17 @@ const isCxa = entry.id === 'create-xtarter-app' || path === '/create-xtarter-app
             <a class="xt-btn xt-btn-ghost" href="/create-xtarter-app/guide/templates/">Browse Templates</a>
           </div>
         </div>
-        <div class="xt-command-panel" aria-hidden="true" role="presentation">
-          <div class="xt-command-panel-label">create-xtarter-app</div>
-          <code class="xt-command-line">$ pnpm create xtarter-app</code>
-          <div class="xt-command-prompt">
-            <span class="xt-prompt-q">?? Which template?</span>
-            <ul class="xt-prompt-list">
-              <li>Next.js + Chakra UI</li>
-              <li>Next.js + Tailwind</li>
-              <li>Vite + React + Chakra</li>
-              <li>Vite + React + Tailwind</li>
-              <li>Vite + React + Hero UI</li>
-            </ul>
-          </div>
+        <div class="xt-prompt" aria-hidden="true" role="presentation">
+          <code class="xt-prompt-line">$ pnpm create xtarter-app</code>
+          <span class="xt-prompt-q">?? Which template?</span>
+          <ol class="xt-prompt-list">
+            {TEMPLATE_CATALOG.map((t, i) => (
+              <li class:list={{ 'xt-prompt-item': true, 'is-selected': i === 0 }}>
+                <span class="xt-prompt-caret" aria-hidden="true">&rsaquo;</span>
+                <span>{t.name}</span>
+              </li>
+            ))}
+          </ol>
         </div>
       </div>
     </div>

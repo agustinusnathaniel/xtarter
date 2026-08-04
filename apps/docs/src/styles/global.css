@@ -3,7 +3,8 @@
 @import "@astrojs/starlight-tailwind";
 @import "tailwindcss/theme.css" layer(theme);
 @import "tailwindcss/utilities.css" layer(utilities);
-@import "@fontsource/lora";
+@import "@fontsource/lora/500.css";
+@import "@fontsource/lora/600.css";
 @import "@fontsource-variable/atkinson-hyperlegible-next";
 @import "@fontsource-variable/geist-mono";
 
@@ -53,8 +54,7 @@ h6 {
 }
 
 /* ============================================
-   CONFORMANCE WORKBENCH - DESIGN TOKENS
-   Warm paper + charcoal + orange + mono.
+   TOKENS - warm paper + charcoal + orange
    Light-first: defaults are light, dark overrides follow.
    ============================================ */
 
@@ -98,7 +98,6 @@ h6 {
   --xt-radius-sm: 6px;
   /* Motion */
   --xt-ease: ease-out;
-  --xt-dur-entrance: 180ms;
   --xt-dur-hover: 160ms;
   --xt-dur-press: 100ms;
 }
@@ -144,28 +143,25 @@ body {
 
 /* ============================================
    LANDING TYPOGRAPHY
+   Display: Lora. Body/UI: Atkinson. Labels/artifacts: Geist Mono.
    ============================================ */
 
 .xt-hero h1,
 .xt-section-title,
-.xt-product-card h3,
 .xt-template-name,
-.xt-step-name,
-.xt-guardrail h3,
-.xt-manifest-row h3 {
+.xt-lifecycle li,
+.xt-pipe-name {
   text-wrap: balance;
   overflow-wrap: anywhere;
   min-width: 0;
 }
 
 .xt-hero-lede,
-.xt-lane-desc,
+.xt-section-lead,
 .xt-template-desc,
-.xt-product-card p,
-.xt-step-desc,
-.xt-guardrail p,
+.xt-pipe-desc,
 .xt-terminal-caption,
-.xt-manifest-row p {
+.xt-note {
   text-wrap: pretty;
 }
 
@@ -174,16 +170,12 @@ body {
    headings without Starlight's anchor-link wrapper. */
 h2.xt-section-title {
   font-family: var(--font-heading);
-  font-weight: 700;
+  font-weight: 600;
   font-size: clamp(1.5rem, 3vw, 2rem);
   line-height: 1.2;
   letter-spacing: -0.01em;
   color: var(--xt-ink);
   margin: 0 0 0.9rem;
-}
-
-p.xt-section-label {
-  margin: 2.5rem 0 0.5rem;
 }
 
 .xt-section-lead {
@@ -195,11 +187,11 @@ p.xt-section-label {
 }
 
 .xt-note {
-  font-size: 0.88rem;
+  font-size: 0.92rem;
   line-height: 1.6;
   color: var(--xt-muted);
   max-width: 70ch;
-  margin: 0 0 1.25rem;
+  margin: 0;
 }
 
 .xt-note code {
@@ -207,18 +199,29 @@ p.xt-section-label {
   font-size: 0.85em;
 }
 
-.xt-note a {
+/* Inline text links (quick-start clusters, next-step lines). */
+.xt-link {
   color: var(--xt-accent-deep);
   text-decoration: underline;
   text-underline-offset: 2px;
+  text-decoration-color: color-mix(in srgb, var(--xt-accent-deep) 45%, transparent);
 }
 
-:root[data-theme="dark"] .xt-note a {
+.xt-link:hover {
+  text-decoration-color: var(--xt-accent-deep);
+}
+
+:root[data-theme="dark"] .xt-link {
   color: var(--xt-accent);
+  text-decoration-color: color-mix(in srgb, var(--xt-accent) 45%, transparent);
+}
+
+:root[data-theme="dark"] .xt-link:hover {
+  text-decoration-color: var(--xt-accent);
 }
 
 /* ============================================
-   HERO (custom LandingHero compositions)
+   HERO
    ============================================ */
 
 .xt-hero {
@@ -236,11 +239,12 @@ p.xt-section-label {
   min-width: 0;
 }
 
+/* One mono eyebrow per hero - labels, not section numbering. */
 .xt-eyebrow {
   font-family: var(--font-mono);
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   font-weight: 500;
-  letter-spacing: 0.09em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--xt-accent-deep);
   margin: 0 0 0.9rem;
@@ -251,13 +255,14 @@ p.xt-section-label {
 }
 
 .xt-hero h1 {
-  font-size: clamp(2.1rem, 5vw, 3.4rem);
+  font-family: var(--font-heading);
+  font-size: clamp(2.1rem, 5vw, 3.3rem);
   line-height: 1.08;
   letter-spacing: -0.015em;
-  font-weight: 700;
+  font-weight: 600;
   color: var(--xt-ink);
   margin: 0 0 1.25rem;
-  max-width: 18ch;
+  max-width: 20ch;
 }
 
 .xt-hero-lede {
@@ -306,7 +311,6 @@ p.xt-section-label {
 
 .xt-btn:hover {
   text-decoration: none;
-  transform: translateY(-2px);
 }
 
 .xt-btn:active {
@@ -363,85 +367,15 @@ p.xt-section-label {
   color: var(--xt-btn-ink);
 }
 
-/* ---- Homepage: two-lane workbench ---- */
+/* ============================================
+   CHARCOAL ARTIFACTS
+   One dominant charcoal artifact per route, distinct shapes:
+   home = forked command strip, xtz = terminal output,
+   CXA = template-selection prompt.
+   ============================================ */
 
-.xt-lanes {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 1.25rem;
-}
-
-.xt-lane {
-  display: flex;
-  flex-direction: column;
-  gap: 0.6rem;
-  padding: 1.5rem 1.5rem 1.4rem;
-  border-radius: var(--xt-radius);
-  border: 1px solid var(--xt-line);
-  background: var(--xt-panel);
-  color: inherit;
-  text-decoration: none;
-  min-width: 0;
-  transition:
-    transform var(--xt-dur-hover) var(--xt-ease),
-    border-color var(--xt-dur-hover) var(--xt-ease),
-    background-color var(--xt-dur-hover) var(--xt-ease);
-}
-
-.xt-lane:hover {
-  text-decoration: none;
-  transform: translateY(-2px);
-  border-color: var(--xt-accent);
-  background: var(--xt-panel-2);
-}
-
-.xt-lane:active {
-  transform: translateY(1px);
-  transition-duration: var(--xt-dur-press);
-}
-
-.xt-lane-kicker {
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-  color: var(--xt-muted);
-}
-
-.xt-lane-cmd {
-  font-family: var(--font-mono);
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--xt-ink);
-  background: var(--xt-code-bg);
-  border-radius: var(--xt-radius-sm);
-  padding: 0.5rem 0.75rem;
-  overflow-wrap: anywhere;
-}
-
-.xt-lane-desc {
-  font-size: 0.92rem;
-  line-height: 1.55;
-  color: var(--xt-muted);
-  margin: 0;
-}
-
-.xt-lane-cta {
-  font-family: var(--font-sans);
-  font-size: 0.92rem;
-  font-weight: 600;
-  color: var(--xt-accent-deep);
-  margin-top: auto;
-}
-
-:root[data-theme="dark"] .xt-lane-cta {
-  color: var(--xt-accent);
-}
-
-/* ---- Terminal-style evidence panels (charcoal in both themes) ---- */
-
-.xt-command-summary,
-.xt-command-panel,
+.xt-fork,
+.xt-prompt,
 .xt-terminal {
   border-radius: var(--xt-radius);
   border: 1px solid var(--xt-term-line);
@@ -451,61 +385,57 @@ p.xt-section-label {
   min-width: 0;
 }
 
-.xt-command-summary {
-  padding: 1.25rem 1.35rem 1.35rem;
+/* ---- Home: forked command strip ---- */
+
+.xt-fork {
+  padding: 1.35rem 1.4rem 1.25rem;
 }
 
-.xt-command-summary-label,
-.xt-command-panel-label {
-  display: block;
-  font-size: 0.75rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--xt-term-dim);
-  margin-bottom: 1rem;
-}
-
-.xt-command-summary-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.7rem;
-}
-
-.xt-command-summary-list li {
+.xt-fork-row {
   display: flex;
   align-items: baseline;
-  gap: 0.6rem;
-  font-size: 0.85rem;
-  line-height: 1.5;
+  gap: 0.65rem;
+  font-size: 0.92rem;
+  line-height: 2.1;
+  min-width: 0;
+}
+
+.xt-fork-branch {
+  color: var(--xt-term-dim);
+  flex-shrink: 0;
+  font-size: 0.82rem;
+}
+
+.xt-fork-prompt {
+  color: var(--xt-accent);
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.xt-fork-cmd {
   overflow-wrap: anywhere;
 }
 
-/* ---- create-xtarter-app hero: command panel ---- */
+/* ---- create-xtarter-app: template-selection prompt ---- */
 
-.xt-command-panel {
-  padding: 1.35rem;
+.xt-prompt {
+  padding: 1.35rem 1.4rem 1.3rem;
+  max-width: 26rem;
 }
 
-.xt-command-line {
+.xt-prompt-line {
   display: block;
-  font-size: 0.95rem;
-  color: var(--xt-term-ink);
+  font-size: 0.9rem;
   overflow-wrap: anywhere;
   margin-bottom: 1.1rem;
 }
 
-.xt-command-prompt {
-  border-top: 1px solid var(--xt-term-line);
-  padding-top: 1.1rem;
-}
-
 .xt-prompt-q {
   display: block;
-  font-size: 0.85rem;
+  font-size: 0.82rem;
   color: var(--xt-accent);
+  border-top: 1px solid var(--xt-term-line);
+  padding-top: 1.1rem;
   margin-bottom: 0.7rem;
 }
 
@@ -515,58 +445,35 @@ p.xt-section-label {
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.45rem;
+  gap: 0.4rem;
   font-size: 0.85rem;
-  color: var(--xt-term-dim);
 }
 
-.xt-prompt-list li::before {
-  content: "·";
+.xt-prompt-item {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
   color: var(--xt-term-dim);
-  margin-right: 0.6rem;
+  overflow-wrap: anywhere;
 }
 
-/* ---- Status tags (used on charcoal panels) ---- */
-
-.xt-tag {
-  display: inline-flex;
-  align-items: center;
+.xt-prompt-item .xt-prompt-caret {
+  color: var(--xt-accent);
   flex-shrink: 0;
-  padding: 0 0.45rem;
-  border-radius: 4px;
-  font-size: 0.68rem;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  line-height: 1.5;
+  opacity: 0;
 }
 
-.xt-tag-detect {
-  background: rgba(249, 115, 22, 0.18);
-  color: #fdba74;
+.xt-prompt-item.is-selected {
+  color: var(--xt-term-ink);
 }
 
-.xt-tag-plan {
-  background: rgba(251, 191, 36, 0.16);
-  color: #fcd34d;
+.xt-prompt-item.is-selected .xt-prompt-caret {
+  opacity: 1;
 }
 
-.xt-tag-info {
-  background: rgba(148, 163, 184, 0.18);
-  color: #cbd5e1;
-}
-
-.xt-tag-safe {
-  background: rgba(74, 222, 128, 0.16);
-  color: #86efac;
-}
-
-/* ============================================
-   TERMINAL DEMO (xtarterize page)
-   ============================================ */
+/* ---- xtarterize: terminal output ---- */
 
 .xt-terminal {
-  margin: 2rem 0 0.9rem;
   overflow: hidden;
 }
 
@@ -576,15 +483,15 @@ p.xt-section-label {
 }
 
 .xt-terminal-title {
-  font-size: 0.75rem;
+  font-size: 0.72rem;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--xt-term-dim);
 }
 
 .xt-terminal-body {
-  padding: 1.35rem 1.4rem;
-  font-size: 0.85rem;
+  padding: 1.25rem 1.3rem;
+  font-size: 0.84rem;
   line-height: 1.75;
   overflow-x: auto;
   white-space: pre;
@@ -636,18 +543,12 @@ p.xt-section-label {
   font-weight: 700;
 }
 
-.xt-term-file {
-  color: var(--xt-term-dim);
-  font-size: 0.75rem;
-  margin-left: 0.75rem;
-}
-
 .xt-terminal-caption {
   font-size: 0.88rem;
   line-height: 1.6;
   color: var(--xt-muted);
   max-width: 70ch;
-  margin: 0 0 2rem;
+  margin: 0.9rem 0 0;
 }
 
 .xt-terminal-caption code {
@@ -655,141 +556,87 @@ p.xt-section-label {
   font-size: 0.85em;
 }
 
-/* ============================================
-   PRODUCT LANES (homepage - Choose your starting point)
-   ============================================ */
+/* ---- Status tags (used on charcoal panels) ---- */
 
-.xt-product-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 1.25rem;
-  margin: 0;
-}
-
-.xt-product-card {
-  display: flex;
-  flex-direction: column;
-  gap: 0.7rem;
-  padding: 1.75rem;
-  border-radius: var(--xt-radius);
-  border: 1px solid var(--xt-line);
-  background: var(--xt-panel);
-  text-decoration: none;
-  color: inherit;
-  min-width: 0;
-  min-height: 44px;
-  transition:
-    transform var(--xt-dur-hover) var(--xt-ease),
-    border-color var(--xt-dur-hover) var(--xt-ease),
-    background-color var(--xt-dur-hover) var(--xt-ease);
-}
-
-.xt-product-card:hover {
-  text-decoration: none;
-  transform: translateY(-2px);
-  border-color: var(--xt-accent);
-  background: var(--xt-panel-2);
-}
-
-.xt-product-card:active {
-  transform: translateY(1px);
-  transition-duration: var(--xt-dur-press);
-}
-
-.xt-product-card h3 {
-  display: flex;
+.xt-tag {
+  display: inline-flex;
   align-items: center;
-  gap: 0.55rem;
-  margin: 0;
-  font-family: var(--font-sans);
-  font-size: 1.15rem;
-  font-weight: 700;
-  color: var(--xt-ink);
-}
-
-.xt-product-card p {
-  margin: 0;
-  font-size: 0.95rem;
-  line-height: 1.6;
-  color: var(--xt-muted);
-  flex: 1;
-}
-
-.xt-product-cta {
-  font-family: var(--font-sans);
-  font-size: 0.92rem;
+  flex-shrink: 0;
+  padding: 0 0.45rem;
+  border-radius: 4px;
+  font-size: 0.68rem;
   font-weight: 600;
-  color: var(--xt-accent-deep);
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  line-height: 1.5;
 }
 
-:root[data-theme="dark"] .xt-product-cta {
-  color: var(--xt-accent);
+.xt-tag-detect {
+  background: rgba(249, 115, 22, 0.18);
+  color: #fdba74;
+}
+
+.xt-tag-plan {
+  background: rgba(251, 191, 36, 0.16);
+  color: #fcd34d;
+}
+
+.xt-tag-safe {
+  background: rgba(74, 222, 128, 0.16);
+  color: #86efac;
 }
 
 /* ============================================
-   STATIC TEMPLATE GALLERY
+   STATIC TEMPLATE GALLERY - authored rows, not cards
    ============================================ */
 
-.xt-gallery {
+.xt-template-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--xt-line);
+}
+
+.xt-template-row {
+  border-bottom: 1px solid var(--xt-line);
+}
+
+.xt-template-link {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 1.25rem;
-  margin: 0;
-}
-
-.xt-template-card {
-  display: flex;
-  flex-direction: column;
-  gap: 0.55rem;
-  padding: 1.5rem;
-  border-radius: var(--xt-radius);
-  border: 1px solid var(--xt-line);
-  background: var(--xt-panel);
+  gap: 0.55rem 1.75rem;
+  padding: 1.3rem 0.35rem;
   text-decoration: none;
   color: inherit;
-  min-width: 0;
   min-height: 44px;
-  transition:
-    transform var(--xt-dur-hover) var(--xt-ease),
-    border-color var(--xt-dur-hover) var(--xt-ease),
-    background-color var(--xt-dur-hover) var(--xt-ease);
+  min-width: 0;
+  transition: background-color var(--xt-dur-hover) var(--xt-ease);
 }
 
-.xt-template-card:hover {
+.xt-template-link:hover {
   text-decoration: none;
-  transform: translateY(-2px);
-  border-color: var(--xt-accent);
-  background: var(--xt-panel-2);
+  background: var(--xt-accent-soft);
 }
 
-.xt-template-card:active {
-  transform: translateY(1px);
+.xt-template-link:active {
   transition-duration: var(--xt-dur-press);
-}
-
-.xt-template-card-head {
-  display: flex;
-  align-items: baseline;
-  gap: 0.6rem;
-}
-
-.xt-template-index {
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  color: var(--xt-accent-deep);
-  flex-shrink: 0;
-}
-
-:root[data-theme="dark"] .xt-template-index {
-  color: var(--xt-accent);
 }
 
 .xt-template-name {
   margin: 0;
   font-family: var(--font-sans);
-  font-size: 1.05rem;
-  font-weight: 700;
+  font-size: 1.08rem;
+  font-weight: 600;
   color: var(--xt-ink);
+  transition: color var(--xt-dur-hover) var(--xt-ease);
+}
+
+.xt-template-link:hover .xt-template-name {
+  color: var(--xt-accent-hover);
+}
+
+:root[data-theme="dark"] .xt-template-link:hover .xt-template-name {
+  color: var(--xt-accent);
 }
 
 .xt-template-desc {
@@ -797,37 +644,33 @@ p.xt-section-label {
   font-size: 0.92rem;
   line-height: 1.55;
   color: var(--xt-muted);
-  flex: 1;
 }
 
 .xt-template-stack {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem;
+  gap: 0.3rem 0.75rem;
   list-style: none;
   margin: 0;
   padding: 0;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--xt-muted);
 }
 
-.xt-chip {
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  line-height: 1.4;
-  padding: 0.15rem 0.5rem;
-  border-radius: var(--xt-radius-sm);
-  border: 1px solid var(--xt-line);
-  background: var(--xt-code-bg);
-  color: var(--xt-muted);
-  white-space: nowrap;
+.xt-template-stack li + li::before {
+  content: "·";
+  margin-right: 0.75rem;
+  color: var(--xt-line-strong);
 }
 
 .xt-template-repo {
   display: flex;
   align-items: center;
-  justify-content: space-between;
   gap: 0.5rem;
   font-size: 0.8rem;
   color: var(--xt-muted);
+  min-width: 0;
 }
 
 .xt-template-repo code {
@@ -839,279 +682,184 @@ p.xt-section-label {
 .xt-arrow {
   color: var(--xt-accent-deep);
   flex-shrink: 0;
+  transition: transform var(--xt-dur-hover) var(--xt-ease);
+}
+
+.xt-template-link:hover .xt-arrow {
+  transform: translateX(2px);
 }
 
 :root[data-theme="dark"] .xt-arrow {
   color: var(--xt-accent);
 }
 
+@media (min-width: 40rem) {
+  .xt-template-link {
+    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+    align-items: baseline;
+  }
+
+  .xt-template-repo {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (min-width: 72rem) {
+  .xt-template-link {
+    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr) auto;
+    align-items: center;
+  }
+
+  .xt-template-repo {
+    grid-column: auto;
+  }
+}
+
 /* ============================================
-   PROGRESSION (homepage - first commit to conformance)
+   LIFECYCLE (home) - one line, Choose -> Scaffold -> Conform -> Ship
    ============================================ */
 
-.xt-progression {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 1.5rem;
+.xt-lifecycle {
+  list-style: none;
+  margin: 0;
+  padding: 1.25rem 0;
   border-top: 1px solid var(--xt-line);
-  padding-top: 1.5rem;
-  margin: 1.5rem 0 0;
+  border-bottom: 1px solid var(--xt-line);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.75rem 0.5rem;
 }
 
-.xt-progress-step {
-  min-width: 0;
-}
-
-.xt-progress-step .xt-step-num {
+.xt-lifecycle li {
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  font-weight: 500;
   color: var(--xt-muted);
 }
 
-.xt-step-num {
-  display: block;
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
-  letter-spacing: 0.06em;
+.xt-lifecycle li:not(:last-child)::after {
+  content: "→";
+  margin-left: 0.5rem;
   color: var(--xt-accent-deep);
-  margin-bottom: 0.5rem;
 }
 
-:root[data-theme="dark"] .xt-step-num {
+:root[data-theme="dark"] .xt-lifecycle li:not(:last-child)::after {
   color: var(--xt-accent);
 }
 
-.xt-progress-cmd {
-  display: block;
-  font-family: var(--font-mono);
-  font-size: 0.88rem;
-  font-weight: 600;
+.xt-lifecycle a {
   color: var(--xt-ink);
-  overflow-wrap: anywhere;
-  margin-bottom: 0.35rem;
+  text-decoration: none;
+  border-bottom: 1px solid transparent;
+  transition:
+    color var(--xt-dur-hover) var(--xt-ease),
+    border-color var(--xt-dur-hover) var(--xt-ease);
 }
 
-.xt-progress-step p {
-  margin: 0;
-  font-size: 0.9rem;
-  line-height: 1.55;
-  color: var(--xt-muted);
+.xt-lifecycle a:hover {
+  color: var(--xt-accent-hover);
+  border-bottom-color: var(--xt-accent-deep);
+}
+
+:root[data-theme="dark"] .xt-lifecycle a {
+  color: var(--xt-ink);
+}
+
+:root[data-theme="dark"] .xt-lifecycle a:hover {
+  color: var(--xt-accent);
+  border-bottom-color: var(--xt-accent);
 }
 
 /* ============================================
-   PIPELINE (xtarterize - Detect/Resolve/Check/Plan/Apply)
+   PIPELINE (xtarterize) - Detect / Resolve / Check / Plan / Apply
    ============================================ */
 
-.xt-steps {
+.xt-pipeline {
   list-style: none;
-  margin: 2rem 0 0;
+  margin: 0;
   padding: 0;
   display: grid;
   grid-template-columns: 1fr;
-  gap: 1.75rem;
   border-top: 1px solid var(--xt-line);
-  padding-top: 1.5rem;
+  border-bottom: 1px solid var(--xt-line);
 }
 
-.xt-step {
+.xt-pipe {
+  padding: 1.35rem 0.25rem;
   min-width: 0;
 }
 
-.xt-step-name {
-  margin: 0 0 0.4rem;
-  font-family: var(--font-sans);
-  font-size: 1.02rem;
-  font-weight: 700;
-  color: var(--xt-ink);
+.xt-pipe + .xt-pipe {
+  border-top: 1px solid var(--xt-line);
 }
 
-.xt-step-desc {
+.xt-pipe-name {
+  display: block;
+  margin: 0 0 0.4rem;
+  font-family: var(--font-mono);
+  font-size: 0.82rem;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--xt-accent-deep);
+}
+
+:root[data-theme="dark"] .xt-pipe-name {
+  color: var(--xt-accent);
+}
+
+.xt-pipe-desc {
   margin: 0;
   font-size: 0.9rem;
   line-height: 1.55;
   color: var(--xt-muted);
+  max-width: 26ch;
 }
 
-/* ============================================
-   GUARDRAILS (xtarterize)
-   ============================================ */
-
-.xt-guardrails {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 1.25rem;
-  margin: 0;
-}
-
-.xt-guardrail {
-  padding: 1.5rem;
-  border-radius: var(--xt-radius);
-  border: 1px solid var(--xt-line);
-  background: var(--xt-panel);
-  min-width: 0;
-  transition:
-    transform var(--xt-dur-hover) var(--xt-ease),
-    border-color var(--xt-dur-hover) var(--xt-ease),
-    background-color var(--xt-dur-hover) var(--xt-ease);
-}
-
-.xt-guardrail:hover {
-  transform: translateY(-2px);
-  border-color: var(--xt-accent);
-  background: var(--xt-panel-2);
-}
-
-.xt-guardrail-kicker {
-  display: block;
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-  color: var(--xt-accent-deep);
-  margin-bottom: 0.5rem;
-}
-
-:root[data-theme="dark"] .xt-guardrail-kicker {
-  color: var(--xt-accent);
-}
-
-.xt-guardrail h3 {
-  margin: 0 0 0.45rem;
-  font-family: var(--font-sans);
-  font-size: 1.05rem;
-  font-weight: 700;
-  color: var(--xt-ink);
-}
-
-.xt-guardrail p {
-  margin: 0;
-  font-size: 0.92rem;
-  line-height: 1.55;
-  color: var(--xt-muted);
-}
-
-/* ============================================
-   CAPABILITY MANIFEST (create-xtarter-app)
-   ============================================ */
-
-.xt-manifest {
-  margin: 0;
-  border: 1px solid var(--xt-line);
-  border-radius: var(--xt-radius);
-  background: var(--xt-panel);
-  overflow: hidden;
-}
-
-.xt-manifest-row {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 0.2rem 1.5rem;
-  padding: 1.1rem 1.4rem;
-  min-width: 0;
-}
-
-.xt-manifest-row + .xt-manifest-row {
-  border-top: 1px solid var(--xt-line);
-}
-
-.xt-manifest-row h3 {
-  margin: 0;
-  font-family: var(--font-mono);
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: var(--xt-ink);
-}
-
-.xt-manifest-row p {
-  margin: 0;
-  font-size: 0.92rem;
-  line-height: 1.55;
-  color: var(--xt-muted);
-}
-
-/* ============================================
-   CROSS-LINK PANEL (Day 0 / Day 1+)
-   ============================================ */
-
-.xt-switch {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 1.25rem;
-  margin: 1.5rem 0 0;
-}
-
-.xt-switch-card {
-  padding: 1.5rem;
-  border-radius: var(--xt-radius);
-  border: 1px solid var(--xt-line);
-  background: var(--xt-panel);
-  min-width: 0;
-}
-
-.xt-switch-kicker {
-  display: block;
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  letter-spacing: 0.07em;
-  text-transform: uppercase;
-  color: var(--xt-muted);
-  margin-bottom: 0.6rem;
-}
-
-.xt-switch-card h3 {
-  margin: 0 0 0.45rem;
-  font-family: var(--font-sans);
-  font-size: 1.05rem;
-  font-weight: 700;
-  color: var(--xt-ink);
-}
-
-.xt-switch-card p {
-  margin: 0 0 0.9rem;
-  font-size: 0.92rem;
-  line-height: 1.55;
-  color: var(--xt-muted);
-}
-
-.xt-switch-card .xt-btn {
-  margin-top: 0.25rem;
-}
-
-.xt-switch-card code {
-  font-family: var(--font-mono);
-  font-size: 0.9em;
-}
-
-.xt-switch-action {
-  margin-top: 0.9rem;
-}
-
-/* ============================================
-   MOTION - restrained, transform/opacity only
-   ============================================ */
-
-/* Section entrance: opacity + translateY(8px), 180ms ease-out.
-   Max stagger 120ms via --xt-delay. */
-.xt-rise {
-  animation: xt-rise var(--xt-dur-entrance) var(--xt-ease) both;
-  animation-delay: var(--xt-delay, 0ms);
-}
-
-@keyframes xt-rise {
-  from {
-    opacity: 0;
-    transform: translateY(8px);
+@media (min-width: 64rem) {
+  .xt-pipeline {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
   }
-  to {
-    opacity: 1;
-    transform: none;
+
+  .xt-pipe {
+    padding: 1.5rem 1.6rem 1.5rem 0;
+  }
+
+  .xt-pipe + .xt-pipe {
+    border-top: 0;
+    border-left: 1px solid var(--xt-line);
+    padding-left: 1.6rem;
   }
 }
 
-/* Hover lifts are pointer-only; touch devices get no transform. */
+/* ============================================
+   QUICK START - inline link cluster
+   ============================================ */
+
+.xt-link-cluster {
+  list-style: none;
+  margin: 1.25rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem 0.9rem;
+  font-size: 0.92rem;
+}
+
+.xt-link-cluster li + li::before {
+  content: "·";
+  margin-right: 0.9rem;
+  color: var(--xt-line-strong);
+}
+
+/* ============================================
+   MOTION - restrained, compositor-safe only
+   Hover lifts are pointer-only; touch devices get no transform.
+   No entrance/exit or decorative motion on landing pages.
+   ============================================ */
+
 @media (hover: hover) {
-  .xt-lane:hover,
-  .xt-product-card:hover,
-  .xt-template-card:hover,
-  .xt-guardrail:hover,
   .xt-btn:hover {
     transform: translateY(-2px);
   }
@@ -1127,46 +875,14 @@ p.xt-section-label {
     gap: 3rem;
   }
 
-  .xt-hero-home .xt-hero-grid {
-    grid-template-columns: 1fr;
-    gap: 2.5rem;
+  /* CXA's prompt artifact is a narrow panel; keep the copy column dominant. */
+  .xt-hero-cxa .xt-hero-grid {
+    grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
   }
 
-  .xt-lanes {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .xt-product-grid,
-  .xt-guardrails {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .xt-gallery {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .xt-progression {
-    grid-template-columns: 1fr 1fr;
-  }
-
-  .xt-steps {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-    gap: 1.25rem;
-  }
-
-  .xt-manifest-row {
-    grid-template-columns: minmax(10rem, 0.7fr) 2fr;
-    align-items: baseline;
-  }
-
-  .xt-switch {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-
-@media (min-width: 64rem) {
-  .xt-progression {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+  .xt-prompt {
+    max-width: 24rem;
+    justify-self: end;
   }
 }
 
@@ -1188,8 +904,8 @@ p.xt-section-label {
 /* Terminal text stays legible on small screens. */
 @media (max-width: 40rem) {
   .xt-terminal-body {
-    font-size: 0.75rem;
-    padding: 1.1rem;
+    font-size: 0.73rem;
+    padding: 1rem;
   }
 }
 
@@ -1234,7 +950,7 @@ p.xt-section-label {
 }
 
 /* ============================================
-   REDUCED MOTION - no transforms, no animation, no smooth scroll
+   REDUCED MOTION - no transforms, no smooth scroll
    ============================================ */
 
 @media (prefers-reduced-motion: reduce) {
@@ -1249,12 +965,7 @@ p.xt-section-label {
     scroll-behavior: auto !important;
   }
 
-  .xt-lane,
-  .xt-product-card,
-  .xt-template-card,
-  .xt-guardrail,
-  .xt-btn,
-  .xt-rise {
+  .xt-btn {
     transform: none !important;
   }
 }

@@ -3,11 +3,12 @@
 // session. Decorative by design: the panel is aria-hidden and a plain-text
 // caption next to it carries the same information for assistive tech.
 // No typing, spinner, or blinking cursor - the output is present on load.
+// This is the sole charcoal artifact on the xtarterize landing page.
 ---
 
 <div class="xt-terminal">
 	<div class="xt-terminal-bar">
-		<span class="xt-terminal-title">xtarterize -- dry run</span>
+		<span class="xt-terminal-title">xtarterize &middot; dry run</span>
 	</div>
 	<div class="xt-terminal-body" aria-hidden="true" role="presentation">
 		<div class="xt-term-line">
@@ -29,7 +30,7 @@
 			<span class="xt-term-dim">Status  Task                    Group</span>
 		</div>
 		<div class="xt-term-line">
-			<span class="xt-term-dim">────────────────────────────────────────────</span>
+			<span class="xt-term-dim">────────────────────────────────────</span>
 		</div>
 		<div class="xt-term-line xt-term-row">
 			<span class="xt-term-add">+</span>  Biome (lint + format)      <span class="xt-term-dim">Linting</span>
@@ -50,42 +51,16 @@
 			<span class="xt-term-add">+</span>  vite-plugin-checker         <span class="xt-term-dim">Vite</span>
 		</div>
 		<div class="xt-term-line xt-term-spacer"></div>
-		<div class="xt-term-line">
-			<span class="xt-term-prompt">$</span>
-			<span class="xt-term-cmd">npx xtarterize diff</span>
-		</div>
-		<div class="xt-term-line xt-term-out">
-			<span class="xt-tag xt-tag-info">info</span>
-			<span class="xt-term-dim">Showing diffs for 8 files</span>
-		</div>
-		<div class="xt-term-line xt-term-out">
-			<span class="xt-term-add">+</span>  <span class="xt-term-dim">biome.json</span>
-			<span class="xt-term-file">+47 lines</span>
-		</div>
-		<div class="xt-term-line xt-term-out">
-			<span class="xt-term-edit">~</span>  <span class="xt-term-dim">tsconfig.json</span>
-			<span class="xt-term-file">+3 / -1 lines</span>
-		</div>
-		<div class="xt-term-line xt-term-out">
-			<span class="xt-term-add">+</span>  <span class="xt-term-dim">.github/workflows/ci.yml</span>
-		</div>
-		<div class="xt-term-line xt-term-out">
-			<span class="xt-term-add">+</span>  <span class="xt-term-dim">.vscode/extensions.json</span>
-		</div>
 		<div class="xt-term-line xt-term-out">
 			<span class="xt-tag xt-tag-safe">backup</span>
 			<span class="xt-term-dim">Originals saved to</span>
 			<span class="xt-term-dim xt-term-accent">.xtarterize/backups/</span>
-		</div>
-		<div class="xt-term-line xt-term-spacer"></div>
-		<div class="xt-term-line">
-			<span class="xt-term-prompt">$</span>
 		</div>
 	</div>
 </div>
 <p class="xt-terminal-caption">
 	Example output: <code>npx xtarterize init --dry-run</code> detects the stack
 	(react 19, vite 8, typescript 5.8, pnpm 10), plans 12 conformance tasks
-	across 8 files, and previews every change as a diff. Originals are backed
-	up to <code>.xtarterize/backups/</code> before anything is written.
+	across 8 files, and previews each change before anything is written.
+	Originals are backed up to <code>.xtarterize/backups/</code>.
 </p>
