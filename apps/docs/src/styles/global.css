@@ -190,7 +190,8 @@ h2.xt-section-title {
   line-height: 1.6;
   color: var(--xt-muted);
   max-width: 70ch;
-  margin: 0;
+  /* Standalone footer lines sit below the gallery / code block, not on it. */
+  margin: 1.5rem 0 0;
 }
 
 .xt-note code {
@@ -217,6 +218,33 @@ h2.xt-section-title {
 
 :root[data-theme="dark"] .xt-link:hover {
   text-decoration-color: var(--xt-accent);
+}
+
+/* ============================================
+   SECTION RHYTHM (landing pages)
+   Landing content lives in Starlight's markdown container; sections are
+   separated by a clear vertical beat, while the first section keeps its
+   existing hero gap (hero bottom padding + Starlight container margin).
+   Heading-to-content spacing stays tight (see h2.xt-section-title's
+   margin-bottom) so the section beat reads as section-to-section only.
+   ============================================ */
+
+.sl-markdown-content > .xt-section-title {
+  margin-top: clamp(2.5rem, 4.5vw, 3.5rem);
+}
+
+.sl-markdown-content > .xt-section-title:first-of-type {
+  margin-top: 0;
+}
+
+/* Standalone contextual links (e.g. "All source repositories on GitHub")
+   become their own block with rhythm so they stop colliding with the
+   gallery / section above. Inline .xt-link usage inside paragraphs and
+   link clusters is untouched by this direct-child rule. */
+.sl-markdown-content > a.xt-link {
+  display: block;
+  width: fit-content;
+  margin-top: 1.5rem;
 }
 
 /* ============================================
@@ -603,7 +631,7 @@ h2.xt-section-title {
 .xt-template-link {
   display: grid;
   grid-template-columns: 1fr;
-  gap: 0.55rem 1.75rem;
+  gap: 0.7rem 1.75rem;
   padding: 1.3rem 0.35rem;
   text-decoration: none;
   color: inherit;
@@ -628,6 +656,17 @@ h2.xt-section-title {
   font-weight: 600;
   color: var(--xt-ink);
   transition: color var(--xt-dur-hover) var(--xt-ease);
+}
+
+/* Row ordinal (01-05) - decorative mono index, kept out of the accessible
+   name so screen readers hear the template name alone. */
+.xt-template-index {
+  display: inline-block;
+  margin-right: 0.65rem;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: var(--xt-muted);
 }
 
 .xt-template-link:hover .xt-template-name {
@@ -694,23 +733,31 @@ h2.xt-section-title {
 
 @media (min-width: 40rem) {
   .xt-template-link {
-    grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
     align-items: baseline;
+    column-gap: 2rem;
   }
 
+  /* Action moves to its own full-width row, right-aligned so the arrow
+     edge stays consistent with the desktop column. */
   .xt-template-repo {
     grid-column: 1 / -1;
+    justify-self: end;
   }
 }
 
 @media (min-width: 72rem) {
   .xt-template-link {
-    grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr) auto;
-    align-items: center;
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) auto;
+    align-items: baseline;
+    column-gap: 2rem;
   }
 
   .xt-template-repo {
     grid-column: auto;
+    justify-self: end;
+    /* Stable action column: repo names stay on one line, arrows align. */
+    white-space: nowrap;
   }
 }
 

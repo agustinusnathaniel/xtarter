@@ -8,7 +8,7 @@ import { TEMPLATE_CATALOG } from '../data/template-catalog'
 ---
 
 <ul class="xt-template-list">
-	{TEMPLATE_CATALOG.map((t) => (
+	{TEMPLATE_CATALOG.map((t, i) => (
 		<li class="xt-template-row">
 			<a
 				href={t.url}
@@ -19,7 +19,10 @@ import { TEMPLATE_CATALOG } from '../data/template-catalog'
 				data-umami-event-template_name={t.name}
 			>
 				<div class="xt-template-main">
-					<h3 class="xt-template-name">{t.name}</h3>
+					<h3 class="xt-template-name">
+						<span class="xt-template-index" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+						{t.name}
+					</h3>
 					<p class="xt-template-desc">{t.description}</p>
 				</div>
 				<ul class="xt-template-stack" aria-label="Stack">
