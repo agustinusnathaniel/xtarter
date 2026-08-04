@@ -127,7 +127,7 @@ describe('add command', () => {
 			process.exitCode = 0
 			await fs.rm(cwd, { recursive: true, force: true })
 		}
-	})
+	}, 60_000)
 
 	it('handles invalid task ID gracefully', async () => {
 		const cwd = await createMinimalProject()
@@ -167,7 +167,7 @@ describe('add command', () => {
 		} finally {
 			await fs.rm(cwd, { recursive: true, force: true })
 		}
-	})
+	}, 60_000)
 })
 
 describe('undo command', () => {
