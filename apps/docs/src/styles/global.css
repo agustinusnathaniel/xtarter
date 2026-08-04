@@ -72,6 +72,9 @@ h6 {
   /* Accent (brand orange) */
   --xt-accent: #f97316;
   --xt-accent-deep: #c2410c;
+  /* Ghost hover ink on light surfaces: deeper than --xt-accent-deep so it
+     clears 4.5:1 (5.35:1 on the soft tint over paper, 5.72:1 over panel). */
+  --xt-accent-hover: #a83c0a;
   --xt-accent-soft: rgba(249, 115, 22, 0.1);
   /* Status */
   --xt-ok: #15803d;
@@ -325,15 +328,39 @@ p.xt-section-label {
   border-color: var(--xt-line-strong);
 }
 
+/* The dark base button rule (:root[data-theme="dark"] .xt-btn, 0,3,0)
+   would paint every button - including ghosts - with the accent background.
+   Keep ghost buttons transparent in dark mode; the dark hover rule below
+   restores the soft tint on hover. */
+:root[data-theme="dark"] .xt-btn-ghost {
+  background: transparent;
+}
+
 .xt-btn-ghost:hover {
   border-color: var(--xt-accent-deep);
-  color: var(--xt-accent-deep);
+  color: var(--xt-accent-hover);
   background: var(--xt-accent-soft);
 }
 
 :root[data-theme="dark"] .xt-btn-ghost:hover {
   border-color: var(--xt-accent);
   color: var(--xt-accent);
+  background: var(--xt-accent-soft);
+}
+
+/* Starlight LinkButton primary - light mode only. Starlight paints it
+   white-on-var(--sl-color-text-accent), which resolves to the brand
+   orange #f97316 in light mode (~2.8:1). Use the deep accent so white
+   text clears 4.5:1 (5.18:1). Dark mode keeps Starlight's own
+   accent-high background (10.5:1) untouched. */
+:root[data-theme="light"] .sl-link-button.primary {
+  background: var(--xt-accent-deep);
+  border-color: var(--xt-accent-deep);
+  color: var(--xt-btn-ink);
+}
+
+:root[data-theme="light"] .sl-link-button.primary:hover {
+  color: var(--xt-btn-ink);
 }
 
 /* ---- Homepage: two-lane workbench ---- */
