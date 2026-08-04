@@ -5,94 +5,30 @@ template: splash
 editUrl: false
 lastUpdated: false
 hero:
-  title: "Scaffold projects in seconds"
-  tagline: "Pick a template. Run one command. Get a fully configured project with linting, type checking, CI, and editor settings - ready to ship."
-  actions:
-    - text: Get Started
-      icon: right-arrow
-      link: /create-xtarter-app/getting-started/
-    - text: Browse Templates
-      icon: external
-      variant: minimal
-      link: /#starter-templates
+  # Presence flag only. This route's hero is rendered by
+  # src/components/LandingHero.astro (wired in astro.config.mjs), which
+  # hardcodes the composition; no hero data is read from this file. Keep
+  # the key present and empty: Starlight sets data-has-hero on the page
+  # root from its presence, activating the splash paper backdrop in
+  # global.css.
+  {}
 ---
 
-import { LinkCard, CardGrid, LinkButton } from '@astrojs/starlight/components'
+import TemplateGallery from '../../components/TemplateGallery.astro'
+import { PackageManagers } from 'starlight-package-managers'
 
-## Why create-xtarter-app?
+<h2 class="xt-section-title">Five templates, one command</h2>
 
-Starting a new JS/TS project means configuring Biome, TypeScript, ESLint, Prettier, GitHub Actions,
-VS Code settings, Tailwind, and more - before writing a single line of code.
+<p class="xt-section-lead">Every option ships with Biome, TypeScript strict, CI, editor settings, and agent skills pre-configured - the same baseline in every scaffold.</p>
 
-<div class="features-grid">
+<TemplateGallery />
 
-<div class="feature-card">
-<div class="feature-icon">⚡</div>
-<h3>One command</h3>
-<p>Run <code>pnpm create xtarter-app</code> and pick your stack. Everything else is handled for you.</p>
-</div>
+<a class="xt-link" href="https://github.com/agustinusnathaniel?tab=repositories&q=&type=source" target="_blank" rel="noopener noreferrer" data-umami-event="github_browse_click">All source repositories on GitHub</a>
 
-<div class="feature-card">
-<div class="feature-icon">📦</div>
-<h3>Curated templates</h3>
-<p>Production-grade starters for Next.js, React + Vite.</p>
-</div>
+<h2 class="xt-section-title">Quick start</h2>
 
-<div class="feature-card">
-<div class="feature-icon">🔧</div>
-<h3>Pre-configured tooling</h3>
-<p>Every template ships with Biome linting & formatting, TypeScript strict mode, and CI workflows.</p>
-</div>
+<p class="xt-section-lead">Scaffold a new project in one command.</p>
 
-<div class="feature-card">
-<div class="feature-icon">🔄</div>
-<h3>Stay in sync</h3>
-<p>After scaffolding, use <strong>xtarterize</strong> to keep your conformance configs up to date.</p>
-</div>
+<PackageManagers type="create" pkg="xtarter-app@latest" pkgManagers={['npm', 'pnpm', 'yarn', 'bun']} />
 
-</div>
-
----
-
-## Quick Start
-
-```bash
-# Scaffold a new project
-pnpm create xtarter-app
-
-# Follow the interactive prompts to pick your template
-# ?? Which template?
-#   - Next.js + Chakra UI
-#   - Next.js + Tailwind
-#   - Vite + React + Chakra
-#   - Vite + React + Tailwind
-#   - Vite + React + Hero UI
-```
-
-<LinkButton href="/create-xtarter-app/getting-started/" size="lg">Get started →</LinkButton>
-
----
-
-## Available Templates
-
-<CardGrid>
-  <LinkCard title="Next.js + Chakra UI" href="/#starter-templates" description="Next.js 16, Chakra UI v3, Biome, Turborepo, Playwright." />
-  <LinkCard title="Next.js + Tailwind" href="/#starter-templates" description="Next.js 16, Tailwind CSS v4, Biome, Playwright." />
-  <LinkCard title="Vite + React + Chakra" href="/#starter-templates" description="Vite+ (Vite 8), React 19, Chakra UI v3, TanStack Router & Query, Biome, Vitest." />
-  <LinkCard title="Vite + React + Tailwind" href="/#starter-templates" description="Vite+ (Vite 8), React 19, Tailwind CSS v4, TanStack Router & Query, Biome, Vitest." />
-  <LinkCard title="Vite + React + Hero UI" href="/#starter-templates" description="Vite+ (Vite 8), React 19, Hero UI, TanStack Router, Biome, Vitest." />
-</CardGrid>
-
----
-
-## After scaffolding? Use xtarterize
-
-Once your project is scaffolded, use **xtarterize** to keep your
-conformance configs in sync as the ecosystem evolves.
-
-| create-xtarter-app | xtarterize |
-|---|---|
-| Day 0 - scaffold new projects | Day 1+ - keep existing projects in shape |
-| `pnpm create xtarter-app` | `npx xtarterize init` |
-
-<LinkButton href="/xtarterize/" variant="secondary">Learn about xtarterize →</LinkButton>
+<p class="xt-note">Follow the prompts to pick a template. Next, keep the project conformant as standards evolve: <a class="xt-link" href="/xtarterize/getting-started/installation/">npx xtarterize init</a>.</p>

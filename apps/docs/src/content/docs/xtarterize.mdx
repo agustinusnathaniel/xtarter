@@ -5,140 +5,61 @@ template: splash
 editUrl: false
 lastUpdated: false
 hero:
-  title: "The conformance CLI for JavaScript & TypeScript"
-  tagline: "Detect your project's stack. Validate your configs. Keep everything in sync - without overwriting a single file without your say-so."
-  actions:
-    - text: Get Started
-      icon: right-arrow
-      link: /xtarterize/getting-started/installation/
-    - text: View CLI Reference
-      icon: external
-      variant: minimal
-      link: /xtarterize/guide/cli/overview/
+  # Presence flag only. This route's hero is rendered by
+  # src/components/LandingHero.astro (wired in astro.config.mjs), which
+  # hardcodes the composition; no hero data is read from this file. Keep
+  # the key present and empty: Starlight sets data-has-hero on the page
+  # root from its presence, activating the splash paper backdrop in
+  # global.css.
+  {}
 ---
 
-import { Aside, LinkCard, CardGrid, LinkButton } from '@astrojs/starlight/components'
-import TerminalDemo from '../../components/TerminalDemo.astro'
+import { Aside } from '@astrojs/starlight/components'
+import { PackageManagers } from 'starlight-package-managers'
 
-<TerminalDemo />
+<h2 class="xt-section-title">The pipeline</h2>
 
-## Why xtarterize?
+<p class="xt-section-lead">Every run follows the same five steps, from reading your project to applying changes with backups in place.</p>
 
-Every [JavaScript](https://developer.mozilla.org/en-US/docs/Web/JavaScript)/[TypeScript](https://www.typescriptlang.org/) project needs [Biome](https://biomejs.dev/) ([linting](https://biomejs.dev/linter/) + [formatting](https://biomejs.dev/formatter/)), [TypeScript](https://www.typescriptlang.org/tsconfig/) ([strict mode](https://www.typescriptlang.org/tsconfig/#strict)), [CI workflows](https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions) ([GitHub Actions](https://docs.github.com/en/actions)), [editor configs](https://code.visualstudio.com/docs/getstarted/settings#_settingsjson) ([VS Code](https://code.visualstudio.com/)), [AI agent skills](https://skills.sh), and more. Setting them up is tedious. Keeping them consistent across projects is worse.
-
-<div class="features-grid">
-
-<div class="feature-card">
-<div class="feature-icon">🔍</div>
-<h3>Detects your stack</h3>
-<p>Scans your project to understand what frameworks, tools, and configs you're using - before touching anything.</p>
-</div>
-
-<div class="feature-card">
-<div class="feature-icon">🎯</div>
-<h3>Applies only what fits</h3>
-<p>Never gets in your way. Only suggests configs that match your detected tooling and project structure.</p>
-</div>
-
-<div class="feature-card">
-<div class="feature-icon">🛡️</div>
-<h3>Never destructive</h3>
-<p>Shows you a diff before any change. Backs up your files. You're always in control.</p>
-</div>
-
-<div class="feature-card">
-<div class="feature-icon">🔄</div>
-<h3>Safe to rerun</h3>
-<p>Idempotent by design. Run it ten times - no duplicates, no corruption, no drift.</p>
-</div>
-
-<div class="feature-card">
-<div class="feature-icon">📈</div>
-<h3>Evolves with you</h3>
-<p>As your project grows, <code>sync</code> and <code>diff</code> keep your configs up to date without manual work.</p>
-</div>
-
-<div class="feature-card">
-<div class="feature-icon">⚡</div>
-<h3>Wide framework support</h3>
-<p>React, Vue, Svelte, Solid, Node, Bun - xtarterize detects your stack and applies what fits.</p>
-</div>
-
-</div>
+<ol class="xt-pipeline">
+  <li class="xt-pipe">
+    <span class="xt-pipe-name">Detect</span>
+    <p class="xt-pipe-desc">Profile your project: framework, bundler, package manager, existing configs.</p>
+  </li>
+  <li class="xt-pipe">
+    <span class="xt-pipe-name">Resolve</span>
+    <p class="xt-pipe-desc">Map that profile to the conformance tasks that apply to your stack.</p>
+  </li>
+  <li class="xt-pipe">
+    <span class="xt-pipe-name">Check</span>
+    <p class="xt-pipe-desc">Compare each file against the standard: new, patch, skip, or conflict.</p>
+  </li>
+  <li class="xt-pipe">
+    <span class="xt-pipe-name">Plan</span>
+    <p class="xt-pipe-desc">Review the conformance plan before anything is written.</p>
+  </li>
+  <li class="xt-pipe">
+    <span class="xt-pipe-name">Apply</span>
+    <p class="xt-pipe-desc">Back up originals, then merge or rewrite configs.</p>
+  </li>
+</ol>
 
 <Aside type="caution" title="Current focus: Vite + React + TypeScript">
   The CLI detects a wide range of frameworks, but the deepest task coverage is for **Vite**, **React**, and **TypeScript** projects. Support for other stacks (Vue, Svelte, Solid, Node CLI, Bun, etc.) works but is **experimental** - tasks may be fewer or less mature. Contributions to expand coverage are welcome.
 </Aside>
 
----
+<h2 class="xt-section-title">Quick start</h2>
 
-## How it works
+<p class="xt-section-lead">Three commands cover the common loop.</p>
 
-```mermaid
-flowchart LR
-    A["🔍 Detect<br/>Project Stack"] --> B["🎯 Resolve<br/>Applicable Tasks"]
-    B --> C["✅ Check<br/>Task Statuses"]
-    C --> D["📋 Plan<br/>Show Diffs"]
-    D --> E["🚀 Apply<br/>With Backups"]
+<PackageManagers type="exec" pkg="xtarterize" args="init" pkgManagers={['npm', 'pnpm', 'yarn', 'bun']} title="Initialize conformance" />
 
-    style A fill:#6366f1,color:#fff
-    style B fill:#8b5cf6,color:#fff
-    style C fill:#a855f7,color:#fff
-    style D fill:#d946ef,color:#fff
-    style E fill:#22c55e,color:#fff
-```
+<PackageManagers type="exec" pkg="xtarterize" args="check" pkgManagers={['npm', 'pnpm', 'yarn', 'bun']} title="Check conformance" />
 
----
+<PackageManagers type="exec" pkg="xtarterize" args="diff" pkgManagers={['npm', 'pnpm', 'yarn', 'bun']} title="Preview changes" />
 
-## Quick Start
-
-Get up and running in under a minute:
-
-```bash
-# 1. Initialize conformance for your project
-npx xtarterize init
-
-# 2. Check your current conformance status
-npx xtarterize check
-
-# 3. Preview what changes sync would make
-npx xtarterize diff
-```
-
-<LinkButton href="/xtarterize/getting-started/installation/" size="lg">Install xtarterize →</LinkButton>
-
----
-
-## Explore the docs
-
-<CardGrid>
-  <LinkCard title="Getting Started" href="/xtarterize/getting-started/introduction/" description="Learn the basics and set up your first project in minutes." />
-  <LinkCard title="CLI Reference" href="/xtarterize/guide/cli/overview/" description="Complete command reference with all flags and options." />
-  <LinkCard title="Conformance Tasks" href="/xtarterize/guide/tasks/overview/" description="See what tasks are available and how to customize them." />
-  <LinkCard title="Configuration" href="/xtarterize/guide/config/overview/" description="How xtarterize detects and adapts to your project." />
-  <LinkCard title="Architecture" href="/xtarterize/contributing/architecture/overview/" description="Understand the internal design and package structure." />
-  <LinkCard title="Project Detection" href="/xtarterize/contributing/core/detect/" description="How xtarterize discovers your project's stack." />
-  <LinkCard title="Contributing" href="https://github.com/agustinusnathaniel/xtarterize/blob/main/CONTRIBUTING.md" description="Get involved, report issues, or help build xtarterize." />
-</CardGrid>
-
----
-
-## New project or existing?
-
-xtarterize works with both:
-
-| Tool | When to use |
-|------|-------------|
-| **[create-xtarter-app](/create-xtarter-app/)** | Day 0 - Scaffold a new project from curated templates |
-| **[xtarterize](/xtarterize/getting-started/installation/)** | Day 1+ - Bring conformance to any existing project |
-
-## References
-
-- [Biome](https://biomejs.dev/) - Fast linter and formatter
-- [TypeScript](https://www.typescriptlang.org/) - Typed JavaScript
-- [GitHub Actions](https://docs.github.com/en/actions) - CI/CD automation
-- [VS Code](https://code.visualstudio.com/) - Code editor with extensive configuration
-- [Agent Skills](https://skills.sh) - Open ecosystem of reusable AI agent capabilities
-- [Node.js](https://nodejs.org/) - JavaScript runtime
-
-<LinkButton href="/xtarterize/getting-started/installation/">Start now →</LinkButton>
+<ul class="xt-link-cluster" aria-label="Related documentation">
+  <li><a class="xt-link" href="/xtarterize/getting-started/installation/">Getting Started</a></li>
+  <li><a class="xt-link" href="/xtarterize/guide/cli/overview/">CLI Reference</a></li>
+  <li><a class="xt-link" href="/xtarterize/guide/tasks/overview/">Conformance Tasks</a></li>
+</ul>

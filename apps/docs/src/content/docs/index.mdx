@@ -5,52 +5,34 @@ template: splash
 editUrl: false
 lastUpdated: false
 hero:
-  title: "xtarter"
-  tagline: "Production-grade starter templates for JavaScript & TypeScript. Scaffold your next project in seconds."
-  actions:
-    - text: Browse Templates
-      icon: right-arrow
-      link: "#starter-templates"
-    - text: Get Started with xtarterize
-      icon: external
-      variant: minimal
-      link: /xtarterize/
+  # Presence flag only. This route's hero is rendered by
+  # src/components/LandingHero.astro (wired in astro.config.mjs), which
+  # hardcodes the composition; no hero data is read from this file. Keep
+  # the key present and empty: Starlight sets data-has-hero on the page
+  # root from its presence, activating the splash paper backdrop in
+  # global.css.
+  {}
 ---
 
-import { LinkCard, CardGrid, LinkButton } from '@astrojs/starlight/components'
 import TemplateGallery from '../../components/TemplateGallery.astro'
 
-## Starter Templates
+<h2 id="starter-templates" class="xt-section-title">Starter Templates</h2>
 
-Every template comes pre-configured with Biome linting & formatting, TypeScript strict mode,
-GitHub Actions CI, VS Code settings, and AI agent skills - ready the moment you scaffold.
+<p class="xt-section-lead">Five curated starters, each pre-configured with Biome, TypeScript strict, CI, VS Code settings, and agent skills. Pick one and scaffold - no setup after.</p>
 
 <TemplateGallery />
 
-<LinkButton href="https://github.com/agustinusnathaniel?tab=repositories&q=&type=source&language=" size="lg" data-umami-event="github_browse_click">View all templates on GitHub →</LinkButton>
+<p class="xt-note">Ready to use one? <a class="xt-link" href="/create-xtarter-app/">Scaffold with create-xtarter-app &rarr;</a></p>
 
----
+<a class="xt-link" href="https://github.com/agustinusnathaniel?tab=repositories&q=&type=source" target="_blank" rel="noopener noreferrer" data-umami-event="github_browse_click">All source repositories on GitHub</a>
 
-## The Tooling
+<h2 class="xt-section-title">The project lifecycle</h2>
 
-<div class="product-grid">
-  <a href="/create-xtarter-app/" class="product-card" data-umami-event="product_card_click" data-umami-event-product="create-xtarter-app">
-    <h2>
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="4 17 10 11 4 5"/><line x1="12" y1="19" x2="20" y2="19"/></svg>
-      create-xtarter-app
-      <span class="badge badge-cxa">cxa</span>
-    </h2>
-    <p>Scaffold a new project from production-grade templates in a single command. Pick your stack, get a fully configured project.</p>
-    <span class="product-card-link">Learn more →</span>
-  </a>
-  <a href="/xtarterize/" class="product-card" data-umami-event="product_card_click" data-umami-event-product="xtarterize">
-    <h2>
-      <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-      xtarterize
-      <span class="badge badge-xtz">xtz</span>
-    </h2>
-    <p>Bring conformance to any existing JS/TS project. Detect your stack, validate configs, sync tooling - with diffs and backups.</p>
-    <span class="product-card-link">Learn more →</span>
-  </a>
-</div>
+<p class="xt-section-lead">Two tools, one standard, one path from the first commit to a shipped project.</p>
 
+<ol class="xt-lifecycle">
+  <li><a href="#starter-templates">Choose</a></li>
+  <li><a href="/create-xtarter-app/">Scaffold</a></li>
+  <li><a href="/xtarterize/">Conform</a></li>
+  <li>Ship</li>
+</ol>
