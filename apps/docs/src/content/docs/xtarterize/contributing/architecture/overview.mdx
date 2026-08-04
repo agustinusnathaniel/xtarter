@@ -10,6 +10,7 @@ import {
   TabItem,
   LinkButton,
 } from "@astrojs/starlight/components";
+import { ContributorList } from "astro-contributors";
 
 xtarterize is organized as a monorepo using [Turborepo](https://turbo.build/repo) for task orchestration, [pnpm](https://pnpm.io/) for package management, and [Vite Plus](https://viteplus.dev) for build, test, and development workflows.
 
@@ -193,3 +194,10 @@ flowchart LR
 <LinkButton href="/xtarterize/contributing/core/detect/">
   Explore project detection →
 </LinkButton>
+
+## Contributors
+
+<ContributorList
+  githubRepo="agustinusnathaniel/xtarterize"
+  ignore={["renovate[bot]", "github-actions[bot]"]}
+/>
