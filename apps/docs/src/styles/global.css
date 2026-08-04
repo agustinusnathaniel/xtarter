@@ -147,7 +147,6 @@ body {
 
 .xt-hero h1,
 .xt-section-title,
-.xt-template-name,
 .xt-lifecycle li,
 .xt-pipe-name {
   text-wrap: balance;
@@ -157,7 +156,6 @@ body {
 
 .xt-hero-lede,
 .xt-section-lead,
-.xt-template-desc,
 .xt-pipe-desc,
 .xt-terminal-caption,
 .xt-note {
@@ -611,154 +609,6 @@ h2.xt-section-title {
 .xt-tag-safe {
   background: rgba(74, 222, 128, 0.16);
   color: #86efac;
-}
-
-/* ============================================
-   STATIC TEMPLATE GALLERY - authored rows, not cards
-   ============================================ */
-
-.xt-template-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  border-top: 1px solid var(--xt-line);
-}
-
-.xt-template-row {
-  border-bottom: 1px solid var(--xt-line);
-}
-
-.xt-template-link {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 0.7rem 1.75rem;
-  padding: 1.3rem 0.35rem;
-  text-decoration: none;
-  color: inherit;
-  min-height: 44px;
-  min-width: 0;
-  transition: background-color var(--xt-dur-hover) var(--xt-ease);
-}
-
-.xt-template-link:hover {
-  text-decoration: none;
-  background: var(--xt-accent-soft);
-}
-
-.xt-template-link:active {
-  transition-duration: var(--xt-dur-press);
-}
-
-.xt-template-name {
-  margin: 0;
-  font-family: var(--font-sans);
-  font-size: 1.08rem;
-  font-weight: 600;
-  color: var(--xt-ink);
-  transition: color var(--xt-dur-hover) var(--xt-ease);
-}
-
-/* Row ordinal (01-05) - decorative mono index, kept out of the accessible
-   name so screen readers hear the template name alone. */
-.xt-template-index {
-  display: inline-block;
-  margin-right: 0.65rem;
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  font-weight: 500;
-  color: var(--xt-muted);
-}
-
-.xt-template-link:hover .xt-template-name {
-  color: var(--xt-accent-hover);
-}
-
-:root[data-theme="dark"] .xt-template-link:hover .xt-template-name {
-  color: var(--xt-accent);
-}
-
-.xt-template-desc {
-  margin: 0;
-  font-size: 0.92rem;
-  line-height: 1.55;
-  color: var(--xt-muted);
-}
-
-.xt-template-stack {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.3rem 0.75rem;
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  font-family: var(--font-mono);
-  font-size: 0.78rem;
-  color: var(--xt-muted);
-}
-
-.xt-template-stack li + li::before {
-  content: "·";
-  margin-right: 0.75rem;
-  color: var(--xt-line-strong);
-}
-
-.xt-template-repo {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  font-size: 0.8rem;
-  color: var(--xt-muted);
-  min-width: 0;
-}
-
-.xt-template-repo code {
-  font-family: var(--font-mono);
-  font-size: 0.8rem;
-  overflow-wrap: anywhere;
-}
-
-.xt-arrow {
-  color: var(--xt-accent-deep);
-  flex-shrink: 0;
-  transition: transform var(--xt-dur-hover) var(--xt-ease);
-}
-
-.xt-template-link:hover .xt-arrow {
-  transform: translateX(2px);
-}
-
-:root[data-theme="dark"] .xt-arrow {
-  color: var(--xt-accent);
-}
-
-@media (min-width: 40rem) {
-  .xt-template-link {
-    grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
-    align-items: baseline;
-    column-gap: 2rem;
-  }
-
-  /* Action moves to its own full-width row, right-aligned so the arrow
-     edge stays consistent with the desktop column. */
-  .xt-template-repo {
-    grid-column: 1 / -1;
-    justify-self: end;
-  }
-}
-
-@media (min-width: 72rem) {
-  .xt-template-link {
-    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) auto;
-    align-items: baseline;
-    column-gap: 2rem;
-  }
-
-  .xt-template-repo {
-    grid-column: auto;
-    justify-self: end;
-    /* Stable action column: repo names stay on one line, arrows align. */
-    white-space: nowrap;
-  }
 }
 
 /* ============================================

@@ -2,37 +2,37 @@
 // Static template gallery. Renders records from the manually maintained
 // template catalog in src/data/template-catalog.ts - no network, no GitHub
 // API, no star counts. Ownership of the catalog is documented in that file.
-// Rendered as an authored row list (not cards): hairline-separated rows with
-// a clear scan hierarchy - name, description, stack, repo.
+// Rendered as a quiet catalog list: name, compact stack summary, repo action.
 import { TEMPLATE_CATALOG } from '../data/template-catalog'
 ---
 
-<ul class="xt-template-list">
-	{TEMPLATE_CATALOG.map((t, i) => (
-		<li class="xt-template-row">
+
+<ul class="m-0 list-none divide-y border-y border-[color:var(--xt-line)] p-0">
+	{TEMPLATE_CATALOG.map((t) => (
+		<li>
 			<a
 				href={t.url}
 				target="_blank"
 				rel="noopener noreferrer"
-				class="xt-template-link"
+				class="group grid min-h-11 grid-cols-1 gap-2 px-4 py-5 text-inherit no-underline transition-colors duration-150 hover:bg-[color:var(--xt-accent-soft)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--xt-focus)] sm:grid-cols-[minmax(0,1fr)_auto] sm:items-baseline sm:gap-x-8 sm:gap-y-1"
+				aria-label={`View ${t.repo} repository`}
 				data-umami-event="template_click"
 				data-umami-event-template_name={t.name}
 			>
-				<div class="xt-template-main">
-					<h3 class="xt-template-name">
-						<span class="xt-template-index" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
+				<span class="min-w-0">
+					<span class="block font-sans text-base font-semibold leading-tight text-[color:var(--xt-ink)] transition-colors duration-150 group-hover:text-[color:var(--xt-accent-hover)]">
 						{t.name}
-					</h3>
-					<p class="xt-template-desc">{t.description}</p>
-				</div>
-				<ul class="xt-template-stack" aria-label="Stack">
-					{t.stack.map((item) => (
-						<li>{item}</li>
-					))}
-				</ul>
-				<span class="xt-template-repo">
-					<code>{t.repo}</code>
-					<span class="xt-arrow" aria-hidden="true">&rarr;</span>
+					</span>
+					<span
+						class="mt-1 block min-w-0 text-pretty font-mono text-xs leading-5 text-[color:var(--xt-muted)] sm:truncate"
+						aria-label={`Stack: ${t.stack.slice(0, 3).join(', ')}`}
+					>
+						{t.stack.slice(0, 3).join(' · ')}
+					</span>
+				</span>
+				<span class="inline-flex items-center gap-2 justify-self-start font-mono text-xs text-[color:var(--xt-muted)] transition-colors duration-150 group-hover:text-[color:var(--xt-accent-hover)] sm:justify-self-end">
+					View repository
+					<span aria-hidden="true">&rarr;</span>
 				</span>
 			</a>
 		</li>
