@@ -12,7 +12,7 @@ import AllPackageManagers from '@/components/AllPackageManagers.astro'
 
 1. ### Start the wizard
 
-   <AllPackageManagers type="create" pkg="xtarter-app" />
+   <AllPackageManagers type="create" pkg="xtarter-app@latest" />
 
    You'll see a banner and the first prompt.
 
@@ -45,7 +45,7 @@ import AllPackageManagers from '@/components/AllPackageManagers.astro'
 
    Use `--template` / `-t` to skip the prompt:
 
-   <AllPackageManagers type="create" pkg="xtarter-app" args="my-app --template vite-tailwind" />
+   <AllPackageManagers type="create" pkg="xtarter-app@latest" args="my-app --template vite-tailwind" />
 
 4. ### Choose a package manager
 
@@ -60,7 +60,7 @@ import AllPackageManagers from '@/components/AllPackageManagers.astro'
 
    Use `--pm` / `-p` to skip:
 
-   <AllPackageManagers type="create" pkg="xtarter-app" args="my-app --pm bun" />
+   <AllPackageManagers type="create" pkg="xtarter-app@latest" args="my-app --pm bun" />
 
 5. ### Decide on git init
 
@@ -112,9 +112,9 @@ import AllPackageManagers from '@/components/AllPackageManagers.astro'
 
 Use `--preview` / `-P` to see a template's details without scaffolding:
 
-<AllPackageManagers type="create" pkg="xtarter-app" args="--preview" title="Preview all templates" />
+<AllPackageManagers type="create" pkg="xtarter-app@latest" args="--preview" title="Preview all templates" />
 
-<AllPackageManagers type="create" pkg="xtarter-app" args="--preview --template vite-tailwind" title="Preview a specific template" />
+<AllPackageManagers type="create" pkg="xtarter-app@latest" args="--preview --template vite-tailwind" title="Preview a specific template" />
 
 This shows the template's name, description, repository, and feature list.
 
@@ -122,7 +122,7 @@ This shows the template's name, description, repository, and feature list.
 
 Skip all prompts with `--yes` / `-y`:
 
-<AllPackageManagers type="create" pkg="xtarter-app" args="my-app --yes" />
+<AllPackageManagers type="create" pkg="xtarter-app@latest" args="my-app --yes" />
 
 This uses: pnpm, `next-chakra` template, git init enabled, CI/CD cleanup disabled.
 
@@ -130,7 +130,7 @@ This uses: pnpm, `next-chakra` template, git init enabled, CI/CD cleanup disable
 
 If you don't want a git repo initialized during scaffolding:
 
-<AllPackageManagers type="create" pkg="xtarter-app" args="my-app --no-git" />
+<AllPackageManagers type="create" pkg="xtarter-app@latest" args="my-app --no-git" />
 
 The CLI checks if `git` is installed. If not, git init is skipped automatically.
 

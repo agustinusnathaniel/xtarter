@@ -34,7 +34,7 @@ This command does not support global formatting or output flags (`--quiet`, `--f
 
 ### Find tasks by description
 
-<AllPackageManagers type="exec" pkg="xtarterize" args='query "strict typescript"' />
+<AllPackageManagers type="exec" pkg="xtarterize@latest" args='query "strict typescript"' />
 
 Outputs tasks grouped by domain bundle with per-group actionable add commands:
 
@@ -53,11 +53,11 @@ Outputs tasks grouped by domain bundle with per-group actionable add commands:
 
 ### Search for linting and formatting
 
-<AllPackageManagers type="exec" pkg="xtarterize" args='query "linting and formatting tool" --limit 5' />
+<AllPackageManagers type="exec" pkg="xtarterize@latest" args='query "linting and formatting tool" --limit 5' />
 
 ### Machine-readable output
 
-<AllPackageManagers type="exec" pkg="xtarterize" args='query "ci pipeline" --json' />
+<AllPackageManagers type="exec" pkg="xtarterize@latest" args='query "ci pipeline" --json' />
 
 ```json
 {
@@ -86,7 +86,7 @@ Outputs tasks grouped by domain bundle with per-group actionable add commands:
 
 Combine query with the init workflow to get a ranked task plan:
 
-<AllPackageManagers type="exec" pkg="xtarterize" args='init --compose "react project with ci and linting"' />
+<AllPackageManagers type="exec" pkg="xtarterize@latest" args='init --compose "react project with ci and linting"' />
 
 This reorders tasks so the most relevant ones appear first in the interactive plan, without excluding any applicable tasks.
 
