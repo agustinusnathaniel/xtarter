@@ -17,6 +17,7 @@ import {
 import { defineCommand } from 'citty'
 import { displayDiffs } from '@/ui/diff-display.js'
 import { resolveCwd } from '@/utils/cwd.js'
+import { statusHint } from '@/utils/display.js'
 import { handlePreflightFailure } from '@/utils/preflight.js'
 import { getAllTasksWithPlugins } from '@/utils/project.js'
 import { resolveRuntimeFlags } from '@/utils/runtime-flags.js'
@@ -157,7 +158,15 @@ async function runSingleTask(options: {
 		return
 	}
 
-	const status = await task.check(cwd, profile)
+	let status: TaskStatus
+	try {
+		status = await task.check(cwd, profile)
+	} catch (error) {
+		const message = error instanceof Error ? error.message : String(error)
+		logError(`Failed to check ${task.id}: ${message}`)
+		process.exitCode = 1
+		return
+	}
 	if (!quiet) console.log(`${statusTag(status)} ${task.id}`)
 
 	if (status === 'skip') {
@@ -332,7 +341,7 @@ async function selectTasksGrouped(
 	for (const entry of tasksWithStatus) {
 		const group = entry.task.group
 		if (!groups[group]) groups[group] = []
-		const hint = getStatusHint(entry.status)
+		const hint = statusHint(entry.status)
 		groups[group].push({
 			value: entry.task.id,
 			label: `${entry.task.label} (${entry.task.id})${hint ? ` - ${hint}` : ''}`,
@@ -355,17 +364,4 @@ async function selectTasksGrouped(
 	}
 
 	return []
-}
-
-function getStatusHint(status: TaskStatus): string {
-	switch (status) {
-		case 'new':
-			return 'new file'
-		case 'patch':
-			return 'needs update'
-		case 'skip':
-			return 'up to date'
-		case 'conflict':
-			return 'conflict'
-	}
 }

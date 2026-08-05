@@ -1,6 +1,7 @@
 import { multiselect } from '@clack/prompts'
 import type { Task, TaskStatus } from '@xtarterize/core'
 import { abortIfCancelled } from '@xtarterize/core'
+import { statusHint } from '@/utils/display.js'
 
 export async function selectTasks(
 	tasks: Task[],
@@ -9,7 +10,7 @@ export async function selectTasks(
 	const options = tasks.map((task) => ({
 		value: task.id,
 		label: `${task.label} (${task.id})`,
-		hint: getStatusHint(statuses.get(task.id)),
+		hint: statusHint(statuses.get(task.id)),
 	}))
 
 	const defaultSelected = tasks
@@ -32,19 +33,4 @@ export async function selectTasks(
 	}
 
 	return []
-}
-
-function getStatusHint(status?: string): string {
-	switch (status) {
-		case 'new':
-			return 'new file'
-		case 'patch':
-			return 'needs update'
-		case 'skip':
-			return 'up to date'
-		case 'conflict':
-			return 'conflict'
-		default:
-			return ''
-	}
 }
