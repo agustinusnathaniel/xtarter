@@ -18,3 +18,18 @@ export function taskStatusIcon(status: TaskStatus, colored = false): string {
 	if (status === 'conflict') return colored ? pc.red('⚠') : '⚠'
 	return colored ? pc.red('✗') : '✗'
 }
+
+export function statusHint(status?: TaskStatus): string {
+	switch (status) {
+		case 'new':
+			return 'new file'
+		case 'patch':
+			return 'needs update'
+		case 'skip':
+			return 'up to date'
+		case 'conflict':
+			return 'conflict'
+		default:
+			return ''
+	}
+}
