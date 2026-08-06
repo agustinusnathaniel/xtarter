@@ -5,20 +5,17 @@ import {
 	applyTasks,
 	createSpinner,
 	detectProject,
-	ensureXtarterizeGitignore,
 	isCI,
 	logError,
 	logInfo,
 	logSuccess,
 	logWarn,
-	runPreflight,
 	statusTag,
 } from '@xtarterize/core'
 import { defineCommand } from 'citty'
 import { displayDiffs } from '@/ui/diff-display.js'
-import { resolveCwd } from '@/utils/cwd.js'
 import { statusHint } from '@/utils/display.js'
-import { handlePreflightFailure } from '@/utils/preflight.js'
+import { resolveCwdWithPreflight } from '@/utils/preflight.js'
 import { getAllTasksWithPlugins } from '@/utils/project.js'
 import { resolveRuntimeFlags } from '@/utils/runtime-flags.js'
 import { printTiming } from '@/utils/timing-display.js'
@@ -57,16 +54,10 @@ export const addCommand = defineCommand({
 		},
 	},
 	async run({ args }) {
-		const cwd = resolveCwd(args)
-		await ensureXtarterizeGitignore(cwd)
+		const cwd = await resolveCwdWithPreflight(args)
 		const quiet = args.quiet || isCI()
 		const recordTiming = args.timing === true
 		const { format } = resolveRuntimeFlags(args)
-
-		const preflight = await runPreflight(cwd)
-		if (!preflight.valid) {
-			handlePreflightFailure(preflight, false)
-		}
 
 		const s = createSpinner(quiet)
 		s.start('Scanning project...')
