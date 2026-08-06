@@ -2,18 +2,15 @@ import { confirm } from '@clack/prompts'
 import {
 	abortIfCancelled,
 	createSpinner,
-	ensureXtarterizeGitignore,
 	listBackups,
 	logError,
 	logInfo,
 	logSuccess,
 	readRunManifest,
 	restoreBackup,
-	runPreflight,
 } from '@xtarterize/core'
 import { defineCommand } from 'citty'
-import { resolveCwd } from '@/utils/cwd.js'
-import { handlePreflightFailure } from '@/utils/preflight.js'
+import { resolveCwdWithPreflight } from '@/utils/preflight.js'
 
 export const undoCommand = defineCommand({
 	meta: {
@@ -31,10 +28,7 @@ export const undoCommand = defineCommand({
 		},
 	},
 	async run({ args }) {
-		const cwd = resolveCwd(args)
-		await ensureXtarterizeGitignore(cwd)
-		const preflight = await runPreflight(cwd)
-		handlePreflightFailure(preflight, false)
+		const cwd = await resolveCwdWithPreflight(args)
 		const quiet = args.quiet === true
 
 		const s = createSpinner(quiet)

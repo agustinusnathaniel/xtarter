@@ -1,13 +1,8 @@
 import type { Task } from '@xtarterize/core'
-import {
-	ensureXtarterizeGitignore,
-	runPreflight,
-	scoreTasks,
-} from '@xtarterize/core'
+import { scoreTasks } from '@xtarterize/core'
 import { defineCommand } from 'citty'
 import { runCommand, sharedRunArgs } from '@/commands/run-command.js'
-import { resolveCwd } from '@/utils/cwd.js'
-import { handlePreflightFailure } from '@/utils/preflight.js'
+import { resolveCwdWithPreflight } from '@/utils/preflight.js'
 import { getAllTasksWithPlugins, resolveCliContext } from '@/utils/project.js'
 
 export const initCommand = defineCommand({
@@ -28,10 +23,7 @@ export const initCommand = defineCommand({
 		},
 	},
 	async run({ args }) {
-		const cwd = resolveCwd(args)
-		await ensureXtarterizeGitignore(cwd)
-		const preflight = await runPreflight(cwd)
-		handlePreflightFailure(preflight, false)
+		const cwd = await resolveCwdWithPreflight(args)
 
 		let orderedTasks: Task[] | undefined
 

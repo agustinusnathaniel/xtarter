@@ -1,5 +1,6 @@
 import type { PreflightResult } from '@xtarterize/core'
-import { pc } from '@xtarterize/core'
+import { ensureXtarterizeGitignore, pc, runPreflight } from '@xtarterize/core'
+import { resolveCwd } from './cwd.js'
 
 export function handlePreflightFailure(
 	preflight: PreflightResult,
@@ -28,4 +29,15 @@ export function handlePreflightFailure(
 	}
 	console.log('')
 	process.exit(1)
+}
+
+export async function resolveCwdWithPreflight(
+	args: { cwd?: string; _?: (string | number)[] },
+	json = false,
+): Promise<string> {
+	const cwd = resolveCwd(args)
+	await ensureXtarterizeGitignore(cwd)
+	const preflight = await runPreflight(cwd)
+	handlePreflightFailure(preflight, json)
+	return cwd
 }

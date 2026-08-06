@@ -3,16 +3,13 @@ import type { Backup } from '@xtarterize/core'
 import {
 	abortIfCancelled,
 	createSpinner,
-	ensureXtarterizeGitignore,
 	listBackups,
 	logError,
 	logSuccess,
 	restoreBackup,
-	runPreflight,
 } from '@xtarterize/core'
 import { defineCommand } from 'citty'
-import { resolveCwd } from '@/utils/cwd.js'
-import { handlePreflightFailure } from '@/utils/preflight.js'
+import { resolveCwdWithPreflight } from '@/utils/preflight.js'
 
 export const restoreCommand = defineCommand({
 	meta: {
@@ -38,10 +35,7 @@ export const restoreCommand = defineCommand({
 		},
 	},
 	async run({ args }) {
-		const cwd = resolveCwd(args)
-		await ensureXtarterizeGitignore(cwd)
-		const preflight = await runPreflight(cwd)
-		handlePreflightFailure(preflight, false)
+		const cwd = await resolveCwdWithPreflight(args)
 		const filepath = args.filepath
 		const yes = args.yes === true
 		const quiet = args.quiet === true
