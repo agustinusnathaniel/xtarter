@@ -18,7 +18,7 @@ import { statusHint } from '@/utils/display.js'
 import { resolveCwdWithPreflight } from '@/utils/preflight.js'
 import { getAllTasksWithPlugins } from '@/utils/project.js'
 import { resolveRuntimeFlags } from '@/utils/runtime-flags.js'
-import { printTiming } from '@/utils/timing-display.js'
+import { detectionOnlyTiming, printTiming } from '@/utils/timing-display.js'
 
 export const addCommand = defineCommand({
 	meta: {
@@ -162,8 +162,7 @@ async function runSingleTask(options: {
 
 	if (status === 'skip') {
 		logSuccess('Already conformant')
-		if (!quiet)
-			printTiming({ detectionMs, resolutionMs: 0, resolutionSumMs: 0 })
+		if (!quiet) printTiming(detectionOnlyTiming(detectionMs))
 		return
 	}
 
@@ -188,21 +187,13 @@ async function runSingleTask(options: {
 		for (const error of result.errors) {
 			logError(`  - ${error}`)
 		}
-		if (!quiet)
-			printTiming(
-				{ detectionMs, resolutionMs: 0, resolutionSumMs: 0 },
-				result.timing,
-			)
+		if (!quiet) printTiming(detectionOnlyTiming(detectionMs), result.timing)
 		process.exitCode = 1
 		return
 	}
 	logSuccess(`${task.id} applied successfully`)
 	if (!quiet) {
-		printTiming(
-			{ detectionMs, resolutionMs: 0, resolutionSumMs: 0 },
-			result.timing,
-			recordTiming,
-		)
+		printTiming(detectionOnlyTiming(detectionMs), result.timing, recordTiming)
 	}
 }
 
@@ -317,11 +308,7 @@ async function runInteractive(options: {
 	}
 	logSuccess(`${totalApplied}/${selectedIds.length} tasks applied`)
 	if (!quiet && totalTiming) {
-		printTiming(
-			{ detectionMs, resolutionMs: 0, resolutionSumMs: 0 },
-			totalTiming,
-			recordTiming,
-		)
+		printTiming(detectionOnlyTiming(detectionMs), totalTiming, recordTiming)
 	}
 }
 

@@ -15,7 +15,7 @@ import { resolveCwd } from '@/utils/cwd.js'
 import { diagnosticIcon } from '@/utils/display.js'
 import { handlePreflightFailure } from '@/utils/preflight.js'
 import { resolveRuntimeFlags } from '@/utils/runtime-flags.js'
-import { printTiming } from '@/utils/timing-display.js'
+import { detectionOnlyTiming, printTiming } from '@/utils/timing-display.js'
 
 interface DiagnosticGroup {
 	title: string
@@ -160,7 +160,7 @@ export const doctorCommand = defineCommand({
 				`${summary.pass} passed, ${summary.warn} warnings, ${summary.fail} failed (${summary.total} checks)`,
 			),
 		)
-		printTiming({ detectionMs: diagMs, resolutionMs: 0, resolutionSumMs: 0 })
+		printTiming(detectionOnlyTiming(diagMs))
 	},
 })
 
