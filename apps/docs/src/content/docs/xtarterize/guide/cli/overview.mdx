@@ -53,6 +53,10 @@ The CLI follows the Unix convention: exit code `0` means success, `1` means the 
 npx xtarterize check --quiet || exit 1
 ```
 
+In GitHub Actions, `check` also emits native workflow command annotations — one `::error` per non-conformant task (linked to the config file it would modify) and one per failing diagnostic — so failures appear inline on the PR:
+
+<AllPackageManagers type="exec" pkg="xtarterize@latest" args="check --annotations" title="CI annotations" />
+
 ## `doctor`
 
 Run comprehensive project diagnostics. Checks are grouped into four categories:
@@ -186,6 +190,7 @@ Audit which tasks are conformant and which need attention. Also runs diagnostics
 | `--verbose` | Show tool installation and conflict checks |
 | `--quiet` | Suppress verbose output |
 | `--badge <path>` | Generate a conformance badge SVG (use `-` for stdout) |
+| `--annotations` | Emit GitHub Actions workflow command annotations (auto-enabled in CI) |
 
 <AllPackageManagers type="exec" pkg="xtarterize@latest" args="check" />
 

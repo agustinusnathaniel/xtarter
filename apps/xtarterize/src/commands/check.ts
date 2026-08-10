@@ -9,6 +9,7 @@ import {
 	statusTag,
 } from '@xtarterize/core'
 import { defineCommand } from 'citty'
+import { formatCheckAnnotations } from '@/ui/annotations.js'
 import { generateBadgeSvg } from '@/ui/badge.js'
 import { computeCheckOk, formatCheckResult } from '@/ui/json-formatter.js'
 import { diagnosticIcon, taskStatusIcon } from '@/utils/display.js'
@@ -38,6 +39,11 @@ export const checkCommand = defineCommand({
 			description:
 				'Generate conformance badge SVG (provide output path, or - for stdout)',
 		},
+		annotations: {
+			type: 'boolean',
+			description:
+				'Emit GitHub Actions workflow command annotations (auto-enabled in CI)',
+		},
 	},
 	async run({ args }) {
 		const ctx = resolveCliContext(args)
@@ -50,6 +56,13 @@ export const checkCommand = defineCommand({
 
 		if (!computeCheckOk(tasks, statuses, diagnostics)) {
 			process.exitCode = 1
+		}
+
+		const isGitHubActions = process.env.GITHUB_ACTIONS === 'true'
+		if (args.annotations || isGitHubActions) {
+			process.stdout.write(
+				`${formatCheckAnnotations(tasks, statuses, diagnostics)}\n`,
+			)
 		}
 
 		const conformant = tasks.filter((t) => statuses.get(t.id) === 'skip').length
