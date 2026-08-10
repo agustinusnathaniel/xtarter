@@ -7,6 +7,12 @@ import { Aside, Tabs, TabItem, CardGrid, Card, LinkButton, Steps } from '@astroj
 
 Latest updates and feature releases for xtarterize.
 
+## v1.21.0 — 2026-08-10
+
+### Added
+
+- `check` now emits GitHub Actions workflow command annotations (`::error` / `::warning`) for non-conformant tasks and failing diagnostics — one annotation per task, linked to the config file it would modify. Use `--annotations` to force it, or it auto-enables inside GitHub Actions. Conformance failures now appear inline on the PR, not just as an exit code.
+
 ## v1.20.0 — 2026-08-04
 
 ### Added

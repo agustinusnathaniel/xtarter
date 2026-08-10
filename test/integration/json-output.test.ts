@@ -4,7 +4,7 @@ import path from 'node:path'
 import { checkCommand } from '@xtarterize/app/commands/check.js'
 import { diffCommand } from '@xtarterize/app/commands/diff.js'
 import { listCommand } from '@xtarterize/app/commands/list.js'
-import { describe, expect, it } from 'vite-plus/test'
+import { describe, expect, it, vi } from 'vite-plus/test'
 
 async function createProjectFixture(): Promise<string> {
 	const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'xtarterize-json-'))
@@ -136,4 +136,40 @@ describe('cli json output', () => {
 		process.exitCode = 0
 		await fs.rm(cwd, { recursive: true, force: true })
 	})
+})
+
+it('check --json keeps stdout machine-readable when annotations are enabled', async () => {
+	const cwd = await createProjectFixture()
+	const stdoutChunks: string[] = []
+	const stderrChunks: string[] = []
+	const stdoutSpy = vi
+		.spyOn(process.stdout, 'write')
+		.mockImplementation((chunk: unknown) => {
+			stdoutChunks.push(String(chunk))
+			return true
+		})
+	const stderrSpy = vi
+		.spyOn(process.stderr, 'write')
+		.mockImplementation((chunk: unknown) => {
+			stderrChunks.push(String(chunk))
+			return true
+		})
+
+	try {
+		await captureJsonOutput(async () => {
+			await checkCommand.run?.({
+				args: { cwd, json: true, annotations: true },
+			} as never)
+		})
+
+		// Annotations must not pollute the machine-readable stdout stream
+		expect(stdoutChunks.join('')).not.toContain('::')
+		// Annotations are emitted on stderr (parsed by the Actions runner)
+		expect(stderrChunks.join('')).toContain('::error')
+	} finally {
+		stdoutSpy.mockRestore()
+		stderrSpy.mockRestore()
+		process.exitCode = 0
+		await fs.rm(cwd, { recursive: true, force: true })
+	}
 })
