@@ -6,6 +6,8 @@ import { diffCommand } from '@xtarterize/app/commands/diff.js'
 import { listCommand } from '@xtarterize/app/commands/list.js'
 import { describe, expect, it, vi } from 'vite-plus/test'
 
+const CONFORMANCE_SUMMARY_REGEX = /conformant|Conformance audit/
+
 async function createProjectFixture(): Promise<string> {
 	const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'xtarterize-json-'))
 	await fs.mkdir(path.join(tmpDir, '.git'), { recursive: true })
@@ -267,9 +269,13 @@ it('check --badge - keeps stdout a clean SVG and routes the audit to stderr', as
 		const stdout = stdoutChunks.join('')
 		const stderr = stderrChunks.join('')
 		expect(stdout.startsWith('<svg')).toBe(true)
+		// Nothing may follow the SVG on stdout — the audit goes to stderr.
 		expect(stdout.endsWith('</svg>')).toBe(true)
 		expect(stdout).not.toContain('Conformance audit')
-		expect(stderr).toContain('Conformance audit')
+		// In CI, quiet mode is auto-enabled so the audit section is skipped and
+		// only the summary line is printed — but it must land on stderr, never
+		// after the SVG on stdout.
+		expect(stderr).toMatch(CONFORMANCE_SUMMARY_REGEX)
 	} finally {
 		stdoutSpy.mockRestore()
 		stderrSpy.mockRestore()
