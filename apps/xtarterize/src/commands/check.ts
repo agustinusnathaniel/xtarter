@@ -60,9 +60,14 @@ export const checkCommand = defineCommand({
 
 		const isGitHubActions = process.env.GITHUB_ACTIONS === 'true'
 		if (args.annotations || isGitHubActions) {
-			process.stdout.write(
-				`${formatCheckAnnotations(tasks, statuses, diagnostics)}\n`,
+			const annotationOutput = formatCheckAnnotations(
+				tasks,
+				statuses,
+				diagnostics,
 			)
+			if (annotationOutput) {
+				process.stderr.write(`${annotationOutput}\n`)
+			}
 		}
 
 		const conformant = tasks.filter((t) => statuses.get(t.id) === 'skip').length
