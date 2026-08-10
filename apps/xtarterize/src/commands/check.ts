@@ -47,8 +47,12 @@ export const checkCommand = defineCommand({
 	},
 	async run({ args }) {
 		const ctx = resolveCliContext(args)
+		// When the badge is written to stdout, stdout must carry only the SVG.
+		// Suppress the scan spinner so it does not pollute the stream.
+		const badgeToStdout = args.badge === '-'
+		const scanCtx = badgeToStdout ? { ...ctx, quiet: true } : ctx
 		await ensureXtarterizeGitignore(ctx.cwd)
-		const { tasks, statuses, timing } = await scanProject(ctx)
+		const { tasks, statuses, timing } = await scanProject(scanCtx)
 
 		const conflictChecks = await runConflictChecks(ctx.cwd)
 		const installChecks = await runToolInstallationChecks(ctx.cwd)
@@ -77,14 +81,20 @@ export const checkCommand = defineCommand({
 			const svg = generateBadgeSvg({ conformant, total })
 			let badgePath = String(args.badge)
 			if (badgePath === '-') {
-				process.stdout.write(svg)
+				if (ctx.json) {
+					process.stderr.write(`${svg}\n`)
+				} else {
+					process.stdout.write(svg)
+				}
 			} else {
 				const stat = await fs.stat(badgePath).catch(() => null)
 				if (stat?.isDirectory()) {
 					badgePath = path.join(badgePath, 'conformance.svg')
 				}
 				await fs.writeFile(badgePath, svg, 'utf-8')
-				logSuccess(`Badge written to ${badgePath}`)
+				if (!ctx.json) {
+					logSuccess(`Badge written to ${badgePath}`)
+				}
 			}
 		}
 
@@ -93,37 +103,45 @@ export const checkCommand = defineCommand({
 			return
 		}
 
+		// In human mode with the badge on stdout, the audit text must not
+		// follow the SVG on the same stream, so route it to stderr.
+		const auditStream = badgeToStdout ? process.stderr : process.stdout
+
 		if (!ctx.quiet) {
-			console.log('')
-			console.log(pc.bold('Conformance audit'))
-			console.log('')
+			auditStream.write('\n')
+			auditStream.write(`${pc.bold('Conformance audit')}\n`)
+			auditStream.write('\n')
 
 			for (const task of tasks) {
 				const status = statuses.get(task.id) ?? 'new'
 				const icon = taskStatusIcon(status, true)
 
-				console.log(
-					`  ${icon} ${task.label.padEnd(40)} ${pc.dim(task.id)} ${statusTag(status)}`,
+				auditStream.write(
+					`  ${icon} ${task.label.padEnd(40)} ${pc.dim(task.id)} ${statusTag(status)}\n`,
 				)
 			}
 
-			console.log('')
-			console.log(pc.bold(`${conformant}/${total} conformant`))
+			auditStream.write('\n')
+			auditStream.write(`${pc.bold(`${conformant}/${total} conformant`)}\n`)
 
 			if (diagnostics.length > 0) {
-				console.log('')
-				console.log(pc.bold('Diagnostics'))
-				console.log('')
+				auditStream.write('\n')
+				auditStream.write(`${pc.bold('Diagnostics')}\n`)
+				auditStream.write('\n')
 
 				for (const check of diagnostics) {
-					console.log(`  ${diagnosticIcon(check.status)} ${check.message}`)
+					auditStream.write(
+						`  ${diagnosticIcon(check.status)} ${check.message}\n`,
+					)
 				}
 			}
 
-			console.log('')
-			printTiming(timing)
+			auditStream.write('\n')
+			printTiming(timing, undefined, {
+				write: (line) => auditStream.write(`${line}\n`),
+			})
 		} else {
-			console.log(`${conformant}/${total} conformant`)
+			auditStream.write(`${conformant}/${total} conformant\n`)
 		}
 	},
 })

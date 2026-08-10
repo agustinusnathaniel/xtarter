@@ -36,8 +36,12 @@ export function detectionOnlyTiming(detectionMs: number): ResolveTiming {
 export function printTiming(
 	resolve: ResolveTiming,
 	apply?: ApplyTiming,
-	recordTiming?: boolean,
+	options?: {
+		recordTiming?: boolean
+		write?: (line: string) => void
+	},
 ): void {
+	const { recordTiming, write = console.log } = options ?? {}
 	const lines: string[] = []
 	lines.push('')
 	lines.push(pc.bold('Timing'))
@@ -66,6 +70,6 @@ export function printTiming(
 		}
 	}
 
-	console.log(lines.join('\n'))
-	console.log('')
+	write(lines.join('\n'))
+	write('')
 }

@@ -80,7 +80,7 @@ async function applyAndReport({
 		process.exitCode = 1
 	}
 	const quietFlag = quiet ?? isCI()
-	if (!quietFlag) printTiming(timing, result.timing, recordTiming)
+	if (!quietFlag) printTiming(timing, result.timing, { recordTiming })
 }
 
 interface ResolveActionableTasksOptions {

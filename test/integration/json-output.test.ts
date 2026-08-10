@@ -6,6 +6,8 @@ import { diffCommand } from '@xtarterize/app/commands/diff.js'
 import { listCommand } from '@xtarterize/app/commands/list.js'
 import { describe, expect, it, vi } from 'vite-plus/test'
 
+const CONFORMANCE_SUMMARY_REGEX = /conformant|Conformance audit/
+
 async function createProjectFixture(): Promise<string> {
 	const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'xtarterize-json-'))
 	await fs.mkdir(path.join(tmpDir, '.git'), { recursive: true })
@@ -166,6 +168,114 @@ it('check --json keeps stdout machine-readable when annotations are enabled', as
 		expect(stdoutChunks.join('')).not.toContain('::')
 		// Annotations are emitted on stderr (parsed by the Actions runner)
 		expect(stderrChunks.join('')).toContain('::error')
+	} finally {
+		stdoutSpy.mockRestore()
+		stderrSpy.mockRestore()
+		process.exitCode = 0
+		await fs.rm(cwd, { recursive: true, force: true })
+	}
+})
+
+it('check --badge - --json keeps stdout a valid JSON payload', async () => {
+	const cwd = await createProjectFixture()
+	const stdoutChunks: string[] = []
+	const stderrChunks: string[] = []
+	const stdoutSpy = vi
+		.spyOn(process.stdout, 'write')
+		.mockImplementation((chunk: unknown) => {
+			stdoutChunks.push(String(chunk))
+			return true
+		})
+	const stderrSpy = vi
+		.spyOn(process.stderr, 'write')
+		.mockImplementation((chunk: unknown) => {
+			stderrChunks.push(String(chunk))
+			return true
+		})
+
+	try {
+		const output = await captureJsonOutput(async () => {
+			await checkCommand.run?.({
+				args: { cwd, json: true, badge: '-' },
+			} as never)
+		})
+
+		// The badge SVG must not pollute the machine-readable stdout stream
+		expect(stdoutChunks.join('')).not.toContain('<svg')
+		// The badge SVG is emitted on stderr alongside annotations
+		expect(stderrChunks.join('')).toContain('<svg')
+		expect(typeof output).toBe('object')
+	} finally {
+		stdoutSpy.mockRestore()
+		stderrSpy.mockRestore()
+		process.exitCode = 0
+		await fs.rm(cwd, { recursive: true, force: true })
+	}
+})
+
+it('check --badge <file> --json writes the badge and keeps stdout a valid JSON payload', async () => {
+	const cwd = await createProjectFixture()
+	const badgePath = path.join(cwd, 'conformance.svg')
+	const stdoutChunks: string[] = []
+	const stdoutSpy = vi
+		.spyOn(process.stdout, 'write')
+		.mockImplementation((chunk: unknown) => {
+			stdoutChunks.push(String(chunk))
+			return true
+		})
+
+	try {
+		const output = await captureJsonOutput(async () => {
+			await checkCommand.run?.({
+				args: { cwd, json: true, badge: badgePath },
+			} as never)
+		})
+
+		// The "Badge written" success message must not break the JSON payload
+		expect(stdoutChunks.join('')).not.toContain('Badge written')
+		expect(typeof output).toBe('object')
+
+		const svg = await fs.readFile(badgePath, 'utf-8')
+		expect(svg).toContain('<svg')
+	} finally {
+		stdoutSpy.mockRestore()
+		process.exitCode = 0
+		await fs.rm(cwd, { recursive: true, force: true })
+	}
+})
+
+it('check --badge - keeps stdout a clean SVG and routes the audit to stderr', async () => {
+	const cwd = await createProjectFixture()
+	const stdoutChunks: string[] = []
+	const stderrChunks: string[] = []
+	const stdoutSpy = vi
+		.spyOn(process.stdout, 'write')
+		.mockImplementation((chunk: unknown) => {
+			stdoutChunks.push(String(chunk))
+			return true
+		})
+	const stderrSpy = vi
+		.spyOn(process.stderr, 'write')
+		.mockImplementation((chunk: unknown) => {
+			stderrChunks.push(String(chunk))
+			return true
+		})
+
+	try {
+		await checkCommand.run?.({
+			args: { cwd, badge: '-' },
+		} as never)
+
+		const stdout = stdoutChunks.join('')
+		const stderr = stderrChunks.join('')
+		expect(stdout.startsWith('<svg')).toBe(true)
+		// Nothing may follow the SVG on stdout — the audit goes to stderr.
+		expect(stdout.endsWith('</svg>')).toBe(true)
+		expect(stdout).not.toContain('Conformance audit')
+		// In CI, quiet mode is auto-enabled so the audit section is skipped and
+		// only the summary line is printed — but it must land on stderr, never
+		// after the SVG on stdout.
+		expect(stderr).toMatch(CONFORMANCE_SUMMARY_REGEX)
 	} finally {
 		stdoutSpy.mockRestore()
 		stderrSpy.mockRestore()
