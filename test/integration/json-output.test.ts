@@ -173,3 +173,107 @@ it('check --json keeps stdout machine-readable when annotations are enabled', as
 		await fs.rm(cwd, { recursive: true, force: true })
 	}
 })
+
+it('check --badge - --json keeps stdout a valid JSON payload', async () => {
+	const cwd = await createProjectFixture()
+	const stdoutChunks: string[] = []
+	const stderrChunks: string[] = []
+	const stdoutSpy = vi
+		.spyOn(process.stdout, 'write')
+		.mockImplementation((chunk: unknown) => {
+			stdoutChunks.push(String(chunk))
+			return true
+		})
+	const stderrSpy = vi
+		.spyOn(process.stderr, 'write')
+		.mockImplementation((chunk: unknown) => {
+			stderrChunks.push(String(chunk))
+			return true
+		})
+
+	try {
+		const output = await captureJsonOutput(async () => {
+			await checkCommand.run?.({
+				args: { cwd, json: true, badge: '-' },
+			} as never)
+		})
+
+		// The badge SVG must not pollute the machine-readable stdout stream
+		expect(stdoutChunks.join('')).not.toContain('<svg')
+		// The badge SVG is emitted on stderr alongside annotations
+		expect(stderrChunks.join('')).toContain('<svg')
+		expect(typeof output).toBe('object')
+	} finally {
+		stdoutSpy.mockRestore()
+		stderrSpy.mockRestore()
+		process.exitCode = 0
+		await fs.rm(cwd, { recursive: true, force: true })
+	}
+})
+
+it('check --badge <file> --json writes the badge and keeps stdout a valid JSON payload', async () => {
+	const cwd = await createProjectFixture()
+	const badgePath = path.join(cwd, 'conformance.svg')
+	const stdoutChunks: string[] = []
+	const stdoutSpy = vi
+		.spyOn(process.stdout, 'write')
+		.mockImplementation((chunk: unknown) => {
+			stdoutChunks.push(String(chunk))
+			return true
+		})
+
+	try {
+		const output = await captureJsonOutput(async () => {
+			await checkCommand.run?.({
+				args: { cwd, json: true, badge: badgePath },
+			} as never)
+		})
+
+		// The "Badge written" success message must not break the JSON payload
+		expect(stdoutChunks.join('')).not.toContain('Badge written')
+		expect(typeof output).toBe('object')
+
+		const svg = await fs.readFile(badgePath, 'utf-8')
+		expect(svg).toContain('<svg')
+	} finally {
+		stdoutSpy.mockRestore()
+		process.exitCode = 0
+		await fs.rm(cwd, { recursive: true, force: true })
+	}
+})
+
+it('check --badge - keeps stdout a clean SVG and routes the audit to stderr', async () => {
+	const cwd = await createProjectFixture()
+	const stdoutChunks: string[] = []
+	const stderrChunks: string[] = []
+	const stdoutSpy = vi
+		.spyOn(process.stdout, 'write')
+		.mockImplementation((chunk: unknown) => {
+			stdoutChunks.push(String(chunk))
+			return true
+		})
+	const stderrSpy = vi
+		.spyOn(process.stderr, 'write')
+		.mockImplementation((chunk: unknown) => {
+			stderrChunks.push(String(chunk))
+			return true
+		})
+
+	try {
+		await checkCommand.run?.({
+			args: { cwd, badge: '-' },
+		} as never)
+
+		const stdout = stdoutChunks.join('')
+		const stderr = stderrChunks.join('')
+		expect(stdout.startsWith('<svg')).toBe(true)
+		expect(stdout.endsWith('</svg>')).toBe(true)
+		expect(stdout).not.toContain('Conformance audit')
+		expect(stderr).toContain('Conformance audit')
+	} finally {
+		stdoutSpy.mockRestore()
+		stderrSpy.mockRestore()
+		process.exitCode = 0
+		await fs.rm(cwd, { recursive: true, force: true })
+	}
+})

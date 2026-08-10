@@ -7,6 +7,12 @@ import { Aside, Tabs, TabItem, CardGrid, Card, LinkButton, Steps } from '@astroj
 
 Latest updates and feature releases for xtarterize.
 
+## v1.22.0 — 2026-08-10
+
+### Fixed
+
+- `check --badge` no longer corrupts machine-readable output: `--badge - --json` keeps stdout as pure JSON (the SVG goes to stderr), `--badge <file> --json` suppresses the "Badge written" success message from stdout, and `--badge -` in human mode keeps stdout as a clean SVG by routing the audit report to stderr.
+
 ## v1.21.0 — 2026-08-10
 
 ### Added

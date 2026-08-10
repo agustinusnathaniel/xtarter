@@ -193,7 +193,9 @@ async function runSingleTask(options: {
 	}
 	logSuccess(`${task.id} applied successfully`)
 	if (!quiet) {
-		printTiming(detectionOnlyTiming(detectionMs), result.timing, recordTiming)
+		printTiming(detectionOnlyTiming(detectionMs), result.timing, {
+			recordTiming,
+		})
 	}
 }
 
@@ -308,7 +310,9 @@ async function runInteractive(options: {
 	}
 	logSuccess(`${totalApplied}/${selectedIds.length} tasks applied`)
 	if (!quiet && totalTiming) {
-		printTiming(detectionOnlyTiming(detectionMs), totalTiming, recordTiming)
+		printTiming(detectionOnlyTiming(detectionMs), totalTiming, {
+			recordTiming,
+		})
 	}
 }
 
