@@ -166,6 +166,15 @@ async function runSingleTask(options: {
 		return
 	}
 
+	if (status === 'conflict') {
+		logWarn(
+			`Task "${taskId}" conflicts with existing configuration and was not applied`,
+		)
+		logInfo('Resolve the conflict manually, then re-run to apply.')
+		process.exitCode = 1
+		return
+	}
+
 	const diffs = await task.dryRun(cwd, profile)
 	if (!quiet) displayDiffs(diffs, format)
 
@@ -290,12 +299,14 @@ async function runInteractive(options: {
 			quiet: true,
 		})
 
-		if (result.errors.length > 0) {
+		if (result.applied > 0) {
+			totalApplied++
+			logSuccess(`${entry.task.id} applied`)
+		} else if (result.errors.length > 0) {
 			allErrors.push(...result.errors)
 			logError(`${entry.task.id}: ${result.errors.join(', ')}`)
 		} else {
-			totalApplied++
-			logSuccess(`${entry.task.id} applied`)
+			logWarn(`${entry.task.id} skipped (${entry.status}) — not applied`)
 		}
 
 		if (result.timing) {

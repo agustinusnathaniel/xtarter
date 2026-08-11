@@ -40,7 +40,7 @@ export const diffCommand = defineCommand({
 
 		const actionableTasks = tasks.filter((task) => {
 			const status = statuses.get(task.id)
-			return status === 'new' || status === 'patch'
+			return status === 'new' || status === 'patch' || status === 'conflict'
 		})
 		const { diffs, failures } = await collectTaskDiffs(
 			actionableTasks,
