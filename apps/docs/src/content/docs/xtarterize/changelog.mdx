@@ -12,6 +12,7 @@ Latest updates and feature releases for xtarterize.
 ### Fixed
 
 - `add` no longer claims a conflicting task "applied successfully": when a task conflicts with existing configuration (e.g. `ts/strict` on a tsconfig that already sets `strict: false`), `add` now reports it as not applied, exits 1, and leaves the conflicting file untouched. Interactive mode counts conflicts as skipped instead of applied, and `diff` now shows conflict diffs.
+- `sync` and `init` now honor `--include-conflicts` in non-interactive (`--yes`/quiet) mode: the flag was previously passed through in the interactive paths but silently dropped for `--yes`, so conflicting tasks were skipped even when the flag was set — exactly the automation scenario where it matters.
 
 ## v1.23.0 — 2026-08-10
 

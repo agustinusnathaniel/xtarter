@@ -267,7 +267,11 @@ export async function runCommand(
 			cwd,
 			profile,
 			timing,
-			options: { quiet, recordTiming: args.timing },
+			options: {
+				quiet,
+				recordTiming: args.timing,
+				includeConflicts: args.includeConflicts,
+			},
 		})
 		return
 	}
