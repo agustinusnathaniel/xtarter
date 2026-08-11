@@ -1,5 +1,33 @@
 # xtarterize
 
+## 1.19.0
+
+### Minor Changes
+
+- [#127](https://github.com/agustinusnathaniel/xtarter/pull/127) [`e9b776d`](https://github.com/agustinusnathaniel/xtarter/commit/e9b776d95120130fc30654dc6cf4112fa740e504) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - feat: emit GitHub Actions workflow command annotations from check
+
+  - New `--annotations` flag on `check` emits `::error`/`::warning` workflow
+    command annotations per non-conformant task and failing diagnostic, so
+    conformance failures surface inline on files in GitHub Actions.
+  - Auto-enabled when running inside GitHub Actions (`GITHUB_ACTIONS=true`).
+  - Annotations are emitted on stderr so `--json` and `--badge -` output stays
+    machine-readable.
+
+### Patch Changes
+
+- [#129](https://github.com/agustinusnathaniel/xtarter/pull/129) [`93e3d86`](https://github.com/agustinusnathaniel/xtarter/commit/93e3d86bd1bdfe45d025877b52be953fb9467268) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - fix: keep `check --badge` output from polluting stdout in JSON mode and when writing the badge to stdout
+
+  - `check --badge - --json` no longer interleaves the badge SVG with the JSON payload on stdout — the SVG goes to stderr so the JSON stays parseable.
+  - `check --badge <file> --json` no longer lets the "Badge written" success message break the JSON payload.
+  - `check --badge -` (human mode) no longer follows the SVG with the human-readable audit on the same stream; the audit routes to stderr so piping the SVG to a file yields clean markup.
+
+- [#130](https://github.com/agustinusnathaniel/xtarter/pull/130) [`ab22fc9`](https://github.com/agustinusnathaniel/xtarter/commit/ab22fc97b2fe6c97d7ad93edb64a864e464c634b) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - fix: `undo` now removes files that a run created instead of failing with "No backup found"
+
+  Previously `undo` only restored files that had a backup, so files newly created by
+  `init`/`add`/`sync` (e.g. `biome.json`) were left behind and the command exited 1.
+  Now a manifest entry without a backup is treated as a file created by the run and
+  is deleted to restore the pre-run state.
+
 ## 1.18.0
 
 ### Minor Changes
