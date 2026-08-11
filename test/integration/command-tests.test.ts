@@ -143,6 +143,28 @@ describe('add command', () => {
 		}
 	})
 
+	it('reports conflict tasks as not applied and exits 1', async () => {
+		const cwd = await createMinimalProject()
+		process.exitCode = 0
+		try {
+			const tsconfigPath = path.join(cwd, 'tsconfig.json')
+			const original = '{"compilerOptions":{"strict":false}}\n'
+			await fs.writeFile(tsconfigPath, original)
+
+			await addCommand.run?.({
+				args: { cwd, taskId: 'ts/strict', quiet: true },
+			} as never)
+
+			expect(process.exitCode).toBe(1)
+			// The conflicting file must NOT have been overwritten
+			const tsconfig = await fs.readFile(tsconfigPath, 'utf-8')
+			expect(tsconfig).toBe(original)
+		} finally {
+			process.exitCode = 0
+			await fs.rm(cwd, { recursive: true, force: true })
+		}
+	}, 60_000)
+
 	it('skips already-configured task', async () => {
 		const cwd = await createMinimalProject()
 		try {

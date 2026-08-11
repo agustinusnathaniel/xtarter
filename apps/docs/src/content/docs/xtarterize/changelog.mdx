@@ -7,6 +7,12 @@ import { Aside, Tabs, TabItem, CardGrid, Card, LinkButton, Steps } from '@astroj
 
 Latest updates and feature releases for xtarterize.
 
+## v1.24.0 — 2026-08-11
+
+### Fixed
+
+- `add` no longer claims a conflicting task "applied successfully": when a task conflicts with existing configuration (e.g. `ts/strict` on a tsconfig that already sets `strict: false`), `add` now reports it as not applied, exits 1, and leaves the conflicting file untouched. Interactive mode counts conflicts as skipped instead of applied, and `diff` now shows conflict diffs.
+
 ## v1.23.0 — 2026-08-10
 
 ### Fixed
