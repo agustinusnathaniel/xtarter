@@ -188,6 +188,24 @@ describe('undo command', () => {
 		}
 	})
 
+	it('removes files that were created by the run (no backup exists)', async () => {
+		const cwd = await createMinimalProject()
+		try {
+			// Simulate a run that created a brand-new file: the manifest
+			// lists it, but backupFile skipped it because it did not exist.
+			await fs.writeFile(path.join(cwd, 'created.txt'), 'new content')
+			await writeRunManifest(cwd, ['created.txt'])
+
+			await undoCommand.run?.({ args: { cwd, quiet: true } } as never)
+
+			await expect(fs.access(path.join(cwd, 'created.txt'))).rejects.toThrow()
+			expect(process.exitCode).toBe(0)
+		} finally {
+			process.exitCode = 0
+			await fs.rm(cwd, { recursive: true, force: true })
+		}
+	})
+
 	it('handles missing manifest gracefully', async () => {
 		const cwd = await createMinimalProject()
 		try {

@@ -7,6 +7,12 @@ import { Aside, Tabs, TabItem, CardGrid, Card, LinkButton, Steps } from '@astroj
 
 Latest updates and feature releases for xtarterize.
 
+## v1.23.0 — 2026-08-10
+
+### Fixed
+
+- `undo` now removes files that the last run created (like `biome.json` or `tsconfig.json`) instead of failing with "No backup found" — the working tree is fully restored to its pre-run state.
+
 ## v1.22.0 — 2026-08-10
 
 ### Fixed

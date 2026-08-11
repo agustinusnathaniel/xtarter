@@ -1,3 +1,4 @@
+import fs from 'node:fs/promises'
 import { confirm } from '@clack/prompts'
 import {
 	abortIfCancelled,
@@ -7,6 +8,7 @@ import {
 	logInfo,
 	logSuccess,
 	readRunManifest,
+	resolvePath,
 	restoreBackup,
 } from '@xtarterize/core'
 import { defineCommand } from 'citty'
@@ -71,7 +73,11 @@ export const undoCommand = defineCommand({
 			try {
 				const backups = await listBackups(cwd, filepath)
 				if (backups.length === 0) {
-					errors.push(`No backup found for ${filepath}`)
+					// The file was created by the run (backupFile skips
+					// files that didn't exist before applying). Undo must
+					// remove it to restore the pre-run state.
+					await removeCreatedFile(cwd, filepath)
+					restored++
 					continue
 				}
 				// Restore the most recent backup (first in sorted list)
@@ -97,3 +103,19 @@ export const undoCommand = defineCommand({
 		logSuccess(`Restored ${restored}/${manifest.files.length} files`)
 	},
 })
+
+/**
+ * Delete a file that the run created. Mirrors the path-traversal guard used
+ * by restoreBackup: the resolved path must stay inside the target directory.
+ */
+async function removeCreatedFile(cwd: string, filepath: string): Promise<void> {
+	const resolvedDest = resolvePath(cwd, filepath)
+	const resolvedCwd = resolvePath(cwd)
+	if (
+		!resolvedDest.startsWith(`${resolvedCwd}/`) &&
+		resolvedDest !== resolvedCwd
+	) {
+		throw new Error(`Path traversal detected: ${filepath}`)
+	}
+	await fs.rm(resolvedDest, { force: true })
+}
