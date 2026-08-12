@@ -52,6 +52,10 @@ export const addCommand = defineCommand({
 			description:
 				'Apply all applicable new and patch tasks without interaction',
 		},
+		includeConflicts: {
+			type: 'boolean',
+			description: 'Include conflicting tasks when applying (default: false)',
+		},
 	},
 	async run({ args }) {
 		const cwd = await resolveCwdWithPreflight(args)
@@ -85,6 +89,7 @@ export const addCommand = defineCommand({
 				detectionMs,
 				recordTiming,
 				all: true,
+				includeConflicts: args.includeConflicts === true,
 			})
 		} else if (args.taskId) {
 			await runSingleTask({
@@ -96,6 +101,7 @@ export const addCommand = defineCommand({
 				format,
 				detectionMs,
 				recordTiming,
+				includeConflicts: args.includeConflicts === true,
 			})
 		} else {
 			await runInteractive({
@@ -106,6 +112,7 @@ export const addCommand = defineCommand({
 				format,
 				detectionMs,
 				recordTiming,
+				includeConflicts: args.includeConflicts === true,
 			})
 		}
 	},
@@ -120,6 +127,7 @@ async function runSingleTask(options: {
 	format: import('@/ui/diff-display.js').DisplayFormat
 	detectionMs: number
 	recordTiming: boolean
+	includeConflicts: boolean
 }) {
 	const {
 		taskId,
@@ -130,6 +138,7 @@ async function runSingleTask(options: {
 		format,
 		detectionMs,
 		recordTiming,
+		includeConflicts,
 	} = options
 
 	const task = allTasks.find((t) => t.id === taskId)
@@ -166,7 +175,7 @@ async function runSingleTask(options: {
 		return
 	}
 
-	if (status === 'conflict') {
+	if (status === 'conflict' && !includeConflicts) {
 		logWarn(
 			`Task "${taskId}" conflicts with existing configuration and was not applied`,
 		)
@@ -189,6 +198,7 @@ async function runSingleTask(options: {
 		cwd,
 		profile,
 		selectedIds: [task.id],
+		includeConflicts,
 		quiet,
 	})
 	if (result.errors.length > 0) {
@@ -222,6 +232,7 @@ async function runInteractive(options: {
 	detectionMs: number
 	recordTiming: boolean
 	all?: boolean
+	includeConflicts: boolean
 }) {
 	const {
 		allTasks,
@@ -232,6 +243,7 @@ async function runInteractive(options: {
 		detectionMs,
 		recordTiming,
 		all: allFlag,
+		includeConflicts,
 	} = options
 
 	const applicable = allTasks.filter((t) => t.applicable(profile))
@@ -264,7 +276,12 @@ async function runInteractive(options: {
 
 	const selectedIds = allFlag
 		? tasksWithStatus
-				.filter((t) => t.status === 'new' || t.status === 'patch')
+				.filter(
+					(t) =>
+						t.status === 'new' ||
+						t.status === 'patch' ||
+						(includeConflicts && t.status === 'conflict'),
+				)
 				.map((t) => t.task.id)
 		: await selectTasksGrouped(tasksWithStatus)
 	if (selectedIds.length === 0) {
@@ -296,6 +313,7 @@ async function runInteractive(options: {
 			cwd,
 			profile,
 			selectedIds: [entry.task.id],
+			includeConflicts,
 			quiet: true,
 		})
 
@@ -312,6 +330,16 @@ async function runInteractive(options: {
 		if (result.timing) {
 			totalTiming = result.timing
 		}
+	}
+
+	if (
+		allFlag &&
+		!includeConflicts &&
+		tasksWithStatus.some((t) => t.status === 'conflict')
+	) {
+		logWarn(
+			'Conflicting tasks skipped. Pass --include-conflicts to apply them anyway.',
+		)
 	}
 
 	console.log('')

@@ -221,6 +221,92 @@ describe('add command', () => {
 		}
 	}, 60_000)
 
+	it('applies conflicting tasks when --include-conflicts is passed with --all', async () => {
+		const cwd = await createMinimalProject()
+		process.exitCode = 0
+		try {
+			// ts/strict reports 'conflict' when the existing config sets a
+			// compiler option to a different value (strict: false).
+			await fs.writeFile(
+				path.join(cwd, 'tsconfig.json'),
+				'{"compilerOptions":{"strict":false}}\n',
+			)
+
+			// A TS-only fixture trims `add --all` to a smaller task set than
+			// the react+vite fixture (no vite-plugin tasks), but release/
+			// quality tasks (czg, knip, ...) still install dev deps, so the
+			// test carries a 180s timeout below for cold-cache installs.
+			await fs.writeFile(
+				path.join(cwd, 'package.json'),
+				JSON.stringify({
+					name: 'cmd-test-fixture',
+					version: '1.0.0',
+					type: 'module',
+					devDependencies: { typescript: '^5.0.0' },
+				}),
+			)
+
+			await addCommand.run?.({
+				args: {
+					cwd,
+					all: true,
+					quiet: true,
+					includeConflicts: true,
+				},
+			} as never)
+
+			// Do not assert exitCode: `add --all` applies every applicable
+			// task, and unrelated tasks may fail on a minimal fixture (e.g.
+			// vite plugins without a vite.config). The behavior under test is
+			// that the conflicting task WAS included and applied — same
+			// assertion style as the init/sync conflict tests above.
+			// Applying the conflict must add the missing strict options.
+			// defu preserves the user's `strict: false`, so assert on a key
+			// that is only present after the conflict is applied.
+			const tsconfig = JSON.parse(
+				await fs.readFile(path.join(cwd, 'tsconfig.json'), 'utf-8'),
+			)
+			expect(tsconfig.compilerOptions.noUnusedLocals).toBe(true)
+		} finally {
+			process.exitCode = 0
+			await fs.rm(cwd, { recursive: true, force: true })
+		}
+		// add --all applies every applicable task, including release/quality
+		// tasks that install dev dependencies (czg, commit-and-tag-version,
+		// knip, ...). Cold-cache installs and shared pnpm-store contention
+		// push this past 120s; 240s matches the suite's heavy-test pattern
+		// (mirrors the init --yes --include-conflicts test above).
+	}, 240_000)
+
+	it('adds a conflicting task with --include-conflicts on a specific task ID', async () => {
+		const cwd = await createMinimalProject()
+		process.exitCode = 0
+		try {
+			await fs.writeFile(
+				path.join(cwd, 'tsconfig.json'),
+				'{"compilerOptions":{"strict":false}}\n',
+			)
+
+			await addCommand.run?.({
+				args: {
+					cwd,
+					taskId: 'ts/strict',
+					quiet: true,
+					includeConflicts: true,
+				},
+			} as never)
+
+			expect(process.exitCode).toBe(0)
+			const tsconfig = JSON.parse(
+				await fs.readFile(path.join(cwd, 'tsconfig.json'), 'utf-8'),
+			)
+			expect(tsconfig.compilerOptions.noUnusedLocals).toBe(true)
+		} finally {
+			process.exitCode = 0
+			await fs.rm(cwd, { recursive: true, force: true })
+		}
+	}, 60_000)
+
 	it('skips already-configured task', async () => {
 		const cwd = await createMinimalProject()
 		try {

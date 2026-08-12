@@ -7,6 +7,12 @@ import { Aside, Tabs, TabItem, CardGrid, Card, LinkButton, Steps } from '@astroj
 
 Latest updates and feature releases for xtarterize.
 
+## v1.25.0 — 2026-08-12
+
+### Fixed
+
+- `add` now honors `--include-conflicts` like `init`/`sync`: `add --all` and `add <task-id>` can force-apply tasks whose configuration conflicts, and `add --all` warns when conflicting tasks were skipped so CI runs aren't silently incomplete.
+
 ## v1.24.0 — 2026-08-11
 
 ### Fixed
