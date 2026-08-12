@@ -91,6 +91,34 @@ describe('sync command', () => {
 			await fs.rm(cwd, { recursive: true, force: true })
 		}
 	}, 60_000)
+
+	it('applies conflicting tasks when --include-conflicts is passed with --yes', async () => {
+		const cwd = await createMinimalProject()
+		process.exitCode = 0
+		try {
+			// ts/strict reports 'conflict' when the existing config sets a
+			// compiler option to a different value (strict: false).
+			await fs.writeFile(
+				path.join(cwd, 'tsconfig.json'),
+				'{"compilerOptions":{"strict":false}}\n',
+			)
+
+			await syncCommand.run?.({
+				args: { cwd, yes: true, includeConflicts: true },
+			} as never)
+
+			// Applying the conflict must add the missing strict options.
+			// defu preserves the user's `strict: false`, so assert on a key
+			// that is only present after the conflict is applied.
+			const tsconfig = JSON.parse(
+				await fs.readFile(path.join(cwd, 'tsconfig.json'), 'utf-8'),
+			)
+			expect(tsconfig.compilerOptions.noUnusedLocals).toBe(true)
+		} finally {
+			process.exitCode = 0
+			await fs.rm(cwd, { recursive: true, force: true })
+		}
+	}, 60_000)
 })
 
 describe('init command', () => {
@@ -102,6 +130,34 @@ describe('init command', () => {
 				args: { cwd, dryRun: true, quiet: true },
 			} as never)
 			expect(process.exitCode).toBe(1)
+		} finally {
+			process.exitCode = 0
+			await fs.rm(cwd, { recursive: true, force: true })
+		}
+	}, 60_000)
+
+	it('applies conflicting tasks when --include-conflicts is passed with --yes', async () => {
+		const cwd = await createMinimalProject()
+		process.exitCode = 0
+		try {
+			// ts/strict reports 'conflict' when the existing config sets a
+			// compiler option to a different value (strict: false).
+			await fs.writeFile(
+				path.join(cwd, 'tsconfig.json'),
+				'{"compilerOptions":{"strict":false}}\n',
+			)
+
+			await initCommand.run?.({
+				args: { cwd, yes: true, includeConflicts: true },
+			} as never)
+
+			// Applying the conflict must add the missing strict options.
+			// defu preserves the user's `strict: false`, so assert on a key
+			// that is only present after the conflict is applied.
+			const tsconfig = JSON.parse(
+				await fs.readFile(path.join(cwd, 'tsconfig.json'), 'utf-8'),
+			)
+			expect(tsconfig.compilerOptions.noUnusedLocals).toBe(true)
 		} finally {
 			process.exitCode = 0
 			await fs.rm(cwd, { recursive: true, force: true })
