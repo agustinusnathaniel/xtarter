@@ -120,6 +120,7 @@ Full conformance setup. Detects your project stack, shows a plan, and applies ch
 | `--skip <task-id>` | Exclude a specific task (comma-separated) |
 | `--only <task-id>` | Apply only a specific task (comma-separated) |
 | `--quiet` | Suppress interactive prompts and verbose output |
+| `--include-conflicts` | Include conflicting tasks when applying (default: false) |
 | `--format <format>` | Output format (`terminal` or `json`) |
 | `--timing` | Show detailed per-task timing breakdown |
 
@@ -146,6 +147,7 @@ Update existing project configs to match the latest conformance templates. Only 
 | `--skip <task-id>` | Exclude a specific task (comma-separated) |
 | `--only <task-id>` | Apply only a specific task (comma-separated) |
 | `--quiet` | Suppress interactive prompts and verbose output |
+| `--include-conflicts` | Include conflicting tasks when applying (default: false) |
 | `--format <format>` | Output format (`terminal` or `json`) |
 | `--timing` | Show detailed per-task timing breakdown |
 
@@ -227,6 +229,7 @@ When called **with a task ID**, applies that specific task after showing a diff 
 | `--format <format>` | Output format (`terminal` or `json`) |
 | `--timing` | Show detailed per-task timing breakdown |
 | `--all` | Apply all applicable new and patch tasks without interaction |
+| `--include-conflicts` | Include conflicting tasks when applying (default: false) |
 
 <AllPackageManagers type="exec" pkg="xtarterize@latest" args="add lint/biome" title="Specific task" />
 
