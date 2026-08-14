@@ -1,5 +1,13 @@
 # @xtarterize/tasks
 
+## 1.20.0
+
+### Patch Changes
+
+- Updated dependencies []:
+  - @xtarterize/core@1.20.0
+  - @xtarterize/patchers@1.20.0
+
 ## 1.19.0
 
 ### Patch Changes

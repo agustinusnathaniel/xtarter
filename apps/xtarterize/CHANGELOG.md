@@ -1,5 +1,47 @@
 # xtarterize
 
+## 1.20.0
+
+### Minor Changes
+
+- [#135](https://github.com/agustinusnathaniel/xtarter/pull/135) [`7214167`](https://github.com/agustinusnathaniel/xtarter/commit/7214167ee9987356f52cffc33f0dcc539f66cec0) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - feat: emit machine-readable JSON from add, init, and sync
+
+  `add`, `init`, and `sync` now support `--json` (or `--format json`) and emit a
+  single machine-readable result payload on stdout instead of human logs:
+
+  - `add <task-id> --json` — `{ ok, taskId, status, applied, skipped, errors }`
+  - `add --all --json` and `init`/`sync --yes --json` — `{ ok, applied, skipped, errors }`
+  - JSON mode implies quiet: stdout carries only the JSON document, so the payload
+    can be piped straight into automation (CI, scripts, tooling). Human logs go to
+    stderr or are suppressed, and dependency-install output is silenced.
+  - The `ok` field agrees with the process exit code (1 on errors), matching the
+    exit-code contract introduced for `check`, `diff`, and `doctor`.
+
+### Patch Changes
+
+- [#134](https://github.com/agustinusnathaniel/xtarter/pull/134) [`cad8039`](https://github.com/agustinusnathaniel/xtarter/commit/cad8039bd1119b5b9c28ba53b68b503b41857224) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - `add` now supports `--include-conflicts`, mirroring `init`/`sync`. `add --all` and `add <task-id>` can force-apply conflicting tasks, and `add --all` warns when conflicting tasks were skipped so CI runs aren't silently incomplete.
+
+- [#131](https://github.com/agustinusnathaniel/xtarter/pull/131) [`e37d79f`](https://github.com/agustinusnathaniel/xtarter/commit/e37d79fe617668977127afde6119c72cf325caa4) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - fix: `add` reports conflicting tasks as not applied instead of claiming success
+
+  When a task's check returned `conflict` (e.g. `ts/strict` on a tsconfig that already
+  sets `strict: false`), `add` fell through to the apply step, where `applyTasks`
+  silently skipped the conflict (applied=0, errors=0) — the command then logged
+  "applied successfully" and exited 0 even though nothing was applied. Now `add`
+  detects the conflict up front, warns the user, exits 1, and never touches the
+  conflicting file. Interactive mode counts conflicts as skipped instead of applied,
+  and `diff` includes conflict diffs so they are visible before adding.
+
+- [#133](https://github.com/agustinusnathaniel/xtarter/pull/133) [`744d831`](https://github.com/agustinusnathaniel/xtarter/commit/744d8315db23a4f779d7bdd25340beaa8e13fb7a) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - fix: `sync`/`init` honor `--include-conflicts` in non-interactive (`--yes`/quiet) mode
+
+  `--include-conflicts` was passed through to `applyTasks` in the interactive apply-all and
+  select paths, but silently dropped in the `--yes`/quiet path — so
+  `xtarterize sync --yes --include-conflicts` (or `init --yes --include-conflicts`) skipped
+  every conflicting task despite the flag. Non-interactive mode is exactly where the flag
+  matters (CI, scripts), so conflicting tasks are now applied when it is set, consistent
+  with the interactive paths.
+
+- [#136](https://github.com/agustinusnathaniel/xtarter/pull/136) [`78449ea`](https://github.com/agustinusnathaniel/xtarter/commit/78449eaef265e54a8b8c3fc3db8fc6aee84f085b) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - `check`, `list`, `diff`, `init`, and `sync` no longer crash when a single task's `check()` throws: the task degrades to `conflict` (with a warning naming the task and error) and the rest of the audit still resolves. Previously one failing task check aborted the entire command with an unhandled `TaskError` and no output.
+
 ## 1.19.0
 
 ### Minor Changes
