@@ -113,3 +113,26 @@ export function formatDoctorResult(diagnostics: DiagnosticCheck[]): string {
 	}
 	return JSON.stringify({ ok: summary.fail === 0, summary, diagnostics })
 }
+
+export interface RunResult {
+	ok: boolean
+	applied: number
+	skipped: number
+	errors: string[]
+	taskId?: string
+	status?: string
+	timing?: Record<string, unknown>
+}
+
+export function formatRunResult(options: RunResult): string {
+	const result: Record<string, unknown> = {
+		ok: options.ok,
+		applied: options.applied,
+		skipped: options.skipped,
+		errors: options.errors,
+	}
+	if (options.taskId !== undefined) result.taskId = options.taskId
+	if (options.status !== undefined) result.status = options.status
+	if (options.timing) result.timing = options.timing
+	return JSON.stringify(result)
+}

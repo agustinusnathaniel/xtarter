@@ -68,6 +68,7 @@ export interface DepToInstall {
 export async function installDependenciesBatch(
 	cwd: string,
 	deps: DepToInstall[],
+	options?: { silent?: boolean },
 ): Promise<void> {
 	if (deps.length === 0) return
 
@@ -92,7 +93,12 @@ export async function installDependenciesBatch(
 
 	if (devDeps.length > 0) {
 		try {
-			await addDependency(devDeps, { cwd, dev: true, workspace })
+			await addDependency(devDeps, {
+				cwd,
+				dev: true,
+				workspace,
+				silent: options?.silent,
+			})
 		} catch (cause) {
 			const msg = cause instanceof Error ? cause.message : String(cause)
 			errors.push(`Failed to install dev dependencies: ${msg}`)
@@ -101,7 +107,12 @@ export async function installDependenciesBatch(
 
 	if (prodDeps.length > 0) {
 		try {
-			await addDependency(prodDeps, { cwd, dev: false, workspace })
+			await addDependency(prodDeps, {
+				cwd,
+				dev: false,
+				workspace,
+				silent: options?.silent,
+			})
 		} catch (cause) {
 			const msg = cause instanceof Error ? cause.message : String(cause)
 			errors.push(`Failed to install dependencies: ${msg}`)

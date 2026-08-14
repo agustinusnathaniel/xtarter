@@ -10,6 +10,7 @@ import {
 	resolveProjectTasks,
 } from '@xtarterize/core'
 import { type DisplayFormat, displayDiffs } from '@/ui/diff-display.js'
+import { formatRunResult } from '@/ui/json-formatter.js'
 import { mergeFileDiffs } from '@/ui/merge-file-diffs.js'
 import { displayPlan } from '@/ui/plan-display.js'
 import { selectTasks } from '@/ui/select-menu.js'
@@ -18,8 +19,9 @@ import {
 	getAllTasksWithPlugins,
 	printProjectProfile,
 } from '@/utils/project.js'
+import { resolveRuntimeFlags } from '@/utils/runtime-flags.js'
 import { collectTaskDiffs } from '@/utils/task-diffs.js'
-import { printTiming } from '@/utils/timing-display.js'
+import { formatTimingJson, printTiming } from '@/utils/timing-display.js'
 
 interface CommandArgs {
 	dryRun?: boolean
@@ -30,6 +32,7 @@ interface CommandArgs {
 	includeConflicts?: boolean
 	format?: string
 	timing?: boolean
+	json?: boolean
 }
 
 interface RunCommandOptions {
@@ -51,6 +54,7 @@ interface ApplyAndReportInput {
 	cwd: string
 	profile: Awaited<ReturnType<typeof detectProjectWithAmbiguity>>
 	timing: ResolveTiming
+	format?: string
 	options: ApplyAndReportOptions
 }
 
@@ -59,6 +63,7 @@ async function applyAndReport({
 	cwd,
 	profile,
 	timing,
+	format,
 	options,
 }: ApplyAndReportInput): Promise<void> {
 	const { selectedIds, includeConflicts, quiet, recordTiming } = options
@@ -70,6 +75,25 @@ async function applyAndReport({
 		includeConflicts,
 		quiet: quiet ?? isCI(),
 	})
+
+	if (format === 'json') {
+		console.log(
+			formatRunResult({
+				ok: result.errors.length === 0,
+				applied: result.applied,
+				skipped: result.skipped,
+				errors: result.errors,
+				timing: recordTiming
+					? formatTimingJson(timing, result.timing)
+					: undefined,
+			}),
+		)
+		if (result.errors.length > 0) {
+			process.exitCode = 1
+		}
+		return
+	}
+
 	console.log('')
 	logSuccess(`Applied ${result.applied} tasks`)
 	if (result.errors.length > 0) {
@@ -137,7 +161,7 @@ async function handleDryRun(options: DryRunOptions): Promise<void> {
 	}
 	const resolvedFormat: DisplayFormat = format === 'json' ? 'json' : 'terminal'
 	displayDiffs(mergedDiffs, resolvedFormat)
-	printTiming(timing)
+	if (format !== 'json') printTiming(timing)
 }
 
 interface PromptAndApplyOptions {
@@ -148,11 +172,20 @@ interface PromptAndApplyOptions {
 	timing: ResolveTiming
 	args: CommandArgs
 	runOptions: RunCommandOptions
+	format?: string
 }
 
 async function promptAndApply(options: PromptAndApplyOptions): Promise<void> {
-	const { actionableTasks, cwd, profile, statuses, timing, args, runOptions } =
-		options
+	const {
+		actionableTasks,
+		cwd,
+		profile,
+		statuses,
+		timing,
+		args,
+		runOptions,
+		format,
+	} = options
 	const action = await select({
 		message: runOptions.confirmMessage,
 		options: [
@@ -176,7 +209,7 @@ async function promptAndApply(options: PromptAndApplyOptions): Promise<void> {
 			cwd,
 			profile,
 			timing,
-			format: args.format,
+			format,
 		})
 		return
 	}
@@ -193,6 +226,7 @@ async function promptAndApply(options: PromptAndApplyOptions): Promise<void> {
 			cwd,
 			profile,
 			timing,
+			format,
 			options: {
 				selectedIds: selected,
 				includeConflicts: args.includeConflicts,
@@ -209,6 +243,7 @@ async function promptAndApply(options: PromptAndApplyOptions): Promise<void> {
 		cwd,
 		profile,
 		timing,
+		format,
 		options: {
 			selectedIds,
 			includeConflicts: args.includeConflicts,
@@ -223,8 +258,12 @@ export async function runCommand(
 	args: CommandArgs,
 	options: RunCommandOptions,
 ): Promise<void> {
-	const ci = isCI()
-	const quiet = args.quiet || ci
+	const { format, quiet: runtimeQuiet } = resolveRuntimeFlags(args)
+	const jsonMode = format === 'json'
+	// JSON mode implies quiet: stdout must carry only the JSON document,
+	// so the human profile/plan/timing output is suppressed even when the
+	// user passes `--format json` without `--quiet`/`--json`.
+	const quiet = jsonMode || runtimeQuiet
 
 	const allTasks = options.orderedTasks ?? (await getAllTasksWithPlugins(cwd))
 	const {
@@ -243,8 +282,14 @@ export async function runCommand(
 	})
 
 	if (actionableTasks.length === 0) {
-		logSuccess(options.emptyMessage)
-		if (!quiet) printTiming(timing)
+		if (jsonMode) {
+			console.log(
+				formatRunResult({ ok: true, applied: 0, skipped: 0, errors: [] }),
+			)
+		} else {
+			logSuccess(options.emptyMessage)
+			if (!quiet) printTiming(timing)
+		}
 		return
 	}
 
@@ -256,7 +301,7 @@ export async function runCommand(
 			cwd,
 			profile,
 			timing,
-			format: args.format,
+			format,
 		})
 		return
 	}
@@ -267,6 +312,7 @@ export async function runCommand(
 			cwd,
 			profile,
 			timing,
+			format,
 			options: {
 				quiet,
 				recordTiming: args.timing,
@@ -284,6 +330,7 @@ export async function runCommand(
 		timing,
 		args,
 		runOptions: options,
+		format,
 	})
 }
 
