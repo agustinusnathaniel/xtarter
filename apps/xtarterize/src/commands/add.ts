@@ -5,7 +5,6 @@ import {
 	applyTasks,
 	createSpinner,
 	detectProject,
-	isCI,
 	logError,
 	logInfo,
 	logSuccess,
@@ -14,6 +13,7 @@ import {
 } from '@xtarterize/core'
 import { defineCommand } from 'citty'
 import { displayDiffs } from '@/ui/diff-display.js'
+import { formatRunResult } from '@/ui/json-formatter.js'
 import { statusHint } from '@/utils/display.js'
 import { resolveCwdWithPreflight } from '@/utils/preflight.js'
 import { getAllTasksWithPlugins } from '@/utils/project.js'
@@ -59,9 +59,13 @@ export const addCommand = defineCommand({
 	},
 	async run({ args }) {
 		const cwd = await resolveCwdWithPreflight(args)
-		const quiet = args.quiet || isCI()
+		const { format, quiet: runtimeQuiet } = resolveRuntimeFlags(args)
+		// JSON mode implies quiet: stdout must carry only the JSON document,
+		// so the human logs/spinner are suppressed even when the user passes
+		// `--format json` without `--quiet`/`--json`.
+		const jsonMode = format === 'json'
+		const quiet = jsonMode || runtimeQuiet
 		const recordTiming = args.timing === true
-		const { format } = resolveRuntimeFlags(args)
 
 		const s = createSpinner(quiet)
 		s.start('Scanning project...')
@@ -142,19 +146,45 @@ async function runSingleTask(options: {
 	} = options
 
 	const task = allTasks.find((t) => t.id === taskId)
+	const jsonMode = format === 'json'
 
 	if (!task) {
-		logError(`Task "${taskId}" not found`)
-		logInfo('Available tasks:')
-		allTasks.forEach((t) => {
-			console.log(`  ${t.id}`)
-		})
+		if (jsonMode) {
+			console.log(
+				formatRunResult({
+					ok: false,
+					taskId,
+					applied: 0,
+					skipped: 0,
+					errors: [`Task "${taskId}" not found`],
+				}),
+			)
+		} else {
+			logError(`Task "${taskId}" not found`)
+			logInfo('Available tasks:')
+			allTasks.forEach((t) => {
+				console.log(`  ${t.id}`)
+			})
+		}
 		process.exitCode = 1
 		return
 	}
 
 	if (!task.applicable(profile)) {
-		logInfo(`Task "${taskId}" is not applicable for this project`)
+		if (jsonMode) {
+			console.log(
+				formatRunResult({
+					ok: true,
+					taskId,
+					status: 'not-applicable',
+					applied: 0,
+					skipped: 0,
+					errors: [],
+				}),
+			)
+		} else {
+			logInfo(`Task "${taskId}" is not applicable for this project`)
+		}
 		return
 	}
 
@@ -163,31 +193,71 @@ async function runSingleTask(options: {
 		status = await task.check(cwd, profile)
 	} catch (error) {
 		const message = error instanceof Error ? error.message : String(error)
-		logError(`Failed to check ${task.id}: ${message}`)
+		if (jsonMode) {
+			console.log(
+				formatRunResult({
+					ok: false,
+					taskId,
+					applied: 0,
+					skipped: 0,
+					errors: [`Failed to check ${task.id}: ${message}`],
+				}),
+			)
+		} else {
+			logError(`Failed to check ${task.id}: ${message}`)
+		}
 		process.exitCode = 1
 		return
 	}
 	if (!quiet) console.log(`${statusTag(status)} ${task.id}`)
 
 	if (status === 'skip') {
-		logSuccess('Already conformant')
-		if (!quiet) printTiming(detectionOnlyTiming(detectionMs))
+		if (jsonMode) {
+			console.log(
+				formatRunResult({
+					ok: true,
+					taskId,
+					status: 'skip',
+					applied: 0,
+					skipped: 0,
+					errors: [],
+				}),
+			)
+		} else {
+			logSuccess('Already conformant')
+			if (!quiet) printTiming(detectionOnlyTiming(detectionMs))
+		}
 		return
 	}
 
 	if (status === 'conflict' && !includeConflicts) {
-		logWarn(
-			`Task "${taskId}" conflicts with existing configuration and was not applied`,
-		)
-		logInfo('Resolve the conflict manually, then re-run to apply.')
+		if (jsonMode) {
+			console.log(
+				formatRunResult({
+					ok: false,
+					taskId,
+					status: 'conflict',
+					applied: 0,
+					skipped: 0,
+					errors: [
+						`Task "${taskId}" conflicts with existing configuration and was not applied`,
+					],
+				}),
+			)
+		} else {
+			logWarn(
+				`Task "${taskId}" conflicts with existing configuration and was not applied`,
+			)
+			logInfo('Resolve the conflict manually, then re-run to apply.')
+		}
 		process.exitCode = 1
 		return
 	}
 
 	const diffs = await task.dryRun(cwd, profile)
-	if (!quiet) displayDiffs(diffs, format)
+	if (!quiet && !jsonMode) displayDiffs(diffs, format)
 
-	if (!quiet) {
+	if (!quiet && !jsonMode) {
 		const proceed = await confirm({ message: 'Apply this change?' })
 		abortIfCancelled(proceed, 'Apply cancelled')
 		if (!proceed) return
@@ -202,12 +272,37 @@ async function runSingleTask(options: {
 		quiet,
 	})
 	if (result.errors.length > 0) {
-		logError(`${result.errors.length} errors`)
-		for (const error of result.errors) {
-			logError(`  - ${error}`)
+		if (jsonMode) {
+			console.log(
+				formatRunResult({
+					ok: false,
+					taskId,
+					applied: 0,
+					skipped: 0,
+					errors: result.errors,
+				}),
+			)
+		} else {
+			logError(`${result.errors.length} errors`)
+			for (const error of result.errors) {
+				logError(`  - ${error}`)
+			}
+			if (!quiet) printTiming(detectionOnlyTiming(detectionMs), result.timing)
 		}
-		if (!quiet) printTiming(detectionOnlyTiming(detectionMs), result.timing)
 		process.exitCode = 1
+		return
+	}
+	if (jsonMode) {
+		console.log(
+			formatRunResult({
+				ok: true,
+				taskId,
+				status,
+				applied: 1,
+				skipped: 0,
+				errors: [],
+			}),
+		)
 		return
 	}
 	logSuccess(`${task.id} applied successfully`)
@@ -245,10 +340,17 @@ async function runInteractive(options: {
 		all: allFlag,
 		includeConflicts,
 	} = options
+	const jsonMode = format === 'json'
 
 	const applicable = allTasks.filter((t) => t.applicable(profile))
 	if (applicable.length === 0) {
-		logInfo('No tasks applicable for this project')
+		if (jsonMode) {
+			console.log(
+				formatRunResult({ ok: true, applied: 0, skipped: 0, errors: [] }),
+			)
+		} else {
+			logInfo('No tasks applicable for this project')
+		}
 		return
 	}
 
@@ -262,7 +364,7 @@ async function runInteractive(options: {
 			tasksWithStatus.push({ task, status })
 		} catch (error) {
 			const message = error instanceof Error ? error.message : String(error)
-			logError(`Failed to check ${task.id}: ${message}`)
+			if (!jsonMode) logError(`Failed to check ${task.id}: ${message}`)
 			process.exitCode = 1
 			tasksWithStatus.push({ task, status: 'conflict' })
 		}
@@ -270,7 +372,13 @@ async function runInteractive(options: {
 	s.stop('Tasks checked')
 
 	if (quiet && !allFlag) {
-		logInfo('Interactive mode requires a terminal. Use a task ID instead.')
+		if (jsonMode) {
+			console.log(
+				formatRunResult({ ok: true, applied: 0, skipped: 0, errors: [] }),
+			)
+		} else {
+			logInfo('Interactive mode requires a terminal. Use a task ID instead.')
+		}
 		return
 	}
 
@@ -285,7 +393,13 @@ async function runInteractive(options: {
 				.map((t) => t.task.id)
 		: await selectTasksGrouped(tasksWithStatus)
 	if (selectedIds.length === 0) {
-		logInfo('No tasks to apply')
+		if (jsonMode) {
+			console.log(
+				formatRunResult({ ok: true, applied: 0, skipped: 0, errors: [] }),
+			)
+		} else {
+			logInfo('No tasks to apply')
+		}
 		return
 	}
 
@@ -298,9 +412,9 @@ async function runInteractive(options: {
 		if (!entry) continue
 
 		const diffs = await entry.task.dryRun(cwd, profile)
-		if (!allFlag) displayDiffs(diffs, format)
+		if (!allFlag && !jsonMode) displayDiffs(diffs, format)
 
-		if (!allFlag) {
+		if (!allFlag && !jsonMode) {
 			const proceed = await confirm({
 				message: `Apply ${entry.task.label}?`,
 			})
@@ -319,11 +433,11 @@ async function runInteractive(options: {
 
 		if (result.applied > 0) {
 			totalApplied++
-			logSuccess(`${entry.task.id} applied`)
+			if (!jsonMode) logSuccess(`${entry.task.id} applied`)
 		} else if (result.errors.length > 0) {
 			allErrors.push(...result.errors)
-			logError(`${entry.task.id}: ${result.errors.join(', ')}`)
-		} else {
+			if (!jsonMode) logError(`${entry.task.id}: ${result.errors.join(', ')}`)
+		} else if (!jsonMode) {
 			logWarn(`${entry.task.id} skipped (${entry.status}) — not applied`)
 		}
 
@@ -334,12 +448,28 @@ async function runInteractive(options: {
 
 	if (
 		allFlag &&
+		!jsonMode &&
 		!includeConflicts &&
 		tasksWithStatus.some((t) => t.status === 'conflict')
 	) {
 		logWarn(
 			'Conflicting tasks skipped. Pass --include-conflicts to apply them anyway.',
 		)
+	}
+
+	if (jsonMode) {
+		console.log(
+			formatRunResult({
+				ok: allErrors.length === 0,
+				applied: totalApplied,
+				skipped: selectedIds.length - totalApplied,
+				errors: allErrors,
+			}),
+		)
+		if (allErrors.length > 0) {
+			process.exitCode = 1
+		}
+		return
 	}
 
 	console.log('')

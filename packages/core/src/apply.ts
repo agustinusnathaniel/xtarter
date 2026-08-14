@@ -104,7 +104,9 @@ async function runApply(options: RunApplyOptions): Promise<ApplyResult> {
 				continue
 			}
 			if (status === 'conflict' && !includeConflicts) {
-				logInfo(`Skipping conflict: ${task.label} (${task.id})`)
+				if (!quiet) {
+					logInfo(`Skipping conflict: ${task.label} (${task.id})`)
+				}
 				skippedInCheck++
 				continue
 			}
@@ -156,7 +158,9 @@ async function runApply(options: RunApplyOptions): Promise<ApplyResult> {
 	}
 	if (allDeps.length > 0) {
 		try {
-			await installDependenciesBatch(cwd, allDeps)
+			// In quiet mode (CI, --json), pipe the package manager's output
+			// instead of inheriting it so stdout stays machine-readable.
+			await installDependenciesBatch(cwd, allDeps, { silent: quiet })
 		} catch (error) {
 			const message = error instanceof Error ? error.message : String(error)
 			logError(`Failed to batch-install dependencies: ${message}`)

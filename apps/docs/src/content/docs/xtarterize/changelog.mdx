@@ -7,6 +7,12 @@ import { Aside, Tabs, TabItem, CardGrid, Card, LinkButton, Steps } from '@astroj
 
 Latest updates and feature releases for xtarterize.
 
+## v1.26.0 — 2026-08-14
+
+### Added
+
+- `add`, `init`, and `sync` now emit machine-readable JSON when passed `--json` (or `--format json`): a single result payload on stdout — `{ ok, taskId, status, applied, skipped, errors }` for single-task adds, `{ ok, applied, skipped, errors }` for `--all` and `--yes` runs. JSON mode implies quiet, so the payload is the only thing on stdout and can be piped straight into CI scripts; human logs and dependency-install output are suppressed or routed to stderr. The `ok` field agrees with the process exit code, matching the exit-code contract introduced for `check`, `diff`, and `doctor`.
+
 ## v1.25.0 — 2026-08-12
 
 ### Fixed
