@@ -7,6 +7,12 @@ import { Aside, Tabs, TabItem, CardGrid, Card, LinkButton, Steps } from '@astroj
 
 Latest updates and feature releases for xtarterize.
 
+## Unreleased
+
+### Fixed
+
+- `check`, `list`, `diff`, `init`, and `sync` no longer crash when a single task's status check throws: the affected task degrades to `conflict` (with a warning naming the task and the error) and the rest of the audit still resolves. Previously one failing task check aborted the entire command with an unhandled `TaskError` and produced no output — a single misbehaving task (e.g. a plugin task) could take down the whole CLI.
+
 ## v1.26.0 — 2026-08-14
 
 ### Added

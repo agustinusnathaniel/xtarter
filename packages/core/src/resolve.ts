@@ -4,6 +4,7 @@ import type { ProjectProfile } from '@/detect.js'
 import { detectProject } from '@/detect.js'
 import { TaskError } from '@/errors.js'
 import type { ResolveTiming } from '@/timing.js'
+import { logWarn } from '@/utils/logger.js'
 
 export function resolveTasks(
 	profile: ProjectProfile,
@@ -40,6 +41,14 @@ export function resolveTaskStatuses(
 							cause,
 						}),
 				}).pipe(
+					Effect.catchTag('TaskError', (error) => {
+						const detail =
+							error.cause instanceof Error
+								? error.cause.message
+								: String(error.cause)
+						logWarn(`Failed to check ${task.id}: ${detail}`)
+						return Effect.succeed('conflict' as TaskStatus)
+					}),
 					Effect.map((status) => [task.id, status] as [string, TaskStatus]),
 				),
 			),
@@ -71,6 +80,14 @@ async function resolveStatusesWithTiming(
 							cause,
 						}),
 				}).pipe(
+					Effect.catchTag('TaskError', (error) => {
+						const detail =
+							error.cause instanceof Error
+								? error.cause.message
+								: String(error.cause)
+						logWarn(`Failed to check ${task.id}: ${detail}`)
+						return Effect.succeed('conflict' as TaskStatus)
+					}),
 					Effect.map((status) => [task.id, status] as [string, TaskStatus]),
 				),
 			),
