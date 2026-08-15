@@ -1,5 +1,6 @@
 import { addDependency } from 'nypm'
 import { type PackageJson, readPackageJSON, writePackageJSON } from 'pkg-types'
+import { detectPackageManager } from '@/detect/package-manager.js'
 import { fileExists, resolvePath } from '@/utils/fs.js'
 export async function readPackageJson(cwd: string) {
 	const pkgPath = resolvePath(cwd, 'package.json')
@@ -91,6 +92,8 @@ export async function installDependenciesBatch(
 
 	const errors: string[] = []
 
+	const packageManager = await detectPackageManager(cwd)
+
 	if (devDeps.length > 0) {
 		try {
 			await addDependency(devDeps, {
@@ -98,6 +101,7 @@ export async function installDependenciesBatch(
 				dev: true,
 				workspace,
 				silent: options?.silent,
+				packageManager,
 			})
 		} catch (cause) {
 			const msg = cause instanceof Error ? cause.message : String(cause)
@@ -112,6 +116,7 @@ export async function installDependenciesBatch(
 				dev: false,
 				workspace,
 				silent: options?.silent,
+				packageManager,
 			})
 		} catch (cause) {
 			const msg = cause instanceof Error ? cause.message : String(cause)
@@ -136,11 +141,14 @@ export async function installDependency(
 		resolvePath(cwd, 'pnpm-workspace.yaml'),
 	)
 
+	const packageManager = await detectPackageManager(cwd)
+
 	try {
 		await addDependency([depName], {
 			cwd,
 			dev,
 			workspace: isPnpmWorkspaceRoot || undefined,
+			packageManager,
 		})
 	} catch (cause) {
 		const message = cause instanceof Error ? cause.message : String(cause)

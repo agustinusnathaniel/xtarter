@@ -162,7 +162,7 @@ describe('init command', () => {
 			process.exitCode = 0
 			await fs.rm(cwd, { recursive: true, force: true })
 		}
-	}, 60_000)
+	}, 240_000)
 })
 
 describe('add command', () => {

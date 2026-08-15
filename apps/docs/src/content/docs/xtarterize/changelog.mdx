@@ -11,6 +11,7 @@ Latest updates and feature releases for xtarterize.
 
 ### Fixed
 
+- `init`, `add`, and `sync` no longer fail with "No package manager auto-detected" when installing dependencies on fresh projects that have `package.json` but no lockfile — the detected package manager (npm fallback) is now passed to dependency installs.
 - `check`, `list`, `diff`, `init`, and `sync` no longer crash when a single task's status check throws: the affected task degrades to `conflict` (with a warning naming the task and the error) and the rest of the audit still resolves. Previously one failing task check aborted the entire command with an unhandled `TaskError` and produced no output — a single misbehaving task (e.g. a plugin task) could take down the whole CLI.
 
 ## v1.26.0 — 2026-08-14
