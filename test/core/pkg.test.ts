@@ -41,4 +41,30 @@ describe('installDependency', () => {
 			await fs.rm(tmpDir, { recursive: true, force: true })
 		}
 	})
+
+	it('does not fail package-manager detection on lockfile-less projects', async () => {
+		const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'xtarterize-'))
+		try {
+			await fs.writeFile(
+				path.join(tmpDir, 'package.json'),
+				JSON.stringify({
+					name: 'test-pkg',
+				}),
+			)
+			// No lockfile: nypm would fail auto-detection, but xtarterize passes the
+			// npm fallback, so any failure must come from npm itself instead.
+			try {
+				await installDependency(
+					tmpDir,
+					'nonexistent-package-that-will-fail',
+					true,
+				)
+			} catch (err) {
+				const message = err instanceof Error ? err.message : String(err)
+				expect(message).not.toContain('No package manager auto-detected')
+			}
+		} finally {
+			await fs.rm(tmpDir, { recursive: true, force: true })
+		}
+	})
 })
