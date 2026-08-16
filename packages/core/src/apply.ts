@@ -206,7 +206,7 @@ async function runApply(options: RunApplyOptions): Promise<ApplyResult> {
 
 	const skipped = skippedInCheck
 	const applyMs = performance.now() - applyStart
-	console.log('')
+	if (!quiet) console.log('')
 	return {
 		applied,
 		skipped,
