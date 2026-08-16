@@ -7,13 +7,17 @@ export type DisplayFormat = 'terminal' | 'json'
 export function displayDiffs(
 	diffs: FileDiff[],
 	format: DisplayFormat = 'terminal',
+	failures = 0,
 ): void {
-	if (diffs.length === 0) return
-
+	// JSON mode always emits a machine-readable payload — including the
+	// empty-diffs case — so consumers can always parse stdout. Terminal
+	// mode has nothing to render when diffs are empty.
 	if (format === 'json') {
-		displayJsonDiffs(diffs)
+		displayJsonDiffs(diffs, failures)
 		return
 	}
+
+	if (diffs.length === 0) return
 
 	displayTerminalDiffs(diffs)
 }
@@ -101,18 +105,19 @@ function renderHunkDiff(hunks: DiffHunk[]): void {
 	}
 }
 
-function displayJsonDiffs(diffs: FileDiff[]): void {
-	const output = buildJsonOutput(diffs)
+function displayJsonDiffs(diffs: FileDiff[], failures = 0): void {
+	const output = buildJsonOutput(diffs, failures)
 	console.log(JSON.stringify(output))
 }
 
-function buildJsonOutput(diffs: FileDiff[]): JsonOutput {
+function buildJsonOutput(diffs: FileDiff[], failures = 0): JsonOutput {
 	const totalStats = computeTotalStats(diffs)
 
 	return {
-		ok: diffs.length === 0,
+		ok: diffs.length === 0 && failures === 0,
 		summary: {
 			total: diffs.length,
+			...(failures > 0 ? { failures } : {}),
 			stats: totalStats ?? undefined,
 		},
 		files: diffs.map((diff) => ({
@@ -131,6 +136,7 @@ interface JsonOutput {
 	ok: boolean
 	summary: {
 		total: number
+		failures?: number
 		stats?: { added: number; removed: number }
 	}
 	files: {
