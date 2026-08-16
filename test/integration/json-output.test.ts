@@ -78,7 +78,11 @@ async function captureJsonOutput(run: () => Promise<void>): Promise<unknown> {
 	}
 
 	expect(logs.length).toBeGreaterThan(0)
-	return JSON.parse(logs[logs.length - 1])
+	// The payload must be the FIRST thing on stdout — a leading blank line
+	// or human text breaks the machine-readable contract for CI consumers.
+	const payload = logs.find((line) => line.trim().startsWith('{'))
+	expect(payload).toBe(logs[0])
+	return JSON.parse(payload ?? '')
 }
 
 describe('cli json output', () => {
@@ -391,6 +395,33 @@ describe('init/sync/add json output', () => {
 			expect(parsed.taskId).toBe('lint/biome')
 			expect(typeof parsed.applied).toBe('number')
 			expect(Array.isArray(parsed.errors)).toBe(true)
+		} finally {
+			process.exitCode = 0
+			await fs.rm(cwd, { recursive: true, force: true })
+		}
+	}, 120_000)
+
+	it('add ts/strict --format json emits the payload as the first thing on stdout', async () => {
+		const cwd = await createProjectFixture()
+		try {
+			const output = (await captureJsonOutput(async () => {
+				await addCommand.run?.({
+					args: { cwd, taskId: 'ts/strict', format: 'json', quiet: true },
+				} as never)
+			})) as {
+				ok: boolean
+				taskId: string
+				applied: number
+				errors: string[]
+			}
+
+			// The apply pipeline runs before the payload is emitted — the
+			// hardened captureJsonOutput above proves no leading blank line
+			// (or human text) precedes it.
+			expect(typeof output.ok).toBe('boolean')
+			expect(output.taskId).toBe('ts/strict')
+			expect(output.applied).toBe(1)
+			expect(Array.isArray(output.errors)).toBe(true)
 		} finally {
 			process.exitCode = 0
 			await fs.rm(cwd, { recursive: true, force: true })
