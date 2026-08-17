@@ -1,6 +1,6 @@
 {
 	"name": "xtarterize",
-	"version": "1.20.0",
+	"version": "1.20.1",
 	"description": "Automated project setup and configuration scaffolding",
 	"keywords": [
 		"boilerplate",

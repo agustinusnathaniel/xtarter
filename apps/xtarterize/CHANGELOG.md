@@ -1,5 +1,17 @@
 # xtarterize
 
+## 1.20.1
+
+### Patch Changes
+
+- [#140](https://github.com/agustinusnathaniel/xtarter/pull/140) [`fe69cad`](https://github.com/agustinusnathaniel/xtarter/commit/fe69cad5f2226280f197c213797e8367d60cbf68) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - `diff --json` (and `init`/`sync` `--dry-run --json`) now emit a machine-readable payload even when there are no pending changes — previously a fully conformant project printed human text like "No pending changes" on stdout (or nothing at all), breaking the JSON contract for CI consumers. The payload's `ok` field agrees with the exit code, and dry-run failures are surfaced as `summary.failures`.
+
+- [#137](https://github.com/agustinusnathaniel/xtarter/pull/137) [`1733ebf`](https://github.com/agustinusnathaniel/xtarter/commit/1733ebfc11dbee6c044c98a512451960fb43ae57) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - `init`, `add`, and `sync` no longer fail with "No package manager auto-detected" when installing dependencies on fresh projects that have `package.json` but no lockfile: the detected package manager (npm fallback) is now passed to dependency installs instead of letting nypm re-run its own detection, which found nothing and threw.
+
+- [#139](https://github.com/agustinusnathaniel/xtarter/pull/139) [`25b6ba8`](https://github.com/agustinusnathaniel/xtarter/commit/25b6ba8ddd60c767fd3844609e66be27ed74341b) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - `add`, `init`, and `sync` no longer emit a leading blank line before the JSON payload in `--json`/`--format json` mode — stdout now contains exactly the machine-readable payload, as documented.
+
+- [#141](https://github.com/agustinusnathaniel/xtarter/pull/141) [`ab54037`](https://github.com/agustinusnathaniel/xtarter/commit/ab54037fbb97c4b86db63da0ef557bd01ce87e40) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - fix: use atomic writes for run manifest to prevent corruption on crash, tighten plugin specifier regex to reject `~` in package names, and batch `add --all` task application for faster execution
+
 ## 1.20.0
 
 ### Minor Changes

@@ -1,5 +1,13 @@
 # @xtarterize/tasks
 
+## 1.20.1
+
+### Patch Changes
+
+- Updated dependencies [[`ab54037`](https://github.com/agustinusnathaniel/xtarter/commit/ab54037fbb97c4b86db63da0ef557bd01ce87e40)]:
+  - @xtarterize/core@1.20.1
+  - @xtarterize/patchers@1.20.1
+
 ## 1.20.0
 
 ### Patch Changes
