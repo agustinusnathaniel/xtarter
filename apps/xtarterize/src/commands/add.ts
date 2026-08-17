@@ -403,46 +403,63 @@ async function runInteractive(options: {
 		return
 	}
 
+	const selectedTasks = tasksWithStatus.filter((entry) =>
+		selectedIds.includes(entry.task.id),
+	)
+
 	let totalApplied = 0
 	const allErrors: string[] = []
 	let totalTiming: import('@xtarterize/core').ApplyTiming | undefined
 
-	for (const taskId of selectedIds) {
-		const entry = tasksWithStatus.find((t) => t.task.id === taskId)
-		if (!entry) continue
+	if (allFlag) {
+		const result = await applyTasks({
+			tasks: selectedTasks.map((entry) => entry.task),
+			cwd,
+			profile,
+			includeConflicts,
+			quiet: true,
+		})
+		totalApplied = result.applied
+		allErrors.push(...result.errors)
+		totalTiming = result.timing
+		if (!jsonMode) {
+			for (const error of result.errors) {
+				logError(error)
+			}
+		}
+	} else {
+		for (const entry of selectedTasks) {
+			const diffs = await entry.task.dryRun(cwd, profile)
+			if (!jsonMode) displayDiffs(diffs, format)
 
-		const diffs = await entry.task.dryRun(cwd, profile)
-		if (!allFlag && !jsonMode) displayDiffs(diffs, format)
-
-		if (!allFlag && !jsonMode) {
 			const proceed = await confirm({
 				message: `Apply ${entry.task.label}?`,
 			})
 			abortIfCancelled(proceed, 'Add cancelled')
 			if (!proceed) continue
-		}
 
-		const result = await applyTasks({
-			tasks: [entry.task],
-			cwd,
-			profile,
-			selectedIds: [entry.task.id],
-			includeConflicts,
-			quiet: true,
-		})
+			const result = await applyTasks({
+				tasks: [entry.task],
+				cwd,
+				profile,
+				selectedIds: [entry.task.id],
+				includeConflicts,
+				quiet: true,
+			})
 
-		if (result.applied > 0) {
-			totalApplied++
-			if (!jsonMode) logSuccess(`${entry.task.id} applied`)
-		} else if (result.errors.length > 0) {
-			allErrors.push(...result.errors)
-			if (!jsonMode) logError(`${entry.task.id}: ${result.errors.join(', ')}`)
-		} else if (!jsonMode) {
-			logWarn(`${entry.task.id} skipped (${entry.status}) — not applied`)
-		}
+			if (result.applied > 0) {
+				totalApplied++
+				if (!jsonMode) logSuccess(`${entry.task.id} applied`)
+			} else if (result.errors.length > 0) {
+				allErrors.push(...result.errors)
+				if (!jsonMode) logError(`${entry.task.id}: ${result.errors.join(', ')}`)
+			} else if (!jsonMode) {
+				logWarn(`${entry.task.id} skipped (${entry.status}) — not applied`)
+			}
 
-		if (result.timing) {
-			totalTiming = result.timing
+			if (result.timing) {
+				totalTiming = result.timing
+			}
 		}
 	}
 
@@ -462,7 +479,7 @@ async function runInteractive(options: {
 			formatRunResult({
 				ok: allErrors.length === 0,
 				applied: totalApplied,
-				skipped: selectedIds.length - totalApplied,
+				skipped: selectedTasks.length - totalApplied,
 				errors: allErrors,
 			}),
 		)
@@ -477,7 +494,7 @@ async function runInteractive(options: {
 		logError(`${allErrors.length} error(s)`)
 		process.exitCode = 1
 	}
-	logSuccess(`${totalApplied}/${selectedIds.length} tasks applied`)
+	logSuccess(`${totalApplied}/${selectedTasks.length} tasks applied`)
 	if (!quiet && totalTiming) {
 		printTiming(detectionOnlyTiming(detectionMs), totalTiming, {
 			recordTiming,

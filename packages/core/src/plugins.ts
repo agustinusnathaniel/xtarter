@@ -99,12 +99,10 @@ export async function loadPluginConfig(
  */
 function validatePluginSpecifier(specifier: string): boolean {
 	// npm package name pattern:
-	//   - optional scope: @scope/ (alphanumeric, hyphens, dots, underscores, tildes)
+	//   - optional scope: @scope/ (alphanumeric, hyphens, dots, underscores)
 	//   - required name: same charset, at least one char
 	//   - no leading dots, no leading hyphens, no consecutive dots
-	return /^(?:@[a-z0-9~][a-z0-9-._~]*\/)?[a-z0-9~][a-z0-9-._~]*$/.test(
-		specifier,
-	)
+	return /^(?:@[a-z0-9][a-z0-9-._]*\/)?[a-z0-9][a-z0-9-._]*$/.test(specifier)
 }
 
 /**
