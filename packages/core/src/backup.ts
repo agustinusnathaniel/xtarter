@@ -168,11 +168,18 @@ export async function writeRunManifest(
 		files,
 	}
 	await fs.mkdir(resolvePath(cwd, BACKUP_DIR), { recursive: true })
+	const tempPath = `${manifestPath}.${process.pid}.${Date.now()}.tmp`
 	await fs.writeFile(
-		manifestPath,
+		tempPath,
 		`${JSON.stringify(manifest, null, 2)}\n`,
 		'utf-8',
 	)
+	try {
+		await fs.rename(tempPath, manifestPath)
+	} catch (error) {
+		await fs.unlink(tempPath).catch(() => {})
+		throw error
+	}
 }
 
 export async function readRunManifest(
