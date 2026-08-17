@@ -1,5 +1,11 @@
 # @xtarterize/core
 
+## 1.20.1
+
+### Patch Changes
+
+- [#141](https://github.com/agustinusnathaniel/xtarter/pull/141) [`ab54037`](https://github.com/agustinusnathaniel/xtarter/commit/ab54037fbb97c4b86db63da0ef557bd01ce87e40) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - fix: use atomic writes for run manifest to prevent corruption on crash, tighten plugin specifier regex to reject `~` in package names, and batch `add --all` task application for faster execution
+
 ## 1.20.0
 
 ## 1.19.0
