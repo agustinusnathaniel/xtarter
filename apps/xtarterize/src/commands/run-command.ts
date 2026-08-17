@@ -160,7 +160,7 @@ async function handleDryRun(options: DryRunOptions): Promise<void> {
 		process.exitCode = 1
 	}
 	const resolvedFormat: DisplayFormat = format === 'json' ? 'json' : 'terminal'
-	displayDiffs(mergedDiffs, resolvedFormat)
+	displayDiffs(mergedDiffs, resolvedFormat, failures)
 	if (format !== 'json') printTiming(timing)
 }
 

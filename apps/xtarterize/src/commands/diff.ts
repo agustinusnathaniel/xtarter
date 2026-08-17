@@ -55,6 +55,10 @@ export const diffCommand = defineCommand({
 		}
 
 		if (mergedDiffs.length === 0) {
+			if (ctx.format === 'json') {
+				displayDiffs(mergedDiffs, ctx.format, failures)
+				return
+			}
 			if (failures > 0) {
 				logError(`${failures} task(s) failed to dry-run`)
 			} else {
@@ -64,7 +68,7 @@ export const diffCommand = defineCommand({
 			return
 		}
 
-		displayDiffs(mergedDiffs, ctx.format)
+		displayDiffs(mergedDiffs, ctx.format, failures)
 		if (!ctx.quiet) printTiming(timing)
 	},
 })
