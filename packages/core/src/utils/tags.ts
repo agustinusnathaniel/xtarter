@@ -32,28 +32,24 @@ export function tag(text: string, color: TagColor): string {
 	}
 }
 
+const STATUS_COLORS: Record<string, TagColor> = {
+	new: 'green',
+	patch: 'yellow',
+	skip: 'dim',
+	conflict: 'red',
+}
+
 export function statusTag(status: string): string {
-	switch (status) {
-		case 'new':
-			return tag('new', 'green')
-		case 'patch':
-			return tag('patch', 'yellow')
-		case 'skip':
-			return tag('skip', 'dim')
-		case 'conflict':
-			return tag('conflict', 'red')
-		default:
-			return ` ${status} `
-	}
+	const color = STATUS_COLORS[status]
+	return color ? tag(status, color) : ` ${status} `
+}
+
+const ACTION_COLORS: Record<string, TagColor> = {
+	create: 'green',
+	modify: 'yellow',
 }
 
 export function actionTag(action: string): string {
-	switch (action) {
-		case 'create':
-			return tag('create', 'green')
-		case 'modify':
-			return tag('modify', 'yellow')
-		default:
-			return ` ${action} `
-	}
+	const color = ACTION_COLORS[action]
+	return color ? tag(action, color) : ` ${action} `
 }
