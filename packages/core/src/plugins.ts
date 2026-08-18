@@ -3,6 +3,12 @@ import { findConfigFile, readFile, readJson } from '@/utils/fs.js'
 import { logWarn } from '@/utils/logger.js'
 
 /**
+ * Maximum time (ms) to wait for a plugin module to load.
+ * Prevents the CLI from hanging on slow or broken plugins.
+ */
+const PLUGIN_LOAD_TIMEOUT_MS = 10_000
+
+/**
  * Configuration file basenames searched in order.
  * The first match wins.
  */
@@ -106,6 +112,31 @@ function validatePluginSpecifier(specifier: string): boolean {
 }
 
 /**
+ * Import a module with a timeout to prevent hanging on slow or broken plugins.
+ *
+ * A malicious or misconfigured plugin could execute infinite loops or block
+ * on network I/O during module evaluation. The timeout ensures the CLI
+ * remains responsive even when a plugin fails to load.
+ */
+async function importWithTimeout(
+	specifier: string,
+): Promise<Record<string, unknown>> {
+	const importPromise = import(/* @vite-ignore */ specifier)
+	const timeoutPromise = new Promise<never>((_resolve, reject) => {
+		setTimeout(
+			() =>
+				reject(
+					new Error(
+						`Plugin "${specifier}" failed to load within ${PLUGIN_LOAD_TIMEOUT_MS / 1000}s`,
+					),
+				),
+			PLUGIN_LOAD_TIMEOUT_MS,
+		)
+	})
+	return Promise.race([importPromise, timeoutPromise])
+}
+
+/**
  * Given a plugin config, dynamically import each plugin package and
  * collect the tasks they export.
  *
@@ -129,7 +160,7 @@ export async function loadPluginTasks(config: PluginConfig): Promise<Task[]> {
 		}
 
 		try {
-			const mod = await import(/* @vite-ignore */ specifier)
+			const mod = await importWithTimeout(specifier)
 
 			// Collect tasks from the module
 			const moduleTasks: Task[] = []
