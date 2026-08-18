@@ -1,5 +1,16 @@
 # @xtarterize/core
 
+## 1.21.0
+
+### Minor Changes
+
+- [#143](https://github.com/agustinusnathaniel/xtarter/pull/143) [`6ad927c`](https://github.com/agustinusnathaniel/xtarter/commit/6ad927c020e52ede8e4204f7b2deda815faa81d9) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Add timeout to plugin dynamic imports to prevent CLI hanging on slow or broken plugins
+
+  Plugins that fail to load within 10 seconds now time out gracefully instead of
+  blocking the entire CLI. This prevents denial-of-service via malicious or
+  misconfigured plugins that execute infinite loops or block on I/O during module
+  evaluation.
+
 ## 1.20.1
 
 ### Patch Changes

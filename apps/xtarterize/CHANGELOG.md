@@ -1,5 +1,7 @@
 # xtarterize
 
+## 1.21.0
+
 ## 1.20.1
 
 ### Patch Changes
