@@ -1,14 +1,9 @@
 import type { ApplyTiming, ResolveTiming } from '@xtarterize/core'
 import { pc } from '@xtarterize/core'
 
-function formatMs(ms: number): string {
+function formatMs(ms: number, precision = 1): string {
 	if (ms < 1000) return `${Math.round(ms)}ms`
-	return `${(ms / 1000).toFixed(1)}s`
-}
-
-function formatMsPrecise(ms: number): string {
-	if (ms < 1000) return `${Math.round(ms)}ms`
-	return `${(ms / 1000).toFixed(2)}s`
+	return `${(ms / 1000).toFixed(precision)}s`
 }
 
 export function formatTimingJson(
@@ -48,7 +43,7 @@ export function printTiming(
 
 	lines.push(`  Detection    ${pc.dim(formatMs(resolve.detectionMs))}`)
 
-	const sumLabel = `∑ ${formatMsPrecise(resolve.resolutionSumMs)}`
+	const sumLabel = `∑ ${formatMs(resolve.resolutionSumMs, 2)}`
 	lines.push(
 		`  Resolution   ${pc.dim(formatMs(resolve.resolutionMs))} ${pc.dim(`(${sumLabel} across checks)`)}`,
 	)
