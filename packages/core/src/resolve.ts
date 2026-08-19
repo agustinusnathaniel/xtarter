@@ -24,6 +24,29 @@ export function resolveTasks(
 	})
 }
 
+function checkTask(
+	task: Task,
+	cwd: string,
+	profile: ProjectProfile,
+): Effect.Effect<TaskStatus, never> {
+	return Effect.tryPromise({
+		try: (_signal) => task.check(cwd, profile),
+		catch: (cause) =>
+			new TaskError({
+				taskId: task.id,
+				message: `Failed to check ${task.id}`,
+				cause,
+			}),
+	}).pipe(
+		Effect.catchTag('TaskError', (error) => {
+			const detail =
+				error.cause instanceof Error ? error.cause.message : String(error.cause)
+			logWarn(`Failed to check ${task.id}: ${detail}`)
+			return Effect.succeed('conflict' as TaskStatus)
+		}),
+	)
+}
+
 export function resolveTaskStatuses(
 	tasks: Task[],
 	cwd: string,
@@ -32,23 +55,7 @@ export function resolveTaskStatuses(
 	return Effect.runPromise(
 		Effect.all(
 			tasks.map((task) =>
-				Effect.tryPromise({
-					try: (_signal) => task.check(cwd, profile),
-					catch: (cause) =>
-						new TaskError({
-							taskId: task.id,
-							message: `Failed to check ${task.id}`,
-							cause,
-						}),
-				}).pipe(
-					Effect.catchTag('TaskError', (error) => {
-						const detail =
-							error.cause instanceof Error
-								? error.cause.message
-								: String(error.cause)
-						logWarn(`Failed to check ${task.id}: ${detail}`)
-						return Effect.succeed('conflict' as TaskStatus)
-					}),
+				checkTask(task, cwd, profile).pipe(
 					Effect.map((status) => [task.id, status] as [string, TaskStatus]),
 				),
 			),
@@ -66,30 +73,12 @@ async function resolveStatusesWithTiming(
 	const statuses = await Effect.runPromise(
 		Effect.all(
 			tasks.map((task) =>
-				Effect.tryPromise({
-					try: async (_signal) => {
-						const start = performance.now()
-						const status = await task.check(cwd, profile)
-						checkDurations.push(performance.now() - start)
-						return status
-					},
-					catch: (cause) =>
-						new TaskError({
-							taskId: task.id,
-							message: `Failed to check ${task.id}`,
-							cause,
-						}),
-				}).pipe(
-					Effect.catchTag('TaskError', (error) => {
-						const detail =
-							error.cause instanceof Error
-								? error.cause.message
-								: String(error.cause)
-						logWarn(`Failed to check ${task.id}: ${detail}`)
-						return Effect.succeed('conflict' as TaskStatus)
-					}),
-					Effect.map((status) => [task.id, status] as [string, TaskStatus]),
-				),
+				Effect.gen(function* () {
+					const start = performance.now()
+					const status = yield* checkTask(task, cwd, profile)
+					checkDurations.push(performance.now() - start)
+					return [task.id, status] as [string, TaskStatus]
+				}),
 			),
 			{ concurrency: 8 },
 		).pipe(Effect.map((entries) => new Map(entries))),
