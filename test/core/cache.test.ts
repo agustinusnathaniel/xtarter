@@ -29,6 +29,15 @@ async function createMinimalProject(dir: string) {
 	await fs.writeFile(path.join(dir, 'vite.config.ts'), `export default {}\n`)
 }
 
+async function createProjectWithoutConfigFiles(dir: string) {
+	await writePkg(dir, {
+		name: 'test-project',
+		version: '1.0.0',
+		dependencies: { react: '^18.2.0' },
+		devDependencies: { vite: '^5.0.0' },
+	})
+}
+
 async function cachePath(dir: string) {
 	return path.join(dir, '.xtarterize', 'cache', 'profile-fingerprint.json')
 }
@@ -58,7 +67,7 @@ describe('detect cache', () => {
 		expect(profile.typescript).toBe(true)
 
 		const written = await readCache(dir)
-		expect(written.version).toBe(1)
+		expect(written.version).toBe(2)
 		expect(written.fingerprint.packageJson.path).toContain('package.json')
 		expect(written.profile.framework).toBe('react')
 		expect(typeof written.durationMs).toBe('number')
@@ -250,6 +259,138 @@ describe('detect cache', () => {
 		// (indicating cache was invalidated and recomputed)
 		const cached = await readCache(dir)
 		expect(cached.fingerprint.configDirs.length).toBeGreaterThan(0)
+
+		await fs.rm(dir, { recursive: true, force: true })
+	})
+
+	it('includes root detector files in fingerprint', async () => {
+		const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'cache-rootfp-'))
+		await createMinimalProject(dir)
+
+		await detectProject(dir)
+		const cached = await readCache(dir)
+		const rootPaths = cached.fingerprint.rootInputs.map(
+			(fp: { path: string }) => fp.path,
+		)
+
+		expect(rootPaths.some((p: string) => p.endsWith('tsconfig.json'))).toBe(
+			true,
+		)
+		expect(rootPaths.some((p: string) => p.endsWith('vite.config.ts'))).toBe(
+			true,
+		)
+
+		await fs.rm(dir, { recursive: true, force: true })
+	})
+
+	it('invalidates cache when tsconfig is added', async () => {
+		const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'cache-ts-add-'))
+		await createProjectWithoutConfigFiles(dir)
+
+		const first = await detectProject(dir)
+		expect(first.existing.tsconfig).toBe(false)
+		expect(first.typescript).toBe(false)
+
+		await fs.writeFile(
+			path.join(dir, 'tsconfig.json'),
+			JSON.stringify({ compilerOptions: {} }),
+		)
+
+		const second = await detectProject(dir)
+		expect(second.existing.tsconfig).toBe(true)
+		expect(second.typescript).toBe(true)
+
+		await fs.rm(dir, { recursive: true, force: true })
+	})
+
+	it('invalidates cache when tsconfig is removed', async () => {
+		const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'cache-ts-rm-'))
+		await createProjectWithoutConfigFiles(dir)
+		await fs.writeFile(
+			path.join(dir, 'tsconfig.json'),
+			JSON.stringify({ compilerOptions: {} }),
+		)
+
+		const first = await detectProject(dir)
+		expect(first.existing.tsconfig).toBe(true)
+		expect(first.typescript).toBe(true)
+
+		await fs.unlink(path.join(dir, 'tsconfig.json'))
+
+		const second = await detectProject(dir)
+		expect(second.existing.tsconfig).toBe(false)
+		expect(second.typescript).toBe(false)
+
+		await fs.rm(dir, { recursive: true, force: true })
+	})
+
+	it('invalidates cache when vite.config is added', async () => {
+		const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'cache-vite-add-'))
+		await createProjectWithoutConfigFiles(dir)
+
+		const first = await detectProject(dir)
+		expect(first.existing.viteConfig).toBe(false)
+
+		await fs.writeFile(path.join(dir, 'vite.config.ts'), `export default {}\n`)
+
+		const second = await detectProject(dir)
+		expect(second.existing.viteConfig).toBe(true)
+
+		await fs.rm(dir, { recursive: true, force: true })
+	})
+
+	it('invalidates cache when an ancestor monorepo marker is added or removed', async () => {
+		const root = await fs.mkdtemp(path.join(os.tmpdir(), 'cache-ancestor-'))
+		try {
+			const nested = path.join(root, 'apps', 'demo')
+			await fs.mkdir(nested, { recursive: true })
+			await writePkg(nested, {
+				name: 'demo-app',
+				version: '1.0.0',
+				dependencies: { react: '^18.2.0' },
+			})
+
+			const before = await detectProject(nested)
+			expect(before.monorepo).toBe(false)
+
+			const marker = path.join(root, 'pnpm-workspace.yaml')
+			await fs.writeFile(marker, "packages:\n  - 'apps/*'\n")
+
+			const withMarker = await detectProject(nested)
+			expect(withMarker.monorepo).toBe(true)
+			expect(withMarker.workspaceRoot).toBe(false)
+
+			await fs.unlink(marker)
+
+			const afterRemoval = await detectProject(nested)
+			expect(afterRemoval.monorepo).toBe(false)
+		} finally {
+			await fs.rm(root, { recursive: true, force: true })
+		}
+	})
+
+	it('invalidates cache when .nvmrc is added or changed', async () => {
+		const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'cache-nvmrc-'))
+		await writePkg(dir, {
+			name: 'test-project',
+			version: '1.0.0',
+			engines: { node: '22' },
+		})
+
+		const first = await detectProject(dir)
+		expect(first.nodeVersion).toBe('22')
+
+		const nvmrcPath = path.join(dir, '.nvmrc')
+		await fs.writeFile(nvmrcPath, '20\n')
+
+		const withNvmrc = await detectProject(dir)
+		expect(withNvmrc.nodeVersion).toBe('20')
+
+		// Different size/content to remain deterministic on coarse mtimes
+		await fs.writeFile(nvmrcPath, 'v18\n')
+
+		const changed = await detectProject(dir)
+		expect(changed.nodeVersion).toBe('18')
 
 		await fs.rm(dir, { recursive: true, force: true })
 	})

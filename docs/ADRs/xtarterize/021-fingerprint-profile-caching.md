@@ -24,11 +24,13 @@ Add a **fingerprint-based cache** for `detectProject()` that skips re-detection 
 
 The fingerprint covers all inputs that affect the profile:
 
-| Component      | Fields                                           | Rationale                             |
-| -------------- | ------------------------------------------------ | ------------------------------------- |
-| `package.json` | path, mtimeMs, size                              | Dep changes, version bumps            |
-| Lockfile       | path, mtimeMs, size                              | Dep install/update                    |
-| Config dirs    | path, mtimeMs, size per file (recursive, sorted) | `.github/`, `.vscode/`, `.changeset/` |
+| Component         | Fields                                    | Rationale                                                        |
+| ----------------- | ----------------------------------------- | ---------------------------------------------------------------- |
+| `package.json`    | path, mtimeMs, size                       | Dep changes, version bumps                                       |
+| Lockfile          | path, mtimeMs, size                       | Dep install/update                                               |
+| Config dirs       | path, mtimeMs, size per file (recursive)  | `.github/`, `.vscode/`, `.changeset/`                            |
+| Root inputs       | path, mtimeMs, size per file              | Detector configs at cwd: `tsconfig`, `vite.config`, monorepo markers, `.nvmrc`, ... |
+| Ancestor inputs   | path, presence per marker/dir             | Monorepo markers + `packages`/`apps`/`.git` walked upward from a nested cwd |
 
 We use **mtime + size** instead of content hashing because:
 
@@ -44,7 +46,7 @@ We use **mtime + size** instead of content hashing because:
 
 ```typescript
 interface ProfileCacheEntry {
-  version: 1;
+  version: 2;
   fingerprint: ProjectFingerprint;
   profile: ProjectProfile;
   computedAt: string; // ISO timestamp
@@ -61,8 +63,10 @@ Cache is invalidated if **any** fingerprint field changes:
 1. `package.json` mtime or size changes
 2. Lockfile mtime or size changes (or lockfile appears/disappears)
 3. Config directory mtime changes (file added/removed from `.github/`, `.vscode/`, `.changeset/`)
-4. Cache version doesn't match
-5. Cache file is missing or corrupt (JSON parse fails → fall through to compute)
+4. Root input files change (detector configs at cwd: `tsconfig`, `vite.config`, monorepo markers, `.nvmrc`, ...)
+5. Ancestor inputs change (monorepo markers, `packages`/`apps` dirs, or `.git` appearing/disappearing in any ancestor walked by `detectMonorepo`)
+6. Cache version doesn't match
+7. Cache file is missing or corrupt (JSON parse fails → fall through to compute)
 
 Cache does **not** depend on git HEAD - the profile is determined by deps and configs, not code content.
 
@@ -86,7 +90,7 @@ export async function detectProject(cwd: string): Promise<ProjectProfile> {
     return cached.profile
   }
   const profile = await computeProjectProfile(cwd)
-  await writeProfileCache(cwd, { version: 1, fingerprint, profile, ... })
+  await writeProfileCache(cwd, { version: 2, fingerprint, profile, ... })
   return profile
 }
 ```

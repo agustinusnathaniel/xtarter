@@ -11,6 +11,10 @@ import {
 	readProfileCache,
 	writeProfileCache,
 } from './detect/cache.js'
+import {
+	type DetectorRootInput,
+	ROOT_DETECTOR_INPUTS,
+} from './detect/root-inputs.js'
 import type {
 	Bundler,
 	Framework,
@@ -109,29 +113,18 @@ interface FileDetectorSpec {
 }
 
 const FILE_DETECTORS: FileDetectorSpec[] = [
-	{ key: 'biome', basename: 'biome', extensions: ['.json', '.jsonc'] },
-	{ key: 'tsconfig', basename: 'tsconfig', extensions: ['.json', '.jsonc'] },
-	{ key: 'renovate', basename: 'renovate', extensions: ['.json', '.jsonc'] },
-	{
-		key: 'commitlint',
-		basename: 'commitlint.config',
-		extensions: ['.ts', '.js', '.mjs', '.mts', '.cts'],
-	},
-	{ key: 'knip', basename: 'knip', extensions: ['.ts', '.mts'] },
-	{ key: 'plop', basename: 'plopfile', extensions: ['.ts', '.js', '.mjs'] },
-	{ key: 'turbo', basename: 'turbo', extensions: ['.json'] },
+	...ROOT_DETECTOR_INPUTS.filter(
+		(
+			input,
+		): input is DetectorRootInput & {
+			key: keyof ProjectProfile['existing']
+		} => input.key !== undefined,
+	).map(({ key, basename, extensions }) => ({ key, basename, extensions })),
 	{
 		key: 'vscodeSettings',
 		basename: '.vscode/settings',
 		extensions: ['.json'],
 	},
-	{
-		key: 'viteConfig',
-		basename: 'vite.config',
-		extensions: ['.ts', '.js', '.mts', '.mjs', '.cts', '.cjs'],
-	},
-	{ key: 'versionrc', basename: '.versionrc', extensions: [] },
-	{ key: 'gitignore', basename: '.gitignore', extensions: [] },
 ]
 
 // ── Custom detectors for complex cases ──
@@ -392,7 +385,7 @@ export async function detectProject(cwd: string): Promise<ProjectProfile> {
 	const durationMs = performance.now() - start
 
 	await writeProfileCache(cwd, {
-		version: 1,
+		version: 2,
 		fingerprint,
 		profile,
 		computedAt: new Date().toISOString(),
