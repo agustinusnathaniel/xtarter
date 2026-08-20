@@ -3,6 +3,7 @@ import { Effect } from 'effect'
 import { dirname } from 'pathe'
 import { FileSystemError } from '@/errors.js'
 import { resolvePath } from '@/utils/fs.js'
+import { ROOT_DETECTOR_INPUTS } from './root-inputs.js'
 import type { ProjectProfile } from './types.js'
 
 export interface PathFingerprint {
@@ -15,10 +16,12 @@ export interface ProjectFingerprint {
 	packageJson: PathFingerprint
 	lockfile: PathFingerprint | null
 	configDirs: PathFingerprint[]
+	rootInputs: PathFingerprint[]
+	ancestorInputs: PathFingerprint[]
 }
 
 export interface ProfileCacheEntry {
-	version: 1
+	version: 2
 	fingerprint: ProjectFingerprint
 	profile: ProjectProfile
 	computedAt: string
@@ -33,6 +36,15 @@ const LOCKFILE_NAMES = [
 ]
 
 const CONFIG_DIRS = ['.github', '.vscode', '.changeset']
+
+const ANCESTOR_MARKER_FILES = [
+	'pnpm-workspace.yaml',
+	'turbo.json',
+	'nx.json',
+	'lerna.json',
+]
+
+const ANCESTOR_MARKER_DIRS = ['packages', 'apps']
 
 function statOrFail(
 	filePath: string,
@@ -109,6 +121,73 @@ function fingerprintConfigDirs(
 	}).pipe(Effect.orElseSucceed(() => []))
 }
 
+function fingerprintRootInputs(
+	cwd: string,
+): Effect.Effect<PathFingerprint[], never> {
+	return Effect.tryPromise({
+		try: async () => {
+			const entryStats: PathFingerprint[] = []
+			for (const input of ROOT_DETECTOR_INPUTS) {
+				const names =
+					input.extensions.length === 0
+						? [input.basename]
+						: input.extensions.map((ext) => `${input.basename}${ext}`)
+				for (const name of names) {
+					const filePath = resolvePath(cwd, name)
+					try {
+						const s = await fs.stat(filePath)
+						if (s.isFile()) {
+							entryStats.push({
+								path: filePath,
+								mtimeMs: s.mtimeMs,
+								size: s.size,
+							})
+						}
+					} catch {
+						// Absent or unreadable inputs simply don't contribute
+					}
+				}
+			}
+			return entryStats
+		},
+		catch: (cause) => new FileSystemError({ path: cwd, cause }),
+	}).pipe(Effect.orElseSucceed(() => []))
+}
+
+function fingerprintAncestorInputs(
+	cwd: string,
+): Effect.Effect<PathFingerprint[], never> {
+	const names = [...ANCESTOR_MARKER_FILES, ...ANCESTOR_MARKER_DIRS]
+	return Effect.tryPromise({
+		try: async () => {
+			const entryStats: PathFingerprint[] = []
+			let current = dirname(cwd)
+			while (current !== dirname(current)) {
+				for (const name of names) {
+					const inputPath = resolvePath(current, name)
+					try {
+						await fs.access(inputPath)
+						entryStats.push({ path: inputPath, mtimeMs: 0, size: 0 })
+					} catch {
+						// Absent inputs don't contribute
+					}
+				}
+				const gitPath = resolvePath(current, '.git')
+				try {
+					await fs.access(gitPath)
+					entryStats.push({ path: gitPath, mtimeMs: 0, size: 0 })
+					break
+				} catch {
+					// No .git here, keep walking up
+				}
+				current = dirname(current)
+			}
+			return entryStats
+		},
+		catch: (cause) => new FileSystemError({ path: cwd, cause }),
+	}).pipe(Effect.orElseSucceed(() => []))
+}
+
 export function computeFingerprint(cwd: string): Promise<ProjectFingerprint> {
 	return Effect.runPromise(
 		Effect.gen(function* () {
@@ -116,6 +195,8 @@ export function computeFingerprint(cwd: string): Promise<ProjectFingerprint> {
 			const packageJson = yield* statPath(pkgJsonPath)
 			const lockfile = yield* findLockfile(cwd)
 			const configDirs = yield* fingerprintConfigDirs(cwd)
+			const rootInputs = yield* fingerprintRootInputs(cwd)
+			const ancestorInputs = yield* fingerprintAncestorInputs(cwd)
 
 			return {
 				packageJson: packageJson ?? {
@@ -125,6 +206,8 @@ export function computeFingerprint(cwd: string): Promise<ProjectFingerprint> {
 				},
 				lockfile,
 				configDirs,
+				rootInputs,
+				ancestorInputs,
 			}
 		}),
 	)
@@ -134,7 +217,7 @@ export function isCacheValid(
 	stored: ProfileCacheEntry,
 	current: ProjectFingerprint,
 ): boolean {
-	if (stored.version !== 1) return false
+	if (stored.version !== 2) return false
 
 	const s = stored.fingerprint
 	const c = current
@@ -159,16 +242,30 @@ export function isCacheValid(
 		}
 	}
 
-	if (s.configDirs.length !== c.configDirs.length) return false
+	if (!samePathFingerprints(s.configDirs, c.configDirs)) return false
+	if (!samePathFingerprints(s.rootInputs, c.rootInputs)) return false
 
-	const sDirMap = new Map(s.configDirs.map((d) => [d.path, d]))
-	for (const dir of c.configDirs) {
-		const stored = sDirMap.get(dir.path)
-		if (!stored || stored.mtimeMs !== dir.mtimeMs || stored.size !== dir.size) {
+	const sAncestors = s.ancestorInputs
+	if (!sAncestors || !samePathFingerprints(sAncestors, c.ancestorInputs)) {
+		return false
+	}
+
+	return true
+}
+
+function samePathFingerprints(
+	stored: PathFingerprint[],
+	current: PathFingerprint[],
+): boolean {
+	if (stored.length !== current.length) return false
+
+	const storedByPath = new Map(stored.map((d) => [d.path, d]))
+	for (const fp of current) {
+		const match = storedByPath.get(fp.path)
+		if (!match || match.mtimeMs !== fp.mtimeMs || match.size !== fp.size) {
 			return false
 		}
 	}
-
 	return true
 }
 
@@ -196,13 +293,15 @@ export function readProfileCache(
 function isValidCacheEntry(value: unknown): value is ProfileCacheEntry {
 	if (typeof value !== 'object' || value === null) return false
 	const entry = value as Record<string, unknown>
-	if (entry.version !== 1) return false
+	if (entry.version !== 2) return false
 	if (typeof entry.fingerprint !== 'object' || entry.fingerprint === null)
 		return false
 	if (typeof entry.profile !== 'object' || entry.profile === null) return false
 	const fp = entry.fingerprint as Record<string, unknown>
 	if (typeof fp.packageJson !== 'object' || fp.packageJson === null)
 		return false
+	if (!Array.isArray(fp.rootInputs)) return false
+	if (!Array.isArray(fp.ancestorInputs)) return false
 	return true
 }
 
