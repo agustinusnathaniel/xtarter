@@ -270,6 +270,7 @@ async function runSingleTask(options: {
 		selectedIds: [task.id],
 		includeConflicts,
 		quiet,
+		statuses: new Map([[task.id, status]]),
 	})
 	if (result.errors.length > 0) {
 		if (jsonMode) {
@@ -371,6 +372,8 @@ async function runInteractive(options: {
 	}
 	s.stop('Tasks checked')
 
+	const statusesMap = new Map(tasksWithStatus.map((t) => [t.task.id, t.status]))
+
 	if (quiet && !allFlag) {
 		if (jsonMode) {
 			console.log(
@@ -418,6 +421,7 @@ async function runInteractive(options: {
 			profile,
 			includeConflicts,
 			quiet: true,
+			statuses: statusesMap,
 		})
 		totalApplied = result.applied
 		allErrors.push(...result.errors)
@@ -445,6 +449,7 @@ async function runInteractive(options: {
 				selectedIds: [entry.task.id],
 				includeConflicts,
 				quiet: true,
+				statuses: statusesMap,
 			})
 
 			if (result.applied > 0) {
