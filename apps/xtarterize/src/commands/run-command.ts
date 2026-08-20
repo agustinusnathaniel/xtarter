@@ -56,6 +56,7 @@ interface ApplyAndReportInput {
 	timing: ResolveTiming
 	format?: string
 	options: ApplyAndReportOptions
+	statuses?: ReadonlyMap<string, TaskStatus>
 }
 
 async function applyAndReport({
@@ -65,6 +66,7 @@ async function applyAndReport({
 	timing,
 	format,
 	options,
+	statuses,
 }: ApplyAndReportInput): Promise<void> {
 	const { selectedIds, includeConflicts, quiet, recordTiming } = options
 	const result = await applyTasks({
@@ -74,6 +76,7 @@ async function applyAndReport({
 		selectedIds,
 		includeConflicts,
 		quiet: quiet ?? isCI(),
+		statuses,
 	})
 
 	if (format === 'json') {
@@ -227,6 +230,7 @@ async function promptAndApply(options: PromptAndApplyOptions): Promise<void> {
 			profile,
 			timing,
 			format,
+			statuses,
 			options: {
 				selectedIds: selected,
 				includeConflicts: args.includeConflicts,
@@ -244,6 +248,7 @@ async function promptAndApply(options: PromptAndApplyOptions): Promise<void> {
 		profile,
 		timing,
 		format,
+		statuses,
 		options: {
 			selectedIds,
 			includeConflicts: args.includeConflicts,
@@ -313,6 +318,7 @@ export async function runCommand(
 			profile,
 			timing,
 			format,
+			statuses,
 			options: {
 				quiet,
 				recordTiming: args.timing,
