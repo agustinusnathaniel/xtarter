@@ -67,7 +67,7 @@ This enables Biome to parse [Tailwind v4 directives](https://tailwindcss.com/doc
 
 ### Conditional pnpm Setup
 
-For projects using [**pnpm**](https://pnpm.io/), CI workflows automatically include [`pnpm/action-setup@v4`](https://github.com/pnpm/action-setup) with [`package_json_file`](https://github.com/pnpm/action-setup#inputs) before [`actions/setup-node@v6`](https://github.com/actions/setup-node). This ensures reproducible pnpm versions across runs. [npm](https://www.npmjs.com/) and [yarn](https://yarnpkg.com/) projects are unaffected.
+For projects using [**pnpm**](https://pnpm.io/), CI workflows automatically include [`pnpm/setup@v1`](https://github.com/pnpm/setup) with [`cache: true`](https://github.com/pnpm/setup#usage) before [`actions/setup-node@v6`](https://github.com/actions/setup-node). This ensures reproducible pnpm versions across runs. [npm](https://www.npmjs.com/) and [yarn](https://yarnpkg.com/) projects are unaffected.
 
 ### Monorepo Workspace Config
 
@@ -103,7 +103,7 @@ This is the standard pnpm workspace layout. The task only applies when the detec
 |---------|-------------|-----------------|
 | `quality/knip` | Install [Knip](https://knip.dev/), write [`knip.json`](https://knip.dev/reference/configuration) with framework-aware [`entry`](https://knip.dev/reference/configuration#entry) and [`project`](https://knip.dev/reference/configuration#project) paths | Always (JSON format if no TypeScript) |
 | `quality/lint-staged` | Install [lint-staged](https://github.com/okonet/lint-staged), write [`.lintstagedrc.json`](https://github.com/okonet/lint-staged#configuration) running Biome on staged files | Non-Vite+ projects |
-| `quality/package-engines` | Add [`devEngines`](https://docs.npmjs.com/cli/v10/configuring-npm/package-json#devengines) to `package.json` with Node >=24 and detected package manager version constraint | Always |
+| `quality/package-engines` | Add [`devEngines`](https://docs.npmjs.com/cli/v10/configuring-npm/package-json#devengines) to `package.json` with a Node floor derived from the detected Node version and detected package manager version constraint | Always |
 
 ## Code Generation
 
@@ -157,7 +157,7 @@ The `quality/package-engines` task adds a `devEngines` field to `package.json`:
 | Field | Value |
 |-------|-------|
 | `runtime.name` | `node` |
-| `runtime.version` | `>=24` |
+| `runtime.version` | `>=` + the project's detected Node version (from `.nvmrc`, `engines.node`, or the CLI default), matching the version installed by generated CI workflows |
 | `packageManager.name` | Detected package manager |
 | `packageManager.version` | `>=9` (pnpm) or `>=10` (npm, yarn, bun) |
 
@@ -255,7 +255,7 @@ Tasks only run when their conditions are met:
 - [GitHub Actions Documentation](https://docs.github.com/en/actions) - Workflow syntax and features
 - [actions/checkout](https://github.com/actions/checkout) - Check out repository
 - [actions/setup-node](https://github.com/actions/setup-node) - Set up Node.js
-- [pnpm/action-setup](https://github.com/pnpm/action-setup) - Set up pnpm
+- [pnpm/setup](https://github.com/pnpm/setup) - Set up pnpm with caching
 
 ### Dependencies
 - [Renovate Documentation](https://docs.renovatebot.com/) - Automated dependency updates

@@ -10,7 +10,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const fixtures = path.resolve(__dirname, '../fixtures')
 
 const EXPECTED_DEV_ENGINES = {
-	runtime: { name: 'node', version: '>=24' },
+	runtime: { name: 'node', version: '>=18' },
 	packageManager: { name: 'pnpm', version: '>=9' },
 }
 
@@ -62,6 +62,7 @@ describe('packageEnginesTask', () => {
 				devEngines: EXPECTED_DEV_ENGINES,
 			}),
 		)
+		await fs.writeFile(path.join(tmpDir, '.nvmrc'), '18\n')
 
 		const profile = await detectProject(tmpDir)
 		const status = await packageEnginesTask.check(tmpDir, profile)
@@ -92,6 +93,50 @@ describe('packageEnginesTask', () => {
 		await fs.rm(tmpDir, { recursive: true })
 	})
 
+	it('derives runtime floor from .nvmrc', async () => {
+		const tmpDir = await fs.mkdtemp(
+			path.join(os.tmpdir(), 'xtarterize-engines-nvmrc-'),
+		)
+		await fs.writeFile(
+			path.join(tmpDir, 'package.json'),
+			JSON.stringify({ name: 'engines-test' }),
+		)
+		await fs.writeFile(path.join(tmpDir, '.nvmrc'), '20.11.1\n')
+
+		const profile = await detectProject(tmpDir)
+		const diffs = await packageEnginesTask.dryRun(tmpDir, profile)
+		expect(diffs.length).toBe(1)
+		expect(JSON.parse(diffs[0].after).devEngines).toEqual({
+			runtime: { name: 'node', version: '>=20' },
+			packageManager: { name: 'pnpm', version: '>=9' },
+		})
+
+		await fs.rm(tmpDir, { recursive: true })
+	})
+
+	it('derives runtime floor from engines.node', async () => {
+		const tmpDir = await fs.mkdtemp(
+			path.join(os.tmpdir(), 'xtarterize-engines-node-'),
+		)
+		await fs.writeFile(
+			path.join(tmpDir, 'package.json'),
+			JSON.stringify({
+				name: 'engines-test',
+				engines: { node: '^22.14.0' },
+			}),
+		)
+
+		const profile = await detectProject(tmpDir)
+		const diffs = await packageEnginesTask.dryRun(tmpDir, profile)
+		expect(diffs.length).toBe(1)
+		expect(JSON.parse(diffs[0].after).devEngines).toEqual({
+			runtime: { name: 'node', version: '>=22' },
+			packageManager: { name: 'pnpm', version: '>=9' },
+		})
+
+		await fs.rm(tmpDir, { recursive: true })
+	})
+
 	it('apply writes devEngines to package.json', async () => {
 		const tmpDir = await fs.mkdtemp(
 			path.join(os.tmpdir(), 'xtarterize-engines-apply-'),
@@ -103,6 +148,7 @@ describe('packageEnginesTask', () => {
 				devDependencies: {},
 			}),
 		)
+		await fs.writeFile(path.join(tmpDir, '.nvmrc'), '18\n')
 
 		const profile = await detectProject(tmpDir)
 		await packageEnginesTask.apply(tmpDir, profile)
