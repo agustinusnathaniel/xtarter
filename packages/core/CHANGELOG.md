@@ -1,5 +1,23 @@
 # @xtarterize/core
 
+## 1.22.0
+
+### Patch Changes
+
+- [#147](https://github.com/agustinusnathaniel/xtarter/pull/147) [`72c068a`](https://github.com/agustinusnathaniel/xtarter/commit/72c068a48729781f7558a1891b2eb55de65c4cea) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Fix stale project-profile cache when root config files change
+  
+  The profile cache fingerprint only covered package.json, the lockfile, and
+  `.github`/`.vscode`/`.changeset` contents. Detectors also read root config
+  files such as `tsconfig.json`, `vite.config.*`, ESLint/Oxlint/Oxfmt configs,
+  `AGENTS.md`, `CLAUDE.md`, bundler configs, monorepo markers, and `.nvmrc` —
+  none of which invalidated the cache. Adding or removing any of these could
+  return an outdated profile until an unrelated fingerprint change.
+  
+  The fingerprint now covers every detector-relevant root file via a shared
+  declarative list (`ROOT_DETECTOR_INPUTS`), invalidating the cache when such a
+  file is added, removed, or modified. Cache entries are versioned (v2) so
+  existing stale caches are recomputed once on upgrade.
+
 ## 1.21.0
 
 ### Minor Changes
