@@ -1,5 +1,11 @@
 # xtarterize
 
+## 1.22.0
+
+### Minor Changes
+
+- [#151](https://github.com/agustinusnathaniel/xtarter/pull/151) [`7fc347e`](https://github.com/agustinusnathaniel/xtarter/commit/7fc347e64542d1a9bc4a9480f41d807c529631dd) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Show task status (new/patch/skip/conflict) in query results
+
 ## 1.21.0
 
 ## 1.20.1
