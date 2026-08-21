@@ -1,5 +1,7 @@
 import {
 	detectPackageManager,
+	detectProject,
+	resolveTaskStatuses,
 	runPreflight,
 	scoreTasks,
 	tokenize,
@@ -56,8 +58,12 @@ export const queryCommand = defineCommand({
 			minScore: threshold,
 		})
 
+		const matchedTasks = results.map((r) => r.task)
+		const profile = await detectProject(ctx.cwd)
+		const statuses = await resolveTaskStatuses(matchedTasks, ctx.cwd, profile)
+
 		if (ctx.json) {
-			console.log(formatQueryResult({ results, query: queryStr }))
+			console.log(formatQueryResult({ results, query: queryStr, statuses }))
 			return
 		}
 
@@ -74,6 +80,11 @@ export const queryCommand = defineCommand({
 		}
 
 		const pm = await detectPackageManager(ctx.cwd)
-		displayQueryResults(results, queryStr, pm)
+		displayQueryResults({
+			results,
+			query: queryStr,
+			packageManager: pm,
+			statuses,
+		})
 	},
 })

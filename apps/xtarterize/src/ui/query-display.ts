@@ -1,5 +1,9 @@
-import type { InquiryResult, PackageManager } from '@xtarterize/core'
-import { pc } from '@xtarterize/core'
+import type {
+	InquiryResult,
+	PackageManager,
+	TaskStatus,
+} from '@xtarterize/core'
+import { pc, statusTag } from '@xtarterize/core'
 
 interface GroupedResults {
 	group: string
@@ -27,11 +31,15 @@ function getDlxPrefix(pm: PackageManager): string {
 	return runners[pm] ?? 'npx xtarterize@latest'
 }
 
-export function displayQueryResults(
-	results: InquiryResult[],
-	query: string,
-	packageManager: PackageManager = 'npm',
-): void {
+interface DisplayQueryOptions {
+	results: InquiryResult[]
+	query: string
+	packageManager?: PackageManager
+	statuses?: Map<string, TaskStatus>
+}
+
+export function displayQueryResults(options: DisplayQueryOptions): void {
+	const { results, query, packageManager = 'npm', statuses } = options
 	// Group by task.group
 	const groupMap = new Map<string, InquiryResult[]>()
 	for (const r of results) {
@@ -70,20 +78,23 @@ export function displayQueryResults(
 			const label = r.task.label
 			const target = getConfigTarget(r)
 			const relevance = relevanceColor(r.relevance)
+			const status = statuses?.get(r.taskId) ?? 'new'
+			const statusBadge = statusTag(status)
 
 			// Build the full line with ANSI-styled segments
-			const line = `  ${pc.dim(id)}  ${relevance}  ${label}  ${pc.dim(target)}`
+			const line = `  ${pc.dim(id)}  ${relevance}  ${statusBadge}  ${label}  ${pc.dim(target)}`
 
 			// Check if line exceeds terminal width (approx - ANSI codes inflate .length slightly)
 			if (line.length > termWidth) {
-				const overhead = 2 + maxIdLen + 2 + 4 + 2 + 2 + target.length + 2
+				const overhead =
+					2 + maxIdLen + 2 + 4 + 2 + 6 + 2 + 2 + target.length + 2
 				const maxLabelLen = Math.max(10, termWidth - overhead - 4)
 				const truncated =
 					label.length > maxLabelLen
 						? `${label.slice(0, Math.max(1, maxLabelLen - 1))}…`
 						: label
 				console.log(
-					`  ${pc.dim(id)}  ${relevance}  ${truncated}  ${pc.dim(target)}`,
+					`  ${pc.dim(id)}  ${relevance}  ${statusBadge}  ${truncated}  ${pc.dim(target)}`,
 				)
 			} else {
 				console.log(line)

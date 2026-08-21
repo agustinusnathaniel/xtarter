@@ -83,11 +83,12 @@ export function formatListResult(options: ListResultOptions): string {
 interface QueryResultOptions {
 	results: InquiryResult[]
 	query: string
+	statuses?: Map<string, TaskStatus>
 	timing?: ResolveTiming
 }
 
 export function formatQueryResult(options: QueryResultOptions): string {
-	const { results, query, timing } = options
+	const { results, query, statuses, timing } = options
 	const data: Record<string, unknown> = {
 		type: 'query',
 		query,
@@ -97,6 +98,7 @@ export function formatQueryResult(options: QueryResultOptions): string {
 			label: r.task.label,
 			group: r.task.group,
 			relevance: r.relevance,
+			status: statuses?.get(r.taskId) ?? 'new',
 			signals: r.signals,
 		})),
 	}
