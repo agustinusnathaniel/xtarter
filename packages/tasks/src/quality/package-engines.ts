@@ -39,7 +39,7 @@ export const packageEnginesTask = createJsonMergeTask({
 			devEngines: {
 				runtime: {
 					name: 'node',
-					version: '>=24',
+					version: `>=${profile.nodeVersion}`,
 				},
 				packageManager: {
 					name: pm,
