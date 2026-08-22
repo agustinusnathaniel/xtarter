@@ -1,0 +1,25 @@
+---
+// Shared landing-page section head: optional mono eyebrow + title + lead
+// composed into one `.xt-section-head` unit. All styling lives in
+// apps/docs/src/styles/global.css (`.xt-section-head`, `.xt-section-eyebrow`
+// plus the existing `.xt-section-title` / `.xt-section-lead` classes it
+// composes with) - this component carries no scoped styles.
+//
+// Rhythm contract: a standalone SectionHead rendered directly in MDX gets a
+// top beat from global.css; when the page builder wraps the whole section in
+// `<div class="xt-section">...</div>`, the wrapper owns the beat instead.
+interface Props {
+  eyebrow?: string
+  title: string
+  id?: string
+  lead?: string
+}
+
+const { eyebrow, title, id, lead } = Astro.props
+---
+
+<div class="xt-section-head">
+  {eyebrow && <p class="xt-section-eyebrow">{eyebrow}</p>}
+  <h2 class="xt-section-title" id={id}>{title}</h2>
+  {lead && <p class="xt-section-lead">{lead}</p>}
+</div>
