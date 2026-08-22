@@ -19,3 +19,5 @@ single machine-readable result payload on stdout instead of human logs:
   process exit code, matching the contract already shipped for `check`,
   `diff`, `doctor`, `list`, `add`, `init`, and `sync`. Every command in the
   CLI now speaks JSON.
+- `check`, `list`, and `query` now declare the `--json` flag they already
+  honored (previously it worked but was invisible in `--help`).
