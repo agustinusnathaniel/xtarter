@@ -19,6 +19,10 @@ export const listCommand = defineCommand({
 			type: 'boolean',
 			description: 'Suppress verbose output',
 		},
+		json: {
+			type: 'boolean',
+			description: 'Output machine-readable JSON',
+		},
 	},
 	async run({ args }) {
 		const ctx = resolveCliContext(args)

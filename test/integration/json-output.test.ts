@@ -6,6 +6,7 @@ import { checkCommand } from '@xtarterize/app/commands/check.js'
 import { diffCommand } from '@xtarterize/app/commands/diff.js'
 import { initCommand } from '@xtarterize/app/commands/init.js'
 import { listCommand } from '@xtarterize/app/commands/list.js'
+import { queryCommand } from '@xtarterize/app/commands/query.js'
 import { restoreCommand } from '@xtarterize/app/commands/restore.js'
 import { syncCommand } from '@xtarterize/app/commands/sync.js'
 import { undoCommand } from '@xtarterize/app/commands/undo.js'
@@ -618,6 +619,17 @@ describe('undo and restore json output', () => {
 		} finally {
 			process.exitCode = 0
 			await fs.rm(cwd, { recursive: true, force: true })
+		}
+	})
+})
+
+describe('json flag declarations', () => {
+	// These commands honor --json through resolveCliContext/resolveRuntimeFlags and
+	// the docs advertise it, so the flag must be declared in their args definition
+	// to stay visible in --help.
+	it('check, list, and query declare the --json flag they honor', () => {
+		for (const command of [checkCommand, listCommand, queryCommand]) {
+			expect(command.args?.json).toMatchObject({ type: 'boolean' })
 		}
 	})
 })
