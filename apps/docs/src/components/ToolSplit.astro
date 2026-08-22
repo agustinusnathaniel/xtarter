@@ -1,0 +1,62 @@
+---
+// Homepage two-tool split panel. Product facts are intentionally baked in -
+// this is stable positioning copy, not data-driven content, so the two cards
+// live in one place and page builders consume `<ToolSplit />` verbatim.
+//
+// Structure: each card is a SINGLE link (`.xt-tool-card`); its accessible
+// name is the product name via aria-label, so the inner eyebrow/role/body/
+// cmd/action text stays presentational for AT while remaining visible.
+// Styling lives in apps/docs/src/styles/global.css (no scoped styles).
+// Umami analytics ride data-* attributes, matching the hero button pattern.
+const cards = [
+  {
+    product: 'create-xtarter-app',
+    href: '/create-xtarter-app/',
+    eyebrow: 'scaffolding CLI',
+    role: 'New project, fully configured, in one command.',
+    body: 'Five curated templates for Next.js and Vite+ / React, each pre-wired with Biome linting, TypeScript strict, CI workflows, and editor settings.',
+    cmd: '$ pnpm create xtarter-app',
+    action: 'Start with a template',
+  },
+  {
+    product: 'xtarterize',
+    href: '/xtarterize/',
+    eyebrow: 'conformance CLI',
+    role: 'Bring any project up to standard - without overwriting your files.',
+    body: 'Detects your stack, validates your configs against the standard, and applies only the changes you approve - originals backed up first.',
+    cmd: '$ npx xtarterize@latest init',
+    action: 'Conform your project',
+  },
+] as const
+---
+
+<div class="xt-split">
+  {
+    cards.map((card) => (
+      <a
+        class="xt-tool-card"
+        href={card.href}
+        aria-label={card.product}
+        data-umami-event="tool_card_click"
+        data-umami-event-product={card.product}
+      >
+        <p class="xt-section-eyebrow">{card.eyebrow}</p>
+        <span class="xt-tool-name">
+          {card.product}
+          <span class="xt-tool-arrow" aria-hidden="true">
+            &rarr;
+          </span>
+        </span>
+        <p class="xt-tool-role">{card.role}</p>
+        <p class="xt-tool-body">{card.body}</p>
+        <span class="xt-tool-cmd" aria-hidden="true">
+          {card.cmd}
+        </span>
+        <span class="xt-tool-action">
+          {card.action}
+          <span aria-hidden="true">&rarr;</span>
+        </span>
+      </a>
+    ))
+  }
+</div>

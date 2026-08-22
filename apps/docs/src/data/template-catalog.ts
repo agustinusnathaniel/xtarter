@@ -26,7 +26,8 @@ export const TEMPLATE_CATALOG: TemplateRecord[] = [
 	{
 		id: 'next-chakra',
 		name: 'Next.js + Chakra UI',
-		description: 'Next.js with Chakra UI',
+		description:
+			'Next.js 16 + Chakra UI v3 pre-wired with Biome, Playwright e2e tests, and Turborepo',
 		repo: 'agustinusnathaniel/nextarter-chakra',
 		url: 'https://github.com/agustinusnathaniel/nextarter-chakra',
 		stack: ['Next.js 16', 'Chakra UI v3', 'Biome', 'Turborepo'],
@@ -42,7 +43,8 @@ export const TEMPLATE_CATALOG: TemplateRecord[] = [
 	{
 		id: 'next-tailwind',
 		name: 'Next.js + Tailwind',
-		description: 'Next.js with Tailwind CSS',
+		description:
+			'Next.js 16 + Tailwind CSS v4, with Biome linting and Playwright e2e out of the box',
 		repo: 'agustinusnathaniel/nextarter-tailwind',
 		url: 'https://github.com/agustinusnathaniel/nextarter-tailwind',
 		stack: ['Next.js 16', 'Tailwind CSS v4', 'Biome'],
@@ -57,7 +59,8 @@ export const TEMPLATE_CATALOG: TemplateRecord[] = [
 	{
 		id: 'vite-chakra',
 		name: 'Vite + React + Chakra',
-		description: 'Vite+, TanStack Router, Chakra UI',
+		description:
+			'Vite+ (Vite 8) speed with React 19, Chakra UI v3, and TanStack Router & Query wired in',
 		repo: 'agustinusnathaniel/vite-react-chakra-starter',
 		url: 'https://github.com/agustinusnathaniel/vite-react-chakra-starter',
 		stack: ['Vite+ (Vite 8)', 'React 19', 'Chakra UI v3', 'TanStack Router'],
@@ -74,7 +77,8 @@ export const TEMPLATE_CATALOG: TemplateRecord[] = [
 	{
 		id: 'vite-tailwind',
 		name: 'Vite + React + Tailwind',
-		description: 'Vite+, TanStack Router, Tailwind CSS',
+		description:
+			'Vite+ (Vite 8) speed with React 19, Tailwind CSS v4, and TanStack Router & Query ready',
 		repo: 'agustinusnathaniel/vite-react-tailwind-starter',
 		url: 'https://github.com/agustinusnathaniel/vite-react-tailwind-starter',
 		stack: ['Vite+ (Vite 8)', 'React 19', 'Tailwind CSS v4', 'TanStack Router'],
@@ -91,7 +95,8 @@ export const TEMPLATE_CATALOG: TemplateRecord[] = [
 	{
 		id: 'vite-hero',
 		name: 'Vite + React + Hero UI',
-		description: 'Vite+, TanStack Router, Hero UI',
+		description:
+			'Vite+ (Vite 8) speed with React 19, Hero UI components, and TanStack Router routing',
 		repo: 'agustinusnathaniel/vite-react-hero-starter',
 		url: 'https://github.com/agustinusnathaniel/vite-react-hero-starter',
 		stack: ['Vite+ (Vite 8)', 'React 19', 'Hero UI', 'TanStack Router'],

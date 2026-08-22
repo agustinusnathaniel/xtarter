@@ -1,0 +1,21 @@
+---
+// Closing CTA band: charcoal surface echoing the hero terminal artifacts
+// (`.xt-band` family in apps/docs/src/styles/global.css, no scoped styles).
+// Pass action links through the default slot - pair `.xt-btn` with the
+// `.xt-btn-invert` or `.xt-btn-ghost-dark` modifiers, which are tuned for
+// this fixed-charcoal surface in both color themes.
+interface Props {
+  title: string
+  note?: string
+}
+
+const { title, note } = Astro.props
+---
+
+<div class="xt-band">
+  <h2 class="xt-band-title">{title}</h2>
+  {note && <p class="xt-band-note">{note}</p>}
+  <div class="xt-band-actions">
+    <slot />
+  </div>
+</div>
