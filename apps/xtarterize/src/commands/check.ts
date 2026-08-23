@@ -44,6 +44,10 @@ export const checkCommand = defineCommand({
 			description:
 				'Emit GitHub Actions workflow command annotations (auto-enabled in CI)',
 		},
+		json: {
+			type: 'boolean',
+			description: 'Output machine-readable JSON',
+		},
 	},
 	async run({ args }) {
 		const ctx = resolveCliContext(args)
