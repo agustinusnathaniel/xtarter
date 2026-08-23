@@ -8,18 +8,34 @@
 // Rhythm contract: a standalone SectionHead rendered directly in MDX gets a
 // top beat from global.css; when the page builder wraps the whole section in
 // `<div class="xt-section">...</div>`, the wrapper owns the beat instead.
-interface Props {
+//
+// Status layer (optional): pass `index` to number a section, e.g.
+// `<SectionHead index="01" ... />`. It renders two decorative artifacts:
+//   - a mono eyebrow line reading `// 01` above the title
+//     (use short ordinals like "01"; any short slug works and is rendered
+//      verbatim after `//`)
+//   - a giant ghost numeral right-aligned beside the head, hidden <=640px
+// Both are aria-hidden decoration; omitting the prop keeps the exact
+// pre-existing DOM shape (title/lead simply nest one level deeper inside
+// `.xt-section-head-body`, which no selector depends on).
+export interface Props {
   eyebrow?: string
   title: string
   id?: string
   lead?: string
+  /** Section ordinal/slug rendered as `// {index}` + ghost numeral. */
+  index?: string
 }
 
-const { eyebrow, title, id, lead } = Astro.props
+const { eyebrow, title, id, lead, index } = Astro.props
 ---
 
-<div class="xt-section-head">
-  {eyebrow && <p class="xt-section-eyebrow">{eyebrow}</p>}
-  <h2 class="xt-section-title" id={id}>{title}</h2>
-  {lead && <p class="xt-section-lead">{lead}</p>}
+<div class:list={['xt-section-head', index && 'has-index']}>
+  {index && <span class="xt-section-num" aria-hidden="true">{index}</span>}
+  <div class="xt-section-head-body">
+    {index && <p class="xt-section-index" aria-hidden="true">// {index}</p>}
+    {eyebrow && <p class="xt-section-eyebrow">{eyebrow}</p>}
+    <h2 class="xt-section-title" id={id}>{title}</h2>
+    {lead && <p class="xt-section-lead">{lead}</p>}
+  </div>
 </div>

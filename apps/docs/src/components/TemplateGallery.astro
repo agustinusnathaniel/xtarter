@@ -2,39 +2,44 @@
 // Static template gallery. Renders records from the manually maintained
 // template catalog in src/data/template-catalog.ts - no network, no GitHub
 // API, no star counts. Ownership of the catalog is documented in that file.
-// Rendered as a quiet catalog list: name, compact stack summary, repo action.
+//
+// Round 2: card grid instead of a divided list. Each record is ONE link
+// (`.xt-tpl-card`) so the whole card is clickable; its accessible name is
+// the repo slug via aria-label (matching the previous list pattern). Shows
+// name, catalog description, up to four mono stack chips, and a pinned
+// "View repository ->" footer. All styling lives in global.css under the
+// `.xt-gallery` / `.xt-tpl-*` classes - no Tailwind utilities here.
 import { TEMPLATE_CATALOG } from '../data/template-catalog'
 ---
 
-
-<ul class="m-0 list-none divide-y border-y border-[color:var(--xt-line)] p-0">
-	{TEMPLATE_CATALOG.map((t) => (
-		<li>
-			<a
-				href={t.url}
-				target="_blank"
-				rel="noopener noreferrer"
-				class="group grid min-h-11 grid-cols-1 gap-2 px-4 py-5 text-inherit no-underline transition-colors duration-150 hover:bg-[color:var(--xt-accent-soft)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[color:var(--xt-focus)] sm:grid-cols-[minmax(0,1fr)_auto] sm:items-baseline sm:gap-x-8 sm:gap-y-1"
-				aria-label={`View ${t.repo} repository`}
-				data-umami-event="template_click"
-				data-umami-event-template_name={t.name}
-			>
-				<span class="min-w-0">
-					<span class="block font-sans text-base font-semibold leading-tight text-[color:var(--xt-ink)] transition-colors duration-150 group-hover:text-[color:var(--xt-accent-hover)]">
-						{t.name}
-					</span>
-					<span
-						class="mt-1 block min-w-0 text-pretty font-mono text-xs leading-5 text-[color:var(--xt-muted)] sm:truncate"
-						aria-label={`Stack: ${t.stack.slice(0, 3).join(', ')}`}
-					>
-						{t.stack.slice(0, 3).join(' · ')}
-					</span>
-				</span>
-				<span class="inline-flex items-center gap-2 justify-self-start font-mono text-xs text-[color:var(--xt-muted)] transition-colors duration-150 group-hover:text-[color:var(--xt-accent-hover)] sm:justify-self-end">
-					View repository
-					<span aria-hidden="true">&rarr;</span>
-				</span>
-			</a>
-		</li>
-	))}
+<ul class="xt-gallery">
+  {
+    TEMPLATE_CATALOG.map((t) => (
+      <li class="xt-tpl">
+        <a
+          class="xt-tpl-card"
+          href={t.url}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={`View ${t.repo} repository`}
+          data-umami-event="template_click"
+          data-umami-event-template_name={t.name}
+        >
+          <span class="xt-tpl-name">{t.name}</span>
+          <span class="xt-tpl-desc">{t.description}</span>
+          <span class="xt-tpl-stack" aria-label={`Stack: ${t.stack.slice(0, 4).join(', ')}`}>
+            {t.stack.slice(0, 4).map((s) => (
+              <span class="xt-tpl-chip">{s}</span>
+            ))}
+          </span>
+          <span class="xt-tpl-action">
+            View repository
+            <span class="xt-tpl-arrow" aria-hidden="true">
+              &rarr;
+            </span>
+          </span>
+        </a>
+      </li>
+    ))
+  }
 </ul>
