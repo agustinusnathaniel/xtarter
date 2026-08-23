@@ -21,25 +21,25 @@ import Checklist from '@/components/Checklist.astro'
 import CtaBand from '@/components/CtaBand.astro'
 
 <div class="xt-section">
-  <SectionHead id="whats-included" eyebrow="included in every scaffold" title="One baseline, five ways" lead="Every template ships the same production baseline, pre-configured before your first commit - your choice is the UI library and router, not the tooling." />
-  <Checklist items={['Biome - lint + format', 'TypeScript strict mode', 'GitHub Actions CI', 'VS Code settings + recommended extensions', 'Agent skills for AI editors']} />
+  <SectionHead index="01" id="whats-included" eyebrow="included in every scaffold" title="One baseline, five ways" lead="Every template carries the identical production baseline. Your only decision is UI library and router." />
+  <Checklist items={['Biome lint + format', 'TypeScript strict mode', 'GitHub Actions CI', 'VS Code settings + recommended extensions', 'Agent skills for AI editors']} />
 </div>
 
 <div class="xt-section">
-  <SectionHead id="templates" title="The templates" lead="Next.js or Vite+ / React, with Chakra UI, Tailwind CSS, or Hero UI - pick by taste. Every option ships the identical baseline above." />
+  <SectionHead index="02" id="templates" title="The templates" lead="Next.js or Vite+ with React. Chakra UI, Tailwind, or HeroUI up front. Pick by taste." />
   <TemplateGallery />
 </div>
 
 <a class="xt-link" href="https://github.com/agustinusnathaniel?tab=repositories&q=&type=source" target="_blank" rel="noopener noreferrer" data-umami-event="github_browse_click">All source repositories on GitHub</a>
 
 <div class="xt-section">
-  <SectionHead id="quick-start" title="Quick start" lead="Scaffold a new project in one command." />
+  <SectionHead index="03" id="quick-start" title="Quick start" lead="Scaffold a new project in one command." />
   <AllPackageManagers type="create" pkg="xtarter-app@latest" />
   <p class="xt-note">Follow the prompts to pick a template. Next, keep the project conformant as standards evolve: <a class="xt-link" href="/xtarterize/getting-started/installation/">npx xtarterize init</a>.</p>
 </div>
 
 <div class="xt-section">
-  <CtaBand title="Start conformant. Stay conformant." note="Hand the fresh scaffold to xtarterize, then again as standards evolve - each run realigns your project without manual drift.">
+  <CtaBand title="Start conformant. Stay conformant." note="Hand the fresh scaffold to xtarterize whenever standards move. Each run realigns the project without manual drift.">
     <a class="xt-btn xt-btn-invert" href="/xtarterize/getting-started/installation/" data-umami-event="band_cta_init">Run xtarterize init</a>
     <a class="xt-btn xt-btn-ghost-dark" href="/xtarterize/" data-umami-event="band_cta_about_xtz">About xtarterize</a>
   </CtaBand>

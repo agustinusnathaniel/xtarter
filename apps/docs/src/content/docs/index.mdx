@@ -21,21 +21,21 @@ import TemplateGallery from '@/components/TemplateGallery.astro'
 import CtaBand from '@/components/CtaBand.astro'
 
 <div class="xt-section">
-  <SectionHead eyebrow="the xtarter ecosystem" id="two-tools" title="Two tools, one standard" lead="Start a new project from a production-grade template, or bring an existing repo up to standard - either way you land on the same conformance baseline." />
+  <SectionHead index="01" eyebrow="the xtarter ecosystem" id="two-tools" title="Two tools, one standard" lead="Start a new project from a production-grade template, or bring an existing repo up to standard. Either way you land on the same conformance baseline." />
   <ToolSplit />
 </div>
 
 <div class="xt-section">
-  <SectionHead eyebrow="why conformant" id="why-conformant" title="Standards that hold their shape" lead="Configs drift when enforcement relies on memory - someone updates locally, CI disagrees, reviews arbitrate. This baseline lives in the repo, so your editor, your terminal, and CI all enforce the same thing." />
+  <SectionHead index="02" eyebrow="why conformant" id="why-conformant" title="Standards that hold their shape" lead="Configs drift when enforcement lives in someone's head. Someone formats locally, CI disagrees, reviews turn into style debates. This baseline lives in the repo instead." />
   <FeatureGrid items={[
-    { title: 'Reviews that read themselves', body: 'Biome lint + format and TypeScript strict are enforced from the first commit, so pull requests argue about features instead of style.' },
-    { title: 'CI that stays green', body: 'GitHub Actions runs against the same configs your editor enforces - local and CI can never disagree about what passing means.' },
-    { title: 'Agent-ready by default', body: 'Agent skills ship beside every config, so AI assistants working in your repo follow the same standard you do.' },
+    { title: 'Reviews that read themselves', body: 'Biome and strict TypeScript run from the first commit. Pull requests argue about features, not formatting.' },
+    { title: 'CI that stays green', body: 'GitHub Actions runs the same configs your editor enforces. Local and CI cannot disagree about what passing means.' },
+    { title: 'Agent-ready by default', body: 'Agent skills ship next to every config, so AI assistants working in your repo follow the same standard you do.' },
   ]} />
 </div>
 
 <div class="xt-section">
-  <SectionHead id="starter-templates" title="Starter templates" lead="Five curated starters, each pre-configured with Biome, TypeScript strict, CI, VS Code settings, and agent skills. Pick one and scaffold - no setup after." />
+  <SectionHead index="03" id="starter-templates" title="Starter templates" lead="Five curated starters. Each ships Biome, strict TypeScript, CI, VS Code settings, and agent skills before your first commit." />
   <TemplateGallery />
   <p class="xt-note">Ready to use one? <a class="xt-link" href="/create-xtarter-app/">Scaffold with create-xtarter-app &rarr;</a></p>
 </div>
@@ -43,7 +43,7 @@ import CtaBand from '@/components/CtaBand.astro'
 <a class="xt-link" href="https://github.com/agustinusnathaniel?tab=repositories&q=&type=source" target="_blank" rel="noopener noreferrer" data-umami-event="github_browse_click">All source repositories on GitHub</a>
 
 <div class="xt-section">
-  <SectionHead id="lifecycle" title="The project lifecycle" lead="Two tools, one standard, one path from the first commit to a shipped project." />
+  <SectionHead index="04" id="lifecycle" title="The project lifecycle" lead="Two tools, one path from first commit to shipped project." />
   <ol class="xt-lifecycle">
     <li><a href="#starter-templates">Choose</a></li>
     <li><a href="/create-xtarter-app/">Scaffold</a></li>
@@ -53,7 +53,7 @@ import CtaBand from '@/components/CtaBand.astro'
 </div>
 
 <div class="xt-section" id="get-started">
-  <CtaBand title="Pick your door." note="Both commands land on the same baseline - choose scaffolding for greenfield projects or the conformance CLI for code you already have.">
+  <CtaBand title="Pick your door." note="Both commands land on the same baseline. Scaffold something new, or conform code you already have.">
     <a class="xt-btn xt-btn-invert" href="/create-xtarter-app/" data-umami-event="band_cta_browse">Start with a template</a>
     <a class="xt-btn xt-btn-ghost-dark" href="/xtarterize/" data-umami-event="band_cta_conform">Conform an existing project</a>
   </CtaBand>

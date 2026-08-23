@@ -21,7 +21,7 @@ import FeatureGrid from '@/components/FeatureGrid.astro'
 import CtaBand from '@/components/CtaBand.astro'
 
 <div class="xt-section">
-  <SectionHead id="how-it-works" title="How a run works" lead="Every run follows the same five steps, from reading your project to applying changes with backups in place." />
+  <SectionHead index="01" id="how-it-works" title="How a run works" lead="Five steps, every run: read the project, resolve tasks, compare files, show the plan, apply with backups." />
 
   <ol class="xt-pipeline">
     <li class="xt-pipe">
@@ -48,20 +48,20 @@ import CtaBand from '@/components/CtaBand.astro'
 </div>
 
 <Aside type="caution" title="Current focus: Vite + React + TypeScript">
-  The CLI detects a wide range of frameworks, but the deepest task coverage is for **Vite**, **React**, and **TypeScript** projects. Support for other stacks (Vue, Svelte, Solid, Node CLI, Bun, etc.) works but is **experimental** - tasks may be fewer or less mature. Contributions to expand coverage are welcome.
+  Detection covers a wide range of frameworks. Task coverage is deepest for Vite, React, and TypeScript projects. Other stacks such as Vue, Svelte, Solid, Node CLIs, and Bun work but stay experimental: fewer tasks, less maturity. Contributions to expand coverage are welcome.
 </Aside>
 
 <div class="xt-section">
-  <SectionHead eyebrow="safety model" id="safety" title="Nothing moves without you" lead="xtarterize is built for repos you care about: every change is previewable, revertible, and yours to approve." />
+  <SectionHead index="02" eyebrow="safety model" id="safety" title="Nothing moves without you" lead="Built for repos you care about. Changes are previewed, originals are backed up, and writes happen only when you approve." />
   <FeatureGrid items={[
     { title: 'Preview the plan', body: 'Run init or sync with --dry-run first. It prints every planned change before anything touches your files.' },
-    { title: 'Backups by default', body: 'Before any file is modified, originals are saved to .xtarterize/backups/. Every apply stays reversible with undo or restore.' },
-    { title: 'You approve writes', body: 'init prompts you to apply everything, pick tasks, dry-run, or quit - and conflicts surface instead of overwriting your configs.' },
+    { title: 'Backups by default', body: 'Modified files are copied to .xtarterize/backups/ first. Undo and restore are built in.' },
+    { title: 'You approve writes', body: 'init asks before it applies: everything, selected tasks, dry run, or quit. Conflicts surface instead of overwriting your configs.' },
   ]} />
 </div>
 
 <div class="xt-section">
-  <SectionHead eyebrow="task catalog" id="task-groups" title="What it can manage" lead="Task groups cover linting, types, CI/CD, editor setup, agent skills, Vite plugins, and more - each task focused and independently reviewable." />
+  <SectionHead index="03" eyebrow="task catalog" id="task-groups" title="What it can manage" lead="Task groups cover linting, types, CI, editor setup, agent skills, Vite plugins, and more. Each task is small enough to review at a glance." />
   <ul class="xt-link-cluster" aria-label="Task groups">
     <li>Linting &amp; Formatting</li>
     <li>TypeScript</li>
@@ -80,7 +80,7 @@ import CtaBand from '@/components/CtaBand.astro'
 </div>
 
 <div class="xt-section">
-  <SectionHead id="quick-start" title="Quick start" lead="Three commands cover the common loop." />
+  <SectionHead index="04" id="quick-start" title="Quick start" lead="Three commands cover the loop." />
 
   <AllPackageManagers type="exec" pkg="xtarterize@latest" args="init" title="Initialize conformance" />
 
@@ -96,7 +96,7 @@ import CtaBand from '@/components/CtaBand.astro'
 </div>
 
 <div class="xt-section">
-  <CtaBand title="Starting from scratch?" note="Scaffold a new project on the same baseline with create-xtarter-app.">
+  <CtaBand title="Starting from scratch?" note="create-xtarter-app scaffolds new projects on this same baseline.">
     <a class="xt-btn xt-btn-invert" href="/create-xtarter-app/">Start with a template</a>
     <a class="xt-btn xt-btn-ghost-dark" href="https://github.com/agustinusnathaniel/xtarterize" target="_blank" rel="noopener noreferrer" data-umami-event="band_cta_github">Star on GitHub</a>
   </CtaBand>
