@@ -32,11 +32,72 @@ const CONFIG_BASENAMES = [
 export interface PluginConfig {
 	/** npm package names exporting tasks */
 	plugins?: string[]
+	/** Task IDs to always exclude from runs */
+	skip?: string[]
+	/** When non-empty: restrict runs to these task IDs */
+	only?: string[]
 }
 
 export interface Plugin {
 	name: string
 	tasks: Task[]
+}
+
+/**
+ * Module-private sentinel thrown by `readRawXtarterizeConfig` when a config
+ * file exists but cannot be parsed. Never escapes public APIs: each caller
+ * maps it to its own fallback behavior.
+ */
+const CONFIG_PARSE_ERROR = Symbol('xtarterizerc-parse-error')
+
+/**
+ * Load the raw xtarterize configuration object.
+ *
+ * Searches for:
+ *   1. `.xtarterizerc` / `.xtarterizerc.json` / `.xtarterizerc.json5`
+ *   2. `"xtarterize"` key in `package.json`
+ *
+ * Returns the raw parsed object, or `null` when no config is found.
+ */
+async function readRawXtarterizeConfig(
+	cwd: string,
+): Promise<Record<string, unknown> | null> {
+	// 1. Standalone config file
+	for (const basename of CONFIG_BASENAMES) {
+		const path = await findConfigFile(cwd, basename, [''])
+		if (path) {
+			const content = await readFile(path)
+			let config: Record<string, unknown>
+			try {
+				config = JSON.parse(content) as Record<string, unknown>
+			} catch {
+				logWarn('Failed to parse .xtarterizerc')
+				throw CONFIG_PARSE_ERROR
+			}
+			if (config && typeof config === 'object') {
+				return config
+			}
+			throw CONFIG_PARSE_ERROR
+		}
+	}
+
+	// 2. package.json under "xtarterize" key
+	try {
+		const pkg = await readJson<{ xtarterize?: Record<string, unknown> }>(
+			`${cwd}/package.json`,
+		)
+		if (
+			pkg?.xtarterize &&
+			typeof pkg.xtarterize === 'object' &&
+			!Array.isArray(pkg.xtarterize)
+		) {
+			return pkg.xtarterize
+		}
+	} catch {
+		// Not a package.json or no such key - that's fine
+	}
+
+	return null
 }
 
 /**
@@ -51,42 +112,110 @@ export interface Plugin {
 export async function loadPluginConfig(
 	cwd: string,
 ): Promise<PluginConfig | null> {
-	// 1. Standalone config file
-	for (const basename of CONFIG_BASENAMES) {
-		const path = await findConfigFile(cwd, basename, [''])
-		if (path) {
-			const content = await readFile(path)
-			let config: PluginConfig | null = null
-			try {
-				config = JSON.parse(content) as PluginConfig
-			} catch {
-				logWarn('Failed to parse .xtarterizerc')
-				return { plugins: [] }
-			}
-			if (
-				!config ||
-				typeof config !== 'object' ||
-				!Array.isArray(config.plugins)
-			) {
-				return { plugins: [] }
-			}
-			return config
-		}
-	}
-
-	// 2. package.json under "xtarterize" key
+	let raw: Record<string, unknown> | null
 	try {
-		const pkg = await readJson<{ xtarterize?: PluginConfig }>(
-			`${cwd}/package.json`,
-		)
-		if (pkg?.xtarterize?.plugins?.length) {
-			return pkg.xtarterize
+		raw = await readRawXtarterizeConfig(cwd)
+	} catch (error) {
+		if (error === CONFIG_PARSE_ERROR) return { plugins: [] }
+		throw error
+	}
+	if (raw === null) return null
+	if (!Array.isArray(raw.plugins)) {
+		return { plugins: [] }
+	}
+	return raw as PluginConfig
+}
+
+export interface TaskSelectionConfig {
+	skip: string[]
+	only: string[]
+}
+
+function sanitizeStringArray(value: unknown): string[] {
+	if (!Array.isArray(value)) return []
+	return value
+		.filter((s): s is string => typeof s === 'string')
+		.map((s) => s.trim())
+		.filter((s) => s.length > 0)
+}
+
+/**
+ * Load persisted task selection from `.xtarterizerc` (or the
+ * `"xtarterize"` key in package.json). Returns empty arrays when
+ * no config exists or the fields are absent/invalid.
+ *
+ * Semantics:
+ * - Entries are trimmed; empty strings and non-string entries are dropped.
+ * - An EMPTY or ABSENT `only` array means "no restriction" (never "apply nothing").
+ * - If a task ID appears in both skip and only, skip wins (task excluded).
+ */
+export async function loadSelectionConfig(
+	cwd: string,
+): Promise<TaskSelectionConfig> {
+	try {
+		const raw = await readRawXtarterizeConfig(cwd)
+		if (!raw) return { skip: [], only: [] }
+		return {
+			skip: sanitizeStringArray(raw.skip),
+			only: sanitizeStringArray(raw.only),
 		}
 	} catch {
-		// Not a package.json or no such key - that's fine
+		return { skip: [], only: [] }
 	}
+}
 
-	return null
+interface TaskSelectionInput {
+	/** CLI `--skip` flag value (comma-separated), if provided */
+	cliSkip?: string
+	/** CLI `--only` flag value (comma-separated), if provided */
+	cliOnly?: string
+	/** Persisted `skip` entries from the selection config */
+	configSkip?: string[]
+	/** Persisted `only` entries from the selection config */
+	configOnly?: string[]
+}
+
+/**
+ * Apply persisted + CLI task selection to a list of tasks.
+ *
+ * Precedence:
+ * 1. CLI `--only` overrides config `only` when non-empty after parsing;
+ *    an empty/absent CLI value falls back to config `only` (which itself,
+ *    when empty, means "no restriction").
+ * 2. CLI `--skip` extends (unions with) config `skip`.
+ * 3. Tasks in the effective only-set are kept first, then every task whose
+ *    id is in the effective skip-set is removed — so skip wins over only.
+ *
+ * Pure helper: no I/O, no status filtering.
+ */
+export function applyTaskSelection<T extends { id: string }>(
+	tasks: T[],
+	input: TaskSelectionInput,
+): T[] {
+	const parseCliIds = (value?: string): Set<string> =>
+		new Set(
+			(value ?? '')
+				.split(',')
+				.map((s) => s.trim())
+				.filter((s) => s.length > 0),
+		)
+
+	const cliOnlyIds = parseCliIds(input.cliOnly)
+	const only =
+		cliOnlyIds.size > 0
+			? cliOnlyIds
+			: new Set(sanitizeStringArray(input.configOnly))
+
+	const skip = new Set([
+		...parseCliIds(input.cliSkip),
+		...sanitizeStringArray(input.configSkip),
+	])
+
+	let selected = tasks
+	if (only.size > 0) {
+		selected = selected.filter((t) => only.has(t.id))
+	}
+	return selected.filter((t) => !skip.has(t.id))
 }
 
 /**

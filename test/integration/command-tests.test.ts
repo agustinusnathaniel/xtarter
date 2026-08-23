@@ -121,6 +121,83 @@ describe('sync command', () => {
 	}, 60_000)
 })
 
+describe('sync task selection via .xtarterizerc', () => {
+	// Fixture shared by the selection tests: an outdated biome.json puts
+	// `lint/biome` into `patch` status and a tsconfig with strict:false puts
+	// `ts/incremental` into `patch` status (`ts/strict` becomes `conflict`,
+	// which sync does not apply without --include-conflicts).
+	async function createSelectionProject(): Promise<string> {
+		const cwd = await createMinimalProject()
+		await fs.writeFile(
+			path.join(cwd, 'biome.json'),
+			JSON.stringify({
+				$schema: './node_modules/@biomejs/biome/configuration_schema.json',
+				linter: { enabled: true, rules: { recommended: true } },
+				formatter: { enabled: false },
+			}),
+		)
+		await fs.writeFile(
+			path.join(cwd, 'tsconfig.json'),
+			'{"compilerOptions":{"strict":false}}\n',
+		)
+		return cwd
+	}
+
+	it('sync honors skip from .xtarterizerc', async () => {
+		const cwd = await createSelectionProject()
+		try {
+			await fs.writeFile(
+				path.join(cwd, '.xtarterizerc'),
+				JSON.stringify({ skip: ['ts/incremental'] }),
+			)
+
+			await syncCommand.run?.({ args: { cwd, yes: true } } as never)
+
+			// The skipped task must NOT have been applied...
+			const tsconfig = JSON.parse(
+				await fs.readFile(path.join(cwd, 'tsconfig.json'), 'utf-8'),
+			)
+			expect(tsconfig.compilerOptions.incremental).toBeUndefined()
+
+			// ...while other pending tasks were.
+			const biome = JSON.parse(
+				await fs.readFile(path.join(cwd, 'biome.json'), 'utf-8'),
+			)
+			expect(biome.vcs).toBeDefined()
+		} finally {
+			await fs.rm(cwd, { recursive: true, force: true })
+		}
+	}, 60_000)
+
+	it('--only overrides config.only', async () => {
+		const cwd = await createSelectionProject()
+		try {
+			await fs.writeFile(
+				path.join(cwd, '.xtarterizerc'),
+				JSON.stringify({ only: ['ts/incremental', 'lint/biome'] }),
+			)
+
+			await syncCommand.run?.({
+				args: { cwd, yes: true, only: 'lint/biome' },
+			} as never)
+
+			// CLI --only replaces the config list entirely: lint/biome runs,
+			// ts/incremental stays untouched despite being listed in config.
+			const biome = JSON.parse(
+				await fs.readFile(path.join(cwd, 'biome.json'), 'utf-8'),
+			)
+			expect(biome.vcs).toBeDefined()
+
+			const tsconfig = JSON.parse(
+				await fs.readFile(path.join(cwd, 'tsconfig.json'), 'utf-8'),
+			)
+			expect(tsconfig.compilerOptions.incremental).toBeUndefined()
+		} finally {
+			await fs.rm(cwd, { recursive: true, force: true })
+		}
+	}, 60_000)
+})
+
 describe('init command', () => {
 	it('dry-run exits 1 when tasks are pending', async () => {
 		const cwd = await createMinimalProject()
