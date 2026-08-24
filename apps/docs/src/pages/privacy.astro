@@ -1,125 +1,66 @@
 ---
-// Standalone trust page (/privacy/). Minimal static HTML outside Starlight;
-// visuals reuse the shared token vocabulary from src/styles/global.css.
-// Truthfulness contract: state data practices exactly as implemented in
-// src/components/Analytics.astro and Tracking.astro, no more, no less.
-import Analytics from '../components/Analytics.astro'
-import Tracking from '../components/Tracking.astro'
-import '../styles/global.css'
+import TrustPageLayout from '../layouts/TrustPageLayout.astro'
 ---
 
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Privacy | xtarter</title>
-    <meta
-      name="description"
-      content="What the xtarter docs site measures: cookieless Umami usage analytics loaded only when configured, aggregate event tracking, GitHub avatar fetches for the contributors page. No cookies, no ads."
-    />
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <Analytics />
-    <Tracking />
-  </head>
-  <body>
-    <main>
-      <header class="xt-hero">
-        <p class="xt-section-eyebrow">xtarter &middot; privacy</p>
-        <h1>No cookies. No ads. Just counts.</h1>
-        <p class="xt-hero-lede">
-          This site measures usage in aggregate to decide what to document better, and it is
-          deliberately built so that measurement touches as little of your data as possible.
-        </p>
-      </header>
+<TrustPageLayout
+  title="Privacy | xtarter"
+  description="What the xtarter docs site measures: cookieless Umami usage analytics loaded only when configured, aggregate event tracking, GitHub avatar fetches for the contributors page. No cookies, no ads."
+  eyebrow="xtarter · privacy"
+  heading="No cookies. No ads. Just counts."
+  lede="This site measures usage in aggregate to decide what to document better, and it is deliberately built so that measurement touches as little of your data as possible."
+>
+  <section class="xt-section">
+    <h2 class="xt-section-title">Cookies</h2>
+    <p>
+      This site sets no cookies. There is no login, no comment system, and nothing on these
+      pages stores identifiers in your browser. The documentation itself is fully static.
+    </p>
+  </section>
 
-      <section class="xt-section">
-        <h2 class="xt-section-title">Cookies</h2>
-        <p>
-          This site sets no cookies. There is no login, no comment system, and nothing on these
-          pages stores identifiers in your browser. The documentation itself is fully static.
-        </p>
-      </section>
+  <section class="xt-section">
+    <h2 class="xt-section-title">Usage measurement (Umami)</h2>
+    <ul class="xt-checklist">
+      <li>
+        Page views are measured with Umami, a cookieless analytics tool hosted at
+        umami.sznm.dev.
+      </li>
+      <li>
+        The analytics script loads only when the site build is configured with UMAMI_SRC and
+        UMAMI_WEBSITE_ID environment variables; without that configuration it never loads at
+        all.
+      </li>
+      <li>
+        Aggregate click and change events (for example: hero buttons, theme toggles, search
+        opens) are recorded through the same Umami instance.
+      </li>
+      <li>Measurement is aggregate: no advertising profiles are built from this data.</li>
+    </ul>
+  </section>
 
-      <section class="xt-section">
-        <h2 class="xt-section-title">Usage measurement (Umami)</h2>
-        <ul class="xt-checklist">
-          <li>
-            Page views are measured with Umami, a cookieless analytics tool hosted at
-            umami.sznm.dev.
-          </li>
-          <li>
-            The analytics script loads only when the site build is configured with UMAMI_SRC and
-            UMAMI_WEBSITE_ID environment variables; without that configuration it never loads at
-            all.
-          </li>
-          <li>
-            Aggregate click and change events (for example: hero buttons, theme toggles, search
-            opens) are recorded through the same Umami instance.
-          </li>
-          <li>Measurement is aggregate: no advertising profiles are built from this data.</li>
-        </ul>
-      </section>
+  <section class="xt-section">
+    <h2 class="xt-section-title">GitHub avatars and API</h2>
+    <p>
+      The contributors page loads contributor avatars from avatars.githubusercontent.com and
+      queries api.github.com for contributor metadata. Those requests go directly to GitHub
+      from your browser when you visit that page; this site itself keeps no copy of them.
+    </p>
+  </section>
 
-      <section class="xt-section">
-        <h2 class="xt-section-title">GitHub avatars and API</h2>
-        <p>
-          The contributors page loads contributor avatars from avatars.githubusercontent.com and
-          queries api.github.com for contributor metadata. Those requests go directly to GitHub
-          from your browser when you visit that page; this site itself keeps no copy of them.
-        </p>
-      </section>
-
-      <section class="xt-section">
-        <h2 class="xt-section-title">No ads, no data sales</h2>
-        <p>
-          This site runs no advertising and sells no data. Nothing collected here is shared with
-          ad networks or data brokers, because there is nothing here to share beyond anonymous,
-          aggregate counters.
-        </p>
-        <p>
-          Questions about privacy? Open an issue at
-          <a
-            class="xt-link"
-            href="https://github.com/agustinusnathaniel/xtarter/issues"
-            rel="noopener noreferrer"
-            >github.com/agustinusnathaniel/xtarter/issues</a
-          >.
-        </p>
-      </section>
-
-      <footer>
-        <p class="xt-note"><a class="xt-link" href="/">&larr; Back to home</a></p>
-      </footer>
-    </main>
-  </body>
-</html>
-
-<style>
-  body {
-    margin: 0;
-    background: var(--xt-paper);
-    color: var(--xt-ink);
-    font-family: var(--font-sans);
-  }
-
-  main {
-    max-width: 44rem;
-    margin-inline: auto;
-    padding: 2.5rem 1.25rem 4rem;
-  }
-
-  main p {
-    line-height: 1.6;
-  }
-
-  footer {
-    margin-top: 3rem;
-  }
-
-  @media (min-width: 40rem) {
-    main {
-      padding: 3.5rem 1.5rem 5rem;
-    }
-  }
-</style>
+  <section class="xt-section">
+    <h2 class="xt-section-title">No ads, no data sales</h2>
+    <p>
+      This site runs no advertising and sells no data. Nothing collected here is shared with
+      ad networks or data brokers, because there is nothing here to share beyond anonymous,
+      aggregate counters.
+    </p>
+    <p>
+      Questions about privacy? Open an issue at{' '}
+      <a
+        class="xt-link"
+        href="https://github.com/agustinusnathaniel/xtarter/issues"
+        rel="noopener noreferrer"
+        >github.com/agustinusnathaniel/xtarter/issues</a
+      >.
+    </p>
+  </section>
+</TrustPageLayout>

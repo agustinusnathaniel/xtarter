@@ -1,114 +1,54 @@
 ---
-// Standalone trust page (/contact/). Minimal static HTML outside Starlight;
-// visuals reuse the shared token vocabulary from src/styles/global.css.
-// Truthfulness contract: this project publishes no email address, phone
-// number, or postal address anywhere, so none may appear here. The only
-// support channel is GitHub issues; security reports follow SECURITY.md.
-import Analytics from '../components/Analytics.astro'
-import Tracking from '../components/Tracking.astro'
-import '../styles/global.css'
+import TrustPageLayout from '../layouts/TrustPageLayout.astro'
 ---
 
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Contact | xtarter</title>
-    <meta
-      name="description"
-      content="How to reach the xtarter project: GitHub issues for questions and bugs, SECURITY.md for responsible disclosure, and the maintainer's site."
-    />
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <Analytics />
-    <Tracking />
-  </head>
-  <body>
-    <main>
-      <header class="xt-hero">
-        <p class="xt-section-eyebrow">xtarter &middot; contact</p>
-        <h1>Talk to us on GitHub.</h1>
-        <p class="xt-hero-lede">
-          xtarter is maintained in the open, so the fastest way to get an answer is a public
-          thread that other users can search and learn from too.
-        </p>
-      </header>
+<TrustPageLayout
+  title="Contact | xtarter"
+  description="How to reach the xtarter project: GitHub issues for questions and bugs, SECURITY.md for responsible disclosure, and the maintainer's site."
+  eyebrow="xtarter · contact"
+  heading="Talk to us on GitHub."
+  lede="xtarter is maintained in the open, so the fastest way to get an answer is a public thread that other users can search and learn from too."
+>
+  <section class="xt-section">
+    <h2 class="xt-section-title">Questions, bugs, and feature ideas</h2>
+    <p>
+      The primary (and currently only) support channel is the project's issue tracker:{' '}
+      <a
+        class="xt-link"
+        href="https://github.com/agustinusnathaniel/xtarter/issues"
+        rel="noopener noreferrer"
+        >github.com/agustinusnathaniel/xtarter/issues</a
+      >. Open an issue for bug reports, documentation gaps, and feature requests for both CLIs,
+      xtarterize and create-xtarter-app.
+    </p>
+    <p>
+      There is no email support channel: no support inbox exists for this project, and any
+      message sent privately cannot be answered. Please use the issue tracker above.
+    </p>
+  </section>
 
-      <section class="xt-section">
-        <h2 class="xt-section-title">Questions, bugs, and feature ideas</h2>
-        <p>
-          The primary (and currently only) support channel is the project's issue tracker:
-          <a
-            class="xt-link"
-            href="https://github.com/agustinusnathaniel/xtarter/issues"
-            rel="noopener noreferrer"
-            >github.com/agustinusnathaniel/xtarter/issues</a
-          >. Open an issue for bug reports, documentation gaps, and feature requests for both CLIs,
-          xtarterize and create-xtarter-app.
-        </p>
-        <p>
-          There is no email support channel: no support inbox exists for this project, and any
-          message sent privately cannot be answered. Please use the issue tracker above.
-        </p>
-      </section>
+  <section class="xt-section">
+    <h2 class="xt-section-title">Security reports</h2>
+    <p>
+      Do not report vulnerabilities in a public issue. Follow the project's responsible
+      disclosure process described in{' '}
+      <a
+        class="xt-link"
+        href="https://github.com/agustinusnathaniel/xtarter/blob/main/SECURITY.md"
+        rel="noopener noreferrer"
+        >SECURITY.md</a
+      >: report privately through GitHub, include reproduction steps, and give the maintainer
+      time to ship a fix before public disclosure.
+    </p>
+  </section>
 
-      <section class="xt-section">
-        <h2 class="xt-section-title">Security reports</h2>
-        <p>
-          Do not report vulnerabilities in a public issue. Follow the project's responsible
-          disclosure process described in
-          <a
-            class="xt-link"
-            href="https://github.com/agustinusnathaniel/xtarter/blob/main/SECURITY.md"
-            rel="noopener noreferrer"
-            >SECURITY.md</a
-          >: report privately through GitHub, include reproduction steps, and give the maintainer
-          time to ship a fix before public disclosure.
-        </p>
-      </section>
-
-      <section class="xt-section">
-        <h2 class="xt-section-title">Maintainer</h2>
-        <p>
-          xtarter is maintained by
-          <a class="xt-link" href="https://agustinusnathaniel.com/" rel="noopener noreferrer"
-            >Agustinus Nathaniel</a
-          >, whose personal site links current projects and writing.
-        </p>
-      </section>
-
-      <footer>
-        <p class="xt-note"><a class="xt-link" href="/">&larr; Back to home</a></p>
-      </footer>
-    </main>
-  </body>
-</html>
-
-<style>
-  body {
-    margin: 0;
-    background: var(--xt-paper);
-    color: var(--xt-ink);
-    font-family: var(--font-sans);
-  }
-
-  main {
-    max-width: 44rem;
-    margin-inline: auto;
-    padding: 2.5rem 1.25rem 4rem;
-  }
-
-  main p {
-    line-height: 1.6;
-  }
-
-  footer {
-    margin-top: 3rem;
-  }
-
-  @media (min-width: 40rem) {
-    main {
-      padding: 3.5rem 1.5rem 5rem;
-    }
-  }
-</style>
+  <section class="xt-section">
+    <h2 class="xt-section-title">Maintainer</h2>
+    <p>
+      xtarter is maintained by{' '}
+      <a class="xt-link" href="https://agustinusnathaniel.com/" rel="noopener noreferrer"
+        >Agustinus Nathaniel</a
+      >, whose personal site links current projects and writing.
+    </p>
+  </section>
+</TrustPageLayout>
