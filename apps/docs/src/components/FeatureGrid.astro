@@ -1,0 +1,21 @@
+---
+// Feature/value grid for landing pages: quiet hairline-topped items
+// (`.xt-feature-grid` / `.xt-feature` in apps/docs/src/styles/global.css,
+// no scoped styles). 1 column on mobile, 2 from 40rem, 3 from 48rem.
+interface Props {
+  items: { title: string; body: string }[]
+}
+
+const { items } = Astro.props
+---
+
+<ul class="xt-feature-grid">
+  {
+    items.map((item) => (
+      <li class="xt-feature">
+        <h3 class="xt-feature-title">{item.title}</h3>
+        <p class="xt-feature-body">{item.body}</p>
+      </li>
+    ))
+  }
+</ul>

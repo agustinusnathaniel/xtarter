@@ -14,21 +14,33 @@ hero:
   {}
 ---
 
-import TemplateGallery from '../../components/TemplateGallery.astro'
+import TemplateGallery from '@/components/TemplateGallery.astro'
 import AllPackageManagers from '@/components/AllPackageManagers.astro'
+import SectionHead from '@/components/SectionHead.astro'
+import Checklist from '@/components/Checklist.astro'
+import CtaBand from '@/components/CtaBand.astro'
 
-<h2 class="xt-section-title">Five templates, one command</h2>
+<div class="xt-section">
+  <SectionHead index="01" id="whats-included" eyebrow="included in every scaffold" title="One baseline, five ways" lead="Every template carries the identical production baseline. Your only decision is UI library and router." />
+  <Checklist items={['Biome lint + format', 'TypeScript strict mode', 'GitHub Actions CI', 'VS Code settings + recommended extensions', 'Agent skills for AI editors']} />
+</div>
 
-<p class="xt-section-lead">Every option ships with Biome, TypeScript strict, CI, editor settings, and agent skills pre-configured - the same baseline in every scaffold.</p>
-
-<TemplateGallery />
+<div class="xt-section">
+  <SectionHead index="02" id="templates" title="The templates" lead="Next.js or Vite+ with React. Chakra UI, Tailwind, or HeroUI up front. Pick by taste." />
+  <TemplateGallery />
+</div>
 
 <a class="xt-link" href="https://github.com/agustinusnathaniel?tab=repositories&q=&type=source" target="_blank" rel="noopener noreferrer" data-umami-event="github_browse_click">All source repositories on GitHub</a>
 
-<h2 class="xt-section-title">Quick start</h2>
+<div class="xt-section">
+  <SectionHead index="03" id="quick-start" title="Quick start" lead="Scaffold a new project in one command." />
+  <AllPackageManagers type="create" pkg="xtarter-app@latest" />
+  <p class="xt-note">Follow the prompts to pick a template. Next, keep the project conformant as standards evolve: <a class="xt-link" href="/xtarterize/getting-started/installation/">npx xtarterize init</a>.</p>
+</div>
 
-<p class="xt-section-lead">Scaffold a new project in one command.</p>
-
-<AllPackageManagers type="create" pkg="xtarter-app@latest" />
-
-<p class="xt-note">Follow the prompts to pick a template. Next, keep the project conformant as standards evolve: <a class="xt-link" href="/xtarterize/getting-started/installation/">npx xtarterize init</a>.</p>
+<div class="xt-section">
+  <CtaBand title="Start conformant. Stay conformant." note="Hand the fresh scaffold to xtarterize whenever standards move. Each run realigns the project without manual drift.">
+    <a class="xt-btn xt-btn-invert" href="/xtarterize/getting-started/installation/" data-umami-event="band_cta_init">Run xtarterize init</a>
+    <a class="xt-btn xt-btn-ghost-dark" href="/xtarterize/" data-umami-event="band_cta_about_xtz">About xtarterize</a>
+  </CtaBand>
+</div>

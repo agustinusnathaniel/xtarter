@@ -2,7 +2,7 @@ import { createDefu } from 'defu'
 import { dump, load } from 'js-yaml'
 
 const mergeYamlDefu = createDefu((obj, key, value) => {
-	// Arrays are replaced, not concatenated — consistent with mergeJson and ADR-007
+	// Arrays are replaced, not concatenated - consistent with mergeJson and ADR-007
 	if (Array.isArray(obj[key])) {
 		obj[key] = value
 		return true

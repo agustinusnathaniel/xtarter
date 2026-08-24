@@ -62,6 +62,10 @@ h6 {
   --xt-paper: #faf6f1;
   --xt-panel: #ffffff;
   --xt-panel-2: #f6efe7;
+  /* Tool-card hover surface: panel tinted toward the accent. Text keeps
+     its panel ratios on this tint (ink ~15.9:1, muted ~5.8:1 vs white
+     panel; the 6% tint shifts them by <0.2). */
+  --xt-panel-hover: color-mix(in srgb, var(--xt-accent) 6%, var(--xt-panel));
   /* Ink */
   --xt-ink: #241c15;
   --xt-muted: #6f6157;
@@ -84,6 +88,9 @@ h6 {
   --xt-term-ink: #e9e1d8;
   --xt-term-dim: #9d9085;
   --xt-term-line: #302720;
+  /* Blueprint hairlines painted on charcoal canvases (inverted hero, CTA
+     band): term ink at 3% alpha - decorative texture, no contrast duty. */
+  --xt-grid-line: color-mix(in srgb, var(--xt-term-ink) 3%, transparent);
   /* Terminal status markers: fixed light-on-charcoal values because the
      terminal keeps its charcoal background in both themes. The theme-scoped
      --xt-ok/--xt-warn drop to ~3.6:1 on charcoal in light mode, so these
@@ -105,6 +112,9 @@ h6 {
   --xt-paper: #171310;
   --xt-panel: #1f1915;
   --xt-panel-2: #27201a;
+  /* Dark hover surface: same derivation as light, ~8% accent into panel.
+     Ink (~13:1) and muted (~6.3:1) keep comfortable ratios on the tint. */
+  --xt-panel-hover: color-mix(in srgb, var(--xt-accent) 8%, var(--xt-panel));
   --xt-ink: #f2ece4;
   --xt-muted: #b1a396;
   --xt-line: #352c24;
@@ -123,6 +133,14 @@ h6 {
    Starlight's default surfaces. */
 html[data-has-hero]:not([data-has-sidebar]) main {
   background: var(--xt-paper);
+}
+
+/* Splash routes hide Starlight's prev/next pagination footer: the three
+   landing pages are top-level entries, so the links only ever point at
+   /blog/ and read as noise. Scoped to the same splash signature used for
+   the paper backdrop above; docs pages with sidebars keep their pager. */
+html[data-has-hero]:not([data-has-sidebar]) .pagination-links {
+  display: none;
 }
 
 /* ============================================
@@ -168,9 +186,9 @@ body {
 h2.xt-section-title {
   font-family: var(--font-heading);
   font-weight: 600;
-  font-size: clamp(1.5rem, 3vw, 2rem);
-  line-height: 1.2;
-  letter-spacing: -0.01em;
+  font-size: clamp(1.75rem, 3.5vw, 2.5rem);
+  line-height: 1.15;
+  letter-spacing: -0.015em;
   color: var(--xt-ink);
   margin: 0 0 0.9rem;
 }
@@ -181,6 +199,70 @@ h2.xt-section-title {
   color: var(--xt-muted);
   max-width: 60ch;
   margin: 0 0 1.5rem;
+}
+
+/* Composed section head (SectionHead component): optional mono eyebrow +
+   title + lead as one unit. It composes with - never duplicates - the
+   .xt-section-title / .xt-section-lead classes above; children keep their
+   own type rules and margins. Because the title is nested inside this
+   wrapper, it is no longer a direct child of .sl-markdown-content and the
+   legacy direct-child rhythm rules below simply don't fire for wrapped
+   sections (no double beats). */
+.xt-section-head {
+  min-width: 0;
+}
+
+/* ---- Status layer (SectionHead `index` prop) ----
+   Numbered sections get a mono `// 01` eyebrow line plus a giant ghost
+   numeral right-aligned beside the head. Both artifacts are aria-hidden
+   decoration; the numeral drops below the ink at opacity .08 on purpose.
+   Omitting `index` keeps the plain stacked head - no grid, no artifacts. */
+.xt-section-head.has-index {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  column-gap: 1.5rem;
+  align-items: start;
+}
+
+.xt-section-head.has-index .xt-section-head-body {
+  grid-column: 1;
+  min-width: 0;
+}
+
+/* Same voice as .xt-section-eyebrow; accent-deep on paper ~5.7:1 light /
+   accent ~8.6:1 dark (matches eyebrow ledger). */
+.xt-section-index {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  color: var(--xt-accent-deep);
+  margin: 0 0 0.9rem;
+}
+
+:root[data-theme="dark"] .xt-section-index {
+  color: var(--xt-accent);
+}
+
+/* Ghost numeral: mono, display-scale, faded to a whisper. Decorative only
+   (aria-hidden in the component) - contrast does not apply. */
+.xt-section-num {
+  grid-column: 2;
+  justify-self: end;
+  font-family: var(--font-mono);
+  font-size: clamp(3.5rem, 7vw, 6rem);
+  font-weight: 600;
+  line-height: 0.85;
+  letter-spacing: -0.04em;
+  color: var(--xt-ink);
+  opacity: 0.08;
+  user-select: none;
+}
+
+@media (max-width: 640px) {
+  .xt-section-num {
+    display: none;
+  }
 }
 
 .xt-note {
@@ -225,7 +307,30 @@ h2.xt-section-title {
    existing hero gap (hero bottom padding + Starlight container margin).
    Heading-to-content spacing stays tight (see h2.xt-section-title's
    margin-bottom) so the section beat reads as section-to-section only.
+
+   Two authoring styles share these values:
+   - rebuilt pages wrap each section in .xt-section (owns the beat);
+   - a standalone SectionHead (direct child of the markdown container)
+     carries the same beat itself.
+   Titles nested in either wrapper escape the legacy direct-child rules
+   below, which keep working for unwrapped MDX until pages migrate.
    ============================================ */
+
+.xt-section {
+  margin-top: clamp(3rem, 7vw, 5rem);
+}
+
+.xt-section:first-child {
+  margin-top: 0;
+}
+
+.sl-markdown-content > .xt-section-head {
+  margin-top: clamp(3rem, 7vw, 5rem);
+}
+
+.sl-markdown-content > .xt-section-head:first-child {
+  margin-top: 0;
+}
 
 .sl-markdown-content > .xt-section-title {
   margin-top: clamp(2.5rem, 4.5vw, 3.5rem);
@@ -264,8 +369,11 @@ h2.xt-section-title {
   min-width: 0;
 }
 
-/* One mono eyebrow per hero - labels, not section numbering. */
-.xt-eyebrow {
+/* One mono eyebrow per hero or section head - labels, not section
+   numbering. .xt-section-eyebrow is the same treatment aliased for the
+   SectionHead component so both share this single source of truth. */
+.xt-eyebrow,
+.xt-section-eyebrow {
   font-family: var(--font-mono);
   font-size: 0.72rem;
   font-weight: 500;
@@ -275,19 +383,32 @@ h2.xt-section-title {
   margin: 0 0 0.9rem;
 }
 
-:root[data-theme="dark"] .xt-eyebrow {
+:root[data-theme="dark"] .xt-eyebrow,
+:root[data-theme="dark"] .xt-section-eyebrow {
   color: var(--xt-accent);
 }
 
 .xt-hero h1 {
   font-family: var(--font-heading);
-  font-size: clamp(2.1rem, 5vw, 3.3rem);
-  line-height: 1.08;
-  letter-spacing: -0.015em;
-  font-weight: 600;
+  /* Type jump (round 2): display-scale headline, tighter leading. */
+  font-size: clamp(2.75rem, 7vw, 4.5rem);
+  line-height: 1.04;
+  letter-spacing: -0.02em;
+  font-weight: 650;
   color: var(--xt-ink);
   margin: 0 0 1.25rem;
-  max-width: 20ch;
+  max-width: 22ch;
+}
+
+/* Home renders its h1 as two explicit lines; the second sentence carries
+   the accent. On charcoal (--xt-hero-dark) this is --xt-accent: ~6.5:1 in
+   light / ~8:1 in dark on term-bg (AA, and large text besides). */
+.xt-h1-line {
+  display: block;
+}
+
+.xt-h1-accent {
+  color: var(--xt-accent);
 }
 
 .xt-hero-lede {
@@ -375,6 +496,193 @@ h2.xt-section-title {
   border-color: var(--xt-accent);
   color: var(--xt-accent);
   background: var(--xt-accent-soft);
+}
+
+/* ---- Buttons on charcoal surfaces (.xt-band) ----
+   The band keeps fixed term tokens in both themes, so these modifiers pin
+   their own colors and re-declare them dark-scoped to beat the dark base
+   .xt-btn accent paint (same specificity trick as the ghost fix above).
+   Color-only hovers stay ungated; the shared transform lift lives in the
+   @media (hover:hover) block and is neutralized by prefers-reduced-motion. */
+
+/* Light button on charcoal: term-bg ink on a term-ink fill ~13.9:1 (fixed
+   pairing, identical in both themes); the hover shade keeps >=11:1. */
+.xt-btn-invert,
+:root[data-theme="dark"] .xt-btn-invert {
+  background: var(--xt-term-ink);
+  border-color: var(--xt-term-ink);
+  color: var(--xt-term-bg);
+}
+
+.xt-btn-invert:hover {
+  border-color: color-mix(in srgb, var(--xt-term-bg) 10%, var(--xt-term-ink));
+  background: color-mix(in srgb, var(--xt-term-bg) 10%, var(--xt-term-ink));
+  color: var(--xt-term-bg);
+}
+
+:root[data-theme="dark"] .xt-btn-invert:hover {
+  border-color: color-mix(in srgb, var(--xt-term-bg) 10%, var(--xt-term-ink));
+  background: color-mix(in srgb, var(--xt-term-bg) 10%, var(--xt-term-ink));
+}
+
+/* Ghost on charcoal: term-ink label on the charcoal surface ~13.9:1; the
+   <=8% ink-tint hover fill keeps it >=13:1. The hairline border is a
+   quiet affordance (~2.2:1 at rest, term-dim ~5.8:1 on hover) - the label
+   carries identification, matching the artifact aesthetic. */
+.xt-btn-ghost-dark,
+:root[data-theme="dark"] .xt-btn-ghost-dark {
+  background: transparent;
+  border-color: color-mix(in srgb, var(--xt-term-dim) 45%, transparent);
+  color: var(--xt-term-ink);
+}
+
+.xt-btn-ghost-dark:hover {
+  border-color: var(--xt-term-dim);
+  background: color-mix(in srgb, var(--xt-term-ink) 8%, transparent);
+  color: var(--xt-term-ink);
+}
+
+:root[data-theme="dark"] .xt-btn-ghost-dark:hover {
+  border-color: var(--xt-term-dim);
+  background: color-mix(in srgb, var(--xt-term-ink) 8%, transparent);
+  color: var(--xt-term-ink);
+}
+
+/* ============================================
+   HERO INVERSION ("terminal takeover")
+   The three splash heroes invert onto the term-token charcoal family via
+   `.xt-hero-dark` (added in LandingHero.astro): a full-bleed charcoal
+   canvas behind display-scale copy, with the artifact panel elevated one
+   step. Paper resumes below the band.
+
+   Contrast ledger (fixed term-token pairings, identical in both themes):
+   - h1 / term ink on term bg ......... ~13.9:1 (AAA)
+   - lede / term dim on term bg ....... ~5.8:1 (AA)
+   - eyebrow & cursor / accent ........ ~6.5:1 light, ~8:1 dark (AA)
+   - ghost actions .................... see .xt-btn-ghost-dark above
+   The full-bleed breakout centers the canvas on the Starlight container:
+   negative margins extend it to the viewport edges while equal padding
+   keeps every child exactly where it was. html/body overflow-x: clip
+   absorbs the 100vw scrollbar overhang.
+   ============================================ */
+
+.xt-hero-dark {
+  position: relative;
+  isolation: isolate;
+  margin-inline: calc(50% - 50vw);
+  padding-inline: calc(50vw - 50%);
+  padding-block: clamp(3rem, 6vw, 4.5rem) clamp(2.5rem, 5vw, 3.75rem);
+  background: var(--xt-term-bg);
+  /* Copy tokens flip to the charcoal family; ratios documented above. */
+  color: var(--xt-term-ink);
+}
+
+/* Blueprint hairline grid, ~3% alpha / 1px lines / 48px pitch. Shared by
+   the inverted hero and the CTA band (.xt-band v2). Purely decorative:
+   z-index -1 under an isolated parent paints above that parent's own
+   background but below all content. */
+.xt-hero-dark::before,
+.xt-band::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image:
+    linear-gradient(to right, var(--xt-grid-line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--xt-grid-line) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+.xt-hero-dark h1 {
+  color: var(--xt-term-ink);
+}
+
+.xt-hero-dark .xt-hero-lede {
+  color: var(--xt-term-dim);
+}
+
+.xt-hero-dark .xt-eyebrow,
+.xt-hero-dark .xt-section-eyebrow {
+  color: var(--xt-accent);
+}
+
+/* ---- Artifact panel elevation ----
+   On the now-charcoal hero the artifacts would melt into the canvas, so
+   they lift one step: background mixed ~4% toward term ink, border ~14%
+   (a lighter charcoal hairline). Flat by design - no shadows. Ink/dim
+   text sits on the lifted surface instead of raw term-bg; at 4% mix the
+   shift costs ~1.1 contrast-ratio points absolute (ink 13.96 -> 12.86,
+   dim 5.82 -> 5.36), so the ledger above still holds. */
+.xt-hero-dark .xt-fork,
+.xt-hero-dark .xt-prompt,
+.xt-hero-dark .xt-terminal {
+  background: color-mix(in srgb, var(--xt-term-ink) 4%, var(--xt-term-bg));
+  border-color: color-mix(in srgb, var(--xt-term-ink) 14%, var(--xt-term-bg));
+}
+
+/* The dry-run caption lives inside the inverted hero (TerminalDemo renders
+   it as a sibling of the panel), so it must leave its paper-scoped default:
+   --xt-muted is #6f6157 and drops to ~3:1 on the fixed charcoal canvas.
+   Term dim restores the lede's pairing - ~5.8:1 on term bg, identical in
+   both themes; inline code inherits it. */
+.xt-hero-dark .xt-terminal-caption {
+  color: var(--xt-term-dim);
+}
+
+/* ============================================
+   MICRO-LIFE - blinking cursors + staggered hero entrance
+   Both effects are decorative and double-covered for reduced motion:
+   gated behind prefers-reduced-motion: no-preference here AND neutralized
+   by the global reduce kill switch at the bottom of this file.
+   ============================================ */
+
+/* Block cursor appended after command lines (fork strip rows, CXA prompt).
+   Sized 1ch x 1.05em, accent fill (decorative, aria-hidden), hard-stepped
+   blink. As an empty inline-block/flex item its baseline is its bottom
+   edge, so it sits on the text baseline like a real caret. */
+.xt-cursor {
+  display: inline-block;
+  flex-shrink: 0;
+  width: 1ch;
+  height: 1.05em;
+  background: var(--xt-accent);
+  animation: xt-cursor-blink 1.1s steps(1) infinite;
+}
+
+@keyframes xt-cursor-blink {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  /* Entrance: children of the hero grid fade up 12px over 320ms, staggered
+     0 / 70 / 140ms. `backwards` keeps pre-delay children hidden on their
+     first frame only. */
+  .xt-hero-dark .xt-hero-grid > * {
+    animation: xt-rise-in 320ms var(--xt-ease) backwards;
+  }
+
+  .xt-hero-dark .xt-hero-grid > :nth-child(2) {
+    animation-delay: 70ms;
+  }
+
+  .xt-hero-dark .xt-hero-grid > :nth-child(3) {
+    animation-delay: 140ms;
+  }
+}
+
+@keyframes xt-rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
 }
 
 /* Starlight LinkButton primary - light mode only. Starlight paints it
@@ -546,6 +854,15 @@ h2.xt-section-title {
   padding-left: 3.5ch;
 }
 
+/* Wrapped continuation segments for a tagged record (detected stack,
+   backup path): a column nested in the baseline-aligned line keeps each
+   segment flush under the first one's text column at any font size, so
+   long records split instead of overflowing the artifact on phones. */
+.xt-term-stack {
+  display: flex;
+  flex-direction: column;
+}
+
 .xt-term-spacer {
   height: 0.6rem;
 }
@@ -612,59 +929,537 @@ h2.xt-section-title {
 }
 
 /* ============================================
-   LIFECYCLE (home) - one line, Choose -> Scaffold -> Conform -> Ship
+   LANDING SECTIONS - split panels, feature grid,
+   checklist, closing CTA band
+   Vocabulary for the rebuilt landing pages; tokens only, no new deps.
+   ============================================ */
+
+/* ---- Two-tool split panel (home) ---- */
+
+.xt-split {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+  margin: 0 0 1.75rem;
+}
+
+/* Whole card is one <a class="xt-tool-card"> link; its accessible name is
+   the product name (aria-label). Keyboard focus shows the global
+   :focus-visible outline (--xt-focus); hover lift is pointer-only (see
+   MOTION below) and neutralized under prefers-reduced-motion. */
+.xt-tool-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  min-width: 0;
+  padding: 1.6rem 1.7rem 1.5rem;
+  background: var(--xt-panel);
+  border: 1px solid var(--xt-line);
+  border-radius: var(--xt-radius);
+  color: inherit;
+  text-decoration: none;
+  transition:
+    transform var(--xt-dur-hover) var(--xt-ease),
+    border-color var(--xt-dur-hover) var(--xt-ease),
+    background-color var(--xt-dur-hover) var(--xt-ease);
+}
+
+.xt-tool-card .xt-eyebrow,
+.xt-tool-card .xt-section-eyebrow {
+  margin-bottom: 0.15rem;
+}
+
+.xt-tool-name {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-family: var(--font-heading);
+  font-size: 1.18rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+  color: var(--xt-ink);
+}
+
+.xt-tool-arrow {
+  flex-shrink: 0;
+  color: var(--xt-accent-deep);
+}
+
+:root[data-theme="dark"] .xt-tool-arrow {
+  color: var(--xt-accent);
+}
+
+.xt-tool-role {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+  /* Muted on panel ~5.8:1 light / ~6.3:1 dark (AA small text). */
+  color: var(--xt-muted);
+}
+
+.xt-tool-body {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  text-wrap: pretty;
+  color: var(--xt-muted);
+}
+
+/* Mono artifact cue on a thin charcoal chip - echoes the hero terminal
+   without competing with it. Term dim on term bg ~5.8:1 (fixed pairing,
+   identical in both themes). */
+.xt-tool-cmd {
+  align-self: flex-start;
+  max-width: 100%;
+  margin-top: 0.4rem;
+  padding: 0.35rem 0.7rem;
+  overflow-wrap: anywhere;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--xt-term-dim);
+  background: var(--xt-term-bg);
+  border: 1px solid var(--xt-term-line);
+  border-radius: var(--xt-radius-sm);
+}
+
+/* Footer action pinned to the card bottom so unequal copy still yields
+   equal-height cards. Accent deep on panel ~5.7:1 light / accent on panel
+   ~8.6:1 dark (AA large/bold UI text). */
+.xt-tool-action {
+  margin-top: auto;
+  padding-top: 1rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--xt-accent-deep);
+}
+
+:root[data-theme="dark"] .xt-tool-action {
+  color: var(--xt-accent);
+}
+
+.xt-tool-card:active {
+  transform: translateY(1px);
+  transition-duration: var(--xt-dur-press);
+}
+
+/* ---- Template gallery (home + CXA) ----
+   Card grid replacing the v1 divided list; markup is semantic-only in
+   TemplateGallery.astro (no Tailwind utilities). Whole card is one link
+   with the accessible name carried by aria-label, matching .xt-tool-card.
+   1 / 2 / 3 columns at 40 / 64rem. */
+
+.xt-gallery {
+  list-style: none;
+  margin: 0 0 1.75rem;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.25rem;
+}
+
+@media (min-width: 40rem) {
+  .xt-gallery {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 64rem) {
+  .xt-gallery {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.xt-tpl {
+  min-width: 0;
+  display: flex;
+}
+
+.xt-tpl-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+  width: 100%;
+  min-width: 0;
+  padding: 1.5rem 1.55rem 1.35rem;
+  background: var(--xt-panel);
+  border: 1px solid var(--xt-line);
+  border-radius: var(--xt-radius);
+  color: inherit;
+  text-decoration: none;
+  transition:
+    transform var(--xt-dur-hover) var(--xt-ease),
+    border-color var(--xt-dur-hover) var(--xt-ease),
+    background-color var(--xt-dur-hover) var(--xt-ease);
+}
+
+.xt-tpl-name {
+  font-family: var(--font-heading);
+  font-size: 1.12rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+  /* Ink on panel ~15.9:1 light / ~13:1 dark. */
+  color: var(--xt-ink);
+}
+
+.xt-tpl-desc {
+  min-width: 0;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  text-wrap: pretty;
+  overflow-wrap: anywhere;
+  /* Muted on panel ~5.8:1 light / ~6.3:1 dark (AA small text). */
+  color: var(--xt-muted);
+}
+
+.xt-tpl-stack {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  margin-top: 0.25rem;
+}
+
+/* Hairline mono pill, .72rem - quiet stack cue; same muted pairing as the
+   description line. */
+.xt-tpl-chip {
+  padding: 0.14rem 0.6rem;
+  border: 1px solid var(--xt-line-strong);
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  line-height: 1.4;
+  white-space: nowrap;
+  color: var(--xt-muted);
+}
+
+/* Footer action pinned bottom so unequal copy still yields equal-height
+   cards. Accent deep on panel ~5.7:1 light / accent on panel ~8.6:1 dark
+   (AA large/bold UI text). Arrow nudge lives in the hover:hover block. */
+.xt-tpl-action {
+  margin-top: auto;
+  padding-top: 1rem;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: var(--xt-accent-deep);
+}
+
+:root[data-theme="dark"] .xt-tpl-action {
+  color: var(--xt-accent);
+}
+
+.xt-tpl-arrow {
+  display: inline-block;
+  transition: transform var(--xt-dur-hover) var(--xt-ease);
+}
+
+/* ---- Feature/value grid ----
+   Quiet surfaces: a top hairline per item (same beat as the lifecycle /
+   pipeline rules), no per-cell boxes. */
+
+.xt-feature-grid {
+  list-style: none;
+  margin: 0 0 1.75rem;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.4rem 2.5rem;
+}
+
+@media (min-width: 40rem) {
+  .xt-feature-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 48rem) {
+  .xt-feature-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.xt-feature {
+  min-width: 0;
+  border-top: 1px solid var(--xt-line);
+  padding-top: 1.05rem;
+}
+
+.xt-feature-title {
+  margin: 0 0 0.45rem;
+  font-family: var(--font-heading);
+  font-size: 1.05rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--xt-ink);
+}
+
+.xt-feature-body {
+  margin: 0;
+  font-size: 0.92rem;
+  line-height: 1.55;
+  text-wrap: pretty;
+  /* Muted on paper ~5.5:1 light / ~7.5:1 dark (AA small text). */
+  color: var(--xt-muted);
+}
+
+/* ---- Checklist grid (create-xtarter-app "what you get") ---- */
+
+.xt-checklist {
+  list-style: none;
+  margin: 0 0 1.75rem;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.6rem 2.5rem;
+}
+
+@media (min-width: 40rem) {
+  .xt-checklist {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+.xt-checklist li {
+  position: relative;
+  min-width: 0;
+  padding-left: 1.55rem;
+  font-size: 0.95rem;
+  line-height: 1.55;
+  color: var(--xt-ink);
+}
+
+/* Pure-CSS check marker. Decorative glyph: --xt-ok on paper is ~4.7:1 in
+   light / ~10.6:1 in dark; the adjacent ink text carries the meaning. */
+.xt-checklist li::before {
+  content: "✓";
+  position: absolute;
+  left: 0;
+  top: 0;
+  font-size: 0.85em;
+  font-weight: 700;
+  color: var(--xt-ok);
+}
+
+/* ---- Closing CTA band ----
+   Charcoal surface echoing the hero artifacts (term token family), which
+   keep their fixed values in both themes. V2: bigger padding, blueprint
+   hairline texture (shared ::before rule in the HERO INVERSION block),
+   display-adjacent title. isolation + z-index:-1 keep the texture between
+   the band's background and its content; overflow clips it to the radius. */
+
+.xt-band {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  padding: clamp(3rem, 7vw, 4.5rem) clamp(1.25rem, 4vw, 2.75rem);
+  border: 1px solid var(--xt-term-line);
+  border-radius: var(--xt-radius);
+  background: var(--xt-term-bg);
+  color: var(--xt-term-ink);
+  text-align: center;
+}
+
+.xt-band-title {
+  margin: 0 auto 0.75rem;
+  max-width: 24ch;
+  font-family: var(--font-heading);
+  font-size: clamp(1.75rem, 3vw, 2.25rem);
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  text-wrap: balance;
+  overflow-wrap: anywhere;
+  /* Term ink on term bg ~13.9:1 (fixed pairing). */
+  color: var(--xt-term-ink);
+}
+
+.xt-band-note {
+  margin: 0 auto 1.6rem;
+  max-width: 46ch;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  text-wrap: pretty;
+  /* Term dim on term bg ~5.8:1 (fixed pairing, AA small text). */
+  color: var(--xt-term-dim);
+}
+
+.xt-band-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.85rem;
+}
+
+/* ============================================
+   LIFECYCLE STEPPER (home) - Choose -> Scaffold -> Conform -> Ship
+   Pure CSS over the existing MDX markup (ol.xt-lifecycle > li > a).
+   Desktop (>640px): horizontal rail - a 1px hairline threaded through
+   10px accent node dots, mono step numbers above the labels. Mobile
+   (<=640px): the same anatomy rotated into a vertical left rail.
+   The home page has exactly four steps; the grid below is written for it.
    ============================================ */
 
 .xt-lifecycle {
   list-style: none;
-  margin: 0;
-  padding: 1.25rem 0;
-  border-top: 1px solid var(--xt-line);
-  border-bottom: 1px solid var(--xt-line);
-  display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  gap: 0.75rem 0.5rem;
+  margin: 0 0 1.75rem;
+  padding: 0;
+  counter-reset: xt-step;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  column-gap: 1.5rem;
 }
 
 .xt-lifecycle li {
+  counter-increment: xt-step;
+  position: relative;
+  min-width: 0;
+  /* Right padding gives the connector room to reach the next node. */
+  padding-right: 0.25rem;
+}
+
+/* Mono step number (01-04) above each label. Muted on paper ~5.5:1 light /
+   ~7.5:1 dark (AA small text). Fixed line-height + margin reserve the dot
+   row so the absolutely-positioned node lands in predictable space. */
+.xt-lifecycle li::before {
+  content: "0" counter(xt-step);
+  display: block;
+  margin-bottom: 1.15rem;
   font-family: var(--font-mono);
-  font-size: 0.95rem;
-  font-weight: 500;
+  font-size: 0.72rem;
+  line-height: 1;
+  letter-spacing: 0.08em;
   color: var(--xt-muted);
 }
 
+/* Node dot + connector, drawn as layered backgrounds on one pseudo so the
+   hairline and the 10px accent dot always stay registered. Decorative:
+   the accent dot carries no text; step order is conveyed by the numbers. */
+.xt-lifecycle li::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 1.05rem;
+  width: 10px;
+  height: 10px;
+  background-image:
+    radial-gradient(circle at 5px 5px, var(--xt-accent) 4px, transparent 4.5px),
+    linear-gradient(var(--xt-line-strong) 0 0);
+  background-repeat: no-repeat;
+}
+
+/* Horizontal run: line starts at this dot's right edge and stops exactly
+   at the next list item's left edge (its own dot). */
 .xt-lifecycle li:not(:last-child)::after {
-  content: "→";
-  margin-left: 0.5rem;
+  right: -1.5rem;
+  background-size:
+    10px 10px,
+    calc(100% - 10px + 1.5rem) 1px;
+  background-position:
+    0 0,
+    10px 5px;
+}
+
+/* Last node: dot only, no trailing hairline. */
+.xt-lifecycle li:last-child::after {
+  background-size:
+    10px 10px,
+    0 0;
+  background-position:
+    0 0,
+    0 0;
+}
+
+/* Reached/available end state ("Ship"): accent-numbered node plus full-ink
+   semibold label (~15.6:1 light / ~13.9:1 dark on paper), so the final
+   step reads as reached, not pending. Links keep the shared affordance. */
+.xt-lifecycle li.xt-lifecycle-done {
+  padding-right: 0;
+}
+
+.xt-lifecycle li.xt-lifecycle-done::before {
+  font-weight: 700;
   color: var(--xt-accent-deep);
 }
 
-:root[data-theme="dark"] .xt-lifecycle li:not(:last-child)::after {
+:root[data-theme="dark"] .xt-lifecycle li.xt-lifecycle-done::before {
   color: var(--xt-accent);
 }
 
+.xt-lifecycle li.xt-lifecycle-done a {
+  font-weight: 600;
+}
+
+/* Lifecycle links need a resting affordance: a 1px dotted hairline mixed
+   from ink and line-strong (~5.8:1 on paper light, ~7.7:1 on paper dark)
+   that reads as quiet structure under mono text. Hover strengthens it to
+   the solid accent pair used by the ghost buttons (accent-hover ~5.4:1
+   light / accent ~8.1:1 dark on paper). The Ship step keeps its
+   .xt-lifecycle-done emphasis; this only changes link decoration. */
 .xt-lifecycle a {
+  display: inline-block;
+  margin-top: 0.65rem;
   color: var(--xt-ink);
-  text-decoration: none;
-  border-bottom: 1px solid transparent;
+  text-decoration: underline;
+  text-decoration-style: dotted;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.25em;
+  text-decoration-color: color-mix(in srgb, var(--xt-ink) 60%, var(--xt-line-strong));
   transition:
     color var(--xt-dur-hover) var(--xt-ease),
-    border-color var(--xt-dur-hover) var(--xt-ease);
+    text-decoration-color var(--xt-dur-hover) var(--xt-ease);
 }
 
 .xt-lifecycle a:hover {
   color: var(--xt-accent-hover);
-  border-bottom-color: var(--xt-accent-deep);
-}
-
-:root[data-theme="dark"] .xt-lifecycle a {
-  color: var(--xt-ink);
+  text-decoration-style: solid;
+  text-decoration-color: var(--xt-accent-hover);
 }
 
 :root[data-theme="dark"] .xt-lifecycle a:hover {
   color: var(--xt-accent);
-  border-bottom-color: var(--xt-accent);
+  text-decoration-color: var(--xt-accent);
+}
+
+@media (max-width: 640px) {
+  /* Vertical left-rail variant: numbers still sit above their labels,
+     nodes strung down a left spine that runs from each dot to the next
+     one's top edge (-3px bridges the inter-item boundary). */
+  .xt-lifecycle {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .xt-lifecycle li {
+    padding-right: 0;
+    padding-left: 1.9rem;
+    padding-bottom: 1.25rem;
+  }
+
+  .xt-lifecycle li:last-child {
+    padding-bottom: 0;
+  }
+
+  .xt-lifecycle li::before {
+    margin-bottom: 0.3rem;
+  }
+
+  .xt-lifecycle li::after {
+    top: 0.11rem;
+    height: auto;
+  }
+
+  .xt-lifecycle li:not(:last-child)::after {
+    bottom: -3px;
+    background-size:
+      10px 10px,
+      1px calc(100% - 10px);
+    background-position:
+      0 0,
+      5px 10px;
+  }
 }
 
 /* ============================================
@@ -679,11 +1474,26 @@ h2.xt-section-title {
   grid-template-columns: 1fr;
   border-top: 1px solid var(--xt-line);
   border-bottom: 1px solid var(--xt-line);
+  counter-reset: xt-pipe;
 }
 
 .xt-pipe {
   padding: 1.35rem 0.25rem;
   min-width: 0;
+  counter-increment: xt-pipe;
+}
+
+/* Mono step number (01, 02, ...) via counter - MDX markup stays clean and
+   the sequence survives reordering or a different step count. */
+.xt-pipe::before {
+  content: "0" counter(xt-pipe);
+  display: block;
+  margin-bottom: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  /* Muted on paper ~5.5:1 light / ~7.5:1 dark (AA small text). */
+  color: var(--xt-muted);
 }
 
 .xt-pipe + .xt-pipe {
@@ -752,12 +1562,67 @@ h2.xt-section-title {
 /* ============================================
    MOTION - restrained, compositor-safe only
    Hover lifts are pointer-only; touch devices get no transform.
-   No entrance/exit or decorative motion on landing pages.
+   Entrance/cursor animations are gated behind no-preference and covered
+   by the reduce kill switch at the bottom of this file.
    ============================================ */
 
 @media (hover: hover) {
   .xt-btn:hover {
     transform: translateY(-2px);
+  }
+
+  /* Pointer-only card lift; color shifts (border, surface, name) stay
+     ungated above, matching the ghost-button pattern. */
+  .xt-tool-card:hover {
+    border-color: var(--xt-line-strong);
+    background-color: var(--xt-panel-hover);
+    transform: translateY(-2px);
+  }
+
+  .xt-tool-card:hover .xt-tool-name {
+    color: var(--xt-accent-hover);
+  }
+
+  :root[data-theme="dark"] .xt-tool-card:hover .xt-tool-name {
+    /* No --xt-accent-hover in dark; mirrors the dark ghost hover. */
+    color: var(--xt-accent);
+  }
+
+  /* Gallery card: same pointer-only lift vocabulary as .xt-tool-card. */
+  .xt-tpl-card:hover {
+    border-color: var(--xt-line-strong);
+    background-color: var(--xt-panel-hover);
+    transform: translateY(-2px);
+  }
+
+  .xt-tpl-card:hover .xt-tpl-name {
+    color: var(--xt-accent-hover);
+  }
+
+  :root[data-theme="dark"] .xt-tpl-card:hover .xt-tpl-name {
+    color: var(--xt-accent);
+  }
+
+  .xt-tpl-card:hover .xt-tpl-arrow {
+    transform: translateX(2px);
+  }
+}
+
+/* ============================================
+   PACKAGE-MANAGER TABS (starlight-package-managers)
+   The plugin renders Starlight's Tabs; on phones its tablist overflows
+   its scroll wrapper and bun/deno/ni sit offscreen with only a silent
+   swipe to find them. A fading alpha mask on the plugin's own scroll
+   wrapper ghosts the cut edge as an explicit "keeps going" cue.
+   Scoped by the plugin's unique sync-key so plain Starlight Tabs
+   elsewhere are untouched, and theme-agnostic: an alpha mask reveals
+   whatever surface is behind the wrapper in both light and dark.
+   ============================================ */
+
+@media (max-width: 30rem) {
+  starlight-tabs[data-sync-key="starlight-package-managers-pkg"] .tablist-wrapper {
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 1.75rem), transparent);
+    mask-image: linear-gradient(to right, #000 calc(100% - 1.75rem), transparent);
   }
 }
 
@@ -769,6 +1634,15 @@ h2.xt-section-title {
   .xt-hero-grid {
     grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
     gap: 3rem;
+  }
+
+  /* Home's display-scale h1 renders as two explicit sentences; the copy
+     column takes a little extra room (and a tighter gap) so each sentence
+     holds one line at the 4.5rem cap - the fork strip needs ~23rem and
+     still clears it. */
+  .xt-hero-home .xt-hero-grid {
+    grid-template-columns: minmax(0, 1.22fr) minmax(0, 0.78fr);
+    gap: 2.5rem;
   }
 
   /* CXA's prompt artifact is a narrow panel; keep the copy column dominant. */
@@ -787,6 +1661,14 @@ h2.xt-section-title {
     padding: 2rem 0 0.5rem;
   }
 
+  /* Inverted band keeps proportionally more air than the paper hero;
+     re-asserted here so the compact .xt-hero rule above can't strip the
+     dark variant's vertical rhythm or its full-bleed inline padding. */
+  .xt-hero-dark {
+    padding-block: 2.5rem 2.25rem;
+    padding-inline: calc(50vw - 50%);
+  }
+
   .xt-hero-actions {
     flex-direction: column;
     align-items: stretch;
@@ -795,6 +1677,13 @@ h2.xt-section-title {
   .xt-hero-actions .xt-btn {
     width: 100%;
   }
+
+  /* Display headline: hero words are short, so space-wrapping suffices.
+     `anywhere` + `balance` lets the balancer pick mid-word cuts at this
+     width ("Start con / formant."); normal keeps breaks on spaces only. */
+  .xt-hero h1 {
+    overflow-wrap: normal;
+  }
 }
 
 /* Terminal text stays legible on small screens. */
@@ -802,6 +1691,20 @@ h2.xt-section-title {
   .xt-terminal-body {
     font-size: 0.73rem;
     padding: 1rem;
+  }
+}
+
+/* Tablet squeeze band: with the two-column hero grid active the artifact
+   column can be narrower than the plan-table rows, which then scroll
+   horizontally. A fading mask on the body's right edge signals the cut
+   continuation instead of a silent slice; the charcoal surface lives on
+   .xt-terminal (the parent), so only the text fades. Below 40rem the
+   single-column layout and above ~66rem the full column both fit every
+   line, so no fade shows there. */
+@media (min-width: 40rem) and (max-width: 66rem) {
+  .xt-terminal-body {
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 2rem), transparent);
+    mask-image: linear-gradient(to right, #000 calc(100% - 2rem), transparent);
   }
 }
 
@@ -861,7 +1764,13 @@ h2.xt-section-title {
     scroll-behavior: auto !important;
   }
 
-  .xt-btn {
+  /* Covers every hover transform in this sheet (buttons, tool cards,
+     gallery cards). The cursor blink and hero entrance animations are
+     neutralized by the universal reset above; without a fill mode they
+     settle on their resting state, so nothing stays hidden or mid-flight. */
+  .xt-btn,
+  .xt-tool-card,
+  .xt-tpl-card {
     transform: none !important;
   }
 }

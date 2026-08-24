@@ -1,0 +1,15 @@
+---
+// Checklist grid for landing pages (e.g. create-xtarter-app "what you get"):
+// accent check markers are pure CSS (`::before` on `.xt-checklist li` in
+// apps/docs/src/styles/global.css, no scoped styles). 1 column on mobile,
+// 2 from 40rem.
+interface Props {
+  items: string[]
+}
+
+const { items } = Astro.props
+---
+
+<ul class="xt-checklist">
+  {items.map((item) => <li>{item}</li>)}
+</ul>

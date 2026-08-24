@@ -9,8 +9,8 @@ export function displayDiffs(
 	format: DisplayFormat = 'terminal',
 	failures = 0,
 ): void {
-	// JSON mode always emits a machine-readable payload — including the
-	// empty-diffs case — so consumers can always parse stdout. Terminal
+	// JSON mode always emits a machine-readable payload - including the
+	// empty-diffs case - so consumers can always parse stdout. Terminal
 	// mode has nothing to render when diffs are empty.
 	if (format === 'json') {
 		displayJsonDiffs(diffs, failures)

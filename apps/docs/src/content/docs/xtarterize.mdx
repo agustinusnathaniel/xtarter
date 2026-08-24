@@ -16,50 +16,88 @@ hero:
 
 import { Aside } from '@astrojs/starlight/components'
 import AllPackageManagers from '@/components/AllPackageManagers.astro'
+import SectionHead from '@/components/SectionHead.astro'
+import FeatureGrid from '@/components/FeatureGrid.astro'
+import CtaBand from '@/components/CtaBand.astro'
 
-<h2 class="xt-section-title">The pipeline</h2>
+<div class="xt-section">
+  <SectionHead index="01" id="how-it-works" title="How a run works" lead="Five steps, every run: read the project, resolve tasks, compare files, show the plan, apply with backups." />
 
-<p class="xt-section-lead">Every run follows the same five steps, from reading your project to applying changes with backups in place.</p>
-
-<ol class="xt-pipeline">
-  <li class="xt-pipe">
-    <span class="xt-pipe-name">Detect</span>
-    <p class="xt-pipe-desc">Profile your project: framework, bundler, package manager, existing configs.</p>
-  </li>
-  <li class="xt-pipe">
-    <span class="xt-pipe-name">Resolve</span>
-    <p class="xt-pipe-desc">Map that profile to the conformance tasks that apply to your stack.</p>
-  </li>
-  <li class="xt-pipe">
-    <span class="xt-pipe-name">Check</span>
-    <p class="xt-pipe-desc">Compare each file against the standard: new, patch, skip, or conflict.</p>
-  </li>
-  <li class="xt-pipe">
-    <span class="xt-pipe-name">Plan</span>
-    <p class="xt-pipe-desc">Review the conformance plan before anything is written.</p>
-  </li>
-  <li class="xt-pipe">
-    <span class="xt-pipe-name">Apply</span>
-    <p class="xt-pipe-desc">Back up originals, then merge or rewrite configs.</p>
-  </li>
-</ol>
+  <ol class="xt-pipeline">
+    <li class="xt-pipe">
+      <span class="xt-pipe-name">Detect</span>
+      <p class="xt-pipe-desc">Profile your project: framework, bundler, package manager, existing configs.</p>
+    </li>
+    <li class="xt-pipe">
+      <span class="xt-pipe-name">Resolve</span>
+      <p class="xt-pipe-desc">Map that profile to the conformance tasks that apply to your stack.</p>
+    </li>
+    <li class="xt-pipe">
+      <span class="xt-pipe-name">Check</span>
+      <p class="xt-pipe-desc">Compare each file against the standard: new, patch, skip, or conflict.</p>
+    </li>
+    <li class="xt-pipe">
+      <span class="xt-pipe-name">Plan</span>
+      <p class="xt-pipe-desc">Review the conformance plan before anything is written.</p>
+    </li>
+    <li class="xt-pipe">
+      <span class="xt-pipe-name">Apply</span>
+      <p class="xt-pipe-desc">Back up originals, then merge or rewrite configs.</p>
+    </li>
+  </ol>
+</div>
 
 <Aside type="caution" title="Current focus: Vite + React + TypeScript">
-  The CLI detects a wide range of frameworks, but the deepest task coverage is for **Vite**, **React**, and **TypeScript** projects. Support for other stacks (Vue, Svelte, Solid, Node CLI, Bun, etc.) works but is **experimental** - tasks may be fewer or less mature. Contributions to expand coverage are welcome.
+  Detection covers a wide range of frameworks. Task coverage is deepest for Vite, React, and TypeScript projects. Other stacks such as Vue, Svelte, Solid, Node CLIs, and Bun work but stay experimental: fewer tasks, less maturity. Contributions to expand coverage are welcome.
 </Aside>
 
-<h2 class="xt-section-title">Quick start</h2>
+<div class="xt-section">
+  <SectionHead index="02" eyebrow="safety model" id="safety" title="Nothing moves without you" lead="Built for repos you care about. Changes are previewed, originals are backed up, and writes happen only when you approve." />
+  <FeatureGrid items={[
+    { title: 'Preview the plan', body: 'Run init or sync with --dry-run first. It prints every planned change before anything touches your files.' },
+    { title: 'Backups by default', body: 'Modified files are copied to .xtarterize/backups/ first. Undo and restore are built in.' },
+    { title: 'You approve writes', body: 'init asks before it applies: everything, selected tasks, dry run, or quit. Conflicts surface instead of overwriting your configs.' },
+  ]} />
+</div>
 
-<p class="xt-section-lead">Three commands cover the common loop.</p>
+<div class="xt-section">
+  <SectionHead index="03" eyebrow="task catalog" id="task-groups" title="What it can manage" lead="Task groups cover linting, types, CI, editor setup, agent skills, Vite plugins, and more. Each task is small enough to review at a glance." />
+  <ul class="xt-link-cluster" aria-label="Task groups">
+    <li>Linting &amp; Formatting</li>
+    <li>TypeScript</li>
+    <li>Vite Plugins</li>
+    <li>CI/CD</li>
+    <li>Editor</li>
+    <li>Agent</li>
+    <li>Release</li>
+    <li><a class="xt-link" href="/xtarterize/guide/tasks/overview/">More in the task overview</a></li>
+  </ul>
+  <ul class="xt-link-cluster" aria-label="Related documentation">
+    <li><a class="xt-link" href="/xtarterize/guide/tasks/overview/">Conformance tasks</a></li>
+    <li><a class="xt-link" href="/xtarterize/guide/config/overview/">Configuration</a></li>
+    <li><a class="xt-link" href="/xtarterize/guide/monorepo/">Monorepo support</a></li>
+  </ul>
+</div>
 
-<AllPackageManagers type="exec" pkg="xtarterize@latest" args="init" title="Initialize conformance" />
+<div class="xt-section">
+  <SectionHead index="04" id="quick-start" title="Quick start" lead="Three commands cover the loop." />
 
-<AllPackageManagers type="exec" pkg="xtarterize@latest" args="check" title="Check conformance" />
+  <AllPackageManagers type="exec" pkg="xtarterize@latest" args="init" title="Initialize conformance" />
 
-<AllPackageManagers type="exec" pkg="xtarterize@latest" args="diff" title="Preview changes" />
+  <AllPackageManagers type="exec" pkg="xtarterize@latest" args="check" title="Check conformance" />
 
-<ul class="xt-link-cluster" aria-label="Related documentation">
-  <li><a class="xt-link" href="/xtarterize/getting-started/installation/">Getting Started</a></li>
-  <li><a class="xt-link" href="/xtarterize/guide/cli/overview/">CLI Reference</a></li>
-  <li><a class="xt-link" href="/xtarterize/guide/tasks/overview/">Conformance Tasks</a></li>
-</ul>
+  <AllPackageManagers type="exec" pkg="xtarterize@latest" args="diff" title="Preview changes" />
+
+  <ul class="xt-link-cluster" aria-label="Related documentation">
+    <li><a class="xt-link" href="/xtarterize/getting-started/installation/">Getting Started</a></li>
+    <li><a class="xt-link" href="/xtarterize/guide/cli/overview/">CLI Reference</a></li>
+    <li><a class="xt-link" href="/xtarterize/guide/tasks/overview/">Conformance Tasks</a></li>
+  </ul>
+</div>
+
+<div class="xt-section">
+  <CtaBand title="Starting from scratch?" note="create-xtarter-app scaffolds new projects on this same baseline.">
+    <a class="xt-btn xt-btn-invert" href="/create-xtarter-app/">Start with a template</a>
+    <a class="xt-btn xt-btn-ghost-dark" href="https://github.com/agustinusnathaniel/xtarterize" target="_blank" rel="noopener noreferrer" data-umami-event="band_cta_github">Star on GitHub</a>
+  </CtaBand>
+</div>

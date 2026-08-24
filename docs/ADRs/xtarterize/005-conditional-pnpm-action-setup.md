@@ -12,7 +12,7 @@ Conditionally include `pnpm/setup` in generated GitHub Actions workflows **only 
 
 xtarterize configures projects; it does not impose package manager choices. Teams committed to npm or yarn should not find pnpm-specific actions injected into their CI workflows.
 
-`pnpm/setup@v1` is a unified action that handles both pnpm (and its runtime — Node.js, Bun, Deno) installation in a single step. It replaces `actions/setup-node` entirely for pnpm projects: it reads the `packageManager` field, installs the correct pnpm version, sets up the runtime, and handles caching of the pnpm store directly via `cache: true`.
+`pnpm/setup@v1` is a unified action that handles both pnpm (and its runtime - Node.js, Bun, Deno) installation in a single step. It replaces `actions/setup-node` entirely for pnpm projects: it reads the `packageManager` field, installs the correct pnpm version, sets up the runtime, and handles caching of the pnpm store directly via `cache: true`.
 
 Prior to June 2026, the ecosystem used two separate actions: `pnpm/action-setup` (for pnpm only) alongside `actions/setup-node` (for runtime and caching). The release of `pnpm/setup` unified these into a single step. xtarterize migrated accordingly.
 

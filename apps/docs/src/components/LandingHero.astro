@@ -22,6 +22,14 @@ declare global {
 //   CXA    -> a narrow template-selection prompt (static markup)
 // The artifacts are decorative by design and aria-hidden; their content is
 // restated in visible page copy so assistive tech gets the same information.
+//
+// Round 2 ("terminal takeover"): every splash hero carries `.xt-hero-dark`,
+// inverting the whole hero canvas onto the term-token charcoal family
+// (styling lives in global.css). Ghost actions use `.xt-btn-ghost-dark`
+// because paper-token ghost colors fail contrast on charcoal. Home's h1 is
+// split into two explicit lines with the second sentence wrapped in
+// `.xt-h1-accent`. Command lines end in a `.xt-cursor` blinking block
+// (aria-hidden; frozen by the prefers-reduced-motion kill switch).
 import DefaultHero from '@astrojs/starlight/components/Hero.astro'
 import TerminalDemo from './TerminalDemo.astro'
 import { TEMPLATE_CATALOG } from '../data/template-catalog'
@@ -38,16 +46,19 @@ const isCxa = entry.id === 'create-xtarter-app' || path === '/create-xtarter-app
   !isHome && !isXtz && !isCxa ? (
     <DefaultHero />
   ) : isHome ? (
-    <div class="hero xt-hero xt-hero-home">
+    <div class="hero xt-hero xt-hero-dark xt-hero-home">
       <div class="xt-hero-grid">
         <div class="xt-hero-copy">
           <p class="xt-eyebrow">xtarter &middot; two tools, one standard</p>
-          <h1 id="_top" data-page-title>Start conformant. Stay conformant.</h1>
+          <h1 id="_top" data-page-title
+            ><span class="xt-h1-line">Start conformant.</span>
+            <span class="xt-h1-line xt-h1-accent">Stay conformant.</span></h1
+          >
           <p class="xt-hero-lede">
-            Scaffold new JavaScript &amp; TypeScript projects with
-            create-xtarter-app, or bring existing ones up to standard with
-            xtarterize. Biome, TypeScript strict, CI, and editor configs are
-            handled either way.
+            Scaffold new JavaScript and TypeScript projects with
+            create-xtarter-app. Bring existing repos up to standard with
+            xtarterize. Both paths give you Biome, strict TypeScript, CI, and
+            editor configs that hold their shape.
           </p>
           <div class="xt-hero-actions">
             <a
@@ -58,7 +69,7 @@ const isCxa = entry.id === 'create-xtarter-app' || path === '/create-xtarter-app
               >Start with a template</a
             >
             <a
-              class="xt-btn xt-btn-ghost"
+              class="xt-btn xt-btn-ghost-dark"
               href="/xtarterize/"
               data-umami-event="hero_lane_click"
               data-umami-event-product="xtarterize"
@@ -71,50 +82,52 @@ const isCxa = entry.id === 'create-xtarter-app' || path === '/create-xtarter-app
             <span class="xt-fork-branch">├─</span>
             <span class="xt-fork-prompt">$</span>
             <code class="xt-fork-cmd">pnpm create xtarter-app</code>
+            <span class="xt-cursor" aria-hidden="true"></span>
           </div>
           <div class="xt-fork-row">
             <span class="xt-fork-branch">└─</span>
             <span class="xt-fork-prompt">$</span>
             <code class="xt-fork-cmd">pnpx xtarterize@latest init</code>
+            <span class="xt-cursor" aria-hidden="true"></span>
           </div>
         </div>
       </div>
     </div>
   ) : isXtz ? (
-    <div class="hero xt-hero xt-hero-xtz">
+    <div class="hero xt-hero xt-hero-dark xt-hero-xtz">
       <div class="xt-hero-grid">
         <div class="xt-hero-copy">
           <p class="xt-eyebrow">xtarterize &middot; conformance CLI</p>
           <h1 id="_top" data-page-title>The conformance CLI for JavaScript &amp; TypeScript</h1>
           <p class="xt-hero-lede">
-            Detect your project&rsquo;s stack. Validate your configs. Keep everything
-            in sync &mdash; without overwriting a single file without your say-so.
+            Detects your stack. Validates your configs. Keeps everything in
+            sync without overwriting a single file unless you say so.
           </p>
           <div class="xt-hero-actions">
             <a class="xt-btn xt-btn-primary" href="/xtarterize/getting-started/installation/">Get Started</a>
-            <a class="xt-btn xt-btn-ghost" href="/xtarterize/guide/cli/overview/">View CLI Reference</a>
+            <a class="xt-btn xt-btn-ghost-dark" href="/xtarterize/guide/cli/overview/">View CLI Reference</a>
           </div>
         </div>
         <TerminalDemo />
       </div>
     </div>
   ) : (
-    <div class="hero xt-hero xt-hero-cxa">
+    <div class="hero xt-hero xt-hero-dark xt-hero-cxa">
       <div class="xt-hero-grid">
         <div class="xt-hero-copy">
           <p class="xt-eyebrow">create-xtarter-app &middot; scaffolding CLI</p>
           <h1 id="_top" data-page-title>Scaffold projects in seconds</h1>
           <p class="xt-hero-lede">
-            Pick a template. Run one command. Get a fully configured project with
-            linting, type checking, CI, and editor settings &mdash; ready to ship.
+            Pick a template. Run one command. You get linting, type checking,
+            CI, and editor settings ready to ship.
           </p>
           <div class="xt-hero-actions">
             <a class="xt-btn xt-btn-primary" href="/create-xtarter-app/getting-started/">Get Started</a>
-            <a class="xt-btn xt-btn-ghost" href="/create-xtarter-app/guide/templates/">Browse Templates</a>
+            <a class="xt-btn xt-btn-ghost-dark" href="/create-xtarter-app/guide/templates/">Browse Templates</a>
           </div>
         </div>
         <div class="xt-prompt" aria-hidden="true" role="presentation">
-          <code class="xt-prompt-line">$ pnpm create xtarter-app</code>
+          <code class="xt-prompt-line">$ pnpm create xtarter-app<span class="xt-cursor" aria-hidden="true"></span></code>
           <span class="xt-prompt-q">?? Which template?</span>
           <ol class="xt-prompt-list">
             {TEMPLATE_CATALOG.map((t, i) => (

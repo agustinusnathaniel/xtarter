@@ -12,7 +12,7 @@ import { describe, expect, it } from 'vite-plus/test'
 
 /**
  * Replicate the file-private regex to test validation logic directly.
- * This is acceptable for a security-critical validation — it documents
+ * This is acceptable for a security-critical validation - it documents
  * the contract explicitly and catches regressions if the regex changes.
  */
 const npmPackageRe = /^(?:@[a-z0-9~][a-z0-9-._~]*\/)?[a-z0-9~][a-z0-9-._~]*$/
@@ -113,7 +113,7 @@ describe('loadPluginTasks specifier validation integration', () => {
 		const result = await loadPluginTasks({
 			plugins: ['../../malicious.js', './local.js'],
 		})
-		// Both invalid, so both skipped — empty result
+		// Both invalid, so both skipped - empty result
 		expect(result).toEqual([])
 	})
 
@@ -232,7 +232,7 @@ describe('loadPluginConfig', () => {
 			path.join(os.tmpdir(), 'xtarter-plugins-priority-'),
 		)
 		try {
-			// Both exist — .xtarterizerc should win (first in CONFIG_BASENAMES)
+			// Both exist - .xtarterizerc should win (first in CONFIG_BASENAMES)
 			await fs.writeFile(
 				path.join(tmpDir, '.xtarterizerc'),
 				JSON.stringify({ plugins: ['from-rc'] }),

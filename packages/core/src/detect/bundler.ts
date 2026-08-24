@@ -45,7 +45,7 @@ export async function detectBundler(
 	if (await hasBundlerConfig(cwd, 'next.config')) return 'nextjs'
 	if (await hasBundlerConfig(cwd, 'vite.config')) return 'vite'
 
-	// Check once and cache — avoids redundant hasBundlerConfig calls
+	// Check once and cache - avoids redundant hasBundlerConfig calls
 	const hasRspackConfig = await hasBundlerConfig(cwd, 'rspack.config')
 	if (hasRspackConfig) return 'rspack'
 	if (await hasBundlerConfig(cwd, 'webpack.config')) return 'webpack'

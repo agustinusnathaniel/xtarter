@@ -82,7 +82,7 @@ async function captureJsonOutput(run: () => Promise<void>): Promise<unknown> {
 	}
 
 	expect(logs.length).toBeGreaterThan(0)
-	// The payload must be the FIRST thing on stdout — a leading blank line
+	// The payload must be the FIRST thing on stdout - a leading blank line
 	// or human text breaks the machine-readable contract for CI consumers.
 	const payload = logs.find((line) => line.trim().startsWith('{'))
 	expect(payload).toBe(logs[0])
@@ -312,11 +312,11 @@ it('check --badge - keeps stdout a clean SVG and routes the audit to stderr', as
 		const stdout = stdoutChunks.join('')
 		const stderr = stderrChunks.join('')
 		expect(stdout.startsWith('<svg')).toBe(true)
-		// Nothing may follow the SVG on stdout — the audit goes to stderr.
+		// Nothing may follow the SVG on stdout - the audit goes to stderr.
 		expect(stdout.endsWith('</svg>')).toBe(true)
 		expect(stdout).not.toContain('Conformance audit')
 		// In CI, quiet mode is auto-enabled so the audit section is skipped and
-		// only the summary line is printed — but it must land on stderr, never
+		// only the summary line is printed - but it must land on stderr, never
 		// after the SVG on stdout.
 		expect(stderr).toMatch(CONFORMANCE_SUMMARY_REGEX)
 	} finally {
@@ -338,7 +338,7 @@ describe('init/sync/add json output', () => {
 			})
 
 			const stdout = logs.join('\n')
-			// The diff payload is the only thing on stdout — no human text.
+			// The diff payload is the only thing on stdout - no human text.
 			expect(stdout).not.toContain('Conformance plan')
 			expect(stdout).not.toContain('Timing')
 			const parsed = JSON.parse(logs[logs.length - 1])
@@ -365,7 +365,7 @@ describe('init/sync/add json output', () => {
 				errors: string[]
 			}
 
-			// Apply may fail on dependency install in the sandbox — the
+			// Apply may fail on dependency install in the sandbox - the
 			// payload must still carry the result shape.
 			expect(typeof output.ok).toBe('boolean')
 			expect(typeof output.applied).toBe('number')
@@ -419,7 +419,7 @@ describe('init/sync/add json output', () => {
 				errors: string[]
 			}
 
-			// The apply pipeline runs before the payload is emitted — the
+			// The apply pipeline runs before the payload is emitted - the
 			// hardened captureJsonOutput above proves no leading blank line
 			// (or human text) precedes it.
 			expect(typeof output.ok).toBe('boolean')
@@ -466,7 +466,7 @@ describe('init/sync/add json output', () => {
 			})
 
 			const stdout = logs.join('\n')
-			// The result payload is the only thing on stdout — no human text.
+			// The result payload is the only thing on stdout - no human text.
 			expect(stdout).not.toContain('No updates available')
 			expect(stdout).not.toContain('Applied')
 			expect(stdout).not.toContain('Conformance plan')

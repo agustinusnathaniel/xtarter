@@ -12,11 +12,11 @@
 
 ### Patch Changes
 
-- [#140](https://github.com/agustinusnathaniel/xtarter/pull/140) [`fe69cad`](https://github.com/agustinusnathaniel/xtarter/commit/fe69cad5f2226280f197c213797e8367d60cbf68) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - `diff --json` (and `init`/`sync` `--dry-run --json`) now emit a machine-readable payload even when there are no pending changes — previously a fully conformant project printed human text like "No pending changes" on stdout (or nothing at all), breaking the JSON contract for CI consumers. The payload's `ok` field agrees with the exit code, and dry-run failures are surfaced as `summary.failures`.
+- [#140](https://github.com/agustinusnathaniel/xtarter/pull/140) [`fe69cad`](https://github.com/agustinusnathaniel/xtarter/commit/fe69cad5f2226280f197c213797e8367d60cbf68) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - `diff --json` (and `init`/`sync` `--dry-run --json`) now emit a machine-readable payload even when there are no pending changes - previously a fully conformant project printed human text like "No pending changes" on stdout (or nothing at all), breaking the JSON contract for CI consumers. The payload's `ok` field agrees with the exit code, and dry-run failures are surfaced as `summary.failures`.
 
 - [#137](https://github.com/agustinusnathaniel/xtarter/pull/137) [`1733ebf`](https://github.com/agustinusnathaniel/xtarter/commit/1733ebfc11dbee6c044c98a512451960fb43ae57) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - `init`, `add`, and `sync` no longer fail with "No package manager auto-detected" when installing dependencies on fresh projects that have `package.json` but no lockfile: the detected package manager (npm fallback) is now passed to dependency installs instead of letting nypm re-run its own detection, which found nothing and threw.
 
-- [#139](https://github.com/agustinusnathaniel/xtarter/pull/139) [`25b6ba8`](https://github.com/agustinusnathaniel/xtarter/commit/25b6ba8ddd60c767fd3844609e66be27ed74341b) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - `add`, `init`, and `sync` no longer emit a leading blank line before the JSON payload in `--json`/`--format json` mode — stdout now contains exactly the machine-readable payload, as documented.
+- [#139](https://github.com/agustinusnathaniel/xtarter/pull/139) [`25b6ba8`](https://github.com/agustinusnathaniel/xtarter/commit/25b6ba8ddd60c767fd3844609e66be27ed74341b) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - `add`, `init`, and `sync` no longer emit a leading blank line before the JSON payload in `--json`/`--format json` mode - stdout now contains exactly the machine-readable payload, as documented.
 
 - [#141](https://github.com/agustinusnathaniel/xtarter/pull/141) [`ab54037`](https://github.com/agustinusnathaniel/xtarter/commit/ab54037fbb97c4b86db63da0ef557bd01ce87e40) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - fix: use atomic writes for run manifest to prevent corruption on crash, tighten plugin specifier regex to reject `~` in package names, and batch `add --all` task application for faster execution
 
@@ -28,9 +28,8 @@
 
   `add`, `init`, and `sync` now support `--json` (or `--format json`) and emit a
   single machine-readable result payload on stdout instead of human logs:
-
-  - `add <task-id> --json` — `{ ok, taskId, status, applied, skipped, errors }`
-  - `add --all --json` and `init`/`sync --yes --json` — `{ ok, applied, skipped, errors }`
+  - `add <task-id> --json` - `{ ok, taskId, status, applied, skipped, errors }`
+  - `add --all --json` and `init`/`sync --yes --json` - `{ ok, applied, skipped, errors }`
   - JSON mode implies quiet: stdout carries only the JSON document, so the payload
     can be piped straight into automation (CI, scripts, tooling). Human logs go to
     stderr or are suppressed, and dependency-install output is silenced.
@@ -45,7 +44,7 @@
 
   When a task's check returned `conflict` (e.g. `ts/strict` on a tsconfig that already
   sets `strict: false`), `add` fell through to the apply step, where `applyTasks`
-  silently skipped the conflict (applied=0, errors=0) — the command then logged
+  silently skipped the conflict (applied=0, errors=0) - the command then logged
   "applied successfully" and exited 0 even though nothing was applied. Now `add`
   detects the conflict up front, warns the user, exits 1, and never touches the
   conflicting file. Interactive mode counts conflicts as skipped instead of applied,
@@ -54,7 +53,7 @@
 - [#133](https://github.com/agustinusnathaniel/xtarter/pull/133) [`744d831`](https://github.com/agustinusnathaniel/xtarter/commit/744d8315db23a4f779d7bdd25340beaa8e13fb7a) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - fix: `sync`/`init` honor `--include-conflicts` in non-interactive (`--yes`/quiet) mode
 
   `--include-conflicts` was passed through to `applyTasks` in the interactive apply-all and
-  select paths, but silently dropped in the `--yes`/quiet path — so
+  select paths, but silently dropped in the `--yes`/quiet path - so
   `xtarterize sync --yes --include-conflicts` (or `init --yes --include-conflicts`) skipped
   every conflicting task despite the flag. Non-interactive mode is exactly where the flag
   matters (CI, scripts), so conflicting tasks are now applied when it is set, consistent
@@ -67,7 +66,6 @@
 ### Minor Changes
 
 - [#127](https://github.com/agustinusnathaniel/xtarter/pull/127) [`e9b776d`](https://github.com/agustinusnathaniel/xtarter/commit/e9b776d95120130fc30654dc6cf4112fa740e504) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - feat: emit GitHub Actions workflow command annotations from check
-
   - New `--annotations` flag on `check` emits `::error`/`::warning` workflow
     command annotations per non-conformant task and failing diagnostic, so
     conformance failures surface inline on files in GitHub Actions.
@@ -78,8 +76,7 @@
 ### Patch Changes
 
 - [#129](https://github.com/agustinusnathaniel/xtarter/pull/129) [`93e3d86`](https://github.com/agustinusnathaniel/xtarter/commit/93e3d86bd1bdfe45d025877b52be953fb9467268) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - fix: keep `check --badge` output from polluting stdout in JSON mode and when writing the badge to stdout
-
-  - `check --badge - --json` no longer interleaves the badge SVG with the JSON payload on stdout — the SVG goes to stderr so the JSON stays parseable.
+  - `check --badge - --json` no longer interleaves the badge SVG with the JSON payload on stdout - the SVG goes to stderr so the JSON stays parseable.
   - `check --badge <file> --json` no longer lets the "Badge written" success message break the JSON payload.
   - `check --badge -` (human mode) no longer follows the SVG with the human-readable audit on the same stream; the audit routes to stderr so piping the SVG to a file yields clean markup.
 
@@ -95,7 +92,6 @@
 ### Minor Changes
 
 - [#116](https://github.com/agustinusnathaniel/xtarter/pull/116) [`6aea841`](https://github.com/agustinusnathaniel/xtarter/commit/6aea841c1c459a88f57a3ef4253358be5ed3e3e5) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - feat: add CI-friendly exit codes to check, diff, and doctor commands
-
   - check: exits 1 when the project has pending changes or failing diagnostics (was always 0)
   - diff: exits 1 when at least one change is pending, mirroring `git diff --exit-code`
   - doctor: exits 1 when at least one diagnostic fails
@@ -120,7 +116,6 @@
 ### Minor Changes
 
 - [#88](https://github.com/agustinusnathaniel/xtarter/pull/88) [`b916204`](https://github.com/agustinusnathaniel/xtarter/commit/b916204b790fa85e2e7919be24df960d05439f30) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - feat: enhance TypeScript strict config, add new tasks, extend git hooks, improve VSCode settings
-
   - ts/strict: now manages noUnusedLocals, noUnusedParameters, verbatimModuleSyntax alongside strict
   - quality/package-engines: add devEngines field to package.json
   - workspace/pnpm-workspace: generate pnpm-workspace.yaml for pnpm projects
@@ -163,7 +158,6 @@
 - [#75](https://github.com/agustinusnathaniel/xtarter/pull/75) [`be651f3`](https://github.com/agustinusnathaniel/xtarter/commit/be651f3aa5e6bac9098fc145fd0a3651f7b4fbbb) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - feat: add natural language task query engine with `query` command and `init --compose`
 
   New features:
-
   - `xtarterize query <query>` - search and discover tasks using natural language with a pure-algorithmic scoring engine
   - `xtarterize init --compose <query>` - compose a targeted task plan by ranking tasks by relevance
   - Task metadata enrichment: new optional `searchMeta` field on the Task interface with `tags`, `configTargets`, and `keywords` supports richer search results
@@ -181,7 +175,6 @@
 - [#73](https://github.com/agustinusnathaniel/xtarter/pull/73) [`aec3c0a`](https://github.com/agustinusnathaniel/xtarter/commit/aec3c0a4d289c5984183d738d99727555b84c602) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Refactor task resolution with TaskScope system for monorepo-aware task filtering
 
   Introduces a `TaskScope` type (`'root' | 'package' | 'both'`) that each task can declare. When running in a monorepo:
-
   - **Root-scoped tasks** (CI/CD, release tooling, turbo, renovate, editor config, npmrc, gitignore, package scripts) are excluded when running inside a workspace package.
   - **Package-scoped tasks** (tsconfig path aliases, vite-plugin-checker, rollup-plugin-visualizer) are excluded when running from the monorepo root.
   - Tasks without explicit scope (or with `scope: 'both'`) are included everywhere, preserving backward compatibility.
@@ -203,16 +196,13 @@
 ### Minor Changes
 
 - [#69](https://github.com/agustinusnathaniel/xtarter/pull/69) [`331efa4`](https://github.com/agustinusnathaniel/xtarter/commit/331efa4b2d94862c8c7d629b4829df5e1150cfe8) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - feat: add --yes and --quiet flags to restore command
-
   - `restore --yes` skips confirmation and selects latest backup automatically
   - `restore --quiet` suppresses verbose output
 
   feat: add --all flag to add command
-
   - `add --all` applies all new and patch tasks without interaction
 
   feat: expose --json flag in doctor command args
-
   - `doctor --json` now appears in command-level help output
 
 ## 1.14.4
@@ -305,7 +295,6 @@
 
   Rather than making every function return `Effect<A, E>` (which would require
   all callers to understand Effect), we apply Effect at two levels:
-
   1. **Internal composition** - async workflows use `Effect.gen` + `yield*`,
      `Effect.all` for concurrency, and `Effect.tryPromise` with typed error
      handlers. This gives us structured error handling without changing
@@ -317,7 +306,6 @@
   **What changed (26 files, +1857/-1571):**
 
   Tagged errors and Effect composition:
-
   - `packages/core/src/errors.ts` (new) - consolidated `Data.TaggedError`
     types: `FileSystemError` (read/write/parse failures), `BackupError`
     (backup operations), `TaskError` (task check/apply failures)
@@ -342,7 +330,6 @@
     with `Equal.equals` from Effect
 
   Reducing Effect ceremony:
-
   - `packages/tasks/src/factory/ops.ts` - added `wrapTask(taskId, method, fn)`
     internal helper collapsing the 6-line `Effect.runPromise(Effect.tryPromise)`
     pattern into 1 line
@@ -354,7 +341,6 @@
     removed `Effect` import, fixed hardcoded task IDs in error metadata
 
   **Trade-offs.**
-
   - Added Effect v4 beta as a dependency (~44 MB install size, 10 transitive
     deps). Beta stability risk is mitigated by pinning the exact version in
     `pnpm-workspace.yaml` catalog.
@@ -401,7 +387,6 @@
 - [`f1069d6`](https://github.com/agustinusnathaniel/xtarter/commit/f1069d6bea26aabece3ed030303642e1d3f14693) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - refactor: enrich oxlint and biome config templates with additional lint rules
 
   Add non-recommended rules mapped from typical ESLint configs:
-
   - Oxlint: max-params, eqeqeq, prefer-const, no-var, prefer-template, no-shadow, consistent-type-definitions, array-type, react rules, vitest overrides, unicorn relaxations, import rules
   - Biome: noExcessiveCognitiveComplexity, useMaxParams, useConsistentTypeDefinitions, useConsistentTestIt overrides
 
@@ -469,7 +454,6 @@
 ### Patch Changes
 
 - [`82e1d9f`](https://github.com/agustinusnathaniel/xtarterize/commit/82e1d9f24fd223a8f3c15c0b516c89fe5537c105) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Update .gitignore
-
   - Add missing ignore patterns for better monorepo hygiene
 
 - [`82e1d9f`](https://github.com/agustinusnathaniel/xtarterize/commit/82e1d9f24fd223a8f3c15c0b516c89fe5537c105) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Refactor CLI run-command to extract seams
@@ -488,7 +472,6 @@
 ### Patch Changes
 
 - [`658c504`](https://github.com/agustinusnathaniel/xtarterize/commit/658c50470e462b958f0bcbc6a0eaeb92ed15acd0) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Refactor internal architecture by deepening module seams in project detection and task execution.
-
   - modularize core detection into focused adapters (framework, bundler, router, styling, package manager, monorepo)
   - centralize JSON config mutation flow in shared task helpers
   - consolidate agent task behavior behind a dedicated agent module seam
@@ -569,7 +552,6 @@
 - [`ccd9287`](https://github.com/agustinusnathaniel/xtarterize/commit/ccd9287afd967ed1ea0ef0c64b4a4a468e95b550) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - feat: add `patchJson` for surgical JSON text edits using `jsonc-parser`
 
   Replaced `JSON.stringify(mergeJson(...), null, 2)` with `patchJson`, which performs byte-level text edits via Microsoft's [`jsonc-parser`](https://github.com/microsoft/node-jsonc-parser). This preserves:
-
   - Comments (`// inline` and `/* block */`)
   - Key ordering
   - Whitespace and indentation style
