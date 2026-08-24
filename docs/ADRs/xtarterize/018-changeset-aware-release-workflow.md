@@ -12,7 +12,7 @@ Accepted
 
 The `ci/release` task generates a `.github/workflows/release.yml` file. Previously it only produced a simple tag-push workflow (`on: push: tags: - 'v*'`) that assumed a `release` script exists. This approach had two problems:
 
-1. **Changeset projects got the wrong workflow**: Projects using `@changesets/cli` need a fundamentally different release workflow - triggered by pushes to `main` on changeset-related paths, using `changesets/action@v1` to create version PRs and publish, with OIDC permissions for trusted publishing.
+1. **Changeset projects got the wrong workflow**: Projects using `@changesets/cli` need a fundamentally different release workflow - triggered by pushes to `main` on changeset-related paths, using the Changesets action version compatible with the installed CLI to create version PRs and publish, with OIDC permissions for trusted publishing. Changesets CLI v3 requires `changesets/action@v2`; action v1 targets CLI v2.
 
 2. **No graceful coexistence**: If a project already has a custom release workflow (especially changeset-based), xtarterize would flag it as `conflict` and refuse to touch it, even when it could provide value by syncing best-practices (permissions, concurrency, triggers).
 
@@ -58,7 +58,7 @@ jobs:
   release:
     steps:
       - checkout (fetch-depth: 0) → setup → install → build
-      - changesets/action@v1 (version + publish)
+- changesets/action@v2 (version + publish)
 ```
 
 ### 3. Smart Check Logic
@@ -94,7 +94,7 @@ When `packageScriptsTask` detects a changeset project, it adds changeset-specifi
 
 - ⚠️ Two workflow templates to maintain
 - ⚠️ The `renderReleaseWorkflow` function signature changed from `(profile)` to `(profile, existing)` - all callers updated
-- ⚠️ Projects with highly customized changeset workflows that don't use `changesets/action@v1` will flag as conflict
+- ⚠️ Projects with highly customized changeset workflows that don't use a versioned `changesets/action` will flag as conflict
 
 ### Future enhancements
 

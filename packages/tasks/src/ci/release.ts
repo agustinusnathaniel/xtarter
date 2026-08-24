@@ -7,7 +7,7 @@ function hasReleaseJob(content: string): boolean {
 }
 
 function usesChangesetsAction(content: string): boolean {
-	return /changesets\/action@v1/.test(content)
+	return /changesets\/action@v\d+/.test(content)
 }
 
 async function checkReleaseWorkflow({

@@ -62,16 +62,14 @@ function renderChangesetWorkflow(profile: ProjectProfile): string {
 	const changesetActionStep: YamlStep = {
 		name: 'Create Release Pull Request or Publish',
 		if: "github.ref == 'refs/heads/main'",
-		uses: 'changesets/action@v1',
+		uses: 'changesets/action@v2',
 		with: {
-			version: versionScript,
-			publish: publishScript,
-			title: '"chore: version packages"',
-			commit: '"chore: version packages"',
-		},
-		env: {
+			'version-script': versionScript,
+			'publish-script': publishScript,
+			'pr-title': '"chore: version packages"',
+			'commit-message': '"chore: version packages"',
 			// biome-ignore lint/suspicious/noTemplateCurlyInString: GitHub Actions expression syntax
-			GITHUB_TOKEN: '${{ secrets.GITHUB_TOKEN }}',
+			'github-token': '${{ secrets.GITHUB_TOKEN }}',
 		},
 	}
 
