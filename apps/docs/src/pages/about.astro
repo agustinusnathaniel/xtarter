@@ -1,121 +1,59 @@
 ---
-// Standalone trust page (/about/). Deliberately outside Starlight so it
-// ships as a minimal static HTML document; visuals reuse the shared token
-// vocabulary from src/styles/global.css (xt-hero, xt-section-eyebrow,
-// xt-section-title, xt-checklist, xt-link, xt-note) with only page-scoped
-// layout additions below.
-import Analytics from '../components/Analytics.astro'
-import Tracking from '../components/Tracking.astro'
-import '../styles/global.css'
+import TrustPageLayout from '@/layouts/TrustPageLayout.astro'
 ---
 
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>About | xtarter</title>
-    <meta
-      name="description"
-      content="xtarter is production-grade starter templates plus conformance tooling for JavaScript and TypeScript projects, maintained by Agustinus Nathaniel."
-    />
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-    <Analytics />
-    <Tracking />
-  </head>
-  <body>
-    <main>
-      <header class="xt-hero">
-        <p class="xt-section-eyebrow">xtarter &middot; about</p>
-        <h1>Production-grade starters and conformance tooling for JavaScript and TypeScript.</h1>
-        <p class="xt-hero-lede">
-          xtarter is two tools built around one idea: every JavaScript or TypeScript project should
-          start conformant, and stay conformant, without anyone having to remember what the
-          standard was.
-        </p>
-      </header>
+<TrustPageLayout
+  title="About | xtarter"
+  description="xtarter is production-grade starter templates plus conformance tooling for JavaScript and TypeScript projects, maintained by Agustinus Nathaniel."
+  eyebrow="xtarter · about"
+  heading="Production-grade starters and conformance tooling for JavaScript and TypeScript."
+  lede="xtarter is two tools built around one idea: every JavaScript or TypeScript project should start conformant, and stay conformant, without anyone having to remember what the standard was."
+>
+  <section class="xt-section">
+    <h2 class="xt-section-title">Two tools, one standard</h2>
+    <p>
+      create-xtarter-app scaffolds brand-new projects from five production-grade templates,
+      each shipping Biome, strict TypeScript, CI workflows, editor settings, and agent skills
+      before your first commit.
+    </p>
+    <p>
+      xtarterize brings existing repositories up to the same baseline. It detects your stack,
+      previews every change with a dry run, and asks for approval before writing, so adopting a
+      standard never means surrendering your files.
+    </p>
+    <p>
+      Both CLIs are published on npm and documented right here on this site, alongside guides
+      for configuration, CLI reference, and contributing.
+    </p>
+  </section>
 
-      <section class="xt-section">
-        <h2 class="xt-section-title">Two tools, one standard</h2>
-        <p>
-          create-xtarter-app scaffolds brand-new projects from five production-grade templates,
-          each shipping Biome, strict TypeScript, CI workflows, editor settings, and agent skills
-          before your first commit.
-        </p>
-        <p>
-          xtarterize brings existing repositories up to the same baseline. It detects your stack,
-          previews every change with a dry run, and asks for approval before writing, so adopting a
-          standard never means surrendering your files.
-        </p>
-        <p>
-          Both CLIs are published on npm and documented right here on this site, alongside guides
-          for configuration, CLI reference, and contributing.
-        </p>
-      </section>
+  <section class="xt-section">
+    <h2 class="xt-section-title">Principles</h2>
+    <ul class="xt-checklist">
+      <li>Idempotent by contract: running a task twice leaves the repo identical to running it once.</li>
+      <li>Conformance over convenience: generated configs stay strict instead of loosening defaults.</li>
+      <li>Composition over coupling: no task assumes another has already run.</li>
+      <li>Prefer the ecosystem: existing tools first, custom machinery only when nothing fits.</li>
+    </ul>
+  </section>
 
-      <section class="xt-section">
-        <h2 class="xt-section-title">Principles</h2>
-        <ul class="xt-checklist">
-          <li>Idempotent by contract: running a task twice leaves the repo identical to running it once.</li>
-          <li>Conformance over convenience: generated configs stay strict instead of loosening defaults.</li>
-          <li>Composition over coupling: no task assumes another has already run.</li>
-          <li>Prefer the ecosystem: existing tools first, custom machinery only when nothing fits.</li>
-        </ul>
-      </section>
-
-      <section class="xt-section">
-        <h2 class="xt-section-title">Maintainer and community</h2>
-        <p>
-          xtarter is created and maintained by
-          <a class="xt-link" href="https://agustinusnathaniel.com/" rel="noopener noreferrer"
-            >Agustinus Nathaniel</a
-          >. Development happens in the open on GitHub:
-          <a
-            class="xt-link"
-            href="https://github.com/agustinusnathaniel/xtarterize"
-            rel="noopener noreferrer">agustinusnathaniel/xtarterize</a
-          >.
-        </p>
-        <p>
-          Contributions are welcome. Meet the people behind the project on the
-          <a class="xt-link" href="/xtarterize/contributing/contributors/">contributors page</a>,
-          or read how to get involved in the repository's contribution guides.
-        </p>
-      </section>
-
-      <footer>
-        <p class="xt-note"><a class="xt-link" href="/">&larr; Back to home</a></p>
-      </footer>
-    </main>
-  </body>
-</html>
-
-<style>
-  body {
-    margin: 0;
-    background: var(--xt-paper);
-    color: var(--xt-ink);
-    font-family: var(--font-sans);
-  }
-
-  main {
-    max-width: 44rem;
-    margin-inline: auto;
-    padding: 2.5rem 1.25rem 4rem;
-  }
-
-  main > * + p,
-  main p {
-    line-height: 1.6;
-  }
-
-  footer {
-    margin-top: 3rem;
-  }
-
-  @media (min-width: 40rem) {
-    main {
-      padding: 3.5rem 1.5rem 5rem;
-    }
-  }
-</style>
+  <section class="xt-section">
+    <h2 class="xt-section-title">Maintainer and community</h2>
+    <p>
+      xtarter is created and maintained by{' '}
+      <a class="xt-link" href="https://agustinusnathaniel.com/" rel="noopener noreferrer"
+        >Agustinus Nathaniel</a
+      >. Development happens in the open on GitHub:{' '}
+      <a
+        class="xt-link"
+        href="https://github.com/agustinusnathaniel/xtarterize"
+        rel="noopener noreferrer">agustinusnathaniel/xtarterize</a
+      >.
+    </p>
+    <p>
+      Contributions are welcome. Meet the people behind the project on the
+      <a class="xt-link" href="/xtarterize/contributing/contributors/">contributors page</a>,
+      or read how to get involved in the repository's contribution guides.
+    </p>
+  </section>
+</TrustPageLayout>

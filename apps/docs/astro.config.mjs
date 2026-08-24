@@ -1,7 +1,3 @@
-import { readdir, readFile, writeFile } from 'node:fs/promises'
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
-import sitemap from '@astrojs/sitemap'
 import starlight from '@astrojs/starlight'
 import tailwindcss from '@tailwindcss/vite'
 import { defineConfig } from 'astro/config'
@@ -12,122 +8,78 @@ import starlightLinksValidator from 'starlight-links-validator'
 import starlightLlmsTxt from 'starlight-llms-txt'
 import starlightPageActions from 'starlight-page-actions'
 import starlightSidebarSwipe from 'starlight-sidebar-swipe'
-import TurndownService from 'turndown'
-import { gfm } from 'turndown-plugin-gfm'
-import { buildLlmsExtras } from './src/lib/llms-extras.ts'
+import {
+	buildFounderPersonJsonLd,
+	buildOrganizationJsonLd,
+	buildSoftwareApplicationJsonLd,
+	buildWebSiteJsonLd,
+	SITE_URL,
+	serializeJsonLd,
+} from './src/lib/jsonld.ts'
 
-const SITE_URL = 'https://xtarter.sznm.dev'
-const AGENT_EXTRAS_BEGIN = '<!-- BEGIN agent-extras -->'
-const AGENT_EXTRAS_END = '<!-- END agent-extras -->'
-const WORKER_SOURCE_URL = new URL('./worker/index.js', import.meta.url)
+const JSON_LD = serializeJsonLd({
+	'@context': 'https://schema.org',
+	'@graph': [
+		buildWebSiteJsonLd(),
+		buildOrganizationJsonLd(),
+		buildFounderPersonJsonLd(),
+		buildSoftwareApplicationJsonLd(
+			'xtarterize',
+			'Conformance CLI that brings existing JavaScript/TypeScript projects up to a production-grade baseline (linting, strict TypeScript, CI, editor configs) with dry-run previews and approval before writing.',
+			`${SITE_URL}/xtarterize/`,
+			'https://github.com/agustinusnathaniel/xtarterize',
+		),
+		buildSoftwareApplicationJsonLd(
+			'create-xtarter-app',
+			'Scaffolding CLI that creates new JavaScript/TypeScript projects from five production-grade starter templates with Biome, strict TypeScript, CI, editor configs, and agent skills preconfigured.',
+			`${SITE_URL}/create-xtarter-app/`,
+			'https://github.com/agustinusnathaniel/xtarterize',
+		),
+	],
+})
 
-/** Deterministic depth-first walk collecting every .html file under rootDir. */
-async function collectHtmlFiles(rootDir) {
-	const files = []
-	async function walk(currentDir) {
-		const entries = await readdir(currentDir, { withFileTypes: true })
-		const sorted = [...entries].sort((a, b) =>
-			a.name < b.name ? -1 : a.name > b.name ? 1 : 0,
-		)
-		for (const entry of sorted) {
-			const entryPath = path.join(currentDir, entry.name)
-			if (entry.isDirectory()) {
-				await walk(entryPath)
-			} else if (entry.name.endsWith('.html')) {
-				files.push(entryPath)
-			}
-		}
-	}
-	await walk(rootDir)
-	return files
-}
+const LLMS_DETAILS = `For dedicated usage guidance, installation instructions, and machine-readable resource links, read [xtarter agent instructions](${SITE_URL}/agents.md).`
 
-/**
- * Convert one built HTML document to markdown. Head metadata and executable
- * elements carry no prose value, so they are stripped before conversion;
- * collapsing blank runs plus a single trailing newline keeps mirrors stable
- * byte-for-byte across builds.
- */
-function convertHtmlToMarkdown(turndownService, html) {
-	const cleaned = html
-		.replace(/<head\b[^>]*>[\s\S]*?<\/head>/gi, '')
-		.replace(
-			/<(script|style|noscript|template|svg)\b[^>]*>[\s\S]*?<\/\1>/gi,
-			'',
-		)
-		.replace(/<(script|style|noscript|template)\b[^>]*\/>/gi, '')
-	const markdown = turndownService.turndown(cleaned)
-	return `${markdown.replace(/\n{3,}/g, '\n\n').trimEnd()}\n`
-}
-
-/**
- * Build-time post-processing for agent-facing artifacts:
- * 1. writes a .md mirror next to every built .html page so servers can honor
- *    `Accept: text/markdown` from static hosting without runtime HTML scraping,
- * 2. injects hand-written agent guidance into llms.txt between owned markers
- *    (previous blocks are removed first, keeping repeated builds byte-identical),
- * 3. copies the Cloudflare Pages advanced-mode worker verbatim to _worker.js.
- *
- * Runs in `astro:build:done`, ordered after starlight-llms-txt (llms.txt exists)
- * and alongside @astrojs/sitemap.
- */
-const agentExtras = {
-	name: 'agent-extras',
-	hooks: {
-		'astro:build:done': async ({ dir, logger }) => {
-			// `dir` arrives as a URL that may or may not end with a slash.
-			const outDir = fileURLToPath(dir).replace(/[\\/]+$/, '')
-
-			const turndownService = new TurndownService({
-				headingStyle: 'atx',
-				codeBlockStyle: 'fenced',
-				bulletListMarker: '-',
-			})
-			turndownService.use(gfm)
-
-			let mirrorCount = 0
-			for (const htmlPath of await collectHtmlFiles(outDir)) {
-				const html = await readFile(htmlPath, 'utf8')
-				if (!html.trim()) continue // an empty document has no mirror value
-				const relativePath = path.relative(outDir, htmlPath)
-				const markdownPath =
-					path.basename(relativePath) === 'index.html'
-						? path.join(path.dirname(relativePath), 'index.md')
-						: relativePath.replace(/\.html$/, '.md')
-				await writeFile(
-					path.join(outDir, markdownPath),
-					convertHtmlToMarkdown(turndownService, html),
-				)
-				mirrorCount += 1
-			}
-			logger.info(`agent-extras: ${mirrorCount} markdown mirrors written`)
-
-			const llmsPath = path.join(outDir, 'llms.txt')
-			try {
-				let llmsContent = await readFile(llmsPath, 'utf8')
-				// Drop any previously injected block (including its leading newline)
-				// so appending below yields byte-identical output on every build.
-				llmsContent = llmsContent.replace(
-					/\n<!-- BEGIN agent-extras -->[\s\S]*?<!-- END agent-extras -->\n/g,
-					'',
-				)
-				llmsContent += `\n${AGENT_EXTRAS_BEGIN}\n${buildLlmsExtras(SITE_URL)}${AGENT_EXTRAS_END}\n`
-				await writeFile(llmsPath, llmsContent)
-			} catch (error) {
-				logger.warn(`agent-extras: could not update llms.txt (${error})`)
-			}
-
-			const workerTargetPath = path.join(outDir, '_worker.js')
-			await writeFile(
-				workerTargetPath,
-				await readFile(fileURLToPath(WORKER_SOURCE_URL), 'utf8'),
-			)
-		},
+const LLMS_OPTIONAL_LINKS = [
+	{
+		label: 'XML sitemap',
+		url: `${SITE_URL}/sitemap-index.xml`,
+		description: 'The machine-readable list of published routes.',
 	},
-}
+	{
+		label: 'About this project',
+		url: `${SITE_URL}/about/`,
+	},
+	{
+		label: 'Contact channels',
+		url: `${SITE_URL}/contact/`,
+	},
+	{
+		label: 'Privacy practices',
+		url: `${SITE_URL}/privacy/`,
+	},
+	{
+		label: 'Agent instructions',
+		url: `${SITE_URL}/agents.md`,
+		description:
+			'Usage guidance and machine-readable resource links for agents.',
+	},
+	{
+		label: 'GitHub repository',
+		url: 'https://github.com/agustinusnathaniel/xtarterize',
+	},
+	{
+		label: 'xtarterize on npm',
+		url: 'https://www.npmjs.com/package/xtarterize',
+	},
+	{
+		label: 'create-xtarter-app on npm',
+		url: 'https://www.npmjs.com/package/create-xtarter-app',
+	},
+]
 
 export default defineConfig({
-	site: 'https://xtarter.sznm.dev',
+	site: SITE_URL,
 	vite: {
 		plugins: [tailwindcss()],
 	},
@@ -145,11 +97,20 @@ export default defineConfig({
 			// favicon: '/favicon.svg',
 			customCss: ['./src/styles/global.css'],
 			plugins: [
-				starlightLinksValidator(),
+				starlightLinksValidator({
+					exclude: [
+						'/about/**',
+						'/contact/**',
+						'/privacy/**',
+						'/sitemap-index.xml',
+					],
+				}),
 				starlightLlmsTxt({
 					projectName: 'xtarter',
 					description:
 						'Production-grade starter templates and conformance tooling for JavaScript/TypeScript projects. Includes xtarterize (conformance CLI) and create-xtarter-app (scaffolding CLI).',
+					details: LLMS_DETAILS,
+					optionalLinks: LLMS_OPTIONAL_LINKS,
 				}),
 				starlightPageActions({
 					share: true,
@@ -204,6 +165,11 @@ export default defineConfig({
 						href: '/favicon.svg',
 						type: 'image/svg+xml',
 					},
+				},
+				{
+					tag: 'script',
+					attrs: { type: 'application/ld+json' },
+					content: JSON_LD,
 				},
 			],
 			social: [
@@ -353,9 +319,5 @@ export default defineConfig({
 				},
 			],
 		}),
-		// Sitemap and agent post-processing run after starlight so their
-		// `astro:build:done` hooks see the final llms.txt output.
-		sitemap(),
-		agentExtras,
 	],
 })
