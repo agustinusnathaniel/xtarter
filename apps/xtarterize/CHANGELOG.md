@@ -1,5 +1,46 @@
 # xtarterize
 
+## 1.23.0
+
+### Minor Changes
+
+- [#157](https://github.com/agustinusnathaniel/xtarter/pull/157) [`2522f04`](https://github.com/agustinusnathaniel/xtarter/commit/2522f04d302aa4b6f02b4830ded686c0a3909b56) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - feat: persist task selection in `.xtarterizerc`
+  
+  `.xtarterizerc` (and the `"xtarterize"` key in `package.json`) now accepts
+  `skip` and `only` arrays alongside `plugins`, giving every run a persisted
+  default filter:
+  
+  - `skip` — task IDs always excluded from runs.
+  - `only` — when non-empty, restricts runs to these task IDs; an empty or
+    absent list means no restriction.
+  
+  CLI flags keep precedence over the config: `--only` replaces the config
+  `only` list, while `--skip` extends the config `skip` list. A task listed
+  in both `skip` and `only` is excluded (skip wins). Entries are trimmed,
+  and empty or non-string entries are dropped. When a selection references
+  unknown task IDs, sync/init print a warning — suppressed in quiet and JSON
+  mode so stdout stays machine-readable.
+
+- [#155](https://github.com/agustinusnathaniel/xtarter/pull/155) [`af32df5`](https://github.com/agustinusnathaniel/xtarter/commit/af32df5ef8ab52c6e6023bf629908d282572836e) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - feat: emit machine-readable JSON from undo and restore
+  
+  `undo` and `restore` now support `--json` (or `--format json`) and emit a
+  single machine-readable result payload on stdout instead of human logs:
+  
+  - `undo --json` — `{ ok, timestamp, restored, total, files, errors }`, plus
+    `removed: <count>` when the run created files that undo deleted (created-by-
+    run files have no backup, so removal is the correct pre-run restore).
+  - `restore <file> --json` — `{ ok, filepath, restoredFrom, timestamp }`.
+  - Error paths stay machine-readable too: missing manifest, no backups found,
+    per-file restore failures, and usage errors all emit a JSON payload with
+    `ok: false` and an `error` field, and set exit code 1.
+  - JSON mode implies quiet and auto-confirms, so stdout carries only the JSON
+    document — pipe straight into CI or scripts. The `ok` field agrees with the
+    process exit code, matching the contract already shipped for `check`,
+    `diff`, `doctor`, `list`, `add`, `init`, and `sync`. Every command in the
+    CLI now speaks JSON.
+  - `check`, `list`, and `query` now declare the `--json` flag they already
+    honored (previously it worked but was invisible in `--help`).
+
 ## 1.22.0
 
 ### Minor Changes

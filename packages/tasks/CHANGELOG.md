@@ -1,5 +1,14 @@
 # @xtarterize/tasks
 
+## 1.23.0
+
+### Patch Changes
+
+- [#153](https://github.com/agustinusnathaniel/xtarter/pull/153) [`3ff2606`](https://github.com/agustinusnathaniel/xtarter/commit/3ff2606b4658040193cbdf1355d5c818cc97102d) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - quality/package-engines now derives the devEngines Node floor from the project's detected Node version (.nvmrc, engines.node, or CLI default) instead of hardcoding >=24, keeping devEngines consistent with the Node version installed by generated CI workflows.
+- Updated dependencies []:
+  - @xtarterize/core@1.23.0
+  - @xtarterize/patchers@1.23.0
+
 ## 1.22.0
 
 ### Patch Changes
