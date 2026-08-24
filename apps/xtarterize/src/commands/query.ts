@@ -36,6 +36,10 @@ export const queryCommand = defineCommand({
 			type: 'string',
 			description: 'Minimum relevance score 0-1 (default: 0.1)',
 		},
+		json: {
+			type: 'boolean',
+			description: 'Output machine-readable JSON',
+		},
 	},
 	async run({ args }) {
 		const ctx = resolveCliContext(args)

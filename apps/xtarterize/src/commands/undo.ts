@@ -13,6 +13,7 @@ import {
 } from '@xtarterize/core'
 import { defineCommand } from 'citty'
 import { resolveCwdWithPreflight } from '@/utils/preflight.js'
+import { resolveRuntimeFlags } from '@/utils/runtime-flags.js'
 
 export const undoCommand = defineCommand({
 	meta: {
@@ -28,10 +29,20 @@ export const undoCommand = defineCommand({
 			type: 'boolean',
 			description: 'Suppress interactive prompts (auto-confirm)',
 		},
+		json: {
+			type: 'boolean',
+			description: 'Output machine-readable JSON',
+		},
+		format: {
+			type: 'string',
+			description: 'Output format (terminal|json)',
+		},
 	},
 	async run({ args }) {
 		const cwd = await resolveCwdWithPreflight(args)
-		const quiet = args.quiet === true
+		const { format, quiet: runtimeQuiet } = resolveRuntimeFlags(args)
+		const jsonMode = format === 'json'
+		const quiet = jsonMode || runtimeQuiet
 
 		const s = createSpinner(quiet)
 		s.start('Reading last run manifest...')
@@ -40,21 +51,30 @@ export const undoCommand = defineCommand({
 		s.stop('Manifest loaded')
 
 		if (!manifest || manifest.files.length === 0) {
+			if (jsonMode) {
+				console.log(
+					JSON.stringify({ ok: false, error: 'No previous run found' }),
+				)
+				process.exitCode = 1
+				return
+			}
 			logError('No previous run found. Nothing to undo.')
 			logInfo('Run `xtarterize init` or `xtarterize add` first.')
 			process.exitCode = 1
 			return
 		}
 
-		console.log('')
-		console.log(`Last run: ${manifest.timestamp}`)
-		console.log(`Files modified: ${manifest.files.length}`)
-		console.log('')
+		if (!jsonMode) {
+			console.log('')
+			console.log(`Last run: ${manifest.timestamp}`)
+			console.log(`Files modified: ${manifest.files.length}`)
+			console.log('')
 
-		for (const filepath of manifest.files) {
-			console.log(`  ${filepath}`)
+			for (const filepath of manifest.files) {
+				console.log(`  ${filepath}`)
+			}
+			console.log('')
 		}
-		console.log('')
 
 		if (!quiet) {
 			const proceed = await confirm({
@@ -67,6 +87,7 @@ export const undoCommand = defineCommand({
 		s.start('Restoring files...')
 
 		let restored = 0
+		let removedCount = 0
 		const errors: string[] = []
 
 		for (const filepath of manifest.files) {
@@ -78,6 +99,7 @@ export const undoCommand = defineCommand({
 					// remove it to restore the pre-run state.
 					await removeCreatedFile(cwd, filepath)
 					restored++
+					removedCount++
 					continue
 				}
 				// Restore the most recent backup (first in sorted list)
@@ -90,6 +112,21 @@ export const undoCommand = defineCommand({
 		}
 
 		s.stop('Files restored')
+
+		if (jsonMode) {
+			const result: Record<string, unknown> = {
+				ok: errors.length === 0,
+				timestamp: manifest.timestamp,
+				restored,
+				total: manifest.files.length,
+				files: manifest.files,
+				errors,
+			}
+			if (removedCount > 0) result.removed = removedCount
+			console.log(JSON.stringify(result))
+			if (errors.length > 0) process.exitCode = 1
+			return
+		}
 
 		console.log('')
 		if (errors.length > 0) {

@@ -6,7 +6,11 @@ import { checkCommand } from '@xtarterize/app/commands/check.js'
 import { diffCommand } from '@xtarterize/app/commands/diff.js'
 import { initCommand } from '@xtarterize/app/commands/init.js'
 import { listCommand } from '@xtarterize/app/commands/list.js'
+import { queryCommand } from '@xtarterize/app/commands/query.js'
+import { restoreCommand } from '@xtarterize/app/commands/restore.js'
 import { syncCommand } from '@xtarterize/app/commands/sync.js'
+import { undoCommand } from '@xtarterize/app/commands/undo.js'
+import { backupFile, writeRunManifest } from '@xtarterize/core'
 import { describe, expect, it, vi } from 'vite-plus/test'
 
 const CONFORMANCE_SUMMARY_REGEX = /conformant|Conformance audit/
@@ -485,4 +489,147 @@ describe('init/sync/add json output', () => {
 			await fs.rm(cwd, { recursive: true, force: true })
 		}
 	}, 120_000)
+})
+
+describe('undo and restore json output', () => {
+	it('undo command emits machine-readable payload', async () => {
+		const cwd = await createMinimalProject()
+		try {
+			await fs.writeFile(
+				path.join(cwd, 'vite.config.ts'),
+				'export default {}\n',
+			)
+			await fs.mkdir(path.join(cwd, '.xtarterize', 'backups'), {
+				recursive: true,
+			})
+			await backupFile(cwd, 'vite.config.ts')
+			await fs.writeFile(
+				path.join(cwd, 'vite.config.ts'),
+				'export default { changed: true }\n',
+			)
+			await fs.writeFile(path.join(cwd, 'newfile.ts'), 'created by run\n')
+			await writeRunManifest(cwd, ['vite.config.ts', 'newfile.ts'])
+
+			const output = (await captureJsonOutput(async () => {
+				await undoCommand.run?.({ args: { cwd, json: true } } as never)
+			})) as {
+				ok: boolean
+				restored: number
+				total: number
+				removed?: number
+			}
+
+			expect(output.ok).toBe(true)
+			expect(output.restored).toBe(2)
+			expect(output.total).toBe(2)
+			expect(output.removed).toBe(1)
+
+			const restored = await fs.readFile(
+				path.join(cwd, 'vite.config.ts'),
+				'utf-8',
+			)
+			expect(restored).toBe('export default {}\n')
+			await expect(fs.access(path.join(cwd, 'newfile.ts'))).rejects.toThrow()
+
+			expect(process.exitCode).toBe(0)
+		} finally {
+			process.exitCode = 0
+			await fs.rm(cwd, { recursive: true, force: true })
+		}
+	})
+
+	it('undo command exits 1 when there is nothing to undo', async () => {
+		const cwd = await createMinimalProject()
+		try {
+			const output = (await captureJsonOutput(async () => {
+				await undoCommand.run?.({ args: { cwd, json: true } } as never)
+			})) as { ok: boolean }
+
+			expect(output.ok).toBe(false)
+			expect(process.exitCode).toBe(1)
+		} finally {
+			process.exitCode = 0
+			await fs.rm(cwd, { recursive: true, force: true })
+		}
+	})
+
+	it('restore command emits machine-readable payload', async () => {
+		const cwd = await createMinimalProject()
+		try {
+			await fs.writeFile(
+				path.join(cwd, 'vite.config.ts'),
+				'export default {}\n',
+			)
+			await fs.mkdir(path.join(cwd, '.xtarterize', 'backups'), {
+				recursive: true,
+			})
+			await backupFile(cwd, 'vite.config.ts')
+			await fs.writeFile(
+				path.join(cwd, 'vite.config.ts'),
+				'export default { changed: true }\n',
+			)
+
+			const output = (await captureJsonOutput(async () => {
+				await restoreCommand.run?.({
+					args: { cwd, filepath: 'vite.config.ts', json: true },
+				} as never)
+			})) as {
+				ok: boolean
+				filepath: string
+				restoredFrom: string
+				timestamp: string
+			}
+
+			expect(output.ok).toBe(true)
+			expect(output.filepath).toBe('vite.config.ts')
+			expect(typeof output.restoredFrom).toBe('string')
+			expect(typeof output.timestamp).toBe('string')
+
+			const restored = await fs.readFile(
+				path.join(cwd, 'vite.config.ts'),
+				'utf-8',
+			)
+			expect(restored).toBe('export default {}\n')
+
+			expect(process.exitCode).toBe(0)
+		} finally {
+			process.exitCode = 0
+			await fs.rm(cwd, { recursive: true, force: true })
+		}
+	})
+
+	it('restore command exits 1 when no backup exists', async () => {
+		const cwd = await createMinimalProject()
+		try {
+			await fs.writeFile(
+				path.join(cwd, 'vite.config.ts'),
+				'export default {}\n',
+			)
+
+			const output = (await captureJsonOutput(async () => {
+				await restoreCommand.run?.({
+					args: { cwd, filepath: 'vite.config.ts', json: true },
+				} as never)
+			})) as { ok: boolean; filepath: string; error: string }
+
+			expect(output.ok).toBe(false)
+			expect(output.filepath).toBe('vite.config.ts')
+			expect(output.error).toBe('No backups found')
+			expect(process.exitCode).toBe(1)
+		} finally {
+			process.exitCode = 0
+			await fs.rm(cwd, { recursive: true, force: true })
+		}
+	})
+})
+
+describe('json flag declarations', () => {
+	// These commands honor --json through resolveCliContext/resolveRuntimeFlags and
+	// the docs advertise it, so the flag must be declared in their args definition
+	// to stay visible in --help.
+	it('check, list, and query declare the --json flag they honor', () => {
+		for (const command of [checkCommand, listCommand, queryCommand]) {
+			expect(command.args?.json).toMatchObject({ type: 'boolean' })
+		}
+	})
 })

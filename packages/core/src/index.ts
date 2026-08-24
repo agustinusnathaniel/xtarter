@@ -61,11 +61,13 @@ export type {
 	RelevanceSignal,
 	WeightConfig,
 } from '@/inquiry/types.js'
-// Plugin/extension system - @internal: stable but untested in production
-export type { PluginConfig } from '@/plugins.js'
+// Plugin/extension system — @internal: stable but untested in production
+export type { PluginConfig, TaskSelectionConfig } from '@/plugins.js'
 export {
+	applyTaskSelection,
 	loadPluginConfig,
 	loadPluginTasks,
+	loadSelectionConfig,
 	resolveExternalTasks,
 } from '@/plugins.js'
 export type { PreflightError, PreflightResult } from '@/preflight.js'

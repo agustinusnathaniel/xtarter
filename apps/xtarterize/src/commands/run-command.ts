@@ -2,11 +2,14 @@ import { select } from '@clack/prompts'
 import type { ResolveTiming, Task, TaskStatus } from '@xtarterize/core'
 import {
 	abortIfCancelled,
+	applyTaskSelection,
 	applyTasks,
 	isCI,
+	loadSelectionConfig,
 	logError,
 	logInfo,
 	logSuccess,
+	logWarn,
 	resolveProjectTasks,
 } from '@xtarterize/core'
 import { type DisplayFormat, displayDiffs } from '@/ui/diff-display.js'
@@ -114,6 +117,10 @@ interface ResolveActionableTasksOptions {
 	actionableStatuses: TaskStatus[]
 	skip?: string
 	only?: string
+	/** Persisted selection: task IDs always excluded */
+	configSkip?: string[]
+	/** Persisted selection: when non-empty, restrict runs to these IDs */
+	configOnly?: string[]
 }
 
 function resolveActionableTasks(
@@ -121,27 +128,14 @@ function resolveActionableTasks(
 	statuses: Map<string, TaskStatus>,
 	options: ResolveActionableTasksOptions,
 ): Task[] {
-	let filteredTasks = tasks
+	const selected = applyTaskSelection(tasks, {
+		cliSkip: options.skip,
+		cliOnly: options.only,
+		configSkip: options.configSkip,
+		configOnly: options.configOnly,
+	})
 
-	if (options.skip) {
-		const skipIds = options.skip
-			.split(',')
-			.map((s) => s.trim())
-			.filter(Boolean)
-		filteredTasks = filteredTasks.filter((t) => !skipIds.includes(t.id))
-	}
-
-	if (options.only) {
-		const onlyIds = options.only
-			.split(',')
-			.map((s) => s.trim())
-			.filter(Boolean)
-		if (onlyIds.length > 0) {
-			filteredTasks = filteredTasks.filter((t) => onlyIds.includes(t.id))
-		}
-	}
-
-	return filteredTasks.filter((t) => {
+	return selected.filter((t) => {
 		const status = statuses.get(t.id)
 		return status !== undefined && options.actionableStatuses.includes(status)
 	})
@@ -280,10 +274,24 @@ export async function runCommand(
 	const profile = await detectProjectWithAmbiguity(cwd, quiet, baseProfile)
 	if (!quiet) printProjectProfile(profile)
 
+	const selection = await loadSelectionConfig(cwd)
+	if (!quiet && selection.skip.length + selection.only.length > 0) {
+		const unknown = [...selection.skip, ...selection.only].filter(
+			(id) => !tasks.some((t) => t.id === id),
+		)
+		if (unknown.length > 0) {
+			logWarn(
+				`Selection config references unknown task IDs: ${unknown.join(', ')}`,
+			)
+		}
+	}
+
 	const actionableTasks = resolveActionableTasks(tasks, statuses, {
 		actionableStatuses: options.actionableStatuses,
 		skip: args.skip,
 		only: args.only,
+		configSkip: selection.skip,
+		configOnly: selection.only,
 	})
 
 	if (actionableTasks.length === 0) {

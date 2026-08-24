@@ -250,8 +250,19 @@ Undo the last `init`, `sync`, or `add` run by restoring all files that were back
 | Option | Description |
 |--------|-------------|
 | `--quiet` | Skip confirmation prompt |
+| `--json` | Output machine-readable JSON |
+| `--format <format>` | Output format (`terminal` or `json`) |
 
 <AllPackageManagers type="exec" pkg="xtarterize@latest" args="undo" />
+
+<AllPackageManagers type="exec" pkg="xtarterize@latest" args="undo --json" title="JSON output" />
+
+```bash
+$ npx xtarterize undo --json
+{"ok":true,"timestamp":"2026-08-22T12:00:00.000Z","restored":2,"total":2,"files":["biome.json","tsconfig.json"],"errors":[],"removed":1}
+```
+
+`removed` appears only when the run created files that had no backup to restore from — undo deletes them to return the project to its pre-run state.
 
 <Aside type="tip">
   The <code>undo</code> command restores all files from the most recent run in one step. For single-file restores, use <code>xtarterize restore &lt;file&gt;</code> instead.
@@ -273,12 +284,21 @@ Restore a file from a previous backup. If multiple backups exist, you'll be prom
 |--------|-------------|
 | `--yes` | Skip confirmation, restore latest backup when multiple exist |
 | `--quiet` | Suppress verbose output |
+| `--json` | Output machine-readable JSON |
+| `--format <format>` | Output format (`terminal` or `json`) |
 
 <AllPackageManagers type="exec" pkg="xtarterize@latest" args="restore tsconfig.json" />
 
 <AllPackageManagers type="exec" pkg="xtarterize@latest" args="restore biome.json --yes" title="Auto-restore" />
 
 <AllPackageManagers type="exec" pkg="xtarterize@latest" args="restore tsconfig.json --quiet" title="Quiet" />
+
+<AllPackageManagers type="exec" pkg="xtarterize@latest" args="restore tsconfig.json --json" title="JSON output" />
+
+```bash
+$ npx xtarterize restore tsconfig.json --json
+{"ok":true,"filepath":"tsconfig.json","restoredFrom":".xtarterize/backups/tsconfig.json.2026-08-22T12-00-00-000Z","timestamp":"2026-08-22T12-00-00-000Z"}
+```
 
 ## `list`
 
@@ -289,6 +309,7 @@ List all registered tasks grouped by category, with current status.
 | Option | Description |
 |--------|-------------|
 | `--quiet` | Suppress verbose output |
+| `--json` | Output machine-readable JSON |
 
 <AllPackageManagers type="exec" pkg="xtarterize@latest" args="list" />
 
