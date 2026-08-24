@@ -15,115 +15,73 @@ import {
 
 Latest updates and feature releases for xtarterize.
 
-## v1.23.1 - 2026-08-24
-
-### Fixed
-
-- Updated the Changesets GitHub Action to the version compatible with Changesets CLI v3, so npm publishing also creates GitHub releases and tags. ([#158](https://github.com/agustinusnathaniel/xtarter/pull/158), [`8da3e56`](https://github.com/agustinusnathaniel/xtarter/commit/8da3e56f00aeb55ac82d9347ce112c0e475c96c0))
-
 ## v1.23.0 - 2026-08-24
 
-### Added
+### Persistent task selection
 
-- Persisted task selection: `.xtarterizerc` and the `xtarterize` key in `package.json` now support `skip` and `only` defaults, with CLI flags taking precedence. ([#157](https://github.com/agustinusnathaniel/xtarter/pull/157), [`2522f04`](https://github.com/agustinusnathaniel/xtarter/commit/2522f04d302aa4b6f02b4830ded686c0a3909b56))
-- `undo` and `restore` now emit machine-readable JSON with `--json` or `--format json`; every CLI command now has a consistent JSON contract. ([#155](https://github.com/agustinusnathaniel/xtarter/pull/155), [`af32df5`](https://github.com/agustinusnathaniel/xtarter/commit/af32df5ef8ab52c6e6023bf629908d282572836e))
+Configure `skip` and `only` defaults in `.xtarterizerc` or `package.json`, with command-line flags taking precedence when needed.
+
+### Consistent JSON output
+
+`undo` and `restore` now support machine-readable JSON output, completing a consistent JSON contract across the CLI.
 
 ## v1.22.0 - 2026-08-22
 
-### Added
+### Task-aware query results
 
-- Query results now show task status (`new`, `patch`, `skip`, or `conflict`). ([#151](https://github.com/agustinusnathaniel/xtarter/pull/151), [`7fc347e`](https://github.com/agustinusnathaniel/xtarter/commit/7fc347e64542d1a9bc4a9480f41d807c529631dd))
-
-## v1.21.0 - 2026-08-18
-
-No user-facing changes were recorded for this release.
+Query results now show whether each task is new, changed, skipped, or in conflict, making it easier to decide what to apply.
 
 ## v1.20.1 - 2026-08-17
 
-### Fixed
+### More reliable automation
 
-- JSON output is now emitted even when there are no pending changes, and dry-run failures are included in the result. ([#140](https://github.com/agustinusnathaniel/xtarter/pull/140), [`fe69cad`](https://github.com/agustinusnathaniel/xtarter/commit/fe69cad5f2226280f197c213797e8367d60cbf68))
-- Fresh projects without a lockfile now use the detected package manager when installing dependencies. ([#137](https://github.com/agustinusnathaniel/xtarter/pull/137), [`1733ebf`](https://github.com/agustinusnathaniel/xtarter/commit/1733ebfc11dbee6c044c98a512451960fb43ae57))
-- JSON mode no longer emits a leading blank line, and run manifests are written atomically with stricter plugin-specifier validation. ([#139](https://github.com/agustinusnathaniel/xtarter/pull/139), [#141](https://github.com/agustinusnathaniel/xtarter/pull/141))
+JSON output now remains valid when there are no pending changes or when a dry run fails. Fresh projects without a lockfile also use the detected package manager for dependency installation.
 
 ## v1.20.0 - 2026-08-14
 
-### Added
+### Machine-readable CLI output
 
-- `add`, `init`, and `sync` now support machine-readable JSON output with a consistent result contract. ([#135](https://github.com/agustinusnathaniel/xtarter/pull/135), [`7214167`](https://github.com/agustinusnathaniel/xtarter/commit/7214167ee9987356f52cffc33f0dcc539f66cec0))
+`add`, `init`, and `sync` now support JSON output that can be consumed directly by CI pipelines and automation.
 
-### Fixed
+### Conflict-aware changes
 
-- `add` now reports conflicts accurately, honors `--include-conflicts`, and no longer silently skips the flag in non-interactive `init` and `sync` runs. ([#131](https://github.com/agustinusnathaniel/xtarter/pull/131), [#133](https://github.com/agustinusnathaniel/xtarter/pull/133), [#134](https://github.com/agustinusnathaniel/xtarter/pull/134))
-- A failing task check now degrades to `conflict` instead of aborting the entire command. ([#136](https://github.com/agustinusnathaniel/xtarter/pull/136), [`78449ea`](https://github.com/agustinusnathaniel/xtarter/commit/78449eaef265e54a8b8c3fc3db8fc6aee84f085b))
+Conflicting tasks are now reported clearly, and `--include-conflicts` works consistently across `add`, `init`, and `sync`.
+
+Individual task-check failures no longer abort the entire command.
 
 ## v1.19.0 - 2026-08-11
 
-### Added
+### CI feedback
 
-- `check` can emit GitHub Actions annotations for non-conformant tasks and failing diagnostics, with automatic enablement in GitHub Actions. ([#127](https://github.com/agustinusnathaniel/xtarter/pull/127), [`e9b776d`](https://github.com/agustinusnathaniel/xtarter/commit/e9b776d95120130fc30654dc6cf4112fa740e504))
+`check` can now emit GitHub Actions annotations for non-conformant tasks and failing diagnostics, with automatic enablement in GitHub Actions.
 
-### Fixed
+### Reliable badges and undo
 
-- Badge output remains clean and machine-readable in JSON and stdout modes. ([#129](https://github.com/agustinusnathaniel/xtarter/pull/129), [`93e3d86`](https://github.com/agustinusnathaniel/xtarter/commit/93e3d86bd1bdfe45d025877b52be953fb9467268))
-- `undo` now removes files created by the last run instead of failing when no backup exists. ([#130](https://github.com/agustinusnathaniel/xtarter/pull/130), [`ab22fc9`](https://github.com/agustinusnathaniel/xtarter/commit/ab22fc97b2fe6c97d7ad93edb64a864e464c634b))
+Badge output stays clean in JSON and stdout modes, and `undo` now removes files created by the last run instead of failing when no backup exists.
 
 ## v1.18.0 - 2026-08-04
 
-### Added
+### CI-friendly exit codes
 
-- CI-friendly exit codes: `check`, `diff`, and `doctor` now fail when conformance checks, pending changes, or diagnostics fail. Dry-run failures also produce a non-zero exit code. ([#116](https://github.com/agustinusnathaniel/xtarter/pull/116), [`6aea841`](https://github.com/agustinusnathaniel/xtarter/commit/6aea841c1c459a88f57a3ef4253358be5ed3e3e5))
-
-## v1.17.3 - 2026-07-30
-
-No user-facing changes were recorded for this release.
-
-## v1.17.2 - 2026-07-28
-
-### Changed
-
-- Shared setup, diff, package, and lint helpers were extracted to reduce workflow duplication, and the `create-xtarter-app` CLI and bundler detection were simplified. ([#104](https://github.com/agustinusnathaniel/xtarter/pull/104), [`0f8e694`](https://github.com/agustinusnathaniel/xtarter/commit/0f8e69444bf6f6623fd2401082c40ca5af6fa8f6))
-
-## v1.17.1 - 2026-07-21
-
-### Changed
-
-- Updated dependencies to their latest compatible versions. ([#90](https://github.com/agustinusnathaniel/xtarter/pull/90), [`c96b053`](https://github.com/agustinusnathaniel/xtarter/commit/c96b053ebc3999393ce7261aefda0423e8110ae6))
+`check`, `diff`, and `doctor` now return non-zero exit codes when conformance checks, pending changes, or diagnostics fail. Dry-run failures are also reported to CI.
 
 ## v1.17.0 - 2026-07-21
 
-### Added
+### More project setup options
 
-- New `quality/package-engines`, `workspace/pnpm-workspace`, and `release/versionrc` tasks provide runtime metadata, workspace configuration, and focused changelog generation.
+New `quality/package-engines`, `workspace/pnpm-workspace`, and `release/versionrc` tasks help projects describe their runtime, workspace, and release configuration.
 
-### Changed
+### Better generated configuration
 
-- `ts/strict`, `release/git-hooks`, and `editor/vscode` now generate stricter TypeScript, commit-hook, and editor configuration; CI templates default to Node 22.
+Generated TypeScript, Git hook, VS Code, and CI configuration is stricter and better aligned with modern Node.js projects.
 
-### Fixed
-
-- Existing workspace files are no longer ignored, and package-engine metadata respects the project's actual package manager.
-- `@xtarterize/patchers` now exports `mergeYaml` / `parseYaml`, plugin specifiers are validated before loading, and failed dependency installation is reported as an error. ([#88](https://github.com/agustinusnathaniel/xtarter/pull/88), [`b916204`](https://github.com/agustinusnathaniel/xtarter/commit/b916204b790fa85e2e7919be24df960d05439f30); [#84](https://github.com/agustinusnathaniel/xtarter/pull/84), [`52b0735`](https://github.com/agustinusnathaniel/xtarter/commit/52b07351865c8d080d1e2b6e9e07a745c9394c60))
+Existing workspace files are preserved, and package-manager metadata reflects the project's actual package manager.
 
 ## v1.16.4 - 2026-07-01
 
-- The `.xtarterize/` directory (backups and cache) is now automatically added to `.gitignore` when running any `xtarterize` command. ([#82](https://github.com/agustinusnathaniel/xtarter/pull/82), [`f90c7b4`](https://github.com/agustinusnathaniel/xtarter/commit/f90c7b437a2cb0fd510f16e749495e163ff48361))
+### Cleaner project artifacts
 
-## v1.16.3 - 2026-07-01
-
-No user-facing changes were recorded for this release.
-
-## v1.16.2 - 2026-06-30
-
-### Fixed
-
-- Task status resolution now continues after an individual failure, errors are surfaced in `ApplyResult`, and `doctor` handles Node engine ranges correctly. ([#78](https://github.com/agustinusnathaniel/xtarter/pull/78), [`f5c701b`](https://github.com/agustinusnathaniel/xtarter/commit/f5c701bd4d29a33b9f168e71334b950183ea034a))
-
-## v1.16.1 - 2026-06-30
-
-### Fixed
-
-- Query suggestions now use the package-manager-aware command prefix; `--cwd` handling and preflight forwarding were corrected across subcommands. ([`bf0eddb`](https://github.com/agustinusnathaniel/xtarter/commit/bf0eddbbe7b36690c68851ad9dfd5d943b28abc58))
+The `.xtarterize/` directory for backups and cache is now automatically added to `.gitignore`, keeping generated internals out of project status.
 
 ## v1.16.0 - June 29, 2026
 
