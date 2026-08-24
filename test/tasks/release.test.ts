@@ -172,7 +172,10 @@ describe('releaseWorkflowTask', () => {
 		expect(profile.existing.changeset).toBe(true)
 
 		const result = renderReleaseWorkflow(profile, null)
-		expect(result).toContain('changesets/action@v1')
+		expect(result).toContain('changesets/action@v2')
+		expect(result).not.toContain('changesets/action@v1')
+		expect(result).toContain('version-script: pnpm run version-packages')
+		expect(result).toContain('publish-script: pnpm run release')
 		expect(result).toContain('id-token: write')
 		expect(result).toContain('workflow_dispatch')
 	})
