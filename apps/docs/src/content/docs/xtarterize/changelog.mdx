@@ -15,86 +15,73 @@ import {
 
 Latest updates and feature releases for xtarterize.
 
-## Unreleased
+## v1.23.0 - 2026-08-24
 
-### Fixed
+### Persistent task selection
 
-- `init`, `add`, and `sync` no longer fail with "No package manager auto-detected" when installing dependencies on fresh projects that have `package.json` but no lockfile - the detected package manager (npm fallback) is now passed to dependency installs.
-- `check`, `list`, `diff`, `init`, and `sync` no longer crash when a single task's status check throws: the affected task degrades to `conflict` (with a warning naming the task and the error) and the rest of the audit still resolves. Previously one failing task check aborted the entire command with an unhandled `TaskError` and produced no output - a single misbehaving task (e.g. a plugin task) could take down the whole CLI.
+Configure `skip` and `only` defaults in `.xtarterizerc` or `package.json`, with command-line flags taking precedence when needed.
 
-## v1.26.0 - 2026-08-14
+### Consistent JSON output
 
-### Added
+`undo` and `restore` now support machine-readable JSON output, completing a consistent JSON contract across the CLI.
 
-- `add`, `init`, and `sync` now emit machine-readable JSON when passed `--json` (or `--format json`): a single result payload on stdout - `{ ok, taskId, status, applied, skipped, errors }` for single-task adds, `{ ok, applied, skipped, errors }` for `--all` and `--yes` runs. JSON mode implies quiet, so the payload is the only thing on stdout and can be piped straight into CI scripts; human logs and dependency-install output are suppressed or routed to stderr. The `ok` field agrees with the process exit code, matching the exit-code contract introduced for `check`, `diff`, and `doctor`.
+## v1.22.0 - 2026-08-22
 
-## v1.25.0 - 2026-08-12
+### Task-aware query results
 
-### Fixed
+Query results now show whether each task is new, changed, skipped, or in conflict, making it easier to decide what to apply.
 
-- `add` now honors `--include-conflicts` like `init`/`sync`: `add --all` and `add <task-id>` can force-apply tasks whose configuration conflicts, and `add --all` warns when conflicting tasks were skipped so CI runs aren't silently incomplete.
+## v1.20.1 - 2026-08-17
 
-## v1.24.0 - 2026-08-11
+### More reliable automation
 
-### Fixed
+JSON output now remains valid when there are no pending changes or when a dry run fails. Fresh projects without a lockfile also use the detected package manager for dependency installation.
 
-- `add` no longer claims a conflicting task "applied successfully": when a task conflicts with existing configuration (e.g. `ts/strict` on a tsconfig that already sets `strict: false`), `add` now reports it as not applied, exits 1, and leaves the conflicting file untouched. Interactive mode counts conflicts as skipped instead of applied, and `diff` now shows conflict diffs.
-- `sync` and `init` now honor `--include-conflicts` in non-interactive (`--yes`/quiet) mode: the flag was previously passed through in the interactive paths but silently dropped for `--yes`, so conflicting tasks were skipped even when the flag was set - exactly the automation scenario where it matters.
+## v1.20.0 - 2026-08-14
 
-## v1.23.0 - 2026-08-10
+### Machine-readable CLI output
 
-### Fixed
+`add`, `init`, and `sync` now support JSON output that can be consumed directly by CI pipelines and automation.
 
-- `undo` now removes files that the last run created (like `biome.json` or `tsconfig.json`) instead of failing with "No backup found" - the working tree is fully restored to its pre-run state.
+### Conflict-aware changes
 
-## v1.22.0 - 2026-08-10
+Conflicting tasks are now reported clearly, and `--include-conflicts` works consistently across `add`, `init`, and `sync`.
 
-### Fixed
+Individual task-check failures no longer abort the entire command.
 
-- `check --badge` no longer corrupts machine-readable output: `--badge - --json` keeps stdout as pure JSON (the SVG goes to stderr), `--badge <file> --json` suppresses the "Badge written" success message from stdout, and `--badge -` in human mode keeps stdout as a clean SVG by routing the audit report to stderr.
+## v1.19.0 - 2026-08-11
 
-## v1.21.0 - 2026-08-10
+### CI feedback
 
-### Added
+`check` can now emit GitHub Actions annotations for non-conformant tasks and failing diagnostics, with automatic enablement in GitHub Actions.
 
-- `check` now emits GitHub Actions workflow command annotations (`::error` / `::warning`) for non-conformant tasks and failing diagnostics - one annotation per task, linked to the config file it would modify. Use `--annotations` to force it, or it auto-enables inside GitHub Actions. Conformance failures now appear inline on the PR, not just as an exit code.
+### Reliable badges and undo
 
-## v1.20.0 - 2026-08-04
+Badge output stays clean in JSON and stdout modes, and `undo` now removes files created by the last run instead of failing when no backup exists.
 
-### Added
+## v1.18.0 - 2026-08-04
 
-- CI-friendly exit codes: `check` exits 1 when the project has pending changes or failing diagnostics, `diff` exits 1 when at least one change is pending (mirroring `git diff --exit-code`), and `doctor` exits 1 when at least one diagnostic fails. `init`/`sync --dry-run` and other mutating commands also exit 1 on dry-run task failures. This makes `xtarterize` usable as a CI gate - pipelines can now fail builds on non-conformant projects.
+### CI-friendly exit codes
 
-## v1.19.0 - 2026-07-21
+`check`, `diff`, and `doctor` now return non-zero exit codes when conformance checks, pending changes, or diagnostics fail. Dry-run failures are also reported to CI.
 
-### Added
+## v1.17.0 - 2026-07-21
 
-- New `quality/package-engines` task: records Node >=24 and your project's package manager version in `package.json`, so tools know what runtime you expect
-- New `workspace/pnpm-workspace` task: generates `pnpm-workspace.yaml` for pnpm projects - monorepos get the standard package layout, single-package projects get a minimal placeholder
-- New `release/versionrc` task: generates `.versionrc.json` so commit-and-tag-version only includes meaningful change types in your changelog
+### More project setup options
 
-### Changed
+New `quality/package-engines`, `workspace/pnpm-workspace`, and `release/versionrc` tasks help projects describe their runtime, workspace, and release configuration.
 
-- `ts/strict` now enforces `noUnusedLocals`, `noUnusedParameters`, and `verbatimModuleSyntax` alongside `strict: true` - catches dead code and ensures proper type imports
-- `release/git-hooks` adds a `prepare-commit-msg` hook: if you use czg or commitizen, commits will prompt you interactively
-- `editor/vscode`: format on paste is now off by default, generated TanStack Router files are hidden from the explorer, and TypeScript acquisition is better configured
-- CI workflow templates now default to Node 22 instead of 20
+### Better generated configuration
 
-### Fixed
+Generated TypeScript, Git hook, VS Code, and CI configuration is stricter and better aligned with modern Node.js projects.
 
-- `workspace/pnpm-workspace` no longer ignores changes to an existing workspace file
-- `quality/package-engines` now respects your project's actual package manager instead of always assuming pnpm
+Existing workspace files are preserved, and package-manager metadata reflects the project's actual package manager.
 
-## v1.18.0 - 2026-07-06
+## v1.16.4 - 2026-07-01
 
-- New `mergeYaml` / `parseYaml` functions in `@xtarterize/patchers` for deep-merging configuration into YAML files. Existing keys are preserved, incoming keys fill gaps. Works with GitHub Actions workflows, Renovate configs, and any YAML-based config file.
-- Plugin specifier validation `(ADR 026)`: Plugin specifiers in `.xtarterizerc` and `package.json` `xtarterize.plugins` are now validated as npm package names. Relative paths (`../../malicious.js`), absolute paths (`/etc/passwd`), and URL specifiers are rejected - preventing arbitrary code execution from attacker-controlled paths.
-- `installDependency` now throws an error when installation fails, instead of silently logging a warning and continuing.
-- Backup source path traversal protection: restored files from `xtarterize undo` are now validated to resolve within the backup directory.
+### Cleaner project artifacts
 
-## v1.17.0 - 2026-07-01
-
-- The `.xtarterize/` directory (backups, cache) is now automatically added to `.gitignore` when running any `xtarterize` command. No more untracked files in `git status`. (ADR 026)
+The `.xtarterize/` directory for backups and cache is now automatically added to `.gitignore`, keeping generated internals out of project status.
 
 ## v1.16.0 - June 29, 2026
 
