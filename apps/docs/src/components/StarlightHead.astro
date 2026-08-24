@@ -5,38 +5,8 @@ import StarlightHead from '@astrojs/starlight/components/Head.astro'
 import Analytics from './Analytics.astro'
 // biome-ignore lint/correctness/noUnusedImports: used in template below
 import Tracking from './Tracking.astro'
-import {
-  buildFounderPersonJsonLd,
-  buildOrganizationJsonLd,
-  buildSoftwareApplicationJsonLd,
-  buildWebSiteJsonLd,
-  serializeJsonLd,
-} from '../lib/jsonld'
-
-// One structured-data graph for every page: WebSite, Organization, founder
-// Person, and one SoftwareApplication node per published CLI. Builders are
-// pure and deterministic, so repeated builds stay byte-identical.
-const jsonLdGraph = [
-  buildWebSiteJsonLd(),
-  buildOrganizationJsonLd(),
-  buildFounderPersonJsonLd(),
-  buildSoftwareApplicationJsonLd(
-    'xtarterize',
-    'Conformance CLI that brings existing JavaScript/TypeScript projects up to a production-grade baseline (linting, strict TypeScript, CI, editor configs) with dry-run previews and approval before writing.',
-    'https://xtarter.sznm.dev/xtarterize/',
-    'https://github.com/agustinusnathaniel/xtarterize',
-  ),
-  buildSoftwareApplicationJsonLd(
-    'create-xtarter-app',
-    'Scaffolding CLI that creates new JavaScript/TypeScript projects from five production-grade starter templates with Biome, strict TypeScript, CI, editor configs, and agent skills preconfigured.',
-    'https://xtarter.sznm.dev/create-xtarter-app/',
-    'https://github.com/agustinusnathaniel/xtarterize',
-  ),
-]
-const jsonLd = serializeJsonLd({ '@context': 'https://schema.org', '@graph': jsonLdGraph })
 ---
 
 <StarlightHead />
 <Analytics />
 <Tracking />
-<script type="application/ld+json" set:html={jsonLd} is:inline />

@@ -147,9 +147,6 @@ importers:
 
   apps/docs:
     dependencies:
-      '@astrojs/sitemap':
-        specifier: ^3.7.3
-        version: 3.7.3
       '@astrojs/starlight':
         specifier: ^0.41.7
         version: 0.41.7(@astrojs/markdown-remark@7.2.4(supports-color@10.2.2))(astro@7.2.4(@astrojs/markdown-remark@7.2.4(supports-color@10.2.2))(@emnapi/core@1.11.1)(@emnapi/runtime@1.11.3)(@types/node@26.2.0)(jiti@2.7.0)(typescript@6.0.3)(yaml@2.8.3))(supports-color@10.2.2)(typescript@6.0.3)
@@ -204,12 +201,6 @@ importers:
       tailwindcss:
         specifier: ^4.3.3
         version: 4.3.3
-      turndown:
-        specifier: ^7.2.4
-        version: 7.2.4
-      turndown-plugin-gfm:
-        specifier: ^1.0.2
-        version: 1.0.2
     devDependencies:
       '@astrojs/check':
         specifier: ^0.9.10
@@ -1217,9 +1208,6 @@ packages:
 
   '@mermaid-js/parser@1.2.1':
     resolution: {integrity: sha512-n12NohV3mrUyUL2o93IgG/ifeW9FTyeJn3zDxkhwa8MJ9Fxg3HQMlA3RiGmD/3UnJvheztkjjQAjA2T4LmUcpw==}
-
-  '@mixmark-io/domino@2.2.0':
-    resolution: {integrity: sha512-Y28PR25bHXUg88kCV7nivXrP2Nj2RueZ3/l/jdx6J9f8J4nsEGcgX0Qe6lt7Pa+J79+kPiJU3LguR6O/6zrLOw==}
 
   '@msgpackr-extract/msgpackr-extract-darwin-arm64@3.0.4':
     resolution: {integrity: sha512-LCkGo6JDfaBhgST7UpPWgNgLINpcpabaHfyz5OBx75nUYxBsaEPxjnyNjWpeb/xBup/682QnBfRBy2/LvPutZQ==}
@@ -4388,13 +4376,6 @@ packages:
     resolution: {integrity: sha512-yQfwQVoRXwOuyX1LxiJFBFNg6VfuYh+/RyZLd82+isgyLkBXw3S5XRRzvcck1FAjSCG5sVyLd+O1eDMvYa3J7g==}
     hasBin: true
 
-  turndown-plugin-gfm@1.0.2:
-    resolution: {integrity: sha512-vwz9tfvF7XN/jE0dGoBei3FXWuvll78ohzCZQuOb+ZjWrs3a0XhQVomJEb2Qh4VHTPNRO4GPZh0V7VRbiWwkRg==}
-
-  turndown@7.2.4:
-    resolution: {integrity: sha512-I8yFsfRzmzK0WV1pNNOA4A7y4RDfFxPRxb3t+e3ui14qSGOxGtiSP6GjeX+Y6CHb7HYaFj7ECUD7VE5kQMZWGQ==}
-    engines: {node: '>=18', npm: '>=9'}
-
   type-fest@0.21.3:
     resolution: {integrity: sha512-t0rzBq87m3fVcduHDUFhKmyyX+9eo6WQjZvf51Ea/M0Q7+T374Jp1aUiyUl0GKxp8M/OETVHSDvmkyPgvX+X2w==}
     engines: {node: '>=10'}
@@ -5640,8 +5621,6 @@ snapshots:
   '@mermaid-js/parser@1.2.1':
     dependencies:
       '@chevrotain/types': 11.1.2
-
-  '@mixmark-io/domino@2.2.0': {}
 
   '@msgpackr-extract/msgpackr-extract-darwin-arm64@3.0.4':
     optional: true
@@ -9090,12 +9069,6 @@ snapshots:
       '@turbo/linux-arm64': 2.10.11
       '@turbo/windows-64': 2.10.11
       '@turbo/windows-arm64': 2.10.11
-
-  turndown-plugin-gfm@1.0.2: {}
-
-  turndown@7.2.4:
-    dependencies:
-      '@mixmark-io/domino': 2.2.0
 
   type-fest@0.21.3: {}
 

@@ -1,0 +1,80 @@
+---
+import Analytics from '@/components/Analytics.astro'
+import Tracking from '@/components/Tracking.astro'
+import '@/styles/global.css'
+
+interface Props {
+	title: string
+	description: string
+	eyebrow: string
+	heading: string
+	lede: string
+}
+
+const { title, description, eyebrow, heading, lede } = Astro.props
+const canonicalUrl = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin)
+---
+
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<title>{title}</title>
+		<meta name="description" content={description} />
+		<link rel="canonical" href={canonicalUrl.href} />
+		<link rel="sitemap" href="/sitemap-index.xml" />
+		<meta property="og:title" content={title} />
+		<meta property="og:description" content={description} />
+		<meta property="og:type" content="website" />
+		<meta property="og:url" content={canonicalUrl.href} />
+		<meta name="twitter:card" content="summary_large_image" />
+		<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+		<Analytics />
+		<Tracking />
+	</head>
+	<body class="xt-trust-body">
+		<main class="xt-trust-page">
+			<header class="xt-hero">
+				<p class="xt-section-eyebrow">{eyebrow}</p>
+				<h1>{heading}</h1>
+				<p class="xt-hero-lede">{lede}</p>
+			</header>
+
+			<slot />
+
+			<footer>
+				<p class="xt-note"><a class="xt-link" href="/">&larr; Back to home</a></p>
+			</footer>
+		</main>
+	</body>
+</html>
+
+<style is:global>
+	.xt-trust-body {
+		margin: 0;
+		background: var(--xt-paper);
+		color: var(--xt-ink);
+		font-family: var(--font-sans);
+	}
+
+	.xt-trust-page {
+		max-width: 44rem;
+		margin-inline: auto;
+		padding: 2.5rem 1.25rem 4rem;
+	}
+
+	.xt-trust-page p {
+		line-height: 1.6;
+	}
+
+	.xt-trust-page footer {
+		margin-top: 3rem;
+	}
+
+	@media (min-width: 40rem) {
+		.xt-trust-page {
+			padding: 3.5rem 1.5rem 5rem;
+		}
+	}
+</style>

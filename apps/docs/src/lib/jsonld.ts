@@ -3,12 +3,12 @@
  *
  * These functions only assemble plain objects: no DOM access, no dates, no
  * randomness, so repeated builds serialize to byte-identical output
- * (idempotency contract). The Starlight Head override renders the result of
- * `serializeJsonLd` inside a single `<script type="application/ld+json">`.
+ * (idempotency contract). The Astro config registers the result of
+ * `serializeJsonLd` through Starlight’s `head` option.
  */
 
 /** Canonical site origin (matches `site` in astro.config.mjs). */
-const SITE_URL = 'https://xtarter.sznm.dev'
+export const SITE_URL = 'https://xtarter.sznm.dev'
 
 /** Stable node identifiers shared by reference (`{@id}`) links. */
 export const ORGANIZATION_JSONLD_ID = `${SITE_URL}/#organization`
