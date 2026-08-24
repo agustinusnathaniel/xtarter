@@ -11,7 +11,7 @@ const { mockX } = vi.hoisted(() => ({
 }))
 
 // Use a path-based mock for tinyexec because pnpm installs it in
-// packages/tasks/node_modules/tinyexec — a different resolution path
+// packages/tasks/node_modules/tinyexec - a different resolution path
 // than the test file's dependency graph. A bare specifier mock
 // ('tinyexec') would intercept the wrong copy of the module.
 vi.mock('/packages/tasks/node_modules/tinyexec/dist/main.mjs', () => ({

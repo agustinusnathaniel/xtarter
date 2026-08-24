@@ -23,7 +23,7 @@ const CONFIG_BASENAMES = [
  *
  * The plugin system loads external task packages from npm.
  * Plugin specifiers are validated against npm package name patterns
- * (local paths and URLs are rejected — see `validatePluginSpecifier`).
+ * (local paths and URLs are rejected - see `validatePluginSpecifier`).
  *
  * @remarks This API is stable but has not been tested in production.
  * Plugin specifiers are validated to prevent arbitrary code execution
@@ -154,7 +154,7 @@ export async function loadPluginTasks(config: PluginConfig): Promise<Task[]> {
 	for (const specifier of config.plugins) {
 		if (!validatePluginSpecifier(specifier)) {
 			logWarn(
-				`Invalid xtarterize plugin specifier "${specifier}" — must be an npm package name. Skipping.`,
+				`Invalid xtarterize plugin specifier "${specifier}" - must be an npm package name. Skipping.`,
 			)
 			continue
 		}

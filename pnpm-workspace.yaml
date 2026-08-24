@@ -9,7 +9,7 @@ allowBuilds:
 
 catalog:
   # TS 7 (native compiler) is latest, but astro check / @astrojs/check still
-  # require the TS 6 programmatic API — pinned to newest 6.x until astro supports 7.
+  # require the TS 6 programmatic API - pinned to newest 6.x until astro supports 7.
   typescript: ^6.0.3
   "@types/node": ^26.2.0
   json5: ^2.2.3
@@ -41,11 +41,11 @@ onlyBuiltDependencies:
   - esbuild
   - sharp
 overrides:
-  vite: 'catalog:'
+  vite: "catalog:"
   # astro@7.2.4 pins vite to npm:@voidzero-dev/vite-plus-core@0.2.5, which
   # diverges from the catalog (0.2.9) and installs a second instance whose
   # native rolldown binding is missing. Force a single 0.2.9 instance.
-  '@voidzero-dev/vite-plus-core': 0.2.9
+  "@voidzero-dev/vite-plus-core": 0.2.9
   dompurify: 3.4.13
   postcss: 8.5.25
   ws: 8.21.0
@@ -58,4 +58,4 @@ peerDependencyRules:
   allowAny:
     - vite
   allowedVersions:
-    vite: '*'
+    vite: "*"
