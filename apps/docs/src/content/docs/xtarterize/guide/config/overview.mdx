@@ -127,6 +127,25 @@ Restore with:
 
 <AllPackageManagers type="exec" pkg="xtarterize@latest" args="restore tsconfig.json" />
 
+## Task selection
+
+`.xtarterizerc` accepts `skip` and `only` arrays alongside `plugins` so repeat runs apply the same filter without CLI flags. The same fields work in the `"xtarterize"` key of `package.json`.
+
+```json
+{
+  "plugins": ["@acme/xtarterize-tasks"],
+  "skip": ["agent/skills-install"],
+  "only": ["ts/strict", "lint/biome"]
+}
+```
+
+Precedence rules:
+
+- CLI `--only` overrides the config `only` list when provided
+- CLI `--skip` extends the config `skip` list
+- A task in both `skip` and `only` is excluded - skip wins
+- An empty or absent `only` list means no restriction, not "apply nothing"
+
 ## References
 
 - [React](https://react.dev/) - UI library
