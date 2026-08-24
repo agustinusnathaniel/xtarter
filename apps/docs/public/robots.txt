@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://xtarter.sznm.dev/sitemap-index.xml
