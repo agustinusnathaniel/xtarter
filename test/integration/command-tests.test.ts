@@ -258,7 +258,7 @@ describe('add command', () => {
 			// Do not assert exitCode: `add --all` applies every applicable
 			// task, and unrelated tasks may fail on a minimal fixture (e.g.
 			// vite plugins without a vite.config). The behavior under test is
-			// that the conflicting task WAS included and applied — same
+			// that the conflicting task WAS included and applied - same
 			// assertion style as the init/sync conflict tests above.
 			// Applying the conflict must add the missing strict options.
 			// defu preserves the user's `strict: false`, so assert on a key

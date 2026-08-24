@@ -459,7 +459,7 @@ async function runInteractive(options: {
 				allErrors.push(...result.errors)
 				if (!jsonMode) logError(`${entry.task.id}: ${result.errors.join(', ')}`)
 			} else if (!jsonMode) {
-				logWarn(`${entry.task.id} skipped (${entry.status}) — not applied`)
+				logWarn(`${entry.task.id} skipped (${entry.status}) - not applied`)
 			}
 
 			if (result.timing) {
