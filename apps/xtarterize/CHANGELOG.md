@@ -1,5 +1,11 @@
 # xtarterize
 
+## 1.23.1
+
+### Patch Changes
+
+- [#158](https://github.com/agustinusnathaniel/xtarter/pull/158) [`8da3e56`](https://github.com/agustinusnathaniel/xtarter/commit/8da3e56f00aeb55ac82d9347ce112c0e475c96c0) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Use the Changesets GitHub Action version compatible with Changesets CLI v3 so npm publishing also creates GitHub releases and tags.
+
 ## 1.23.0
 
 ### Minor Changes
