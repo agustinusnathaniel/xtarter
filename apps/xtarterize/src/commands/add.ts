@@ -359,13 +359,16 @@ async function runInteractive(options: {
 	s.start('Checking task statuses...')
 
 	const tasksWithStatus: TaskWithStatus[] = []
+	const checkErrors: string[] = []
 	for (const task of applicable) {
 		try {
 			const status = await task.check(cwd, profile)
 			tasksWithStatus.push({ task, status })
 		} catch (error) {
 			const message = error instanceof Error ? error.message : String(error)
-			if (!jsonMode) logError(`Failed to check ${task.id}: ${message}`)
+			const detail = `Failed to check ${task.id}: ${message}`
+			checkErrors.push(detail)
+			if (!jsonMode) logError(detail)
 			process.exitCode = 1
 			tasksWithStatus.push({ task, status: 'conflict' })
 		}
@@ -377,7 +380,12 @@ async function runInteractive(options: {
 	if (quiet && !allFlag) {
 		if (jsonMode) {
 			console.log(
-				formatRunResult({ ok: true, applied: 0, skipped: 0, errors: [] }),
+				formatRunResult({
+					ok: checkErrors.length === 0,
+					applied: 0,
+					skipped: 0,
+					errors: checkErrors,
+				}),
 			)
 		} else {
 			logInfo('Interactive mode requires a terminal. Use a task ID instead.')
@@ -398,7 +406,12 @@ async function runInteractive(options: {
 	if (selectedIds.length === 0) {
 		if (jsonMode) {
 			console.log(
-				formatRunResult({ ok: true, applied: 0, skipped: 0, errors: [] }),
+				formatRunResult({
+					ok: checkErrors.length === 0,
+					applied: 0,
+					skipped: 0,
+					errors: checkErrors,
+				}),
 			)
 		} else {
 			logInfo('No tasks to apply')
@@ -482,21 +495,21 @@ async function runInteractive(options: {
 	if (jsonMode) {
 		console.log(
 			formatRunResult({
-				ok: allErrors.length === 0,
+				ok: allErrors.length === 0 && checkErrors.length === 0,
 				applied: totalApplied,
 				skipped: selectedTasks.length - totalApplied,
-				errors: allErrors,
+				errors: [...checkErrors, ...allErrors],
 			}),
 		)
-		if (allErrors.length > 0) {
+		if (allErrors.length > 0 || checkErrors.length > 0) {
 			process.exitCode = 1
 		}
 		return
 	}
 
 	console.log('')
-	if (allErrors.length > 0) {
-		logError(`${allErrors.length} error(s)`)
+	if (allErrors.length > 0 || checkErrors.length > 0) {
+		logError(`${allErrors.length + checkErrors.length} error(s)`)
 		process.exitCode = 1
 	}
 	logSuccess(`${totalApplied}/${selectedTasks.length} tasks applied`)

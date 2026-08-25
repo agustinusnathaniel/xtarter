@@ -7,7 +7,22 @@ import { restoreCommand } from '@xtarterize/app/commands/restore.js'
 import { syncCommand } from '@xtarterize/app/commands/sync.js'
 import { undoCommand } from '@xtarterize/app/commands/undo.js'
 import { backupFile, readRunManifest, writeRunManifest } from '@xtarterize/core'
-import { describe, expect, it } from 'vite-plus/test'
+import { describe, expect, it, vi } from 'vite-plus/test'
+
+const { mockGetAllTasks } = vi.hoisted(() => ({
+	mockGetAllTasks: vi.fn(),
+}))
+
+// Module-global mock: spread the original module so every other export
+// (resolveCliContext, scanProject, ...) keeps its real implementation, and
+// default getAllTasksWithPlugins to the real one so un-mocked tests are
+// unaffected. Individual tests override with mockImplementationOnce.
+vi.mock('@xtarterize/app/utils/project.js', async (importOriginal) => {
+	const actual =
+		await importOriginal<typeof import('@xtarterize/app/utils/project.js')>()
+	mockGetAllTasks.mockImplementation(actual.getAllTasksWithPlugins)
+	return { ...actual, getAllTasksWithPlugins: mockGetAllTasks }
+})
 
 async function createMinimalProject(): Promise<string> {
 	const tmpDir = await fs.mkdtemp(
@@ -411,6 +426,47 @@ describe('add command', () => {
 			)
 			expect(pkgAfter.scripts).toEqual(pkgBefore.scripts)
 		} finally {
+			await fs.rm(cwd, { recursive: true, force: true })
+		}
+	}, 60_000)
+
+	it('reports failed task checks in JSON ok field instead of claiming success', async () => {
+		const cwd = await createMinimalProject()
+		process.exitCode = 0
+		const jsonLines: string[] = []
+		const originalLog = console.log
+		console.log = (...logArgs: unknown[]) => {
+			jsonLines.push(String(logArgs[0]))
+		}
+		try {
+			// A misbehaving plugin task whose check() rejects must surface as
+			// ok:false in the emitted JSON, agreeing with the exit code.
+			mockGetAllTasks.mockImplementationOnce(async () => [
+				{
+					id: 'boom/failing',
+					label: 'Boom failing',
+					group: 'test',
+					applicable: () => true,
+					check: async () => {
+						throw new Error('kaboom')
+					},
+					dryRun: async () => [],
+					apply: async () => {},
+				} as never,
+			])
+
+			await addCommand.run?.({
+				args: { cwd, all: true, format: 'json', quiet: true },
+			} as never)
+
+			expect(process.exitCode).toBe(1)
+			const jsonLine = jsonLines.find((line) => line.startsWith('{'))
+			expect(jsonLine).toBeDefined()
+			const parsed = JSON.parse(jsonLine as string) as { ok: boolean }
+			expect(parsed.ok).toBe(false)
+		} finally {
+			console.log = originalLog
+			process.exitCode = 0
 			await fs.rm(cwd, { recursive: true, force: true })
 		}
 	}, 60_000)
