@@ -6,7 +6,7 @@
 	"scripts": {
 		"dev": "astro dev",
 		"start": "astro dev",
-		"build": "astro build",
+		"build": "astro build && cp worker/index.js dist/_worker.js",
 		"preview": "astro preview",
 		"typecheck": "astro check",
 		"astro": "astro"

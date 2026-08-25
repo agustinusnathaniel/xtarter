@@ -36,4 +36,21 @@ describe.skipIf(!fs.existsSync(distPath))('docs build artifacts', () => {
 		expect(fs.existsSync(agentsPath)).toBe(true)
 		expect(fs.readFileSync(agentsPath, 'utf8')).toContain('When to use xtarter')
 	})
+
+	it('ships the worker with content negotiation and Vary', () => {
+		const workerPath = path.join(distPath, '_worker.js')
+		expect(fs.existsSync(workerPath)).toBe(true)
+		const content = fs.readFileSync(workerPath, 'utf8')
+		expect(content).toContain('text/markdown')
+		expect(content).toMatch(/Vary|Accept/)
+	})
+
+	it('writes a markdown 404 page', () => {
+		expect(fs.existsSync(path.join(distPath, '404.md'))).toBe(true)
+	})
+
+	it('llms.txt documents when to use', () => {
+		const llmsTxt = fs.readFileSync(llmsTxtPath, 'utf8')
+		expect(llmsTxt).toContain('When to use')
+	})
 })

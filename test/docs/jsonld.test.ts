@@ -1,11 +1,11 @@
-import { describe, expect, it } from 'vite-plus/test'
 import {
 	buildFounderPersonJsonLd,
 	buildOrganizationJsonLd,
 	buildSoftwareApplicationJsonLd,
 	buildWebSiteJsonLd,
 	serializeJsonLd,
-} from '../../apps/docs/src/lib/jsonld'
+} from '@docs/src/lib/jsonld'
+import { describe, expect, it } from 'vite-plus/test'
 
 /** Recursively collect every object key name in a JSON-like graph. */
 function collectKeys(value: unknown, seen = new Set<unknown>()): string[] {
