@@ -15,7 +15,7 @@ import {
 	buildWebSiteJsonLd,
 	SITE_URL,
 	serializeJsonLd,
-} from './src/lib/jsonld.ts'
+} from '@/lib/jsonld.ts'
 
 const JSON_LD = serializeJsonLd({
 	'@context': 'https://schema.org',

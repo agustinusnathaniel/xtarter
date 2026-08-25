@@ -1,9 +1,9 @@
-import { describe, expect, it, vi } from 'vitest'
 import worker, {
 	markdownCandidates,
 	mergeVary,
 	wantsMarkdown,
-} from '../../apps/docs/worker/index.js'
+} from '@docs/worker/index.js'
+import { describe, expect, it, vi } from 'vitest'
 
 function createEnv(entries: Array<[string, Response]>, fallback?: Response) {
 	const map = new Map(entries)
