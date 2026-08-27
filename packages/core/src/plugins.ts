@@ -1,3 +1,4 @@
+import JSON5 from 'json5'
 import type { Task } from '@/_base.js'
 import { findConfigFile, readFile, readJson } from '@/utils/fs.js'
 import { logWarn } from '@/utils/logger.js'
@@ -69,7 +70,7 @@ async function readRawXtarterizeConfig(
 			const content = await readFile(path)
 			let config: Record<string, unknown>
 			try {
-				config = JSON.parse(content) as Record<string, unknown>
+				config = JSON5.parse(content) as Record<string, unknown>
 			} catch {
 				logWarn('Failed to parse .xtarterizerc')
 				throw CONFIG_PARSE_ERROR
@@ -237,7 +238,9 @@ function validatePluginSpecifier(specifier: string): boolean {
 	//   - optional scope: @scope/ (alphanumeric, hyphens, dots, underscores)
 	//   - required name: same charset, at least one char
 	//   - no leading dots, no leading hyphens, no consecutive dots
-	return /^(?:@[a-z0-9][a-z0-9-._]*\/)?[a-z0-9][a-z0-9-._]*$/.test(specifier)
+	return /^(?:@[a-z0-9~][a-z0-9-._~]*\/)?[a-z0-9~][a-z0-9-._~]*$/.test(
+		specifier,
+	)
 }
 
 /**
