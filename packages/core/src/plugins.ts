@@ -251,6 +251,7 @@ async function importWithTimeout(
 	specifier: string,
 ): Promise<Record<string, unknown>> {
 	const importPromise = import(/* @vite-ignore */ specifier)
+	void importPromise.catch(() => {})
 	let timeoutId: ReturnType<typeof setTimeout> | undefined
 	const timeoutPromise = new Promise<never>((_resolve, reject) => {
 		timeoutId = setTimeout(

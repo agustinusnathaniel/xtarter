@@ -1,5 +1,6 @@
 import { dirname, relative } from 'pathe'
 import { fileExists, resolvePath } from '@/utils/fs.js'
+import { isPnpmWorkspace } from '@/utils/pkg.js'
 import type { MonorepoDetection } from './types.js'
 
 /**
@@ -31,7 +32,7 @@ export async function detectMonorepo(cwd: string): Promise<MonorepoDetection> {
 		hasPackagesDir,
 		hasAppsDir,
 	] = await Promise.all([
-		fileExists(resolvePath(cwd, 'pnpm-workspace.yaml')),
+		isPnpmWorkspace(cwd).then((v) => !!v),
 		fileExists(resolvePath(cwd, 'turbo.json')),
 		fileExists(resolvePath(cwd, 'nx.json')),
 		fileExists(resolvePath(cwd, 'lerna.json')),

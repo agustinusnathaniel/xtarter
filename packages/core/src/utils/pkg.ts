@@ -3,7 +3,9 @@ import { type PackageJson, readPackageJSON, writePackageJSON } from 'pkg-types'
 import { detectPackageManager } from '@/detect/package-manager.js'
 import { fileExists, resolvePath } from '@/utils/fs.js'
 
-async function isPnpmWorkspace(cwd: string): Promise<boolean | undefined> {
+export async function isPnpmWorkspace(
+	cwd: string,
+): Promise<boolean | undefined> {
 	const exists = await fileExists(resolvePath(cwd, 'pnpm-workspace.yaml'))
 	return exists || undefined
 }
