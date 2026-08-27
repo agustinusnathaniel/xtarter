@@ -2,6 +2,12 @@ import { addDependency } from 'nypm'
 import { type PackageJson, readPackageJSON, writePackageJSON } from 'pkg-types'
 import { detectPackageManager } from '@/detect/package-manager.js'
 import { fileExists, resolvePath } from '@/utils/fs.js'
+
+async function isPnpmWorkspace(cwd: string): Promise<boolean | undefined> {
+	const exists = await fileExists(resolvePath(cwd, 'pnpm-workspace.yaml'))
+	return exists || undefined
+}
+
 export async function readPackageJson(cwd: string) {
 	const pkgPath = resolvePath(cwd, 'package.json')
 	const exists = await fileExists(pkgPath)
@@ -81,10 +87,7 @@ export async function installDependenciesBatch(
 	)
 	if (missing.length === 0) return
 
-	const isPnpmWorkspaceRoot = await fileExists(
-		resolvePath(cwd, 'pnpm-workspace.yaml'),
-	)
-	const workspace = isPnpmWorkspaceRoot || undefined
+	const workspace = await isPnpmWorkspace(cwd)
 
 	// Group by dev vs prod (nypm's `dev` option applies to ALL names in one call)
 	const devDeps = missing.filter((d) => d.dev).map((d) => d.depName)
@@ -137,9 +140,7 @@ export async function installDependency(
 	const pkg = await readPackageJson(cwd)
 	if (pkg?.devDependencies?.[depName] || pkg?.dependencies?.[depName]) return
 
-	const isPnpmWorkspaceRoot = await fileExists(
-		resolvePath(cwd, 'pnpm-workspace.yaml'),
-	)
+	const workspace = await isPnpmWorkspace(cwd)
 
 	const packageManager = await detectPackageManager(cwd)
 
@@ -147,7 +148,7 @@ export async function installDependency(
 		await addDependency([depName], {
 			cwd,
 			dev,
-			workspace: isPnpmWorkspaceRoot || undefined,
+			workspace,
 			packageManager,
 		})
 	} catch (cause) {

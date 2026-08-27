@@ -251,8 +251,9 @@ async function importWithTimeout(
 	specifier: string,
 ): Promise<Record<string, unknown>> {
 	const importPromise = import(/* @vite-ignore */ specifier)
+	let timeoutId: ReturnType<typeof setTimeout> | undefined
 	const timeoutPromise = new Promise<never>((_resolve, reject) => {
-		setTimeout(
+		timeoutId = setTimeout(
 			() =>
 				reject(
 					new Error(
@@ -262,7 +263,11 @@ async function importWithTimeout(
 			PLUGIN_LOAD_TIMEOUT_MS,
 		)
 	})
-	return Promise.race([importPromise, timeoutPromise])
+	try {
+		return await Promise.race([importPromise, timeoutPromise])
+	} finally {
+		if (timeoutId !== undefined) clearTimeout(timeoutId)
+	}
 }
 
 /**
