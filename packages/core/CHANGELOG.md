@@ -1,5 +1,13 @@
 # @xtarterize/core
 
+## 1.23.2
+
+### Patch Changes
+
+- [#167](https://github.com/agustinusnathaniel/xtarter/pull/167) [`f5e69c8`](https://github.com/agustinusnathaniel/xtarter/commit/f5e69c8702aac807b8356e50650f7f9afa45cd8c) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - fix: clear plugin import timeout to prevent unhandled rejection
+  
+  `importWithTimeout` now clears its timer in `finally` after `Promise.race` settles — the previous code left the 10s timer running after a fast successful import, producing an unhandled promise rejection when the timer fired. Also deduplicates pnpm workspace detection via a shared `isPnpmWorkspace` helper.
+
 ## 1.23.1
 
 ## 1.23.0
