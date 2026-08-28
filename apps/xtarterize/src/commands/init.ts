@@ -45,7 +45,7 @@ export const initCommand = defineCommand({
 			})
 
 			const ctx = resolveCliContext(args)
-			if (!ctx.json) {
+			if (ctx.format !== 'json') {
 				console.log('')
 				console.log(`Composing plan for: "${composeQuery}"`)
 				if (scored.length > 0) {
