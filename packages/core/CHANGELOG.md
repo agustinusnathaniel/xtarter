@@ -1,5 +1,15 @@
 # @xtarterize/core
 
+## 1.23.3
+
+### Patch Changes
+
+- [#168](https://github.com/agustinusnathaniel/xtarter/pull/168) [`e73935a`](https://github.com/agustinusnathaniel/xtarter/commit/e73935a6f2122f066636b198fa0ca2cd83de52e5) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - fix(core): parse .xtarterizerc with JSON5 and align plugin specifier regex
+  
+  Support JSON5 superset (comments, trailing commas, single quotes) for .xtarterizerc files via JSON5.parse to match package.json handling, and allow tilde (~) in plugin specifier names to match npm naming and test expectations.
+
+- [#171](https://github.com/agustinusnathaniel/xtarter/pull/171) [`97ecb71`](https://github.com/agustinusnathaniel/xtarter/commit/97ecb71201ad3a428244c444c107c30a826d3a5c) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - fix(core): correct recursive file fingerprinting for nested config dirs
+
 ## 1.23.2
 
 ### Patch Changes
