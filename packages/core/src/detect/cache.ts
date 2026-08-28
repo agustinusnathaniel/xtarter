@@ -93,7 +93,13 @@ function fingerprintConfigDirs(
 						const entryStats: PathFingerprint[] = []
 						for (const entry of entries) {
 							if (entry.isFile()) {
-								const fullPath = resolvePath(dirPath, entry.name)
+								const parent =
+									(entry as unknown as { parentPath?: string; path?: string })
+										.parentPath ??
+									(entry as unknown as { parentPath?: string; path?: string })
+										.path ??
+									dirPath
+								const fullPath = resolvePath(String(parent), entry.name)
 								const s = await fs.stat(fullPath)
 								entryStats.push({
 									path: fullPath,
