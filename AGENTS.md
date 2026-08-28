@@ -28,7 +28,7 @@
 
 1. **Understand the Project**
    - `git pull`; check recent commits with `git log --oneline -20`
-   - Determine which package(s) are affected: core, patchers, tasks, xtarterize, create-xtarter-app, or docs
+   - Determine which package(s) are affected: core, patchers, tasks, xtarterize, create-xtarter-app, xtarter-create, or docs (`pnpm-workspace.yaml` defines `packages/*` and `apps/*`)
 
 2. **Understand the Problem**
    - Map the problem to existing abstractions (Task interface, patchers, detection engine) before inventing new ones
@@ -74,6 +74,8 @@
 | Task implementations   | `packages/tasks/src/`           |
 | CLI commands           | `apps/xtarterize/src/commands/` |
 | Scaffolding CLI        | `apps/create-xtarter-app/src/`  |
+| vp create integration  | `apps/xtarter-create/`          |
+| Documentation site     | `apps/docs/`                    |
 | Publishable docs       | `apps/docs/src/content/docs/`   |
 | Architecture decisions | `docs/ADRs/`                    |
 | Tests                  | `test/`                         |
