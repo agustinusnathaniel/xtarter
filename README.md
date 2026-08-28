@@ -35,16 +35,18 @@ npx xtarterize init
 
 ## xtarterize Commands
 
-| Command                         | Description                                        |
-| ------------------------------- | -------------------------------------------------- |
-| `npx xtarterize init`           | Scan project and apply conformance configurations  |
-| `npx xtarterize sync`           | Update existing configurations to latest templates |
-| `npx xtarterize diff`           | Show pending changes without applying anything     |
-| `npx xtarterize check`          | Audit current conformance status                   |
-| `npx xtarterize add [task]`     | Apply a specific task, or pick interactively       |
-| `npx xtarterize undo`           | Undo the last run by restoring backed-up files     |
-| `npx xtarterize restore <file>` | Restore a file from backup                         |
-| `npx xtarterize list`           | List all available tasks and their status          |
+| Command                         | Description                                              |
+| ------------------------------- | -------------------------------------------------------- |
+| `npx xtarterize init`           | Initialize xtarterize conformance for a project          |
+| `npx xtarterize query <query>`  | Search tasks by natural language query                   |
+| `npx xtarterize sync`           | Update existing configurations to latest conformance     |
+| `npx xtarterize diff`           | Show pending changes without applying                    |
+| `npx xtarterize check`          | Audit current conformance status                         |
+| `npx xtarterize doctor`         | Run environment and project diagnostics                  |
+| `npx xtarterize add [task]`     | Add a specific task (or pick interactively)              |
+| `npx xtarterize restore <file>` | Restore a file from backup                               |
+| `npx xtarterize undo`           | Undo the last xtarterize run by restoring backed-up files |
+| `npx xtarterize list`           | List all available tasks                                 |
 
 ## How xtarterize Works
 
@@ -55,18 +57,19 @@ npx xtarterize init
 
 ## Task Categories
 
-- **Linting** - Biome
-- **TypeScript** - Incremental builds, strict mode
+- **Linting & Formatting** - Biome, Oxlint, Oxfmt
+- **TypeScript** - Strict mode, incremental builds, path aliases, tsbuildinfo gitignore
 - **Vite Plugins** - vite-plugin-checker, rollup-plugin-visualizer
 - **CI/CD** - GitHub Actions (CI, release, auto-update)
 - **Dependencies** - Renovate configuration
-- **Release** - commitlint, czg, commit-and-tag-version
-- **Quality** - Knip (unused code detection)
+- **Release** - commitlint, czg, commit-and-tag-version, versionrc, git-hooks
+- **Quality** - Knip (unused code detection), lint-staged, package engines
 - **Codegen** - Plop generators (framework-aware scaffolding)
 - **Monorepo** - Turborepo pipeline
 - **Editor** - VS Code settings and extensions
-- **AI Agents** - AGENTS.md for AI IDE assistants
-- **Scripts** - Standardized package.json scripts
+- **Agent** - AGENTS.md and Agent Skills catalog (skills-install)
+- **Scripts** - Standardized package.json scripts, .npmrc
+- **Workspace** - pnpm-workspace.yaml
 
 ## Create an xtarter App Templates
 
@@ -89,8 +92,10 @@ xtarterize/
 │   ├── patchers/      # JSON merge, YAML merge, AST patching (magicast)
 │   └── tasks/         # All task implementations + templates
 ├── apps/
-│   ├── xtarterize/     # Conformance CLI (citty + @clack/prompts)
-│   └── create-xtarter-app/  # Project scaffolding CLI (citty + giget)
+│   ├── xtarterize/          # Conformance CLI (citty + @clack/prompts)
+│   ├── create-xtarter-app/  # Project scaffolding CLI (citty + giget)
+│   ├── xtarter-create/      # vp create integration (@xtarter/create)
+│   └── docs/                # Documentation site (Astro + Starlight)
 ├── test/              # Shared test fixtures and test suites
 ├── turbo.json
 └── pnpm-workspace.yaml
@@ -105,6 +110,8 @@ xtarterize/
 | `@xtarterize/tasks`    | All task implementations and template renderers                                | Internal    |
 | `xtarterize`           | CLI for applying conformance configurations to existing projects               | Yes         |
 | `create-xtarter-app`   | CLI for scaffolding new projects from templates                                | Yes         |
+| `@xtarter/create`      | `vp create` integration for scaffolding from templates                         | Yes         |
+| `@xtarter/docs`        | Documentation site (Astro + Starlight)                                         | No          |
 
 ## Contributing a New Task
 
