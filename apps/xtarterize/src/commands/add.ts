@@ -9,6 +9,7 @@ import {
 	logInfo,
 	logSuccess,
 	logWarn,
+	resolveTaskStatuses,
 	statusTag,
 } from '@xtarterize/core'
 import { defineCommand } from 'citty'
@@ -358,24 +359,31 @@ async function runInteractive(options: {
 	const s = createSpinner(quiet)
 	s.start('Checking task statuses...')
 
-	const tasksWithStatus: TaskWithStatus[] = []
 	const checkErrors: string[] = []
-	for (const task of applicable) {
-		try {
-			const status = await task.check(cwd, profile)
-			tasksWithStatus.push({ task, status })
-		} catch (error) {
-			const message = error instanceof Error ? error.message : String(error)
-			const detail = `Failed to check ${task.id}: ${message}`
-			checkErrors.push(detail)
-			if (!jsonMode) logError(detail)
-			process.exitCode = 1
-			tasksWithStatus.push({ task, status: 'conflict' })
-		}
-	}
+	const wrappedApplicable: Task[] = applicable.map((task) => ({
+		...task,
+		check: async (
+			checkCwd: string,
+			checkProfile: import('@xtarterize/core').ProjectProfile,
+		): Promise<TaskStatus> => {
+			try {
+				return await task.check(checkCwd, checkProfile)
+			} catch (error) {
+				const message = error instanceof Error ? error.message : String(error)
+				const detail = `Failed to check ${task.id}: ${message}`
+				checkErrors.push(detail)
+				if (!jsonMode) logError(detail)
+				process.exitCode = 1
+				return 'conflict'
+			}
+		},
+	}))
+	const statusesMap = await resolveTaskStatuses(wrappedApplicable, cwd, profile)
+	const tasksWithStatus: TaskWithStatus[] = applicable.map((task) => ({
+		task,
+		status: statusesMap.get(task.id) ?? 'new',
+	}))
 	s.stop('Tasks checked')
-
-	const statusesMap = new Map(tasksWithStatus.map((t) => [t.task.id, t.status]))
 
 	if (quiet && !allFlag) {
 		if (jsonMode) {
