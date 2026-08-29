@@ -11,17 +11,35 @@ export async function collectTaskDiffs(
 	cwd: string,
 	profile: ProjectProfile,
 ): Promise<{ diffs: FileDiff[]; failures: number }> {
-	const diffs: FileDiff[] = []
+	const concurrency = 8
+	const results: (FileDiff[] | null)[] = Array.from({
+		length: tasks.length,
+	})
 	let failures = 0
-	for (const task of tasks) {
-		try {
-			const taskDiffs = await task.dryRun(cwd, profile)
-			diffs.push(...taskDiffs)
-		} catch (error) {
-			failures++
-			const message = error instanceof Error ? error.message : String(error)
-			logError(`Failed to dryRun ${task.id}: ${message}`)
+	let nextIndex = 0
+
+	async function worker(): Promise<void> {
+		while (true) {
+			const current = nextIndex++
+			if (current >= tasks.length) break
+			const task = tasks[current]
+			if (!task) continue
+			try {
+				results[current] = await task.dryRun(cwd, profile)
+			} catch (error) {
+				failures++
+				const message = error instanceof Error ? error.message : String(error)
+				logError(`Failed to dryRun ${task.id}: ${message}`)
+				results[current] = null
+			}
 		}
 	}
+
+	const workers = Array.from(
+		{ length: Math.min(concurrency, tasks.length) },
+		() => worker(),
+	)
+	await Promise.all(workers)
+	const diffs = results.filter((r): r is FileDiff[] => r !== null).flat()
 	return { diffs, failures }
 }
