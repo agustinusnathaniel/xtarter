@@ -32,10 +32,42 @@
 					"options": {
 						"max": 3
 					}
+				},
+				"noExcessiveLinesPerFunction": {
+					"level": "error",
+					"options": {
+						"maxLines": 60
+					}
+				}
+			},
+			"style": {
+				"noExcessiveLinesPerFile": {
+					"level": "error",
+					"options": {
+						"maxLines": 500,
+						"skipBlankLines": true
+					}
 				}
 			}
 		}
 	},
+	"overrides": [
+		{
+			"includes": [
+				"test/**/*.test.ts",
+				"test/**/*.spec.ts",
+				"apps/**/src/**/*.test.ts",
+				"**/*.test.ts"
+			],
+			"linter": {
+				"rules": {
+					"complexity": {
+						"noExcessiveLinesPerFunction": "off"
+					}
+				}
+			}
+		}
+	],
 	"formatter": {
 		"enabled": true
 	},
