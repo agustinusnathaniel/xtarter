@@ -48,14 +48,30 @@ export const queryCommand = defineCommand({
 		const tasks = await getAllTasksWithPlugins(ctx.cwd)
 
 		const queryStr = String(args.query)
-		const limit =
-			args.limit !== undefined
-				? Math.max(1, parseInt(String(args.limit), 10) || 20)
-				: 20
-		const threshold =
-			args.threshold !== undefined
-				? Math.min(1, Math.max(0, parseFloat(String(args.threshold)) || 0.1))
-				: 0.1
+		let limit = 20
+		if (args.limit !== undefined) {
+			const parsed = parseInt(String(args.limit), 10)
+			if (Number.isNaN(parsed) || parsed < 1) {
+				console.error(
+					`Invalid --limit "${args.limit}": expected a positive integer`,
+				)
+				process.exitCode = 1
+				return
+			}
+			limit = parsed
+		}
+		let threshold = 0.1
+		if (args.threshold !== undefined) {
+			const parsed = parseFloat(String(args.threshold))
+			if (Number.isNaN(parsed) || parsed < 0 || parsed > 1) {
+				console.error(
+					`Invalid --threshold "${args.threshold}": expected a number between 0 and 1`,
+				)
+				process.exitCode = 1
+				return
+			}
+			threshold = parsed
+		}
 
 		const results = scoreTasks(tasks, queryStr, {
 			maxResults: limit,
