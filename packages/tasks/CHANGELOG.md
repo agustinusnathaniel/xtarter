@@ -1,5 +1,16 @@
 # @xtarterize/tasks
 
+## 1.23.4
+
+### Patch Changes
+
+- [#172](https://github.com/agustinusnathaniel/xtarter/pull/172) [`654b8b9`](https://github.com/agustinusnathaniel/xtarter/commit/654b8b921210bb6877820a91a290e9aa8f765e3d) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - perf(add): check task statuses concurrently via resolveTaskStatuses
+
+- [#172](https://github.com/agustinusnathaniel/xtarter/pull/172) [`654b8b9`](https://github.com/agustinusnathaniel/xtarter/commit/654b8b921210bb6877820a91a290e9aa8f765e3d) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - fix: keep init --compose output from polluting JSON stdout when --format json is used
+- Updated dependencies [[`654b8b9`](https://github.com/agustinusnathaniel/xtarter/commit/654b8b921210bb6877820a91a290e9aa8f765e3d), [`654b8b9`](https://github.com/agustinusnathaniel/xtarter/commit/654b8b921210bb6877820a91a290e9aa8f765e3d), [`00e8cb7`](https://github.com/agustinusnathaniel/xtarter/commit/00e8cb74669d36676f4817880fd5d4147bb27dd0), [`2711817`](https://github.com/agustinusnathaniel/xtarter/commit/2711817726266870609d82f67ab0aa03c9540029)]:
+  - @xtarterize/core@1.23.4
+  - @xtarterize/patchers@1.23.4
+
 ## 1.23.3
 
 ### Patch Changes
