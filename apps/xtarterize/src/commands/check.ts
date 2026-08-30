@@ -16,6 +16,111 @@ import { diagnosticIcon, taskStatusIcon } from '@/utils/display.js'
 import { resolveCliContext, scanProject } from '@/utils/project.js'
 import { printTiming } from '@/utils/timing-display.js'
 
+function emitAnnotations(options: {
+	args: Record<string, unknown>
+	tasks: unknown[]
+	statuses: Map<string, string>
+	diagnostics: unknown[]
+}) {
+	const { args, tasks, statuses, diagnostics } = options
+	const isGitHubActions = process.env.GITHUB_ACTIONS === 'true'
+	if (!(args.annotations || isGitHubActions)) return
+	const annotationOutput = formatCheckAnnotations(
+		tasks as Parameters<typeof formatCheckAnnotations>[0],
+		statuses as Parameters<typeof formatCheckAnnotations>[1],
+		diagnostics as Parameters<typeof formatCheckAnnotations>[2],
+	)
+	if (annotationOutput) process.stderr.write(`${annotationOutput}\n`)
+}
+
+async function handleBadgeOutput(options: {
+	args: Record<string, unknown>
+	ctx: { json?: boolean }
+	conformant: number
+	total: number
+}) {
+	const { args, ctx, conformant, total } = options
+	if (!args.badge) return
+	const svg = generateBadgeSvg({ conformant, total })
+	let badgePath = String(args.badge)
+	if (badgePath === '-') {
+		if (ctx.json) process.stderr.write(`${svg}\n`)
+		else process.stdout.write(svg)
+		return
+	}
+	const stat = await fs.stat(badgePath).catch(() => null)
+	if (stat?.isDirectory()) badgePath = path.join(badgePath, 'conformance.svg')
+	await fs.writeFile(badgePath, svg, 'utf-8')
+	if (!ctx.json) logSuccess(`Badge written to ${badgePath}`)
+}
+
+function renderCheckSummary(options: {
+	ctx: { json?: boolean; quiet?: boolean }
+	tasks: { id: string; label: string }[]
+	statuses: Map<string, string>
+	diagnostics: { status: string; message: string }[]
+	timing: unknown
+	conformant: number
+	total: number
+	badgeToStdout: boolean
+}) {
+	const {
+		ctx,
+		tasks,
+		statuses,
+		diagnostics,
+		timing,
+		conformant,
+		total,
+		badgeToStdout,
+	} = options
+	if (ctx.json) {
+		console.log(
+			formatCheckResult({
+				tasks: tasks as Parameters<typeof formatCheckResult>[0]['tasks'],
+				statuses: statuses as Parameters<
+					typeof formatCheckResult
+				>[0]['statuses'],
+				diagnostics: diagnostics as Parameters<
+					typeof formatCheckResult
+				>[0]['diagnostics'],
+				timing: timing as Parameters<typeof formatCheckResult>[0]['timing'],
+			}),
+		)
+		return
+	}
+	const auditStream = badgeToStdout ? process.stderr : process.stdout
+	if (!ctx.quiet) {
+		auditStream.write('\n')
+		auditStream.write(`${pc.bold('Conformance audit')}\n\n`)
+		for (const task of tasks) {
+			const status = (statuses.get(task.id) ?? 'new') as Parameters<
+				typeof taskStatusIcon
+			>[0]
+			const icon = taskStatusIcon(status, true)
+			auditStream.write(
+				`  ${icon} ${task.label.padEnd(40)} ${pc.dim(task.id)} ${statusTag(status as Parameters<typeof statusTag>[0])}\n`,
+			)
+		}
+		auditStream.write('\n')
+		auditStream.write(`${pc.bold(`${conformant}/${total} conformant`)}\n`)
+		if (diagnostics.length > 0) {
+			auditStream.write(`\n${pc.bold('Diagnostics')}\n\n`)
+			for (const check of diagnostics) {
+				auditStream.write(
+					`  ${diagnosticIcon(check.status as Parameters<typeof diagnosticIcon>[0])} ${check.message}\n`,
+				)
+			}
+		}
+		auditStream.write('\n')
+		printTiming(timing as Parameters<typeof printTiming>[0], undefined, {
+			write: (line) => auditStream.write(`${line}\n`),
+		})
+		return
+	}
+	auditStream.write(`${conformant}/${total} conformant\n`)
+}
+
 export const checkCommand = defineCommand({
 	meta: {
 		name: 'check',
@@ -51,101 +156,37 @@ export const checkCommand = defineCommand({
 	},
 	async run({ args }) {
 		const ctx = resolveCliContext(args)
-		// When the badge is written to stdout, stdout must carry only the SVG.
-		// Suppress the scan spinner so it does not pollute the stream.
 		const badgeToStdout = args.badge === '-'
 		const scanCtx = badgeToStdout ? { ...ctx, quiet: true } : ctx
 		await ensureXtarterizeGitignore(ctx.cwd)
 		const { tasks, statuses, timing } = await scanProject(scanCtx)
-
 		const conflictChecks = await runConflictChecks(ctx.cwd)
 		const installChecks = await runToolInstallationChecks(ctx.cwd)
 		const diagnostics = [...installChecks, ...conflictChecks]
-
-		if (!computeCheckOk(tasks, statuses, diagnostics)) {
-			process.exitCode = 1
-		}
-
-		const isGitHubActions = process.env.GITHUB_ACTIONS === 'true'
-		if (args.annotations || isGitHubActions) {
-			const annotationOutput = formatCheckAnnotations(
-				tasks,
-				statuses,
-				diagnostics,
-			)
-			if (annotationOutput) {
-				process.stderr.write(`${annotationOutput}\n`)
-			}
-		}
-
+		if (!computeCheckOk(tasks, statuses, diagnostics)) process.exitCode = 1
+		emitAnnotations({
+			args: args as Record<string, unknown>,
+			tasks,
+			statuses: statuses as Map<string, string>,
+			diagnostics,
+		})
 		const conformant = tasks.filter((t) => statuses.get(t.id) === 'skip').length
 		const total = tasks.length
-
-		if (args.badge) {
-			const svg = generateBadgeSvg({ conformant, total })
-			let badgePath = String(args.badge)
-			if (badgePath === '-') {
-				if (ctx.json) {
-					process.stderr.write(`${svg}\n`)
-				} else {
-					process.stdout.write(svg)
-				}
-			} else {
-				const stat = await fs.stat(badgePath).catch(() => null)
-				if (stat?.isDirectory()) {
-					badgePath = path.join(badgePath, 'conformance.svg')
-				}
-				await fs.writeFile(badgePath, svg, 'utf-8')
-				if (!ctx.json) {
-					logSuccess(`Badge written to ${badgePath}`)
-				}
-			}
-		}
-
-		if (ctx.json) {
-			console.log(formatCheckResult({ tasks, statuses, diagnostics, timing }))
-			return
-		}
-
-		// In human mode with the badge on stdout, the audit text must not
-		// follow the SVG on the same stream, so route it to stderr.
-		const auditStream = badgeToStdout ? process.stderr : process.stdout
-
-		if (!ctx.quiet) {
-			auditStream.write('\n')
-			auditStream.write(`${pc.bold('Conformance audit')}\n`)
-			auditStream.write('\n')
-
-			for (const task of tasks) {
-				const status = statuses.get(task.id) ?? 'new'
-				const icon = taskStatusIcon(status, true)
-
-				auditStream.write(
-					`  ${icon} ${task.label.padEnd(40)} ${pc.dim(task.id)} ${statusTag(status)}\n`,
-				)
-			}
-
-			auditStream.write('\n')
-			auditStream.write(`${pc.bold(`${conformant}/${total} conformant`)}\n`)
-
-			if (diagnostics.length > 0) {
-				auditStream.write('\n')
-				auditStream.write(`${pc.bold('Diagnostics')}\n`)
-				auditStream.write('\n')
-
-				for (const check of diagnostics) {
-					auditStream.write(
-						`  ${diagnosticIcon(check.status)} ${check.message}\n`,
-					)
-				}
-			}
-
-			auditStream.write('\n')
-			printTiming(timing, undefined, {
-				write: (line) => auditStream.write(`${line}\n`),
-			})
-		} else {
-			auditStream.write(`${conformant}/${total} conformant\n`)
-		}
+		await handleBadgeOutput({
+			args: args as Record<string, unknown>,
+			ctx,
+			conformant,
+			total,
+		})
+		renderCheckSummary({
+			ctx,
+			tasks,
+			statuses: statuses as Map<string, string>,
+			diagnostics,
+			timing,
+			conformant,
+			total,
+			badgeToStdout,
+		})
 	},
 })
