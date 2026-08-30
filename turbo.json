@@ -16,13 +16,10 @@
     "typecheck": {
       "dependsOn": ["^build"]
     },
-    "//#lint": {
+    "//#ultracite:check": {
       "cache": false
     },
-    "//#check": {
-      "cache": false
-    },
-    "//#fix": {
+    "//#ultracite:fix": {
       "cache": false
     },
     "//#verify:shebangs": {

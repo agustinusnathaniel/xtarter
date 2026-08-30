@@ -42,7 +42,7 @@
    - Only introduce a new dependency when no existing abstraction fits
 
 5. **Implementation & Testing**
-   - Run `vp test`, `pnpm typecheck`, `pnpm build`, `pnpm lint`, `pnpm check`
+    - Run `vp test`, `pnpm typecheck`, `pnpm build`, `pnpm ultracite:check`, `pnpm check`
    - Ensure idempotency - running the same operation twice produces the same result
    - Tasks must follow the interface: `applicable`, `check`, `dryRun`, `apply`
    - Add tests in `test/tasks/`, `test/patchers/`, or `test/core/` for new behavior
