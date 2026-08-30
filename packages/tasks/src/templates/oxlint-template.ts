@@ -52,6 +52,7 @@ export default defineConfig({
   rules: {
     "no-console": ["error", { allow: ["info", "warn", "error"] }],
     "no-shadow": "warn",
+    curly: ["error", "all"],
     "max-lines": ["error", { max: 500, skipBlankLines: true, skipComments: true }],
     "max-lines-per-function": ["error", { max: 60, skipBlankLines: true, skipComments: true }],
   },
@@ -85,6 +86,7 @@ function buildOxlintBaseRules(): Record<string, unknown> {
 		'@typescript-eslint/array-type': ['error', { default: 'generic' }],
 		complexity: ['warn', { max: 30 }],
 		'max-params': ['error', { max: 3 }],
+		curly: ['error', 'all'],
 		'max-lines': [
 			'error',
 			{ max: 500, skipBlankLines: true, skipComments: true },

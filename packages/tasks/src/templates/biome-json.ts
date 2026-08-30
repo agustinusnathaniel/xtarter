@@ -53,6 +53,7 @@ function buildBiomeLinterRules(): Record<string, unknown> {
 				level: 'error',
 				options: { filenameCases: ['kebab-case'] },
 			},
+			useBlockStatements: 'error',
 			noExcessiveLinesPerFile: {
 				level: 'error',
 				options: {

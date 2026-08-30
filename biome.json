@@ -41,6 +41,7 @@
 				}
 			},
 			"style": {
+				"useBlockStatements": "error",
 				"noExcessiveLinesPerFile": {
 					"level": "error",
 					"options": {
