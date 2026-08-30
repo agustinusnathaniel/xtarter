@@ -1,5 +1,19 @@
 # @xtarterize/tasks
 
+## 1.24.0
+
+### Minor Changes
+
+- [#177](https://github.com/agustinusnathaniel/xtarter/pull/177) [`bc5552e`](https://github.com/agustinusnathaniel/xtarter/commit/bc5552e0c9273b4eba6cab95b1f19f059dcb609a) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Enforce file and function size limits via Biome and Oxlint
+  
+  Adds 500-line file and 60-line function limits to generated configs. Biome uses skipBlankLines (skipComments unsupported in 2.5.9) while Oxlint uses both skipBlankLines and skipComments. Test files disable function limit. Refactors core apply pipeline, task factories, and CLI commands to comply with new limits.
+
+### Patch Changes
+
+- Updated dependencies [[`bc5552e`](https://github.com/agustinusnathaniel/xtarter/commit/bc5552e0c9273b4eba6cab95b1f19f059dcb609a)]:
+  - @xtarterize/core@1.24.0
+  - @xtarterize/patchers@1.24.0
+
 ## 1.23.4
 
 ### Patch Changes
