@@ -168,6 +168,111 @@ function getUpgradeCommand(pm: string): string {
 
 type ScriptsMap = Record<string, string>;
 
+function toScriptsMap(raw: Record<string, unknown>): ScriptsMap {
+  const mapped: ScriptsMap = {};
+  for (const [key, value] of Object.entries(raw)) {
+    if (value !== undefined) {
+      mapped[key] = value as string;
+    }
+  }
+  return mapped;
+}
+
+function addCoreScripts(params: {
+  existingScripts: ScriptsMap;
+  lintTool: LintTool | null;
+  oxlintPlugins: string;
+  pm: string;
+  scripts: Array<ScriptEntry>;
+}): void {
+  pushAllIfMissing(
+    params.scripts,
+    params.existingScripts,
+    lintToolScripts(params.lintTool, params.oxlintPlugins)
+  );
+  pushIfMissing(params.scripts, params.existingScripts, {
+    script: 'test',
+    value: 'vitest run',
+  });
+  pushIfMissing(params.scripts, params.existingScripts, {
+    script: 'upgrade',
+    value: getUpgradeCommand(params.pm),
+  });
+}
+
+function addReleaseScripts(params: {
+  existingScripts: ScriptsMap;
+  hasChangeset: boolean;
+  scripts: Array<ScriptEntry>;
+}): void {
+  if (params.hasChangeset) {
+    pushAllIfMissing(params.scripts, params.existingScripts, [
+      { script: 'changeset', value: 'changeset' },
+      { script: 'version-packages', value: 'changeset version' },
+      { script: 'release', value: 'changeset publish' },
+    ]);
+  } else {
+    pushIfMissing(params.scripts, params.existingScripts, {
+      script: 'release',
+      value: 'commit-and-tag-version',
+    });
+  }
+}
+
+function addTypescriptScripts(params: {
+  existingScripts: ScriptsMap;
+  scripts: Array<ScriptEntry>;
+  typescript: boolean;
+}): void {
+  if (params.typescript) {
+    pushIfMissing(params.scripts, params.existingScripts, {
+      script: 'typecheck',
+      value: 'tsc --noEmit',
+    });
+    pushIfMissing(params.scripts, params.existingScripts, {
+      script: 'knip',
+      value: 'knip',
+    });
+  }
+}
+
+function addTurboScript(params: {
+  existingScripts: ScriptsMap;
+  lintTool: LintTool | null;
+  pkg: Record<string, unknown> | null;
+  profile: {
+    existing: { turbo: boolean };
+    monorepoTool: string | null;
+    typescript: boolean;
+  };
+  scripts: Array<ScriptEntry>;
+}): void {
+  const hasTurbo =
+    params.profile.monorepoTool === 'turbo' ||
+    params.profile.existing.turbo ||
+    !!(params.pkg?.devDependencies as Record<string, string> | undefined)
+      ?.turborepo ||
+    !!(params.pkg?.devDependencies as Record<string, string> | undefined)
+      ?.turbo;
+  if (hasTurbo) {
+    const turboTasks = lintTurboTasks(
+      params.lintTool,
+      params.existingScripts,
+      params.profile.typescript
+    );
+    const existingCheckTurbo = params.existingScripts['check:turbo'];
+    const newCheckTurboValue = `turbo run ${turboTasks.join(' ')}`;
+    if (
+      !(
+        existingCheckTurbo &&
+        areEquivalent(existingCheckTurbo, newCheckTurboValue)
+      )
+    ) {
+      params.scripts.push({ script: 'check:turbo', value: newCheckTurboValue });
+    }
+  }
+}
+
 function pushIfMissing(
   scripts: Array<ScriptEntry>,
   existing: ScriptsMap,
@@ -218,36 +323,21 @@ export const packageScriptsTask = createPackageJsonTask({
   async checkFn(_cwd, profile, pkg) {
     const existingScripts = (pkg.scripts as Record<string, string>) ?? {};
     const hasExistingScripts = Object.keys(existingScripts).length > 0;
-
-    const pm = profile.packageManager;
-    const scriptsMap: ScriptsMap = {};
-    for (const [key, value] of Object.entries(existingScripts)) {
-      if (value !== undefined) {
-        scriptsMap[key] = value;
-      }
-    }
-
-    const { lintTool, oxlintPlugins } = resolveProjectLintConfig(pkg, profile);
-
-    const scripts: Array<ScriptEntry> = [];
-    pushAllIfMissing(
-      scripts,
-      scriptsMap,
-      lintToolScripts(lintTool, oxlintPlugins)
+    const scriptsMap = toScriptsMap(
+      existingScripts as unknown as Record<string, unknown>
     );
-    pushIfMissing(scripts, scriptsMap, {
-      script: 'test',
-      value: 'vitest run',
+    const { lintTool, oxlintPlugins } = resolveProjectLintConfig(pkg, profile);
+    const scripts: Array<ScriptEntry> = [];
+    addCoreScripts({
+      existingScripts: scriptsMap,
+      lintTool,
+      oxlintPlugins,
+      pm: profile.packageManager,
+      scripts,
     });
-    pushIfMissing(scripts, scriptsMap, {
-      script: 'upgrade',
-      value: getUpgradeCommand(pm),
-    });
-
     if (scripts.length === 0) {
       return 'skip';
     }
-
     return hasExistingScripts ? 'patch' : 'new';
   },
   getDeps: async (cwd, profile) => {
@@ -300,82 +390,37 @@ export const packageScriptsTask = createPackageJsonTask({
   },
   getScripts: async (cwd, profile) => {
     const pm = profile.packageManager;
-
     const pkg = await readPackageJson(cwd);
-    const rawScripts = pkg?.scripts ?? {};
-    const existingScripts: ScriptsMap = {};
-    for (const [key, value] of Object.entries(rawScripts)) {
-      if (value !== undefined) {
-        existingScripts[key] = value;
-      }
-    }
-
-    const { lintTool, oxlintPlugins } = resolveProjectLintConfig(pkg, profile);
-
-    const scripts: Array<ScriptEntry> = [];
-    pushAllIfMissing(
-      scripts,
-      existingScripts,
-      lintToolScripts(lintTool, oxlintPlugins)
+    const existingScripts = toScriptsMap(
+      (pkg?.scripts as Record<string, unknown>) ?? {}
     );
-    pushIfMissing(scripts, existingScripts, {
-      script: 'test',
-      value: 'vitest run',
+    const { lintTool, oxlintPlugins } = resolveProjectLintConfig(pkg, profile);
+    const scripts: Array<ScriptEntry> = [];
+    addCoreScripts({
+      existingScripts,
+      lintTool,
+      oxlintPlugins,
+      pm,
+      scripts,
     });
-    pushIfMissing(scripts, existingScripts, {
-      script: 'upgrade',
-      value: getUpgradeCommand(pm),
+    addReleaseScripts({
+      existingScripts,
+      hasChangeset: !!profile.existing.changeset,
+      scripts,
     });
-
-    if (profile.existing.changeset) {
-      pushAllIfMissing(scripts, existingScripts, [
-        { script: 'changeset', value: 'changeset' },
-        { script: 'version-packages', value: 'changeset version' },
-        { script: 'release', value: 'changeset publish' },
-      ]);
-    } else {
-      pushIfMissing(scripts, existingScripts, {
-        script: 'release',
-        value: 'commit-and-tag-version',
-      });
-    }
-
     pushIfMissing(scripts, existingScripts, { script: 'plop', value: 'plop' });
-
-    if (profile.typescript) {
-      pushIfMissing(scripts, existingScripts, {
-        script: 'typecheck',
-        value: 'tsc --noEmit',
-      });
-      pushIfMissing(scripts, existingScripts, {
-        script: 'knip',
-        value: 'knip',
-      });
-    }
-
-    const hasTurbo =
-      profile.monorepoTool === 'turbo' ||
-      profile.existing.turbo ||
-      !!pkg?.devDependencies?.turborepo ||
-      !!pkg?.devDependencies?.turbo;
-    if (hasTurbo) {
-      const turboTasks = lintTurboTasks(
-        lintTool,
-        existingScripts,
-        profile.typescript
-      );
-      const existingCheckTurbo = existingScripts['check:turbo'];
-      const newCheckTurboValue = `turbo run ${turboTasks.join(' ')}`;
-      if (
-        !(
-          existingCheckTurbo &&
-          areEquivalent(existingCheckTurbo, newCheckTurboValue)
-        )
-      ) {
-        scripts.push({ script: 'check:turbo', value: newCheckTurboValue });
-      }
-    }
-
+    addTypescriptScripts({
+      existingScripts,
+      scripts,
+      typescript: !!profile.typescript,
+    });
+    addTurboScript({
+      existingScripts,
+      lintTool,
+      pkg: pkg as Record<string, unknown> | null,
+      profile,
+      scripts,
+    });
     return scripts;
   },
   group: 'Scripts',

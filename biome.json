@@ -153,16 +153,6 @@
           }
         }
       }
-    },
-    {
-      "includes": ["packages/tasks/src/factory/package-scripts.ts"],
-      "linter": {
-        "rules": {
-          "complexity": {
-            "noExcessiveLinesPerFunction": "off"
-          }
-        }
-      }
     }
   ],
   "css": {
