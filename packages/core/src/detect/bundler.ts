@@ -1,15 +1,16 @@
-import { findConfigFile } from '@/utils/fs.js'
-import type { Bundler } from './types.js'
+import { findConfigFile } from '@/utils/fs.js';
+
+import type { Bundler } from './types.js';
 
 /** File extensions to search when looking up bundler config files. */
-const CONFIG_EXTENSIONS: string[] = [
-	'.ts',
-	'.js',
-	'.mts',
-	'.mjs',
-	'.cts',
-	'.cjs',
-]
+const CONFIG_EXTENSIONS: Array<string> = [
+  '.ts',
+  '.js',
+  '.mts',
+  '.mjs',
+  '.cts',
+  '.cjs',
+];
 
 /**
  * Checks if a bundler config file exists
@@ -19,11 +20,11 @@ const CONFIG_EXTENSIONS: string[] = [
  * @returns Promise resolving to true if config file exists
  */
 export async function hasBundlerConfig(
-	cwd: string,
-	baseName: string,
-	extensions: string[] = CONFIG_EXTENSIONS,
+  cwd: string,
+  baseName: string,
+  extensions: Array<string> = CONFIG_EXTENSIONS
 ): Promise<boolean> {
-	return Boolean(await findConfigFile(cwd, baseName, extensions))
+  return Boolean(await findConfigFile(cwd, baseName, extensions));
 }
 
 /**
@@ -33,41 +34,41 @@ export async function hasBundlerConfig(
  * @returns Detected bundler
  */
 export async function detectBundler(
-	deps: Record<string, string>,
-	cwd: string,
+  deps: Record<string, string>,
+  cwd: string
 ): Promise<Bundler> {
-	if (deps['@tanstack/start']) {
-		return 'tanstack-start'
-	}
-	if (deps.next) {
-		return 'nextjs'
-	}
-	if (deps.expo) {
-		return 'expo'
-	}
-	if (deps.vite) {
-		return 'vite'
-	}
-	if (deps.webpack) {
-		return 'webpack'
-	}
-	if (deps['@rspack/core']) {
-		return 'rspack'
-	}
-	if (await hasBundlerConfig(cwd, 'next.config')) {
-		return 'nextjs'
-	}
-	if (await hasBundlerConfig(cwd, 'vite.config')) {
-		return 'vite'
-	}
+  if (deps['@tanstack/start']) {
+    return 'tanstack-start';
+  }
+  if (deps.next) {
+    return 'nextjs';
+  }
+  if (deps.expo) {
+    return 'expo';
+  }
+  if (deps.vite) {
+    return 'vite';
+  }
+  if (deps.webpack) {
+    return 'webpack';
+  }
+  if (deps['@rspack/core']) {
+    return 'rspack';
+  }
+  if (await hasBundlerConfig(cwd, 'next.config')) {
+    return 'nextjs';
+  }
+  if (await hasBundlerConfig(cwd, 'vite.config')) {
+    return 'vite';
+  }
 
-	// Check once and cache - avoids redundant hasBundlerConfig calls
-	const hasRspackConfig = await hasBundlerConfig(cwd, 'rspack.config')
-	if (hasRspackConfig) {
-		return 'rspack'
-	}
-	if (await hasBundlerConfig(cwd, 'webpack.config')) {
-		return 'webpack'
-	}
-	return 'none'
+  // Check once and cache - avoids redundant hasBundlerConfig calls
+  const hasRspackConfig = await hasBundlerConfig(cwd, 'rspack.config');
+  if (hasRspackConfig) {
+    return 'rspack';
+  }
+  if (await hasBundlerConfig(cwd, 'webpack.config')) {
+    return 'webpack';
+  }
+  return 'none';
 }

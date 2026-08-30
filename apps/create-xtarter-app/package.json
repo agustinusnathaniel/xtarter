@@ -1,73 +1,73 @@
 {
-	"name": "create-xtarter-app",
-	"version": "1.15.1",
-	"description": "Fast project scaffolding for modern web apps",
-	"keywords": [
-		"scaffold",
-		"starter",
-		"template",
-		"cli",
-		"nextjs",
-		"vite",
-		"react",
-		"typescript"
-	],
-	"homepage": "https://xtarter.sznm.dev/create-xtarter-app",
-	"bugs": {
-		"url": "https://github.com/agustinusnathaniel/xtarter/issues"
-	},
-	"license": "MIT",
-	"author": "agustinusnathaniel",
-	"repository": {
-		"type": "git",
-		"url": "https://github.com/agustinusnathaniel/xtarter",
-		"directory": "apps/create-xtarter-app"
-	},
-	"bin": {
-		"create-xtarter-app": "./dist/cli.mjs"
-	},
-	"exports": {
-		".": "./dist/index.mjs",
-		"./cli": "./dist/cli.mjs",
-		"./package.json": "./package.json"
-	},
-	"files": [
-		"dist"
-	],
-	"type": "module",
-	"publishConfig": {
-		"access": "public",
-		"provenance": true
-	},
-	"scripts": {
-		"build": "vp pack",
-		"dev": "vp pack --watch",
-		"typecheck": "tsc --noEmit",
-		"test": "vp test run",
-		"prepublishOnly": "pnpm build"
-	},
-	"dependencies": {
-		"@clack/prompts": "catalog:",
-		"citty": "catalog:",
-		"giget": "catalog:",
-		"tinyexec": "catalog:",
-		"tinyglobby": "catalog:"
-	},
-	"devDependencies": {
-		"@types/node": "catalog:",
-		"@xtarterize/core": "workspace:*",
-		"typescript": "catalog:",
-		"vite": "catalog:",
-		"vite-plus": "catalog:"
-	},
-	"engines": {
-		"node": ">=24"
-	},
-	"inlinedDependencies": {
-		"consola": "3.4.2",
-		"diff": "9.0.0",
-		"effect": "4.0.0-beta.91",
-		"json5": "2.2.3",
-		"picocolors": "1.1.1"
-	}
+  "name": "create-xtarter-app",
+  "version": "1.15.1",
+  "description": "Fast project scaffolding for modern web apps",
+  "keywords": [
+    "scaffold",
+    "starter",
+    "template",
+    "cli",
+    "nextjs",
+    "vite",
+    "react",
+    "typescript"
+  ],
+  "homepage": "https://xtarter.sznm.dev/create-xtarter-app",
+  "bugs": {
+    "url": "https://github.com/agustinusnathaniel/xtarter/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/agustinusnathaniel/xtarter",
+    "directory": "apps/create-xtarter-app"
+  },
+  "license": "MIT",
+  "author": "agustinusnathaniel",
+  "type": "module",
+  "exports": {
+    ".": "./dist/index.mjs",
+    "./cli": "./dist/cli.mjs",
+    "./package.json": "./package.json"
+  },
+  "bin": {
+    "create-xtarter-app": "./dist/cli.mjs"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "vp pack",
+    "dev": "vp pack --watch",
+    "prepublishOnly": "pnpm build",
+    "test": "vp test run",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@clack/prompts": "catalog:",
+    "citty": "catalog:",
+    "giget": "catalog:",
+    "tinyexec": "catalog:",
+    "tinyglobby": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "@xtarterize/core": "workspace:*",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vite-plus": "catalog:"
+  },
+  "engines": {
+    "node": ">=24"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  },
+  "inlinedDependencies": {
+    "consola": "3.4.2",
+    "diff": "9.0.0",
+    "effect": "4.0.0-beta.91",
+    "json5": "2.2.3",
+    "picocolors": "1.1.1"
+  }
 }

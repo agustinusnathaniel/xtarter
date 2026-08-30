@@ -1,31 +1,32 @@
-import type { ProjectProfile, Task, TaskStatus } from '@xtarterize/core'
-import type { DisplayFormat } from '@/ui/diff-display.js'
+import type { ProjectProfile, Task, TaskStatus } from '@xtarterize/core';
+
+import type { DisplayFormat } from '@/ui/diff-display.js';
 
 export interface TaskWithStatus {
-	task: Task
-	status: TaskStatus
+  status: TaskStatus;
+  task: Task;
 }
 
 export interface RunSingleTaskOptions {
-	taskId: string
-	allTasks: Task[]
-	profile: ProjectProfile
-	cwd: string
-	quiet: boolean
-	format: DisplayFormat
-	detectionMs: number
-	recordTiming: boolean
-	includeConflicts: boolean
+  allTasks: Array<Task>;
+  cwd: string;
+  detectionMs: number;
+  format: DisplayFormat;
+  includeConflicts: boolean;
+  profile: ProjectProfile;
+  quiet: boolean;
+  recordTiming: boolean;
+  taskId: string;
 }
 
 export interface RunInteractiveOptions {
-	allTasks: Task[]
-	profile: ProjectProfile
-	cwd: string
-	quiet: boolean
-	format: DisplayFormat
-	detectionMs: number
-	recordTiming: boolean
-	all?: boolean
-	includeConflicts: boolean
+  all?: boolean;
+  allTasks: Array<Task>;
+  cwd: string;
+  detectionMs: number;
+  format: DisplayFormat;
+  includeConflicts: boolean;
+  profile: ProjectProfile;
+  quiet: boolean;
+  recordTiming: boolean;
 }

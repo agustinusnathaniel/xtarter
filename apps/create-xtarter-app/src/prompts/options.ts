@@ -1,32 +1,32 @@
-import { confirm } from '@clack/prompts'
-import { abortIfCancelled } from '@xtarterize/core'
+import { confirm } from '@clack/prompts';
+import { abortIfCancelled } from '@xtarterize/core';
 
 export async function promptGitInit(skipGit?: boolean): Promise<boolean> {
-	if (skipGit !== undefined) {
-		return !skipGit
-	}
+  if (skipGit !== undefined) {
+    return !skipGit;
+  }
 
-	const result = await confirm({
-		message: 'Initialize a git repository?',
-		initialValue: true,
-	})
+  const result = await confirm({
+    initialValue: true,
+    message: 'Initialize a git repository?',
+  });
 
-	abortIfCancelled(result)
+  abortIfCancelled(result);
 
-	return result
+  return result;
 }
 
 export async function promptCleanCI(cleanMode?: boolean): Promise<boolean> {
-	if (cleanMode !== undefined) {
-		return cleanMode
-	}
+  if (cleanMode !== undefined) {
+    return cleanMode;
+  }
 
-	const result = await confirm({
-		message: 'Remove CI/CD configurations (GitHub Actions, Vercel, etc.)?',
-		initialValue: false,
-	})
+  const result = await confirm({
+    initialValue: false,
+    message: 'Remove CI/CD configurations (GitHub Actions, Vercel, etc.)?',
+  });
 
-	abortIfCancelled(result)
+  abortIfCancelled(result);
 
-	return result
+  return result;
 }

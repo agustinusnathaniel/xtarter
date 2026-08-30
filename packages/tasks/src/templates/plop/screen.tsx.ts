@@ -7,4 +7,4 @@ export default function {{pascalCase name}}Screen() {
     </View>
   )
 }
-`
+`;

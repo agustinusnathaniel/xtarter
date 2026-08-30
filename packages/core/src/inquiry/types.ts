@@ -1,27 +1,27 @@
-import type { Task } from '@/_base.js'
+import type { Task } from '@/_base.js';
 
 export interface RelevanceSignal {
-	name: string
-	score: number
+  name: string;
+  score: number;
 }
 
 export interface InquiryResult {
-	taskId: string
-	task: Task
-	relevance: number
-	signals: RelevanceSignal[]
+  relevance: number;
+  signals: Array<RelevanceSignal>;
+  task: Task;
+  taskId: string;
 }
 
 export interface WeightConfig {
-	label: number
-	id: number
-	group: number
-	keywords: number
-	config: number
+  config: number;
+  group: number;
+  id: number;
+  keywords: number;
+  label: number;
 }
 
 export interface InquiryOptions {
-	minScore?: number
-	maxResults?: number
-	weights?: Partial<WeightConfig>
+  maxResults?: number;
+  minScore?: number;
+  weights?: Partial<WeightConfig>;
 }

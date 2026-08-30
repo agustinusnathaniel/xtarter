@@ -1,45 +1,45 @@
 export interface BadgeOptions {
-	conformant: number
-	total: number
+  conformant: number;
+  total: number;
 }
 
 function getBadgeColor(percentage: number): string {
-	if (percentage >= 90) {
-		return '#22c55e' // green
-	}
-	if (percentage >= 70) {
-		return '#84cc16' // lime
-	}
-	if (percentage >= 50) {
-		return '#eab308' // yellow
-	}
-	return '#ef4444' // red
+  if (percentage >= 90) {
+    return '#22c55e'; // green
+  }
+  if (percentage >= 70) {
+    return '#84cc16'; // lime
+  }
+  if (percentage >= 50) {
+    return '#eab308'; // yellow
+  }
+  return '#ef4444'; // red
 }
 
 function getStatusText(percentage: number): string {
-	if (percentage >= 90) {
-		return 'excellent'
-	}
-	if (percentage >= 70) {
-		return 'good'
-	}
-	if (percentage >= 50) {
-		return 'fair'
-	}
-	return 'needs work'
+  if (percentage >= 90) {
+    return 'excellent';
+  }
+  if (percentage >= 70) {
+    return 'good';
+  }
+  if (percentage >= 50) {
+    return 'fair';
+  }
+  return 'needs work';
 }
 
 export function generateBadgeSvg(options: BadgeOptions): string {
-	const { conformant, total } = options
-	const percentage = total === 0 ? 100 : Math.round((conformant / total) * 100)
-	const nonConformant = total - conformant
-	const color = getBadgeColor(percentage)
-	const status = getStatusText(percentage)
+  const { conformant, total } = options;
+  const percentage = total === 0 ? 100 : Math.round((conformant / total) * 100);
+  const nonConformant = total - conformant;
+  const color = getBadgeColor(percentage);
+  const status = getStatusText(percentage);
 
-	const width = 204
-	const height = 68
+  const width = 204;
+  const height = 68;
 
-	return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" role="img" aria-label="conformance: ${conformant}/${total} (${percentage}%)">
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" role="img" aria-label="conformance: ${conformant}/${total} (${percentage}%)">
 <title>conformance: ${conformant}/${total} (${percentage}%)</title>
 <defs>
 <clipPath id="r"><rect width="${width}" height="${height}" rx="6"/></clipPath>
@@ -67,5 +67,5 @@ export function generateBadgeSvg(options: BadgeOptions): string {
 <!-- Non-conformant count -->
 ${nonConformant > 0 ? `<text x="150" y="55" fill="#a6adc8" font-family="Verdana,Geneva,DejaVu Sans,sans-serif" font-size="10" text-anchor="middle">${nonConformant} remaining</text>` : `<text x="150" y="55" fill="${color}" font-family="Verdana,Geneva,DejaVu Sans,sans-serif" font-size="10" text-anchor="middle">all conformant</text>`}
 </g>
-</svg>`
+</svg>`;
 }

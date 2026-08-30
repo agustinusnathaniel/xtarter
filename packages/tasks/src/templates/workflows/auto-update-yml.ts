@@ -1,49 +1,50 @@
-import type { ProjectProfile } from '@xtarterize/core'
-import { installDependenciesCommand, runScriptCommand } from 'nypm'
-import { ACTION_VERSIONS } from './shared/versions.js'
+import type { ProjectProfile } from '@xtarterize/core';
+import { installDependenciesCommand, runScriptCommand } from 'nypm';
+
+import { ACTION_VERSIONS } from './shared/versions.js';
 import {
-	conditionalScriptStep,
-	createSetupSteps,
-	renderSteps,
-} from './shared/workflow.js'
+  conditionalScriptStep,
+  createSetupSteps,
+  renderSteps,
+} from './shared/workflow.js';
 
 export function renderAutoUpdateWorkflow(profile: ProjectProfile): string {
-	const pm = profile.packageManager
-	const installCmd = installDependenciesCommand(pm)
-	const updateCmd = pm === 'npm' ? 'npx npm-check-updates -u' : `${pm} update`
-	const dedupeCmd = `${pm} dedupe`
-	const runLint = runScriptCommand(pm, 'lint')
-	const runTypecheck = runScriptCommand(pm, 'typecheck')
-	const runTest = runScriptCommand(pm, 'test')
+  const pm = profile.packageManager;
+  const installCmd = installDependenciesCommand(pm);
+  const updateCmd = pm === 'npm' ? 'npx npm-check-updates -u' : `${pm} update`;
+  const dedupeCmd = `${pm} dedupe`;
+  const runLint = runScriptCommand(pm, 'lint');
+  const runTypecheck = runScriptCommand(pm, 'typecheck');
+  const runTest = runScriptCommand(pm, 'test');
 
-	const steps = createSetupSteps(profile)
+  const steps = createSetupSteps(profile);
 
-	steps.push(
-		{
-			name: 'Update dependencies',
-			run: `${installCmd}\n${updateCmd}\n${dedupeCmd}`,
-		},
-		{ run: runLint },
-	)
+  steps.push(
+    {
+      name: 'Update dependencies',
+      run: `${installCmd}\n${updateCmd}\n${dedupeCmd}`,
+    },
+    { run: runLint }
+  );
 
-	if (profile.typescript) {
-		steps.push({ run: runTypecheck })
-	}
+  if (profile.typescript) {
+    steps.push({ run: runTypecheck });
+  }
 
-	steps.push(conditionalScriptStep('Test', runTest, 'test'))
+  steps.push(conditionalScriptStep('Test', runTest, 'test'));
 
-	steps.push({
-		uses: ACTION_VERSIONS.CREATE_PR,
-		with: {
-			'commit-message': 'chore(deps): update dependencies',
-			title: 'chore(deps): update dependencies',
-			body: 'Automated dependency updates',
-			branch: 'chore/update-dependencies',
-			'delete-branch': 'true',
-		},
-	})
+  steps.push({
+    uses: ACTION_VERSIONS.CREATE_PR,
+    with: {
+      body: 'Automated dependency updates',
+      branch: 'chore/update-dependencies',
+      'commit-message': 'chore(deps): update dependencies',
+      'delete-branch': 'true',
+      title: 'chore(deps): update dependencies',
+    },
+  });
 
-	return `name: Auto Update Dependencies
+  return `name: Auto Update Dependencies
 
 on:
   schedule:
@@ -59,5 +60,5 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 ${renderSteps(steps, 6)}
-`
+`;
 }

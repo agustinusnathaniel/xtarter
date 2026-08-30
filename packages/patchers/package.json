@@ -1,37 +1,37 @@
 {
-	"name": "@xtarterize/patchers",
-	"version": "1.23.4",
-	"private": true,
-	"type": "module",
-	"engines": {
-		"node": ">=24"
-	},
-	"main": "./dist/index.mjs",
-	"types": "./dist/index.d.mts",
-	"exports": {
-		".": {
-			"types": "./dist/index.d.mts",
-			"import": "./dist/index.mjs"
-		}
-	},
-	"scripts": {
-		"build": "vp pack",
-		"dev": "vp pack --watch",
-		"typecheck": "tsc --noEmit"
-	},
-	"dependencies": {
-		"defu": "catalog:",
-		"js-yaml": "^5.3.0",
-		"json5": "catalog:",
-		"jsonc-parser": "catalog:",
-		"magicast": "catalog:",
-		"pathe": "catalog:"
-	},
-	"devDependencies": {
-		"@types/js-yaml": "^4.0.9",
-		"@types/node": "catalog:",
-		"typescript": "catalog:",
-		"vite": "catalog:",
-		"vite-plus": "catalog:"
-	}
+  "name": "@xtarterize/patchers",
+  "version": "1.23.4",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.mts",
+      "import": "./dist/index.mjs"
+    }
+  },
+  "main": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
+  "scripts": {
+    "build": "vp pack",
+    "dev": "vp pack --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "defu": "catalog:",
+    "js-yaml": "^5.3.0",
+    "json5": "catalog:",
+    "jsonc-parser": "catalog:",
+    "magicast": "catalog:",
+    "pathe": "catalog:"
+  },
+  "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vite-plus": "catalog:"
+  },
+  "engines": {
+    "node": ">=24"
+  }
 }

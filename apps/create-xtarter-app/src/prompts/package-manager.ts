@@ -1,34 +1,35 @@
-import { select } from '@clack/prompts'
-import { abortIfCancelled } from '@xtarterize/core'
-import type { PackageManager } from '@/types'
+import { select } from '@clack/prompts';
+import { abortIfCancelled } from '@xtarterize/core';
+
+import type { PackageManager } from '@/types';
 
 const packageManagerOptions = [
-	{ value: 'pnpm', label: 'pnpm (recommended)', hint: 'Fast, disk-efficient' },
-	{ value: 'npm', label: 'npm', hint: 'Default Node.js' },
-	{ value: 'bun', label: 'bun', hint: 'Ultra-fast' },
-	{ value: 'yarn', label: 'yarn', hint: 'Classic choice' },
-]
+  { hint: 'Fast, disk-efficient', label: 'pnpm (recommended)', value: 'pnpm' },
+  { hint: 'Default Node.js', label: 'npm', value: 'npm' },
+  { hint: 'Ultra-fast', label: 'bun', value: 'bun' },
+  { hint: 'Classic choice', label: 'yarn', value: 'yarn' },
+];
 
 export async function promptPackageManager(
-	selectedPm?: PackageManager,
+  selectedPm?: PackageManager
 ): Promise<PackageManager> {
-	if (selectedPm) {
-		const validPms = packageManagerOptions.map((o) => o.value)
-		if (!validPms.includes(selectedPm)) {
-			throw new Error(
-				`Unknown package manager "${selectedPm}". Valid options: ${validPms.join(', ')}`,
-			)
-		}
-		return selectedPm
-	}
+  if (selectedPm) {
+    const validPms = packageManagerOptions.map((o) => o.value);
+    if (!validPms.includes(selectedPm)) {
+      throw new Error(
+        `Unknown package manager "${selectedPm}". Valid options: ${validPms.join(', ')}`
+      );
+    }
+    return selectedPm;
+  }
 
-	const result = await select({
-		message: 'Which package manager would you like to use?',
-		options: packageManagerOptions,
-		initialValue: 'pnpm',
-	})
+  const result = await select({
+    initialValue: 'pnpm',
+    message: 'Which package manager would you like to use?',
+    options: packageManagerOptions,
+  });
 
-	abortIfCancelled(result)
+  abortIfCancelled(result);
 
-	return result as PackageManager
+  return result as PackageManager;
 }

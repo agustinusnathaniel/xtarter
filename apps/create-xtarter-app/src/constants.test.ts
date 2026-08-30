@@ -1,26 +1,27 @@
-import { describe, expect, it } from 'vite-plus/test'
-import { SUPPORTED_PACKAGE_MANAGERS } from '@/constants'
+import { describe, expect, test } from 'vite-plus/test';
+
+import { SUPPORTED_PACKAGE_MANAGERS } from '@/constants';
 
 describe('Constants', () => {
-	describe('SUPPORTED_PACKAGE_MANAGERS', () => {
-		it('should support pnpm, npm, bun, and yarn', () => {
-			expect(SUPPORTED_PACKAGE_MANAGERS).toHaveProperty('pnpm')
-			expect(SUPPORTED_PACKAGE_MANAGERS).toHaveProperty('npm')
-			expect(SUPPORTED_PACKAGE_MANAGERS).toHaveProperty('bun')
-			expect(SUPPORTED_PACKAGE_MANAGERS).toHaveProperty('yarn')
-		})
+  describe('SUPPORTED_PACKAGE_MANAGERS', () => {
+    test('should support pnpm, npm, bun, and yarn', () => {
+      expect(SUPPORTED_PACKAGE_MANAGERS).toHaveProperty('pnpm');
+      expect(SUPPORTED_PACKAGE_MANAGERS).toHaveProperty('npm');
+      expect(SUPPORTED_PACKAGE_MANAGERS).toHaveProperty('bun');
+      expect(SUPPORTED_PACKAGE_MANAGERS).toHaveProperty('yarn');
+    });
 
-		it('should have installCommand for each package manager', () => {
-			for (const pm of Object.values(SUPPORTED_PACKAGE_MANAGERS)) {
-				expect(pm.installCommand).toBe('install')
-			}
-		})
+    test('should have installCommand for each package manager', () => {
+      for (const pm of Object.values(SUPPORTED_PACKAGE_MANAGERS)) {
+        expect(pm.installCommand).toBe('install');
+      }
+    });
 
-		it('should have correct execCommand for each package manager', () => {
-			expect(SUPPORTED_PACKAGE_MANAGERS.pnpm.execCommand).toBe('pnpm')
-			expect(SUPPORTED_PACKAGE_MANAGERS.npm.execCommand).toBe('npm')
-			expect(SUPPORTED_PACKAGE_MANAGERS.bun.execCommand).toBe('bun')
-			expect(SUPPORTED_PACKAGE_MANAGERS.yarn.execCommand).toBe('yarn')
-		})
-	})
-})
+    test('should have correct execCommand for each package manager', () => {
+      expect(SUPPORTED_PACKAGE_MANAGERS.pnpm.execCommand).toBe('pnpm');
+      expect(SUPPORTED_PACKAGE_MANAGERS.npm.execCommand).toBe('npm');
+      expect(SUPPORTED_PACKAGE_MANAGERS.bun.execCommand).toBe('bun');
+      expect(SUPPORTED_PACKAGE_MANAGERS.yarn.execCommand).toBe('yarn');
+    });
+  });
+});

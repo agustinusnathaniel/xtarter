@@ -1,45 +1,47 @@
-import { select } from '@clack/prompts'
+import { select } from '@clack/prompts';
 import type {
-	ProjectProfile,
-	ResolveTiming,
-	Task,
-	TaskStatus,
-} from '@xtarterize/core'
+  ProjectProfile,
+  ResolveTiming,
+  Task,
+  TaskStatus,
+} from '@xtarterize/core';
 import {
-	abortIfCancelled,
-	createSpinner,
-	detectProject,
-	pc,
-	readPackageJson,
-	resolveExternalTasks,
-	resolveProjectTasks,
-	runPreflight,
-} from '@xtarterize/core'
-import { getAllTasks } from '@xtarterize/tasks'
-import type { DisplayFormat } from '@/ui/diff-display.js'
-import { resolveCwd } from './cwd.js'
-import { handlePreflightFailure } from './preflight.js'
-import { resolveRuntimeFlags } from './runtime-flags.js'
+  abortIfCancelled,
+  createSpinner,
+  detectProject,
+  pc,
+  readPackageJson,
+  resolveExternalTasks,
+  resolveProjectTasks,
+  runPreflight,
+} from '@xtarterize/core';
+import { getAllTasks } from '@xtarterize/tasks';
+
+import type { DisplayFormat } from '@/ui/diff-display.js';
+
+import { resolveCwd } from './cwd.js';
+import { handlePreflightFailure } from './preflight.js';
+import { resolveRuntimeFlags } from './runtime-flags.js';
 
 export interface CliContext {
-	cwd: string
-	json: boolean
-	quiet: boolean
-	format: DisplayFormat
-	timing: boolean
+  cwd: string;
+  format: DisplayFormat;
+  json: boolean;
+  quiet: boolean;
+  timing: boolean;
 }
 
 export function resolveCliContext(args: {
-	quiet?: boolean | string | number | string[]
-	json?: boolean | string | number | string[]
-	format?: string
-	cwd?: string
-	timing?: boolean
-	_?: (string | number)[]
+  quiet?: boolean | string | number | Array<string>;
+  json?: boolean | string | number | Array<string>;
+  format?: string;
+  cwd?: string;
+  timing?: boolean;
+  _?: Array<string | number>;
 }): CliContext {
-	const cwd = resolveCwd(args)
-	const { json, quiet, format } = resolveRuntimeFlags(args)
-	return { cwd, json, quiet, format, timing: args.timing === true }
+  const cwd = resolveCwd(args);
+  const { json, quiet, format } = resolveRuntimeFlags(args);
+  return { cwd, format, json, quiet, timing: args.timing === true };
 }
 
 /**
@@ -47,84 +49,86 @@ export function resolveCliContext(args: {
  * External tasks are loaded from the project's plugin config
  * (`.xtarterizerc` or `"xtarterize"` key in `package.json`).
  */
-export async function getAllTasksWithPlugins(cwd: string): Promise<Task[]> {
-	const internal = getAllTasks()
-	const external = await resolveExternalTasks(cwd)
-	return external.length > 0 ? [...internal, ...external] : internal
+export async function getAllTasksWithPlugins(
+  cwd: string
+): Promise<Array<Task>> {
+  const internal = getAllTasks();
+  const external = await resolveExternalTasks(cwd);
+  return external.length > 0 ? [...internal, ...external] : internal;
 }
 
 export interface ScanResult {
-	profile: ProjectProfile
-	tasks: Task[]
-	statuses: Map<string, TaskStatus>
-	timing: ResolveTiming
+  profile: ProjectProfile;
+  statuses: Map<string, TaskStatus>;
+  tasks: Array<Task>;
+  timing: ResolveTiming;
 }
 
 export async function scanProject(ctx: CliContext): Promise<ScanResult> {
-	const preflight = await runPreflight(ctx.cwd)
-	handlePreflightFailure(preflight, ctx.json)
+  const preflight = await runPreflight(ctx.cwd);
+  handlePreflightFailure(preflight, ctx.json);
 
-	const s = createSpinner(ctx.quiet)
-	s.start('Scanning project...')
+  const s = createSpinner(ctx.quiet);
+  s.start('Scanning project...');
 
-	const allTasks = await getAllTasksWithPlugins(ctx.cwd)
-	const result = await resolveProjectTasks(ctx.cwd, allTasks)
+  const allTasks = await getAllTasksWithPlugins(ctx.cwd);
+  const result = await resolveProjectTasks(ctx.cwd, allTasks);
 
-	s.stop('Project scanned')
-	return result
+  s.stop('Project scanned');
+  return result;
 }
 
 export async function detectProjectWithAmbiguity(
-	cwd: string,
-	quiet: boolean,
-	baseProfile?: ProjectProfile,
+  cwd: string,
+  quiet: boolean,
+  baseProfile?: ProjectProfile
 ): Promise<ProjectProfile> {
-	let profile = baseProfile ?? (await detectProject(cwd))
+  let profile = baseProfile ?? (await detectProject(cwd));
 
-	if (profile.framework === null && !quiet) {
-		const pkg = await readPackageJson(cwd)
-		const allDeps: Record<string, string> = {}
-		if (pkg?.dependencies) {
-			Object.assign(allDeps, pkg.dependencies)
-		}
-		if (pkg?.devDependencies) {
-			Object.assign(allDeps, pkg.devDependencies)
-		}
+  if (profile.framework === null && !quiet) {
+    const pkg = await readPackageJson(cwd);
+    const allDeps: Record<string, string> = {};
+    if (pkg?.dependencies) {
+      Object.assign(allDeps, pkg.dependencies);
+    }
+    if (pkg?.devDependencies) {
+      Object.assign(allDeps, pkg.devDependencies);
+    }
 
-		const hasReactNative = !!(allDeps['react-native'] || allDeps.expo)
-		const hasReact = !!allDeps.react
+    const hasReactNative = !!(allDeps['react-native'] || allDeps.expo);
+    const hasReact = !!allDeps.react;
 
-		if (hasReactNative && hasReact) {
-			const resolved = await resolveAmbiguousFramework()
-			profile = { ...profile, framework: resolved }
-		}
-	}
+    if (hasReactNative && hasReact) {
+      const resolved = await resolveAmbiguousFramework();
+      profile = { ...profile, framework: resolved };
+    }
+  }
 
-	return profile
+  return profile;
 }
 
 export function printProjectProfile(profile: ProjectProfile): void {
-	console.log('')
-	console.log(`${pc.bold(`Framework: ${profile.framework ?? 'none'}`)}`)
-	console.log(`${pc.bold(`Bundler: ${profile.bundler ?? 'none'}`)}`)
-	console.log(`${pc.bold(`Package Manager: ${profile.packageManager}`)}`)
-	console.log('')
+  console.log('');
+  console.log(`${pc.bold(`Framework: ${profile.framework ?? 'none'}`)}`);
+  console.log(`${pc.bold(`Bundler: ${profile.bundler ?? 'none'}`)}`);
+  console.log(`${pc.bold(`Package Manager: ${profile.packageManager}`)}`);
+  console.log('');
 }
 
 async function resolveAmbiguousFramework(): Promise<
-	'react' | 'react-native' | 'node'
+  'react' | 'react-native' | 'node'
 > {
-	const choice = await select({
-		message:
-			'Detected both React and React Native dependencies. Which best describes this project?',
-		options: [
-			{ value: 'react', label: 'React (web)' },
-			{ value: 'react-native', label: 'React Native / Expo (mobile)' },
-			{ value: 'node', label: 'Universal (web + native, treating as Node)' },
-		],
-	})
+  const choice = await select({
+    message:
+      'Detected both React and React Native dependencies. Which best describes this project?',
+    options: [
+      { label: 'React (web)', value: 'react' },
+      { label: 'React Native / Expo (mobile)', value: 'react-native' },
+      { label: 'Universal (web + native, treating as Node)', value: 'node' },
+    ],
+  });
 
-	abortIfCancelled(choice)
+  abortIfCancelled(choice);
 
-	return choice as 'react' | 'react-native' | 'node'
+  return choice as 'react' | 'react-native' | 'node';
 }

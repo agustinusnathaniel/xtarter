@@ -1,27 +1,27 @@
 {
-	"$schema": "https://unpkg.com/@changesets/config@4.0.0/schema.json",
-	"changelog": [
-		"@changesets/changelog-github",
-		{
-			"repo": "agustinusnathaniel/xtarter"
-		}
-	],
-	"commit": false,
-	"fixed": [
-		[
-			"@xtarterize/core",
-			"@xtarterize/patchers",
-			"@xtarterize/tasks",
-			"xtarterize"
-		]
-	],
-	"linked": [],
-	"access": "public",
-	"baseBranch": "main",
-	"privatePackages": {
-		"version": true,
-		"tag": false
-	},
-	"updateInternalDependencies": "patch",
-	"ignore": ["@xtarter/docs"]
+  "$schema": "https://unpkg.com/@changesets/config@4.0.0/schema.json",
+  "changelog": [
+    "@changesets/changelog-github",
+    {
+      "repo": "agustinusnathaniel/xtarter"
+    }
+  ],
+  "commit": false,
+  "fixed": [
+    [
+      "@xtarterize/core",
+      "@xtarterize/patchers",
+      "@xtarterize/tasks",
+      "xtarterize"
+    ]
+  ],
+  "linked": [],
+  "access": "public",
+  "baseBranch": "main",
+  "privatePackages": {
+    "version": true,
+    "tag": false
+  },
+  "updateInternalDependencies": "patch",
+  "ignore": ["@xtarter/docs"]
 }

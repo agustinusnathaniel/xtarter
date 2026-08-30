@@ -1,4 +1,4 @@
-import { createPackageJsonTask } from '@/factory'
+import { createPackageJsonTask } from '@/factory';
 
 const VERSIONRC_TEMPLATE = `{
   "packageFiles": ["package.json"],
@@ -13,32 +13,32 @@ const VERSIONRC_TEMPLATE = `{
     { "type": "perf", "section": "Performance" },
     { "type": "test", "hidden": true }
   ]
-}`
+}`;
 
 export const catVersionTask = createPackageJsonTask({
-	id: 'release/cat-version',
-	label: 'commit-and-tag-version',
-	group: 'Release',
-	searchMeta: {
-		tags: ['release', 'version', 'changelog', 'semver'],
-		configTargets: ['.versionrc'],
-		keywords: [
-			'commit-and-tag-version',
-			'version bump',
-			'changelog',
-			'release',
-			'semver',
-		],
-	},
-	scope: 'root',
-	applicable: () => true,
-	scripts: [{ script: 'release', value: 'commit-and-tag-version' }],
-	depName: 'commit-and-tag-version',
-	installDev: true,
-	files: [
-		{
-			filepath: '.versionrc',
-			render: () => VERSIONRC_TEMPLATE,
-		},
-	],
-})
+  applicable: () => true,
+  depName: 'commit-and-tag-version',
+  files: [
+    {
+      filepath: '.versionrc',
+      render: () => VERSIONRC_TEMPLATE,
+    },
+  ],
+  group: 'Release',
+  id: 'release/cat-version',
+  installDev: true,
+  label: 'commit-and-tag-version',
+  scope: 'root',
+  scripts: [{ script: 'release', value: 'commit-and-tag-version' }],
+  searchMeta: {
+    configTargets: ['.versionrc'],
+    keywords: [
+      'commit-and-tag-version',
+      'version bump',
+      'changelog',
+      'release',
+      'semver',
+    ],
+    tags: ['release', 'version', 'changelog', 'semver'],
+  },
+});

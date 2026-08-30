@@ -1,5 +1,5 @@
-import { Equal } from 'effect'
+import { Equal } from 'effect';
 
 export function deepEqual(a: unknown, b: unknown): boolean {
-	return Equal.equals(a, b)
+  return Equal.equals(a, b);
 }

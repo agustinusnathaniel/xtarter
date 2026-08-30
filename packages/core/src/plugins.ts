@@ -1,23 +1,24 @@
-import JSON5 from 'json5'
-import type { Task } from '@/_base.js'
-import { findConfigFile, readFile, readJson } from '@/utils/fs.js'
-import { logWarn } from '@/utils/logger.js'
+import JSON5 from 'json5';
+
+import type { Task } from '@/_base.js';
+import { findConfigFile, readFile, readJson } from '@/utils/fs.js';
+import { logWarn } from '@/utils/logger.js';
 
 /**
  * Maximum time (ms) to wait for a plugin module to load.
  * Prevents the CLI from hanging on slow or broken plugins.
  */
-const PLUGIN_LOAD_TIMEOUT_MS = 10_000
+const PLUGIN_LOAD_TIMEOUT_MS = 10_000;
 
 /**
  * Configuration file basenames searched in order.
  * The first match wins.
  */
 const CONFIG_BASENAMES = [
-	'.xtarterizerc',
-	'.xtarterizerc.json',
-	'.xtarterizerc.json5',
-]
+  '.xtarterizerc',
+  '.xtarterizerc.json',
+  '.xtarterizerc.json5',
+];
 
 /**
  * @internal Plugin configuration.
@@ -31,17 +32,17 @@ const CONFIG_BASENAMES = [
  * via dynamic import of attacker-controlled paths.
  */
 export interface PluginConfig {
-	/** npm package names exporting tasks */
-	plugins?: string[]
-	/** Task IDs to always exclude from runs */
-	skip?: string[]
-	/** When non-empty: restrict runs to these task IDs */
-	only?: string[]
+  /** When non-empty: restrict runs to these task IDs */
+  only?: Array<string>;
+  /** npm package names exporting tasks */
+  plugins?: Array<string>;
+  /** Task IDs to always exclude from runs */
+  skip?: Array<string>;
 }
 
 export interface Plugin {
-	name: string
-	tasks: Task[]
+  name: string;
+  tasks: Array<Task>;
 }
 
 /**
@@ -49,7 +50,7 @@ export interface Plugin {
  * file exists but cannot be parsed. Never escapes public APIs: each caller
  * maps it to its own fallback behavior.
  */
-const CONFIG_PARSE_ERROR = Symbol('xtarterizerc-parse-error')
+const CONFIG_PARSE_ERROR = Symbol('xtarterizerc-parse-error');
 
 /**
  * Load the raw xtarterize configuration object.
@@ -61,44 +62,44 @@ const CONFIG_PARSE_ERROR = Symbol('xtarterizerc-parse-error')
  * Returns the raw parsed object, or `null` when no config is found.
  */
 async function readRawXtarterizeConfig(
-	cwd: string,
+  cwd: string
 ): Promise<Record<string, unknown> | null> {
-	// 1. Standalone config file
-	for (const basename of CONFIG_BASENAMES) {
-		const path = await findConfigFile(cwd, basename, [''])
-		if (path) {
-			const content = await readFile(path)
-			let config: Record<string, unknown>
-			try {
-				config = JSON5.parse(content) as Record<string, unknown>
-			} catch {
-				logWarn('Failed to parse .xtarterizerc')
-				throw CONFIG_PARSE_ERROR
-			}
-			if (config && typeof config === 'object') {
-				return config
-			}
-			throw CONFIG_PARSE_ERROR
-		}
-	}
+  // 1. Standalone config file
+  for (const basename of CONFIG_BASENAMES) {
+    const path = await findConfigFile(cwd, basename, ['']);
+    if (path) {
+      const content = await readFile(path);
+      let config: Record<string, unknown>;
+      try {
+        config = JSON5.parse(content) as Record<string, unknown>;
+      } catch {
+        logWarn('Failed to parse .xtarterizerc');
+        throw CONFIG_PARSE_ERROR;
+      }
+      if (config && typeof config === 'object') {
+        return config;
+      }
+      throw CONFIG_PARSE_ERROR;
+    }
+  }
 
-	// 2. package.json under "xtarterize" key
-	try {
-		const pkg = await readJson<{ xtarterize?: Record<string, unknown> }>(
-			`${cwd}/package.json`,
-		)
-		if (
-			pkg?.xtarterize &&
-			typeof pkg.xtarterize === 'object' &&
-			!Array.isArray(pkg.xtarterize)
-		) {
-			return pkg.xtarterize
-		}
-	} catch {
-		// Not a package.json or no such key - that's fine
-	}
+  // 2. package.json under "xtarterize" key
+  try {
+    const pkg = await readJson<{ xtarterize?: Record<string, unknown> }>(
+      `${cwd}/package.json`
+    );
+    if (
+      pkg?.xtarterize &&
+      typeof pkg.xtarterize === 'object' &&
+      !Array.isArray(pkg.xtarterize)
+    ) {
+      return pkg.xtarterize;
+    }
+  } catch {
+    // Not a package.json or no such key - that's fine
+  }
 
-	return null
+  return null;
 }
 
 /**
@@ -111,39 +112,39 @@ async function readRawXtarterizeConfig(
  * Returns `null` when no config is found.
  */
 export async function loadPluginConfig(
-	cwd: string,
+  cwd: string
 ): Promise<PluginConfig | null> {
-	let raw: Record<string, unknown> | null
-	try {
-		raw = await readRawXtarterizeConfig(cwd)
-	} catch (error) {
-		if (error === CONFIG_PARSE_ERROR) {
-			return { plugins: [] }
-		}
-		throw error
-	}
-	if (raw === null) {
-		return null
-	}
-	if (!Array.isArray(raw.plugins)) {
-		return { plugins: [] }
-	}
-	return raw as PluginConfig
+  let raw: Record<string, unknown> | null;
+  try {
+    raw = await readRawXtarterizeConfig(cwd);
+  } catch (error) {
+    if (error === CONFIG_PARSE_ERROR) {
+      return { plugins: [] };
+    }
+    throw error;
+  }
+  if (raw === null) {
+    return null;
+  }
+  if (!Array.isArray(raw.plugins)) {
+    return { plugins: [] };
+  }
+  return raw as PluginConfig;
 }
 
 export interface TaskSelectionConfig {
-	skip: string[]
-	only: string[]
+  only: Array<string>;
+  skip: Array<string>;
 }
 
-function sanitizeStringArray(value: unknown): string[] {
-	if (!Array.isArray(value)) {
-		return []
-	}
-	return value
-		.filter((s): s is string => typeof s === 'string')
-		.map((s) => s.trim())
-		.filter((s) => s.length > 0)
+function sanitizeStringArray(value: unknown): Array<string> {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+  return value
+    .filter((s): s is string => typeof s === 'string')
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0);
 }
 
 /**
@@ -157,31 +158,31 @@ function sanitizeStringArray(value: unknown): string[] {
  * - If a task ID appears in both skip and only, skip wins (task excluded).
  */
 export async function loadSelectionConfig(
-	cwd: string,
+  cwd: string
 ): Promise<TaskSelectionConfig> {
-	try {
-		const raw = await readRawXtarterizeConfig(cwd)
-		if (!raw) {
-			return { skip: [], only: [] }
-		}
-		return {
-			skip: sanitizeStringArray(raw.skip),
-			only: sanitizeStringArray(raw.only),
-		}
-	} catch {
-		return { skip: [], only: [] }
-	}
+  try {
+    const raw = await readRawXtarterizeConfig(cwd);
+    if (!raw) {
+      return { only: [], skip: [] };
+    }
+    return {
+      only: sanitizeStringArray(raw.only),
+      skip: sanitizeStringArray(raw.skip),
+    };
+  } catch {
+    return { only: [], skip: [] };
+  }
 }
 
 interface TaskSelectionInput {
-	/** CLI `--skip` flag value (comma-separated), if provided */
-	cliSkip?: string
-	/** CLI `--only` flag value (comma-separated), if provided */
-	cliOnly?: string
-	/** Persisted `skip` entries from the selection config */
-	configSkip?: string[]
-	/** Persisted `only` entries from the selection config */
-	configOnly?: string[]
+  /** CLI `--only` flag value (comma-separated), if provided */
+  cliOnly?: string;
+  /** CLI `--skip` flag value (comma-separated), if provided */
+  cliSkip?: string;
+  /** Persisted `only` entries from the selection config */
+  configOnly?: Array<string>;
+  /** Persisted `skip` entries from the selection config */
+  configSkip?: Array<string>;
 }
 
 /**
@@ -198,33 +199,33 @@ interface TaskSelectionInput {
  * Pure helper: no I/O, no status filtering.
  */
 export function applyTaskSelection<T extends { id: string }>(
-	tasks: T[],
-	input: TaskSelectionInput,
-): T[] {
-	const parseCliIds = (value?: string): Set<string> =>
-		new Set(
-			(value ?? '')
-				.split(',')
-				.map((s) => s.trim())
-				.filter((s) => s.length > 0),
-		)
+  tasks: Array<T>,
+  input: TaskSelectionInput
+): Array<T> {
+  const parseCliIds = (value?: string): Set<string> =>
+    new Set(
+      (value ?? '')
+        .split(',')
+        .map((s) => s.trim())
+        .filter((s) => s.length > 0)
+    );
 
-	const cliOnlyIds = parseCliIds(input.cliOnly)
-	const only =
-		cliOnlyIds.size > 0
-			? cliOnlyIds
-			: new Set(sanitizeStringArray(input.configOnly))
+  const cliOnlyIds = parseCliIds(input.cliOnly);
+  const only =
+    cliOnlyIds.size > 0
+      ? cliOnlyIds
+      : new Set(sanitizeStringArray(input.configOnly));
 
-	const skip = new Set([
-		...parseCliIds(input.cliSkip),
-		...sanitizeStringArray(input.configSkip),
-	])
+  const skip = new Set([
+    ...parseCliIds(input.cliSkip),
+    ...sanitizeStringArray(input.configSkip),
+  ]);
 
-	let selected = tasks
-	if (only.size > 0) {
-		selected = selected.filter((t) => only.has(t.id))
-	}
-	return selected.filter((t) => !skip.has(t.id))
+  let selected = tasks;
+  if (only.size > 0) {
+    selected = selected.filter((t) => only.has(t.id));
+  }
+  return selected.filter((t) => !skip.has(t.id));
 }
 
 /**
@@ -242,13 +243,13 @@ export function applyTaskSelection<T extends { id: string }>(
  * Invalid: `../../malicious.js`, `/etc/passwd`, `https://evil.com/pwn.js`
  */
 function validatePluginSpecifier(specifier: string): boolean {
-	// npm package name pattern:
-	//   - optional scope: @scope/ (alphanumeric, hyphens, dots, underscores)
-	//   - required name: same charset, at least one char
-	//   - no leading dots, no leading hyphens, no consecutive dots
-	return /^(?:@[a-z0-9~][a-z0-9-._~]*\/)?[a-z0-9~][a-z0-9-._~]*$/.test(
-		specifier,
-	)
+  // npm package name pattern:
+  //   - optional scope: @scope/ (alphanumeric, hyphens, dots, underscores)
+  //   - required name: same charset, at least one char
+  //   - no leading dots, no leading hyphens, no consecutive dots
+  return /^(?:@[a-z0-9~][a-z0-9-._~]*\/)?[a-z0-9~][a-z0-9-._~]*$/.test(
+    specifier
+  );
 }
 
 /**
@@ -259,29 +260,29 @@ function validatePluginSpecifier(specifier: string): boolean {
  * remains responsive even when a plugin fails to load.
  */
 async function importWithTimeout(
-	specifier: string,
+  specifier: string
 ): Promise<Record<string, unknown>> {
-	const importPromise = import(/* @vite-ignore */ specifier)
-	void importPromise.catch(() => {})
-	let timeoutId: ReturnType<typeof setTimeout> | undefined
-	const timeoutPromise = new Promise<never>((_resolve, reject) => {
-		timeoutId = setTimeout(
-			() =>
-				reject(
-					new Error(
-						`Plugin "${specifier}" failed to load within ${PLUGIN_LOAD_TIMEOUT_MS / 1000}s`,
-					),
-				),
-			PLUGIN_LOAD_TIMEOUT_MS,
-		)
-	})
-	try {
-		return await Promise.race([importPromise, timeoutPromise])
-	} finally {
-		if (timeoutId !== undefined) {
-			clearTimeout(timeoutId)
-		}
-	}
+  const importPromise = import(/* @vite-ignore */ specifier);
+  void importPromise.catch(() => {});
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+  const timeoutPromise = new Promise<never>((_resolve, reject) => {
+    timeoutId = setTimeout(
+      () =>
+        reject(
+          new Error(
+            `Plugin "${specifier}" failed to load within ${PLUGIN_LOAD_TIMEOUT_MS / 1000}s`
+          )
+        ),
+      PLUGIN_LOAD_TIMEOUT_MS
+    );
+  });
+  try {
+    return await Promise.race([importPromise, timeoutPromise]);
+  } finally {
+    if (timeoutId !== undefined) {
+      clearTimeout(timeoutId);
+    }
+  }
 }
 
 /**
@@ -293,72 +294,74 @@ async function importWithTimeout(
  *   - a named export `tasks` that is `Task[]`
  *   - a named export `task` that is a single `Task`
  */
-export async function loadPluginTasks(config: PluginConfig): Promise<Task[]> {
-	if (!config.plugins?.length) {
-		return []
-	}
+export async function loadPluginTasks(
+  config: PluginConfig
+): Promise<Array<Task>> {
+  if (!config.plugins?.length) {
+    return [];
+  }
 
-	const allTasks: Task[] = []
-	const seen = new Set<string>()
+  const allTasks: Array<Task> = [];
+  const seen = new Set<string>();
 
-	for (const specifier of config.plugins) {
-		if (!validatePluginSpecifier(specifier)) {
-			logWarn(
-				`Invalid xtarterize plugin specifier "${specifier}" - must be an npm package name. Skipping.`,
-			)
-			continue
-		}
+  for (const specifier of config.plugins) {
+    if (!validatePluginSpecifier(specifier)) {
+      logWarn(
+        `Invalid xtarterize plugin specifier "${specifier}" - must be an npm package name. Skipping.`
+      );
+      continue;
+    }
 
-		try {
-			const mod = await importWithTimeout(specifier)
+    try {
+      const mod = await importWithTimeout(specifier);
 
-			// Collect tasks from the module
-			const moduleTasks: Task[] = []
+      // Collect tasks from the module
+      const moduleTasks: Array<Task> = [];
 
-			// Default export: single Task
-			if (
-				mod.default &&
-				typeof mod.default === 'object' &&
-				'id' in mod.default
-			) {
-				moduleTasks.push(mod.default as Task)
-			}
+      // Default export: single Task
+      if (
+        mod.default &&
+        typeof mod.default === 'object' &&
+        'id' in mod.default
+      ) {
+        moduleTasks.push(mod.default as Task);
+      }
 
-			// Named export "tasks": Task[]
-			if (Array.isArray(mod.tasks)) {
-				moduleTasks.push(...(mod.tasks as Task[]))
-			}
+      // Named export "tasks": Task[]
+      if (Array.isArray(mod.tasks)) {
+        moduleTasks.push(...(mod.tasks as Array<Task>));
+      }
 
-			// Named export "task": single Task
-			if (mod.task && typeof mod.task === 'object' && 'id' in mod.task) {
-				moduleTasks.push(mod.task as Task)
-			}
+      // Named export "task": single Task
+      if (mod.task && typeof mod.task === 'object' && 'id' in mod.task) {
+        moduleTasks.push(mod.task as Task);
+      }
 
-			// Deduplicate by id within this load
-			for (const t of moduleTasks) {
-				if (!seen.has(t.id)) {
-					seen.add(t.id)
-					allTasks.push(t)
-				}
-			}
-		} catch (cause) {
-			logWarn(
-				`Failed to load xtarterize plugin "${specifier}": ${cause instanceof Error ? cause.message : String(cause)}`,
-			)
-		}
-	}
+      // Deduplicate by id within this load
+      for (const t of moduleTasks) {
+        if (!seen.has(t.id)) {
+          seen.add(t.id);
+          allTasks.push(t);
+        }
+      }
+    } catch (cause) {
+      logWarn(
+        `Failed to load xtarterize plugin "${specifier}": ${cause instanceof Error ? cause.message : String(cause)}`
+      );
+    }
+  }
 
-	return allTasks
+  return allTasks;
 }
 
 /**
  * Convenience: load config + tasks in one call.
  * Returns an empty array when no plugins are configured or loading fails.
  */
-export async function resolveExternalTasks(cwd: string): Promise<Task[]> {
-	const config = await loadPluginConfig(cwd)
-	if (!config) {
-		return []
-	}
-	return loadPluginTasks(config)
+export async function resolveExternalTasks(cwd: string): Promise<Array<Task>> {
+  const config = await loadPluginConfig(cwd);
+  if (!config) {
+    return [];
+  }
+  return loadPluginTasks(config);
 }

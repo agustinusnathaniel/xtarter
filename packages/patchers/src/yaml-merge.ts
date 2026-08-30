@@ -1,23 +1,23 @@
-import { createDefu } from 'defu'
-import { dump, load } from 'js-yaml'
+import { createDefu } from 'defu';
+import { dump, load } from 'js-yaml';
 
 const mergeYamlDefu = createDefu((obj, key, value) => {
-	// Arrays are replaced, not concatenated - consistent with mergeJson and ADR-007
-	if (Array.isArray(obj[key])) {
-		obj[key] = value
-		return true
-	}
-})
+  // Arrays are replaced, not concatenated - consistent with mergeJson and ADR-007
+  if (Array.isArray(obj[key])) {
+    obj[key] = value;
+    return true;
+  }
+});
 
 /**
  * Parse a YAML string into a plain object.
  * Returns an empty object if the string is empty or contains only whitespace.
  */
 export function parseYaml(text: string): Record<string, unknown> {
-	if (text.trim() === '') {
-		return {}
-	}
-	return load(text) as Record<string, unknown>
+  if (text.trim() === '') {
+    return {};
+  }
+  return load(text) as Record<string, unknown>;
 }
 
 /**
@@ -39,10 +39,10 @@ export function parseYaml(text: string): Record<string, unknown> {
  * this function will flatten them.
  */
 export function mergeYaml(
-	source: string,
-	merge: Record<string, unknown>,
+  source: string,
+  merge: Record<string, unknown>
 ): string {
-	const existing = parseYaml(source)
-	const merged = mergeYamlDefu(existing, merge)
-	return dump(merged)
+  const existing = parseYaml(source);
+  const merged = mergeYamlDefu(existing, merge);
+  return dump(merged);
 }

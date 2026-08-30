@@ -9,8 +9,6 @@
   "files": {
     "ignoreUnknown": false,
     "includes": [
-      "apps",
-      "packages",
       "!**/dist",
       "!**/.turbo",
       "!**/node_modules",
@@ -32,13 +30,29 @@
   "linter": {
     "enabled": true,
     "rules": {
+      "correctness": {
+        "noUndeclaredVariables": "error"
+      },
       "complexity": {
+        "useMaxParams": {
+          "level": "error",
+          "options": {
+            "max": 3
+          }
+        },
+        "noExcessiveCognitiveComplexity": "off",
         "noExcessiveLinesPerFunction": {
           "level": "error",
           "options": {
             "maxLines": 60
           }
-        }
+        },
+        "noVoid": "off"
+      },
+      "performance": {
+        "noBarrelFile": "off",
+        "noAwaitInLoops": "off",
+        "useTopLevelRegex": "off"
       },
       "style": {
         "useConsistentTypeDefinitions": "off",
@@ -61,7 +75,23 @@
             "maxLines": 500,
             "skipBlankLines": true
           }
-        }
+        },
+        "noDefaultExport": "off",
+        "noExportedImports": "off",
+        "noIncrementDecrement": "off",
+        "noNestedTernary": "off",
+        "useAtIndex": "off",
+        "useDestructuring": "off",
+        "useErrorCause": "off",
+        "useDefaultSwitchClause": "off"
+      },
+      "suspicious": {
+        "noBiomeFirstException": "off",
+        "noBitwiseOperators": "off",
+        "noEmptyBlockStatements": "off",
+        "noShadow": "off",
+        "noUnnecessaryConditions": "off",
+        "useAwait": "off"
       }
     }
   },
@@ -91,9 +121,20 @@
   },
   "overrides": [
     {
-      "includes": ["*.test.ts", "*.test.tsx", "*.spec.ts", "*.spec.tsx"],
+      "includes": [
+        "test/**/*.test.ts",
+        "test/**/*.spec.ts",
+        "apps/**/src/**/*.test.ts",
+        "**/*.test.ts",
+        "**/*.test.tsx",
+        "**/*.spec.ts",
+        "**/*.spec.tsx"
+      ],
       "linter": {
         "rules": {
+          "correctness": {
+            "noUndeclaredVariables": "off"
+          },
           "nursery": {
             "useConsistentTestIt": {
               "level": "error",
@@ -103,6 +144,20 @@
               }
             }
           },
+          "complexity": {
+            "noExcessiveLinesPerFunction": "off"
+          },
+          "suspicious": {
+            "noExplicitAny": "off",
+            "noBitwiseOperators": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": ["packages/tasks/src/factory/package-scripts.ts"],
+      "linter": {
+        "rules": {
           "complexity": {
             "noExcessiveLinesPerFunction": "off"
           }

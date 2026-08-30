@@ -1,18 +1,18 @@
 export interface TaskTiming {
-	id: string
-	label: string
-	checkMs?: number
-	dryRunMs?: number
-	applyMs?: number
+  applyMs?: number;
+  checkMs?: number;
+  dryRunMs?: number;
+  id: string;
+  label: string;
 }
 
 export interface ResolveTiming {
-	detectionMs: number
-	resolutionMs: number
-	resolutionSumMs: number
+  detectionMs: number;
+  resolutionMs: number;
+  resolutionSumMs: number;
 }
 
 export interface ApplyTiming {
-	applyMs: number
-	tasks: TaskTiming[]
+  applyMs: number;
+  tasks: Array<TaskTiming>;
 }

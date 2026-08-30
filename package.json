@@ -9,6 +9,7 @@
     "postbuild:ci": "pnpm verify:shebangs",
     "changeset": "changeset",
     "check": "ultracite check",
+    "check:all": "turbo run typecheck build lint test verify:shebangs",
     "check:ci": "turbo run typecheck build --filter=!@xtarter/docs lint test verify:shebangs",
     "contributors:add": "all-contributors add",
     "contributors:check": "all-contributors check",
@@ -26,6 +27,7 @@
     "typecheck": "turbo run typecheck",
     "up-interactive": "pnpm up -i -r",
     "up-latest": "pnpm up-interactive -L",
+    "verify": "turbo run typecheck build lint test verify:shebangs",
     "verify:shebangs": "node scripts/verify-shebangs.mjs",
     "version-packages": "changeset version"
   },

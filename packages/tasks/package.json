@@ -1,39 +1,39 @@
 {
-	"name": "@xtarterize/tasks",
-	"version": "1.23.4",
-	"private": true,
-	"type": "module",
-	"engines": {
-		"node": ">=24"
-	},
-	"main": "./dist/index.mjs",
-	"types": "./dist/index.d.mts",
-	"exports": {
-		".": {
-			"types": "./dist/index.d.mts",
-			"import": "./dist/index.mjs"
-		}
-	},
-	"scripts": {
-		"build": "vp pack",
-		"dev": "vp pack --watch",
-		"typecheck": "tsc --noEmit"
-	},
-	"dependencies": {
-		"@xtarterize/core": "workspace:*",
-		"@xtarterize/patchers": "workspace:*",
-		"effect": "catalog:",
-		"json5": "catalog:",
-		"magicast": "catalog:",
-		"nypm": "catalog:",
-		"pathe": "catalog:",
-		"pkg-types": "catalog:",
-		"tinyexec": "catalog:"
-	},
-	"devDependencies": {
-		"@types/node": "catalog:",
-		"typescript": "catalog:",
-		"vite": "catalog:",
-		"vite-plus": "catalog:"
-	}
+  "name": "@xtarterize/tasks",
+  "version": "1.23.4",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.mts",
+      "import": "./dist/index.mjs"
+    }
+  },
+  "main": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
+  "scripts": {
+    "build": "vp pack",
+    "dev": "vp pack --watch",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@xtarterize/core": "workspace:*",
+    "@xtarterize/patchers": "workspace:*",
+    "effect": "catalog:",
+    "json5": "catalog:",
+    "magicast": "catalog:",
+    "nypm": "catalog:",
+    "pathe": "catalog:",
+    "pkg-types": "catalog:",
+    "tinyexec": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vite-plus": "catalog:"
+  },
+  "engines": {
+    "node": ">=24"
+  }
 }

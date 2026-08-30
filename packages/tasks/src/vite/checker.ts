@@ -1,25 +1,25 @@
-import { createVitePluginTask } from '@/factory'
+import { createVitePluginTask } from '@/factory';
 
 export const viteCheckerTask = createVitePluginTask({
-	id: 'vite/checker',
-	label: 'vite-plugin-checker',
-	group: 'Vite Plugins',
-	searchMeta: {
-		tags: ['vite', 'plugin', 'type-checking', 'linting'],
-		configTargets: ['vite.config.ts'],
-		keywords: [
-			'vite checker',
-			'type checking',
-			'vite plugin',
-			'build validation',
-		],
-	},
-	scope: 'package',
-	applicable: (profile) =>
-		profile.bundler === 'vite' && profile.runtime !== 'node',
-	depName: 'vite-plugin-checker',
-	importName: 'checker',
-	importStyle: 'default',
-	pluginCall: 'checker({ typescript: true })',
-	checkString: 'vite-plugin-checker',
-})
+  applicable: (profile) =>
+    profile.bundler === 'vite' && profile.runtime !== 'node',
+  checkString: 'vite-plugin-checker',
+  depName: 'vite-plugin-checker',
+  group: 'Vite Plugins',
+  id: 'vite/checker',
+  importName: 'checker',
+  importStyle: 'default',
+  label: 'vite-plugin-checker',
+  pluginCall: 'checker({ typescript: true })',
+  scope: 'package',
+  searchMeta: {
+    configTargets: ['vite.config.ts'],
+    keywords: [
+      'vite checker',
+      'type checking',
+      'vite plugin',
+      'build validation',
+    ],
+    tags: ['vite', 'plugin', 'type-checking', 'linting'],
+  },
+});
