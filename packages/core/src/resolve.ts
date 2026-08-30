@@ -26,7 +26,7 @@ export function resolveTasks(
 	})
 }
 
-function checkTask(
+export function checkTask(
 	task: Task,
 	cwd: string,
 	profile: ProjectProfile,

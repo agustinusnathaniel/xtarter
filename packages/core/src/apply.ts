@@ -4,10 +4,13 @@ import type { Task, TaskStatus } from '@/_base.js'
 import { backupFile, writeRunManifest } from '@/backup.js'
 import type { ProjectProfile } from '@/detect.js'
 import { TaskError } from '@/errors.js'
+import { checkTask } from '@/resolve.js'
 import type { ApplyTiming, TaskTiming } from '@/timing.js'
 import { logError, logInfo, pc } from '@/utils/logger.js'
 import { installDependenciesBatch } from '@/utils/pkg.js'
 import { statusTag } from '@/utils/tags.js'
+
+const CONCURRENCY = 8
 
 export interface ApplyOptions {
 	includeConflicts?: boolean
@@ -75,64 +78,137 @@ async function runApply(options: RunApplyOptions): Promise<ApplyResult> {
 	const perTask: TaskTiming[] = []
 	const s = quiet ? null : spinner()
 
-	const tasksToRun: { task: Task; status: TaskStatus }[] = []
+	// Phase 1: concurrent check collection (deduplicating helper via checkTask)
+	const checkResults = await Effect.runPromise(
+		Effect.all(
+			toApply.map((task) => {
+				const precomputed = statuses?.get(task.id)
+				if (precomputed !== undefined) {
+					return Effect.succeed({
+						task,
+						status: precomputed,
+						checkMs: 0,
+					} as const)
+				}
+				return Effect.gen(function* () {
+					const start = performance.now()
+					const status = yield* checkTask(task, cwd, profile)
+					const checkMs = performance.now() - start
+					return { task, status, checkMs } as const
+				})
+			}),
+			{ concurrency: CONCURRENCY },
+		),
+	)
 
-	const filesToBackup = new Set<string>()
 	let skippedInCheck = 0
+	const toDryRun: { task: Task; status: TaskStatus; checkMs: number }[] = []
+
+	for (const result of checkResults) {
+		if (result.status === 'skip') {
+			perTask.push({
+				id: result.task.id,
+				label: result.task.label,
+				checkMs: result.checkMs,
+			})
+			skippedInCheck++
+			continue
+		}
+		if (result.status === 'conflict' && !includeConflicts) {
+			if (!quiet) {
+				logInfo(`Skipping conflict: ${result.task.label} (${result.task.id})`)
+			}
+			perTask.push({
+				id: result.task.id,
+				label: result.task.label,
+				checkMs: result.checkMs,
+			})
+			skippedInCheck++
+			continue
+		}
+		toDryRun.push(result)
+	}
+
+	// Phase 2: concurrent dryRun collection (only dryRun failures go to checkErrors)
 	const checkErrors: string[] = []
 
-	for (const task of toApply) {
-		try {
-			const checkStart = performance.now()
-			const status =
-				statuses?.get(task.id) ??
-				(await Effect.runPromise(
-					Effect.tryPromise({
-						try: (_signal) => task.check(cwd, profile),
+	type DryRunSuccess = {
+		kind: 'success'
+		task: Task
+		status: TaskStatus
+		checkMs: number
+		dryRunMs: number
+		diffs: { filepath: string }[]
+	}
+	type DryRunFailure = {
+		kind: 'failure'
+		task: Task
+		checkMs: number
+		errorMsg: string
+	}
+	type DryRunOutcome = DryRunSuccess | DryRunFailure
+
+	const dryRunOutcomes: DryRunOutcome[] = await Effect.runPromise(
+		Effect.all(
+			toDryRun.map(({ task, status, checkMs }) =>
+				Effect.gen(function* () {
+					const start = performance.now()
+					const diffs = yield* Effect.tryPromise({
+						try: () => task.dryRun(cwd, profile),
 						catch: (cause) =>
 							new TaskError({
 								taskId: task.id,
-								message: `Failed to check ${task.id}`,
+								message: `Failed to dryRun ${task.id}`,
 								cause,
 							}),
-					}),
-				))
-			const checkMs = performance.now() - checkStart
-			if (status === 'skip') {
-				perTask.push({ id: task.id, label: task.label, checkMs })
-				skippedInCheck++
-				continue
-			}
-			if (status === 'conflict' && !includeConflicts) {
-				if (!quiet) {
-					logInfo(`Skipping conflict: ${task.label} (${task.id})`)
-				}
-				skippedInCheck++
-				continue
-			}
-			const dryRunStart = performance.now()
-			const diffs = await Effect.runPromise(
-				Effect.tryPromise({
-					try: (_signal) => task.dryRun(cwd, profile),
-					catch: (cause) =>
-						new TaskError({
-							taskId: task.id,
-							message: `Failed to dryRun ${task.id}`,
-							cause,
+					})
+					const dryRunMs = performance.now() - start
+					return {
+						kind: 'success' as const,
+						task,
+						status,
+						checkMs,
+						dryRunMs,
+						diffs,
+					}
+				}).pipe(
+					Effect.catch((error: unknown) =>
+						Effect.sync(() => {
+							const message =
+								error instanceof Error ? error.message : String(error)
+							logError(`Failed to check/dryRun ${task.id}: ${message}`)
+							return {
+								kind: 'failure' as const,
+								task,
+								checkMs,
+								errorMsg: `${task.id}: ${message}`,
+							}
 						}),
-				}),
-			)
-			const dryRunMs = performance.now() - dryRunStart
-			for (const diff of diffs) {
-				filesToBackup.add(diff.filepath)
-			}
-			tasksToRun.push({ task, status })
-			perTask.push({ id: task.id, label: task.label, checkMs, dryRunMs })
-		} catch (error) {
-			const message = error instanceof Error ? error.message : String(error)
-			logError(`Failed to check/dryRun ${task.id}: ${message}`)
-			checkErrors.push(`${task.id}: ${message}`)
+					),
+				),
+			),
+			{ concurrency: CONCURRENCY },
+		),
+	)
+
+	const tasksToRun: { task: Task; status: TaskStatus }[] = []
+	const filesToBackup = new Set<string>()
+
+	for (const outcome of dryRunOutcomes) {
+		if (outcome.kind === 'failure') {
+			checkErrors.push(outcome.errorMsg)
+			continue
 		}
+		for (const diff of outcome.diffs) {
+			filesToBackup.add(diff.filepath)
+		}
+		tasksToRun.push({ task: outcome.task, status: outcome.status })
+		perTask.push({
+			id: outcome.task.id,
+			label: outcome.task.label,
+			checkMs: outcome.checkMs,
+			dryRunMs: outcome.dryRunMs,
+		})
 	}
 
 	// Backup each unique file only once before applying any tasks
@@ -145,17 +221,20 @@ async function runApply(options: RunApplyOptions): Promise<ApplyResult> {
 		await writeRunManifest(cwd, [...filesToBackup])
 	}
 
-	// Phase: batch-install all needed deps across all tasks
-	// This lets pnpm/npm resolve all packages in one go instead
-	// of per-task. Each task's apply() will find deps already
-	// installed and skip them (no-op in installDependenciesBatch).
-	const allDeps: { depName: string; dev: boolean }[] = []
-	for (const { task } of tasksToRun) {
-		if (task.getDeps) {
-			const deps = await task.getDeps(cwd, profile)
-			allDeps.push(...deps)
-		}
-	}
+	// Phase: batch-install all needed deps across all tasks (concurrently collected)
+	const depArrays = await Effect.runPromise(
+		Effect.all(
+			tasksToRun.map(({ task }) =>
+				Effect.promise(() =>
+					task.getDeps
+						? task.getDeps(cwd, profile)
+						: Promise.resolve([] as { depName: string; dev: boolean }[]),
+				),
+			),
+			{ concurrency: CONCURRENCY },
+		),
+	)
+	const allDeps = depArrays.flat()
 	if (allDeps.length > 0) {
 		try {
 			// In quiet mode (CI, --json), pipe the package manager's output
