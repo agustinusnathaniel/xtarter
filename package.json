@@ -1,49 +1,51 @@
 {
-	"name": "xtarter",
-	"version": "0.1.0",
-	"private": true,
-	"scripts": {
-		"contributors:add": "all-contributors add",
-		"contributors:generate": "all-contributors generate",
-		"contributors:check": "all-contributors check",
-		"build": "turbo run build",
-		"verify:shebangs": "node scripts/verify-shebangs.mjs",
-		"postbuild": "pnpm verify:shebangs",
-		"build:ci": "turbo run build --filter=!@xtarter/docs",
-		"postbuild:ci": "pnpm verify:shebangs",
-		"dev": "turbo run dev",
-		"test": "vp test",
-		"lint": "biome check",
-		"lint:fix": "biome check --write",
-		"typecheck": "turbo run typecheck",
-		"check": "turbo run typecheck build lint test verify:shebangs",
-		"check:ci": "turbo run typecheck build --filter=!@xtarter/docs lint test verify:shebangs",
-		"docs:dev": "pnpm --filter @xtarter/docs dev",
-		"docs:build": "pnpm --filter @xtarter/docs build",
-		"docs:preview": "pnpm --filter @xtarter/docs preview",
-		"up-interactive": "pnpm up -i -r",
-		"up-latest": "pnpm up-interactive -L",
-		"changeset": "changeset",
-		"version-packages": "changeset version",
-		"release": "changeset publish",
-		"prepare": "vp config"
-	},
-	"devDependencies": {
-		"@biomejs/biome": "catalog:",
-		"@changesets/changelog-github": "^1.0.0",
-		"@changesets/cli": "^3.0.1",
-		"@types/node": "catalog:",
-		"all-contributors-cli": "^6.26.1",
-		"turbo": "^2.10.11",
-		"vite": "catalog:",
-		"vite-plus": "catalog:"
-	},
-	"devEngines": {
-		"runtime": {
-			"name": "node",
-			"version": "24.16.0",
-			"onFail": "download"
-		}
-	},
-	"packageManager": "pnpm@11.15.1"
+  "name": "xtarter",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "build": "turbo run build",
+    "postbuild": "pnpm verify:shebangs",
+    "build:ci": "turbo run build --filter=!@xtarter/docs",
+    "postbuild:ci": "pnpm verify:shebangs",
+    "changeset": "changeset",
+    "check": "ultracite check",
+    "check:ci": "turbo run typecheck build --filter=!@xtarter/docs lint test verify:shebangs",
+    "contributors:add": "all-contributors add",
+    "contributors:check": "all-contributors check",
+    "contributors:generate": "all-contributors generate",
+    "dev": "turbo run dev",
+    "docs:build": "pnpm --filter @xtarter/docs build",
+    "docs:dev": "pnpm --filter @xtarter/docs dev",
+    "docs:preview": "pnpm --filter @xtarter/docs preview",
+    "fix": "ultracite fix",
+    "lint": "biome check",
+    "lint:fix": "biome check --write",
+    "prepare": "vp config",
+    "release": "changeset publish",
+    "test": "vp test",
+    "typecheck": "turbo run typecheck",
+    "up-interactive": "pnpm up -i -r",
+    "up-latest": "pnpm up-interactive -L",
+    "verify:shebangs": "node scripts/verify-shebangs.mjs",
+    "version-packages": "changeset version"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.9",
+    "@changesets/changelog-github": "^1.0.0",
+    "@changesets/cli": "^3.0.1",
+    "@types/node": "catalog:",
+    "all-contributors-cli": "^6.26.1",
+    "turbo": "^2.10.11",
+    "ultracite": "7.10.7",
+    "vite": "catalog:",
+    "vite-plus": "catalog:"
+  },
+  "packageManager": "pnpm@11.15.1",
+  "devEngines": {
+    "runtime": {
+      "name": "node",
+      "version": "24.16.0",
+      "onFail": "download"
+    }
+  }
 }

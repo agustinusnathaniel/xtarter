@@ -1,37 +1,41 @@
 {
-	"$schema": "https://turbo.build/schema.json",
-	"tasks": {
-		"build": {
-			"dependsOn": ["^build", "typecheck"],
-			"outputs": ["dist/**"]
-		},
-		"@xtarter/create#build": {
-			"outputs": [],
-			"cache": false
-		},
-		"dev": {
-			"persistent": true,
-			"cache": false
-		},
-		"typecheck": {
-			"dependsOn": ["^build"]
-		},
-		"//#lint": {
-			"inputs": ["biome.json", "apps/", "packages/"]
-		},
-		"//#verify:shebangs": {
-			"dependsOn": ["^build"]
-		},
-		"//#test": {
-			"dependsOn": [
-				"^build",
-				"@xtarterize/core#build",
-				"@xtarterize/patchers#build",
-				"@xtarterize/tasks#build",
-				"create-xtarter-app#build"
-			],
-			"inputs": ["vite.config.ts", "test/", "!test/fixtures/**/.xtarterize/**"],
-			"outputs": ["node_modules/.vite/vitest/*"]
-		}
-	}
+  "$schema": "https://turbo.build/schema.json",
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build", "typecheck"],
+      "outputs": ["dist/**"]
+    },
+    "@xtarter/create#build": {
+      "outputs": [],
+      "cache": false
+    },
+    "dev": {
+      "persistent": true,
+      "cache": false
+    },
+    "typecheck": {
+      "dependsOn": ["^build"]
+    },
+    "//#lint": {
+      "inputs": ["biome.json", "apps/", "packages/"]
+    },
+    "//#check": {},
+    "//#fix": {
+      "cache": false
+    },
+    "//#verify:shebangs": {
+      "dependsOn": ["^build"]
+    },
+    "//#test": {
+      "dependsOn": [
+        "^build",
+        "@xtarterize/core#build",
+        "@xtarterize/patchers#build",
+        "@xtarterize/tasks#build",
+        "create-xtarter-app#build"
+      ],
+      "inputs": ["vite.config.ts", "test/", "!test/fixtures/**/.xtarterize/**"],
+      "outputs": ["node_modules/.vite/vitest/*"]
+    }
+  }
 }
