@@ -32,7 +32,7 @@ const main = defineCommand({
 		diff: () => import('@/commands/diff.js').then((m) => m.diffCommand),
 		check: () => import('@/commands/check.js').then((m) => m.checkCommand),
 		doctor: () => import('@/commands/doctor.js').then((m) => m.doctorCommand),
-		add: () => import('@/commands/add.js').then((m) => m.addCommand),
+		add: () => import('@/commands/add/index.js').then((m) => m.addCommand),
 		restore: () =>
 			import('@/commands/restore.js').then((m) => m.restoreCommand),
 		undo: () => import('@/commands/undo.js').then((m) => m.undoCommand),

@@ -1,7 +1,7 @@
 import fs from 'node:fs/promises'
 import os from 'node:os'
 import path from 'node:path'
-import { addCommand } from '@xtarterize/app/commands/add.js'
+import { addCommand } from '@xtarterize/app/commands/add/index.js'
 import { initCommand } from '@xtarterize/app/commands/init.js'
 import { restoreCommand } from '@xtarterize/app/commands/restore.js'
 import { syncCommand } from '@xtarterize/app/commands/sync.js'
