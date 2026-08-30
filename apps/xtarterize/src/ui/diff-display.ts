@@ -17,7 +17,9 @@ export function displayDiffs(
 		return
 	}
 
-	if (diffs.length === 0) return
+	if (diffs.length === 0) {
+		return
+	}
 
 	displayTerminalDiffs(diffs)
 }

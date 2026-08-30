@@ -27,8 +27,12 @@ async function resolveArg<T>(
 	prompt: () => Promise<T>,
 	defaultValue?: T,
 ): Promise<T> {
-	if (argValue !== undefined) return argValue
-	if (defaultValue !== undefined) return defaultValue
+	if (argValue !== undefined) {
+		return argValue
+	}
+	if (defaultValue !== undefined) {
+		return defaultValue
+	}
 	return prompt()
 }
 
@@ -135,6 +139,161 @@ const previewCommand = defineCommand({
 	},
 })
 
+function parseArgs(args: Record<string, unknown>) {
+	const quiet = Boolean(args.quiet || args.json)
+	const json = Boolean(args.json)
+	if (args.noColor) {
+		process.env.NO_COLOR = '1'
+	}
+	if (quiet) {
+		consola.level = 0
+	} else {
+		console.log(BANNER)
+	}
+	return {
+		quiet,
+		json,
+		useDefaults: args.yes === true,
+		defaultPackageManager: 'pnpm' as PackageManager,
+	}
+}
+
+async function promptProjectDetails(
+	args: Record<string, unknown>,
+	useDefaults: boolean,
+	defaultPackageManager: PackageManager,
+) {
+	let projectName = args.name as string | undefined
+	let projectPath: string
+	if (!projectName) {
+		projectName = await promptProjectName()
+		projectPath = resolve(process.cwd(), projectName)
+	} else {
+		const resolved = resolveProjectPath(projectName)
+		projectName = resolved.projectName
+		projectPath = resolved.projectPath
+	}
+	await prepareProjectDir(
+		projectName,
+		projectPath,
+		args.force as boolean | undefined,
+	)
+	const template = await promptTemplate(
+		args.yes && !args.template
+			? DEFAULT_TEMPLATE
+			: (args.template as string | undefined),
+	)
+	const packageManager = await resolveArg(
+		args.pm as PackageManager | undefined,
+		promptPackageManager,
+		useDefaults ? defaultPackageManager : undefined,
+	)
+	const shouldCleanCI = await resolveArg(
+		args.clean as boolean | undefined,
+		promptCleanCI,
+		useDefaults ? false : undefined,
+	)
+	const shouldInitGit =
+		args.noGit === true
+			? false
+			: await resolveArg(
+					undefined,
+					promptGitInit,
+					useDefaults ? true : undefined,
+				)
+	return {
+		projectName,
+		projectPath,
+		template,
+		packageManager,
+		shouldCleanCI,
+		shouldInitGit,
+	}
+}
+
+function reportScaffoldSettings(
+	details: Awaited<ReturnType<typeof promptProjectDetails>>,
+	quiet: boolean,
+) {
+	if (quiet) {
+		return
+	}
+	note(
+		[
+			`Project: ${pc.cyan(details.projectName)}`,
+			`Template: ${pc.cyan(details.template.name)}`,
+			`Package Manager: ${pc.cyan(details.packageManager)}`,
+			`Git Init: ${pc.cyan(details.shouldInitGit ? 'Yes' : 'No')}`,
+			`Clean CI/CD: ${pc.cyan(details.shouldCleanCI ? 'Yes' : 'No')}`,
+		].join('\n'),
+		'Scaffolding with these settings',
+	)
+}
+
+async function scaffoldAndInstall(options: {
+	details: Awaited<ReturnType<typeof promptProjectDetails>>
+	args: Record<string, unknown>
+	quiet: boolean
+	json: boolean
+}) {
+	const { details, args, quiet, json } = options
+	await scaffoldProject({
+		projectName: details.projectName,
+		projectPath: details.projectPath,
+		template: details.template,
+		packageManager: details.packageManager,
+		cleanCI: details.shouldCleanCI,
+		initGit: details.shouldInitGit,
+		ref: args.ref as string | undefined,
+	})
+	if (!quiet) {
+		outro(pc.green(`Successfully created ${pc.cyan(details.projectName)}!`))
+	}
+	if (json) {
+		const cdCommand = args.name === '.' ? '' : `cd ${details.projectName}`
+		process.stdout.write(
+			`${formatJsonResult({
+				success: true as const,
+				projectPath: details.projectPath,
+				template: details.template.id,
+				packageManager: details.packageManager,
+				gitInitialized: details.shouldInitGit,
+				dependenciesInstalled: true,
+				ciConfigsCleaned: details.shouldCleanCI,
+				nextSteps: [
+					...(cdCommand ? [cdCommand] : []),
+					`${details.packageManager} dev`,
+				],
+			})}\n`,
+		)
+		return
+	}
+	if (quiet) {
+		return
+	}
+	const cdCommand =
+		args.name === '.'
+			? ''
+			: `  ${pc.dim('1.')} ${pc.cyan(`cd ${details.projectName}`)}\n`
+	console.log(`\n${pc.bold('Next steps:')}
+${cdCommand}  ${pc.dim('2.')} ${pc.cyan(`${details.packageManager} dev`)}
+  ${pc.dim('3.')} Open ${pc.cyan('http://localhost:3000')} (or the port shown)
+
+${pc.bold('Template:')} ${details.template.name}
+${pc.bold('Docs:')} ${pc.underline(`https://github.com/${details.template.repo}`)}
+`)
+}
+
+function handleScaffoldError(error: unknown, json: boolean) {
+	const message = error instanceof Error ? error.message : 'Unknown error'
+	if (json) {
+		process.stderr.write(`${formatJsonError(message)}\n`)
+	} else {
+		cancel(`${pc.red('Error:')} ${message}`)
+	}
+	process.exit(1)
+}
+
 // ── Main command ──
 
 const mainCommand = defineCommand({
@@ -148,135 +307,21 @@ const mainCommand = defineCommand({
 		preview: previewCommand,
 	},
 	async run(ctx) {
-		const args = ctx.args
-
-		if (args.noColor) {
-			process.env.NO_COLOR = '1'
-		}
-
-		const quiet = args.quiet || args.json
-		const json = args.json
-
-		if (quiet) {
-			consola.level = 0
-		}
-		if (!quiet) {
-			console.log(BANNER)
-		}
-
-		const useDefaults = args.yes === true
-		const defaultPackageManager: PackageManager = 'pnpm'
-
+		const args = ctx.args as Record<string, unknown>
+		const { quiet, json, useDefaults, defaultPackageManager } = parseArgs(args)
 		try {
 			if (!quiet) {
 				intro(`${APP_NAME} - Let's create your project!`)
 			}
-
-			let projectName = args.name
-			let projectPath: string
-
-			if (!projectName) {
-				projectName = await promptProjectName()
-				projectPath = resolve(process.cwd(), projectName)
-			} else {
-				const resolved = resolveProjectPath(projectName)
-				projectName = resolved.projectName
-				projectPath = resolved.projectPath
-			}
-
-			await prepareProjectDir(projectName, projectPath, args.force)
-
-			const template = await promptTemplate(
-				args.yes && !args.template
-					? DEFAULT_TEMPLATE
-					: (args.template as string | undefined),
+			const details = await promptProjectDetails(
+				args,
+				useDefaults,
+				defaultPackageManager,
 			)
-
-			const packageManager = await resolveArg(
-				args.pm as PackageManager | undefined,
-				promptPackageManager,
-				useDefaults ? defaultPackageManager : undefined,
-			)
-
-			const shouldCleanCI = await resolveArg(
-				args.clean,
-				promptCleanCI,
-				useDefaults ? false : undefined,
-			)
-
-			const shouldInitGit = args.noGit
-				? false
-				: await resolveArg(
-						undefined,
-						promptGitInit,
-						useDefaults ? true : undefined,
-					)
-
-			if (!quiet) {
-				note(
-					[
-						`Project: ${pc.cyan(projectName)}`,
-						`Template: ${pc.cyan(template.name)}`,
-						`Package Manager: ${pc.cyan(packageManager)}`,
-						`Git Init: ${pc.cyan(shouldInitGit ? 'Yes' : 'No')}`,
-						`Clean CI/CD: ${pc.cyan(shouldCleanCI ? 'Yes' : 'No')}`,
-					].join('\n'),
-					'Scaffolding with these settings',
-				)
-			}
-
-			await scaffoldProject({
-				projectName,
-				projectPath,
-				template,
-				packageManager,
-				cleanCI: shouldCleanCI,
-				initGit: shouldInitGit,
-				ref: args.ref,
-			})
-
-			if (!quiet) {
-				outro(pc.green(`Successfully created ${pc.cyan(projectName)}!`))
-			}
-
-			if (json) {
-				const cdCommand = args.name === '.' ? '' : `cd ${projectName}`
-				process.stdout.write(
-					`${formatJsonResult({
-						success: true as const,
-						projectPath,
-						template: template.id,
-						packageManager,
-						gitInitialized: shouldInitGit,
-						dependenciesInstalled: true,
-						ciConfigsCleaned: shouldCleanCI,
-						nextSteps: [
-							...(cdCommand ? [cdCommand] : []),
-							`${packageManager} dev`,
-						],
-					})}\n`,
-				)
-			} else if (!quiet) {
-				const cdCommand =
-					args.name === '.'
-						? ''
-						: `  ${pc.dim('1.')} ${pc.cyan(`cd ${projectName}`)}\n`
-				console.log(`\n${pc.bold('Next steps:')}
-${cdCommand}  ${pc.dim('2.')} ${pc.cyan(`${packageManager} dev`)}
-  ${pc.dim('3.')} Open ${pc.cyan('http://localhost:3000')} (or the port shown)
-
-${pc.bold('Template:')} ${template.name}
-${pc.bold('Docs:')} ${pc.underline(`https://github.com/${template.repo}`)}
-`)
-			}
+			reportScaffoldSettings(details, quiet)
+			await scaffoldAndInstall({ details, args, quiet, json })
 		} catch (error) {
-			const message = error instanceof Error ? error.message : 'Unknown error'
-			if (json) {
-				process.stderr.write(`${formatJsonError(message)}\n`)
-			} else {
-				cancel(`${pc.red('Error:')} ${message}`)
-			}
-			process.exit(1)
+			handleScaffoldError(error, json)
 		}
 	},
 })

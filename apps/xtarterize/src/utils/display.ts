@@ -13,9 +13,15 @@ export function diagnosticIcon(status: DiagnosticCheck['status']): string {
 }
 
 export function taskStatusIcon(status: TaskStatus, colored = false): string {
-	if (status === 'skip') return colored ? pc.green('✔') : '✔'
-	if (status === 'patch') return colored ? pc.yellow('~') : '~'
-	if (status === 'conflict') return colored ? pc.red('⚠') : '⚠'
+	if (status === 'skip') {
+		return colored ? pc.green('✔') : '✔'
+	}
+	if (status === 'patch') {
+		return colored ? pc.yellow('~') : '~'
+	}
+	if (status === 'conflict') {
+		return colored ? pc.red('⚠') : '⚠'
+	}
 	return colored ? pc.red('✗') : '✗'
 }
 

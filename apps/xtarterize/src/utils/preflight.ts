@@ -6,7 +6,9 @@ export function handlePreflightFailure(
 	preflight: PreflightResult,
 	json: boolean,
 ): void {
-	if (preflight.valid) return
+	if (preflight.valid) {
+		return
+	}
 
 	if (json) {
 		console.log(

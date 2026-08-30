@@ -13,7 +13,9 @@ export async function isPnpmWorkspace(
 export async function readPackageJson(cwd: string) {
 	const pkgPath = resolvePath(cwd, 'package.json')
 	const exists = await fileExists(pkgPath)
-	if (!exists) return null
+	if (!exists) {
+		return null
+	}
 	return readPackageJSON(pkgPath)
 }
 
@@ -47,7 +49,9 @@ export function getDependencyVersion(
 export function getNodeVersion(pkg: {
 	engines?: Record<string, string>
 }): string {
-	if (pkg.engines?.node) return pkg.engines.node
+	if (pkg.engines?.node) {
+		return pkg.engines.node
+	}
 	return '22'
 }
 
@@ -79,7 +83,9 @@ export async function installDependenciesBatch(
 	deps: DepToInstall[],
 	options?: { silent?: boolean },
 ): Promise<void> {
-	if (deps.length === 0) return
+	if (deps.length === 0) {
+		return
+	}
 
 	// Filter out already-installed deps
 	const pkg = await readPackageJson(cwd)
@@ -87,7 +93,9 @@ export async function installDependenciesBatch(
 		(d) =>
 			!pkg?.devDependencies?.[d.depName] && !pkg?.dependencies?.[d.depName],
 	)
-	if (missing.length === 0) return
+	if (missing.length === 0) {
+		return
+	}
 
 	const workspace = await isPnpmWorkspace(cwd)
 
@@ -140,7 +148,9 @@ export async function installDependency(
 	dev: boolean = true,
 ): Promise<void> {
 	const pkg = await readPackageJson(cwd)
-	if (pkg?.devDependencies?.[depName] || pkg?.dependencies?.[depName]) return
+	if (pkg?.devDependencies?.[depName] || pkg?.dependencies?.[depName]) {
+		return
+	}
 
 	const workspace = await isPnpmWorkspace(cwd)
 

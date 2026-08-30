@@ -31,7 +31,9 @@ function getAllDeps(pkg: Record<string, unknown>): Record<string, string> {
 
 async function readSkillLockFile(lockPath: string): Promise<Set<string>> {
 	const installed = new Set<string>()
-	if (!(await fileExists(lockPath))) return installed
+	if (!(await fileExists(lockPath))) {
+		return installed
+	}
 
 	try {
 		const content = await readFile(lockPath)
@@ -62,7 +64,9 @@ async function isDirNonEmpty(dirPath: string): Promise<boolean> {
 
 async function readSkillsFromDir(skillsDir: string): Promise<Set<string>> {
 	const installed = new Set<string>()
-	if (!(await fileExists(skillsDir))) return installed
+	if (!(await fileExists(skillsDir))) {
+		return installed
+	}
 
 	try {
 		const { readdir } = await import('node:fs/promises')
@@ -94,7 +98,9 @@ async function getInstalledSkills(cwd: string): Promise<Set<string>> {
 	const skillDirsWithContent = new Set<string>()
 	for (const dir of projectDirs) {
 		const skills = await readSkillsFromDir(dir)
-		for (const s of skills) skillDirsWithContent.add(s)
+		for (const s of skills) {
+			skillDirsWithContent.add(s)
+		}
 	}
 
 	// Validate lock file entries against actual directories
@@ -166,13 +172,19 @@ export const skillsInstallTask: Task = createExecTask({
 		const deps = pkg ? getAllDeps(pkg as Record<string, unknown>) : {}
 		const skills = getSkillsToInstall(profile, deps)
 
-		if (skills.length === 0) return 'skip'
+		if (skills.length === 0) {
+			return 'skip'
+		}
 
 		const installed = await getInstalledSkills(cwd)
 		const missing = skills.filter((s) => !installed.has(s.skill))
 
-		if (missing.length === 0) return 'skip'
-		if (missing.length === skills.length) return 'new'
+		if (missing.length === 0) {
+			return 'skip'
+		}
+		if (missing.length === skills.length) {
+			return 'new'
+		}
 		return 'patch'
 	},
 
@@ -181,12 +193,16 @@ export const skillsInstallTask: Task = createExecTask({
 		const deps = pkg ? getAllDeps(pkg as Record<string, unknown>) : {}
 		const skills = getSkillsToInstall(profile, deps)
 
-		if (skills.length === 0) return []
+		if (skills.length === 0) {
+			return []
+		}
 
 		const installed = await getInstalledSkills(cwd)
 		const missing = skills.filter((s) => !installed.has(s.skill))
 
-		if (missing.length === 0) return []
+		if (missing.length === 0) {
+			return []
+		}
 
 		return [
 			{
@@ -202,7 +218,9 @@ export const skillsInstallTask: Task = createExecTask({
 		const deps = pkg ? getAllDeps(pkg as Record<string, unknown>) : {}
 		const skills = getSkillsToInstall(profile, deps)
 
-		if (skills.length === 0) return
+		if (skills.length === 0) {
+			return
+		}
 
 		const installed = await getInstalledSkills(cwd)
 		const missing = skills.filter((s) => !installed.has(s.skill))

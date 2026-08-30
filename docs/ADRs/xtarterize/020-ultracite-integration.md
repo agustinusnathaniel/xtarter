@@ -136,6 +136,10 @@ merged (JSON format), while new projects get`oxlint.config.ts`.
 - **ADR-014**: Vite+ migration - oxlint/oxfmt tasks are now Vite+-aware and
   generate their full configs.
 
+## Schema Limitation: Biome skipComments
+
+Biome 2.5.9 only supports `skipBlankLines` for `noExcessiveLinesPerFile` / `noExcessiveLinesPerFunction` (`skipComments` not in schema); Oxlint supports both. See https://biomejs.dev/linter/rules/no-excessive-lines-per-function/ and https://biomejs.dev/linter/rules/no-excessive-lines-per-file/.
+
 ## References
 
 - Ultracite source: `~/.opensrc/repos/github.com/haydenbleasel/ultracite`

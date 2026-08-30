@@ -19,11 +19,21 @@ export function resolveLintTool(params: {
 	existingOxfmt: boolean
 	vitePlus: boolean
 }): LintTool | null {
-	if (params.existingEslint) return null
-	if (params.useUltracite) return 'ultracite'
-	if (params.hasBiomeDep) return 'biome'
-	if (params.existingOxlint || params.existingOxfmt) return 'oxlint'
-	if (params.vitePlus) return 'vp'
+	if (params.existingEslint) {
+		return null
+	}
+	if (params.useUltracite) {
+		return 'ultracite'
+	}
+	if (params.hasBiomeDep) {
+		return 'biome'
+	}
+	if (params.existingOxlint || params.existingOxfmt) {
+		return 'oxlint'
+	}
+	if (params.vitePlus) {
+		return 'vp'
+	}
 	return 'biome'
 }
 
@@ -120,9 +130,12 @@ function lintTurboTasks(
 	}
 
 	return getCompositeTasks(existingScripts, baseTasks).filter((t) => {
-		if (t === 'typecheck' && !typescript) return false
-		if (taskKey && t === taskKey && !recommendedKeys.includes(taskKey))
+		if (t === 'typecheck' && !typescript) {
 			return false
+		}
+		if (taskKey && t === taskKey && !recommendedKeys.includes(taskKey)) {
+			return false
+		}
 		return true
 	})
 }
@@ -172,7 +185,9 @@ function pushAllIfMissing(
 	existing: ScriptsMap,
 	entries: ScriptEntry[],
 ): void {
-	for (const entry of entries) pushIfMissing(scripts, existing, entry)
+	for (const entry of entries) {
+		pushIfMissing(scripts, existing, entry)
+	}
 }
 
 function getCompositeTasks(
@@ -219,7 +234,9 @@ export const packageScriptsTask = createPackageJsonTask({
 		const rawScripts = pkg?.scripts ?? {}
 		const existingScripts: ScriptsMap = {}
 		for (const [key, value] of Object.entries(rawScripts)) {
-			if (value !== undefined) existingScripts[key] = value
+			if (value !== undefined) {
+				existingScripts[key] = value
+			}
 		}
 
 		const { lintTool, oxlintPlugins } = resolveProjectLintConfig(pkg, profile)
@@ -292,7 +309,9 @@ export const packageScriptsTask = createPackageJsonTask({
 		const pm = profile.packageManager
 		const scriptsMap: ScriptsMap = {}
 		for (const [key, value] of Object.entries(existingScripts)) {
-			if (value !== undefined) scriptsMap[key] = value
+			if (value !== undefined) {
+				scriptsMap[key] = value
+			}
 		}
 
 		const { lintTool, oxlintPlugins } = resolveProjectLintConfig(pkg, profile)

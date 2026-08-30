@@ -65,7 +65,9 @@ export function expandQuery(tokens: string[]): string[] {
 		const synonyms = SYNONYM_MAP[token]
 		if (synonyms) {
 			for (const syn of synonyms) {
-				if (!expanded.includes(syn)) expanded.push(syn)
+				if (!expanded.includes(syn)) {
+					expanded.push(syn)
+				}
 			}
 		}
 		for (const [key, values] of Object.entries(SYNONYM_MAP)) {
@@ -77,7 +79,9 @@ export function expandQuery(tokens: string[]): string[] {
 				const keySynonyms = SYNONYM_MAP[key]
 				if (keySynonyms) {
 					for (const syn of keySynonyms) {
-						if (!expanded.includes(syn)) expanded.push(syn)
+						if (!expanded.includes(syn)) {
+							expanded.push(syn)
+						}
 					}
 				}
 			}

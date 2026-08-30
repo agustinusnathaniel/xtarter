@@ -14,7 +14,9 @@ import { describe, expect, it } from 'vite-plus/test'
  * engine range (handles ranges like ">=16 <20", prerelease versions, spaces).
  */
 function parseEngineMajor(engineNode: string | undefined): number {
-	if (!engineNode) return NaN
+	if (!engineNode) {
+		return NaN
+	}
 	const majorMatch = engineNode.match(/(\d+)/)
 	return majorMatch ? Number.parseInt(majorMatch[1], 10) : NaN
 }

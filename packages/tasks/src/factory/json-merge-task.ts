@@ -35,6 +35,80 @@ export interface JsonMergeTaskOptions {
 	checkFn?: (context: CheckFnContext) => Promise<TaskStatus>
 }
 
+function getJsonMergeTaskDeps(options: JsonMergeTaskOptions) {
+	const deps = options.depNames ?? (options.depName ? [options.depName] : [])
+	return deps.map((dep) => ({
+		depName: options.depInstallName ?? dep,
+		dev: options.installDev ?? true,
+	}))
+}
+
+async function checkJsonMergeTask(
+	cwd: string,
+	profile: ProjectProfile,
+	options: JsonMergeTaskOptions,
+): Promise<TaskStatus> {
+	const fullPath = await resolveTaskFile(
+		cwd,
+		options.filepath,
+		options.extensions,
+	)
+	if (!fullPath) {
+		return 'new'
+	}
+	const exists = await fileExists(fullPath)
+	if (!exists) {
+		return 'new'
+	}
+	if (options.checkFn) {
+		const content = await readFile(fullPath)
+		return options.checkFn({ cwd, profile, fullPath, content })
+	}
+	const missingDep = await checkMissingDeps(cwd, {
+		depName: options.depName,
+		depNames: options.depNames,
+	})
+	if (missingDep) {
+		return missingDep
+	}
+	return checkJsonConfigTask(cwd, profile, {
+		filepath: options.filepath,
+		extensions: options.extensions,
+		incoming: options.incoming,
+	})
+}
+
+function dryRunJsonMergeTask(
+	cwd: string,
+	profile: ProjectProfile,
+	options: JsonMergeTaskOptions,
+): Promise<FileDiff[]> {
+	return dryRunJsonConfigTask(cwd, profile, {
+		filepath: options.filepath,
+		extensions: options.extensions,
+		incoming: options.incoming,
+	})
+}
+
+async function applyJsonMergeTask(
+	cwd: string,
+	profile: ProjectProfile,
+	options: JsonMergeTaskOptions,
+): Promise<void> {
+	const diffs = await dryRunJsonMergeTask(cwd, profile, options)
+	await writeTaskDiffs(cwd, diffs)
+	const deps = options.depNames ?? (options.depName ? [options.depName] : [])
+	if (deps.length > 0) {
+		await installDependenciesBatch(
+			cwd,
+			deps.map((dep) => ({
+				depName: options.depInstallName ?? dep,
+				dev: options.installDev ?? true,
+			})),
+		)
+	}
+}
+
 export function createJsonMergeTask(options: JsonMergeTaskOptions): Task {
 	return {
 		id: options.id,
@@ -43,75 +117,23 @@ export function createJsonMergeTask(options: JsonMergeTaskOptions): Task {
 		searchMeta: options.searchMeta,
 		scope: options.scope,
 		applicable: options.applicable,
-
 		async getDeps(_cwd, _profile) {
-			const deps =
-				options.depNames ?? (options.depName ? [options.depName] : [])
-			return deps.map((dep) => ({
-				depName: options.depInstallName ?? dep,
-				dev: options.installDev ?? true,
-			}))
+			return getJsonMergeTaskDeps(options)
 		},
-
 		async check(cwd, profile): Promise<TaskStatus> {
-			return wrapTask(options.id, 'createJsonMergeTask.check', async () => {
-				const fullPath = await resolveTaskFile(
-					cwd,
-					options.filepath,
-					options.extensions,
-				)
-
-				if (!fullPath) return 'new'
-
-				const exists = await fileExists(fullPath)
-				if (!exists) return 'new'
-
-				if (options.checkFn) {
-					const content = await readFile(fullPath)
-					return options.checkFn({ cwd, profile, fullPath, content })
-				}
-
-				const missingDep = await checkMissingDeps(cwd, {
-					depName: options.depName,
-					depNames: options.depNames,
-				})
-				if (missingDep) return missingDep
-
-				return checkJsonConfigTask(cwd, profile, {
-					filepath: options.filepath,
-					extensions: options.extensions,
-					incoming: options.incoming,
-				})
-			})
-		},
-
-		async dryRun(cwd, profile): Promise<FileDiff[]> {
-			return wrapTask(options.id, 'createJsonMergeTask.dryRun', () =>
-				dryRunJsonConfigTask(cwd, profile, {
-					filepath: options.filepath,
-					extensions: options.extensions,
-					incoming: options.incoming,
-				}),
+			return wrapTask(options.id, 'createJsonMergeTask.check', () =>
+				checkJsonMergeTask(cwd, profile, options),
 			)
 		},
-
+		async dryRun(cwd, profile): Promise<FileDiff[]> {
+			return wrapTask(options.id, 'createJsonMergeTask.dryRun', () =>
+				dryRunJsonMergeTask(cwd, profile, options),
+			)
+		},
 		async apply(cwd, profile): Promise<void> {
-			return wrapTask(options.id, 'createJsonMergeTask.apply', async () => {
-				const diffs = await this.dryRun(cwd, profile)
-				await writeTaskDiffs(cwd, diffs)
-
-				const deps =
-					options.depNames ?? (options.depName ? [options.depName] : [])
-				if (deps.length > 0) {
-					await installDependenciesBatch(
-						cwd,
-						deps.map((dep) => ({
-							depName: options.depInstallName ?? dep,
-							dev: options.installDev ?? true,
-						})),
-					)
-				}
-			})
+			return wrapTask(options.id, 'createJsonMergeTask.apply', () =>
+				applyJsonMergeTask(cwd, profile, options),
+			)
 		},
 	}
 }
@@ -135,6 +157,61 @@ export interface MultiFileJsonMergeTaskOptions {
 	files: MultiFileJsonMergeEntry[]
 }
 
+async function checkMultiFileJsonMergeTask(
+	cwd: string,
+	profile: ProjectProfile,
+	options: MultiFileJsonMergeTaskOptions,
+): Promise<TaskStatus> {
+	let status: TaskStatus = 'skip'
+	for (const f of options.files) {
+		const entryStatus = await checkJsonConfigTask(cwd, profile, {
+			filepath: f.filepath,
+			extensions: f.extensions,
+			incoming: async () => f.incoming(profile),
+			merge: f.merge,
+		})
+		if (entryStatus === 'conflict') {
+			status = 'conflict'
+			continue
+		}
+		if (entryStatus === 'patch') {
+			status = 'patch'
+			continue
+		}
+		if (entryStatus === 'new' && status !== 'patch' && status !== 'conflict') {
+			status = 'new'
+		}
+	}
+	return status
+}
+
+async function dryRunMultiFileJsonMergeTask(
+	cwd: string,
+	profile: ProjectProfile,
+	options: MultiFileJsonMergeTaskOptions,
+): Promise<FileDiff[]> {
+	const diffs: FileDiff[] = []
+	for (const f of options.files) {
+		const entryDiffs = await dryRunJsonConfigTask(cwd, profile, {
+			filepath: f.filepath,
+			extensions: f.extensions,
+			incoming: async () => f.incoming(profile),
+			merge: f.merge,
+		})
+		diffs.push(...entryDiffs)
+	}
+	return diffs
+}
+
+async function applyMultiFileJsonMergeTask(
+	cwd: string,
+	profile: ProjectProfile,
+	options: MultiFileJsonMergeTaskOptions,
+): Promise<void> {
+	const diffs = await dryRunMultiFileJsonMergeTask(cwd, profile, options)
+	await writeTaskDiffs(cwd, diffs)
+}
+
 export function createMultiFileJsonMergeTask(
 	options: MultiFileJsonMergeTaskOptions,
 ): Task {
@@ -145,72 +222,19 @@ export function createMultiFileJsonMergeTask(
 		searchMeta: options.searchMeta,
 		scope: options.scope,
 		applicable: options.applicable,
-
 		async check(cwd, profile): Promise<TaskStatus> {
-			return wrapTask(
-				options.id,
-				'createMultiFileJsonMergeTask.check',
-				async () => {
-					let status: TaskStatus = 'skip'
-					for (const f of options.files) {
-						const entryStatus = await checkJsonConfigTask(cwd, profile, {
-							filepath: f.filepath,
-							extensions: f.extensions,
-							incoming: async () => f.incoming(profile),
-							merge: f.merge,
-						})
-
-						if (entryStatus === 'conflict') {
-							status = 'conflict'
-							continue
-						}
-
-						if (entryStatus === 'patch') {
-							status = 'patch'
-							continue
-						}
-
-						if (
-							entryStatus === 'new' &&
-							status !== 'patch' &&
-							status !== 'conflict'
-						) {
-							status = 'new'
-						}
-					}
-					return status
-				},
+			return wrapTask(options.id, 'createMultiFileJsonMergeTask.check', () =>
+				checkMultiFileJsonMergeTask(cwd, profile, options),
 			)
 		},
-
 		async dryRun(cwd, profile): Promise<FileDiff[]> {
-			return wrapTask(
-				options.id,
-				'createMultiFileJsonMergeTask.dryRun',
-				async () => {
-					const diffs: FileDiff[] = []
-					for (const f of options.files) {
-						const entryDiffs = await dryRunJsonConfigTask(cwd, profile, {
-							filepath: f.filepath,
-							extensions: f.extensions,
-							incoming: async () => f.incoming(profile),
-							merge: f.merge,
-						})
-						diffs.push(...entryDiffs)
-					}
-					return diffs
-				},
+			return wrapTask(options.id, 'createMultiFileJsonMergeTask.dryRun', () =>
+				dryRunMultiFileJsonMergeTask(cwd, profile, options),
 			)
 		},
-
 		async apply(cwd, profile): Promise<void> {
-			return wrapTask(
-				options.id,
-				'createMultiFileJsonMergeTask.apply',
-				async () => {
-					const diffs = await this.dryRun(cwd, profile)
-					await writeTaskDiffs(cwd, diffs)
-				},
+			return wrapTask(options.id, 'createMultiFileJsonMergeTask.apply', () =>
+				applyMultiFileJsonMergeTask(cwd, profile, options),
 			)
 		},
 	}

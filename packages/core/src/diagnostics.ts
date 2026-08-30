@@ -126,133 +126,164 @@ function lockfileEntries(): Array<readonly [string, string]> {
 	]
 }
 
+function checkLockfile(
+	cwd: string,
+): Effect.Effect<DiagnosticCheck, FileSystemError> {
+	return Effect.gen(function* () {
+		const results = yield* Effect.all(
+			lockfileEntries().map(([file]) =>
+				tryEffect(() => fileExists(resolvePath(cwd, file))),
+			),
+		)
+		const detected = results.some(Boolean)
+		return makeCheck(
+			'Lockfile',
+			detected ? 'pass' : 'warn',
+			detected
+				? 'Lockfile found - dependencies are locked'
+				: 'No lockfile found - dependencies may not be reproducible',
+		)
+	})
+}
+
+function checkTsconfig(
+	cwd: string,
+): Effect.Effect<DiagnosticCheck, FileSystemError> {
+	return Effect.gen(function* () {
+		const hasTsconfig = yield* tryEffect(() =>
+			fileExists(resolvePath(cwd, 'tsconfig.json')),
+		)
+		return makeCheck(
+			'TypeScript config',
+			hasTsconfig ? 'pass' : 'warn',
+			hasTsconfig
+				? 'TypeScript config found (tsconfig.json)'
+				: 'TypeScript is a dependency but tsconfig.json is missing',
+		)
+	})
+}
+
+function checkReadme(
+	cwd: string,
+): Effect.Effect<DiagnosticCheck, FileSystemError> {
+	return Effect.gen(function* () {
+		const hasReadme = yield* tryEffect(() =>
+			fileExists(resolvePath(cwd, 'README.md')),
+		)
+		return makeCheck(
+			'README',
+			hasReadme ? 'pass' : 'warn',
+			hasReadme ? 'README.md found' : 'No README.md - consider adding one',
+		)
+	})
+}
+
+function checkGitignore(
+	cwd: string,
+): Effect.Effect<DiagnosticCheck, FileSystemError> {
+	return Effect.gen(function* () {
+		const hasGitignore = yield* tryEffect(() =>
+			fileExists(resolvePath(cwd, '.gitignore')),
+		)
+		return makeCheck(
+			'.gitignore',
+			hasGitignore ? 'pass' : 'warn',
+			hasGitignore
+				? '.gitignore found'
+				: 'No .gitignore - generated files may be tracked',
+		)
+	})
+}
+
 export function runProjectHealthChecks(
 	cwd: string,
 ): Promise<DiagnosticCheck[]> {
 	return Effect.runPromise(
 		Effect.gen(function* () {
 			const pkg = yield* tryReadPackageJson(cwd)
-			if (!pkg) return [] as DiagnosticCheck[]
-
+			if (!pkg) {
+				return [] as DiagnosticCheck[]
+			}
 			const deps = { ...pkg.dependencies, ...pkg.devDependencies }
 			const checks: DiagnosticCheck[] = []
-
-			const lockfileResults = yield* Effect.all(
-				lockfileEntries().map(([file]) =>
-					tryEffect(() => fileExists(resolvePath(cwd, file))),
-				),
-			)
-			const lockfileDetected = lockfileResults.some(Boolean)
-
-			checks.push(
-				makeCheck(
-					'Lockfile',
-					lockfileDetected ? 'pass' : 'warn',
-					lockfileDetected
-						? 'Lockfile found - dependencies are locked'
-						: 'No lockfile found - dependencies may not be reproducible',
-				),
-			)
-
+			checks.push(yield* checkLockfile(cwd))
 			if (deps.typescript) {
-				const hasTsconfig = yield* tryEffect(() =>
-					fileExists(resolvePath(cwd, 'tsconfig.json')),
-				)
-				checks.push(
-					makeCheck(
-						'TypeScript config',
-						hasTsconfig ? 'pass' : 'warn',
-						hasTsconfig
-							? 'TypeScript config found (tsconfig.json)'
-							: 'TypeScript is a dependency but tsconfig.json is missing',
-					),
-				)
+				checks.push(yield* checkTsconfig(cwd))
 			}
-
-			const hasReadme = yield* tryEffect(() =>
-				fileExists(resolvePath(cwd, 'README.md')),
-			)
-			checks.push(
-				makeCheck(
-					'README',
-					hasReadme ? 'pass' : 'warn',
-					hasReadme ? 'README.md found' : 'No README.md - consider adding one',
-				),
-			)
-
-			const hasGitignore = yield* tryEffect(() =>
-				fileExists(resolvePath(cwd, '.gitignore')),
-			)
-			checks.push(
-				makeCheck(
-					'.gitignore',
-					hasGitignore ? 'pass' : 'warn',
-					hasGitignore
-						? '.gitignore found'
-						: 'No .gitignore - generated files may be tracked',
-				),
-			)
-
+			checks.push(yield* checkReadme(cwd))
+			checks.push(yield* checkGitignore(cwd))
 			return checks
 		}),
 	)
+}
+
+function collectConflictingToolChecks(
+	deps: Record<string, unknown>,
+): DiagnosticCheck[] {
+	const hasBiome = !!deps['@biomejs/biome']
+	const hasEslint = !!deps.eslint
+	const hasPrettier = !!deps.prettier
+	const checks: DiagnosticCheck[] = []
+	if (hasBiome && hasEslint) {
+		checks.push(
+			makeCheck(
+				'Conflicting tools',
+				'warn',
+				'Both Biome and ESLint are configured. Consider using one as primary.',
+			),
+		)
+	}
+	if (hasBiome && hasPrettier) {
+		checks.push(
+			makeCheck(
+				'Conflicting tools',
+				'warn',
+				'Both Biome and Prettier are configured. Biome includes formatting - Prettier may be redundant.',
+			),
+		)
+	}
+	return checks
+}
+
+function checkLegacyEslintConfig(
+	cwd: string,
+): Effect.Effect<DiagnosticCheck | null, FileSystemError> {
+	return Effect.gen(function* () {
+		const legacyConfigs = [
+			'.eslintrc',
+			'.eslintrc.js',
+			'.eslintrc.cjs',
+			'.eslintrc.mjs',
+			'.eslintrc.json',
+			'.eslintrc.yaml',
+			'.eslintrc.yml',
+		]
+		for (const config of legacyConfigs) {
+			if (yield* tryEffect(() => fileExists(resolvePath(cwd, config)))) {
+				return makeCheck(
+					'Legacy config',
+					'warn',
+					`Legacy ESLint config found (${config}). Consider migrating to flat config (eslint.config.js).`,
+				)
+			}
+		}
+		return null
+	})
 }
 
 export function runConflictChecks(cwd: string): Promise<DiagnosticCheck[]> {
 	return Effect.runPromise(
 		Effect.gen(function* () {
 			const pkg = yield* tryReadPackageJson(cwd)
-			if (!pkg) return [] as DiagnosticCheck[]
-
+			if (!pkg) {
+				return [] as DiagnosticCheck[]
+			}
 			const deps = { ...pkg.dependencies, ...pkg.devDependencies }
-			const checks: DiagnosticCheck[] = []
-
-			const hasBiome = !!deps['@biomejs/biome']
-			const hasEslint = !!deps.eslint
-			const hasPrettier = !!deps.prettier
-
-			if (hasBiome && hasEslint) {
-				checks.push(
-					makeCheck(
-						'Conflicting tools',
-						'warn',
-						'Both Biome and ESLint are configured. Consider using one as primary.',
-					),
-				)
+			const checks: DiagnosticCheck[] = [...collectConflictingToolChecks(deps)]
+			const legacyCheck = yield* checkLegacyEslintConfig(cwd)
+			if (legacyCheck) {
+				checks.push(legacyCheck)
 			}
-
-			if (hasBiome && hasPrettier) {
-				checks.push(
-					makeCheck(
-						'Conflicting tools',
-						'warn',
-						'Both Biome and Prettier are configured. Biome includes formatting - Prettier may be redundant.',
-					),
-				)
-			}
-
-			const legacyEslintConfigs = [
-				'.eslintrc',
-				'.eslintrc.js',
-				'.eslintrc.cjs',
-				'.eslintrc.mjs',
-				'.eslintrc.json',
-				'.eslintrc.yaml',
-				'.eslintrc.yml',
-			]
-			for (const config of legacyEslintConfigs) {
-				if (yield* tryEffect(() => fileExists(resolvePath(cwd, config)))) {
-					checks.push(
-						makeCheck(
-							'Legacy config',
-							'warn',
-							`Legacy ESLint config found (${config}). Consider migrating to flat config (eslint.config.js).`,
-						),
-					)
-					break
-				}
-			}
-
 			if (checks.length === 0) {
 				checks.push(
 					makeCheck(
@@ -262,7 +293,6 @@ export function runConflictChecks(cwd: string): Promise<DiagnosticCheck[]> {
 					),
 				)
 			}
-
 			return checks
 		}),
 	)
@@ -274,7 +304,9 @@ export function runToolInstallationChecks(
 	return Effect.runPromise(
 		Effect.gen(function* () {
 			const pkg = yield* tryReadPackageJson(cwd)
-			if (!pkg) return [] as DiagnosticCheck[]
+			if (!pkg) {
+				return [] as DiagnosticCheck[]
+			}
 
 			const deps = { ...pkg.dependencies, ...pkg.devDependencies }
 			const checks: DiagnosticCheck[] = []

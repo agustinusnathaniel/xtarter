@@ -2,6 +2,8 @@ export function resolveCwd(args: {
 	cwd?: string
 	_?: (string | number)[]
 }): string {
-	if (typeof args.cwd === 'string') return args.cwd
+	if (typeof args.cwd === 'string') {
+		return args.cwd
+	}
 	return process.cwd()
 }

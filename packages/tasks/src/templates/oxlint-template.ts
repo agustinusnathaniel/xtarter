@@ -43,6 +43,7 @@ export function renderOxlintTsConfig(profile: ProjectProfile): string {
 	const env = getOxlintEnv(profile)
 	const envLine = env.node ? `\n  env: { node: true },` : ''
 
+	// Biome 2.5.9: only skipBlankLines is supported (skipComments not in schema); Oxlint supports both
 	return `import { defineConfig } from "oxlint";
 ${importLines.join('\n')}
 
@@ -51,12 +52,16 @@ export default defineConfig({
   rules: {
     "no-console": ["error", { allow: ["info", "warn", "error"] }],
     "no-shadow": "warn",
+    curly: ["error", "all"],
+    "max-lines": ["error", { max: 500, skipBlankLines: true, skipComments: true }],
+    "max-lines-per-function": ["error", { max: 60, skipBlankLines: true, skipComments: true }],
   },
   overrides: [
     {
       files: ["*.test.ts", "*.test.tsx", "*.spec.ts", "*.spec.tsx"],
       rules: {
         "no-console": "off",
+        "max-lines-per-function": "off",
         "@typescript-eslint/no-explicit-any": "off",
       },
     },
@@ -65,10 +70,9 @@ export default defineConfig({
 `
 }
 
-export function renderOxlintJsonConfig(profile: ProjectProfile): string {
-	const env = getOxlintEnv(profile)
-
-	const rules: Record<string, unknown> = {
+function buildOxlintBaseRules(): Record<string, unknown> {
+	// Biome 2.5.9: only skipBlankLines is supported (skipComments not in schema); Oxlint supports both
+	return {
 		'no-console': ['error', { allow: ['info', 'warn', 'error'] }],
 		'no-unused-vars': 'off',
 		'@typescript-eslint/no-unused-vars': [
@@ -82,6 +86,15 @@ export function renderOxlintJsonConfig(profile: ProjectProfile): string {
 		'@typescript-eslint/array-type': ['error', { default: 'generic' }],
 		complexity: ['warn', { max: 30 }],
 		'max-params': ['error', { max: 3 }],
+		curly: ['error', 'all'],
+		'max-lines': [
+			'error',
+			{ max: 500, skipBlankLines: true, skipComments: true },
+		],
+		'max-lines-per-function': [
+			'error',
+			{ max: 60, skipBlankLines: true, skipComments: true },
+		],
 		eqeqeq: 'error',
 		'prefer-const': 'error',
 		'no-var': 'error',
@@ -97,45 +110,86 @@ export function renderOxlintJsonConfig(profile: ProjectProfile): string {
 		'unicorn/no-anonymous-default-export': 'off',
 		'unicorn/consistent-function-scoping': 'off',
 	}
+}
 
-	if (profile.framework === 'react') {
-		Object.assign(rules, {
-			'react/jsx-key': [
-				'error',
-				{
-					checkFragmentShorthand: true,
-					checkKeyMustBeforeSpread: true,
-					warnOnDuplicates: true,
-				},
-			],
-			'react/jsx-boolean-value': 'error',
-			'react/self-closing-comp': 'error',
-			'react/jsx-no-target-blank': 'error',
-			'react/no-unknown-property': 'error',
-			'react/no-unescaped-entities': 'error',
-			'react/display-name': 'off',
-			'jsx-a11y/anchor-is-valid': [
-				'error',
-				{
-					components: ['Link'],
-					specialLink: ['hrefLeft', 'hrefRight'],
-					aspects: ['invalidHref', 'preferButton'],
-				},
-			],
-			'jsx-a11y/alt-text': 'error',
-			'jsx-a11y/click-events-have-key-events': 'warn',
-			'jsx-a11y/no-static-element-interactions': 'warn',
-		})
+function buildOxlintReactRules(): Record<string, unknown> {
+	return {
+		'react/jsx-key': [
+			'error',
+			{
+				checkFragmentShorthand: true,
+				checkKeyMustBeforeSpread: true,
+				warnOnDuplicates: true,
+			},
+		],
+		'react/jsx-boolean-value': 'error',
+		'react/self-closing-comp': 'error',
+		'react/jsx-no-target-blank': 'error',
+		'react/no-unknown-property': 'error',
+		'react/no-unescaped-entities': 'error',
+		'react/display-name': 'off',
+		'jsx-a11y/anchor-is-valid': [
+			'error',
+			{
+				components: ['Link'],
+				specialLink: ['hrefLeft', 'hrefRight'],
+				aspects: ['invalidHref', 'preferButton'],
+			},
+		],
+		'jsx-a11y/alt-text': 'error',
+		'jsx-a11y/click-events-have-key-events': 'warn',
+		'jsx-a11y/no-static-element-interactions': 'warn',
 	}
+}
 
+function buildOxlintRules(profile: ProjectProfile): Record<string, unknown> {
+	const rules = buildOxlintBaseRules()
+	if (profile.framework === 'react') {
+		Object.assign(rules, buildOxlintReactRules())
+	}
+	return rules
+}
+
+function buildOxlintPlugins(profile: ProjectProfile): string[] {
 	const plugins: string[] = ['eslint', 'typescript', 'unicorn', 'import', 'oxc']
 	if (profile.framework === 'react') {
 		plugins.push('react', 'jsx-a11y')
 	}
+	return plugins
+}
 
-	const config: Record<string, unknown> = {
+function buildOxlintOverrides(): Array<Record<string, unknown>> {
+	return [
+		{
+			files: ['*.test.ts', '*.test.tsx', '*.spec.ts', '*.spec.tsx'],
+			plugins: ['vitest'],
+			rules: {
+				'no-console': 'off',
+				'max-params': 'off',
+				'max-lines-per-function': 'off',
+				'@typescript-eslint/no-explicit-any': 'off',
+				'vitest/consistent-test-it': [
+					'error',
+					{ fn: 'it', withinDescribe: 'test' },
+				],
+				'vitest/prefer-strict-equal': 'error',
+				'vitest/prefer-todo': 'error',
+				'vitest/prefer-spy-on': 'error',
+				'vitest/prefer-expect-resolves': 'error',
+				'vitest/no-disabled-tests': 'warn',
+				'vitest/no-focused-tests': 'error',
+				'vitest/no-identical-title': 'error',
+				'vitest/valid-expect': 'error',
+			},
+		},
+	]
+}
+
+function buildOxlintConfig(profile: ProjectProfile): Record<string, unknown> {
+	const env = getOxlintEnv(profile)
+	return {
 		$schema: './node_modules/oxlint/configuration_schema.json',
-		plugins,
+		plugins: buildOxlintPlugins(profile),
 		env,
 		categories: {
 			correctness: 'error',
@@ -143,31 +197,12 @@ export function renderOxlintJsonConfig(profile: ProjectProfile): string {
 			style: 'warn',
 			perf: 'warn',
 		},
-		rules,
-		overrides: [
-			{
-				files: ['*.test.ts', '*.test.tsx', '*.spec.ts', '*.spec.tsx'],
-				plugins: ['vitest'],
-				rules: {
-					'no-console': 'off',
-					'max-params': 'off',
-					'@typescript-eslint/no-explicit-any': 'off',
-					'vitest/consistent-test-it': [
-						'error',
-						{ fn: 'it', withinDescribe: 'test' },
-					],
-					'vitest/prefer-strict-equal': 'error',
-					'vitest/prefer-todo': 'error',
-					'vitest/prefer-spy-on': 'error',
-					'vitest/prefer-expect-resolves': 'error',
-					'vitest/no-disabled-tests': 'warn',
-					'vitest/no-focused-tests': 'error',
-					'vitest/no-identical-title': 'error',
-					'vitest/valid-expect': 'error',
-				},
-			},
-		],
+		rules: buildOxlintRules(profile),
+		overrides: buildOxlintOverrides(),
 	}
+}
 
+export function renderOxlintJsonConfig(profile: ProjectProfile): string {
+	const config = buildOxlintConfig(profile)
 	return JSON.stringify(config, null, 2)
 }

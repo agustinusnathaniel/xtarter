@@ -21,7 +21,9 @@ export const commitlintTask = createFileTask({
 	extensions: ['.ts', '.js', '.mjs', '.mts', '.cts'],
 	render: (profile, _existing) => renderCommitlintConfig(profile),
 	checkFn: async ({ fullPath, content }) => {
-		if (!fullPath || !content) return 'new'
+		if (!fullPath || !content) {
+			return 'new'
+		}
 		// Check if the config already extends @commitlint/config-conventional
 		const hasExtends = /['"]@commitlint\/config-conventional['"]/.test(content)
 		return hasExtends ? 'skip' : 'conflict'

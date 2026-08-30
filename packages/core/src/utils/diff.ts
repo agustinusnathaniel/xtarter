@@ -17,7 +17,9 @@ export function generateDiff(before: string | null, after: string): string {
 		const _reset = change.added || change.removed ? pc.reset : String
 
 		for (const line of change.value.split('\n')) {
-			if (line === '' && change.value.endsWith('\n')) continue
+			if (line === '' && change.value.endsWith('\n')) {
+				continue
+			}
 			lines.push(color(`${prefix}${line}`))
 		}
 	}
@@ -33,8 +35,12 @@ export function computeChangeStats(
 	let added = 0
 	let removed = 0
 	for (const change of changes) {
-		if (change.added) added += change.count ?? 0
-		if (change.removed) removed += change.count ?? 0
+		if (change.added) {
+			added += change.count ?? 0
+		}
+		if (change.removed) {
+			removed += change.count ?? 0
+		}
 	}
 	return { added, removed }
 }
@@ -50,17 +56,27 @@ export function computeUnifiedHunks(
 
 	for (const change of changes) {
 		const rawLines = change.value.split('\n')
-		if (rawLines[rawLines.length - 1] === '') rawLines.pop()
-		if (rawLines.length === 0) continue
+		if (rawLines[rawLines.length - 1] === '') {
+			rawLines.pop()
+		}
+		if (rawLines.length === 0) {
+			continue
+		}
 
 		if (change.added) {
-			for (const line of rawLines) lines.push(`+ ${line}`)
+			for (const line of rawLines) {
+				lines.push(`+ ${line}`)
+			}
 			added += rawLines.length
 		} else if (change.removed) {
-			for (const line of rawLines) lines.push(`- ${line}`)
+			for (const line of rawLines) {
+				lines.push(`- ${line}`)
+			}
 			removed += rawLines.length
 		} else {
-			for (const line of rawLines) lines.push(`  ${line}`)
+			for (const line of rawLines) {
+				lines.push(`  ${line}`)
+			}
 		}
 	}
 
@@ -75,7 +91,9 @@ export function computeSemanticJsonDiff(
 	before: string | null,
 	after: string,
 ): SemanticEntry | undefined {
-	if (before === null) return { added: { '(full file)': after } }
+	if (before === null) {
+		return { added: { '(full file)': after } }
+	}
 	try {
 		const beforeObj = JSON.parse(before)
 		const afterObj = JSON.parse(after)
@@ -116,11 +134,17 @@ export function enhanceDiff(diff: FileDiff): FileDiff {
 }
 
 function isWordLevelDiff(before: string | null, after: string): boolean {
-	if (before === null) return false
+	if (before === null) {
+		return false
+	}
 	const bLines = before.split('\n')
 	const aLines = after.split('\n')
-	if (bLines.length !== aLines.length) return false
-	if (bLines.length > 50) return false
+	if (bLines.length !== aLines.length) {
+		return false
+	}
+	if (bLines.length > 50) {
+		return false
+	}
 	return true
 }
 

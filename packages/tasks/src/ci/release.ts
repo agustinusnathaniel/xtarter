@@ -14,19 +14,29 @@ async function checkReleaseWorkflow({
 	profile,
 	content,
 }: CheckFnContext): Promise<TaskStatus> {
-	if (!content) return 'new'
-
-	const expected = renderReleaseWorkflow(profile, content)
-
-	if (content.trim() === expected.trim()) return 'skip'
-
-	if (profile.existing.changeset) {
-		if (usesChangesetsAction(content)) return 'patch'
-		if (hasReleaseJob(content)) return 'conflict'
+	if (!content) {
 		return 'new'
 	}
 
-	if (hasReleaseJob(content)) return 'patch'
+	const expected = renderReleaseWorkflow(profile, content)
+
+	if (content.trim() === expected.trim()) {
+		return 'skip'
+	}
+
+	if (profile.existing.changeset) {
+		if (usesChangesetsAction(content)) {
+			return 'patch'
+		}
+		if (hasReleaseJob(content)) {
+			return 'conflict'
+		}
+		return 'new'
+	}
+
+	if (hasReleaseJob(content)) {
+		return 'patch'
+	}
 	return 'conflict'
 }
 

@@ -53,7 +53,9 @@ export function formatCheckResult(options: CheckResultOptions): string {
 		tasks: formatTaskList(tasks, statuses),
 		diagnostics,
 	}
-	if (timing) result.timing = timing
+	if (timing) {
+		result.timing = timing
+	}
 	return JSON.stringify(result)
 }
 
@@ -76,7 +78,9 @@ export function formatListResult(options: ListResultOptions): string {
 		},
 		tasks: formatTaskList(tasks, statuses),
 	}
-	if (timing) result.timing = timing
+	if (timing) {
+		result.timing = timing
+	}
 	return JSON.stringify(result)
 }
 
@@ -102,7 +106,9 @@ export function formatQueryResult(options: QueryResultOptions): string {
 			signals: r.signals,
 		})),
 	}
-	if (timing) data.timing = formatTimingJson(timing)
+	if (timing) {
+		data.timing = formatTimingJson(timing)
+	}
 	return JSON.stringify(data, null, 2)
 }
 
@@ -133,8 +139,14 @@ export function formatRunResult(options: RunResult): string {
 		skipped: options.skipped,
 		errors: options.errors,
 	}
-	if (options.taskId !== undefined) result.taskId = options.taskId
-	if (options.status !== undefined) result.status = options.status
-	if (options.timing) result.timing = options.timing
+	if (options.taskId !== undefined) {
+		result.taskId = options.taskId
+	}
+	if (options.status !== undefined) {
+		result.status = options.status
+	}
+	if (options.timing) {
+		result.timing = options.timing
+	}
 	return JSON.stringify(result)
 }

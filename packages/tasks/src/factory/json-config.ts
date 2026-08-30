@@ -26,10 +26,14 @@ export async function checkJsonConfigTask(
 		options.filepath,
 		options.extensions,
 	)
-	if (!fullPath) return 'new'
+	if (!fullPath) {
+		return 'new'
+	}
 
 	const exists = await fileExists(fullPath)
-	if (!exists) return 'new'
+	if (!exists) {
+		return 'new'
+	}
 
 	const actual = await readJsonIfExists(fullPath)
 	const incoming = await options.incoming(cwd, _profile)
@@ -66,6 +70,8 @@ export async function dryRunJsonConfigTask(
 		after = JSON.stringify(await options.incoming(cwd, profile), null, 2)
 	}
 
-	if (after === before) return []
+	if (after === before) {
+		return []
+	}
 	return [{ filepath, before, after }]
 }

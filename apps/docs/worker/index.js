@@ -4,8 +4,9 @@
  * No dependencies, workers-runtime compatible.
  */
 export function wantsMarkdown(acceptHeader) {
-	if (typeof acceptHeader !== 'string' || acceptHeader.length === 0)
+	if (typeof acceptHeader !== 'string' || acceptHeader.length === 0) {
 		return false
+	}
 	for (const part of acceptHeader.split(',')) {
 		const segments = part.split(';')
 		const mediaRange = segments[0].trim().toLowerCase()
@@ -13,7 +14,9 @@ export function wantsMarkdown(acceptHeader) {
 		for (let i = 1; i < segments.length; i++) {
 			const param = segments[i].trim()
 			const eq = param.indexOf('=')
-			if (eq === -1) continue
+			if (eq === -1) {
+				continue
+			}
 			const key = param.slice(0, eq).trim().toLowerCase()
 			const val = param.slice(eq + 1).trim()
 			if (key === 'q') {
@@ -22,16 +25,24 @@ export function wantsMarkdown(acceptHeader) {
 				break
 			}
 		}
-		if (q === 0) continue
-		if (mediaRange === 'text/markdown') return true
+		if (q === 0) {
+			continue
+		}
+		if (mediaRange === 'text/markdown') {
+			return true
+		}
 	}
 	return false
 }
 
 export function markdownCandidates(pathname) {
 	let p = typeof pathname === 'string' && pathname.length > 0 ? pathname : '/'
-	if (!p.startsWith('/')) p = `/${p}`
-	if (p.endsWith('/')) return [`${p}index.md`]
+	if (!p.startsWith('/')) {
+		p = `/${p}`
+	}
+	if (p.endsWith('/')) {
+		return [`${p}index.md`]
+	}
 	return [`${p}.md`, `${p}/index.md`]
 }
 
@@ -44,9 +55,13 @@ export function mergeVary(existingHeaderValue) {
 	) {
 		for (const raw of existingHeaderValue.split(',')) {
 			const token = raw.trim()
-			if (!token) continue
+			if (!token) {
+				continue
+			}
 			const key = token.toLowerCase()
-			if (seen.has(key)) continue
+			if (seen.has(key)) {
+				continue
+			}
 			seen.add(key)
 			tokens.push(token)
 		}
@@ -54,8 +69,12 @@ export function mergeVary(existingHeaderValue) {
 	tokens.sort((a, b) => {
 		const la = a.toLowerCase()
 		const lb = b.toLowerCase()
-		if (la < lb) return -1
-		if (la > lb) return 1
+		if (la < lb) {
+			return -1
+		}
+		if (la > lb) {
+			return 1
+		}
 		return 0
 	})
 	return ['Accept', 'Accept-Encoding', ...tokens].join(', ')
@@ -81,7 +100,9 @@ async function fetchMarkdownAsset(candidatePath, requestUrl, env) {
 		const res = await env.ASSETS.fetch(
 			new Request(new URL(candidatePath, requestUrl)),
 		)
-		if (res && res.status === 200) return res
+		if (res && res.status === 200) {
+			return res
+		}
 	} catch {}
 	return null
 }
@@ -106,7 +127,9 @@ async function handleRequest(request, env) {
 	if (negotiate) {
 		for (const candidate of markdownCandidates(pathname)) {
 			const asset = await fetchMarkdownAsset(candidate, request.url, env)
-			if (asset) return markdownResponse(asset)
+			if (asset) {
+				return markdownResponse(asset)
+			}
 		}
 	}
 	const response = await env.ASSETS.fetch(request)

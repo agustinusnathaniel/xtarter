@@ -11,7 +11,9 @@ async function preCommitHook(
 	_cwd: string,
 	profile: ProjectProfile,
 ): Promise<string> {
-	if (profile.vitePlus) return 'vp staged\n'
+	if (profile.vitePlus) {
+		return 'vp staged\n'
+	}
 	const pkg = await readPackageJson(_cwd)
 	const hasLintStaged = !!(
 		pkg?.devDependencies?.['lint-staged'] || pkg?.dependencies?.['lint-staged']
@@ -24,10 +26,12 @@ async function preCommitHook(
 
 function prePushHook(profile: ProjectProfile): string {
 	const pm = profile.packageManager
-	if (profile.monorepoTool === 'turbo')
+	if (profile.monorepoTool === 'turbo') {
 		return `${runScriptCommand(pm, 'check:turbo')}\n`
-	if (profile.typescript)
+	}
+	if (profile.typescript) {
 		return `${runScriptCommand(pm, 'typecheck')} && ${runScriptCommand(pm, 'test')}\n`
+	}
 	return `${runScriptCommand(pm, 'test')}\n`
 }
 
@@ -42,7 +46,9 @@ async function prepareCommitMsgHook(
 		pkg?.devDependencies?.commitizen ||
 		pkg?.dependencies?.commitizen
 	)
-	if (!hasCz) return '# no-op: no commit wizard detected\nexit 0\n'
+	if (!hasCz) {
+		return '# no-op: no commit wizard detected\nexit 0\n'
+	}
 	const pm = profile.packageManager
 	return `exec < /dev/tty && ${runScriptCommand(pm, 'cz')} --hook || true\n`
 }

@@ -1,7 +1,9 @@
 import { findConfigFile, resolvePath } from '@xtarterize/core'
 
 export function normalizeExtends<T extends object>(obj: T): T {
-	if (!('extends' in obj)) return obj
+	if (!('extends' in obj)) {
+		return obj
+	}
 	const ext = (obj as Record<string, unknown>).extends
 	if (typeof ext === 'string') {
 		return { ...obj, extends: [ext] } as T
@@ -17,7 +19,9 @@ export function getDefaultFilepath(
 	filepath: string,
 	extensions?: string[],
 ): string {
-	if (!extensions || extensions.length === 0) return filepath
+	if (!extensions || extensions.length === 0) {
+		return filepath
+	}
 	const hasExt = extensions.some((ext) => filepath.endsWith(ext))
 	return hasExt ? filepath : `${filepath}${extensions[0]}`
 }

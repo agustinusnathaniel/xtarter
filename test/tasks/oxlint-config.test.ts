@@ -15,7 +15,9 @@ describe('oxlint config validation', () => {
 		const profile = await detectProject(testDir)
 		const diffs = await oxlintTask.dryRun(testDir, profile)
 		const configFile = diffs.find((d) => d.filepath === 'oxlint.config.ts')
-		if (!configFile) throw new Error('Expected oxlint.config.ts diff to exist')
+		if (!configFile) {
+			throw new Error('Expected oxlint.config.ts diff to exist')
+		}
 		expect(configFile.before).toBeNull()
 
 		const content = configFile.after
@@ -41,8 +43,9 @@ describe('oxlint config validation', () => {
 			const profile = await detectProject(testDir)
 			const diffs = await oxlintTask.dryRun(testDir, profile)
 			const configFile = diffs.find((d) => d.filepath === 'oxlint.config.json')
-			if (!configFile)
+			if (!configFile) {
 				throw new Error('Expected oxlint.config.json diff to exist')
+			}
 
 			const config = JSON.parse(configFile.after)
 
@@ -108,7 +111,9 @@ describe('oxlint config validation', () => {
 		const diffs = await oxlintTask.dryRun(testDir, profile)
 		const configFile = diffs.find((d) => d.filepath === 'oxlint.config.ts')
 
-		if (!configFile) throw new Error('Expected oxlint.config.ts diff to exist')
+		if (!configFile) {
+			throw new Error('Expected oxlint.config.ts diff to exist')
+		}
 		const content = configFile.after
 		expect(content).toContain('import react from "ultracite/oxlint/react"')
 		expect(content).toContain('extends: [core, react]')
@@ -124,7 +129,9 @@ describe('oxfmt config validation', () => {
 		const diffs = await oxfmtTask.dryRun(testDir, profile)
 		const configFile = diffs.find((d) => d.filepath === 'oxfmt.config.ts')
 
-		if (!configFile) throw new Error('Expected oxfmt.config.ts diff to exist')
+		if (!configFile) {
+			throw new Error('Expected oxfmt.config.ts diff to exist')
+		}
 		expect(configFile.before).toBeNull()
 
 		const content = configFile.after
@@ -141,7 +148,9 @@ describe('oxfmt config validation', () => {
 			const diffs = await oxfmtTask.dryRun(testDir, profile)
 			const configFile = diffs.find((d) => d.filepath === 'oxfmt.config.ts')
 
-			if (!configFile) throw new Error('Expected oxfmt.config.ts diff to exist')
+			if (!configFile) {
+				throw new Error('Expected oxfmt.config.ts diff to exist')
+			}
 
 			// For new TS format projects, oxfmt generates a TS config
 			const content = configFile.after

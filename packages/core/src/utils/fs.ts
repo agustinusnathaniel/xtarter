@@ -97,7 +97,9 @@ export async function readJsonIfExists<T = Record<string, unknown>>(
 	filePath: string,
 ): Promise<T | null> {
 	const exists = await fileExists(filePath)
-	if (!exists) return null
+	if (!exists) {
+		return null
+	}
 	return readJson<T>(filePath)
 }
 

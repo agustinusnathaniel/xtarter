@@ -12,7 +12,9 @@ const SUFFIXES = ['ing', 'tion', 'ied', 'ies', 'ed', 's']
 
 export function stem(word: string): string {
 	const lower = word.toLowerCase()
-	if (IRREGULAR[lower]) return IRREGULAR[lower]
+	if (IRREGULAR[lower]) {
+		return IRREGULAR[lower]
+	}
 
 	let result = lower
 	for (const suffix of SUFFIXES) {

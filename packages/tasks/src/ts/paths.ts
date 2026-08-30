@@ -7,7 +7,9 @@ function getPathStatus(
 	profile: ProjectProfile,
 ): 'missing' | 'match' | 'mismatch' {
 	const options = getCompilerOptions(content)
-	if (!options) return 'missing'
+	if (!options) {
+		return 'missing'
+	}
 	const paths = options.paths
 	if (typeof paths !== 'object' || paths === null || Array.isArray(paths)) {
 		return 'missing'
@@ -23,8 +25,12 @@ function getPathStatus(
 		return hasValidAlias ? 'match' : 'mismatch'
 	}
 
-	if (!hasValidAlias) return 'mismatch'
-	if (options.baseUrl !== '.') return 'mismatch'
+	if (!hasValidAlias) {
+		return 'mismatch'
+	}
+	if (options.baseUrl !== '.') {
+		return 'mismatch'
+	}
 	return 'match'
 }
 
@@ -47,10 +53,16 @@ export const pathsTask = createJsonMergeTask({
 	applicable: (profile) => profile.typescript,
 	filepath: 'tsconfig.json',
 	checkFn: async ({ profile, fullPath, content }) => {
-		if (!fullPath || !content) return 'new'
+		if (!fullPath || !content) {
+			return 'new'
+		}
 		const status = getPathStatus(content, profile)
-		if (status === 'match') return 'skip'
-		if (status === 'missing') return 'patch'
+		if (status === 'match') {
+			return 'skip'
+		}
+		if (status === 'missing') {
+			return 'patch'
+		}
 		return 'conflict'
 	},
 	incoming: (_cwd, profile) => ({

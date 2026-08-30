@@ -32,7 +32,9 @@ export function backupFile(cwd: string, filepath: string): Promise<void> {
 					.then(() => true)
 					.catch(() => false),
 			)
-			if (!exists) return
+			if (!exists) {
+				return
+			}
 
 			const backupDir = resolvePath(cwd, BACKUP_DIR)
 			yield* tryIo(backupDir, () => fs.mkdir(backupDir, { recursive: true }))
@@ -90,8 +92,9 @@ export function listBackups(cwd: string, filepath: string): Promise<Backup[]> {
 			tryIo(indexPath, async () => {
 				const content = await fs.readFile(indexPath, 'utf-8')
 				const index = JSON.parse(content) as Record<string, unknown>
-				if (!index[filepath] || !Array.isArray(index[filepath]))
+				if (!index[filepath] || !Array.isArray(index[filepath])) {
 					return [] as Backup[]
+				}
 				return (index[filepath] as unknown[])
 					.filter(
 						(entry): entry is Backup =>

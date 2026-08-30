@@ -101,6 +101,99 @@ export interface FileTaskOptions {
 	checkFn?: (context: CheckFnContext) => Promise<TaskStatus>
 }
 
+function getFileTaskDeps(options: FileTaskOptions) {
+	const deps = options.depNames ?? (options.depName ? [options.depName] : [])
+	return deps.map((dep) => ({
+		depName: options.depInstallName ?? dep,
+		dev: options.installDev ?? true,
+	}))
+}
+
+async function checkFileTask(
+	cwd: string,
+	profile: ProjectProfile,
+	options: FileTaskOptions,
+): Promise<TaskStatus> {
+	const fullPath = await resolveTaskFile(
+		cwd,
+		options.filepath,
+		options.extensions,
+	)
+	if (!fullPath) {
+		return 'new' as TaskStatus
+	}
+	const exists = await fileExists(fullPath)
+	if (!exists) {
+		return 'new'
+	}
+	if (options.checkFn) {
+		const content = await readFile(fullPath)
+		return options.checkFn({ cwd, profile, fullPath, content })
+	}
+	const missingDep = await checkMissingDeps(cwd, {
+		depName: options.depName,
+		depNames: options.depNames,
+	})
+	if (missingDep) {
+		return missingDep
+	}
+	const expected = options.render(profile, null)
+	const actual = await readFile(fullPath)
+	if (options.merge) {
+		return checkFileTaskMerge(actual, expected)
+	}
+	if (
+		normalizeLineEndings(actual.trim()) ===
+		normalizeLineEndings(expected.trim())
+	) {
+		return 'skip'
+	}
+	return 'conflict'
+}
+
+function checkFileTaskMerge(actual: string, expected: string): TaskStatus {
+	try {
+		const actualJson = parseJsonc(actual) as object
+		const expectedJson = JSON5.parse(expected)
+		const merged = mergeJson(actualJson, expectedJson)
+		if (JSON.stringify(actualJson) === JSON.stringify(merged)) {
+			return 'skip'
+		}
+		return 'patch'
+	} catch {
+		return 'conflict'
+	}
+}
+
+async function dryRunFileTask(
+	cwd: string,
+	profile: ProjectProfile,
+	options: FileTaskOptions,
+): Promise<FileDiff[]> {
+	const diff = await computeSingleFileDiff(cwd, profile, options)
+	return [diff]
+}
+
+async function applyFileTask(
+	cwd: string,
+	profile: ProjectProfile,
+	options: FileTaskOptions,
+): Promise<void> {
+	const deps = options.depNames ?? (options.depName ? [options.depName] : [])
+	if (deps.length > 0) {
+		const installDeps = deps.map((dep) => ({
+			depName: options.depInstallName ?? dep,
+			dev: options.installDev ?? true,
+		}))
+		await installDependenciesBatch(cwd, installDeps)
+	}
+	if (options.ensureParentDir) {
+		await ensureTaskParentDir(cwd, options.filepath)
+	}
+	const diff = await computeSingleFileDiff(cwd, profile, options)
+	await writeTaskDiffs(cwd, [diff])
+}
+
 export function createFileTask(options: FileTaskOptions): Task {
 	return {
 		id: options.id,
@@ -109,91 +202,23 @@ export function createFileTask(options: FileTaskOptions): Task {
 		searchMeta: options.searchMeta,
 		scope: options.scope,
 		applicable: options.applicable,
-
 		async getDeps(_cwd, _profile) {
-			const deps =
-				options.depNames ?? (options.depName ? [options.depName] : [])
-			return deps.map((dep) => ({
-				depName: options.depInstallName ?? dep,
-				dev: options.installDev ?? true,
-			}))
+			return getFileTaskDeps(options)
 		},
-
 		async check(cwd, profile): Promise<TaskStatus> {
-			return wrapTask(options.id, 'createFileTask.check', async () => {
-				const fullPath = await resolveTaskFile(
-					cwd,
-					options.filepath,
-					options.extensions,
-				)
-
-				if (!fullPath) return 'new' as TaskStatus
-
-				const exists = await fileExists(fullPath)
-				if (!exists) return 'new'
-
-				if (options.checkFn) {
-					const content = await readFile(fullPath)
-					return options.checkFn({ cwd, profile, fullPath, content })
-				}
-
-				const missingDep = await checkMissingDeps(cwd, {
-					depName: options.depName,
-					depNames: options.depNames,
-				})
-				if (missingDep) return missingDep
-
-				const expected = options.render(profile, null)
-				const actual = await readFile(fullPath)
-
-				if (options.merge) {
-					try {
-						const actualJson = parseJsonc(actual) as object
-						const expectedJson = JSON5.parse(expected)
-						const merged = mergeJson(actualJson, expectedJson)
-						if (JSON.stringify(actualJson) === JSON.stringify(merged))
-							return 'skip'
-						return 'patch'
-					} catch {
-						return 'conflict'
-					}
-				}
-
-				if (
-					normalizeLineEndings(actual.trim()) ===
-					normalizeLineEndings(expected.trim())
-				)
-					return 'skip'
-				return 'conflict'
-			})
+			return wrapTask(options.id, 'createFileTask.check', () =>
+				checkFileTask(cwd, profile, options),
+			)
 		},
-
 		async dryRun(cwd, profile): Promise<FileDiff[]> {
-			return wrapTask(options.id, 'createFileTask.dryRun', async () => {
-				const diff = await computeSingleFileDiff(cwd, profile, options)
-				return [diff]
-			})
+			return wrapTask(options.id, 'createFileTask.dryRun', () =>
+				dryRunFileTask(cwd, profile, options),
+			)
 		},
-
 		async apply(cwd, profile): Promise<void> {
-			return wrapTask(options.id, 'createFileTask.apply', async () => {
-				const deps =
-					options.depNames ?? (options.depName ? [options.depName] : [])
-				if (deps.length > 0) {
-					const installDeps = deps.map((dep) => ({
-						depName: options.depInstallName ?? dep,
-						dev: options.installDev ?? true,
-					}))
-					await installDependenciesBatch(cwd, installDeps)
-				}
-
-				if (options.ensureParentDir) {
-					await ensureTaskParentDir(cwd, options.filepath)
-				}
-
-				const diff = await computeSingleFileDiff(cwd, profile, options)
-				await writeTaskDiffs(cwd, [diff])
-			})
+			return wrapTask(options.id, 'createFileTask.apply', () =>
+				applyFileTask(cwd, profile, options),
+			)
 		},
 	}
 }
@@ -247,14 +272,20 @@ export function createMultiFileTask(options: MultiFileTaskOptions): Task {
 					}
 				}
 
-				if (hasMismatch) return 'conflict'
-				if (hasMissing) return 'new'
+				if (hasMismatch) {
+					return 'conflict'
+				}
+				if (hasMissing) {
+					return 'new'
+				}
 
 				if (options.depName) {
 					const missingDep = await checkMissingDeps(cwd, {
 						depName: options.depName,
 					})
-					if (missingDep) return missingDep
+					if (missingDep) {
+						return missingDep
+					}
 				}
 
 				return 'skip'
@@ -262,9 +293,9 @@ export function createMultiFileTask(options: MultiFileTaskOptions): Task {
 		},
 
 		async dryRun(cwd, profile): Promise<FileDiff[]> {
-			return wrapTask(options.id, 'createMultiFileTask.dryRun', async () => {
-				return computeFileDiffs(cwd, profile, options.files(profile))
-			})
+			return wrapTask(options.id, 'createMultiFileTask.dryRun', () =>
+				computeFileDiffs(cwd, profile, options.files(profile)),
+			)
 		},
 
 		async apply(cwd, profile): Promise<void> {

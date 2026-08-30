@@ -9,7 +9,9 @@ function checkBin(pkgDir) {
 	const pkg = JSON.parse(
 		readFileSync(resolve(root, '..', pkgDir, 'package.json'), 'utf8'),
 	)
-	if (!pkg.bin) return
+	if (!pkg.bin) {
+		return
+	}
 	for (const [name, relPath] of Object.entries(pkg.bin)) {
 		const fullPath = resolve(root, '..', pkgDir, relPath)
 		if (!existsSync(fullPath)) {

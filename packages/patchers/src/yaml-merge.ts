@@ -14,7 +14,9 @@ const mergeYamlDefu = createDefu((obj, key, value) => {
  * Returns an empty object if the string is empty or contains only whitespace.
  */
 export function parseYaml(text: string): Record<string, unknown> {
-	if (text.trim() === '') return {}
+	if (text.trim() === '') {
+		return {}
+	}
 	return load(text) as Record<string, unknown>
 }
 

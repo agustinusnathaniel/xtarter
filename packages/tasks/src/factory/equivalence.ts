@@ -65,7 +65,9 @@ const EQUIVALENT_SUBCOMMANDS: Record<string, string[]> = {
 }
 
 export function normalizeTool(tool: string | null): string | null {
-	if (!tool) return null
+	if (!tool) {
+		return null
+	}
 	for (const [canonical, aliases] of Object.entries(TOOL_ALIASES)) {
 		if (aliases.includes(tool.toLowerCase())) {
 			return canonical
@@ -129,7 +131,9 @@ const EQUIVALENCE_RULES: EquivalenceRule[] = [
 	{
 		name: 'exact-match',
 		check: (ctx) => {
-			if (ctx.normA === ctx.normB) return true
+			if (ctx.normA === ctx.normB) {
+				return true
+			}
 			return null
 		},
 	},
@@ -165,8 +169,12 @@ const EQUIVALENCE_RULES: EquivalenceRule[] = [
 	{
 		name: 'tool-mismatch',
 		check: (ctx) => {
-			if (ctx.toolA === null || ctx.toolB === null) return false
-			if (normalizeTool(ctx.toolA) !== normalizeTool(ctx.toolB)) return false
+			if (ctx.toolA === null || ctx.toolB === null) {
+				return false
+			}
+			if (normalizeTool(ctx.toolA) !== normalizeTool(ctx.toolB)) {
+				return false
+			}
 			return null
 		},
 	},
@@ -175,16 +183,22 @@ const EQUIVALENCE_RULES: EquivalenceRule[] = [
 		check: (ctx) => {
 			const normalizeArgs = (args: string) =>
 				args.replace(/(\s+\.)?\s*$/, '').trim()
-			if (normalizeArgs(ctx.argsA) === normalizeArgs(ctx.argsB)) return true
+			if (normalizeArgs(ctx.argsA) === normalizeArgs(ctx.argsB)) {
+				return true
+			}
 			return null
 		},
 	},
 	{
 		name: 'equivalent-subcommands',
 		check: (ctx) => {
-			if (!ctx.toolA) return null
+			if (!ctx.toolA) {
+				return null
+			}
 			const equivSubcommands = EQUIVALENT_SUBCOMMANDS[ctx.toolA.toLowerCase()]
-			if (!equivSubcommands) return null
+			if (!equivSubcommands) {
+				return null
+			}
 			const subcommandPattern = new RegExp(
 				`^(${equivSubcommands.join('|')})\\s*`,
 			)

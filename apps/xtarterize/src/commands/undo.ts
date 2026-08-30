@@ -43,103 +43,142 @@ export const undoCommand = defineCommand({
 		const { format, quiet: runtimeQuiet } = resolveRuntimeFlags(args)
 		const jsonMode = format === 'json'
 		const quiet = jsonMode || runtimeQuiet
-
-		const s = createSpinner(quiet)
-		s.start('Reading last run manifest...')
-
-		const manifest = await readRunManifest(cwd)
-		s.stop('Manifest loaded')
-
-		if (!manifest || manifest.files.length === 0) {
-			if (jsonMode) {
-				console.log(
-					JSON.stringify({ ok: false, error: 'No previous run found' }),
-				)
-				process.exitCode = 1
-				return
-			}
-			logError('No previous run found. Nothing to undo.')
-			logInfo('Run `xtarterize init` or `xtarterize add` first.')
-			process.exitCode = 1
+		const manifest = await loadAndValidateManifest(cwd, jsonMode, quiet)
+		if (!manifest) {
 			return
 		}
-
-		if (!jsonMode) {
-			console.log('')
-			console.log(`Last run: ${manifest.timestamp}`)
-			console.log(`Files modified: ${manifest.files.length}`)
-			console.log('')
-
-			for (const filepath of manifest.files) {
-				console.log(`  ${filepath}`)
-			}
-			console.log('')
-		}
-
-		if (!quiet) {
-			const proceed = await confirm({
-				message: `Restore ${manifest.files.length} file(s) to their previous state?`,
-			})
-			abortIfCancelled(proceed, 'Undo cancelled')
-			if (!proceed) return
-		}
-
-		s.start('Restoring files...')
-
-		let restored = 0
-		let removedCount = 0
-		const errors: string[] = []
-
-		for (const filepath of manifest.files) {
-			try {
-				const backups = await listBackups(cwd, filepath)
-				if (backups.length === 0) {
-					// The file was created by the run (backupFile skips
-					// files that didn't exist before applying). Undo must
-					// remove it to restore the pre-run state.
-					await removeCreatedFile(cwd, filepath)
-					restored++
-					removedCount++
-					continue
-				}
-				// Restore the most recent backup (first in sorted list)
-				await restoreBackup(cwd, backups[0])
-				restored++
-			} catch (error) {
-				const message = error instanceof Error ? error.message : String(error)
-				errors.push(`${filepath}: ${message}`)
-			}
-		}
-
-		s.stop('Files restored')
-
-		if (jsonMode) {
-			const result: Record<string, unknown> = {
-				ok: errors.length === 0,
-				timestamp: manifest.timestamp,
-				restored,
-				total: manifest.files.length,
-				files: manifest.files,
-				errors,
-			}
-			if (removedCount > 0) result.removed = removedCount
-			console.log(JSON.stringify(result))
-			if (errors.length > 0) process.exitCode = 1
+		displayManifestPreview(manifest, jsonMode)
+		if (!(await promptRestoreConfirm(manifest, quiet))) {
 			return
 		}
-
-		console.log('')
-		if (errors.length > 0) {
-			logError(`${errors.length} error(s):`)
-			for (const error of errors) {
-				logError(`  - ${error}`)
-			}
-			process.exitCode = 1
-		}
-
-		logSuccess(`Restored ${restored}/${manifest.files.length} files`)
+		const { restored, removedCount, errors } = await restoreManifestFiles(
+			cwd,
+			manifest,
+			quiet,
+		)
+		reportUndoResult({ manifest, restored, removedCount, errors, jsonMode })
 	},
 })
+
+async function loadAndValidateManifest(
+	cwd: string,
+	jsonMode: boolean,
+	quiet: boolean,
+) {
+	const s = createSpinner(quiet)
+	s.start('Reading last run manifest...')
+	const manifest = await readRunManifest(cwd)
+	s.stop('Manifest loaded')
+	if (manifest && manifest.files.length > 0) {
+		return manifest
+	}
+	if (jsonMode) {
+		console.log(JSON.stringify({ ok: false, error: 'No previous run found' }))
+	} else {
+		logError('No previous run found. Nothing to undo.')
+		logInfo('Run `xtarterize init` or `xtarterize add` first.')
+	}
+	process.exitCode = 1
+	return null
+}
+
+function displayManifestPreview(
+	manifest: { timestamp: string; files: string[] },
+	jsonMode: boolean,
+) {
+	if (jsonMode) {
+		return
+	}
+	console.log('')
+	console.log(`Last run: ${manifest.timestamp}`)
+	console.log(`Files modified: ${manifest.files.length}`)
+	console.log('')
+	for (const filepath of manifest.files) {
+		console.log(`  ${filepath}`)
+	}
+	console.log('')
+}
+
+async function promptRestoreConfirm(
+	manifest: { files: string[] },
+	quiet: boolean,
+): Promise<boolean> {
+	if (quiet) {
+		return true
+	}
+	const proceed = await confirm({
+		message: `Restore ${manifest.files.length} file(s) to their previous state?`,
+	})
+	abortIfCancelled(proceed, 'Undo cancelled')
+	return Boolean(proceed)
+}
+
+async function restoreManifestFiles(
+	cwd: string,
+	manifest: { files: string[] },
+	quiet: boolean,
+): Promise<{ restored: number; removedCount: number; errors: string[] }> {
+	const s = createSpinner(quiet)
+	s.start('Restoring files...')
+	let restored = 0
+	let removedCount = 0
+	const errors: string[] = []
+	for (const filepath of manifest.files) {
+		try {
+			const backups = await listBackups(cwd, filepath)
+			if (backups.length === 0) {
+				await removeCreatedFile(cwd, filepath)
+				restored++
+				removedCount++
+				continue
+			}
+			await restoreBackup(cwd, backups[0])
+			restored++
+		} catch (error) {
+			const message = error instanceof Error ? error.message : String(error)
+			errors.push(`${filepath}: ${message}`)
+		}
+	}
+	s.stop('Files restored')
+	return { restored, removedCount, errors }
+}
+
+function reportUndoResult(options: {
+	manifest: { timestamp: string; files: string[] }
+	restored: number
+	removedCount: number
+	errors: string[]
+	jsonMode: boolean
+}) {
+	const { manifest, restored, removedCount, errors, jsonMode } = options
+	if (jsonMode) {
+		const result: Record<string, unknown> = {
+			ok: errors.length === 0,
+			timestamp: manifest.timestamp,
+			restored,
+			total: manifest.files.length,
+			files: manifest.files,
+			errors,
+		}
+		if (removedCount > 0) {
+			result.removed = removedCount
+		}
+		console.log(JSON.stringify(result))
+		if (errors.length > 0) {
+			process.exitCode = 1
+		}
+		return
+	}
+	console.log('')
+	if (errors.length > 0) {
+		logError(`${errors.length} error(s):`)
+		for (const error of errors) {
+			logError(`  - ${error}`)
+		}
+		process.exitCode = 1
+	}
+	logSuccess(`Restored ${restored}/${manifest.files.length} files`)
+}
 
 /**
  * Delete a file that the run created. Mirrors the path-traversal guard used
