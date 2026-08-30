@@ -1,5 +1,6 @@
 import type { FileDiff, ProjectProfile, Task } from '@xtarterize/core'
 import { logError } from '@xtarterize/core'
+import { Effect } from 'effect'
 
 /**
  * Collect FileDiffs from a list of tasks, logging per-task failures
@@ -11,35 +12,29 @@ export async function collectTaskDiffs(
 	cwd: string,
 	profile: ProjectProfile,
 ): Promise<{ diffs: FileDiff[]; failures: number }> {
-	const concurrency = 8
-	const results: (FileDiff[] | null)[] = Array.from({
-		length: tasks.length,
-	})
-	let failures = 0
-	let nextIndex = 0
-
-	async function worker(): Promise<void> {
-		while (true) {
-			const current = nextIndex++
-			if (current >= tasks.length) break
-			const task = tasks[current]
-			if (!task) continue
-			try {
-				results[current] = await task.dryRun(cwd, profile)
-			} catch (error) {
-				failures++
-				const message = error instanceof Error ? error.message : String(error)
-				logError(`Failed to dryRun ${task.id}: ${message}`)
-				results[current] = null
-			}
-		}
-	}
-
-	const workers = Array.from(
-		{ length: Math.min(concurrency, tasks.length) },
-		() => worker(),
+	const results = await Effect.runPromise(
+		Effect.all(
+			tasks.map((task) =>
+				Effect.tryPromise({
+					try: () => task.dryRun(cwd, profile),
+					catch: (cause: unknown) => cause,
+				}).pipe(
+					Effect.tapError((cause: unknown) =>
+						Effect.sync(() => {
+							const message =
+								cause instanceof Error ? cause.message : String(cause)
+							logError(`Failed to dryRun ${task.id}: ${message}`)
+						}),
+					),
+					Effect.orElseSucceed(() => null as FileDiff[] | null),
+				),
+			),
+			{ concurrency: 8 },
+		),
 	)
-	await Promise.all(workers)
-	const diffs = results.filter((r): r is FileDiff[] => r !== null).flat()
+	const failures = results.filter((r: FileDiff[] | null) => r === null).length
+	const diffs = results
+		.filter((r: FileDiff[] | null): r is FileDiff[] => r !== null)
+		.flat()
 	return { diffs, failures }
 }

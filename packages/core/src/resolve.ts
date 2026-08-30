@@ -6,6 +6,8 @@ import { TaskError } from '@/errors.js'
 import type { ResolveTiming } from '@/timing.js'
 import { logWarn } from '@/utils/logger.js'
 
+const CONCURRENCY = 8
+
 export function resolveTasks(
 	profile: ProjectProfile,
 	allTasks: Task[],
@@ -65,7 +67,7 @@ function runConcurrent<T>(
 	makeEffect: (task: Task) => Effect.Effect<T, never>,
 ): Promise<T[]> {
 	return Effect.runPromise(
-		Effect.all(tasks.map(makeEffect), { concurrency: 8 }),
+		Effect.all(tasks.map(makeEffect), { concurrency: CONCURRENCY }),
 	)
 }
 

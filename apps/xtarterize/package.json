@@ -49,6 +49,7 @@
 		"@xtarterize/core": "workspace:*",
 		"@xtarterize/patchers": "workspace:*",
 		"@xtarterize/tasks": "workspace:*",
+		"effect": "catalog:",
 		"typescript": "catalog:",
 		"vite": "catalog:",
 		"vite-plus": "catalog:"
