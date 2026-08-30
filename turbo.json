@@ -17,9 +17,11 @@
       "dependsOn": ["^build"]
     },
     "//#lint": {
-      "inputs": ["biome.json", "apps/", "packages/"]
+      "cache": false
     },
-    "//#check": {},
+    "//#check": {
+      "cache": false
+    },
     "//#fix": {
       "cache": false
     },
