@@ -45,11 +45,15 @@ export const renovateTask = createJsonMergeTask({
 	extensions: ['.json', '.json5'],
 	incoming: incomingRenovate,
 	async checkFn({ fullPath, content }) {
-		if (!fullPath || !content) return 'new'
+		if (!fullPath || !content) {
+			return 'new'
+		}
 		const actual = normalizeExtends((await readJsonIfExists(fullPath)) ?? {})
 		const expected = normalizeExtends(incomingRenovate())
 		const merged = mergeJson(actual, expected)
-		if (deepEqual(actual, merged)) return 'skip'
+		if (deepEqual(actual, merged)) {
+			return 'skip'
+		}
 		return 'patch'
 	},
 })

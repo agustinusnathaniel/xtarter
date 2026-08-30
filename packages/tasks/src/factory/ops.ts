@@ -29,7 +29,9 @@ export async function checkMissingDeps(
 	cwd: string,
 	options: { depName?: string; depNames?: string[] },
 ): Promise<'patch' | null> {
-	if (!options.depName && !options.depNames) return null
+	if (!options.depName && !options.depNames) {
+		return null
+	}
 	const { readPackageJson } = await import('@xtarterize/core')
 	const pkg = await readPackageJson(cwd)
 	const deps = options.depNames ?? (options.depName ? [options.depName] : [])
@@ -47,7 +49,9 @@ export async function ensureTaskDependency(options: {
 	depInstallName?: string
 	installDev?: boolean
 }): Promise<void> {
-	if (!options.depName) return
+	if (!options.depName) {
+		return
+	}
 	await installDependency(
 		options.cwd,
 		options.depInstallName ?? options.depName,

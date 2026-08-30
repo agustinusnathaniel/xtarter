@@ -15,7 +15,9 @@ export function formatCheckAnnotations(
 
 	for (const task of tasks) {
 		const status = statuses.get(task.id) ?? 'new'
-		if (status === 'skip') continue
+		if (status === 'skip') {
+			continue
+		}
 
 		const file = task.searchMeta?.configTargets?.[0]
 		const props = [
@@ -29,7 +31,9 @@ export function formatCheckAnnotations(
 	}
 
 	for (const diagnostic of diagnostics) {
-		if (diagnostic.status === 'pass') continue
+		if (diagnostic.status === 'pass') {
+			continue
+		}
 		const level = diagnostic.status === 'fail' ? 'error' : 'warning'
 		lines.push(
 			`::${level} title=${escapeProperty(diagnostic.name)}::${escapeData(diagnostic.message)}`,

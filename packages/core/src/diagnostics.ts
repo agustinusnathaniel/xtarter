@@ -201,11 +201,15 @@ export function runProjectHealthChecks(
 	return Effect.runPromise(
 		Effect.gen(function* () {
 			const pkg = yield* tryReadPackageJson(cwd)
-			if (!pkg) return [] as DiagnosticCheck[]
+			if (!pkg) {
+				return [] as DiagnosticCheck[]
+			}
 			const deps = { ...pkg.dependencies, ...pkg.devDependencies }
 			const checks: DiagnosticCheck[] = []
 			checks.push(yield* checkLockfile(cwd))
-			if (deps.typescript) checks.push(yield* checkTsconfig(cwd))
+			if (deps.typescript) {
+				checks.push(yield* checkTsconfig(cwd))
+			}
 			checks.push(yield* checkReadme(cwd))
 			checks.push(yield* checkGitignore(cwd))
 			return checks
@@ -271,11 +275,15 @@ export function runConflictChecks(cwd: string): Promise<DiagnosticCheck[]> {
 	return Effect.runPromise(
 		Effect.gen(function* () {
 			const pkg = yield* tryReadPackageJson(cwd)
-			if (!pkg) return [] as DiagnosticCheck[]
+			if (!pkg) {
+				return [] as DiagnosticCheck[]
+			}
 			const deps = { ...pkg.dependencies, ...pkg.devDependencies }
 			const checks: DiagnosticCheck[] = [...collectConflictingToolChecks(deps)]
 			const legacyCheck = yield* checkLegacyEslintConfig(cwd)
-			if (legacyCheck) checks.push(legacyCheck)
+			if (legacyCheck) {
+				checks.push(legacyCheck)
+			}
 			if (checks.length === 0) {
 				checks.push(
 					makeCheck(
@@ -296,7 +304,9 @@ export function runToolInstallationChecks(
 	return Effect.runPromise(
 		Effect.gen(function* () {
 			const pkg = yield* tryReadPackageJson(cwd)
-			if (!pkg) return [] as DiagnosticCheck[]
+			if (!pkg) {
+				return [] as DiagnosticCheck[]
+			}
 
 			const deps = { ...pkg.dependencies, ...pkg.devDependencies }
 			const checks: DiagnosticCheck[] = []

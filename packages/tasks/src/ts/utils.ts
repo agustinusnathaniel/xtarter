@@ -7,7 +7,9 @@ import { parseJsonc } from '@xtarterize/patchers'
 export function getCompilerOptions(
 	content: string | null,
 ): Record<string, unknown> | null {
-	if (!content) return null
+	if (!content) {
+		return null
+	}
 	const parsed = parseJsonc(content)
 	if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
 		return null

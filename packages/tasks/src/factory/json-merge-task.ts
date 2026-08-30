@@ -53,9 +53,13 @@ async function checkJsonMergeTask(
 		options.filepath,
 		options.extensions,
 	)
-	if (!fullPath) return 'new'
+	if (!fullPath) {
+		return 'new'
+	}
 	const exists = await fileExists(fullPath)
-	if (!exists) return 'new'
+	if (!exists) {
+		return 'new'
+	}
 	if (options.checkFn) {
 		const content = await readFile(fullPath)
 		return options.checkFn({ cwd, profile, fullPath, content })
@@ -64,7 +68,9 @@ async function checkJsonMergeTask(
 		depName: options.depName,
 		depNames: options.depNames,
 	})
-	if (missingDep) return missingDep
+	if (missingDep) {
+		return missingDep
+	}
 	return checkJsonConfigTask(cwd, profile, {
 		filepath: options.filepath,
 		extensions: options.extensions,

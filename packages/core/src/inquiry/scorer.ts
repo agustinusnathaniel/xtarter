@@ -21,29 +21,46 @@ const DEFAULT_WEIGHTS: WeightConfig = {
 type MatchTier = 0.0 | 0.55 | 0.75 | 0.85 | 0.95 | 1.0
 
 function bestMatchTier(token: string, field: string | undefined): MatchTier {
-	if (!field) return 0.0
+	if (!field) {
+		return 0.0
+	}
 	const lowerToken = token.toLowerCase()
 	const lowerField = field.toLowerCase()
 
-	if (lowerToken === lowerField) return 1.0
-	if (stem(lowerToken) === stem(lowerField)) return 0.95
-	if (similarity(lowerToken, lowerField) >= 0.85) return 0.85
+	if (lowerToken === lowerField) {
+		return 1.0
+	}
+	if (stem(lowerToken) === stem(lowerField)) {
+		return 0.95
+	}
+	if (similarity(lowerToken, lowerField) >= 0.85) {
+		return 0.85
+	}
 	if (
 		lowerField.startsWith(lowerToken) ||
 		lowerField.includes(`${lowerToken} `)
-	)
+	) {
 		return 0.75
-	if (lowerField.includes(lowerToken)) return 0.55
+	}
+	if (lowerField.includes(lowerToken)) {
+		return 0.55
+	}
 	return 0.0
 }
 
 function bestMatchInArray(token: string, arr: string[] | undefined): MatchTier {
-	if (!arr || arr.length === 0) return 0.0
+	if (!arr || arr.length === 0) {
+		return 0.0
+	}
 	let best: MatchTier = 0.0
 	for (const item of arr) {
 		const match = bestMatchTier(token, item)
-		if (match > best) best = match
-		if (best === 1.0) break
+		if (match > best) {
+			best = match
+		}
+		if (best === 1.0) {
+			break
+		}
 	}
 	return best
 }
@@ -59,6 +76,35 @@ function matchTaskToToken(token: string, task: Task) {
 			task.searchMeta?.configTargets ?? task.searchMeta?.tags,
 		),
 	}
+}
+
+function getBestScores(task: Task, allTerms: string[]) {
+	let bestLabel = 0
+	let bestId = 0
+	let bestGroup = 0
+	let bestKw = 0
+	let bestConfig = 0
+
+	for (const term of allTerms) {
+		const match = matchTaskToToken(term, task)
+		if (match.label > bestLabel) {
+			bestLabel = match.label
+		}
+		if (match.id > bestId) {
+			bestId = match.id
+		}
+		if (match.group > bestGroup) {
+			bestGroup = match.group
+		}
+		if (match.keywords > bestKw) {
+			bestKw = match.keywords
+		}
+		if (match.config > bestConfig) {
+			bestConfig = match.config
+		}
+	}
+
+	return { bestLabel, bestId, bestGroup, bestKw, bestConfig }
 }
 
 function scoreTaskForQuery(
@@ -78,26 +124,12 @@ function scoreTaskForQuery(
 	let configSum = 0
 
 	for (const _token of tokens) {
-		let bestLabel = 0
-		let bestId = 0
-		let bestGroup = 0
-		let bestKw = 0
-		let bestConfig = 0
-
-		for (const term of allTerms) {
-			const match = matchTaskToToken(term, task)
-			if (match.label > bestLabel) bestLabel = match.label
-			if (match.id > bestId) bestId = match.id
-			if (match.group > bestGroup) bestGroup = match.group
-			if (match.keywords > bestKw) bestKw = match.keywords
-			if (match.config > bestConfig) bestConfig = match.config
-		}
-
-		labelSum += bestLabel
-		idSum += bestId
-		groupSum += bestGroup
-		kwSum += bestKw
-		configSum += bestConfig
+		const best = getBestScores(task, allTerms)
+		labelSum += best.bestLabel
+		idSum += best.bestId
+		groupSum += best.bestGroup
+		kwSum += best.bestKw
+		configSum += best.bestConfig
 	}
 
 	const n = tokens.length || 1
@@ -139,13 +171,17 @@ export function scoreTasks(
 	query: string,
 	options?: InquiryOptions,
 ): InquiryResult[] {
-	if (!query?.trim()) return []
+	if (!query?.trim()) {
+		return []
+	}
 
 	const { minScore = 0, maxResults = 0, weights: customWeights } = options ?? {}
 	const weights = { ...DEFAULT_WEIGHTS, ...customWeights }
 
 	const { tokens } = tokenize(query)
-	if (tokens.length === 0) return []
+	if (tokens.length === 0) {
+		return []
+	}
 
 	const expanded = expandQuery(tokens)
 	const results: InquiryResult[] = []

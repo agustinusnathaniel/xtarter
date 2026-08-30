@@ -117,10 +117,14 @@ export async function loadPluginConfig(
 	try {
 		raw = await readRawXtarterizeConfig(cwd)
 	} catch (error) {
-		if (error === CONFIG_PARSE_ERROR) return { plugins: [] }
+		if (error === CONFIG_PARSE_ERROR) {
+			return { plugins: [] }
+		}
 		throw error
 	}
-	if (raw === null) return null
+	if (raw === null) {
+		return null
+	}
 	if (!Array.isArray(raw.plugins)) {
 		return { plugins: [] }
 	}
@@ -133,7 +137,9 @@ export interface TaskSelectionConfig {
 }
 
 function sanitizeStringArray(value: unknown): string[] {
-	if (!Array.isArray(value)) return []
+	if (!Array.isArray(value)) {
+		return []
+	}
 	return value
 		.filter((s): s is string => typeof s === 'string')
 		.map((s) => s.trim())
@@ -155,7 +161,9 @@ export async function loadSelectionConfig(
 ): Promise<TaskSelectionConfig> {
 	try {
 		const raw = await readRawXtarterizeConfig(cwd)
-		if (!raw) return { skip: [], only: [] }
+		if (!raw) {
+			return { skip: [], only: [] }
+		}
 		return {
 			skip: sanitizeStringArray(raw.skip),
 			only: sanitizeStringArray(raw.only),
@@ -270,7 +278,9 @@ async function importWithTimeout(
 	try {
 		return await Promise.race([importPromise, timeoutPromise])
 	} finally {
-		if (timeoutId !== undefined) clearTimeout(timeoutId)
+		if (timeoutId !== undefined) {
+			clearTimeout(timeoutId)
+		}
 	}
 }
 
@@ -284,7 +294,9 @@ async function importWithTimeout(
  *   - a named export `task` that is a single `Task`
  */
 export async function loadPluginTasks(config: PluginConfig): Promise<Task[]> {
-	if (!config.plugins?.length) return []
+	if (!config.plugins?.length) {
+		return []
+	}
 
 	const allTasks: Task[] = []
 	const seen = new Set<string>()
@@ -345,6 +357,8 @@ export async function loadPluginTasks(config: PluginConfig): Promise<Task[]> {
  */
 export async function resolveExternalTasks(cwd: string): Promise<Task[]> {
 	const config = await loadPluginConfig(cwd)
-	if (!config) return []
+	if (!config) {
+		return []
+	}
 	return loadPluginTasks(config)
 }

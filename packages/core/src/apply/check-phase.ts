@@ -44,8 +44,12 @@ export function collectCheckResults(options: {
 }
 
 function shouldSkip(status: TaskStatus, includeConflicts: boolean): boolean {
-	if (status === 'skip') return true
-	if (status === 'conflict' && !includeConflicts) return true
+	if (status === 'skip') {
+		return true
+	}
+	if (status === 'conflict' && !includeConflicts) {
+		return true
+	}
 	return false
 }
 

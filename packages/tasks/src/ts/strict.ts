@@ -11,8 +11,12 @@ const EXPECTED_OPTIONS = {
 
 function getCompilerOption(content: string | null, key: string): unknown {
 	const options = getCompilerOptions(content)
-	if (!options) return undefined
-	if (!Object.hasOwn(options, key)) return undefined
+	if (!options) {
+		return undefined
+	}
+	if (!Object.hasOwn(options, key)) {
+		return undefined
+	}
 	return options[key]
 }
 
@@ -45,7 +49,9 @@ export const strictTask = createJsonMergeTask({
 	applicable: (profile) => profile.typescript,
 	filepath: 'tsconfig.json',
 	checkFn: async ({ fullPath, content }) => {
-		if (!fullPath || !content) return 'new'
+		if (!fullPath || !content) {
+			return 'new'
+		}
 
 		let hasMissing = false
 		let hasConflict = false
@@ -59,8 +65,12 @@ export const strictTask = createJsonMergeTask({
 			}
 		}
 
-		if (hasConflict) return 'conflict'
-		if (hasMissing) return 'patch'
+		if (hasConflict) {
+			return 'conflict'
+		}
+		if (hasMissing) {
+			return 'patch'
+		}
 		return 'skip'
 	},
 	incoming: () => ({

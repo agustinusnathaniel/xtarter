@@ -28,7 +28,9 @@ const __pkgCache = new Map<string, PackageJson | null>()
 
 async function getPackageJson(cwd: string): Promise<PackageJson | null> {
 	const cached = __pkgCache.get(cwd)
-	if (cached !== undefined) return cached
+	if (cached !== undefined) {
+		return cached
+	}
 	const pkg = await readPackageJson(cwd)
 	__pkgCache.set(cwd, pkg)
 	return pkg
@@ -126,7 +128,9 @@ function getMissingDeps(
 	deps: PackageJsonTaskDep[],
 	pkg: PackageJson | null,
 ): PackageJsonTaskDep[] {
-	if (!pkg) return []
+	if (!pkg) {
+		return []
+	}
 	return deps.filter(
 		(dep) =>
 			!pkg.devDependencies?.[dep.depName] && !pkg.dependencies?.[dep.depName],
@@ -193,13 +197,17 @@ async function checkPackageJsonTask(
 	const changes = await computePackageJsonChanges(options, cwd, profile)
 	const { pkg, allDeps } = changes
 
-	if (!pkg) return 'conflict'
+	if (!pkg) {
+		return 'conflict'
+	}
 
 	if (options.checkFn) {
 		const status = await options.checkFn(cwd, profile, pkg)
 		if (status === 'skip') {
 			const missingDeps = getMissingDeps(allDeps, pkg)
-			if (missingDeps.length > 0) return 'patch'
+			if (missingDeps.length > 0) {
+				return 'patch'
+			}
 		}
 		return status
 	}
@@ -222,7 +230,9 @@ function resolvePackageJsonStatus(
 				changes.pkg?.dependencies?.[depName]))
 
 	if (missingScripts.length === 0) {
-		if (missingFiles.length > 0) return 'patch'
+		if (missingFiles.length > 0) {
+			return 'patch'
+		}
 		return hasDep ? 'skip' : 'patch'
 	}
 
@@ -288,9 +298,13 @@ function collectMissingDepsDiffs(
 	pkg: PackageJson | null,
 	diffs: FileDiff[],
 ): void {
-	if (!pkg) return
+	if (!pkg) {
+		return
+	}
 	const missingDeps = getMissingDeps(neededDeps, pkg)
-	if (missingDeps.length === 0) return
+	if (missingDeps.length === 0) {
+		return
+	}
 	const devDeps = missingDeps.filter((dep) => dep.installDev ?? true)
 	const prodDeps = missingDeps.filter((dep) => !(dep.installDev ?? true))
 	if (devDeps.length > 0) {

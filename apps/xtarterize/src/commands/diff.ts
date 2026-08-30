@@ -64,11 +64,15 @@ export const diffCommand = defineCommand({
 			} else {
 				logSuccess('No pending changes')
 			}
-			if (!ctx.quiet) printTiming(timing)
+			if (!ctx.quiet) {
+				printTiming(timing)
+			}
 			return
 		}
 
 		displayDiffs(mergedDiffs, ctx.format, failures)
-		if (!ctx.quiet) printTiming(timing)
+		if (!ctx.quiet) {
+			printTiming(timing)
+		}
 	},
 })

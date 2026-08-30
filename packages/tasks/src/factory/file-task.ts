@@ -119,9 +119,13 @@ async function checkFileTask(
 		options.filepath,
 		options.extensions,
 	)
-	if (!fullPath) return 'new' as TaskStatus
+	if (!fullPath) {
+		return 'new' as TaskStatus
+	}
 	const exists = await fileExists(fullPath)
-	if (!exists) return 'new'
+	if (!exists) {
+		return 'new'
+	}
 	if (options.checkFn) {
 		const content = await readFile(fullPath)
 		return options.checkFn({ cwd, profile, fullPath, content })
@@ -130,15 +134,20 @@ async function checkFileTask(
 		depName: options.depName,
 		depNames: options.depNames,
 	})
-	if (missingDep) return missingDep
+	if (missingDep) {
+		return missingDep
+	}
 	const expected = options.render(profile, null)
 	const actual = await readFile(fullPath)
-	if (options.merge) return checkFileTaskMerge(actual, expected)
+	if (options.merge) {
+		return checkFileTaskMerge(actual, expected)
+	}
 	if (
 		normalizeLineEndings(actual.trim()) ===
 		normalizeLineEndings(expected.trim())
-	)
+	) {
 		return 'skip'
+	}
 	return 'conflict'
 }
 
@@ -147,7 +156,9 @@ function checkFileTaskMerge(actual: string, expected: string): TaskStatus {
 		const actualJson = parseJsonc(actual) as object
 		const expectedJson = JSON5.parse(expected)
 		const merged = mergeJson(actualJson, expectedJson)
-		if (JSON.stringify(actualJson) === JSON.stringify(merged)) return 'skip'
+		if (JSON.stringify(actualJson) === JSON.stringify(merged)) {
+			return 'skip'
+		}
 		return 'patch'
 	} catch {
 		return 'conflict'
@@ -261,14 +272,20 @@ export function createMultiFileTask(options: MultiFileTaskOptions): Task {
 					}
 				}
 
-				if (hasMismatch) return 'conflict'
-				if (hasMissing) return 'new'
+				if (hasMismatch) {
+					return 'conflict'
+				}
+				if (hasMissing) {
+					return 'new'
+				}
 
 				if (options.depName) {
 					const missingDep = await checkMissingDeps(cwd, {
 						depName: options.depName,
 					})
-					if (missingDep) return missingDep
+					if (missingDep) {
+						return missingDep
+					}
 				}
 
 				return 'skip'

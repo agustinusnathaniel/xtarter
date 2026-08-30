@@ -13,13 +13,19 @@ export function resolveTasks(
 	allTasks: Task[],
 ): Task[] {
 	return allTasks.filter((task) => {
-		if (!task.applicable(profile)) return false
+		if (!task.applicable(profile)) {
+			return false
+		}
 
 		// Scope filtering for monorepos
 		if (profile.monorepo) {
 			const scope = task.scope ?? 'both'
-			if (profile.workspaceRoot && scope === 'package') return false
-			if (!profile.workspaceRoot && scope === 'root') return false
+			if (profile.workspaceRoot && scope === 'package') {
+				return false
+			}
+			if (!profile.workspaceRoot && scope === 'root') {
+				return false
+			}
 		}
 
 		return true

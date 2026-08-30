@@ -17,6 +17,8 @@ function resolveFormat(
 	formatArg: string | undefined,
 	jsonFlag: boolean,
 ): DisplayFormat {
-	if (formatArg === 'json' || jsonFlag) return 'json'
+	if (formatArg === 'json' || jsonFlag) {
+		return 'json'
+	}
 	return 'terminal'
 }

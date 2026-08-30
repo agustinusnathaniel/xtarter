@@ -36,7 +36,9 @@ export const oxlintTask = createFileTask({
 		return renderOxlintTsConfig(profile)
 	},
 	async checkFn({ profile, fullPath, content }) {
-		if (!fullPath || !content) return 'new'
+		if (!fullPath || !content) {
+			return 'new'
+		}
 
 		if (content.trim().startsWith('{')) {
 			const existing = JSON.parse(content) as Record<string, unknown>
@@ -45,7 +47,9 @@ export const oxlintTask = createFileTask({
 				unknown
 			>
 			const merged = mergeJson(existing, desired)
-			if (deepEqual(existing, merged)) return 'skip'
+			if (deepEqual(existing, merged)) {
+				return 'skip'
+			}
 			return 'patch'
 		}
 
@@ -82,7 +86,9 @@ export const oxfmtTask = createFileTask({
 		return renderOxfmtTsConfig(_profile)
 	},
 	async checkFn({ fullPath, content }) {
-		if (!fullPath || !content) return 'new'
+		if (!fullPath || !content) {
+			return 'new'
+		}
 
 		if (content.trim().startsWith('{')) {
 			return 'skip'

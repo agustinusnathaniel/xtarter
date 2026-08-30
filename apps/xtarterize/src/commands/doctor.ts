@@ -57,15 +57,18 @@ export const doctorCommand = defineCommand({
 		const groups = await runAllDiagnostics(cwd, verbose)
 		s.stop('Diagnostics complete')
 		const { allDiagnostics, summary } = summarizeDiagnostics(groups)
-		if (summary.fail > 0) process.exitCode = 1
+		if (summary.fail > 0) {
+			process.exitCode = 1
+		}
 		if (
 			formatDoctorOutput({
 				allDiagnostics,
 				summary,
 				flags: { json, quiet, verbose },
 			})
-		)
+		) {
 			return
+		}
 		const diagMs = performance.now() - diagStart
 		printDoctorSummary(groups, summary, diagMs)
 	},
@@ -128,7 +131,9 @@ async function runAllDiagnostics(
 		{ title: 'Project', checks: healthChecks },
 		{ title: 'Configuration', checks: conflictChecks },
 	]
-	if (!verbose) return groups
+	if (!verbose) {
+		return groups
+	}
 	const mem = Math.round(os.totalmem() / 1024 ** 3)
 	groups.unshift({
 		title: 'System',
@@ -184,10 +189,13 @@ function printDoctorSummary(
 	console.log(pc.bold('Project Diagnostics'))
 	console.log('')
 	for (const group of groups) {
-		if (group.checks.length === 0) continue
+		if (group.checks.length === 0) {
+			continue
+		}
 		console.log(`  ${pc.bold(group.title)}`)
-		for (const check of group.checks)
+		for (const check of group.checks) {
 			console.log(`    ${diagnosticIcon(check.status)} ${check.message}`)
+		}
 		console.log('')
 	}
 	console.log(

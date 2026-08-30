@@ -13,10 +13,14 @@ import { resolveCwdWithPreflight } from '@/utils/preflight.js'
 import { resolveRuntimeFlags } from '@/utils/runtime-flags.js'
 
 function validateRestoreArgs(filepath: unknown, jsonMode: boolean): boolean {
-	if (filepath) return true
-	if (jsonMode)
+	if (filepath) {
+		return true
+	}
+	if (jsonMode) {
 		console.log(JSON.stringify({ ok: false, error: 'File path required' }))
-	else logError('File path required. Usage: xtarterize restore <filepath>')
+	} else {
+		logError('File path required. Usage: xtarterize restore <filepath>')
+	}
 	process.exitCode = 1
 	return false
 }
@@ -32,12 +36,16 @@ async function loadAndValidateBackups(options: {
 	s.start('Loading backups...')
 	const backups = await listBackups(cwd, filepath)
 	s.stop('Backups loaded')
-	if (backups.length > 0) return backups
-	if (jsonMode)
+	if (backups.length > 0) {
+		return backups
+	}
+	if (jsonMode) {
 		console.log(
 			JSON.stringify({ ok: false, filepath, error: 'No backups found' }),
 		)
-	else logError(`No backups found for ${filepath}`)
+	} else {
+		logError(`No backups found for ${filepath}`)
+	}
 	process.exitCode = 1
 	return null
 }
@@ -46,7 +54,9 @@ async function promptRestoreConfirm(
 	backups: Backup[],
 	yes: boolean,
 ): Promise<Backup> {
-	if (backups.length === 1 || yes) return backups[0]
+	if (backups.length === 1 || yes) {
+		return backups[0]
+	}
 	const result = await select({
 		message: 'Select backup to restore:',
 		options: backups.map((b) => ({
@@ -129,14 +139,18 @@ export const restoreCommand = defineCommand({
 		const jsonMode = format === 'json'
 		const quiet = jsonMode || runtimeQuiet
 		const yes = args.yes === true || jsonMode
-		if (!validateRestoreArgs(filepath, jsonMode)) return
+		if (!validateRestoreArgs(filepath, jsonMode)) {
+			return
+		}
 		const backups = await loadAndValidateBackups({
 			cwd,
 			filepath: filepath as string,
 			jsonMode,
 			quiet,
 		})
-		if (!backups) return
+		if (!backups) {
+			return
+		}
 		const selected = await promptRestoreConfirm(backups, yes)
 		await executeRestore({
 			cwd,

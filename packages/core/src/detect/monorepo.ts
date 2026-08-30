@@ -15,7 +15,9 @@ async function hasMonorepoMarkers(dir: string): Promise<boolean> {
 	const results = await Promise.all(
 		MONOREPO_MARKERS.map((m) => fileExists(resolvePath(dir, m))),
 	)
-	if (results.some(Boolean)) return true
+	if (results.some(Boolean)) {
+		return true
+	}
 	const [hasPackagesDir, hasAppsDir] = await Promise.all([
 		fileExists(resolvePath(dir, 'packages')),
 		fileExists(resolvePath(dir, 'apps')),
@@ -28,9 +30,15 @@ function detectMonorepoTool(flags: {
 	hasNxJson: boolean
 	hasLernaJson: boolean
 }): 'turbo' | 'nx' | 'lerna' | null {
-	if (flags.hasTurboJson) return 'turbo'
-	if (flags.hasNxJson) return 'nx'
-	if (flags.hasLernaJson) return 'lerna'
+	if (flags.hasTurboJson) {
+		return 'turbo'
+	}
+	if (flags.hasNxJson) {
+		return 'nx'
+	}
+	if (flags.hasLernaJson) {
+		return 'lerna'
+	}
 	return null
 }
 
@@ -63,7 +71,9 @@ async function walkWorkspaceParents(
 				}
 			}
 		}
-		if (await fileExists(resolvePath(current, '.git'))) break
+		if (await fileExists(resolvePath(current, '.git'))) {
+			break
+		}
 		current = dirname(current)
 	}
 	return null
@@ -103,7 +113,9 @@ export async function detectMonorepo(cwd: string): Promise<MonorepoDetection> {
 	})
 	if (!monorepo) {
 		const parentResult = await walkWorkspaceParents(cwd)
-		if (parentResult) return parentResult
+		if (parentResult) {
+			return parentResult
+		}
 	}
 	return { monorepo, monorepoTool, workspaceRoot: monorepo }
 }

@@ -19,7 +19,9 @@ export function isRecord(value: unknown): value is Record<string, unknown> {
 export function isStringRecord(
 	value: unknown,
 ): value is Record<string, string> {
-	if (!isRecord(value)) return false
+	if (!isRecord(value)) {
+		return false
+	}
 	return Object.values(value).every((v): v is string => typeof v === 'string')
 }
 
@@ -42,11 +44,21 @@ export async function detectPackageManager(
 	}
 
 	// Fallback to lockfile detection if nypm fails
-	if (await fileExists(resolvePath(cwd, 'bun.lockb'))) return 'bun'
-	if (await fileExists(resolvePath(cwd, 'bun.lock'))) return 'bun'
-	if (await fileExists(resolvePath(cwd, 'pnpm-lock.yaml'))) return 'pnpm'
-	if (await fileExists(resolvePath(cwd, 'yarn.lock'))) return 'yarn'
-	if (await fileExists(resolvePath(cwd, 'package-lock.json'))) return 'npm'
+	if (await fileExists(resolvePath(cwd, 'bun.lockb'))) {
+		return 'bun'
+	}
+	if (await fileExists(resolvePath(cwd, 'bun.lock'))) {
+		return 'bun'
+	}
+	if (await fileExists(resolvePath(cwd, 'pnpm-lock.yaml'))) {
+		return 'pnpm'
+	}
+	if (await fileExists(resolvePath(cwd, 'yarn.lock'))) {
+		return 'yarn'
+	}
+	if (await fileExists(resolvePath(cwd, 'package-lock.json'))) {
+		return 'npm'
+	}
 
 	return 'npm'
 }
@@ -61,7 +73,9 @@ export function detectFrameworkVersion(
 	pkg: unknown,
 	framework: Framework,
 ): string | null {
-	if (!isRecord(pkg)) return null
+	if (!isRecord(pkg)) {
+		return null
+	}
 	const allDeps: Record<string, string> = {}
 	if (isStringRecord(pkg.dependencies)) {
 		Object.assign(allDeps, pkg.dependencies)
@@ -79,7 +93,9 @@ export function detectFrameworkVersion(
 					? allDeps[framework === 'solid' ? 'solid-js' : framework]
 					: null
 
-	if (!frameworkPkg) return null
+	if (!frameworkPkg) {
+		return null
+	}
 
 	const cleaned = frameworkPkg.replace(/^[^0-9]*/, '')
 	return cleaned || null

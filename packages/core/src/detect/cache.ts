@@ -223,7 +223,9 @@ export function isCacheValid(
 	stored: ProfileCacheEntry,
 	current: ProjectFingerprint,
 ): boolean {
-	if (stored.version !== 2) return false
+	if (stored.version !== 2) {
+		return false
+	}
 
 	const s = stored.fingerprint
 	const c = current
@@ -236,8 +238,12 @@ export function isCacheValid(
 		return false
 	}
 
-	if (s.lockfile === null && c.lockfile !== null) return false
-	if (s.lockfile !== null && c.lockfile === null) return false
+	if (s.lockfile === null && c.lockfile !== null) {
+		return false
+	}
+	if (s.lockfile !== null && c.lockfile === null) {
+		return false
+	}
 	if (s.lockfile !== null && c.lockfile !== null) {
 		if (
 			s.lockfile.path !== c.lockfile.path ||
@@ -248,8 +254,12 @@ export function isCacheValid(
 		}
 	}
 
-	if (!samePathFingerprints(s.configDirs, c.configDirs)) return false
-	if (!samePathFingerprints(s.rootInputs, c.rootInputs)) return false
+	if (!samePathFingerprints(s.configDirs, c.configDirs)) {
+		return false
+	}
+	if (!samePathFingerprints(s.rootInputs, c.rootInputs)) {
+		return false
+	}
 
 	const sAncestors = s.ancestorInputs
 	if (!sAncestors || !samePathFingerprints(sAncestors, c.ancestorInputs)) {
@@ -263,7 +273,9 @@ function samePathFingerprints(
 	stored: PathFingerprint[],
 	current: PathFingerprint[],
 ): boolean {
-	if (stored.length !== current.length) return false
+	if (stored.length !== current.length) {
+		return false
+	}
 
 	const storedByPath = new Map(stored.map((d) => [d.path, d]))
 	for (const fp of current) {
@@ -287,7 +299,9 @@ export function readProfileCache(
 			try: async () => {
 				const content = await fs.readFile(cacheFilePath(cwd), 'utf-8')
 				const parsed = JSON.parse(content) as unknown
-				if (!isValidCacheEntry(parsed)) return null
+				if (!isValidCacheEntry(parsed)) {
+					return null
+				}
 				return parsed
 			},
 			catch: (cause) =>
@@ -297,17 +311,29 @@ export function readProfileCache(
 }
 
 function isValidCacheEntry(value: unknown): value is ProfileCacheEntry {
-	if (typeof value !== 'object' || value === null) return false
+	if (typeof value !== 'object' || value === null) {
+		return false
+	}
 	const entry = value as Record<string, unknown>
-	if (entry.version !== 2) return false
-	if (typeof entry.fingerprint !== 'object' || entry.fingerprint === null)
+	if (entry.version !== 2) {
 		return false
-	if (typeof entry.profile !== 'object' || entry.profile === null) return false
+	}
+	if (typeof entry.fingerprint !== 'object' || entry.fingerprint === null) {
+		return false
+	}
+	if (typeof entry.profile !== 'object' || entry.profile === null) {
+		return false
+	}
 	const fp = entry.fingerprint as Record<string, unknown>
-	if (typeof fp.packageJson !== 'object' || fp.packageJson === null)
+	if (typeof fp.packageJson !== 'object' || fp.packageJson === null) {
 		return false
-	if (!Array.isArray(fp.rootInputs)) return false
-	if (!Array.isArray(fp.ancestorInputs)) return false
+	}
+	if (!Array.isArray(fp.rootInputs)) {
+		return false
+	}
+	if (!Array.isArray(fp.ancestorInputs)) {
+		return false
+	}
 	return true
 }
 

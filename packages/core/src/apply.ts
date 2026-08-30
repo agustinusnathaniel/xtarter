@@ -100,7 +100,9 @@ async function runApply(options: RunApplyOptions): Promise<ApplyResult> {
 		spinner: s,
 	})
 
-	if (!quiet) console.log('')
+	if (!quiet) {
+		console.log('')
+	}
 	return {
 		applied,
 		skipped: skippedInCheck,

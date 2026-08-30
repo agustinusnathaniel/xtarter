@@ -27,8 +27,12 @@ async function resolveArg<T>(
 	prompt: () => Promise<T>,
 	defaultValue?: T,
 ): Promise<T> {
-	if (argValue !== undefined) return argValue
-	if (defaultValue !== undefined) return defaultValue
+	if (argValue !== undefined) {
+		return argValue
+	}
+	if (defaultValue !== undefined) {
+		return defaultValue
+	}
 	return prompt()
 }
 
@@ -138,9 +142,14 @@ const previewCommand = defineCommand({
 function parseArgs(args: Record<string, unknown>) {
 	const quiet = Boolean(args.quiet || args.json)
 	const json = Boolean(args.json)
-	if (args.noColor) process.env.NO_COLOR = '1'
-	if (quiet) consola.level = 0
-	else console.log(BANNER)
+	if (args.noColor) {
+		process.env.NO_COLOR = '1'
+	}
+	if (quiet) {
+		consola.level = 0
+	} else {
+		console.log(BANNER)
+	}
 	return {
 		quiet,
 		json,
@@ -206,7 +215,9 @@ function reportScaffoldSettings(
 	details: Awaited<ReturnType<typeof promptProjectDetails>>,
 	quiet: boolean,
 ) {
-	if (quiet) return
+	if (quiet) {
+		return
+	}
 	note(
 		[
 			`Project: ${pc.cyan(details.projectName)}`,
@@ -235,8 +246,9 @@ async function scaffoldAndInstall(options: {
 		initGit: details.shouldInitGit,
 		ref: args.ref as string | undefined,
 	})
-	if (!quiet)
+	if (!quiet) {
 		outro(pc.green(`Successfully created ${pc.cyan(details.projectName)}!`))
+	}
 	if (json) {
 		const cdCommand = args.name === '.' ? '' : `cd ${details.projectName}`
 		process.stdout.write(
@@ -256,7 +268,9 @@ async function scaffoldAndInstall(options: {
 		)
 		return
 	}
-	if (quiet) return
+	if (quiet) {
+		return
+	}
 	const cdCommand =
 		args.name === '.'
 			? ''
@@ -272,8 +286,11 @@ ${pc.bold('Docs:')} ${pc.underline(`https://github.com/${details.template.repo}`
 
 function handleScaffoldError(error: unknown, json: boolean) {
 	const message = error instanceof Error ? error.message : 'Unknown error'
-	if (json) process.stderr.write(`${formatJsonError(message)}\n`)
-	else cancel(`${pc.red('Error:')} ${message}`)
+	if (json) {
+		process.stderr.write(`${formatJsonError(message)}\n`)
+	} else {
+		cancel(`${pc.red('Error:')} ${message}`)
+	}
 	process.exit(1)
 }
 
@@ -293,7 +310,9 @@ const mainCommand = defineCommand({
 		const args = ctx.args as Record<string, unknown>
 		const { quiet, json, useDefaults, defaultPackageManager } = parseArgs(args)
 		try {
-			if (!quiet) intro(`${APP_NAME} - Let's create your project!`)
+			if (!quiet) {
+				intro(`${APP_NAME} - Let's create your project!`)
+			}
 			const details = await promptProjectDetails(
 				args,
 				useDefaults,

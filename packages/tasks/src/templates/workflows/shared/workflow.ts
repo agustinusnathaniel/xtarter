@@ -12,18 +12,34 @@ export interface YamlStep {
 }
 
 export function renderSteps(steps: YamlStep[], indent: number): string {
-	if (steps.length === 0) return ''
+	if (steps.length === 0) {
+		return ''
+	}
 
 	return steps
 		.map((step) => {
 			const pairs: [string, string | boolean | Record<string, string>][] = []
-			if (step.name !== undefined) pairs.push(['name', step.name])
-			if (step.if !== undefined) pairs.push(['if', step.if])
-			if (step.uses !== undefined) pairs.push(['uses', step.uses])
-			if (step.run !== undefined) pairs.push(['run', step.run])
-			if (step.with !== undefined) pairs.push(['with', step.with])
-			if (step.env !== undefined) pairs.push(['env', step.env])
-			if (step.continueOnError) pairs.push(['continue-on-error', true])
+			if (step.name !== undefined) {
+				pairs.push(['name', step.name])
+			}
+			if (step.if !== undefined) {
+				pairs.push(['if', step.if])
+			}
+			if (step.uses !== undefined) {
+				pairs.push(['uses', step.uses])
+			}
+			if (step.run !== undefined) {
+				pairs.push(['run', step.run])
+			}
+			if (step.with !== undefined) {
+				pairs.push(['with', step.with])
+			}
+			if (step.env !== undefined) {
+				pairs.push(['env', step.env])
+			}
+			if (step.continueOnError) {
+				pairs.push(['continue-on-error', true])
+			}
 
 			return pairs
 				.map(([key, value], i) => {

@@ -54,11 +54,21 @@ export function detectFramework(deps: Record<string, string>): Framework {
 	const hasSvelte = !!deps.svelte
 	const hasSolid = !!deps['solid-js']
 
-	if (hasReactNative) return 'react-native'
-	if (hasReact) return 'react'
-	if (hasVue) return 'vue'
-	if (hasSvelte) return 'svelte'
-	if (hasSolid) return 'solid'
+	if (hasReactNative) {
+		return 'react-native'
+	}
+	if (hasReact) {
+		return 'react'
+	}
+	if (hasVue) {
+		return 'vue'
+	}
+	if (hasSvelte) {
+		return 'svelte'
+	}
+	if (hasSolid) {
+		return 'solid'
+	}
 	return 'node'
 }
 
@@ -66,14 +76,25 @@ function detectRuntime(
 	framework: Framework,
 	bundler: Bundler,
 ): 'browser' | 'node' | 'edge' | 'native' | 'universal' {
-	if (framework === 'react-native') return 'native'
-	if (bundler === 'expo') return 'native'
-	if (bundler === 'nextjs') return 'edge'
-	if (bundler === 'tanstack-start') return 'edge'
+	if (framework === 'react-native') {
+		return 'native'
+	}
+	if (bundler === 'expo') {
+		return 'native'
+	}
+	if (bundler === 'nextjs') {
+		return 'edge'
+	}
+	if (bundler === 'tanstack-start') {
+		return 'edge'
+	}
 	// Node framework takes precedence over bundler detection
-	if (framework === 'node') return 'node'
-	if (bundler === 'vite' || bundler === 'webpack' || bundler === 'rspack')
+	if (framework === 'node') {
+		return 'node'
+	}
+	if (bundler === 'vite' || bundler === 'webpack' || bundler === 'rspack') {
 		return 'browser'
+	}
 	return 'browser'
 }
 
@@ -84,11 +105,21 @@ function detectVitePlus(deps: Record<string, string>): boolean {
 // ── Inline router detection (was detect/router.ts) ──
 
 function detectRouter(deps: Record<string, string>, bundler: Bundler): Router {
-	if (bundler === 'nextjs') return 'next'
-	if (bundler === 'expo') return 'expo-router'
-	if (deps['@tanstack/react-router']) return 'tanstack-router'
-	if (deps['react-router'] || deps['react-router-dom']) return 'react-router'
-	if (deps['vue-router']) return 'vue-router'
+	if (bundler === 'nextjs') {
+		return 'next'
+	}
+	if (bundler === 'expo') {
+		return 'expo-router'
+	}
+	if (deps['@tanstack/react-router']) {
+		return 'tanstack-router'
+	}
+	if (deps['react-router'] || deps['react-router-dom']) {
+		return 'react-router'
+	}
+	if (deps['vue-router']) {
+		return 'vue-router'
+	}
 	return null
 }
 
@@ -96,11 +127,21 @@ function detectRouter(deps: Record<string, string>, bundler: Bundler): Router {
 
 function detectStyling(deps: Record<string, string>): Styling[] {
 	const result: Styling[] = []
-	if (deps.tailwindcss || deps['@tailwindcss/vite']) result.push('tailwind')
-	if (deps['styled-components']) result.push('styled-components')
-	if (deps['@vanilla-extract/css']) result.push('vanilla-extract')
-	if (deps.nativewind) result.push('nativewind')
-	if (result.length === 0) result.push('vanilla')
+	if (deps.tailwindcss || deps['@tailwindcss/vite']) {
+		result.push('tailwind')
+	}
+	if (deps['styled-components']) {
+		result.push('styled-components')
+	}
+	if (deps['@vanilla-extract/css']) {
+		result.push('vanilla-extract')
+	}
+	if (deps.nativewind) {
+		result.push('nativewind')
+	}
+	if (result.length === 0) {
+		result.push('vanilla')
+	}
 	return result
 }
 
@@ -140,7 +181,9 @@ async function detectEslint(
 		'.yaml',
 		'.yml',
 	]).then(Boolean)
-	if (hasConfigFile) return true
+	if (hasConfigFile) {
+		return true
+	}
 
 	const hasFlatConfig = await findConfigFile(cwd, 'eslint.config', [
 		'.js',
@@ -150,16 +193,22 @@ async function detectEslint(
 		'.mts',
 		'.cts',
 	]).then(Boolean)
-	if (hasFlatConfig) return true
+	if (hasFlatConfig) {
+		return true
+	}
 
-	if (deps) return !!deps.eslint
+	if (deps) {
+		return !!deps.eslint
+	}
 	const pkg = await readPackageJson(cwd)
 	return !!(pkg?.devDependencies?.eslint ?? pkg?.dependencies?.eslint)
 }
 
 async function detectGitHubWorkflows(cwd: string): Promise<string[]> {
 	const workflowsDir = resolvePath(cwd, '.github', 'workflows')
-	if (!(await fileExists(workflowsDir))) return []
+	if (!(await fileExists(workflowsDir))) {
+		return []
+	}
 
 	const { readdir } = await import('node:fs/promises')
 	const entries = await readdir(workflowsDir)
@@ -178,8 +227,12 @@ async function detectChangeset(
 	const hasConfig = await fileExists(
 		resolvePath(cwd, '.changeset', 'config.json'),
 	)
-	if (hasConfig) return true
-	if (deps) return !!deps['@changesets/cli']
+	if (hasConfig) {
+		return true
+	}
+	if (deps) {
+		return !!deps['@changesets/cli']
+	}
 	const pkg = await readPackageJson(cwd)
 	return !!(
 		pkg?.devDependencies?.['@changesets/cli'] ??
@@ -189,7 +242,9 @@ async function detectChangeset(
 
 async function detectAgentsMd(cwd: string): Promise<boolean> {
 	const found = await findConfigFile(cwd, 'AGENTS', ['.md']).then(Boolean)
-	if (found) return true
+	if (found) {
+		return true
+	}
 	return fileExists(resolvePath(cwd, 'CLAUDE.md'))
 }
 
@@ -198,7 +253,9 @@ async function detectOxlint(cwd: string): Promise<boolean> {
 		'.json',
 		'.jsonc',
 	]).then(Boolean)
-	if (oldFormat) return true
+	if (oldFormat) {
+		return true
+	}
 
 	return findConfigFile(cwd, 'oxlint.config', ['.ts', '.js', '.mjs']).then(
 		Boolean,
@@ -210,7 +267,9 @@ async function detectOxfmt(cwd: string): Promise<boolean> {
 		'.json',
 		'.jsonc',
 	]).then(Boolean)
-	if (oldFormat) return true
+	if (oldFormat) {
+		return true
+	}
 
 	return findConfigFile(cwd, 'oxfmt.config', ['.ts', '.js', '.mjs']).then(
 		Boolean,
@@ -276,14 +335,18 @@ async function detectNodeVersion(cwd: string): Promise<string> {
 	if (nvmrcExists) {
 		const content = await readFile(nvmrcPath)
 		const match = content.trim().match(/^v?(\d+)/)
-		if (match) return match[1]
+		if (match) {
+			return match[1]
+		}
 	}
 
 	const pkg = await readPackageJson(cwd)
 	const enginesNode = pkg?.engines?.node
 	if (enginesNode) {
 		const match = String(enginesNode).match(/\d+/)
-		if (match) return match[0]
+		if (match) {
+			return match[0]
+		}
 	}
 
 	return '22'

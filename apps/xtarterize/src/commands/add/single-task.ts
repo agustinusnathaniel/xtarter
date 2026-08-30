@@ -37,7 +37,9 @@ function handleMissingTask(options: {
 	} else {
 		logError(`Task "${taskId}" not found`)
 		logInfo('Available tasks:')
-		for (const t of allTasks) console.log(`  ${t.id}`)
+		for (const t of allTasks) {
+			console.log(`  ${t.id}`)
+		}
 	}
 	process.exitCode = 1
 }
@@ -100,7 +102,9 @@ function handleSkipStatus(options: {
 	detectionMs: number
 }): boolean {
 	const { taskId, status, jsonMode, quiet, detectionMs } = options
-	if (status !== 'skip') return false
+	if (status !== 'skip') {
+		return false
+	}
 	if (jsonMode) {
 		console.log(
 			formatRunResult({
@@ -114,7 +118,9 @@ function handleSkipStatus(options: {
 		)
 	} else {
 		logSuccess('Already conformant')
-		if (!quiet) printTiming(detectionOnlyTiming(detectionMs))
+		if (!quiet) {
+			printTiming(detectionOnlyTiming(detectionMs))
+		}
 	}
 	return true
 }
@@ -126,7 +132,9 @@ function handleConflictStatus(options: {
 	includeConflicts: boolean
 }): boolean {
 	const { taskId, status, jsonMode, includeConflicts } = options
-	if (status !== 'conflict' || includeConflicts) return false
+	if (status !== 'conflict' || includeConflicts) {
+		return false
+	}
 	if (jsonMode) {
 		console.log(
 			formatRunResult({
@@ -155,7 +163,9 @@ async function confirmSingleApply(options: {
 	jsonMode: boolean
 }): Promise<boolean> {
 	const { quiet, jsonMode } = options
-	if (quiet || jsonMode) return true
+	if (quiet || jsonMode) {
+		return true
+	}
 	const proceed = await confirm({ message: 'Apply this change?' })
 	abortIfCancelled(proceed, 'Apply cancelled')
 	return Boolean(proceed)
@@ -209,8 +219,12 @@ async function applySingleTask(options: {
 			)
 		} else {
 			logError(`${result.errors.length} errors`)
-			for (const error of result.errors) logError(`  - ${error}`)
-			if (!quiet) printTiming(detectionOnlyTiming(detectionMs), result.timing)
+			for (const error of result.errors) {
+				logError(`  - ${error}`)
+			}
+			if (!quiet) {
+				printTiming(detectionOnlyTiming(detectionMs), result.timing)
+			}
 		}
 		process.exitCode = 1
 		return
@@ -269,19 +283,30 @@ export async function runSingleTask(
 	}
 
 	const status = await getTaskStatus({ task, cwd, profile, jsonMode })
-	if (status === null) return
-
-	if (!quiet) console.log(`${statusTag(status)} ${task.id}`)
-
-	if (handleSkipStatus({ taskId, status, jsonMode, quiet, detectionMs })) return
-	if (handleConflictStatus({ taskId, status, jsonMode, includeConflicts }))
+	if (status === null) {
 		return
+	}
+
+	if (!quiet) {
+		console.log(`${statusTag(status)} ${task.id}`)
+	}
+
+	if (handleSkipStatus({ taskId, status, jsonMode, quiet, detectionMs })) {
+		return
+	}
+	if (handleConflictStatus({ taskId, status, jsonMode, includeConflicts })) {
+		return
+	}
 
 	const diffs = await task.dryRun(cwd, profile)
-	if (!quiet && !jsonMode) displayDiffs(diffs, format)
+	if (!quiet && !jsonMode) {
+		displayDiffs(diffs, format)
+	}
 
 	const proceed = await confirmSingleApply({ quiet, jsonMode })
-	if (!proceed) return
+	if (!proceed) {
+		return
+	}
 
 	await applySingleTask({
 		task,

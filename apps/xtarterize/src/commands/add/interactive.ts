@@ -46,7 +46,9 @@ function createWrappedTasks(options: {
 				const message = error instanceof Error ? error.message : String(error)
 				const detail = `Failed to check ${task.id}: ${message}`
 				options.checkErrors.push(detail)
-				if (!options.jsonMode) logError(detail)
+				if (!options.jsonMode) {
+					logError(detail)
+				}
 				process.exitCode = 1
 				return 'conflict'
 			}
@@ -144,7 +146,9 @@ async function applyAllTasks(options: {
 		statuses,
 	})
 	if (!jsonMode) {
-		for (const error of result.errors) logError(error)
+		for (const error of result.errors) {
+			logError(error)
+		}
 	}
 	return {
 		applied: result.applied,
@@ -173,9 +177,13 @@ async function applyOneInteractiveTask(options: {
 	timing: ApplyTiming | undefined
 }> {
 	const diffs = await options.entry.task.dryRun(options.cwd, options.profile)
-	if (!options.jsonMode) displayDiffs(diffs, options.format)
+	if (!options.jsonMode) {
+		displayDiffs(diffs, options.format)
+	}
 	const proceed = await confirmTaskApply(options.entry.task.label)
-	if (!proceed) return { appliedDelta: 0, errors: [], timing: undefined }
+	if (!proceed) {
+		return { appliedDelta: 0, errors: [], timing: undefined }
+	}
 	const result = await applyTasks({
 		tasks: [options.entry.task],
 		cwd: options.cwd,
@@ -186,22 +194,26 @@ async function applyOneInteractiveTask(options: {
 		statuses: options.statuses,
 	})
 	if (result.applied > 0) {
-		if (!options.jsonMode) logSuccess(`${options.entry.task.id} applied`)
+		if (!options.jsonMode) {
+			logSuccess(`${options.entry.task.id} applied`)
+		}
 		return { appliedDelta: 1, errors: [], timing: result.timing }
 	}
 	if (result.errors.length > 0) {
-		if (!options.jsonMode)
+		if (!options.jsonMode) {
 			logError(`${options.entry.task.id}: ${result.errors.join(', ')}`)
+		}
 		return {
 			appliedDelta: 0,
 			errors: [...result.errors],
 			timing: result.timing,
 		}
 	}
-	if (!options.jsonMode)
+	if (!options.jsonMode) {
 		logWarn(
 			`${options.entry.task.id} skipped (${options.entry.status}) - not applied`,
 		)
+	}
 	return { appliedDelta: 0, errors: [], timing: result.timing }
 }
 
@@ -233,7 +245,9 @@ async function applyInteractively(options: {
 		})
 		applied += r.appliedDelta
 		errors.push(...r.errors)
-		if (r.timing) timing = r.timing
+		if (r.timing) {
+			timing = r.timing
+		}
 	}
 	return { applied, errors, timing }
 }
@@ -467,7 +481,9 @@ export async function runInteractive(
 		jsonMode,
 		checkErrors,
 	})
-	if (!selectedTasks) return
+	if (!selectedTasks) {
+		return
+	}
 	const result = await executeSelectedTasks({
 		selectedTasks,
 		allFlag,

@@ -21,10 +21,14 @@ export function createSpinner(quiet: boolean): SpinnerHandle {
 	const s = spinner()
 	return {
 		start(message: string) {
-			if (!quiet) s.start(message)
+			if (!quiet) {
+				s.start(message)
+			}
 		},
 		stop(message?: string) {
-			if (!quiet) s.stop(message || '')
+			if (!quiet) {
+				s.stop(message || '')
+			}
 		},
 	}
 }

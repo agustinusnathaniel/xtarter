@@ -10,7 +10,9 @@ function buildGroupedOptions(
 	const groups: Record<string, { value: string; label: string }[]> = {}
 	for (const entry of tasksWithStatus) {
 		const group = entry.task.group
-		if (!groups[group]) groups[group] = []
+		if (!groups[group]) {
+			groups[group] = []
+		}
 		const hint = statusHint(entry.status)
 		groups[group].push({
 			value: entry.task.id,

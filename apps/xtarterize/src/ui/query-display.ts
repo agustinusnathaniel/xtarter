@@ -12,8 +12,12 @@ interface GroupedResults {
 
 function relevanceColor(score: number): string {
 	const pct = `${(score * 100).toFixed(0)}%`.padStart(4)
-	if (score >= 0.7) return pc.green(pc.bold(pct))
-	if (score >= 0.4) return pc.yellow(pc.bold(pct))
+	if (score >= 0.7) {
+		return pc.green(pc.bold(pct))
+	}
+	if (score >= 0.4) {
+		return pc.yellow(pc.bold(pct))
+	}
 	return pc.dim(pct)
 }
 
@@ -42,7 +46,9 @@ function groupResults(results: InquiryResult[]): GroupedResults[] {
 	const groupMap = new Map<string, InquiryResult[]>()
 	for (const r of results) {
 		const g = r.task.group
-		if (!groupMap.has(g)) groupMap.set(g, [])
+		if (!groupMap.has(g)) {
+			groupMap.set(g, [])
+		}
 		groupMap.get(g)?.push(r)
 	}
 	return Array.from(groupMap.entries())
@@ -69,7 +75,9 @@ function formatQueryRow(
 	const status = statuses?.get(r.taskId) ?? 'new'
 	const statusBadge = statusTag(status)
 	const line = `  ${pc.dim(id)}  ${relevance}  ${statusBadge}  ${label}  ${pc.dim(target)}`
-	if (line.length <= termWidth) return line
+	if (line.length <= termWidth) {
+		return line
+	}
 	const overhead = 2 + maxIdLen + 2 + 4 + 2 + 6 + 2 + 2 + target.length + 2
 	const maxLabelLen = Math.max(10, termWidth - overhead - 4)
 	const truncated =
@@ -92,8 +100,9 @@ export function displayQueryResults(options: DisplayQueryOptions): void {
 	for (const group of groups) {
 		console.log('')
 		console.log(`  ${pc.bold(group.group)}`)
-		for (const r of group.tasks)
+		for (const r of group.tasks) {
 			console.log(formatQueryRow(r, { maxIdLen, termWidth, statuses }))
+		}
 	}
 	if (results.length > 0) {
 		const prefix = getDlxPrefix(packageManager)

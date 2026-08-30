@@ -2,7 +2,9 @@ import type { ApplyTiming, ResolveTiming } from '@xtarterize/core'
 import { pc } from '@xtarterize/core'
 
 function formatMs(ms: number, precision = 1): string {
-	if (ms < 1000) return `${Math.round(ms)}ms`
+	if (ms < 1000) {
+		return `${Math.round(ms)}ms`
+	}
 	return `${(ms / 1000).toFixed(precision)}s`
 }
 

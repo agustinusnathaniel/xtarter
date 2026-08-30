@@ -18,7 +18,9 @@ export async function resolveScripts(
 	cwd: string,
 	profile: ProjectProfile,
 ): Promise<PackageJsonScriptEntry[]> {
-	if (options.getScripts) return options.getScripts(cwd, profile)
+	if (options.getScripts) {
+		return options.getScripts(cwd, profile)
+	}
 	return options.scripts ?? []
 }
 

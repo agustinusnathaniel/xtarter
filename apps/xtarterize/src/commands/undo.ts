@@ -44,9 +44,13 @@ export const undoCommand = defineCommand({
 		const jsonMode = format === 'json'
 		const quiet = jsonMode || runtimeQuiet
 		const manifest = await loadAndValidateManifest(cwd, jsonMode, quiet)
-		if (!manifest) return
+		if (!manifest) {
+			return
+		}
 		displayManifestPreview(manifest, jsonMode)
-		if (!(await promptRestoreConfirm(manifest, quiet))) return
+		if (!(await promptRestoreConfirm(manifest, quiet))) {
+			return
+		}
 		const { restored, removedCount, errors } = await restoreManifestFiles(
 			cwd,
 			manifest,
@@ -65,10 +69,12 @@ async function loadAndValidateManifest(
 	s.start('Reading last run manifest...')
 	const manifest = await readRunManifest(cwd)
 	s.stop('Manifest loaded')
-	if (manifest && manifest.files.length > 0) return manifest
-	if (jsonMode)
+	if (manifest && manifest.files.length > 0) {
+		return manifest
+	}
+	if (jsonMode) {
 		console.log(JSON.stringify({ ok: false, error: 'No previous run found' }))
-	else {
+	} else {
 		logError('No previous run found. Nothing to undo.')
 		logInfo('Run `xtarterize init` or `xtarterize add` first.')
 	}
@@ -80,12 +86,16 @@ function displayManifestPreview(
 	manifest: { timestamp: string; files: string[] },
 	jsonMode: boolean,
 ) {
-	if (jsonMode) return
+	if (jsonMode) {
+		return
+	}
 	console.log('')
 	console.log(`Last run: ${manifest.timestamp}`)
 	console.log(`Files modified: ${manifest.files.length}`)
 	console.log('')
-	for (const filepath of manifest.files) console.log(`  ${filepath}`)
+	for (const filepath of manifest.files) {
+		console.log(`  ${filepath}`)
+	}
 	console.log('')
 }
 
@@ -93,7 +103,9 @@ async function promptRestoreConfirm(
 	manifest: { files: string[] },
 	quiet: boolean,
 ): Promise<boolean> {
-	if (quiet) return true
+	if (quiet) {
+		return true
+	}
 	const proceed = await confirm({
 		message: `Restore ${manifest.files.length} file(s) to their previous state?`,
 	})
@@ -148,15 +160,21 @@ function reportUndoResult(options: {
 			files: manifest.files,
 			errors,
 		}
-		if (removedCount > 0) result.removed = removedCount
+		if (removedCount > 0) {
+			result.removed = removedCount
+		}
 		console.log(JSON.stringify(result))
-		if (errors.length > 0) process.exitCode = 1
+		if (errors.length > 0) {
+			process.exitCode = 1
+		}
 		return
 	}
 	console.log('')
 	if (errors.length > 0) {
 		logError(`${errors.length} error(s):`)
-		for (const error of errors) logError(`  - ${error}`)
+		for (const error of errors) {
+			logError(`  - ${error}`)
+		}
 		process.exitCode = 1
 	}
 	logSuccess(`Restored ${restored}/${manifest.files.length} files`)

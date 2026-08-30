@@ -47,7 +47,9 @@ export async function collectAndInstallDeps(options: {
 		),
 	)
 	const allDeps = depArrays.flat()
-	if (allDeps.length === 0) return
+	if (allDeps.length === 0) {
+		return
+	}
 	try {
 		await installDependenciesBatch(cwd, allDeps, { silent: quiet })
 	} catch (error) {
@@ -99,7 +101,9 @@ export async function executeApplyTasks(options: {
 			const applyMs = performance.now() - applyStart
 			applied++
 			const entry = findTimingEntry(perTask, task.id)
-			if (entry) entry.applyMs = applyMs
+			if (entry) {
+				entry.applyMs = applyMs
+			}
 			spinner?.stop(`${statusTag(status)} ${task.label}`)
 		} catch (error) {
 			const message = formatApplyFailure(error)

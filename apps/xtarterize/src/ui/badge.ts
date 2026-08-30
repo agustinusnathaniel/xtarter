@@ -4,16 +4,28 @@ export interface BadgeOptions {
 }
 
 function getBadgeColor(percentage: number): string {
-	if (percentage >= 90) return '#22c55e' // green
-	if (percentage >= 70) return '#84cc16' // lime
-	if (percentage >= 50) return '#eab308' // yellow
+	if (percentage >= 90) {
+		return '#22c55e' // green
+	}
+	if (percentage >= 70) {
+		return '#84cc16' // lime
+	}
+	if (percentage >= 50) {
+		return '#eab308' // yellow
+	}
 	return '#ef4444' // red
 }
 
 function getStatusText(percentage: number): string {
-	if (percentage >= 90) return 'excellent'
-	if (percentage >= 70) return 'good'
-	if (percentage >= 50) return 'fair'
+	if (percentage >= 90) {
+		return 'excellent'
+	}
+	if (percentage >= 70) {
+		return 'good'
+	}
+	if (percentage >= 50) {
+		return 'fair'
+	}
 	return 'needs work'
 }
 

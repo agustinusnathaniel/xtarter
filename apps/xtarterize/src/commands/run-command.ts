@@ -110,7 +110,9 @@ async function applyAndReport({
 		process.exitCode = 1
 	}
 	const quietFlag = quiet ?? isCI()
-	if (!quietFlag) printTiming(timing, result.timing, { recordTiming })
+	if (!quietFlag) {
+		printTiming(timing, result.timing, { recordTiming })
+	}
 }
 
 interface ResolveActionableTasksOptions {
@@ -158,7 +160,9 @@ async function handleDryRun(options: DryRunOptions): Promise<void> {
 	}
 	const resolvedFormat: DisplayFormat = format === 'json' ? 'json' : 'terminal'
 	displayDiffs(mergedDiffs, resolvedFormat, failures)
-	if (format !== 'json') printTiming(timing)
+	if (format !== 'json') {
+		printTiming(timing)
+	}
 }
 
 interface PromptAndApplyOptions {
@@ -261,7 +265,9 @@ async function loadProjectContext(
 		timing,
 	} = await resolveProjectTasks(cwd, allTasks)
 	const profile = await detectProjectWithAmbiguity(cwd, quiet, baseProfile)
-	if (!quiet) printProjectProfile(profile)
+	if (!quiet) {
+		printProjectProfile(profile)
+	}
 	const selection = await loadSelectionConfig(cwd)
 	return { profile, tasks, statuses, timing, selection }
 }
@@ -271,14 +277,17 @@ function warnUnknownSelection(
 	tasks: Task[],
 	quiet: boolean,
 ) {
-	if (quiet || selection.skip.length + selection.only.length === 0) return
+	if (quiet || selection.skip.length + selection.only.length === 0) {
+		return
+	}
 	const unknown = [...selection.skip, ...selection.only].filter(
 		(id) => !tasks.some((t) => t.id === id),
 	)
-	if (unknown.length > 0)
+	if (unknown.length > 0) {
 		logWarn(
 			`Selection config references unknown task IDs: ${unknown.join(', ')}`,
 		)
+	}
 }
 
 function handleEmptyActionable(options: {
@@ -289,14 +298,18 @@ function handleEmptyActionable(options: {
 	emptyMessage: string
 }): boolean {
 	const { actionableTasks, jsonMode, quiet, timing, emptyMessage } = options
-	if (actionableTasks.length > 0) return false
-	if (jsonMode)
+	if (actionableTasks.length > 0) {
+		return false
+	}
+	if (jsonMode) {
 		console.log(
 			formatRunResult({ ok: true, applied: 0, skipped: 0, errors: [] }),
 		)
-	else {
+	} else {
 		logSuccess(emptyMessage)
-		if (!quiet) printTiming(timing)
+		if (!quiet) {
+			printTiming(timing)
+		}
 	}
 	return true
 }
@@ -327,9 +340,12 @@ export async function runCommand(
 			timing,
 			emptyMessage: options.emptyMessage,
 		})
-	)
+	) {
 		return
-	if (!quiet) displayPlan(actionableTasks, statuses)
+	}
+	if (!quiet) {
+		displayPlan(actionableTasks, statuses)
+	}
 	if (args.dryRun) {
 		await handleDryRun({ tasks: actionableTasks, cwd, profile, timing, format })
 		return

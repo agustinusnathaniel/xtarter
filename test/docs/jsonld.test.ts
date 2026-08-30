@@ -9,8 +9,12 @@ import { describe, expect, it } from 'vite-plus/test'
 
 /** Recursively collect every object key name in a JSON-like graph. */
 function collectKeys(value: unknown, seen = new Set<unknown>()): string[] {
-	if (value === null || typeof value !== 'object') return []
-	if (seen.has(value)) return []
+	if (value === null || typeof value !== 'object') {
+		return []
+	}
+	if (seen.has(value)) {
+		return []
+	}
 	seen.add(value)
 
 	const keys: string[] = []

@@ -84,8 +84,12 @@ export async function detectProjectWithAmbiguity(
 	if (profile.framework === null && !quiet) {
 		const pkg = await readPackageJson(cwd)
 		const allDeps: Record<string, string> = {}
-		if (pkg?.dependencies) Object.assign(allDeps, pkg.dependencies)
-		if (pkg?.devDependencies) Object.assign(allDeps, pkg.devDependencies)
+		if (pkg?.dependencies) {
+			Object.assign(allDeps, pkg.dependencies)
+		}
+		if (pkg?.devDependencies) {
+			Object.assign(allDeps, pkg.devDependencies)
+		}
 
 		const hasReactNative = !!(allDeps['react-native'] || allDeps.expo)
 		const hasReact = !!allDeps.react

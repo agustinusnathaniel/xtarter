@@ -5,7 +5,9 @@ import { renderVscodeSettings } from '@/templates/vscode/settings.js'
 function mergeExtensions(existing: object, incoming: object): object {
 	const existingRecs = (existing as Record<string, unknown>).recommendations
 	const incomingRecs = (incoming as Record<string, unknown>).recommendations
-	if (!Array.isArray(incomingRecs)) return { ...existing, ...incoming }
+	if (!Array.isArray(incomingRecs)) {
+		return { ...existing, ...incoming }
+	}
 	const existingArr = Array.isArray(existingRecs)
 		? (existingRecs as string[])
 		: []

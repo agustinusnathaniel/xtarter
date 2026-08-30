@@ -12,9 +12,13 @@ function createEnv(entries: Array<[string, Response]>, fallback?: Response) {
 		const pathname = new URL(req.url).pathname
 		if (map.has(pathname)) {
 			const res = map.get(pathname)
-			if (res) return res.clone()
+			if (res) {
+				return res.clone()
+			}
 		}
-		if (fallback) return fallback.clone()
+		if (fallback) {
+			return fallback.clone()
+		}
 		return new Response('Not Found', {
 			status: 404,
 			headers: { 'content-type': 'text/html; charset=utf-8' },

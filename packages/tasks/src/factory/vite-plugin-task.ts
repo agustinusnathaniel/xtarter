@@ -41,9 +41,13 @@ async function checkVitePluginTask(
 		'vite.config',
 		VITE_CONFIG_EXTENSIONS,
 	)
-	if (!configPath) return 'new'
+	if (!configPath) {
+		return 'new'
+	}
 	const content = await readFile(configPath)
-	if (content.includes(options.checkString)) return 'skip'
+	if (content.includes(options.checkString)) {
+		return 'skip'
+	}
 	return 'new'
 }
 
@@ -62,7 +66,9 @@ async function dryRunVitePluginTask(
 		'vite.config',
 		VITE_CONFIG_EXTENSIONS,
 	)
-	if (!configPath) return []
+	if (!configPath) {
+		return []
+	}
 	const importSpecifier = buildViteImportSpecifier(options)
 	const result = await injectVitePlugin({
 		configPath,
@@ -71,7 +77,9 @@ async function dryRunVitePluginTask(
 		pluginExpression: options.pluginCall,
 		dryRun: true,
 	})
-	if (!result.success) return []
+	if (!result.success) {
+		return []
+	}
 	return [
 		{
 			filepath: 'vite.config',

@@ -24,13 +24,17 @@ function emitAnnotations(options: {
 }) {
 	const { args, tasks, statuses, diagnostics } = options
 	const isGitHubActions = process.env.GITHUB_ACTIONS === 'true'
-	if (!(args.annotations || isGitHubActions)) return
+	if (!(args.annotations || isGitHubActions)) {
+		return
+	}
 	const annotationOutput = formatCheckAnnotations(
 		tasks as Parameters<typeof formatCheckAnnotations>[0],
 		statuses as Parameters<typeof formatCheckAnnotations>[1],
 		diagnostics as Parameters<typeof formatCheckAnnotations>[2],
 	)
-	if (annotationOutput) process.stderr.write(`${annotationOutput}\n`)
+	if (annotationOutput) {
+		process.stderr.write(`${annotationOutput}\n`)
+	}
 }
 
 async function handleBadgeOutput(options: {
@@ -40,18 +44,27 @@ async function handleBadgeOutput(options: {
 	total: number
 }) {
 	const { args, ctx, conformant, total } = options
-	if (!args.badge) return
+	if (!args.badge) {
+		return
+	}
 	const svg = generateBadgeSvg({ conformant, total })
 	let badgePath = String(args.badge)
 	if (badgePath === '-') {
-		if (ctx.json) process.stderr.write(`${svg}\n`)
-		else process.stdout.write(svg)
+		if (ctx.json) {
+			process.stderr.write(`${svg}\n`)
+		} else {
+			process.stdout.write(svg)
+		}
 		return
 	}
 	const stat = await fs.stat(badgePath).catch(() => null)
-	if (stat?.isDirectory()) badgePath = path.join(badgePath, 'conformance.svg')
+	if (stat?.isDirectory()) {
+		badgePath = path.join(badgePath, 'conformance.svg')
+	}
 	await fs.writeFile(badgePath, svg, 'utf-8')
-	if (!ctx.json) logSuccess(`Badge written to ${badgePath}`)
+	if (!ctx.json) {
+		logSuccess(`Badge written to ${badgePath}`)
+	}
 }
 
 function renderCheckSummary(options: {
@@ -163,7 +176,9 @@ export const checkCommand = defineCommand({
 		const conflictChecks = await runConflictChecks(ctx.cwd)
 		const installChecks = await runToolInstallationChecks(ctx.cwd)
 		const diagnostics = [...installChecks, ...conflictChecks]
-		if (!computeCheckOk(tasks, statuses, diagnostics)) process.exitCode = 1
+		if (!computeCheckOk(tasks, statuses, diagnostics)) {
+			process.exitCode = 1
+		}
 		emitAnnotations({
 			args: args as Record<string, unknown>,
 			tasks,
