@@ -6,6 +6,8 @@ import { TaskError } from '@/errors.js'
 import type { ResolveTiming } from '@/timing.js'
 import { logWarn } from '@/utils/logger.js'
 
+const CONCURRENCY = 8
+
 export function resolveTasks(
 	profile: ProjectProfile,
 	allTasks: Task[],
@@ -47,21 +49,38 @@ function checkTask(
 	)
 }
 
+function checkTaskWithTiming(
+	task: Task,
+	cwd: string,
+	profile: ProjectProfile,
+): Effect.Effect<[string, TaskStatus, number], never> {
+	return Effect.gen(function* () {
+		const start = performance.now()
+		const status = yield* checkTask(task, cwd, profile)
+		const duration = performance.now() - start
+		return [task.id, status, duration] as [string, TaskStatus, number]
+	})
+}
+
+function runConcurrent<T>(
+	tasks: Task[],
+	makeEffect: (task: Task) => Effect.Effect<T, never>,
+): Promise<T[]> {
+	return Effect.runPromise(
+		Effect.all(tasks.map(makeEffect), { concurrency: CONCURRENCY }),
+	)
+}
+
 export function resolveTaskStatuses(
 	tasks: Task[],
 	cwd: string,
 	profile: ProjectProfile,
 ): Promise<Map<string, TaskStatus>> {
-	return Effect.runPromise(
-		Effect.all(
-			tasks.map((task) =>
-				checkTask(task, cwd, profile).pipe(
-					Effect.map((status) => [task.id, status] as [string, TaskStatus]),
-				),
-			),
-			{ concurrency: 8 },
-		).pipe(Effect.map((entries) => new Map(entries))),
-	)
+	return runConcurrent(tasks, (task) =>
+		checkTask(task, cwd, profile).pipe(
+			Effect.map((status) => [task.id, status] as [string, TaskStatus]),
+		),
+	).then((entries) => new Map(entries))
 }
 
 async function resolveStatusesWithTiming(
@@ -69,24 +88,14 @@ async function resolveStatusesWithTiming(
 	cwd: string,
 	profile: ProjectProfile,
 ): Promise<{ statuses: Map<string, TaskStatus>; checkSumMs: number }> {
-	const checkDurations: number[] = []
-	const statuses = await Effect.runPromise(
-		Effect.all(
-			tasks.map((task) =>
-				Effect.gen(function* () {
-					const start = performance.now()
-					const status = yield* checkTask(task, cwd, profile)
-					checkDurations.push(performance.now() - start)
-					return [task.id, status] as [string, TaskStatus]
-				}),
-			),
-			{ concurrency: 8 },
-		).pipe(Effect.map((entries) => new Map(entries))),
+	const results = await runConcurrent(tasks, (task) =>
+		checkTaskWithTiming(task, cwd, profile),
 	)
-	return {
-		statuses,
-		checkSumMs: checkDurations.reduce((a, b) => a + b, 0),
-	}
+	const statuses = new Map(
+		results.map(([id, status]) => [id, status] as [string, TaskStatus]),
+	)
+	const checkSumMs = results.reduce((sum, [, , duration]) => sum + duration, 0)
+	return { statuses, checkSumMs }
 }
 
 export async function resolveProjectTasks(
