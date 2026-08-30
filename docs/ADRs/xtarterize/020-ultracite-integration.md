@@ -138,27 +138,7 @@ merged (JSON format), while new projects get`oxlint.config.ts`.
 
 ## Schema Limitation: Biome skipComments
 
-Biome 2.5.9 does not support `skipComments` for `noExcessiveLinesPerFunction` and
-`noExcessiveLinesPerFile` - only `skipBlankLines` is available. Oxlint's
-`max-lines` / `max-lines-per-function` (ESLint semantics) does support
-`skipComments: true` and `skipBlankLines: true`.
-
-Affected files:
-
-- `biome.json` (root) and `packages/tasks/src/templates/biome-json.ts` - use
-  `skipBlankLines: true` without `skipComments` for
-  `noExcessiveLinesPerFile` / `noExcessiveLinesPerFunction`.
-- `packages/tasks/src/templates/oxlint-template.ts` - uses `skipBlankLines: true`
-  and `skipComments: true` for `max-lines` / `max-lines-per-function` (native
-  ESLint support).
-- Test overrides disable `noExcessiveLinesPerFunction` / `max-lines-per-function`
-  for `*.test.ts`, `*.test.tsx`, `*.spec.ts`, `*.spec.tsx` while keeping the
-  500-line file limit active (`noExcessiveLinesPerFile` / `max-lines`).
-
-References:
-
-- https://biomejs.dev/linter/rules/no-excessive-lines-per-function/
-- https://biomejs.dev/linter/rules/no-excessive-lines-per-file/
+Biome 2.5.9 only supports `skipBlankLines` for `noExcessiveLinesPerFile` / `noExcessiveLinesPerFunction` (`skipComments` not in schema); Oxlint supports both. See https://biomejs.dev/linter/rules/no-excessive-lines-per-function/ and https://biomejs.dev/linter/rules/no-excessive-lines-per-file/.
 
 ## References
 

@@ -173,8 +173,6 @@ async function computePackageJsonChanges(
 	return { missingScripts, scripts, allDeps, neededDeps, missingFiles, pkg }
 }
 
-// ─── Extracted task helpers ───
-
 async function getPackageJsonTaskDeps(
 	cwd: string,
 	profile: ProjectProfile,

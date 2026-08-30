@@ -34,12 +34,7 @@ function buildBiomeFilesConfig(): Record<string, unknown> {
 	}
 }
 
-// Note: Biome 2.5.9 does not support skipComments for
-// noExcessiveLinesPerFunction / noExcessiveLinesPerFile - only skipBlankLines is available.
-// See https://biomejs.dev/linter/rules/no-excessive-lines-per-function/ and
-// https://biomejs.dev/linter/rules/no-excessive-lines-per-file/
-// Unlike Oxlint (which uses ESLint's max-lines / max-lines-per-function with
-// skipComments: true), Biome counts comment lines toward the limit.
+// Biome 2.5.9: only skipBlankLines is supported (skipComments not in schema); Oxlint supports both
 function buildBiomeLinterRules(): Record<string, unknown> {
 	return {
 		complexity: {

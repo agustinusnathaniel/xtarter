@@ -43,8 +43,7 @@ export function renderOxlintTsConfig(profile: ProjectProfile): string {
 	const env = getOxlintEnv(profile)
 	const envLine = env.node ? `\n  env: { node: true },` : ''
 
-	// Note: Oxlint's max-lines / max-lines-per-function support skipComments (native ESLint semantics),
-	// unlike Biome 2.5.9 which only supports skipBlankLines for noExcessiveLinesPerFunction / noExcessiveLinesPerFile.
+	// Biome 2.5.9: only skipBlankLines is supported (skipComments not in schema); Oxlint supports both
 	return `import { defineConfig } from "oxlint";
 ${importLines.join('\n')}
 
@@ -71,8 +70,7 @@ export default defineConfig({
 }
 
 function buildOxlintBaseRules(): Record<string, unknown> {
-	// Note: Oxlint supports skipComments for max-lines / max-lines-per-function (ESLint semantics),
-	// unlike Biome 2.5.9 which only supports skipBlankLines for the equivalent rules.
+	// Biome 2.5.9: only skipBlankLines is supported (skipComments not in schema); Oxlint supports both
 	return {
 		'no-console': ['error', { allow: ['info', 'warn', 'error'] }],
 		'no-unused-vars': 'off',
