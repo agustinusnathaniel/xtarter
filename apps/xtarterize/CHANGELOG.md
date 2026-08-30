@@ -1,5 +1,19 @@
 # xtarterize
 
+## 1.24.0
+
+### Minor Changes
+
+- [#177](https://github.com/agustinusnathaniel/xtarter/pull/177) [`bc5552e`](https://github.com/agustinusnathaniel/xtarter/commit/bc5552e0c9273b4eba6cab95b1f19f059dcb609a) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Enforce file and function size limits via Biome and Oxlint
+  
+  Adds 500-line file and 60-line function limits to generated configs. Biome uses skipBlankLines (skipComments unsupported in 2.5.9) while Oxlint uses both skipBlankLines and skipComments. Test files disable function limit. Refactors core apply pipeline, task factories, and CLI commands to comply with new limits.
+
+### Patch Changes
+
+- [#180](https://github.com/agustinusnathaniel/xtarter/pull/180) [`bd98deb`](https://github.com/agustinusnathaniel/xtarter/commit/bd98deb09db09603055874823e6cd4a5ec3a31b7) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Validate query --limit and --threshold inputs
+  
+  Fixes silent fallback when passing invalid values like `--limit abc` (previously returned 20 results without warning) or `--threshold 5` (previously clamped to 1). Now validates inputs and exits with an error message for non-numeric, negative, or out-of-range values.
+
 ## 1.23.4
 
 ### Patch Changes
