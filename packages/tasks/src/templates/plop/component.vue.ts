@@ -9,4 +9,4 @@ defineProps<{
     <h2>{{ title }}</h2>
   </section>
 </template>
-`
+`;

@@ -1,86 +1,163 @@
 {
-	"$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
-	"files": {
-		"includes": [
-			"**",
-			"apps",
-			"packages",
-			"!**/dist",
-			"!**/.turbo",
-			"!**/node_modules",
-			"!**/.astro",
-			"!test/fixtures",
-			"!**/*.generated.d.ts",
-			"!.agents",
-			"!.claude",
-			"!**/*.svg",
-			"!.xtarterize/cache",
-			"!**/*.css",
-			"!**/*.astro"
-		]
-	},
-	"linter": {
-		"enabled": true,
-		"rules": {
-			"preset": "recommended",
-			"suspicious": {
-				"noExplicitAny": "warn"
-			},
-			"complexity": {
-				"useMaxParams": {
-					"level": "error",
-					"options": {
-						"max": 3
-					}
-				},
-				"noExcessiveLinesPerFunction": {
-					"level": "error",
-					"options": {
-						"maxLines": 60
-					}
-				}
-			},
-			"style": {
-				"useBlockStatements": "error",
-				"noExcessiveLinesPerFile": {
-					"level": "error",
-					"options": {
-						"maxLines": 500,
-						"skipBlankLines": true
-					}
-				}
-			}
-		}
-	},
-	"overrides": [
-		{
-			"includes": [
-				"test/**/*.test.ts",
-				"test/**/*.spec.ts",
-				"apps/**/src/**/*.test.ts",
-				"**/*.test.ts"
-			],
-			"linter": {
-				"rules": {
-					"complexity": {
-						"noExcessiveLinesPerFunction": "off"
-					}
-				}
-			}
-		}
-	],
-	"formatter": {
-		"enabled": true
-	},
-	"css": {
-		"parser": {
-			"tailwindDirectives": true
-		}
-	},
-	"javascript": {
-		"formatter": {
-			"quoteStyle": "single",
-			"semicolons": "asNeeded"
-		}
-	}
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+  "vcs": {
+    "enabled": true,
+    "clientKind": "git",
+    "useIgnoreFile": true
+  },
+  "extends": ["ultracite/biome/core"],
+  "files": {
+    "ignoreUnknown": false,
+    "includes": [
+      "!**/dist",
+      "!**/.turbo",
+      "!**/node_modules",
+      "!**/.astro",
+      "!test/fixtures",
+      "!**/*.generated.d.ts",
+      "!.agents",
+      "!.claude",
+      "!**/*.svg",
+      "!.xtarterize/cache",
+      "!**/*.css",
+      "!**/*.astro"
+    ]
+  },
+  "formatter": {
+    "enabled": true,
+    "indentStyle": "space"
+  },
+  "linter": {
+    "enabled": true,
+    "rules": {
+      "correctness": {
+        "noUndeclaredVariables": "error"
+      },
+      "complexity": {
+        "useMaxParams": {
+          "level": "error",
+          "options": {
+            "max": 3
+          }
+        },
+        "noExcessiveCognitiveComplexity": "off",
+        "noExcessiveLinesPerFunction": {
+          "level": "error",
+          "options": {
+            "maxLines": 60
+          }
+        },
+        "noVoid": "off"
+      },
+      "performance": {
+        "noBarrelFile": "off",
+        "noAwaitInLoops": "off",
+        "useTopLevelRegex": "off"
+      },
+      "style": {
+        "useConsistentTypeDefinitions": "off",
+        "useConsistentArrayType": {
+          "level": "error",
+          "options": {
+            "syntax": "generic"
+          }
+        },
+        "useFilenamingConvention": {
+          "level": "error",
+          "options": {
+            "filenameCases": ["kebab-case"]
+          }
+        },
+        "useBlockStatements": "error",
+        "noExcessiveLinesPerFile": {
+          "level": "error",
+          "options": {
+            "maxLines": 500,
+            "skipBlankLines": true
+          }
+        },
+        "noDefaultExport": "off",
+        "noExportedImports": "off",
+        "noIncrementDecrement": "off",
+        "noNestedTernary": "off",
+        "useAtIndex": "off",
+        "useDestructuring": "off",
+        "useErrorCause": "off",
+        "useDefaultSwitchClause": "off"
+      },
+      "suspicious": {
+        "noBiomeFirstException": "off",
+        "noBitwiseOperators": "off",
+        "noEmptyBlockStatements": "off",
+        "noShadow": "off",
+        "noUnnecessaryConditions": "off",
+        "useAwait": "off"
+      }
+    }
+  },
+  "javascript": {
+    "formatter": {
+      "quoteStyle": "single"
+    }
+  },
+  "assist": {
+    "enabled": true,
+    "actions": {
+      "source": {
+        "organizeImports": {
+          "level": "on",
+          "options": {
+            "groups": [
+              [":URL:", ":NODE:", ":PACKAGE:"],
+              ":BLANK_LINE:",
+              [":ALIAS:"],
+              ":BLANK_LINE:",
+              [":PATH:"]
+            ]
+          }
+        }
+      }
+    }
+  },
+  "overrides": [
+    {
+      "includes": [
+        "test/**/*.test.ts",
+        "test/**/*.spec.ts",
+        "apps/**/src/**/*.test.ts",
+        "**/*.test.ts",
+        "**/*.test.tsx",
+        "**/*.spec.ts",
+        "**/*.spec.tsx"
+      ],
+      "linter": {
+        "rules": {
+          "correctness": {
+            "noUndeclaredVariables": "off"
+          },
+          "nursery": {
+            "useConsistentTestIt": {
+              "level": "error",
+              "options": {
+                "function": "it",
+                "withinDescribe": "test"
+              }
+            }
+          },
+          "complexity": {
+            "noExcessiveLinesPerFunction": "off"
+          },
+          "suspicious": {
+            "noExplicitAny": "off",
+            "noBitwiseOperators": "off"
+          }
+        }
+      }
+    }
+  ],
+  "css": {
+    "parser": {
+      "tailwindDirectives": true
+    }
+  }
 }

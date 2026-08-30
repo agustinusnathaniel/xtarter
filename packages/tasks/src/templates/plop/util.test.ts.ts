@@ -6,4 +6,4 @@ describe('{{camelCase name}}', () => {
     expect({{camelCase name}}()).toBeNull()
   })
 })
-`
+`;

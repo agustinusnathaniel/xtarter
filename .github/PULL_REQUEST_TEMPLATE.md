@@ -19,7 +19,7 @@
 - [ ] `pnpm typecheck` passes
 - [ ] `pnpm build` passes
 - [ ] `pnpm test:run` passes
-- [ ] `pnpm lint` passes
+- [ ] `pnpm ultracite:check` passes
 - [ ] Tests added / updated for new behavior
 
 ## Checklist

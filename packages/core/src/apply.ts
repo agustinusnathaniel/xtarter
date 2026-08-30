@@ -1,112 +1,113 @@
-import { spinner } from '@clack/prompts'
-import type { Task, TaskStatus } from '@/_base.js'
+import { spinner } from '@clack/prompts';
+
+import type { Task, TaskStatus } from '@/_base.js';
 import {
-	classifyCheckResults,
-	collectCheckResults,
-} from '@/apply/check-phase.js'
+  classifyCheckResults,
+  collectCheckResults,
+} from '@/apply/check-phase.js';
 import {
-	collectDryRunOutcomes,
-	processDryRunOutcomes,
-} from '@/apply/dryrun-phase.js'
+  collectDryRunOutcomes,
+  processDryRunOutcomes,
+} from '@/apply/dryrun-phase.js';
 import {
-	backupAndManifest,
-	collectAndInstallDeps,
-	executeApplyTasks,
-} from '@/apply/execute-phase.js'
-import type { ProjectProfile } from '@/detect.js'
-import type { ApplyTiming } from '@/timing.js'
+  backupAndManifest,
+  collectAndInstallDeps,
+  executeApplyTasks,
+} from '@/apply/execute-phase.js';
+import type { ProjectProfile } from '@/detect.js';
+import type { ApplyTiming } from '@/timing.js';
 
 export interface ApplyOptions {
-	includeConflicts?: boolean
-	quiet?: boolean
-	selectedIds?: string[]
+  includeConflicts?: boolean;
+  quiet?: boolean;
+  selectedIds?: Array<string>;
 }
 
 export interface ApplyResult {
-	applied: number
-	skipped: number
-	errors: string[]
-	timing?: ApplyTiming
+  applied: number;
+  errors: Array<string>;
+  skipped: number;
+  timing?: ApplyTiming;
 }
 
 export interface ApplyTasksOptions {
-	tasks: Task[]
-	cwd: string
-	profile: ProjectProfile
-	selectedIds?: string[]
-	includeConflicts?: boolean
-	quiet?: boolean
-	statuses?: ReadonlyMap<string, TaskStatus>
+  cwd: string;
+  includeConflicts?: boolean;
+  profile: ProjectProfile;
+  quiet?: boolean;
+  selectedIds?: Array<string>;
+  statuses?: ReadonlyMap<string, TaskStatus>;
+  tasks: Array<Task>;
 }
 
 export function applyTasks(options: ApplyTasksOptions): Promise<ApplyResult> {
-	const selectedIds = options.selectedIds
-	const toApply = selectedIds
-		? options.tasks.filter((t) => selectedIds.includes(t.id))
-		: options.tasks
-	const includeConflicts = options.includeConflicts ?? false
-	const quiet = options.quiet ?? false
-	return runApply({
-		tasks: toApply,
-		cwd: options.cwd,
-		profile: options.profile,
-		includeConflicts,
-		quiet,
-		statuses: options.statuses,
-	})
+  const selectedIds = options.selectedIds;
+  const toApply = selectedIds
+    ? options.tasks.filter((t) => selectedIds.includes(t.id))
+    : options.tasks;
+  const includeConflicts = options.includeConflicts ?? false;
+  const quiet = options.quiet ?? false;
+  return runApply({
+    cwd: options.cwd,
+    includeConflicts,
+    profile: options.profile,
+    quiet,
+    statuses: options.statuses,
+    tasks: toApply,
+  });
 }
 
 interface RunApplyOptions {
-	tasks: Task[]
-	cwd: string
-	profile: ProjectProfile
-	includeConflicts: boolean
-	quiet: boolean
-	statuses?: ReadonlyMap<string, TaskStatus>
+  cwd: string;
+  includeConflicts: boolean;
+  profile: ProjectProfile;
+  quiet: boolean;
+  statuses?: ReadonlyMap<string, TaskStatus>;
+  tasks: Array<Task>;
 }
 
 async function runApply(options: RunApplyOptions): Promise<ApplyResult> {
-	const { tasks, cwd, profile, includeConflicts, quiet, statuses } = options
-	const applyStart = performance.now()
-	const perTask: ApplyTiming['tasks'] = []
-	const s = quiet ? null : spinner()
+  const { tasks, cwd, profile, includeConflicts, quiet, statuses } = options;
+  const applyStart = performance.now();
+  const perTask: ApplyTiming['tasks'] = [];
+  const s = quiet ? null : spinner();
 
-	const checkResults = await collectCheckResults({
-		tasks,
-		cwd,
-		profile,
-		statuses,
-	})
-	const { toDryRun, skippedInCheck } = classifyCheckResults({
-		checkResults,
-		includeConflicts,
-		quiet,
-		perTask,
-	})
+  const checkResults = await collectCheckResults({
+    cwd,
+    profile,
+    statuses,
+    tasks,
+  });
+  const { toDryRun, skippedInCheck } = classifyCheckResults({
+    checkResults,
+    includeConflicts,
+    perTask,
+    quiet,
+  });
 
-	const dryRunOutcomes = await collectDryRunOutcomes(toDryRun, cwd, profile)
-	const { tasksToRun, filesToBackup, checkErrors } = processDryRunOutcomes(
-		dryRunOutcomes,
-		perTask,
-	)
+  const dryRunOutcomes = await collectDryRunOutcomes(toDryRun, cwd, profile);
+  const { tasksToRun, filesToBackup, checkErrors } = processDryRunOutcomes(
+    dryRunOutcomes,
+    perTask
+  );
 
-	await backupAndManifest(cwd, filesToBackup)
-	await collectAndInstallDeps({ cwd, profile, tasksToRun, quiet })
-	const { applied, errors } = await executeApplyTasks({
-		tasksToRun,
-		cwd,
-		profile,
-		perTask,
-		spinner: s,
-	})
+  await backupAndManifest(cwd, filesToBackup);
+  await collectAndInstallDeps({ cwd, profile, quiet, tasksToRun });
+  const { applied, errors } = await executeApplyTasks({
+    cwd,
+    perTask,
+    profile,
+    spinner: s,
+    tasksToRun,
+  });
 
-	if (!quiet) {
-		console.log('')
-	}
-	return {
-		applied,
-		skipped: skippedInCheck,
-		errors: [...checkErrors, ...errors],
-		timing: { applyMs: performance.now() - applyStart, tasks: perTask },
-	}
+  if (!quiet) {
+    console.log('');
+  }
+  return {
+    applied,
+    errors: [...checkErrors, ...errors],
+    skipped: skippedInCheck,
+    timing: { applyMs: performance.now() - applyStart, tasks: perTask },
+  };
 }

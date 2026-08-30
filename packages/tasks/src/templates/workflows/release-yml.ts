@@ -1,32 +1,33 @@
-import type { ProjectProfile } from '@xtarterize/core'
-import { installDependenciesCommand, runScriptCommand } from 'nypm'
-import type { YamlStep } from './shared/workflow.js'
+import type { ProjectProfile } from '@xtarterize/core';
+import { installDependenciesCommand, runScriptCommand } from 'nypm';
+
+import type { YamlStep } from './shared/workflow.js';
 import {
-	conditionalScriptStep,
-	createSetupSteps,
-	renderSteps,
-} from './shared/workflow.js'
+  conditionalScriptStep,
+  createSetupSteps,
+  renderSteps,
+} from './shared/workflow.js';
 
 function renderTagPushWorkflow(profile: ProjectProfile): string {
-	const pm = profile.packageManager
-	const installCmd = installDependenciesCommand(pm)
-	const runLint = runScriptCommand(pm, 'lint')
-	const runTypecheck = runScriptCommand(pm, 'typecheck')
-	const runTest = runScriptCommand(pm, 'test')
-	const runRelease = runScriptCommand(pm, 'release')
+  const pm = profile.packageManager;
+  const installCmd = installDependenciesCommand(pm);
+  const runLint = runScriptCommand(pm, 'lint');
+  const runTypecheck = runScriptCommand(pm, 'typecheck');
+  const runTest = runScriptCommand(pm, 'test');
+  const runRelease = runScriptCommand(pm, 'release');
 
-	const steps = createSetupSteps(profile)
+  const steps = createSetupSteps(profile);
 
-	steps.push({ run: installCmd }, { run: runLint })
+  steps.push({ run: installCmd }, { run: runLint });
 
-	if (profile.typescript) {
-		steps.push({ run: runTypecheck })
-	}
+  if (profile.typescript) {
+    steps.push({ run: runTypecheck });
+  }
 
-	steps.push(conditionalScriptStep('Test', runTest, 'test'))
-	steps.push({ run: runRelease })
+  steps.push(conditionalScriptStep('Test', runTest, 'test'));
+  steps.push({ run: runRelease });
 
-	return `name: Release
+  return `name: Release
 
 on:
   push:
@@ -38,44 +39,44 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 ${renderSteps(steps, 6)}
-`
+`;
 }
 
 function renderChangesetWorkflow(profile: ProjectProfile): string {
-	const pm = profile.packageManager
-	const installCmd = installDependenciesCommand(pm)
-	const runBuild = runScriptCommand(pm, 'build')
+  const pm = profile.packageManager;
+  const installCmd = installDependenciesCommand(pm);
+  const runBuild = runScriptCommand(pm, 'build');
 
-	const steps = createSetupSteps(profile, {
-		fetchDepth: '0',
-		useBunAction: true,
-	})
+  const steps = createSetupSteps(profile, {
+    fetchDepth: '0',
+    useBunAction: true,
+  });
 
-	steps.push(
-		{ run: installCmd },
-		conditionalScriptStep('Build', runBuild, 'build'),
-	)
+  steps.push(
+    { run: installCmd },
+    conditionalScriptStep('Build', runBuild, 'build')
+  );
 
-	const versionScript = runScriptCommand(pm, 'version-packages')
-	const publishScript = runScriptCommand(pm, 'release')
+  const versionScript = runScriptCommand(pm, 'version-packages');
+  const publishScript = runScriptCommand(pm, 'release');
 
-	const changesetActionStep: YamlStep = {
-		name: 'Create Release Pull Request or Publish',
-		if: "github.ref == 'refs/heads/main'",
-		uses: 'changesets/action@v2',
-		with: {
-			'version-script': versionScript,
-			'publish-script': publishScript,
-			'pr-title': '"chore: version packages"',
-			'commit-message': '"chore: version packages"',
-			// biome-ignore lint/suspicious/noTemplateCurlyInString: GitHub Actions expression syntax
-			'github-token': '${{ secrets.GITHUB_TOKEN }}',
-		},
-	}
+  const changesetActionStep: YamlStep = {
+    if: "github.ref == 'refs/heads/main'",
+    name: 'Create Release Pull Request or Publish',
+    uses: 'changesets/action@v2',
+    with: {
+      'commit-message': '"chore: version packages"',
+      // biome-ignore lint/suspicious/noTemplateCurlyInString: GitHub Actions expression syntax
+      'github-token': '${{ secrets.GITHUB_TOKEN }}',
+      'pr-title': '"chore: version packages"',
+      'publish-script': publishScript,
+      'version-script': versionScript,
+    },
+  };
 
-	steps.push(changesetActionStep)
+  steps.push(changesetActionStep);
 
-	return `name: Release
+  return `name: Release
 
 on:
   push:
@@ -117,15 +118,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
 ${renderSteps(steps, 6)}
-`
+`;
 }
 
 export function renderReleaseWorkflow(
-	profile: ProjectProfile,
-	_existing: string | null,
+  profile: ProjectProfile,
+  _existing: string | null
 ): string {
-	if (profile.existing.changeset) {
-		return renderChangesetWorkflow(profile)
-	}
-	return renderTagPushWorkflow(profile)
+  if (profile.existing.changeset) {
+    return renderChangesetWorkflow(profile);
+  }
+  return renderTagPushWorkflow(profile);
 }

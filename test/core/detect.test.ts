@@ -1,423 +1,425 @@
-import fs from 'node:fs/promises'
-import os from 'node:os'
-import path from 'node:path'
-import { fileURLToPath } from 'node:url'
-import { detectProject } from '@xtarterize/core'
-import { afterAll, describe, expect, it } from 'vite-plus/test'
+import fs from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { detectProject } from '@xtarterize/core';
+import { afterAll, describe, expect } from 'vite-plus/test';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url))
-const fixtures = path.resolve(__dirname, '../fixtures')
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const fixtures = path.resolve(__dirname, '../fixtures');
 
 describe('detectProject', () => {
-	it('detects react-vite-tailwind correctly', async () => {
-		const profile = await detectProject(
-			path.join(fixtures, 'react-vite-tailwind'),
-		)
-		expect(profile.framework).toBe('react')
-		expect(profile.frameworkVersion).toBe('18.2.0')
-		expect(profile.bundler).toBe('vite')
-		expect(profile.router).toBeNull()
-		expect(profile.styling).toContain('tailwind')
-		expect(profile.runtime).toBe('browser')
-		expect(profile.packageManager).toBe('pnpm')
-		expect(profile.typescript).toBe(true)
-		expect(profile.vitePlus).toBe(false)
-		expect(profile.monorepo).toBe(false)
-		expect(profile.monorepoTool).toBeNull()
-		expect(profile.workspaceRoot).toBe(false)
-		expect(profile.hasGitHub).toBe(false)
-		expect(profile.hasGit).toBe(false)
-		expect(profile.nodeVersion).toBe('18')
-		expect(profile.existing.tsconfig).toBe(true)
-		expect(profile.existing.viteConfig).toBe(true)
-		expect(profile.existing.biome).toBe(false)
-		expect(profile.existing.gitignore).toBe(false)
-	})
+  test('detects react-vite-tailwind correctly', async () => {
+    const profile = await detectProject(
+      path.join(fixtures, 'react-vite-tailwind')
+    );
+    expect(profile.framework).toBe('react');
+    expect(profile.frameworkVersion).toBe('18.2.0');
+    expect(profile.bundler).toBe('vite');
+    expect(profile.router).toBeNull();
+    expect(profile.styling).toContain('tailwind');
+    expect(profile.runtime).toBe('browser');
+    expect(profile.packageManager).toBe('pnpm');
+    expect(profile.typescript).toBe(true);
+    expect(profile.vitePlus).toBe(false);
+    expect(profile.monorepo).toBe(false);
+    expect(profile.monorepoTool).toBeNull();
+    expect(profile.workspaceRoot).toBe(false);
+    expect(profile.hasGitHub).toBe(false);
+    expect(profile.hasGit).toBe(false);
+    expect(profile.nodeVersion).toBe('18');
+    expect(profile.existing.tsconfig).toBe(true);
+    expect(profile.existing.viteConfig).toBe(true);
+    expect(profile.existing.biome).toBe(false);
+    expect(profile.existing.gitignore).toBe(false);
+  });
 
-	it('detects react-vite-no-styling correctly', async () => {
-		const profile = await detectProject(
-			path.join(fixtures, 'react-vite-no-styling'),
-		)
-		expect(profile.framework).toBe('react')
-		expect(profile.bundler).toBe('vite')
-		expect(profile.router).toBeNull()
-		expect(profile.styling).toContain('vanilla')
-		expect(profile.runtime).toBe('browser')
-		expect(profile.packageManager).toBe('npm')
-		expect(profile.typescript).toBe(true)
-		expect(profile.vitePlus).toBe(false)
-		expect(profile.hasGit).toBe(false)
-		expect(profile.hasGitHub).toBe(false)
-	})
+  test('detects react-vite-no-styling correctly', async () => {
+    const profile = await detectProject(
+      path.join(fixtures, 'react-vite-no-styling')
+    );
+    expect(profile.framework).toBe('react');
+    expect(profile.bundler).toBe('vite');
+    expect(profile.router).toBeNull();
+    expect(profile.styling).toContain('vanilla');
+    expect(profile.runtime).toBe('browser');
+    expect(profile.packageManager).toBe('npm');
+    expect(profile.typescript).toBe(true);
+    expect(profile.vitePlus).toBe(false);
+    expect(profile.hasGit).toBe(false);
+    expect(profile.hasGitHub).toBe(false);
+  });
 
-	it('detects vue-vite correctly', async () => {
-		const profile = await detectProject(path.join(fixtures, 'vue-vite'))
-		expect(profile.framework).toBe('vue')
-		expect(profile.frameworkVersion).toBe('3.4.0')
-		expect(profile.bundler).toBe('vite')
-		expect(profile.router).toBeNull()
-		expect(profile.runtime).toBe('browser')
-		expect(profile.packageManager).toBe('pnpm')
-		expect(profile.typescript).toBe(true)
-		expect(profile.vitePlus).toBe(false)
-		expect(profile.hasGit).toBe(false)
-	})
+  test('detects vue-vite correctly', async () => {
+    const profile = await detectProject(path.join(fixtures, 'vue-vite'));
+    expect(profile.framework).toBe('vue');
+    expect(profile.frameworkVersion).toBe('3.4.0');
+    expect(profile.bundler).toBe('vite');
+    expect(profile.router).toBeNull();
+    expect(profile.runtime).toBe('browser');
+    expect(profile.packageManager).toBe('pnpm');
+    expect(profile.typescript).toBe(true);
+    expect(profile.vitePlus).toBe(false);
+    expect(profile.hasGit).toBe(false);
+  });
 
-	it('detects nextjs correctly', async () => {
-		const profile = await detectProject(path.join(fixtures, 'nextjs'))
-		expect(profile.framework).toBe('react')
-		expect(profile.frameworkVersion).toBe('18.2.0')
-		expect(profile.bundler).toBe('nextjs')
-		expect(profile.router).toBe('next')
-		expect(profile.runtime).toBe('edge')
-		expect(profile.packageManager).toBe('pnpm')
-		expect(profile.typescript).toBe(true)
-		expect(profile.vitePlus).toBe(false)
-		expect(profile.hasGit).toBe(false)
-	})
+  test('detects nextjs correctly', async () => {
+    const profile = await detectProject(path.join(fixtures, 'nextjs'));
+    expect(profile.framework).toBe('react');
+    expect(profile.frameworkVersion).toBe('18.2.0');
+    expect(profile.bundler).toBe('nextjs');
+    expect(profile.router).toBe('next');
+    expect(profile.runtime).toBe('edge');
+    expect(profile.packageManager).toBe('pnpm');
+    expect(profile.typescript).toBe(true);
+    expect(profile.vitePlus).toBe(false);
+    expect(profile.hasGit).toBe(false);
+  });
 
-	it('detects react-native-expo correctly', async () => {
-		const profile = await detectProject(
-			path.join(fixtures, 'react-native-expo'),
-		)
-		// Framework is react-native when both react and react-native are present
-		expect(profile.framework).toBe('react-native')
-		expect(profile.bundler).toBe('expo')
-		expect(profile.router).toBe('expo-router')
-		// runtime is native because bundler is expo (React Native)
-		expect(profile.runtime).toBe('native')
-		expect(profile.packageManager).toBe('yarn')
-		expect(profile.styling).toContain('vanilla')
-		expect(profile.typescript).toBe(true)
-		expect(profile.vitePlus).toBe(false)
-		expect(profile.hasGit).toBe(false)
-	})
+  test('detects react-native-expo correctly', async () => {
+    const profile = await detectProject(
+      path.join(fixtures, 'react-native-expo')
+    );
+    // Framework is react-native when both react and react-native are present
+    expect(profile.framework).toBe('react-native');
+    expect(profile.bundler).toBe('expo');
+    expect(profile.router).toBe('expo-router');
+    // runtime is native because bundler is expo (React Native)
+    expect(profile.runtime).toBe('native');
+    expect(profile.packageManager).toBe('yarn');
+    expect(profile.styling).toContain('vanilla');
+    expect(profile.typescript).toBe(true);
+    expect(profile.vitePlus).toBe(false);
+    expect(profile.hasGit).toBe(false);
+  });
 
-	it('detects node-only correctly', async () => {
-		const profile = await detectProject(path.join(fixtures, 'node-only'))
-		expect(profile.framework).toBe('node')
-		expect(profile.frameworkVersion).toBeNull()
-		expect(profile.bundler).toBe('none')
-		expect(profile.router).toBeNull()
-		expect(profile.runtime).toBe('node')
-		expect(profile.packageManager).toBe('pnpm')
-		expect(profile.typescript).toBe(true)
-		expect(profile.vitePlus).toBe(false)
-		expect(profile.hasGit).toBe(false)
-	})
+  test('detects node-only correctly', async () => {
+    const profile = await detectProject(path.join(fixtures, 'node-only'));
+    expect(profile.framework).toBe('node');
+    expect(profile.frameworkVersion).toBeNull();
+    expect(profile.bundler).toBe('none');
+    expect(profile.router).toBeNull();
+    expect(profile.runtime).toBe('node');
+    expect(profile.packageManager).toBe('pnpm');
+    expect(profile.typescript).toBe(true);
+    expect(profile.vitePlus).toBe(false);
+    expect(profile.hasGit).toBe(false);
+  });
 
-	it('detects monorepo-turbo correctly', async () => {
-		const profile = await detectProject(path.join(fixtures, 'monorepo-turbo'))
-		expect(profile.monorepo).toBe(true)
-		expect(profile.monorepoTool).toBe('turbo')
-		expect(profile.workspaceRoot).toBe(true)
-		expect(profile.framework).toBe('node')
-		expect(profile.bundler).toBe('none')
-		expect(profile.runtime).toBe('node')
-		expect(profile.packageManager).toBe('pnpm')
-		expect(profile.typescript).toBe(false)
-		expect(profile.vitePlus).toBe(false)
-		expect(profile.hasGit).toBe(false)
-	})
+  test('detects monorepo-turbo correctly', async () => {
+    const profile = await detectProject(path.join(fixtures, 'monorepo-turbo'));
+    expect(profile.monorepo).toBe(true);
+    expect(profile.monorepoTool).toBe('turbo');
+    expect(profile.workspaceRoot).toBe(true);
+    expect(profile.framework).toBe('node');
+    expect(profile.bundler).toBe('none');
+    expect(profile.runtime).toBe('node');
+    expect(profile.packageManager).toBe('pnpm');
+    expect(profile.typescript).toBe(false);
+    expect(profile.vitePlus).toBe(false);
+    expect(profile.hasGit).toBe(false);
+  });
 
-	it('detects monorepo when running inside workspace package', async () => {
-		const root = await fs.mkdtemp(
-			path.join(os.tmpdir(), 'xtarterize-workspace-'),
-		)
-		await fs.mkdir(path.join(root, '.git'), { recursive: true })
-		await fs.writeFile(
-			path.join(root, 'pnpm-workspace.yaml'),
-			'packages:\n  - apps/*\n',
-		)
-		await fs.writeFile(
-			path.join(root, 'package.json'),
-			JSON.stringify({ name: 'workspace-root', version: '1.0.0' }),
-		)
+  test('detects monorepo when running inside workspace package', async () => {
+    const root = await fs.mkdtemp(
+      path.join(os.tmpdir(), 'xtarterize-workspace-')
+    );
+    await fs.mkdir(path.join(root, '.git'), { recursive: true });
+    await fs.writeFile(
+      path.join(root, 'pnpm-workspace.yaml'),
+      'packages:\n  - apps/*\n'
+    );
+    await fs.writeFile(
+      path.join(root, 'package.json'),
+      JSON.stringify({ name: 'workspace-root', version: '1.0.0' })
+    );
 
-		const appDir = path.join(root, 'apps', 'web')
-		await fs.mkdir(appDir, { recursive: true })
-		await fs.writeFile(
-			path.join(appDir, 'package.json'),
-			JSON.stringify({ name: 'web-app', version: '1.0.0' }),
-		)
+    const appDir = path.join(root, 'apps', 'web');
+    await fs.mkdir(appDir, { recursive: true });
+    await fs.writeFile(
+      path.join(appDir, 'package.json'),
+      JSON.stringify({ name: 'web-app', version: '1.0.0' })
+    );
 
-		const profile = await detectProject(appDir)
-		expect(profile.monorepo).toBe(true)
-		expect(profile.workspaceRoot).toBe(false)
-		expect(profile.monorepoTool).toBeNull()
+    const profile = await detectProject(appDir);
+    expect(profile.monorepo).toBe(true);
+    expect(profile.workspaceRoot).toBe(false);
+    expect(profile.monorepoTool).toBeNull();
 
-		await fs.rm(root, { recursive: true, force: true })
-	})
+    await fs.rm(root, { force: true, recursive: true });
+  });
 
-	it('detects bundlers from config files when dependencies are absent', async () => {
-		const cases = [
-			['vite.config.mjs', 'vite'],
-			['next.config.mjs', 'nextjs'],
-			['webpack.config.cjs', 'webpack'],
-			['rspack.config.ts', 'rspack'],
-		] as const
+  test('detects bundlers from config files when dependencies are absent', async () => {
+    const cases = [
+      ['vite.config.mjs', 'vite'],
+      ['next.config.mjs', 'nextjs'],
+      ['webpack.config.cjs', 'webpack'],
+      ['rspack.config.ts', 'rspack'],
+    ] as const;
 
-		for (const [configFile, expectedBundler] of cases) {
-			const tmpDir = await fs.mkdtemp(
-				path.join(os.tmpdir(), `xtarterize-${expectedBundler}-`),
-			)
-			await fs.writeFile(
-				path.join(tmpDir, 'package.json'),
-				JSON.stringify({ dependencies: {} }),
-			)
-			await fs.writeFile(path.join(tmpDir, configFile), 'export default {}\n')
+    for (const [configFile, expectedBundler] of cases) {
+      const tmpDir = await fs.mkdtemp(
+        path.join(os.tmpdir(), `xtarterize-${expectedBundler}-`)
+      );
+      await fs.writeFile(
+        path.join(tmpDir, 'package.json'),
+        JSON.stringify({ dependencies: {} })
+      );
+      await fs.writeFile(path.join(tmpDir, configFile), 'export default {}\n');
 
-			const profile = await detectProject(tmpDir)
-			expect(profile.bundler).toBe(expectedBundler)
-		}
-	})
+      const profile = await detectProject(tmpDir);
+      expect(profile.bundler).toBe(expectedBundler);
+    }
+  });
 
-	it('keeps dependency bundler detection ahead of config files', async () => {
-		const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'xtarterize-deps-'))
-		await fs.writeFile(
-			path.join(tmpDir, 'package.json'),
-			JSON.stringify({ dependencies: { vite: '^5.0.0' } }),
-		)
-		await fs.writeFile(
-			path.join(tmpDir, 'next.config.js'),
-			'export default {}\n',
-		)
+  test('keeps dependency bundler detection ahead of config files', async () => {
+    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'xtarterize-deps-'));
+    await fs.writeFile(
+      path.join(tmpDir, 'package.json'),
+      JSON.stringify({ dependencies: { vite: '^5.0.0' } })
+    );
+    await fs.writeFile(
+      path.join(tmpDir, 'next.config.js'),
+      'export default {}\n'
+    );
 
-		const profile = await detectProject(tmpDir)
-		expect(profile.bundler).toBe('vite')
-	})
+    const profile = await detectProject(tmpDir);
+    expect(profile.bundler).toBe('vite');
+  });
 
-	it('nodeVersion defaults to 20 when no config present', async () => {
-		const tmpDir = await fs.mkdtemp(
-			path.join(os.tmpdir(), 'xtarterize-nodever-'),
-		)
-		await fs.writeFile(
-			path.join(tmpDir, 'package.json'),
-			JSON.stringify({ name: 'test-pkg' }),
-		)
+  test('nodeVersion defaults to 20 when no config present', async () => {
+    const tmpDir = await fs.mkdtemp(
+      path.join(os.tmpdir(), 'xtarterize-nodever-')
+    );
+    await fs.writeFile(
+      path.join(tmpDir, 'package.json'),
+      JSON.stringify({ name: 'test-pkg' })
+    );
 
-		const profile = await detectProject(tmpDir)
-		expect(profile.nodeVersion).toBe('22')
-	})
+    const profile = await detectProject(tmpDir);
+    expect(profile.nodeVersion).toBe('22');
+  });
 
-	it('nodeVersion reads from .nvmrc', async () => {
-		const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'xtarterize-nvmrc-'))
-		await fs.writeFile(path.join(tmpDir, '.nvmrc'), '22\n')
-		await fs.writeFile(
-			path.join(tmpDir, 'package.json'),
-			JSON.stringify({ name: 'test-pkg' }),
-		)
+  test('nodeVersion reads from .nvmrc', async () => {
+    const tmpDir = await fs.mkdtemp(
+      path.join(os.tmpdir(), 'xtarterize-nvmrc-')
+    );
+    await fs.writeFile(path.join(tmpDir, '.nvmrc'), '22\n');
+    await fs.writeFile(
+      path.join(tmpDir, 'package.json'),
+      JSON.stringify({ name: 'test-pkg' })
+    );
 
-		const profile = await detectProject(tmpDir)
-		expect(profile.nodeVersion).toBe('22')
-	})
+    const profile = await detectProject(tmpDir);
+    expect(profile.nodeVersion).toBe('22');
+  });
 
-	it('nodeVersion reads from .nvmrc stripping leading v', async () => {
-		const tmpDir = await fs.mkdtemp(
-			path.join(os.tmpdir(), 'xtarterize-nvmrc-v-'),
-		)
-		await fs.writeFile(path.join(tmpDir, '.nvmrc'), 'v18\n')
-		await fs.writeFile(
-			path.join(tmpDir, 'package.json'),
-			JSON.stringify({ name: 'test-pkg' }),
-		)
+  test('nodeVersion reads from .nvmrc stripping leading v', async () => {
+    const tmpDir = await fs.mkdtemp(
+      path.join(os.tmpdir(), 'xtarterize-nvmrc-v-')
+    );
+    await fs.writeFile(path.join(tmpDir, '.nvmrc'), 'v18\n');
+    await fs.writeFile(
+      path.join(tmpDir, 'package.json'),
+      JSON.stringify({ name: 'test-pkg' })
+    );
 
-		const profile = await detectProject(tmpDir)
-		expect(profile.nodeVersion).toBe('18')
-	})
+    const profile = await detectProject(tmpDir);
+    expect(profile.nodeVersion).toBe('18');
+  });
 
-	it('nodeVersion falls back to engines.node from package.json', async () => {
-		const tmpDir = await fs.mkdtemp(
-			path.join(os.tmpdir(), 'xtarterize-engines-'),
-		)
-		await fs.writeFile(
-			path.join(tmpDir, 'package.json'),
-			JSON.stringify({
-				name: 'test-pkg',
-				engines: { node: '>=22' },
-			}),
-		)
+  test('nodeVersion falls back to engines.node from package.json', async () => {
+    const tmpDir = await fs.mkdtemp(
+      path.join(os.tmpdir(), 'xtarterize-engines-')
+    );
+    await fs.writeFile(
+      path.join(tmpDir, 'package.json'),
+      JSON.stringify({
+        engines: { node: '>=22' },
+        name: 'test-pkg',
+      })
+    );
 
-		const profile = await detectProject(tmpDir)
-		expect(profile.nodeVersion).toBe('22')
-	})
+    const profile = await detectProject(tmpDir);
+    expect(profile.nodeVersion).toBe('22');
+  });
 
-	it('nodeVersion prefers .nvmrc over engines.node', async () => {
-		const tmpDir = await fs.mkdtemp(
-			path.join(os.tmpdir(), 'xtarterize-prefer-nvmrc-'),
-		)
-		await fs.writeFile(path.join(tmpDir, '.nvmrc'), '20\n')
-		await fs.writeFile(
-			path.join(tmpDir, 'package.json'),
-			JSON.stringify({
-				name: 'test-pkg',
-				engines: { node: '22' },
-			}),
-		)
+  test('nodeVersion prefers .nvmrc over engines.node', async () => {
+    const tmpDir = await fs.mkdtemp(
+      path.join(os.tmpdir(), 'xtarterize-prefer-nvmrc-')
+    );
+    await fs.writeFile(path.join(tmpDir, '.nvmrc'), '20\n');
+    await fs.writeFile(
+      path.join(tmpDir, 'package.json'),
+      JSON.stringify({
+        engines: { node: '22' },
+        name: 'test-pkg',
+      })
+    );
 
-		const profile = await detectProject(tmpDir)
-		expect(profile.nodeVersion).toBe('20')
-	})
+    const profile = await detectProject(tmpDir);
+    expect(profile.nodeVersion).toBe('20');
+  });
 
-	it('detects Vite+ from vite-plus dep', async () => {
-		const tmpDir = await fs.mkdtemp(
-			path.join(os.tmpdir(), 'xtarterize-vp-detect-'),
-		)
-		await fs.writeFile(
-			path.join(tmpDir, 'package.json'),
-			JSON.stringify({
-				name: 'vp-project',
-				devDependencies: { 'vite-plus': '^0.1.0' },
-			}),
-		)
+  test('detects Vite+ from vite-plus dep', async () => {
+    const tmpDir = await fs.mkdtemp(
+      path.join(os.tmpdir(), 'xtarterize-vp-detect-')
+    );
+    await fs.writeFile(
+      path.join(tmpDir, 'package.json'),
+      JSON.stringify({
+        devDependencies: { 'vite-plus': '^0.1.0' },
+        name: 'vp-project',
+      })
+    );
 
-		const profile = await detectProject(tmpDir)
-		expect(profile.vitePlus).toBe(true)
-		await fs.rm(tmpDir, { recursive: true })
-	})
+    const profile = await detectProject(tmpDir);
+    expect(profile.vitePlus).toBe(true);
+    await fs.rm(tmpDir, { recursive: true });
+  });
 
-	it('detects Vite+ from fixtures/vite-plus-no-lint', async () => {
-		const profile = await detectProject(
-			path.join(fixtures, 'vite-plus-no-lint'),
-		)
-		expect(profile.vitePlus).toBe(true)
-		expect(profile.existing.biome).toBe(false)
-		expect(profile.existing.eslint).toBe(false)
-		expect(profile.existing.oxlint).toBe(false)
-		expect(profile.existing.oxfmt).toBe(false)
-	})
+  test('detects Vite+ from fixtures/vite-plus-no-lint', async () => {
+    const profile = await detectProject(
+      path.join(fixtures, 'vite-plus-no-lint')
+    );
+    expect(profile.vitePlus).toBe(true);
+    expect(profile.existing.biome).toBe(false);
+    expect(profile.existing.eslint).toBe(false);
+    expect(profile.existing.oxlint).toBe(false);
+    expect(profile.existing.oxfmt).toBe(false);
+  });
 
-	it('detects Vite+ with biome in vite-plus-biome fixture', async () => {
-		const profile = await detectProject(path.join(fixtures, 'vite-plus-biome'))
-		expect(profile.vitePlus).toBe(true)
-		expect(profile.existing.biome).toBe(true)
-	})
+  test('detects Vite+ with biome in vite-plus-biome fixture', async () => {
+    const profile = await detectProject(path.join(fixtures, 'vite-plus-biome'));
+    expect(profile.vitePlus).toBe(true);
+    expect(profile.existing.biome).toBe(true);
+  });
 
-	it('detects ESLint from dep', async () => {
-		const tmpDir = await fs.mkdtemp(
-			path.join(os.tmpdir(), 'xtarterize-eslint-dep-'),
-		)
-		await fs.writeFile(
-			path.join(tmpDir, 'package.json'),
-			JSON.stringify({
-				name: 'eslint-project',
-				devDependencies: { eslint: '^8.56.0' },
-			}),
-		)
+  test('detects ESLint from dep', async () => {
+    const tmpDir = await fs.mkdtemp(
+      path.join(os.tmpdir(), 'xtarterize-eslint-dep-')
+    );
+    await fs.writeFile(
+      path.join(tmpDir, 'package.json'),
+      JSON.stringify({
+        devDependencies: { eslint: '^8.56.0' },
+        name: 'eslint-project',
+      })
+    );
 
-		const profile = await detectProject(tmpDir)
-		expect(profile.existing.eslint).toBe(true)
-		await fs.rm(tmpDir, { recursive: true })
-	})
+    const profile = await detectProject(tmpDir);
+    expect(profile.existing.eslint).toBe(true);
+    await fs.rm(tmpDir, { recursive: true });
+  });
 
-	it('detects ESLint from eslintrc config', async () => {
-		const tmpDir = await fs.mkdtemp(
-			path.join(os.tmpdir(), 'xtarterize-eslintrc-'),
-		)
-		await fs.writeFile(
-			path.join(tmpDir, 'package.json'),
-			JSON.stringify({ name: 'eslint-project' }),
-		)
-		await fs.writeFile(
-			path.join(tmpDir, '.eslintrc.json'),
-			JSON.stringify({ rules: {} }),
-		)
+  test('detects ESLint from eslintrc config', async () => {
+    const tmpDir = await fs.mkdtemp(
+      path.join(os.tmpdir(), 'xtarterize-eslintrc-')
+    );
+    await fs.writeFile(
+      path.join(tmpDir, 'package.json'),
+      JSON.stringify({ name: 'eslint-project' })
+    );
+    await fs.writeFile(
+      path.join(tmpDir, '.eslintrc.json'),
+      JSON.stringify({ rules: {} })
+    );
 
-		const profile = await detectProject(tmpDir)
-		expect(profile.existing.eslint).toBe(true)
-		await fs.rm(tmpDir, { recursive: true })
-	})
+    const profile = await detectProject(tmpDir);
+    expect(profile.existing.eslint).toBe(true);
+    await fs.rm(tmpDir, { recursive: true });
+  });
 
-	it('detects ESLint from eslint.config flat config', async () => {
-		const tmpDir = await fs.mkdtemp(
-			path.join(os.tmpdir(), 'xtarterize-flat-eslint-'),
-		)
-		await fs.writeFile(
-			path.join(tmpDir, 'package.json'),
-			JSON.stringify({ name: 'eslint-flat' }),
-		)
-		await fs.writeFile(
-			path.join(tmpDir, 'eslint.config.js'),
-			'export default []',
-		)
+  test('detects ESLint from eslint.config flat config', async () => {
+    const tmpDir = await fs.mkdtemp(
+      path.join(os.tmpdir(), 'xtarterize-flat-eslint-')
+    );
+    await fs.writeFile(
+      path.join(tmpDir, 'package.json'),
+      JSON.stringify({ name: 'eslint-flat' })
+    );
+    await fs.writeFile(
+      path.join(tmpDir, 'eslint.config.js'),
+      'export default []'
+    );
 
-		const profile = await detectProject(tmpDir)
-		expect(profile.existing.eslint).toBe(true)
-		await fs.rm(tmpDir, { recursive: true })
-	})
+    const profile = await detectProject(tmpDir);
+    expect(profile.existing.eslint).toBe(true);
+    await fs.rm(tmpDir, { recursive: true });
+  });
 
-	it('detects oxlint config', async () => {
-		const tmpDir = await fs.mkdtemp(
-			path.join(os.tmpdir(), 'xtarterize-oxlint-detect-'),
-		)
-		await fs.writeFile(
-			path.join(tmpDir, 'package.json'),
-			JSON.stringify({ name: 'oxlint-project' }),
-		)
-		await fs.writeFile(
-			path.join(tmpDir, '.oxlintrc.json'),
-			JSON.stringify({ rules: {} }),
-		)
+  test('detects oxlint config', async () => {
+    const tmpDir = await fs.mkdtemp(
+      path.join(os.tmpdir(), 'xtarterize-oxlint-detect-')
+    );
+    await fs.writeFile(
+      path.join(tmpDir, 'package.json'),
+      JSON.stringify({ name: 'oxlint-project' })
+    );
+    await fs.writeFile(
+      path.join(tmpDir, '.oxlintrc.json'),
+      JSON.stringify({ rules: {} })
+    );
 
-		const profile = await detectProject(tmpDir)
-		expect(profile.existing.oxlint).toBe(true)
-		await fs.rm(tmpDir, { recursive: true })
-	})
+    const profile = await detectProject(tmpDir);
+    expect(profile.existing.oxlint).toBe(true);
+    await fs.rm(tmpDir, { recursive: true });
+  });
 
-	it('detects oxfmt config', async () => {
-		const tmpDir = await fs.mkdtemp(
-			path.join(os.tmpdir(), 'xtarterize-oxfmt-detect-'),
-		)
-		await fs.writeFile(
-			path.join(tmpDir, 'package.json'),
-			JSON.stringify({ name: 'oxfmt-project' }),
-		)
-		await fs.writeFile(
-			path.join(tmpDir, '.oxfmtrc.json'),
-			JSON.stringify({ indentStyle: 'space' }),
-		)
+  test('detects oxfmt config', async () => {
+    const tmpDir = await fs.mkdtemp(
+      path.join(os.tmpdir(), 'xtarterize-oxfmt-detect-')
+    );
+    await fs.writeFile(
+      path.join(tmpDir, 'package.json'),
+      JSON.stringify({ name: 'oxfmt-project' })
+    );
+    await fs.writeFile(
+      path.join(tmpDir, '.oxfmtrc.json'),
+      JSON.stringify({ indentStyle: 'space' })
+    );
 
-		const profile = await detectProject(tmpDir)
-		expect(profile.existing.oxfmt).toBe(true)
-		await fs.rm(tmpDir, { recursive: true })
-	})
+    const profile = await detectProject(tmpDir);
+    expect(profile.existing.oxfmt).toBe(true);
+    await fs.rm(tmpDir, { recursive: true });
+  });
 
-	it('detects ESLint from fixtures/eslint-project', async () => {
-		const profile = await detectProject(path.join(fixtures, 'eslint-project'))
-		expect(profile.existing.eslint).toBe(true)
-		expect(profile.existing.biome).toBe(false)
-	})
+  test('detects ESLint from fixtures/eslint-project', async () => {
+    const profile = await detectProject(path.join(fixtures, 'eslint-project'));
+    expect(profile.existing.eslint).toBe(true);
+    expect(profile.existing.biome).toBe(false);
+  });
 
-	it('detects oxlint standalone from fixtures/oxlint-standalone', async () => {
-		const profile = await detectProject(
-			path.join(fixtures, 'oxlint-standalone'),
-		)
-		expect(profile.existing.oxlint).toBe(true)
-		expect(profile.vitePlus).toBe(false)
-		expect(profile.existing.biome).toBe(false)
-		expect(profile.existing.eslint).toBe(false)
-	})
-})
+  test('detects oxlint standalone from fixtures/oxlint-standalone', async () => {
+    const profile = await detectProject(
+      path.join(fixtures, 'oxlint-standalone')
+    );
+    expect(profile.existing.oxlint).toBe(true);
+    expect(profile.vitePlus).toBe(false);
+    expect(profile.existing.biome).toBe(false);
+    expect(profile.existing.eslint).toBe(false);
+  });
+});
 
 const detectTestFixtures = [
-	'empty',
-	'react-vite-tailwind',
-	'next-chakra',
-	'vite-chakra',
-	'vite-hero',
-	'eslint-project',
-	'oxlint-standalone',
-	'biome-standalone',
-	'bun-monorepo',
-	'astro-monorepo',
-	'yarn-monorepo',
-]
+  'empty',
+  'react-vite-tailwind',
+  'next-chakra',
+  'vite-chakra',
+  'vite-hero',
+  'eslint-project',
+  'oxlint-standalone',
+  'biome-standalone',
+  'bun-monorepo',
+  'astro-monorepo',
+  'yarn-monorepo',
+];
 
 afterAll(async () => {
-	for (const name of detectTestFixtures) {
-		await fs.rm(path.join(fixtures, name, '.xtarterize'), {
-			recursive: true,
-			force: true,
-		})
-	}
-})
+  for (const name of detectTestFixtures) {
+    await fs.rm(path.join(fixtures, name, '.xtarterize'), {
+      force: true,
+      recursive: true,
+    });
+  }
+});

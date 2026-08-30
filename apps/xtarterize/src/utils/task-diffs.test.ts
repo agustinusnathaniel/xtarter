@@ -1,50 +1,51 @@
-import type { ProjectProfile, Task } from '@xtarterize/core'
-import { afterEach, beforeEach, describe, expect, it } from 'vite-plus/test'
-import { collectTaskDiffs } from '@/utils/task-diffs.js'
+import type { ProjectProfile, Task } from '@xtarterize/core';
+import { afterEach, beforeEach, describe, expect, test } from 'vite-plus/test';
 
-const profileStub = {} as never
+import { collectTaskDiffs } from '@/utils/task-diffs.js';
+
+const profileStub = {} as never;
 
 function createTask(id: string, dryRun: Task['dryRun']): Task {
-	return {
-		id,
-		label: id,
-		group: 'test',
-		applicable: () => true,
-		check: async () => 'new',
-		dryRun,
-		apply: async () => {},
-	}
+  return {
+    applicable: () => true,
+    apply: async () => {},
+    check: async () => 'new',
+    dryRun,
+    group: 'test',
+    id,
+    label: id,
+  };
 }
 
 describe('collectTaskDiffs', () => {
-	beforeEach(() => {
-		process.exitCode = 0
-	})
+  beforeEach(() => {
+    process.exitCode = 0;
+  });
 
-	afterEach(() => {
-		process.exitCode = 0
-	})
+  afterEach(() => {
+    process.exitCode = 0;
+  });
 
-	it('collects diffs from successful tasks and counts failures', async () => {
-		const goodTask = createTask('good', async () => [
-			{ filepath: 'a.txt', before: null, after: 'x' },
-		])
-		const badTask = createTask('bad', async () => {
-			throw new Error('boom')
-		})
+  test('collects diffs from successful tasks and counts failures', async () => {
+    const goodTask = createTask('good', async () => [
+      { after: 'x', before: null, filepath: 'a.txt' },
+    ]);
+    const badTask = createTask('bad', async () => {
+      throw new Error('boom');
+    });
 
-		const result = await collectTaskDiffs(
-			[goodTask, badTask],
-			'/tmp',
-			profileStub as ProjectProfile,
-		)
+    const result = await collectTaskDiffs(
+      [goodTask, badTask],
+      '/tmp',
+      profileStub as ProjectProfile
+    );
 
-		expect(result.diffs.length).toBe(1)
-		expect(result.failures).toBe(1)
-		expect(result.diffs[0]).toEqual({
-			filepath: 'a.txt',
-			before: null,
-			after: 'x',
-		})
-	})
-})
+    expect(result.diffs.length).toBe(1);
+    expect(result.failures).toBe(1);
+    expect(result.diffs[0]).toEqual({
+      after: 'x',
+      before: null,
+      filepath: 'a.txt',
+    });
+  });
+});

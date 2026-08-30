@@ -1,4 +1,4 @@
 {
-	"name": "xtarter-skills",
-	"skills": ["./skills/xtarterize", "./skills/create-xtarter-app"]
+  "name": "xtarter-skills",
+  "skills": ["./skills/xtarterize", "./skills/create-xtarter-app"]
 }

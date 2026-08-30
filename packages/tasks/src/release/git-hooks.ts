@@ -1,110 +1,111 @@
-import type { ProjectProfile } from '@xtarterize/core'
-import { readPackageJson } from '@xtarterize/core'
-import { dlxCommand, type PackageManagerName, runScriptCommand } from 'nypm'
-import { createPackageJsonTask } from '@/factory'
+import type { ProjectProfile } from '@xtarterize/core';
+import { readPackageJson } from '@xtarterize/core';
+import { dlxCommand, type PackageManagerName, runScriptCommand } from 'nypm';
+
+import { createPackageJsonTask } from '@/factory';
 
 function commitMsgHook(pm: PackageManagerName): string {
-	return `${dlxCommand(pm, 'commitlint', { short: true })} --edit $1\n`
+  return `${dlxCommand(pm, 'commitlint', { short: true })} --edit $1\n`;
 }
 
 async function preCommitHook(
-	_cwd: string,
-	profile: ProjectProfile,
+  _cwd: string,
+  profile: ProjectProfile
 ): Promise<string> {
-	if (profile.vitePlus) {
-		return 'vp staged\n'
-	}
-	const pkg = await readPackageJson(_cwd)
-	const hasLintStaged = !!(
-		pkg?.devDependencies?.['lint-staged'] || pkg?.dependencies?.['lint-staged']
-	)
-	const pm = profile.packageManager
-	return hasLintStaged
-		? `${dlxCommand(pm, 'lint-staged', { short: true })}\n`
-		: `${dlxCommand(pm, 'biome', { short: true })} check --write\n`
+  if (profile.vitePlus) {
+    return 'vp staged\n';
+  }
+  const pkg = await readPackageJson(_cwd);
+  const hasLintStaged = !!(
+    pkg?.devDependencies?.['lint-staged'] || pkg?.dependencies?.['lint-staged']
+  );
+  const pm = profile.packageManager;
+  return hasLintStaged
+    ? `${dlxCommand(pm, 'lint-staged', { short: true })}\n`
+    : `${dlxCommand(pm, 'biome', { short: true })} check --write\n`;
 }
 
 function prePushHook(profile: ProjectProfile): string {
-	const pm = profile.packageManager
-	if (profile.monorepoTool === 'turbo') {
-		return `${runScriptCommand(pm, 'check:turbo')}\n`
-	}
-	if (profile.typescript) {
-		return `${runScriptCommand(pm, 'typecheck')} && ${runScriptCommand(pm, 'test')}\n`
-	}
-	return `${runScriptCommand(pm, 'test')}\n`
+  const pm = profile.packageManager;
+  if (profile.monorepoTool === 'turbo') {
+    return `${runScriptCommand(pm, 'check:turbo')}\n`;
+  }
+  if (profile.typescript) {
+    return `${runScriptCommand(pm, 'typecheck')} && ${runScriptCommand(pm, 'test')}\n`;
+  }
+  return `${runScriptCommand(pm, 'test')}\n`;
 }
 
 async function prepareCommitMsgHook(
-	_cwd: string,
-	profile: ProjectProfile,
+  _cwd: string,
+  profile: ProjectProfile
 ): Promise<string> {
-	const pkg = await readPackageJson(_cwd)
-	const hasCz = !!(
-		pkg?.devDependencies?.czg ||
-		pkg?.dependencies?.czg ||
-		pkg?.devDependencies?.commitizen ||
-		pkg?.dependencies?.commitizen
-	)
-	if (!hasCz) {
-		return '# no-op: no commit wizard detected\nexit 0\n'
-	}
-	const pm = profile.packageManager
-	return `exec < /dev/tty && ${runScriptCommand(pm, 'cz')} --hook || true\n`
+  const pkg = await readPackageJson(_cwd);
+  const hasCz = !!(
+    pkg?.devDependencies?.czg ||
+    pkg?.dependencies?.czg ||
+    pkg?.devDependencies?.commitizen ||
+    pkg?.dependencies?.commitizen
+  );
+  if (!hasCz) {
+    return '# no-op: no commit wizard detected\nexit 0\n';
+  }
+  const pm = profile.packageManager;
+  return `exec < /dev/tty && ${runScriptCommand(pm, 'cz')} --hook || true\n`;
 }
 
 export const gitHooksTask = createPackageJsonTask({
-	id: 'release/git-hooks',
-	label: 'Git hooks (commit-msg, prepare-commit-msg, pre-commit, pre-push)',
-	group: 'Release',
-	searchMeta: {
-		tags: ['git', 'hooks', 'husky', 'quality'],
-		configTargets: [
-			'.husky/commit-msg',
-			'.husky/prepare-commit-msg',
-			'.husky/pre-commit',
-			'.husky/pre-push',
-		],
-		keywords: [
-			'git hooks',
-			'husky',
-			'pre-commit',
-			'commit-msg',
-			'prepare-commit-msg',
-			'commitizen',
-			'czg',
-			'quality gates',
-		],
-	},
-	scope: 'root',
-	applicable: () => true,
-	depName: 'husky',
-	depCondition: (profile) => !profile.vitePlus,
-	installDev: true,
-	getScripts: async (_cwd, profile) =>
-		profile.vitePlus ? [] : [{ script: 'prepare', value: 'husky' }],
-	files: [
-		{
-			filepath: (profile) =>
-				profile.vitePlus ? '.vite-hooks/commit-msg' : '.husky/commit-msg',
-			render: (_cwd, profile) => commitMsgHook(profile.packageManager),
-		},
-		{
-			filepath: (profile) =>
-				profile.vitePlus
-					? '.vite-hooks/prepare-commit-msg'
-					: '.husky/prepare-commit-msg',
-			render: (cwd, profile) => prepareCommitMsgHook(cwd, profile),
-		},
-		{
-			filepath: (profile) =>
-				profile.vitePlus ? '.vite-hooks/pre-commit' : '.husky/pre-commit',
-			render: (cwd, profile) => preCommitHook(cwd, profile),
-		},
-		{
-			filepath: (profile) =>
-				profile.vitePlus ? '.vite-hooks/pre-push' : '.husky/pre-push',
-			render: (_cwd, profile) => prePushHook(profile),
-		},
-	],
-})
+  applicable: () => true,
+  depCondition: (profile) => !profile.vitePlus,
+  depName: 'husky',
+  files: [
+    {
+      filepath: (profile) =>
+        profile.vitePlus ? '.vite-hooks/commit-msg' : '.husky/commit-msg',
+      render: (_cwd, profile) => commitMsgHook(profile.packageManager),
+    },
+    {
+      filepath: (profile) =>
+        profile.vitePlus
+          ? '.vite-hooks/prepare-commit-msg'
+          : '.husky/prepare-commit-msg',
+      render: (cwd, profile) => prepareCommitMsgHook(cwd, profile),
+    },
+    {
+      filepath: (profile) =>
+        profile.vitePlus ? '.vite-hooks/pre-commit' : '.husky/pre-commit',
+      render: (cwd, profile) => preCommitHook(cwd, profile),
+    },
+    {
+      filepath: (profile) =>
+        profile.vitePlus ? '.vite-hooks/pre-push' : '.husky/pre-push',
+      render: (_cwd, profile) => prePushHook(profile),
+    },
+  ],
+  getScripts: async (_cwd, profile) =>
+    profile.vitePlus ? [] : [{ script: 'prepare', value: 'husky' }],
+  group: 'Release',
+  id: 'release/git-hooks',
+  installDev: true,
+  label: 'Git hooks (commit-msg, prepare-commit-msg, pre-commit, pre-push)',
+  scope: 'root',
+  searchMeta: {
+    configTargets: [
+      '.husky/commit-msg',
+      '.husky/prepare-commit-msg',
+      '.husky/pre-commit',
+      '.husky/pre-push',
+    ],
+    keywords: [
+      'git hooks',
+      'husky',
+      'pre-commit',
+      'commit-msg',
+      'prepare-commit-msg',
+      'commitizen',
+      'czg',
+      'quality gates',
+    ],
+    tags: ['git', 'hooks', 'husky', 'quality'],
+  },
+});

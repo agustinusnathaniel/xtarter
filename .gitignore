@@ -3,7 +3,7 @@ node_modules
 dist
 .turbo
 .plans
-.claude/handoffs
+.claude/
 .xtarterize/cache
 
 # Generated from @biomejs/biome configuration_schema.json

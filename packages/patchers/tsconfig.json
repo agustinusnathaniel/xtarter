@@ -1,22 +1,22 @@
 {
-	"compilerOptions": {
-		"target": "ES2022",
-		"module": "ESNext",
-		"moduleResolution": "bundler",
-		"strict": true,
-		"incremental": true,
-		"composite": true,
-		"tsBuildInfoFile": ".tsbuildinfo",
-		"outDir": "dist",
-		"rootDir": "src",
-		"declaration": true,
-		"esModuleInterop": true,
-		"skipLibCheck": true,
-		"types": ["node"],
-		"paths": {
-			"@/*": ["./src/*"]
-		}
-	},
-	"include": ["src"],
-	"exclude": ["node_modules", "dist"]
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "incremental": true,
+    "composite": true,
+    "tsBuildInfoFile": ".tsbuildinfo",
+    "outDir": "dist",
+    "rootDir": "src",
+    "declaration": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "types": ["node"],
+    "paths": {
+      "@/*": ["./src/*"]
+    }
+  },
+  "include": ["src"],
+  "exclude": ["node_modules", "dist"]
 }

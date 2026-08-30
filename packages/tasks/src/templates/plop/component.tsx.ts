@@ -9,4 +9,4 @@ export function {{pascalCase name}}({ title }: {{pascalCase name}}Props) {
     </section>
   )
 }
-`
+`;
