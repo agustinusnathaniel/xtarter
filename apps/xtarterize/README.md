@@ -1,74 +1,74 @@
 # xtarterize
 
-> Apply production-grade conformance configurations to any JavaScript/TypeScript project
+> Apply conformance configuration to JavaScript and TypeScript projects
 
 [![npm version](https://img.shields.io/npm/v/xtarterize.svg)](https://www.npmjs.com/package/xtarterize)
 [![npm downloads](https://img.shields.io/npm/dm/xtarterize.svg)](https://www.npmjs.com/package/xtarterize)
-[![License](https://img.shields.io/npm/l/xtarterize.svg)](LICENSE)
+[![License](https://img.shields.io/npm/l/xtarterize.svg)](https://github.com/agustinusnathaniel/xtarterize/blob/main/LICENSE)
 
-`xtarterize` detects your tech stack automatically, then applies curated configurations for linting, type checking, CI workflows, code generation, editor settings, and more - without destructively overwriting your existing setup.
+`xtarterize` detects a project's stack, selects applicable configuration tasks,
+previews changes, and applies approved updates. Existing values are preserved
+by default; incompatible values are reported as conflicts.
 
-## Quick Start
+## Requirements
+
+- Node.js 24 or later
+- A `package.json` with a `name` field
+- An initialized Git repository
+
+## Quick start
 
 ```bash
+# Preview changes
+npx xtarterize diff
+
+# Review and apply changes
 npx xtarterize init
+
+# Check the result in CI
+npx xtarterize check --quiet
 ```
 
-That's it. Your project gets Biome, TypeScript incremental builds, Renovate, commitlint, VS Code settings, GitHub Actions, and more - all tailored to your stack.
+Use `npx xtarterize init --yes` to apply all applicable non-conflicting tasks
+without prompts. Use `--format json` or `--json` for machine-readable output.
 
 ## Commands
 
-| Command                         | Description                                        |
-| ------------------------------- | -------------------------------------------------- |
-| `npx xtarterize init`           | Scan project and apply conformance configurations  |
-| `npx xtarterize sync`           | Update existing configurations to latest templates |
-| `npx xtarterize diff`           | Show pending changes without applying anything     |
-| `npx xtarterize check`          | Audit current conformance status                   |
-| `npx xtarterize add <task>`     | Apply a specific task (e.g., `lint/biome`)         |
-| `npx xtarterize restore <file>` | Restore a file from backup                         |
-| `npx xtarterize list`           | List all available tasks and their status          |
-| `npx xtarterize doctor`         | Run environment and project diagnostics            |
-| `npx xtarterize query <query>`  | Search tasks by natural language query             |
-| `npx xtarterize undo`           | Undo the last xtarterize run                       |
+| Command | Purpose |
+| --- | --- |
+| `init` | Detect, preview, and apply applicable tasks |
+| `sync` | Update existing configurations |
+| `diff` | Preview pending changes without writing |
+| `check` | Audit task status and diagnostics |
+| `add [task-id]` | Apply one task or choose tasks interactively |
+| `list` | List tasks and their status |
+| `query <query>` | Search tasks with natural language |
+| `doctor` | Run environment and project diagnostics |
+| `undo` | Restore the most recent run |
+| `restore <file>` | Restore one file from backup |
 
-## Supported Stacks
+See the [CLI reference](https://xtarter.sznm.dev/xtarterize/guide/cli/overview/)
+for command options, exit codes, and JSON output shapes.
 
-| Category         | Supported                                                                      |
-| ---------------- | ------------------------------------------------------------------------------ |
-| Frameworks       | React, React Native, Vue, Svelte, Solid, Node.js                               |
-| Bundlers         | Vite, Next.js, Expo, TanStack Start, Webpack, Rspack                           |
-| Styling          | Tailwind, Vanilla, CSS Modules, Styled Components, NativeWind, Vanilla Extract |
-| Package Managers | pnpm, npm, yarn, bun                                                           |
+## Supported stacks
 
-## How It Works
+xtarterize detects React, React Native, Vue, Svelte, Solid, and Node.js projects;
+Vite, Next.js, Expo, TanStack Start, Webpack, and Rspack bundlers; common CSS
+solutions; and pnpm, npm, yarn, and bun package managers.
 
-1. **Detect** - Reads `package.json`, lockfiles, and config files to build a `ProjectProfile`
-2. **Resolve** - Determines which tasks are applicable and their current status (`new`, `patch`, `skip`, `conflict`)
-3. **Plan** - Shows you exactly what will change before touching anything
-4. **Apply** - Writes configurations using deep merge and AST patching, backing up originals
+Task coverage is deepest for Vite, React, and TypeScript. Other detected stacks
+receive the tasks that apply to them.
 
-## Task Categories
+## How it works
 
-- **Linting** - Biome
-- **TypeScript** - Incremental builds, strict mode
-- **Vite Plugins** - vite-plugin-checker, rollup-plugin-visualizer
-- **CI/CD** - GitHub Actions (CI, release, auto-update)
-- **Dependencies** - Renovate configuration
-- **Release** - commitlint, czg, commit-and-tag-version
-- **Quality** - Knip (unused code detection)
-- **Codegen** - Plop generators (framework-aware scaffolding)
-- **Monorepo** - Turborepo pipeline
-- **Editor** - VS Code settings and extensions
-- **AI Agents** - AGENTS.md for AI IDE assistants
-- **Scripts** - Standardized package.json scripts
+1. Detect the framework, bundler, package manager, and existing configuration.
+2. Resolve tasks and report each as `new`, `patch`, `skip`, or `conflict`.
+3. Show a plan and ask for approval.
+4. Back up files, install task dependencies, and apply changes.
 
-## Key Principles
-
-- **Idempotent** - Running twice changes nothing on the second run
-- **Non-destructive** - Existing content is preserved via deep merge
-- **Dry-run first** - Always see what will change before applying
-- **Backup always** - Every modified file is backed up to `.xtarterize/backups/`
-- **Real templates** - All configurations derived from actual production projects
+Tasks are idempotent, and modified files are backed up under
+`.xtarterize/backups/`. See the [task catalog](https://xtarter.sznm.dev/xtarterize/guide/tasks/overview/)
+for generated files and applicability rules.
 
 ## License
 

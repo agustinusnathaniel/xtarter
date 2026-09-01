@@ -24,7 +24,7 @@ npx create-xtarter-app@latest my-app --yes              # Defaults (pnpm, git, n
 npx create-xtarter-app@latest my-app --yes --quiet      # Non-interactive, minimal output
 npx create-xtarter-app@latest my-app --yes --json        # Non-interactive, JSON result
 npx create-xtarter-app@latest my-app -t vite-tailwind   # Specific template
-npx create-xtarter-app@latest preview                   # Show all templates
+npx create-xtarter-app@latest preview                   # Prompt for a template to preview
 npx create-xtarter-app@latest preview vite-tailwind     # Show one template
 ```
 
@@ -42,7 +42,7 @@ Parse the user's stack description to pick a template:
 | "Next.js" (no UI lib) | SSR framework | Ask "Chakra UI or Tailwind?" |
 | "Vite" (no UI lib) | Client SPA | Ask "Chakra UI, Tailwind, or Hero UI?" |
 | No framework preference | - | Ask "SSR/static (Next.js) or client SPA (Vite)?" |
-| No UI lib preference | - | Show options via `preview` (no args) |
+| No UI lib preference | - | Prompt for a template ID with `preview` (no args) |
 
 ## CLI reference
 
@@ -55,13 +55,18 @@ npx create-xtarter-app@latest [project-name] [options]
 | `--template <name>` | `-t` | Template ID (skips prompt). **See reference below** |
 | `--pm <manager>` | `-p` | Package manager: `pnpm`, `npm`, `bun`, `yarn` |
 | `--no-git` | | Skip git init |
-| `--clean` | | Remove GitHub Actions CI workflows |
+| `--clean` | | Remove supported CI/CD configuration files |
+| `--force` | `-f` | Overwrite a non-empty target directory |
+| `--ref <ref>` | | Download a branch, tag, or commit |
 | `--yes` | `-y` | Use defaults: pnpm, git init, no clean. Without `--template`, uses default template |
 | `--quiet` | | Suppress banners, spinners, and decorative output |
 | `--json` | | Output scaffold result as JSON (also suppresses banners/spinners) |
 | `--no-color` | | Disable colorized output |
 | `--help` | `-h` | Show help |
 | `--version` | `-v` | Show version |
+
+`--yes` skips selection prompts, but it does not provide a project name. Pass
+`[project-name]` for a fully non-interactive run.
 
 Interactive mode prompts for: project name, template, package manager, git init, clean CI/CD.
 
@@ -71,7 +76,8 @@ Interactive mode prompts for: project name, template, package manager, git init,
 npx create-xtarter-app@latest preview [template-name]
 ```
 
-Omit template name to list all available templates. Shows description, repo, and branch.
+Omit the template name to be prompted for one. The command shows its
+description, repository, branch, and feature list.
 
 ## Available templates
 
@@ -108,17 +114,17 @@ To add conformance later: `npx xtarterize init`
 
 ```bash
 npx create-xtarter-app@latest preview
-# Lists all 5 templates with descriptions
+# Prompts for a template ID, then shows its details
 
 npx create-xtarter-app@latest preview vite-tailwind
 # Shows details for one template
 ```
 
-### CI scaffolding
+### Default non-interactive scaffolding
 
 ```bash
 npx create-xtarter-app@latest my-app --yes
-# Auto-detects CI=true. Uses pnpm, git init, no clean.
+# Uses pnpm, git init, and no CI cleanup.
 ```
 
 ## Error handling

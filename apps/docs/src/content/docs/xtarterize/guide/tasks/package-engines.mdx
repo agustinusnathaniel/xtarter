@@ -6,8 +6,7 @@ description: Add devEngines to package.json specifying Node and package manager 
 import { Aside } from '@astrojs/starlight/components'
 
 Adds a `devEngines` field to `package.json` declaring the expected Node.js and
-package manager versions. Downstream tools (engines-check, IDE plugins, CI
-guards) can read this field to enforce a consistent development environment.
+package manager versions for the project.
 
 The task generates:
 
@@ -40,7 +39,7 @@ The `packageManager.version` is set based on the detected package manager:
 | **Config Target** | `package.json` |
 
 <Aside type="tip">
-  This task uses `createJsonMergeTask` and will merge into your existing
-  `devEngines` field rather than replacing it. Individual sub-fields
-  (like `runtime.version`) use tristate conflict detection.
+  This task uses `createJsonMergeTask` and merges into an existing
+  `devEngines` field rather than replacing it. Existing values take precedence
+  over incoming values.
 </Aside>

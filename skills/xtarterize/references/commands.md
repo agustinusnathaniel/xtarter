@@ -9,6 +9,8 @@ All commands run via `npx xtarterize <command> [options]`. Replace `npx` with `p
 | Flag           | Description                         |
 | -------------- | ----------------------------------- |
 | `--cwd <path>` | Target directory (default: current) |
+| `--json`       | Output machine-readable JSON        |
+| `--timing`     | Include detailed timing information |
 
 ---
 
@@ -35,6 +37,7 @@ npx xtarterize init --json --compose "strict TypeScript with CI"  # Rank tasks b
 | `--quiet`             | Suppress interactive prompts and verbose output                                                                                                                              |
 | `--include-conflicts` | Include conflicting tasks when applying                                                                                                                                      |
 | `--compose <query>`   | Natural language query to compose a targeted task plan (e.g. `"strict TypeScript with CI"`). Tasks are ranked by relevance before stepping through the normal init workflow. |
+| `--threshold <n>`     | Minimum relevance score for `--compose`, from 0 to 1 (default: `0.1`)                                                                                                      |
 | `--format <fmt>`      | Output format: `terminal` (default) or `json`                                                                                                                                |
 
 Without `--yes`, opens an interactive task selection menu. In CI or with `--yes`, applies all applicable tasks non-interactively.
@@ -146,6 +149,7 @@ npx xtarterize add ts/strict --json
 | ---------------- | ------------------------------------------------------------ |
 | `--all`          | Apply all applicable new and patch tasks without interaction |
 | `--quiet`        | Suppress interactive prompts                                 |
+| `--json`         | Output machine-readable JSON                                |
 | `--format <fmt>` | Output format: `terminal` or `json`                          |
 
 Shows a diff preview before applying. If the task status is `skip`, outputs a message and exits without changes. If no task ID is provided, lists all available tasks.
@@ -263,6 +267,8 @@ npx xtarterize restore tsconfig.json --yes   # Non-interactive, restore latest
 | -------------- | -------------------------------------------- |
 | `--yes` / `-y` | Skip selection prompt, restore latest backup |
 | `--quiet`      | Suppress verbose output                      |
+| `--json`       | Output machine-readable JSON                 |
+| `--format <fmt>` | Output format: `terminal` or `json`          |
 
 If multiple backups exist, prompts to select which version. Use `--yes` to skip the prompt and restore the latest backup automatically (non-interactive/CI-safe). Use `--quiet` for compact output.
 

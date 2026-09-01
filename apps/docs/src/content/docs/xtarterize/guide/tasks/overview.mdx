@@ -54,8 +54,8 @@ This enables Biome to parse [Tailwind v4 directives](https://tailwindcss.com/doc
 
 | Task ID | Description | Applicable When |
 |---------|-------------|-----------------|
-| `vite/checker` | Inject [`vite-plugin-checker`](https://vite-plugin-checker.netlify.app/) ([`checker()`](https://vite-plugin-checker.netlify.app/checkers/typescript.html)) into [`vite.config.ts`](https://vitejs.dev/config/) via [AST](https://github.com/unjs/magicast) | Bundler is [Vite](https://vitejs.dev/) |
-| `vite/visualizer` | Inject [`rollup-plugin-visualizer`](https://github.com/btd/rollup-plugin-visualizer) ([`visualizer()`](https://github.com/btd/rollup-plugin-visualizer#usage)) into `vite.config.ts` via AST | Bundler is Vite |
+| `vite/checker` | Inject [`vite-plugin-checker`](https://vite-plugin-checker.netlify.app/) ([`checker()`](https://vite-plugin-checker.netlify.app/checkers/typescript.html)) into [`vite.config.ts`](https://vitejs.dev/config/) via [AST](https://github.com/unjs/magicast) | Browser [Vite](https://vitejs.dev/) project |
+| `vite/visualizer` | Inject [`rollup-plugin-visualizer`](https://github.com/btd/rollup-plugin-visualizer) ([`visualizer()`](https://github.com/btd/rollup-plugin-visualizer#usage)) into `vite.config.ts` via AST | Browser Vite project |
 
 ## CI/CD
 
@@ -170,28 +170,24 @@ The `quality/package-engines` task adds a `devEngines` field to `package.json`:
 
 ### Skills Install
 
-The `agent/skills-install` task automatically installs [agent skills](https://skills.sh) from the open ecosystem based on your detected stack. It reads your existing `skills-lock.json` and local skill directories to avoid reinstalling already-present skills.
+The `agent/skills-install` task installs [agent skills](https://skills.sh) from
+the catalog in [`packages/tasks/src/agent/catalog.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/tasks/src/agent/catalog.ts).
+It combines general skills with entries selected from the detected runtime,
+framework, bundler, and dependencies. Before installing, it checks
+`skills-lock.json` and local skill directories so existing skills are not
+installed again.
 
-| Stack | Skills Installed |
-|-------|-----------------|
-| **Web Frontend** (all browser/edge projects) | `frontend-design`, `web-design-guidelines`, `baseline-ui`, `fixing-accessibility`, `fixing-metadata`, `fixing-motion-performance` |
-| **React** (including Next.js) | `vercel-react-best-practices`, `vercel-composition-patterns`, `react-dev`, `react-useeffect` |
-| **Next.js** | `next-best-practices`, `next-cache-components`, `next-upgrade` |
-| **Vue** | `vue`, `vue-best-practices` |
-| **Nuxt** | `nuxt` |
-| **Expo / React Native** | `expo-tailwind-setup`, `expo-cicd-workflows`, `expo-deployment`, `expo-dev-client`, `building-native-ui`, `native-data-fetching`, `expo-module`, `upgrading-expo`, `vercel-react-native-skills` |
-| **Shadcn UI** | `shadcn` |
-| **Ultracite** | `ultracite` |
-| **Vite** | `vite` |
-| **Vitest** | `vitest` |
-| **tsdown** | `tsdown` |
-| **Turborepo** | `turborepo` |
-| **Supabase / Postgres** | `supabase-postgres-best-practices` |
-| **Drizzle** | `postgres-drizzle` |
-| **Redis** | `redis-best-practices` |
-| **Better Auth** | `better-auth-best-practices`, `create-auth-skill` |
-| **AI SDK** | `ai-sdk` |
-| **Remotion** | `remotion-best-practices` |
+The catalog is the source of truth. Its current groups include:
+
+| Signal | Examples |
+| --- | --- |
+| Every TypeScript project | `opensrc`, `grill-me`, `handoff`, `improve` |
+| Browser or edge runtime | `frontend-design`, `web-design-guidelines`, `fixing-accessibility` |
+| React or Next.js | `vercel-react-best-practices`, `react-dev`, `react-useeffect` |
+| Next.js | `next-dev-loop`, `next-cache-components-optimizer`, `next-cache-components-adoption` |
+| Vue or Nuxt | `vue`, `vue-best-practices`, `nuxt` |
+| Expo or React Native | `expo-tailwind-setup`, `expo-cicd-workflows`, `expo-deployment` |
+| Detected dependencies | Skills for component libraries, Vite, Vitest, tsdown, Turborepo, databases, auth, AI SDKs, and Remotion |
 
 ## Scripts
 
@@ -224,61 +220,15 @@ xtarterize doesn't just check key names - it also detects when an equivalent val
 
 If the exact same command, value, or configuration already exists somewhere, xtarterize skips adding a duplicate.
 
-## Task Gating
+## Task gating
 
-Tasks only run when their conditions are met:
-
-- Vite plugin tasks only run when `bundler === 'vite'`
-- Monorepo tasks only run when `monorepo === true`
-- CI tasks only run when `hasGitHub === true`
-- TypeScript tasks only run when `typescript === true`
+Each task table above states its applicability. For detection and monorepo scope
+rules, see the [configuration guide](/xtarterize/guide/config/overview/).
 
 ## References
 
-### Linting & Formatting
-- [Biome Documentation](https://biomejs.dev/) - Fast linter and formatter for JavaScript/TypeScript
-- [Ultracite](https://www.ultracite.ai/) - Strict Biome preset for code quality
-- [Tailwind CSS Directives](https://tailwindcss.com/docs/functions-and-directives) - `@theme`, `@apply`, and other directives
+See the external links in each task row and the [configuration guide](/xtarterize/guide/config/overview/)
+for detection and scope behavior.
 
-### TypeScript
-- [TypeScript tsconfig Reference](https://www.typescriptlang.org/tsconfig/) - All compiler options
-- [strict](https://www.typescriptlang.org/tsconfig/#strict) - Enable all strict type-checking options
-- [paths](https://www.typescriptlang.org/tsconfig/#paths) - Module resolution path mapping
-- [incremental](https://www.typescriptlang.org/tsconfig/#incremental) - Incremental compilation
-
-### Vite
-- [Vite Documentation](https://vitejs.dev/) - Next-generation build tool
-- [vite-plugin-checker](https://vite-plugin-checker.netlify.app/) - Type-checking in development
-- [rollup-plugin-visualizer](https://github.com/btd/rollup-plugin-visualizer) - Bundle visualization
-
-### CI/CD
-- [GitHub Actions Documentation](https://docs.github.com/en/actions) - Workflow syntax and features
-- [actions/checkout](https://github.com/actions/checkout) - Check out repository
-- [actions/setup-node](https://github.com/actions/setup-node) - Set up Node.js
-- [pnpm/setup](https://github.com/pnpm/setup) - Set up pnpm with caching
-
-### Dependencies
-- [Renovate Documentation](https://docs.renovatebot.com/) - Automated dependency updates
-
-### Release
-- [commitlint](https://commitlint.js.org/) - Lint commit messages
-- [czg](https://cz-git.qbb.sh/cli/) - Interactive commit message helper
-- [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) - Automated versioning
-- [husky](https://typicode.github.io/husky/) - Git hooks manager
-
-### Code Quality
-- [Knip Documentation](https://knip.dev/) - Find unused files, dependencies, and exports
-- [package.json devEngines](https://docs.npmjs.com/cli/v10/configuring-npm/package-json#devengines) - Development environment requirements
-
-### Code Generation
-- [Plop Documentation](https://plopjs.com/documentation/) - Micro-generator framework (only for projects with a detected framework)
-
-### Monorepo
-- [Turborepo Documentation](https://turbo.build/repo/docs) - Monorepo task orchestration
-- [pnpm Workspace](https://pnpm.io/pnpm-workspace_yaml) - pnpm workspace configuration
-
-### Editor
-- [VS Code Settings](https://code.visualstudio.com/docs/getstarted/settings) - Editor configuration
-- [VS Code Extension Recommendations](https://code.visualstudio.com/docs/editor/extension-marketplace#_workspace-recommended-extensions) - Workspace extensions
 
 <LinkButton href="/xtarterize/contributing/tasks/overview/">Learn how to contribute a new task →</LinkButton>

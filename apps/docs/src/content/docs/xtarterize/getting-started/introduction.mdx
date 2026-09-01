@@ -10,20 +10,20 @@ import AllPackageManagers from '@/components/AllPackageManagers.astro'
   The deepest task coverage is for projects using **Vite**, **React**, and **TypeScript**. Other stacks (Vue, Svelte, Solid, Node CLI, Bun, etc.) are detected and partially supported, but their conformance tasks are **experimental** - fewer tasks may apply and coverage is less mature.
 </Aside>
 
-xtarterize is an adaptive CLI tool that automates the setup, enforcement, and ongoing synchronization of developer conformance configurations across [JavaScript](https://developer.mozilla.org/en-US/docs/Web/JavaScript)/[TypeScript](https://www.typescriptlang.org/) projects.
+xtarterize scans [JavaScript](https://developer.mozilla.org/en-US/docs/Web/JavaScript)/[TypeScript](https://www.typescriptlang.org/) projects, selects the conformance tasks that apply, previews the resulting changes, and applies approved updates.
 
 ## Why xtarterize?
 
-Modern JS/TS projects require a large and growing set of tooling configuration: [linters](https://biomejs.dev/), [formatters](https://biomejs.dev/), [bundler plugins](https://vitejs.dev/guide/using-plugins.html), [TypeScript settings](https://www.typescriptlang.org/tsconfig/), [CI/CD workflows](https://docs.github.com/en/actions), [release automation](https://github.com/absolute-version/commit-and-tag-version), [dependency management](https://docs.renovatebot.com/), [editor settings](https://code.visualstudio.com/docs/getstarted/settings), and [AI agent skills](https://skills.sh). Setting these up consistently across projects is:
+Modern JS/TS projects often need several kinds of tooling configuration: [linters](https://biomejs.dev/), [formatters](https://biomejs.dev/), [bundler plugins](https://vitejs.dev/guide/using-plugins.html), [TypeScript settings](https://www.typescriptlang.org/tsconfig/), [CI/CD workflows](https://docs.github.com/en/actions), [release automation](https://github.com/absolute-version/commit-and-tag-version), [dependency management](https://docs.renovatebot.com/), [editor settings](https://code.visualstudio.com/docs/getstarted/settings), and [AI agent skills](https://skills.sh). Setting them up consistently is:
 
 - **Repetitive** - the same configs are rewritten or copy-pasted project to project
 - **Error-prone** - manual patching of [`package.json`](https://docs.npmjs.com/cli/v10/configuring-npm/package-json), [`tsconfig.json`](https://www.typescriptlang.org/tsconfig/), or [`vite.config.ts`](https://vitejs.dev/config/) often misses edge cases
 - **Inconsistent** - configs diverge between projects over time as standards evolve
 - **Context-blind** - a [React](https://react.dev/) project needs different config than a [React Native](https://reactnative.dev/) or [Vue](https://vuejs.org/) project
 
-xtarterize solves this by being detection-first, context-aware, non-destructive, idempotent, and evolvable.
+xtarterize detects the project before selecting tasks, preserves existing values by default, reports conflicts instead of overwriting them, and makes repeat runs idempotent.
 
-## How It Works
+## How it works
 
 <Steps>
 
@@ -35,43 +35,15 @@ xtarterize solves this by being detection-first, context-aware, non-destructive,
 
 </Steps>
 
-```mermaid
-flowchart TD
-    A[Run xtarterize init] --> B[Preflight checks]
-    B --> C{Valid?}
-    C -->|No| D[Show errors & exit]
-    C -->|Yes| E[detectProject → ProjectProfile]
-    E --> F[resolveTasks → Applicable tasks]
-    F --> G[resolveTaskStatuses → Status map]
-    G --> H[Display plan]
-    H --> I{User confirms?}
-    I -->|No| J[Exit]
-    I -->|Yes| K[Backup files]
-    K --> L[applyTasks]
-    L --> M[Summary]
-    
-    style A fill:#6366f1,color:#fff
-    style L fill:#22c55e,color:#fff
-    style M fill:#22c55e,color:#fff
-```
-
-## Getting Help
-
-If you have questions or need help:
-
-- Check the [CLI Reference](/xtarterize/guide/cli/overview/) for all commands and flags
-- Review the [Tasks Guide](/xtarterize/guide/tasks/overview/) to see what conformance tasks are available
-- Look at the [Contributing](/xtarterize/contributing/architecture/overview/) section if you want to contribute to the project
-
-## Starting a New Project?
+## Starting a new project
 
 If you're bootstrapping a fresh project, consider using [**create-xtarter-app**](https://github.com/agustinusnathaniel/create-xtarter-app) first. It scaffolds curated starter templates (Next.js/Vite + Chakra/Tailwind/Hero UI) in seconds, then you can run `xtarterize init` to layer on additional conformance configs.
 
-### Step 1: Scaffold a new project from a template
+### 1. Scaffold a new project
 
 <AllPackageManagers type="create" pkg="xtarter-app@latest" args="my-app" />
 
-### Step 2: Apply additional production-grade configs
+### 2. Apply additional conformance
 
 ```bash
 cd my-app
@@ -79,15 +51,10 @@ cd my-app
 
 <AllPackageManagers type="exec" pkg="xtarterize@latest" args="init" />
 
-## References
+## See also
 
-- [TypeScript Documentation](https://www.typescriptlang.org/docs/) - Learn about TypeScript compiler options and configuration
-- [Biome](https://biomejs.dev/) - Fast linter and formatter for JavaScript/TypeScript
-- [Vite](https://vitejs.dev/) - Next-generation frontend build tool
-- [GitHub Actions](https://docs.github.com/en/actions) - CI/CD automation platform
-- [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) - Automated versioning and changelog generation
-- [Renovate](https://docs.renovatebot.com/) - Automated dependency updates
-- [VS Code Settings](https://code.visualstudio.com/docs/getstarted/settings) - Editor configuration documentation
-- [Agent Skills](https://skills.sh) - Open ecosystem of reusable AI agent capabilities
+- [Installation](/xtarterize/getting-started/installation/)
+- [CLI reference](/xtarterize/guide/cli/overview/)
+- [Conformance tasks](/xtarterize/guide/tasks/overview/)
 
 <LinkButton href="/xtarterize/getting-started/installation/">Install xtarterize →</LinkButton>

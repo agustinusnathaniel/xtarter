@@ -21,13 +21,13 @@ All available tasks, organized by group. Each task has a unique `id` used with `
 
 | ID | Label | Applied when |
 |----|-------|-------------|
-| `codegen/plop` | Plop generators | Always |
+| `codegen/plop` | Plop generators | Framework detected |
 
 ## Dependencies
 
 | ID | Label | Applied when |
 |----|-------|-------------|
-| `deps/renovate` | Renovate config | Always |
+| `deps/renovate` | Renovate config | GitHub detected |
 
 ## Editor
 
@@ -39,22 +39,22 @@ All available tasks, organized by group. Each task has a unique `id` used with `
 
 | ID | Label | Applied when |
 |----|-------|-------------|
-| `lint/biome` | Biome linting | Always |
-| `lint/oxlint` | Oxlint | Not when Biome is preferred |
-| `lint/oxfmt` | Oxfmt formatter | Not when Biome is preferred |
+| `lint/biome` | Biome linting | No ESLint, Oxlint, or Oxfmt; non-Vite+ or existing Biome |
+| `lint/oxlint` | Oxlint | Vite+ or existing Oxlint, with no ESLint or Biome |
+| `lint/oxfmt` | Oxfmt formatter | Vite+ or existing Oxfmt, with no ESLint or Biome |
 
 ## Monorepo
 
 | ID | Label | Applied when |
 |----|-------|-------------|
-| `monorepo/turbo` | Turborepo pipeline | Monorepo detected |
+| `monorepo/turbo` | Turborepo pipeline | Turborepo detected or `turbo.json` exists |
 
 ## Quality
 
 | ID | Label | Applied when |
 |----|-------|-------------|
 | `quality/knip` | Knip (dead code) | Always |
-| `quality/lint-staged` | Lint-staged | Always |
+| `quality/lint-staged` | Lint-staged | Non-Vite+ project |
 | `quality/package-engines` | devEngines in package.json | Always |
 
 ## Release
@@ -94,4 +94,4 @@ All available tasks, organized by group. Each task has a unique `id` used with `
 
 | ID | Label | Applied when |
 |----|-------|-------------|
-| `workspace/pnpm-workspace` | pnpm-workspace.yaml | pnpm monorepo detected |
+| `workspace/pnpm-workspace` | pnpm-workspace.yaml | pnpm project; monorepos receive `apps/*` and `packages/*` globs |

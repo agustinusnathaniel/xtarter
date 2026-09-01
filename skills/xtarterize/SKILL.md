@@ -47,21 +47,10 @@ After each command, parse the JSON to decide the next action:
 | `query --json` | `results[].taskId` | Pass to `add` to apply the matched task |
 | `query --json` | `count` | If 0, no tasks met the threshold - broaden query or lower `--threshold` |
 
-## All commands
-
-| Command | Purpose | Flags (always add `--json`) |
-|---------|---------|-----------------------------------|
-| `init` | Apply all applicable tasks | `--yes`, `--dry-run`, `--skip <ids>`, `--only <ids>`, `--include-conflicts`, `--compose <query>`, `--cwd <path>` |
-| `sync` | Update existing configs | Same flags as `init` |
-| `diff` | Preview pending changes | `--cwd <path>` |
-| `check` | Audit conformance per task | `--verbose`, `--cwd <path>` |
-| `add <id>` | Apply one task | `--cwd <path>` |
-| `list` | List tasks with statuses | `--cwd <path>` |
-| `query <query>` | Search tasks by natural language | `--limit <n>`, `--threshold <n>`, `--cwd <path>` |
-| `restore <file>` | Recover from backup | Interactive only |
-| `doctor` | Environment diagnostics | `--verbose`, `--cwd <path>` |
-
-Task statuses: `"new"` (will create), `"patch"` (will update), `"skip"` (conformant), `"conflict"` (needs review - require `--include-conflicts`).
+For the complete command and flag reference, load
+[references/commands.md](references/commands.md). Task statuses are `new`,
+`patch`, `skip`, and `conflict`; see the parsing patterns above for how to act
+on each status.
 
 ## Agent workflows
 

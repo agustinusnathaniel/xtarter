@@ -75,8 +75,9 @@ Each task's `applicable()` method checks `ProjectProfile` properties:
 // TypeScript tasks: only if project uses TS
 applicable: (profile) => profile.typescript
 
-// Vite plugin tasks: only if bundler is Vite
-applicable: (profile) => profile.bundler === 'vite'
+// Vite plugin tasks: only for browser Vite projects
+applicable: (profile) =>
+  profile.bundler === 'vite' && profile.runtime !== 'node'
 
 // CI tasks: only if GitHub detected
 applicable: (profile) => profile.hasGitHub

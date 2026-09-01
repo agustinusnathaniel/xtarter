@@ -4,11 +4,15 @@ Thanks for your interest in contributing to xtarterize!
 
 ## Quick Start
 
+Use Node.js 24 or later. From the repository root:
+
 ```bash
 pnpm install
-pnpm build
-pnpm test
+pnpm check
 ```
+
+`pnpm check` runs type checking, builds, Ultracite checks, tests, and the
+repository verification scripts.
 
 ## Project Structure
 
@@ -54,3 +58,13 @@ Use the factory functions in `packages/tasks/src/factory/`:
 - **Formatted** - `pnpm check` (Biome) must pass
 
 Read `docs/ADRs/` before making architectural changes, and create a new ADR if your change introduces new patterns.
+
+## Documentation
+
+The documentation site lives in `apps/docs`. Build it with:
+
+```bash
+pnpm docs:build
+```
+
+Use `pnpm docs:dev` for a local preview.

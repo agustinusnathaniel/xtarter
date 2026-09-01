@@ -5,7 +5,7 @@ import type { PackageManager } from '@/types';
 
 const packageManagerOptions = [
   { hint: 'Fast, disk-efficient', label: 'pnpm (recommended)', value: 'pnpm' },
-  { hint: 'Default Node.js', label: 'npm', value: 'npm' },
+  { hint: 'Bundled with Node.js', label: 'npm', value: 'npm' },
   { hint: 'Ultra-fast', label: 'bun', value: 'bun' },
   { hint: 'Classic choice', label: 'yarn', value: 'yarn' },
 ];

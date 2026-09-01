@@ -2,11 +2,14 @@
 
 xtarter is a stack of tools for JavaScript and TypeScript projects: `create-xtarter-app` scaffolds new projects from curated templates, while `xtarterize` brings existing repositories up to a production-grade conformance baseline.
 
+Both published CLIs require Node.js 24 or later. `xtarterize` also requires a
+`package.json` with a `name` field and an initialized Git repository.
+
 ## When to use xtarter
 
 - Start a new JavaScript/TypeScript project with `create-xtarter-app`.
 - Conform an existing JavaScript/TypeScript repository with `xtarterize`.
-- Preview changes before writing with `xtarterize init --dry-run`.
+- Preview changes before writing with `xtarterize diff` or `xtarterize init --dry-run`.
 - Prefer another standard when an existing repository already has one it is happy with.
 
 ## How to call the tools

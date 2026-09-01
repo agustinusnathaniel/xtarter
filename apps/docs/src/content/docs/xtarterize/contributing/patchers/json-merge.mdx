@@ -3,8 +3,6 @@ title: JSON Merge
 description: How the JSON merge patcher safely combines configuration objects.
 ---
 
-import { Aside, Tabs, TabItem } from '@astrojs/starlight/components'
-
 The `mergeJson` function performs a deep merge of two JavaScript objects using the [`defu`](https://github.com/unjs/defu) library. It's used whenever xtarterize needs to modify JSON configuration files like [`tsconfig.json`](https://www.typescriptlang.org/tsconfig/), [`biome.json`](https://biomejs.dev/reference/configuration/), or [`.vscode/settings.json`](https://code.visualstudio.com/docs/getstarted/settings).
 
 ## Usage
@@ -67,40 +65,8 @@ const merged = mergeJson(existing, incoming)
 | **Objects** | Deep merge, existing keys win | `{ a: { b: 1 } }` + `{ a: { c: 2 } }` → `{ a: { b: 1, c: 2 } }` |
 | **Arrays** | Replace entirely | `{ rules: ["a"] }` + `{ rules: ["b"] }` → `{ rules: ["b"] }` |
 
-## Merge Flow
-
-```mermaid
-flowchart TD
-    E[Existing config] --> M{mergeJson}
-    I[Incoming config] --> M
-    M --> P{Key exists?}
-    P -->|Yes| K[Keep existing value]
-    P -->|No| A[Add incoming value]
-    P -->|Nested object| R[Recurse merge]
-    K --> O[Merged result]
-    A --> O
-    R --> O
-    
-    style E fill:#6366f1,color:#fff
-    style I fill:#f59e0b,color:#fff
-    style O fill:#22c55e,color:#fff
-```
-
-## Array Handling
-
-<Aside type="caution">
-  Arrays are **replaced**, not concatenated. xtarterize uses a custom `createDefu` callback to overwrite arrays rather than merging them (which would produce duplicates like `[100, 100]`).
-</Aside>
-
-```typescript
-const existing = { plugins: ['pluginA'] }
-const incoming = { plugins: ['pluginB'] }
-
-const merged = mergeJson(existing, incoming)
-// { plugins: ['pluginB'] } - incoming replaces existing array
-```
-
-For cases where arrays need to be combined (like [VS Code extension recommendations](https://code.visualstudio.com/docs/editor/extension-marketplace#_workspace-recommended-extensions)), use a custom merge function instead of `mergeJson`.
+Tasks that need to combine arrays, such as VS Code extension
+recommendations, use a custom merge function instead of `mergeJson`.
 
 ## `patchJson`: Surgical Text Editing
 
@@ -139,44 +105,7 @@ const result = patchJson(existing, incoming)
 | `mergeJson` | Object-level logic, deep merging | None (returns new object) |
 | `patchJson` | Writing changes back to a file | Comments, formatting, key order |
 
-`createJsonMergeTask` and `createMultiFileJsonMergeTask` use **both**: `mergeJson` computes the target state, then `patchJson` applies it surgically to the original text. In `@xtarterize/tasks`, this shared behavior is centralized in [`factory-config.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/tasks/src/factory-config.ts).
-
-## Real-World Examples
-
-<Tabs>
-  <TabItem label="tsconfig.json">
-    ```typescript
-    // Existing
-    const existing = { compilerOptions: { strict: true, target: "ES2022" } }
-    // Incoming: add incremental builds
-    const incoming = { compilerOptions: { incremental: true } }
-    // Result: both preserved
-    ```
-  </TabItem>
-  <TabItem label="biome.json">
-    ```typescript
-    // Existing
-    const existing = { linter: { enabled: true } }
-    // Incoming: add formatter
-    const incoming = { formatter: { enabled: true } }
-    // Result: both sections present
-    ```
-  </TabItem>
-  <TabItem label=".vscode/settings.json">
-    ```typescript
-    // Existing
-    const existing = { "editor.formatOnSave": true }  // https://code.visualstudio.com/docs/editor/codebasics#_format-on-save
-    // Incoming: add Biome formatter
-    const incoming = { "[typescript]": { "editor.defaultFormatter": "biomejs.biome" } }  // https://code.visualstudio.com/docs/getstarted/settings#_language-specific-editor-settings
-    // Result: both settings preserved
-    ```
-  </TabItem>
-</Tabs>
-
-## References
-
-- [defu GitHub Repository](https://github.com/unjs/defu) - Deep merge utility
-- [TypeScript tsconfig Reference](https://www.typescriptlang.org/tsconfig/) - Compiler configuration options
-- [Biome Configuration Reference](https://biomejs.dev/reference/configuration/) - `biome.json` schema
-- [VS Code Settings](https://code.visualstudio.com/docs/getstarted/settings) - Editor configuration documentation
-- [VS Code Extension Recommendations](https://code.visualstudio.com/docs/editor/extension-marketplace#_workspace-recommended-extensions) - Workspace recommended extensions
+`createJsonMergeTask` and `createMultiFileJsonMergeTask` use both functions:
+`mergeJson` computes the target state, then `patchJson` applies it surgically to
+the original text. In `@xtarterize/tasks`, this shared behavior is centralized
+in [`factory/json-config.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/tasks/src/factory/json-config.ts).

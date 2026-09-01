@@ -27,12 +27,15 @@ npx create-xtarter-app@latest [project-name] [options]
 | `--clean` | - | boolean | - | Remove CI/CD config files after scaffolding |
 | `--force` | `-f` | boolean | - | Overwrite existing target directory |
 | `--ref` | - | string | - | Git ref (branch, tag, or commit SHA) to download |
-| `--yes` | `-y` | boolean | - | Use defaults for all prompts (defaults to `next-chakra` template when `-t` is omitted) |
+| `--yes` | `-y` | boolean | - | Skip selection prompts and use defaults (`next-chakra`, pnpm, Git init, no cleanup) |
 | `--quiet` | - | boolean | - | Suppress banners, spinners, and decorative output |
 | `--json` | - | boolean | - | Output scaffold result as JSON (also suppresses banners and spinners) |
 | `--no-color` | - | boolean | - | Disable colorized output |
 | `--help` | `-h` | boolean | - | Show help text |
 | `--version` | `-v` | boolean | - | Show version |
+
+The project name has no default. Provide `[project-name]` when using `--yes`
+for a fully non-interactive run; otherwise the CLI still prompts for a name.
 
 ## Subcommands
 
@@ -44,10 +47,10 @@ npx create-xtarter-app@latest [project-name] [options]
 
 | Manager | Command | Note |
 |---------|---------|------|
-| `pnpm` | (default) | Fast, disk-efficient |
-| `npm` | - | Default Node.js |
-| `bun` | - | Ultra-fast runtime |
-| `yarn` | - | Classic choice |
+| `pnpm` | Default for `--yes` | Disk-efficient package management |
+| `npm` | Supported | npm package manager |
+| `bun` | Supported | JavaScript runtime and package manager |
+| `yarn` | Supported | Yarn package manager |
 
 ## Examples
 
@@ -72,8 +75,8 @@ npx create-xtarter-app@latest [project-name] [options]
 - **Invalid template ID** - prints all valid template IDs and exits
 - **Invalid package manager** - prints valid options and exits
 - **Target directory exists** - cancels with an error unless `--force` is used
-- **Invalid project name** - validation fails during prompt
-- **Download failure** - retries up to 3 times, then exits with error
+- **Invalid project name** - the interactive prompt rejects names containing characters outside letters, numbers, hyphens, and underscores
+- **Download failure** - network failures are retried up to 3 times, then the command exits with an error
 - **Install failure** - cleans up created directory (if scaffolded to a new path), then exits
 - **Partial scaffold** - if any step after download fails, created directories are cleaned up automatically
 
