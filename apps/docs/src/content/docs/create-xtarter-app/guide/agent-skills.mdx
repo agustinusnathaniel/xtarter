@@ -1,11 +1,12 @@
 ---
 title: AI Agent Skills
-description: Install the create-xtarter-app skill for AI assistants to get deep knowledge of scaffolding commands, templates, and project creation workflows.
+description: Install the create-xtarter-app skill for guidance on scaffolding commands, templates, and project creation workflows.
 ---
 
 import { Aside, LinkButton } from '@astrojs/starlight/components'
 
-Install the create-xtarter-app skill for AI assistants (Claude Code, GitHub Copilot, Cline, etc.) to give them deep knowledge of scaffolding, template selection, and project creation.
+Install the create-xtarter-app skill in a compatible AI tool to provide
+guidance for scaffolding, template selection, and project creation.
 
 When installed, your AI assistant knows how to pick the right template from your stack description, use proper flags, and follow best practices.
 
@@ -24,7 +25,7 @@ The skill activates when you ask about creating a project or mention a template:
 | "Scaffold a new project" | Runs interactive mode or suggests a template based on your stack |
 | "I want a Next.js app with Tailwind" | Maps to `next-tailwind`, runs scaffold with `--template next-tailwind` |
 | "Create a Vite SPA with Chakra UI" | Maps to `vite-chakra`, runs scaffold with `--template vite-chakra` |
-| "What templates are available?" | Runs `preview` to list all 5 templates |
+| "What templates are available?" | Uses the template catalog to explain the 5 valid IDs |
 | "Preview the vite-tailwind template" | Runs `preview vite-tailwind` to show repo and branch details |
 
 <Aside type="tip">
@@ -33,7 +34,7 @@ The skill activates when you ask about creating a project or mention a template:
 
 ## What's included
 
-- Scaffold and preview commands with all flags (`--template`, `--pm`, `--no-git`, `--clean`, `--yes`)
+- Scaffold and preview commands with all CLI flags, including `--template`, `--pm`, `--no-git`, `--clean`, `--force`, `--ref`, `--yes`, `--quiet`, and `--json`
 - Template selection decision table mapping stack descriptions to template IDs
 - All 5 templates (`next-chakra`, `next-tailwind`, `vite-chakra`, `vite-tailwind`, `vite-hero`)
 - Agent workflows for scaffolding, previewing, and CI usage

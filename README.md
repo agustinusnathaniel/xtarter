@@ -11,6 +11,10 @@ The **xtarter stack** gives you two complementary tools:
 | [**create-xtarter-app**](https://xtarter.sznm.dev/create-xtarter-app) | Day 0  | Scaffold a new project from curated templates with best practices baked in       |
 | [**xtarterize**](https://xtarter.sznm.dev/xtarterize)                 | Day 1+ | Detect your stack and apply production-grade conformance to any existing project |
 
+Both published CLIs require Node.js 24 or later. `xtarterize` also expects a
+project with a `package.json` that has a `name` field and an initialized Git
+repository.
+
 ## Quick Start
 
 ```bash
@@ -22,7 +26,10 @@ cd my-app
 npx xtarterize init
 ```
 
-`xtarterize` auto-detects your tech stack, then applies curated configurations for linting, type checking, CI workflows, code generation, editor settings, and more - without destructively overwriting your existing setup.
+`xtarterize` auto-detects your tech stack, then applies curated configurations
+for linting, type checking, CI workflows, code generation, editor settings, and
+more. Existing values are preserved by default; incompatible values are
+reported as conflicts for you to review.
 
 ## Supported Stacks
 
@@ -51,25 +58,17 @@ npx xtarterize init
 ## How xtarterize Works
 
 1. **Detect** - Reads `package.json`, lockfiles, and config files to build a `ProjectProfile`
-2. **Resolve** - Determines which tasks are applicable and their current status (`new`, `patch`, `skip`, `conflict`)
-3. **Plan** - Shows you exactly what will change before touching anything
+2. **Resolve** - Determines which tasks apply and checks their status (`new`, `patch`, `skip`, `conflict`)
+3. **Plan** - Shows you what will change before touching anything
 4. **Apply** - Writes configurations using deep merge and AST patching, backing up originals
+5. **Check** - Lets you audit the resulting configuration later with `xtarterize check`
 
-## Task Categories
+## Task categories
 
-- **Linting & Formatting** - Biome, Oxlint, Oxfmt
-- **TypeScript** - Strict mode, incremental builds, path aliases, tsbuildinfo gitignore
-- **Vite Plugins** - vite-plugin-checker, rollup-plugin-visualizer
-- **CI/CD** - GitHub Actions (CI, release, auto-update)
-- **Dependencies** - Renovate configuration
-- **Release** - commitlint, czg, commit-and-tag-version, versionrc, git-hooks
-- **Quality** - Knip (unused code detection), lint-staged, package engines
-- **Codegen** - Plop generators (framework-aware scaffolding)
-- **Monorepo** - Turborepo pipeline
-- **Editor** - VS Code settings and extensions
-- **Agent** - AGENTS.md and Agent Skills catalog (skills-install)
-- **Scripts** - Standardized package.json scripts, .npmrc
-- **Workspace** - pnpm-workspace.yaml
+Tasks cover linting, TypeScript, Vite plugins, CI/CD, dependencies, release
+tooling, quality checks, code generation, monorepos, editor and agent setup,
+package scripts, and workspace configuration. See the [task catalog](https://xtarter.sznm.dev/xtarterize/guide/tasks/overview/)
+for the full list.
 
 ## Create an xtarter App Templates
 
@@ -135,6 +134,7 @@ pnpm build            # Build all packages (turbo)
 pnpm dev              # Watch mode for all packages
 pnpm test             # Run all tests
 pnpm typecheck        # Type check all packages
+pnpm check            # Run typecheck, build, lint, tests, and verification
 ```
 
 ## Key Principles

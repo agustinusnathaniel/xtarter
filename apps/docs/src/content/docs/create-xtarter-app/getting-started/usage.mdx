@@ -90,8 +90,8 @@ import AllPackageManagers from '@/components/AllPackageManagers.astro'
 
 7. ### Wait for download and install
 
-   The CLI downloads the template via tarball (no git clone required), modifies the
-   `package.json` name, installs dependencies, and initializes git (if enabled).
+   The CLI downloads the template via tarball (no local Git clone required), modifies the
+   `package.json` name, installs dependencies, and initializes Git if enabled and available.
 
 8. ### You're ready
 
@@ -110,17 +110,18 @@ import AllPackageManagers from '@/components/AllPackageManagers.astro'
 
 ## Preview a template before scaffolding
 
-Use `--preview` / `-P` to see a template's details without scaffolding:
+Use the `preview` subcommand to see a template's details without scaffolding:
 
-<AllPackageManagers type="create" pkg="xtarter-app@latest" args="--preview" title="Preview all templates" />
+<AllPackageManagers type="create" pkg="xtarter-app@latest" args="preview" title="Choose a template to preview" />
 
-<AllPackageManagers type="create" pkg="xtarter-app@latest" args="--preview --template vite-tailwind" title="Preview a specific template" />
+<AllPackageManagers type="create" pkg="xtarter-app@latest" args="preview vite-tailwind" title="Preview a specific template" />
 
-This shows the template's name, description, repository, and feature list.
+This shows the template's name, description, repository, branch, and feature list.
 
 ## Use defaults mode
 
-Skip all prompts with `--yes` / `-y`:
+Skip the selection prompts with `--yes` / `-y`. The project name is still
+required for a fully non-interactive run:
 
 <AllPackageManagers type="create" pkg="xtarter-app@latest" args="my-app --yes" />
 
@@ -136,12 +137,14 @@ The CLI checks if `git` is installed. If not, git init is skipped automatically.
 
 ## Package manager installation
 
-The CLI runs `<package-manager> install` after downloading. If the install fails
-(e.g., network issues), the process exits with an error. The template files are
-still downloaded - you can run the install manually.
+The CLI runs `<package-manager> install` after downloading. If installation
+fails, the process exits with an error. When the CLI created the target
+directory, it removes that directory during cleanup; if you scaffolded into an
+existing empty directory, the downloaded files remain and you can run the
+install manually.
 
 ## What's modified after download
 
-- **`package.json` name** - updated to your project name (lowercased, special chars stripped)
-- **Workspace references** - any `workspace:*` entries in `pnpm.overrides` are removed
+- **`package.json` name** - normalized to lowercase; unsupported characters become hyphens
+- **Workspace references** - `workspace:` entries in `pnpm.overrides` are removed
 - **CI/CD files** - removed if `--clean` is enabled

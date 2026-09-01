@@ -19,9 +19,11 @@ xtarterize is organized as a monorepo using [Turborepo](https://turbo.build/repo
 - packages/
   - core/ - [`@xtarterize/core`](https://github.com/agustinusnathaniel/xtarterize/tree/main/packages/core) - [`detect.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/detect.ts) + [`detect/`](https://github.com/agustinusnathaniel/xtarterize/tree/main/packages/core/src/detect), [`resolve.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/resolve.ts), [`apply.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/apply.ts), [`backup.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/backup.ts), [`preflight.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/preflight.ts)
   - patchers/ - [`@xtarterize/patchers`](https://github.com/agustinusnathaniel/xtarterize/tree/main/packages/patchers) - [`json-merge.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/patchers/src/json-merge.ts), [`ast-patch.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/patchers/src/ast-patch.ts)
-  - tasks/ - [`@xtarterize/tasks`](https://github.com/agustinusnathaniel/xtarterize/tree/main/packages/tasks) - [`factory.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/tasks/src/factory.ts), [`factory-config.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/tasks/src/factory-config.ts), [`factory-ops.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/tasks/src/factory-ops.ts), all task implementations
+  - tasks/ - [`@xtarterize/tasks`](https://github.com/agustinusnathaniel/xtarterize/tree/main/packages/tasks) - [`factory/`](https://github.com/agustinusnathaniel/xtarterize/tree/main/packages/tasks/src/factory), all task implementations
 - apps/
   - xtarterize/ - **xtarterize** - CLI binary ([citty](https://github.com/unjs/citty) + [@clack/prompts](https://github.com/natemoo-re/clack))
+  - create-xtarter-app/ - **create-xtarter-app** - Template scaffolding CLI ([citty](https://github.com/unjs/citty) + [giget](https://github.com/unjs/giget))
+  - xtarter-create/ - **@xtarter/create** - Vite+ organization template manifest
   - docs/ - @xtarter/docs - This documentation site ([Astro](https://astro.build/)/[Starlight](https://starlight.astro.build/))
 - test/
   - fixtures/ - Test fixtures for various project types
@@ -90,50 +92,13 @@ sequenceDiagram
 - **Factory-based task creation** - Most tasks use `createFileTask`, `createJsonMergeTask`, or `createMultiFileTask` to eliminate boilerplate, with shared seams in `json-config.ts` and `ops.ts`
 - **Shared command orchestration** - `init` and `sync` share a `runCommand()` helper in the CLI layer
 
-## Core Modules
-
-```mermaid
-flowchart TD
-    Core["@xtarterize/core"] --> Detect["detect.ts + detect/*<br/>Project detection"]
-    Core --> Resolve["resolve.ts<br/>Task resolution"]
-    Core --> Apply["apply.ts<br/>Task application"]
-    Core --> Backup["backup.ts<br/>File backup/restore"]
-    Core --> Preflight["preflight.ts<br/>Pre-flight checks"]
-    Core --> Diagnostics["diagnostics.ts<br/>Conflict detection"]
-    Core --> Utils["utils/<br/>fs, diff, logger ([picocolors](https://github.com/alexeyraspopov/picocolors)), pkg ([pkg-types](https://github.com/unjs/pkg-types))"]
-
-    style Core fill:#6366f1,color:#fff
-```
-
-## Task Categories
-
-```mermaid
-flowchart LR
-    Tasks["@xtarterize/tasks"] --> Lint["lint/<br/>biome, oxlint, oxfmt"]
-    Tasks --> TS["ts/<br/>incremental"]
-    Tasks --> Gitignore["gitignore/<br/>tsbuildinfo"]
-    Tasks --> Vite["vite/<br/>checker, visualizer"]
-    Tasks --> CI["ci/<br/>release, auto-update, ci"]
-    Tasks --> Deps["deps/<br/>renovate"]
-    Tasks --> Release["release/<br/>commitlint, czg, cat-version, git-hooks"]
-    Tasks --> Quality["quality/<br/>knip, lint-staged"]
-    Tasks --> Codegen["codegen/<br/>plop"]
-    Tasks --> Monorepo["monorepo/<br/>turbo"]
-    Tasks --> Editor["editor/<br/>vscode (settings + extensions)"]
-    Tasks --> Agent["agent/<br/>agents-md, skills-install"]
-    Tasks --> Scripts["scripts/<br/>package-scripts, npmrc"]
-    Tasks --> Factory["factory.ts + factory-*<br/>task creation helpers"]
-
-    style Tasks fill:#6366f1,color:#fff
-```
-
 ## Development Workflow
 
 <Tabs>
   <TabItem label="Setup">
     ```bash
     # Install dependencies
-    vp install
+    pnpm install
     ```
   </TabItem>
   <TabItem label="Build">
@@ -193,4 +158,3 @@ flowchart LR
 <LinkButton href="/xtarterize/contributing/core/detect/">
   Explore project detection →
 </LinkButton>
-

@@ -7,13 +7,7 @@ import { Aside } from '@astrojs/starlight/components'
 
 The apply engine is the final stage of the conformance pipeline. It runs applicable tasks, backs up modified files, and handles errors gracefully.
 
-## Apply Pipeline
-
-```
-tasks + profile → check each → backup files → install deps → apply each → report results
-```
-
-### `applyTasks(tasks, cwd, profile, selectedIds?, options?)`
+### `applyTasks(options)`
 
 The [`applyTasks`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/apply.ts) function orchestrates the entire process:
 
@@ -27,13 +21,13 @@ The [`applyTasks`](https://github.com/agustinusnathaniel/xtarterize/blob/main/pa
 ```typescript
 import { applyTasks } from '@xtarterize/core'
 
-const result = await applyTasks(
-  tasks,
-  '/path/to/project',
+const result = await applyTasks({
+  cwd: '/path/to/project',
   profile,
   selectedIds, // optional: only apply these
-  { includeConflicts: true }, // optional: allow conflicts
-)
+  tasks,
+  includeConflicts: true, // optional: allow conflicts
+})
 
 console.log(result.applied) // number of successfully applied tasks
 console.log(result.errors)  // error messages for failed tasks
@@ -46,8 +40,8 @@ Before any file is modified, the engine creates timestamped backups in `.xtarter
 ```
 .xtarterize/backups/
 ├── .index.json
-├── biome.json.2026-04-30T17-36-00.bak
-├── tsconfig.json.2026-04-30T17-36-00.bak
+├── biome.json.2026-04-30T17-36-00-000Z
+├── tsconfig.json.2026-04-30T17-36-00-000Z
 └── ...
 ```
 
@@ -61,17 +55,12 @@ Before any file is modified, the engine creates timestamped backups in `.xtarter
 Errors are collected and reported without aborting the entire run:
 
 - **Check/dryRun failures** - Logged as errors; the file is not backed up and the task is skipped
-- **Backup failures** - Caught internally; the apply continues but the file may not be restorable
+- **Backup failures** - Reject the apply before task execution, so no task is applied
 - **Install failures** - If batch installation fails, the error is logged and the pipeline continues. Individual tasks may fail if required packages are missing, but file-generation tasks (lint configs, editor settings) can proceed.
 - **Apply failures** - Logged with the task ID and error message; subsequent tasks continue
 
-The function always returns a result object rather than throwing, making it safe for CLI use.
-
-## Ordering
-
-Tasks are applied in registration order (the order they appear in `getAllTasks()`). There is no dependency graph - each task is independent and idempotent. This means any subset of tasks can be applied in any order without producing different results.
-
-Dependencies are collected and installed upfront in a batch phase before any `apply()` runs, so task execution order does not affect dependency availability.
+Check, dry-run, and task-apply failures are collected in the result. Backup or
+manifest failures can reject the apply before task execution begins.
 
 ## References
 

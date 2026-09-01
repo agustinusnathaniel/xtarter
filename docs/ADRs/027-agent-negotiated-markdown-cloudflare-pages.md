@@ -1,6 +1,6 @@
 # ADR-027: Agent-Negotiated Markdown via Cloudflare Markdown for Agents
 
-**Status:** Accepted  
+**Status:** Superseded by [ADR-028](028-agent-negotiated-markdown-via-worker.md)
 **Date:** 2026-08-24
 
 ## Context

@@ -9,7 +9,9 @@ Before any conformance changes are applied, xtarterize runs a series of validati
 
 ## Preflight Checks
 
-Every command that modifies or inspects your project (`init`, `sync`, `diff`, `check`, `add`, `list`) runs preflight checks first via `runPreflight(cwd)`.
+Every command that targets a project (`init`, `sync`, `diff`, `check`, `add`,
+`list`, `query`, `restore`, `undo`, and `doctor`) runs preflight checks via
+`runPreflight(cwd)` before continuing.
 
 ### Validations
 
@@ -34,7 +36,9 @@ If preflight checks fail, the CLI exits with code `1` and displays all errors wi
 ```
 
 <Aside type="note">
-  Preflight errors are non-destructive - no files are modified if checks fail.
+  A failed preflight prevents conformance tasks from running. The CLI may still
+  maintain `.gitignore` so its internal `.xtarterize/` directory stays out of
+  version control.
 </Aside>
 
 ## Diagnostics

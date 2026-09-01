@@ -146,36 +146,5 @@ Precedence rules:
 - A task in both `skip` and `only` is excluded - skip wins
 - An empty or absent `only` list means no restriction, not "apply nothing"
 
-## References
-
-- [React](https://react.dev/) - UI library
-- [Vue.js](https://vuejs.org/) - Progressive JavaScript framework
-- [Svelte](https://svelte.dev/) - Cybernetically enhanced web apps
-- [Solid](https://www.solidjs.com/) - Simple and performant reactivity
-- [React Native](https://reactnative.dev/) - Native apps with React
-- [Vite](https://vitejs.dev/) - Next-generation frontend tooling
-- [Next.js](https://nextjs.org/) - React framework for production
-- [TanStack Start](https://tanstack.com/start/latest) - Full-stack React framework
-- [Expo](https://expo.dev/) - React Native framework
-- [Webpack](https://webpack.js.org/) - Module bundler
-- [Tailwind CSS](https://tailwindcss.com/) - Utility-first CSS framework
-- [pnpm Workspaces](https://pnpm.io/workspaces) - Monorepo support
-- [Turborepo](https://turbo.build/repo/docs) - Monorepo task runner
-- [Bun](https://bun.sh/) - Fast JavaScript runtime and package manager
-
-## Backup Architecture
-
-```mermaid
-flowchart LR
-    A[File to modify] --> B[backupFile]
-    B --> C[.xtarterize/backups/]
-    C --> D[.index.json]
-    A --> E[apply changes]
-    E --> F{Need to undo?}
-    F -->|Yes| G[restoreBackup]
-    G --> C
-    F -->|No| H[Done]
-    
-    style B fill:#f59e0b,color:#fff
-    style E fill:#22c55e,color:#fff
-```
+For command behavior, see the [CLI reference](/xtarterize/guide/cli/overview/).
+For generated files, see the [task catalog](/xtarterize/guide/tasks/overview/).

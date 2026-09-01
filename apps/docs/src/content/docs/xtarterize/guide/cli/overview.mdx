@@ -81,30 +81,8 @@ Run comprehensive project diagnostics. Checks are grouped into four categories:
 
 <AllPackageManagers type="exec" pkg="xtarterize@latest" args="doctor --verbose" title="Verbose" />
 
-With `--verbose`, a **System** group is added displaying platform, OS release, architecture, CPU count, and RAM:
-
-```
-  System
-    ✅ Platform | Linux 6.8.0 | x64 | 16 CPUs | 32 GB RAM
-
-  Environment
-    ✅ Node.js 22.14.0 satisfies engines.node ^22.0.0
-    ✅ Git 2.43.0 is installed
-
-  Tools
-    ✅ TypeScript 5.7.3 is installed
-    ✅ Biome 1.9.4 is installed
-
-  Project
-    ✅ pnpm-lock.yaml exists
-    ✅ tsconfig.json exists
-    ⚠ README.md is missing
-
-  Configuration
-    ✅ No conflicting tools detected
-```
-
-All diagnostics also support `--json` for machine-readable output.
+With `--verbose`, a **System** group adds platform, OS release, architecture,
+CPU count, and RAM. Diagnostics also support `--json`.
 
 ## `init`
 
@@ -117,6 +95,7 @@ Full conformance setup. Detects your project stack, shows a plan, and applies ch
 | `--dry-run` | Preview all changes without applying |
 | `--yes` | Skip all confirmations, apply all changes automatically |
 | `--compose <query>` | Rank tasks by relevance to a natural language query |
+| `--threshold <n>` | Minimum relevance score for `--compose` (0-1, default: `0.1`) |
 | `--skip <task-id>` | Exclude a specific task (comma-separated) |
 | `--only <task-id>` | Apply only a specific task (comma-separated) |
 | `--quiet` | Suppress interactive prompts and verbose output |
@@ -353,30 +332,5 @@ Before any file is modified, xtarterize creates a timestamped backup in `.xtarte
 <Aside type="tip">
   Backups are stored with timestamps in `.xtarterize/backups/` and indexed in `.xtarterize/backups/.index.json`. Use <code>xtarterize undo</code> to revert an entire run, or <code>xtarterize restore &lt;file&gt;</code> to revert a single file.
 </Aside>
-
-## Command Relationships
-
-```mermaid
-flowchart TD
-    A[init] -->|first run| B[check]
-    A -->|preview| C[diff]
-    B -->|find patches| D[sync]
-    D -->|preview| C
-    A -->|add one| E[add]
-    A -->|undo last| H[undo]
-    H -->|single file| F[restore]
-    B -->|view all| G[list]
-    B -->|badge| I[badge SVG]
-    
-    style A fill:#6366f1,color:#fff
-    style D fill:#f59e0b,color:#fff
-    style E fill:#22c55e,color:#fff
-    style H fill:#ef4444,color:#fff
-```
-
-## References
-
-- [GNU Diff Unified Format](https://www.gnu.org/software/diffutils/manual/html_node/Detailed-Unified.html) - How unified diffs work
-- [GitHub Actions Documentation](https://docs.github.com/en/actions) - CI/CD workflow reference
 
 <LinkButton href="/xtarterize/guide/tasks/overview/">Explore conformance tasks →</LinkButton>
