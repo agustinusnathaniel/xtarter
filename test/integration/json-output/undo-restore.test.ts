@@ -9,32 +9,6 @@ import { undoCommand } from '@xtarterize/app/commands/undo.js';
 import { backupFile, writeRunManifest } from '@xtarterize/core';
 import { describe, expect } from 'vite-plus/test';
 
-const _CONFORMANCE_SUMMARY_REGEX = /conformant|Conformance audit/;
-
-async function _createProjectFixture(): Promise<string> {
-  const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'xtarterize-json-'));
-  await fs.mkdir(path.join(tmpDir, '.git'), { recursive: true });
-  await fs.writeFile(
-    path.join(tmpDir, 'package.json'),
-    JSON.stringify({
-      dependencies: { react: '^18.2.0' },
-      devDependencies: { typescript: '^5.0.0', vite: '^5.0.0' },
-      name: 'json-output-fixture',
-      type: 'module',
-      version: '1.0.0',
-    })
-  );
-  await fs.writeFile(
-    path.join(tmpDir, 'tsconfig.json'),
-    '{"compilerOptions":{}}\n'
-  );
-  await fs.writeFile(
-    path.join(tmpDir, 'vite.config.ts'),
-    'export default {}\n'
-  );
-  return tmpDir;
-}
-
 async function createMinimalProject(): Promise<string> {
   const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'xtarterize-json-'));
   await fs.mkdir(path.join(tmpDir, '.git'), { recursive: true });
@@ -49,24 +23,6 @@ async function createMinimalProject(): Promise<string> {
     })
   );
   return tmpDir;
-}
-
-async function _captureConsoleLogs(
-  run: () => Promise<void>
-): Promise<Array<string>> {
-  const logs: Array<string> = [];
-  const originalLog = console.log;
-  console.log = (...args: Array<unknown>) => {
-    logs.push(args.map((arg) => String(arg)).join(' '));
-  };
-
-  try {
-    await run();
-  } finally {
-    console.log = originalLog;
-  }
-
-  return logs;
 }
 
 async function captureJsonOutput(run: () => Promise<void>): Promise<unknown> {

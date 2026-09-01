@@ -6,8 +6,6 @@ import { initCommand } from '@xtarterize/app/commands/init.js';
 import { syncCommand } from '@xtarterize/app/commands/sync.js';
 import { describe, expect } from 'vite-plus/test';
 
-const _CONFORMANCE_SUMMARY_REGEX = /conformant|Conformance audit/;
-
 async function createProjectFixture(): Promise<string> {
   const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'xtarterize-json-'));
   await fs.mkdir(path.join(tmpDir, '.git'), { recursive: true });

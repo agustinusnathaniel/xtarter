@@ -39,11 +39,20 @@ describe('runPreflight', () => {
   });
 
   test('fails when package.json has no name', async () => {
-    const result = await runPreflight(
-      path.join(fixtures, 'react-vite-no-styling')
+    const tmpDir = await fs.mkdtemp(
+      path.join(os.tmpdir(), 'xtarterize-preflight-invalid-')
     );
-    // react-vite-no-styling has a name, so this should pass git check but...
-    // Actually it has no .git, so it will fail on git
-    expect(result.errors.some((e) => e.code === 'MISSING_GIT')).toBe(true);
+    try {
+      await fs.writeFile(path.join(tmpDir, 'package.json'), '{}');
+
+      const result = await runPreflight(tmpDir);
+
+      expect(result.valid).toBe(false);
+      expect(result.errors).toContainEqual(
+        expect.objectContaining({ code: 'INVALID_PACKAGE_JSON' })
+      );
+    } finally {
+      await fs.rm(tmpDir, { force: true, recursive: true });
+    }
   });
 });

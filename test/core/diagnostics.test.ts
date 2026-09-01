@@ -55,16 +55,6 @@ describe('runConflictChecks', () => {
     );
     expect(checks.some((c) => c.status === 'pass')).toBe(true);
   });
-
-  test('warns about legacy ESLint configs if present', async () => {
-    const checks = await runConflictChecks(
-      path.join(fixtures, 'react-vite-tailwind')
-    );
-    const legacyWarnings = checks.filter((c) =>
-      c.message.includes('Legacy ESLint config')
-    );
-    expect(legacyWarnings).toHaveLength(0);
-  });
 });
 
 describe('runToolInstallationChecks', () => {

@@ -118,7 +118,7 @@ xtarterize/
 1. Implement the `Task` interface from [`packages/core/src/_base.ts`](packages/core/src/_base.ts)
 2. Create your task file in `packages/tasks/src/<category>/<task>.ts`
 3. Export it from [`packages/tasks/src/index.ts`](packages/tasks/src/index.ts)
-4. Add tests in `test/tasks/`
+4. Add or update tests only when they provide meaningful regression protection. Extend the nearest existing suite when possible; see [`docs/TESTING.md`](docs/TESTING.md)
 
 Each task must implement:
 

@@ -18,9 +18,9 @@
 
 - [ ] `pnpm typecheck` passes
 - [ ] `pnpm build` passes
-- [ ] `pnpm test:run` passes
+- [ ] `pnpm test` passes
 - [ ] `pnpm ultracite:check` passes
-- [ ] Tests added / updated for new behavior
+- [ ] Relevant tests were run; tests were added or updated when the behavior and regression risk justified it
 
 ## Checklist
 

@@ -32,40 +32,6 @@ async function createProjectFixture(): Promise<string> {
   return tmpDir;
 }
 
-async function _createMinimalProject(): Promise<string> {
-  const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'xtarterize-json-'));
-  await fs.mkdir(path.join(tmpDir, '.git'), { recursive: true });
-  await fs.writeFile(
-    path.join(tmpDir, 'package.json'),
-    JSON.stringify({
-      dependencies: { react: '^18.2.0' },
-      devDependencies: { typescript: '^5.0.0', vite: '^5.0.0' },
-      name: 'json-output-fixture',
-      type: 'module',
-      version: '1.0.0',
-    })
-  );
-  return tmpDir;
-}
-
-async function _captureConsoleLogs(
-  run: () => Promise<void>
-): Promise<Array<string>> {
-  const logs: Array<string> = [];
-  const originalLog = console.log;
-  console.log = (...args: Array<unknown>) => {
-    logs.push(args.map((arg) => String(arg)).join(' '));
-  };
-
-  try {
-    await run();
-  } finally {
-    console.log = originalLog;
-  }
-
-  return logs;
-}
-
 async function captureJsonOutput(run: () => Promise<void>): Promise<unknown> {
   const logs: Array<string> = [];
   const originalLog = console.log;

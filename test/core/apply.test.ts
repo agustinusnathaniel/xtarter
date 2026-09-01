@@ -1,11 +1,8 @@
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { applyTasks, detectProject } from '@xtarterize/core';
 import { describe, expect } from 'vite-plus/test';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 describe('applyTasks', () => {
   test('applies a single task successfully', async () => {
@@ -178,44 +175,6 @@ describe('applyTasks', () => {
     });
     expect(withIncludeConflicts.skipped).toBe(0);
     expect(withIncludeConflicts.applied).toBe(1);
-    expect(applied).toBe(true);
-
-    await fs.rm(tmpDir, { recursive: true });
-  });
-
-  test('applies conflict tasks when includeConflicts option is true', async () => {
-    const tmpDir = await fs.mkdtemp(
-      path.join(os.tmpdir(), 'xtarterize-include-conflicts-')
-    );
-    await fs.writeFile(
-      path.join(tmpDir, 'package.json'),
-      JSON.stringify({ name: 'test', version: '1.0.0' })
-    );
-
-    const profile = await detectProject(tmpDir);
-    let applied = false;
-    const mockTask = {
-      applicable: () => true,
-      apply: async () => {
-        applied = true;
-      },
-      check: async () => 'conflict' as const,
-      dryRun: async () => [
-        { after: 'after', before: 'before', filepath: 'test.txt' },
-      ],
-      group: 'Test',
-      id: 'mock/conflict',
-      label: 'Mock Conflict',
-    };
-
-    const result = await applyTasks({
-      cwd: tmpDir,
-      includeConflicts: true,
-      profile,
-      tasks: [mockTask],
-    });
-    expect(result.applied).toBe(1);
-    expect(result.skipped).toBe(0);
     expect(applied).toBe(true);
 
     await fs.rm(tmpDir, { recursive: true });

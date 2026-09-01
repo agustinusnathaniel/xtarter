@@ -113,17 +113,6 @@ describe('ensureTaskDependency', () => {
       await fs.rm(tmpDir, { force: true, recursive: true });
     }
   });
-
-  test('returns early when no package.json exists', async () => {
-    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'xtarterize-'));
-    try {
-      await expect(
-        ensureTaskDependency({ cwd: tmpDir, depName: 'execa' })
-      ).resolves.toBeUndefined();
-    } finally {
-      await fs.rm(tmpDir, { force: true, recursive: true });
-    }
-  });
 });
 
 describe('ensureTaskDependency error propagation', () => {

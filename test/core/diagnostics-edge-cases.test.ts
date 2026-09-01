@@ -8,19 +8,6 @@ import { describe, expect } from 'vite-plus/test';
 // Helpers
 // ---------------------------------------------------------------------------
 
-/**
- * Mirrors the version-parsing logic from `runEnvironmentChecks` in
- * `packages/core/src/diagnostics.ts`.  Uses the first numeric segment of the
- * engine range (handles ranges like ">=16 <20", prerelease versions, spaces).
- */
-function parseEngineMajor(engineNode: string | undefined): number {
-  if (!engineNode) {
-    return Number.NaN;
-  }
-  const majorMatch = engineNode.match(/(\d+)/);
-  return majorMatch ? Number.parseInt(majorMatch[1], 10) : Number.NaN;
-}
-
 function createPkg(
   dir: string,
   content: Record<string, unknown>
@@ -47,43 +34,6 @@ async function tmpProject(
   });
   return tmpDir;
 }
-
-// ---------------------------------------------------------------------------
-// Group 1 – Engine version parsing edge cases
-// ---------------------------------------------------------------------------
-
-// NOTE: If the parsing logic in diagnostics.ts changes, update the helper
-// above AND keep these tests verifying the first-number strategy.
-
-describe('engine version parsing', () => {
-  test('parses ">=24" to 24', () => {
-    expect(parseEngineMajor('>=24')).toBe(24);
-  });
-
-  test('parses "^24.0.0" to 24', () => {
-    expect(parseEngineMajor('^24.0.0')).toBe(24);
-  });
-
-  test('parses ">=20.18.0" to 20', () => {
-    expect(parseEngineMajor('>=20.18.0')).toBe(20);
-  });
-
-  test('parses ">=16 <20" to 16 (first numeric segment)', () => {
-    expect(parseEngineMajor('>=16 <20')).toBe(16);
-  });
-
-  test('parses "^20.0.0-rc" to 20 (prerelease)', () => {
-    expect(parseEngineMajor('^20.0.0-rc')).toBe(20);
-  });
-
-  test('parses ">= 18" to 18 (space after operator)', () => {
-    expect(parseEngineMajor('>= 18')).toBe(18);
-  });
-
-  test('returns NaN for undefined / missing engines.node', () => {
-    expect(parseEngineMajor(undefined)).toBeNaN();
-  });
-});
 
 describe('runEnvironmentChecks with engine edge cases', () => {
   const currentMajor = Number.parseInt(
@@ -141,10 +91,6 @@ describe('runEnvironmentChecks with engine edge cases', () => {
     }
   });
 });
-
-// ---------------------------------------------------------------------------
-// Group 2 – Conflict detection edge cases
-// ---------------------------------------------------------------------------
 
 describe('runConflictChecks edge cases', () => {
   test('warns when both Biome and ESLint are present', async () => {
@@ -229,12 +175,3 @@ describe('runConflictChecks edge cases', () => {
     }
   });
 });
-
-// ---------------------------------------------------------------------------
-// Group 3 – runTool failure modes (skipped – runTool is not exported)
-// ---------------------------------------------------------------------------
-
-// runTool is an internal function in diagnostics.ts and is not re-exported
-// from @xtarterize/core.  Testing its failure modes would require either
-// refactoring (extracting it) or mocking the filesystem – both out of scope
-// for this test file.

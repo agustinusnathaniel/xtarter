@@ -2,6 +2,7 @@ import { existsSync } from 'node:fs';
 import {
   access,
   mkdir,
+  mkdtemp,
   readdir,
   readFile,
   rm,
@@ -9,7 +10,7 @@ import {
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { describe, expect, test } from 'vite-plus/test';
+import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
 
 import {
   prepareProjectDir,
@@ -17,12 +18,18 @@ import {
   scaffoldProject,
 } from '@/scaffold';
 import { TEMPLATES } from '@/templates/registry';
+import { installDependencies } from '@/utils/install';
 
-function tempDir() {
-  return join(
-    tmpdir(),
-    `cxa-scaffold-test-${Math.random().toString(36).slice(2, 8)}`
-  );
+vi.mock('@/utils/install', () => ({
+  installDependencies: vi.fn(),
+}));
+
+beforeEach(() => {
+  vi.mocked(installDependencies).mockReset().mockResolvedValue(undefined);
+});
+
+function tempDir(): Promise<string> {
+  return mkdtemp(join(tmpdir(), 'cxa-scaffold-test-'));
 }
 
 async function writeFixture(dir: string): Promise<void> {
@@ -54,14 +61,14 @@ describe('resolveProjectPath', () => {
 
 describe('prepareProjectDir', () => {
   test('should create a new directory', async () => {
-    const dir = tempDir();
+    const dir = await tempDir();
     await prepareProjectDir('test', dir);
     await expect(access(dir)).resolves.toBeUndefined();
     await rm(dir, { force: true, recursive: true });
   });
 
   test('should accept existing empty directory', async () => {
-    const dir = tempDir();
+    const dir = await tempDir();
     await mkdir(dir, { recursive: true });
     await prepareProjectDir('test', dir);
     await expect(access(dir)).resolves.toBeUndefined();
@@ -69,7 +76,7 @@ describe('prepareProjectDir', () => {
   });
 
   test('should throw for non-empty directory without force', async () => {
-    const dir = tempDir();
+    const dir = await tempDir();
     await writeFixture(dir);
     await expect(prepareProjectDir('test', dir)).rejects.toThrow(
       'already exists'
@@ -78,7 +85,7 @@ describe('prepareProjectDir', () => {
   });
 
   test('should overwrite non-empty directory with force', async () => {
-    const dir = tempDir();
+    const dir = await tempDir();
     await writeFixture(dir);
     await prepareProjectDir('test', dir, true);
     await expect(access(dir)).resolves.toBeUndefined();
@@ -90,7 +97,7 @@ describe('prepareProjectDir', () => {
 
 describe('scaffoldProject', () => {
   test('should modify package.json name', async () => {
-    const dir = tempDir();
+    const dir = await tempDir();
     await writeFixture(dir);
 
     const result = await scaffoldProject({
@@ -109,11 +116,15 @@ describe('scaffoldProject', () => {
     expect(result.projectName).toBe('my-project');
     expect(result.gitInitialized).toBe(false);
     expect(result.ciCleaned).toBe(false);
+    expect(installDependencies).toHaveBeenCalledWith({
+      packageManager: 'pnpm',
+      projectPath: dir,
+    });
     await rm(dir, { force: true, recursive: true });
   });
 
   test('should clean CI configs when enabled', async () => {
-    const dir = tempDir();
+    const dir = await tempDir();
     await writeFixture(dir);
     await writeFile(join(dir, 'vercel.json'), JSON.stringify({}));
 
@@ -133,7 +144,7 @@ describe('scaffoldProject', () => {
   });
 
   test('should initialize git when enabled', async () => {
-    const dir = tempDir();
+    const dir = await tempDir();
     await writeFixture(dir);
 
     const result = await scaffoldProject({
@@ -152,26 +163,35 @@ describe('scaffoldProject', () => {
   });
 
   test('should clean up created dir on failure', async () => {
-    const dir = tempDir();
-    const _pkgPath = join(dir, 'package.json');
+    const parent = await tempDir();
+    const dir = join(parent, 'project');
+    try {
+      vi.mocked(installDependencies).mockRejectedValueOnce(
+        new Error('install failed')
+      );
+      await expect(
+        scaffoldProject({
+          cleanCI: false,
+          initGit: false,
+          packageManager: 'pnpm',
+          projectName: 'fail',
+          projectPath: dir,
+          skipDownload: true,
+          template: TEMPLATES[0],
+        })
+      ).rejects.toThrow();
 
-    await expect(
-      scaffoldProject({
-        cleanCI: false,
-        initGit: false,
-        packageManager: 'pnpm',
-        projectName: 'fail',
-        projectPath: dir,
-        skipDownload: true,
-        template: TEMPLATES[0],
-      })
-    ).rejects.toThrow();
-
-    expect(existsSync(dir)).toBe(false);
+      expect(existsSync(dir)).toBe(false);
+    } finally {
+      await rm(parent, { force: true, recursive: true });
+    }
   });
 
   test('should not clean up pre-existing dir on failure', async () => {
-    const dir = tempDir();
+    const dir = await tempDir();
+    vi.mocked(installDependencies).mockRejectedValueOnce(
+      new Error('install failed')
+    );
     await mkdir(dir, { recursive: true });
     await writeFile(join(dir, 'keep-me.txt'), 'data');
 
@@ -192,7 +212,7 @@ describe('scaffoldProject', () => {
   });
 
   test('should handle full scaffold end-to-end', async () => {
-    const dir = tempDir();
+    const dir = await tempDir();
     await writeFixture(dir);
     const ciDir = join(dir, '.github', 'workflows');
     await mkdir(ciDir, { recursive: true });
