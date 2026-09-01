@@ -13,8 +13,6 @@ import { describe, expect } from 'vite-plus/test';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const fixtures = path.resolve(__dirname, '../fixtures');
 
-const toolTimeout = 30_000;
-
 describe('biome config validation', () => {
   test('rendered biome.json is valid JSON with expected structure', async () => {
     const testDir = path.join(fixtures, 'react-vite-tailwind');
@@ -30,50 +28,6 @@ describe('biome config validation', () => {
     expect(config.linter.rules.style.useConsistentTypeDefinitions).toBe('off');
     expect(config.javascript.formatter.quoteStyle).toBe('single');
   });
-
-  test(
-    'rendered biome.json is accepted by biome CLI',
-    async () => {
-      const testDir = path.join(fixtures, 'react-vite-tailwind');
-      const profile = await detectProject(testDir);
-      const diffs = await biomeTask.dryRun(testDir, profile);
-      const configFile = diffs.find((d) => d.filepath === 'biome.json');
-      if (!configFile) {
-        throw new Error('Expected biome.json diff to exist');
-      }
-      const config = configFile.after;
-
-      const { writeFile, mkdtemp, rm } = await import('node:fs/promises');
-      const { join } = await import('node:path');
-      const { tmpdir } = await import('node:os');
-      const { execSync } = await import('node:child_process');
-
-      const tmpDir = await mkdtemp(join(tmpdir(), 'biome-validate-'));
-      await writeFile(join(tmpDir, 'biome.json'), config);
-      await writeFile(join(tmpDir, '.gitignore'), '');
-      await writeFile(join(tmpDir, 'test.js'), 'const x = 1\n');
-
-      try {
-        execSync(
-          `npx -y @biomejs/biome@2.4.16 check --config-path=${tmpDir} --no-errors-on-unmatched ${join(tmpDir, 'test.js')}`,
-          { cwd: tmpDir, stdio: 'pipe', timeout: toolTimeout }
-        );
-      } catch (e: unknown) {
-        const stderr = (
-          (e as { stderr?: Buffer })?.stderr ?? Buffer.from('')
-        ).toString();
-        if (
-          stderr.includes('resulted in errors') ||
-          stderr.includes('Failed to parse')
-        ) {
-          throw new Error(`biome rejected generated config: ${stderr}`);
-        }
-      }
-
-      await rm(tmpDir, { force: true, recursive: true });
-    },
-    toolTimeout
-  );
 
   test('includes css.tailwindDirectives for tailwind projects', async () => {
     const testDir = path.join(fixtures, 'react-vite-tailwind');

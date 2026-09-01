@@ -61,7 +61,7 @@ describe('lintStagedTask', () => {
     expect(lintStagedTask.applicable({} as never)).toBe(true);
   });
 
-  test('returns new on clean fixture', async () => {
+  test('returns patch when config and dependency are missing', async () => {
     const profile = await detectProject(
       path.join(fixtures, 'react-vite-tailwind')
     );

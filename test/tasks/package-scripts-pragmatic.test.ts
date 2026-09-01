@@ -1,13 +1,9 @@
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { detectProject } from '@xtarterize/core';
 import { packageScriptsTask } from '@xtarterize/tasks';
 import { describe, expect } from 'vite-plus/test';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const _fixtures = path.resolve(__dirname, '../fixtures');
 
 describe('packageScriptsTask', () => {
   describe('edge cases', () => {

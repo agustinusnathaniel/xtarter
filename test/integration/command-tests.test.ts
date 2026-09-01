@@ -55,8 +55,31 @@ describe('sync command', () => {
     const cwd = await createMinimalProject();
     process.exitCode = 0;
     try {
-      // On a minimal project all tasks are 'new' or 'skip';
-      // sync only acts on 'patch'/'conflict', so it runs without error.
+      await fs.writeFile(
+        path.join(cwd, '.gitignore'),
+        '*.tsbuildinfo\n.tsbuildinfo/\n'
+      );
+      await fs.writeFile(
+        path.join(cwd, '.lintstagedrc.json'),
+        JSON.stringify({
+          '*.{js,jsx,ts,tsx,mjs,mts,cjs,cts}': ['biome check --write'],
+          '*.{json,md,yaml,yml}': ['biome check --write'],
+        })
+      );
+      const packageJson = JSON.parse(
+        await fs.readFile(path.join(cwd, 'package.json'), 'utf-8')
+      );
+      packageJson.devDependencies['lint-staged'] = '^15.0.0';
+      packageJson.devEngines = {
+        packageManager: { name: 'pnpm', version: '>=9' },
+        runtime: { name: 'node', version: '>=22' },
+      };
+      await fs.writeFile(
+        path.join(cwd, 'package.json'),
+        JSON.stringify(packageJson)
+      );
+
+      // The project now has the configs that sync manages, so no task is actionable.
       await syncCommand.run?.({ args: { cwd, yes: true } } as never);
       expect(process.exitCode).toBe(0);
     } finally {

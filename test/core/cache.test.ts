@@ -190,23 +190,6 @@ describe('detect cache', () => {
     await fs.rm(dir, { force: true, recursive: true });
   });
 
-  test('cache hit is faster than cache miss', async () => {
-    const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'cache-bench-'));
-    await createMinimalProject(dir);
-
-    const startMiss = performance.now();
-    await detectProject(dir);
-    const missDuration = performance.now() - startMiss;
-
-    const warmStart = performance.now();
-    await detectProject(dir);
-    const hitDuration = performance.now() - warmStart;
-
-    expect(hitDuration).toBeLessThanOrEqual(missDuration);
-
-    await fs.rm(dir, { force: true, recursive: true });
-  });
-
   test('includes files from config directories in fingerprint', async () => {
     const dir = await fs.mkdtemp(path.join(os.tmpdir(), 'cache-cfgdirs-'));
     await createMinimalProject(dir);

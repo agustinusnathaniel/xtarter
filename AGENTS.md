@@ -45,7 +45,7 @@
     - Run `vp test`, `pnpm typecheck`, `pnpm build`, `pnpm ultracite:check`, `pnpm check`
    - Ensure idempotency - running the same operation twice produces the same result
    - Tasks must follow the interface: `applicable`, `check`, `dryRun`, `apply`
-   - Add tests in `test/tasks/`, `test/patchers/`, or `test/core/` for new behavior
+   - Add or update tests only when they provide meaningful regression protection; extend the nearest existing suite when possible and follow [`docs/TESTING.md`](docs/TESTING.md)
 
 6. **Dependency Updates**
    - Run `npx taze minor --write -r` for safe updates; `pnpm install && pnpm dedupe` afterward
@@ -182,6 +182,15 @@ Write code that is **accessible, performant, type-safe, and maintainable**. Focu
 - Use `class` and `for` attributes (not `className` or `htmlFor`)
 
 ---
+
+## Repository Testing Policy
+
+- Testing is opt-in for each change. Do not automatically create a new test file, fixture, or test-only helper for every implementation or fix.
+- Prefer extending existing tests and verifying observable behavior. Avoid assertions about source strings, private functions, internal data structures, or incidental implementation shape.
+- Prefer direct runtime, browser, or integration verification when it gives stronger signal with less maintenance.
+- New test files require a concrete justification and explicit approval: document the behavior they protect and why an existing suite cannot express it clearly before creating one.
+- Keep external tools and process-global state isolated, await async work, clean temporary resources in `finally`, and never hide command failures.
+- Read [`docs/TESTING.md`](docs/TESTING.md) for the detailed repository testing policy.
 
 ## Testing
 

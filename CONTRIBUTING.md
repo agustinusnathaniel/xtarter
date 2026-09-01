@@ -26,7 +26,7 @@ test/               # Shared test fixtures and test suites
 1. Implement the `Task` interface from `packages/core/src/_base.ts`
 2. Create your task file in `packages/tasks/src/<category>/<task>.ts`
 3. Export it from `packages/tasks/src/index.ts` and add to `getAllTasks()`
-4. Add tests in `test/tasks/`
+4. Add or update tests only when they provide meaningful regression protection. Extend the nearest existing suite when possible; see [`docs/TESTING.md`](docs/TESTING.md)
 
 Each task must implement:
 
@@ -49,7 +49,7 @@ Use the factory functions in `packages/tasks/src/factory/`:
 
 - **Idempotent** - Running twice must produce the same result
 - **Non-destructive** - Existing content preserved via deep merge
-- **Tested** - Add or update tests in `test/` for new behavior
+- **Tested** - Run the relevant existing tests and add coverage when the behavior and regression risk justify it
 - **Typed** - TypeScript strict mode, no `any`
 - **Formatted** - `pnpm check` (Biome) must pass
 

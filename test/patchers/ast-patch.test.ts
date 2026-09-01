@@ -1,11 +1,8 @@
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { injectVitePlugin } from '@xtarterize/patchers';
 import { describe, expect } from 'vite-plus/test';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 describe('injectVitePlugin', () => {
   test('injects plugin into array-style config', async () => {

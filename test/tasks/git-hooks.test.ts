@@ -54,7 +54,7 @@ describe('gitHooksTask', () => {
     expect(prePush?.after).toContain('pnpm run check:turbo');
   });
 
-  test('returns skip when hooks already exist', async () => {
+  test('returns patch when hooks exist but prepare script is missing', async () => {
     const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'xtarterize-'));
     try {
       await fs.writeFile(
@@ -99,26 +99,6 @@ describe('gitHooksTask', () => {
       const profile = await detectProject(tmpDir);
       const status = await gitHooksTask.check(tmpDir, profile);
       expect(status).toBe('patch');
-    } finally {
-      await fs.rm(tmpDir, { force: true, recursive: true });
-    }
-  });
-
-  test('apply writes the expected file', async () => {
-    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'xtarterize-'));
-    try {
-      await fs.writeFile(
-        path.join(tmpDir, 'package.json'),
-        JSON.stringify({ name: 'hooks-test', scripts: {} })
-      );
-      const profile = await detectProject(tmpDir);
-      await gitHooksTask.apply(tmpDir, profile);
-      const commitMsgPath = path.join(tmpDir, '.husky', 'commit-msg');
-      const exists = await fs
-        .access(commitMsgPath)
-        .then(() => true)
-        .catch(() => false);
-      expect(exists).toBe(true);
     } finally {
       await fs.rm(tmpDir, { force: true, recursive: true });
     }

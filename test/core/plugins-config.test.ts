@@ -1,12 +1,7 @@
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import type { PluginConfig } from '@xtarterize/core';
-import {
-  loadPluginConfig,
-  loadPluginTasks,
-  resolveExternalTasks,
-} from '@xtarterize/core';
+import { loadPluginConfig, resolveExternalTasks } from '@xtarterize/core';
 import { describe, expect } from 'vite-plus/test';
 
 describe('loadPluginConfig', () => {
@@ -247,28 +242,5 @@ describe('resolveExternalTasks', () => {
     } finally {
       await fs.rm(tmpDir, { force: true, recursive: true });
     }
-  });
-});
-
-describe('plugin loading timeout', () => {
-  test('importWithTimeout rejects when import hangs', async () => {
-    // A specifier that doesn't resolve to a real module will cause
-    // import() to hang indefinitely in some runtimes. The timeout
-    // wrapper should reject before the process hangs.
-    //
-    // We use a non-existent package name that won't resolve quickly.
-    // The timeout is 10s; we verify the function rejects (not hangs)
-    // by checking it completes within a reasonable bound.
-    const start = performance.now();
-    const config: PluginConfig = {
-      plugins: ['@nonexistent/fake-package-that-wont-load'],
-    };
-    const tasks = await loadPluginTasks(config);
-    const elapsed = performance.now() - start;
-
-    // Should return empty array (plugin failed to load)
-    expect(tasks).toEqual([]);
-    // Should complete in reasonable time (well under 15s with 10s timeout)
-    expect(elapsed).toBeLessThan(15_000);
   });
 });

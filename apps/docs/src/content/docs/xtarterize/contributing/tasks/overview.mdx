@@ -182,7 +182,7 @@ Package script tasks skip adding a script not only when the key exists, but also
 1. Implement the `Task` interface from `@xtarterize/core`
 2. Create your task file in `packages/tasks/src/<category>/<task>.ts`
 3. Export it from `packages/tasks/src/index.ts`
-4. Add tests in `test/tasks/`
+4. Add or update tests only when they provide meaningful regression protection. Extend the nearest existing suite when possible; see the repository [`docs/TESTING.md`](https://github.com/agustinusnathaniel/xtarterize/blob/main/docs/TESTING.md)
 
 Each task must implement:
 - `applicable(profile)` - Should this task run for this project?

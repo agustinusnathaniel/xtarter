@@ -8,10 +8,15 @@ const distPath = fileURLToPath(
 );
 const llmsTxtPath = path.join(distPath, 'llms.txt');
 const sitemapIndexPath = path.join(distPath, 'sitemap-index.xml');
+const runDocsArtifactTests = process.env.XTARTERIZE_TEST_DOCS_ARTIFACTS === '1';
+const skipDocsArtifactTests = !(
+  runDocsArtifactTests && fs.existsSync(distPath)
+);
 
-// CI excludes the docs build, so these assertions only run against a local
-// build output produced by `pnpm --filter @xtarter/docs build`.
-describe.skipIf(!fs.existsSync(distPath))('docs build artifacts', () => {
+// Build artifacts are tested explicitly after a completed docs build. Keeping
+// this suite opt-in avoids racing a concurrent Turbo docs build.
+const docsArtifactSuite = describe.skipIf(skipDocsArtifactTests);
+docsArtifactSuite('docs build artifacts', () => {
   it('includes the configured llms.txt details and optional links', () => {
     const llmsTxt = fs.readFileSync(llmsTxtPath, 'utf8');
     expect(llmsTxt).toContain('xtarter agent instructions');

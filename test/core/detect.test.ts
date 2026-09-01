@@ -187,7 +187,7 @@ describe('detectProject', () => {
     expect(profile.bundler).toBe('vite');
   });
 
-  test('nodeVersion defaults to 20 when no config present', async () => {
+  test('nodeVersion defaults to 22 when no config present', async () => {
     const tmpDir = await fs.mkdtemp(
       path.join(os.tmpdir(), 'xtarterize-nodever-')
     );
@@ -402,17 +402,17 @@ describe('detectProject', () => {
 });
 
 const detectTestFixtures = [
-  'empty',
+  'react-vite-no-styling',
   'react-vite-tailwind',
-  'next-chakra',
-  'vite-chakra',
-  'vite-hero',
+  'vue-vite',
+  'nextjs',
+  'react-native-expo',
+  'node-only',
+  'monorepo-turbo',
+  'vite-plus-no-lint',
+  'vite-plus-biome',
   'eslint-project',
   'oxlint-standalone',
-  'biome-standalone',
-  'bun-monorepo',
-  'astro-monorepo',
-  'yarn-monorepo',
 ];
 
 afterAll(async () => {

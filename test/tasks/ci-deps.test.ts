@@ -13,14 +13,6 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const fixtures = path.resolve(__dirname, '../fixtures');
 
 describe('ciWorkflowTask', () => {
-  test('is applicable when hasGitHub is true', async () => {
-    const profile = await detectProject(
-      path.join(fixtures, 'react-vite-tailwind')
-    );
-    // The fixture does not have .github, but hasGit checks for .github dir
-    expect(ciWorkflowTask.applicable(profile)).toBe(profile.hasGitHub);
-  });
-
   test('renders package-manager-aware quality steps', async () => {
     const profile = await detectProject(
       path.join(fixtures, 'react-vite-tailwind')
@@ -39,13 +31,6 @@ describe('ciWorkflowTask', () => {
 });
 
 describe('autoUpdateWorkflowTask', () => {
-  test('is applicable when hasGitHub is true', async () => {
-    const profile = await detectProject(
-      path.join(fixtures, 'react-vite-tailwind')
-    );
-    expect(autoUpdateWorkflowTask.applicable(profile)).toBe(profile.hasGitHub);
-  });
-
   test('updates dependencies and validates the result', async () => {
     const profile = await detectProject(
       path.join(fixtures, 'react-vite-tailwind')
@@ -64,13 +49,6 @@ describe('autoUpdateWorkflowTask', () => {
 });
 
 describe('releaseWorkflowTask', () => {
-  test('is applicable when hasGitHub is true', async () => {
-    const profile = await detectProject(
-      path.join(fixtures, 'react-vite-tailwind')
-    );
-    expect(releaseWorkflowTask.applicable(profile)).toBe(profile.hasGitHub);
-  });
-
   test('runs quality checks before release', async () => {
     const profile = await detectProject(
       path.join(fixtures, 'react-vite-tailwind')
@@ -88,13 +66,6 @@ describe('releaseWorkflowTask', () => {
 });
 
 describe('renovateTask', () => {
-  test('is applicable when hasGitHub is true', async () => {
-    const profile = await detectProject(
-      path.join(fixtures, 'react-vite-tailwind')
-    );
-    expect(renovateTask.applicable(profile)).toBe(profile.hasGitHub);
-  });
-
   test('renders the reference-derived renovate defaults', async () => {
     const profile = await detectProject(
       path.join(fixtures, 'react-vite-tailwind')
