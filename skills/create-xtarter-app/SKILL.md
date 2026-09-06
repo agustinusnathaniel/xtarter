@@ -54,14 +54,14 @@ npx create-xtarter-app@latest [project-name] [options]
 |------|-------|-------------|
 | `--template <name>` | `-t` | Template ID (skips prompt). **See reference below** |
 | `--pm <manager>` | `-p` | Package manager: `pnpm`, `npm`, `bun`, `yarn` |
-| `--no-git` | | Skip git init |
+| `--git` / `--no-git` | | Git init is on by default; `--no-git` skips it |
 | `--clean` | | Remove supported CI/CD configuration files |
 | `--force` | `-f` | Overwrite a non-empty target directory |
 | `--ref <ref>` | | Download a branch, tag, or commit |
 | `--yes` | `-y` | Use defaults: pnpm, git init, no clean. Without `--template`, uses default template |
 | `--quiet` | | Suppress banners, spinners, and decorative output |
 | `--json` | | Output scaffold result as JSON (also suppresses banners/spinners) |
-| `--no-color` | | Disable colorized output |
+| `--color` / `--no-color` | | Colorized output is on by default; `--no-color` disables it |
 | `--help` | `-h` | Show help |
 | `--version` | `-v` | Show version |
 

@@ -89,6 +89,7 @@ out=$(npx xtarterize doctor --json --cwd "$dir")
 | Signal | Likely cause | Fix |
 |--------|-------------|-----|
 | `add <id>` → "Task not found" | Wrong task ID | `list --json`, parse `tasks[].id` |
+| `Unknown option --jsn ... Did you mean --json?` | Typoed flag or command | Follow the suggestion, or run the command with `--help` for valid options |
 | `doctor` shows tool not installed | Missing dep | xtarterize only writes configs; user may need to install separately |
 | Task shows `"conflict"` | Config differs | **Never auto-apply** - present to user, only with `--include-conflicts` |
 | `--cwd` fails preflight | No `package.json` | Verify path exists and is a JS/TS project |
