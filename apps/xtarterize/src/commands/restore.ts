@@ -125,6 +125,7 @@ export const restoreCommand = defineCommand({
       type: 'boolean',
     },
     yes: {
+      alias: 'y',
       description: 'Skip confirmation, restore latest backup',
       type: 'boolean',
     },

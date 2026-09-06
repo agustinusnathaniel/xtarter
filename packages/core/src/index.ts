@@ -19,6 +19,18 @@ export {
   restoreBackup,
   writeRunManifest,
 } from '@/backup.js';
+export type {
+  CliArgDefinition,
+  CliArgsDefinition,
+  InvocationValidationOptions,
+  UnknownFlag,
+} from '@/cli-args.js';
+export {
+  findFirstPositionalIndex,
+  findUnknownFlags,
+  suggestSimilar,
+  validateInvocation,
+} from '@/cli-args.js';
 // Detection types
 export type {
   Bundler,

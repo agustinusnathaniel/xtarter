@@ -408,6 +408,10 @@ export const sharedRunArgs = {
     description: 'Include conflicting tasks when applying (default: false)',
     type: 'boolean',
   },
+  json: {
+    description: 'Output machine-readable JSON',
+    type: 'boolean',
+  },
   only: {
     description: 'Apply only a specific task',
     type: 'string',
@@ -425,6 +429,7 @@ export const sharedRunArgs = {
     type: 'boolean',
   },
   yes: {
+    alias: 'y',
     description: 'Skip all confirmations, apply all',
     type: 'boolean',
   },

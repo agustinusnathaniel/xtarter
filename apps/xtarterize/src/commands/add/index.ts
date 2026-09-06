@@ -27,6 +27,10 @@ export const addCommand = defineCommand({
       description: 'Include conflicting tasks when applying (default: false)',
       type: 'boolean',
     },
+    json: {
+      description: 'Output machine-readable JSON',
+      type: 'boolean',
+    },
     quiet: {
       description: 'Suppress interactive prompts',
       type: 'boolean',
@@ -55,6 +59,7 @@ interface AddCommandArgs {
   cwd?: string;
   format?: string;
   includeConflicts?: boolean;
+  json?: boolean;
   quiet?: boolean;
   taskId?: string;
   timing?: boolean;

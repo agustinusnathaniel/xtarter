@@ -53,6 +53,8 @@ The CLI follows the Unix convention: exit code `0` means success, `1` means the 
 npx xtarterize check --quiet || exit 1
 ```
 
+Invalid invocations also exit `1` before any command runs: unknown commands and unknown options print an actionable line on stderr with a suggested correction when one is close (for example, `Unknown option --jsn for "xtarterize check". Did you mean --json?`), so a typo never silently changes behavior.
+
 In GitHub Actions, `check` also emits native workflow command annotations - one `::error` per non-conformant task (linked to the config file it would modify) and one per failing diagnostic - so failures appear inline on the PR. Annotations are written to stderr, so
 `--json` and `--badge -` output stays machine-readable:
 

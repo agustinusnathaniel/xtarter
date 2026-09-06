@@ -23,14 +23,14 @@ npx create-xtarter-app@latest [project-name] [options]
 |--------|-------|------|---------|-------------|
 | `--template` | `-t` | string | - | Template ID to use (skips prompt). See [Templates](/create-xtarter-app/guide/templates/) |
 | `--pm` | `-p` | string | - | Package manager (`pnpm`, `npm`, `bun`, `yarn`) |
-| `--no-git` | - | boolean | - | Skip git initialization |
+| `--git` / `--no-git` | - | boolean | `true` | Git init is on by default; `--no-git` skips it |
 | `--clean` | - | boolean | - | Remove CI/CD config files after scaffolding |
 | `--force` | `-f` | boolean | - | Overwrite existing target directory |
 | `--ref` | - | string | - | Git ref (branch, tag, or commit SHA) to download |
 | `--yes` | `-y` | boolean | - | Skip selection prompts and use defaults (`next-chakra`, pnpm, Git init, no cleanup) |
 | `--quiet` | - | boolean | - | Suppress banners, spinners, and decorative output |
 | `--json` | - | boolean | - | Output scaffold result as JSON (also suppresses banners and spinners) |
-| `--no-color` | - | boolean | - | Disable colorized output |
+| `--color` / `--no-color` | - | boolean | `true` | Colorized output is on by default; `--no-color` disables it |
 | `--help` | `-h` | boolean | - | Show help text |
 | `--version` | `-v` | boolean | - | Show version |
 
@@ -75,6 +75,7 @@ for a fully non-interactive run; otherwise the CLI still prompts for a name.
 - **Invalid template ID** - prints all valid template IDs and exits
 - **Invalid package manager** - prints valid options and exits
 - **Target directory exists** - cancels with an error unless `--force` is used
+- **Unknown option or command** - exits `1` before anything runs, with a suggested correction when one is close (for example, `Unknown option --jsn ... Did you mean --json?`), so a typo never silently changes behavior
 - **Invalid project name** - the interactive prompt rejects names containing characters outside letters, numbers, hyphens, and underscores
 - **Download failure** - network failures are retried up to 3 times, then the command exits with an error
 - **Install failure** - cleans up created directory (if scaffolded to a new path), then exits
