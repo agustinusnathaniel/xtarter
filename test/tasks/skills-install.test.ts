@@ -134,8 +134,11 @@ describe('skillsInstallTask', () => {
     );
     expect(diffs.length).toBe(1);
     const after = diffs[0].after ?? '';
+    expect(after).toContain('expo-overview');
+    expect(after).toContain('expo-router');
     expect(after).toContain('eas-workflows');
     expect(after).toContain('eas-app-stores');
+    expect(after).toContain('eas-update');
     expect(after).toContain('expo-dev-client');
     expect(after).toContain('expo-native-ui');
     expect(after).toContain('expo-data-fetching');
@@ -310,11 +313,14 @@ describe('skillsInstallTask', () => {
       profile
     );
     const after = diffs[0].after ?? '';
-    // expo/skills has 7 skills - they should appear in a single command
+    // expo/skills has 10 skills - they should appear in a single command
     const expoLine = after.split('\n').find((l) => l.includes('expo/skills'));
     expect(expoLine).toBeDefined();
+    expect(expoLine).toContain('--skill expo-overview');
+    expect(expoLine).toContain('--skill expo-router');
     expect(expoLine).toContain('--skill eas-workflows');
     expect(expoLine).toContain('--skill eas-app-stores');
+    expect(expoLine).toContain('--skill eas-update');
     expect(expoLine).toContain('--skill expo-dev-client');
     expect(expoLine).toContain('--skill expo-native-ui');
     expect(expoLine).toContain('--skill expo-data-fetching');

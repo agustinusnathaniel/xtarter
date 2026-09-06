@@ -235,6 +235,18 @@ export const SKILL_CATALOG: Array<SkillDefinition> = [
   //  Expo / React Native
   // ═════════════════════════════════════════════════════════════════
   {
+    // Expo-only: per upstream guidance, a bare React Native project
+    // without an `expo` dependency is not Expo work.
+    condition: (p, d) => p.bundler === 'expo' || hasDep(d, 'expo'),
+    skill: 'expo-overview',
+    source: 'expo/skills',
+  },
+  {
+    condition: (p) => p.bundler === 'expo' || p.framework === 'react-native',
+    skill: 'expo-router',
+    source: 'expo/skills',
+  },
+  {
     condition: (p) => p.bundler === 'expo' || p.framework === 'react-native',
     skill: 'eas-workflows',
     source: 'expo/skills',
@@ -242,6 +254,11 @@ export const SKILL_CATALOG: Array<SkillDefinition> = [
   {
     condition: (p) => p.bundler === 'expo' || p.framework === 'react-native',
     skill: 'eas-app-stores',
+    source: 'expo/skills',
+  },
+  {
+    condition: (p) => p.bundler === 'expo' || p.framework === 'react-native',
+    skill: 'eas-update',
     source: 'expo/skills',
   },
   {
