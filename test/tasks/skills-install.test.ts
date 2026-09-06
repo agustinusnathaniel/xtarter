@@ -77,7 +77,7 @@ describe('skillsInstallTask', () => {
     expect(after).toContain('grill-me');
     expect(after).toContain('handoff');
     expect(after).toContain('improve-codebase-architecture');
-    expect(after).toContain('writing-great-skills');
+    expect(after).toContain('writing-for-agents');
   });
 
   test('dryRun includes vue and frontend skills for vue projects', async () => {
@@ -134,14 +134,13 @@ describe('skillsInstallTask', () => {
     );
     expect(diffs.length).toBe(1);
     const after = diffs[0].after ?? '';
-    expect(after).toContain('expo-tailwind-setup');
-    expect(after).toContain('expo-cicd-workflows');
-    expect(after).toContain('expo-deployment');
+    expect(after).toContain('eas-workflows');
+    expect(after).toContain('eas-app-stores');
     expect(after).toContain('expo-dev-client');
-    expect(after).toContain('building-native-ui');
-    expect(after).toContain('native-data-fetching');
+    expect(after).toContain('expo-native-ui');
+    expect(after).toContain('expo-data-fetching');
     expect(after).toContain('expo-module');
-    expect(after).toContain('upgrading-expo');
+    expect(after).toContain('expo-upgrade');
     expect(after).toContain('vercel-react-native-skills');
   });
 
@@ -240,7 +239,7 @@ describe('skillsInstallTask', () => {
     expect(diffs.length).toBe(1);
     const after = diffs[0].after ?? '';
     expect(after).toContain('opensrc');
-    expect(after).toContain('writing-great-skills');
+    expect(after).toContain('writing-for-agents');
   });
 
   test('returns patch when some skills are already installed', async () => {
@@ -311,17 +310,16 @@ describe('skillsInstallTask', () => {
       profile
     );
     const after = diffs[0].after ?? '';
-    // expo/skills has 8 skills - they should appear in a single command
+    // expo/skills has 7 skills - they should appear in a single command
     const expoLine = after.split('\n').find((l) => l.includes('expo/skills'));
     expect(expoLine).toBeDefined();
-    expect(expoLine).toContain('--skill expo-tailwind-setup');
-    expect(expoLine).toContain('--skill expo-cicd-workflows');
-    expect(expoLine).toContain('--skill expo-deployment');
+    expect(expoLine).toContain('--skill eas-workflows');
+    expect(expoLine).toContain('--skill eas-app-stores');
     expect(expoLine).toContain('--skill expo-dev-client');
-    expect(expoLine).toContain('--skill building-native-ui');
-    expect(expoLine).toContain('--skill native-data-fetching');
+    expect(expoLine).toContain('--skill expo-native-ui');
+    expect(expoLine).toContain('--skill expo-data-fetching');
     expect(expoLine).toContain('--skill expo-module');
-    expect(expoLine).toContain('--skill upgrading-expo');
+    expect(expoLine).toContain('--skill expo-upgrade');
     // Should NOT have separate lines for the same source
     const expoLines = after
       .split('\n')

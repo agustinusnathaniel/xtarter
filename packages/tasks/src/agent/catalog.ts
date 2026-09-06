@@ -88,7 +88,7 @@ export const SKILL_CATALOG: Array<SkillDefinition> = [
   },
   {
     condition: () => true,
-    skill: 'writing-great-skills',
+    skill: 'writing-for-agents',
     source: 'mattpocock/skills',
   },
 
@@ -195,7 +195,7 @@ export const SKILL_CATALOG: Array<SkillDefinition> = [
     condition: (_p, d) =>
       hasAnyDep(d, ['shadcn', 'shadcn-ui', '@shadcn/ui', '@shadcn-ui/cli']),
     skill: 'shadcn',
-    source: 'shadcn/ui',
+    source: 'shadcn-ui/ui',
   },
 
   // ═════════════════════════════════════════════════════════════════
@@ -236,17 +236,12 @@ export const SKILL_CATALOG: Array<SkillDefinition> = [
   // ═════════════════════════════════════════════════════════════════
   {
     condition: (p) => p.bundler === 'expo' || p.framework === 'react-native',
-    skill: 'expo-tailwind-setup',
+    skill: 'eas-workflows',
     source: 'expo/skills',
   },
   {
     condition: (p) => p.bundler === 'expo' || p.framework === 'react-native',
-    skill: 'expo-cicd-workflows',
-    source: 'expo/skills',
-  },
-  {
-    condition: (p) => p.bundler === 'expo' || p.framework === 'react-native',
-    skill: 'expo-deployment',
+    skill: 'eas-app-stores',
     source: 'expo/skills',
   },
   {
@@ -256,12 +251,12 @@ export const SKILL_CATALOG: Array<SkillDefinition> = [
   },
   {
     condition: (p) => p.bundler === 'expo' || p.framework === 'react-native',
-    skill: 'building-native-ui',
+    skill: 'expo-native-ui',
     source: 'expo/skills',
   },
   {
     condition: (p) => p.bundler === 'expo' || p.framework === 'react-native',
-    skill: 'native-data-fetching',
+    skill: 'expo-data-fetching',
     source: 'expo/skills',
   },
   {
@@ -271,7 +266,7 @@ export const SKILL_CATALOG: Array<SkillDefinition> = [
   },
   {
     condition: (p) => p.bundler === 'expo' || p.framework === 'react-native',
-    skill: 'upgrading-expo',
+    skill: 'expo-upgrade',
     source: 'expo/skills',
   },
   {
@@ -336,7 +331,7 @@ export const SKILL_CATALOG: Array<SkillDefinition> = [
   },
   {
     condition: (_p, d) => hasDep(d, 'better-auth'),
-    skill: 'create-auth-skill',
+    skill: 'create-auth',
     source: 'better-auth/skills',
   },
 
