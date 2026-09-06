@@ -5,14 +5,248 @@ import {
   backupFile,
   deepEqual,
   findConfigFile,
+  findFirstPositionalIndex,
+  findUnknownFlags,
   getDependencyVersion,
   getNodeVersion,
   hasDependency,
   listBackups,
   readPackageJson,
   restoreBackup,
+  suggestSimilar,
+  validateInvocation,
 } from '@xtarterize/core';
 import { describe, expect } from 'vite-plus/test';
+
+const cliArgsDef = {
+  cwd: { type: 'string' },
+  dryRun: { type: 'boolean' },
+  format: { alias: 'f', type: 'string' },
+  json: { type: 'boolean' },
+  name: { type: 'positional' },
+} as const;
+
+describe('findFirstPositionalIndex', () => {
+  test('finds a positional at the start', () => {
+    expect(findFirstPositionalIndex(['cmd'], cliArgsDef)).toBe(0);
+  });
+
+  test('finds a positional after boolean flags', () => {
+    expect(
+      findFirstPositionalIndex(['--json', '--dry-run', 'cmd'], cliArgsDef)
+    ).toBe(2);
+  });
+
+  test('skips the separate value of a string flag', () => {
+    expect(findFirstPositionalIndex(['--cwd', '/tmp', 'cmd'], cliArgsDef)).toBe(
+      2
+    );
+  });
+
+  test('skips the separate value of a short alias flag', () => {
+    expect(findFirstPositionalIndex(['-f', 'json', 'cmd'], cliArgsDef)).toBe(2);
+  });
+
+  test('handles inline values', () => {
+    expect(findFirstPositionalIndex(['--cwd=/tmp', 'cmd'], cliArgsDef)).toBe(1);
+  });
+
+  test('returns -1 after the -- terminator', () => {
+    expect(findFirstPositionalIndex(['--', 'cmd'], cliArgsDef)).toBe(-1);
+  });
+
+  test('returns -1 when no positional exists', () => {
+    expect(findFirstPositionalIndex(['--json'], cliArgsDef)).toBe(-1);
+  });
+});
+
+describe('findUnknownFlags', () => {
+  test('accepts declared long, kebab, camel, and alias flags', () => {
+    expect(
+      findUnknownFlags(
+        ['--json', '--dry-run', '--dryRun', '-f', 'json'],
+        cliArgsDef
+      )
+    ).toEqual([]);
+  });
+
+  test('flags unknown options with suggestions', () => {
+    expect(findUnknownFlags(['--jsn'], cliArgsDef)).toEqual([
+      { suggestion: 'json', token: '--jsn' },
+    ]);
+  });
+
+  test('accepts --no- negation of declared booleans', () => {
+    expect(findUnknownFlags(['--no-json', '--no-dry-run'], cliArgsDef)).toEqual(
+      []
+    );
+  });
+
+  test('rejects --no- negation of non-boolean flags', () => {
+    expect(findUnknownFlags(['--no-cwd'], cliArgsDef)).toHaveLength(1);
+  });
+
+  test('skips the value consumed by a string flag', () => {
+    expect(findUnknownFlags(['--cwd', '--json'], cliArgsDef)).toEqual([]);
+  });
+
+  test('handles inline values', () => {
+    expect(
+      findUnknownFlags(['--json=false', '--cwd=/tmp'], cliArgsDef)
+    ).toEqual([]);
+  });
+
+  test('stops at the -- terminator', () => {
+    expect(findUnknownFlags(['--', '--bogus'], cliArgsDef)).toEqual([]);
+  });
+
+  test('accepts built-in help and version flags', () => {
+    expect(
+      findUnknownFlags(['--help', '-h', '--version', '-v'], cliArgsDef)
+    ).toEqual([]);
+  });
+
+  test('reports each unknown flag', () => {
+    const unknown = findUnknownFlags(['--jsn', '--bogus'], cliArgsDef);
+    expect(unknown.map((flag) => flag.token)).toEqual(['--jsn', '--bogus']);
+  });
+
+  test('ignores positionals', () => {
+    expect(findUnknownFlags(['cmd', '--json'], cliArgsDef)).toEqual([]);
+  });
+});
+
+describe('suggestSimilar', () => {
+  test('suggests near matches', () => {
+    expect(suggestSimilar('inti', ['add', 'init'])).toBe('init');
+    expect(suggestSimilar('jsn', ['cwd', 'json'])).toBe('json');
+  });
+
+  test('suggests candidates by prefix', () => {
+    expect(suggestSimilar('verb', ['json', 'verbose'])).toBe('verbose');
+  });
+
+  test('matches case-insensitively', () => {
+    expect(suggestSimilar('INIT', ['init'])).toBe('init');
+  });
+
+  test('returns undefined for distant inputs', () => {
+    expect(suggestSimilar('zzzzzz', ['json'])).toBeUndefined();
+  });
+
+  test('breaks ties deterministically', () => {
+    expect(suggestSimilar('cat', ['can', 'bat'])).toBe('bat');
+  });
+});
+
+describe('validateInvocation', () => {
+  const mainDef = { cwd: { type: 'string' }, json: { type: 'boolean' } };
+  const subcommands = {
+    list: async () => ({
+      json: { type: 'boolean' },
+      quiet: { type: 'boolean' },
+    }),
+  };
+
+  test('passes a valid subcommand invocation', async () => {
+    const issues = await validateInvocation({
+      argsDef: mainDef,
+      commandLabel: 'cli',
+      rawArgs: ['list', '--json', '--quiet'],
+      requireKnownSubcommand: true,
+      subcommands,
+    });
+    expect(issues).toEqual([]);
+  });
+
+  test('passes main flags placed before the subcommand', async () => {
+    const issues = await validateInvocation({
+      argsDef: mainDef,
+      commandLabel: 'cli',
+      rawArgs: ['--cwd', '.'],
+      requireKnownSubcommand: true,
+      subcommands,
+    });
+    expect(issues).toEqual([]);
+  });
+
+  test('rejects unknown options on a subcommand with a suggestion', async () => {
+    const issues = await validateInvocation({
+      argsDef: mainDef,
+      commandLabel: 'cli',
+      rawArgs: ['list', '--jsn'],
+      requireKnownSubcommand: true,
+      subcommands,
+    });
+    expect(issues).toEqual([
+      'Unknown option --jsn for "cli list". Did you mean --json?',
+      'Run "cli list --help" to see valid options.',
+    ]);
+  });
+
+  test('rejects unknown options at the entry level', async () => {
+    const issues = await validateInvocation({
+      argsDef: mainDef,
+      commandLabel: 'cli',
+      rawArgs: ['--jsn', 'list'],
+      requireKnownSubcommand: true,
+      subcommands,
+    });
+    expect(issues[0]).toBe(
+      'Unknown option --jsn for "cli". Did you mean --json?'
+    );
+  });
+
+  test('rejects unknown commands and suggests names', async () => {
+    const issues = await validateInvocation({
+      argsDef: mainDef,
+      commandLabel: 'cli',
+      rawArgs: ['lst'],
+      requireKnownSubcommand: true,
+      subcommands,
+    });
+    expect(issues).toEqual([
+      'Unknown command "lst" for "cli". Did you mean "list"?',
+      'Run "cli --help" to see available commands.',
+    ]);
+  });
+
+  test('rejects unmatched positionals when the entry has no run', async () => {
+    const issues = await validateInvocation({
+      argsDef: mainDef,
+      commandLabel: 'cli',
+      rawArgs: ['bogus'],
+      requireKnownSubcommand: true,
+      subcommands,
+    });
+    expect(issues[0]).toBe('Unknown command "bogus" for "cli".');
+  });
+
+  test('validates entry flags after positional args of the entry command', async () => {
+    const issues = await validateInvocation({
+      argsDef: mainDef,
+      commandLabel: 'cli',
+      rawArgs: ['proj-name', '--bogus'],
+      requireKnownSubcommand: false,
+      subcommands,
+    });
+    expect(issues).toEqual([
+      'Unknown option --bogus for "cli".',
+      'Run "cli --help" to see valid options.',
+    ]);
+  });
+
+  test('skips validation for help and version flags', async () => {
+    const issues = await validateInvocation({
+      argsDef: mainDef,
+      commandLabel: 'cli',
+      rawArgs: ['--help'],
+      requireKnownSubcommand: true,
+      subcommands,
+    });
+    expect(issues).toEqual([]);
+  });
+});
 
 describe('deepEqual', () => {
   test('returns true for identical primitives', () => {
