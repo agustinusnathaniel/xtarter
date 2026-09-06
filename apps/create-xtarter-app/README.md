@@ -34,14 +34,14 @@ npx create-xtarter-app@latest [project-name] [options]
 | --- | --- | --- |
 | `--template <id>` | `-t` | Select a template without prompting |
 | `--pm <manager>` | `-p` | Use `pnpm`, `npm`, `bun`, or `yarn` |
-| `--no-git` | | Skip Git initialization |
+| `--git` / `--no-git` | | Git init is on by default; `--no-git` skips it |
 | `--clean` | | Remove supported CI/CD configuration files |
 | `--force` | `-f` | Overwrite a non-empty target directory |
 | `--ref <ref>` | | Download a branch, tag, or commit |
 | `--yes` | `-y` | Skip selection prompts and use defaults |
 | `--quiet` | | Suppress progress and decorative output |
 | `--json` | | Print the result as JSON |
-| `--no-color` | | Disable colorized output |
+| `--color` / `--no-color` | | Colorized output is on by default; `--no-color` disables it |
 
 The project name has no default. Pass one when using `--yes` for a fully
 non-interactive run. Without it, the CLI still prompts for a name.

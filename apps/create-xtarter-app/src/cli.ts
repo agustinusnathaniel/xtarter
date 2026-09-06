@@ -1,8 +1,15 @@
 #!/usr/bin/env node
 import { resolve } from 'node:path';
 import { cancel, intro, note, outro } from '@clack/prompts';
-import { consola, pc } from '@xtarterize/core';
-import { defineCommand, runMain } from 'citty';
+import { consola, findFirstPositionalIndex, pc } from '@xtarterize/core';
+import {
+  type ArgsDef,
+  type CommandDef,
+  defineCommand,
+  runMain,
+  type SubCommandsDef,
+  showUsage,
+} from 'citty';
 
 import { APP_NAME, BANNER, DEFAULT_TEMPLATE, VERSION } from '@/constants';
 import { promptCleanCI, promptGitInit } from '@/prompts/options';
@@ -16,6 +23,7 @@ import {
   scaffoldProject,
 } from '@/scaffold';
 import type { PackageManager } from '@/types';
+import { createInvocationGuard } from '@/utils/invocation-guard';
 
 // ── Helpers ──
 
@@ -62,9 +70,23 @@ const scaffoldArgs = {
     required: false,
     type: 'boolean',
   },
+  color: {
+    default: true,
+    description: 'Colorize output',
+    negativeDescription: 'Disable colorized output',
+    required: false,
+    type: 'boolean',
+  },
   force: {
     alias: 'f',
     description: 'Overwrite existing directory',
+    required: false,
+    type: 'boolean',
+  },
+  git: {
+    default: true,
+    description: 'Initialize a git repository',
+    negativeDescription: 'Skip git initialization',
     required: false,
     type: 'boolean',
   },
@@ -78,17 +100,6 @@ const scaffoldArgs = {
     description: 'Project name (use "." for current directory)',
     required: false,
     type: 'positional',
-  },
-  noColor: {
-    default: false,
-    description: 'Disable colorized output',
-    required: false,
-    type: 'boolean',
-  },
-  noGit: {
-    description: 'Skip git initialization',
-    required: false,
-    type: 'boolean',
   },
   pm: {
     alias: 'p',
@@ -143,7 +154,7 @@ const previewCommand = defineCommand({
 function parseArgs(args: Record<string, unknown>) {
   const quiet = Boolean(args.quiet || args.json);
   const json = Boolean(args.json);
-  if (args.noColor) {
+  if (args.color === false) {
     process.env.NO_COLOR = '1';
   }
   if (quiet) {
@@ -195,7 +206,7 @@ async function promptProjectDetails(
     useDefaults ? false : undefined
   );
   const shouldInitGit =
-    args.noGit === true
+    args.git === false
       ? false
       : await resolveArg(
           undefined,
@@ -297,6 +308,16 @@ function handleScaffoldError(error: unknown, json: boolean) {
 
 // ── Main command ──
 
+/**
+ * Whether the invocation targets the `preview` subcommand, mirroring how
+ * citty locates a subcommand name before dispatch.
+ */
+function invocationTargetsPreview(): boolean {
+  const argv = process.argv.slice(2);
+  const commandIndex = findFirstPositionalIndex(argv, scaffoldArgs);
+  return argv[commandIndex] === 'preview';
+}
+
 const mainCommand = defineCommand({
   args: scaffoldArgs,
   meta: {
@@ -304,7 +325,19 @@ const mainCommand = defineCommand({
     name: 'create-xtarter-app',
     version: VERSION,
   },
+  plugins: [
+    createInvocationGuard({
+      commandLabel: 'create-xtarter-app',
+      requireKnownSubcommand: false,
+      subcommands: { preview: async () => previewCommand },
+    }),
+  ],
   async run(ctx) {
+    // citty runs the parent's `run` even after dispatching a subcommand;
+    // bail out so a preview is not followed by the scaffold flow.
+    if (invocationTargetsPreview()) {
+      return;
+    }
     const args = ctx.args as Record<string, unknown>;
     const { quiet, json, useDefaults, defaultPackageManager } = parseArgs(args);
     try {
@@ -322,9 +355,28 @@ const mainCommand = defineCommand({
       handleScaffoldError(error, json);
     }
   },
-  subCommands: {
-    preview: previewCommand,
-  },
+  // citty 0.2 rejects any unmatched first positional as an unknown command,
+  // but positionals here are project names. Only expose `preview` as a
+  // subcommand when the invocation actually targets it.
+  subCommands: (): SubCommandsDef =>
+    invocationTargetsPreview() ? { preview: previewCommand } : {},
 });
 
-runMain(mainCommand);
+function renderUsageWithPreview<T extends ArgsDef>(
+  cmd: CommandDef<T>,
+  parent?: CommandDef<T>
+): Promise<void> {
+  if (cmd !== mainCommand) {
+    return showUsage(cmd, parent);
+  }
+  // Keep `preview` discoverable: the dynamic subCommands resolver above
+  // hides it whenever the first positional is a project name, which would
+  // otherwise drop the COMMANDS section from the rendered usage. The entry
+  // command is only ever resolved at the top level, so there is no parent.
+  return showUsage({
+    ...mainCommand,
+    subCommands: { preview: previewCommand },
+  });
+}
+
+runMain(mainCommand, { showUsage: renderUsageWithPreview });
