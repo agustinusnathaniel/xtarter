@@ -12,7 +12,6 @@
     "isolatedDeclarations": true,
     "verbatimModuleSyntax": true,
     "declaration": true,
-    "declarationMap": true,
     "incremental": true,
     "composite": true,
     "tsBuildInfoFile": ".tsbuildinfo",
