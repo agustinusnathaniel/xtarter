@@ -16,7 +16,6 @@ export default defineConfig({
       bin: './src/index.ts',
     },
     minify: true,
-    sourcemap: true,
     target: 'node20',
     treeshake: true,
   },
