@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.16.1
+
+### Patch Changes
+
+- [#188](https://github.com/agustinusnathaniel/xtarter/pull/188) [`832c273`](https://github.com/agustinusnathaniel/xtarter/commit/832c2733f91d0c59d81952cbd8e3690a17b3f9b4) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Disable production JavaScript source maps to reduce published package size.
+
 ## 1.16.0
 
 ### Minor Changes
