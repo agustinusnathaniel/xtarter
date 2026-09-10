@@ -5,7 +5,15 @@ import { dirname } from 'pathe';
 import { FileSystemError } from '@/errors.js';
 import { resolvePath } from '@/utils/fs.js';
 
-import { ROOT_DETECTOR_INPUTS } from './root-inputs.js';
+import {
+  ancestorMarkerInputs,
+  configDirInputs,
+  cwdMarkerInputs,
+  lockfileInputs,
+  packageJsonInput,
+  rootFileInputs,
+  workspacePackageDirs,
+} from './registry/index.js';
 import type { ProjectProfile } from './types.js';
 
 export interface PathFingerprint {
@@ -17,36 +25,21 @@ export interface PathFingerprint {
 export interface ProjectFingerprint {
   ancestorInputs: Array<PathFingerprint>;
   configDirs: Array<PathFingerprint>;
-  lockfile: PathFingerprint | null;
+  cwdInputs: Array<PathFingerprint>;
+  lockfiles: Array<PathFingerprint>;
   packageJson: PathFingerprint;
   rootInputs: Array<PathFingerprint>;
 }
+
+export const PROFILE_CACHE_VERSION = 3;
 
 export interface ProfileCacheEntry {
   computedAt: string;
   durationMs: number;
   fingerprint: ProjectFingerprint;
   profile: ProjectProfile;
-  version: 2;
+  version: typeof PROFILE_CACHE_VERSION;
 }
-
-const LOCKFILE_NAMES = [
-  'pnpm-lock.yaml',
-  'yarn.lock',
-  'bun.lockb',
-  'package-lock.json',
-];
-
-const CONFIG_DIRS = ['.github', '.vscode', '.changeset'];
-
-const ANCESTOR_MARKER_FILES = [
-  'pnpm-workspace.yaml',
-  'turbo.json',
-  'nx.json',
-  'lerna.json',
-];
-
-const ANCESTOR_MARKER_DIRS = ['packages', 'apps'];
 
 function statOrFail(
   filePath: string
@@ -71,22 +64,30 @@ function statPath(
   return statOrFail(filePath).pipe(Effect.orElseSucceed(() => null));
 }
 
-function findLockfile(
+function fingerprintLockfiles(
   cwd: string
-): Effect.Effect<PathFingerprint | null, never> {
-  return Effect.firstSuccessOf(
-    LOCKFILE_NAMES.map((name) => statOrFail(resolvePath(cwd, name)))
-  ).pipe(Effect.orElseSucceed(() => null));
+): Effect.Effect<Array<PathFingerprint>, never> {
+  return Effect.gen(function* () {
+    const fingerprints: Array<PathFingerprint> = [];
+    for (const input of lockfileInputs()) {
+      const fingerprint = yield* statPath(resolvePath(cwd, input.name));
+      if (fingerprint) {
+        fingerprints.push(fingerprint);
+      }
+    }
+    return fingerprints;
+  });
 }
 
 function fingerprintConfigDirs(
   cwd: string
 ): Effect.Effect<Array<PathFingerprint>, never> {
+  const dirs = configDirInputs().map((input) => input.dir);
   return Effect.tryPromise({
     catch: (cause) => new FileSystemError({ cause, path: cwd }),
     try: () =>
       Promise.all(
-        CONFIG_DIRS.map(async (dir) => {
+        dirs.map(async (dir) => {
           const dirPath = resolvePath(cwd, dir);
           try {
             const entries = await fs.readdir(dirPath, {
@@ -136,7 +137,7 @@ function fingerprintRootInputs(
     catch: (cause) => new FileSystemError({ cause, path: cwd }),
     try: async () => {
       const entryStats: Array<PathFingerprint> = [];
-      for (const input of ROOT_DETECTOR_INPUTS) {
+      for (const input of rootFileInputs()) {
         const names =
           input.extensions.length === 0
             ? [input.basename]
@@ -162,16 +163,55 @@ function fingerprintRootInputs(
   }).pipe(Effect.orElseSucceed(() => []));
 }
 
+function fingerprintCwdInputs(
+  cwd: string
+): Effect.Effect<Array<PathFingerprint>, never> {
+  return Effect.tryPromise({
+    catch: (cause) => new FileSystemError({ cause, path: cwd }),
+    try: async () => {
+      const entryStats: Array<PathFingerprint> = [];
+      for (const input of cwdMarkerInputs()) {
+        const inputPath = resolvePath(cwd, input.name);
+        try {
+          const s = await fs.stat(inputPath);
+          entryStats.push({
+            mtimeMs: s.mtimeMs,
+            path: inputPath,
+            size: s.size,
+          });
+        } catch {
+          // Absent markers simply don't contribute
+        }
+      }
+      // Workspace dirs feed root-level monorepo detection, so their presence
+      // matters but their contents do not. Presence-only entries keep dir
+      // mtime churn from invalidating the cache.
+      for (const dir of workspacePackageDirs()) {
+        const dirPath = resolvePath(cwd, dir);
+        try {
+          await fs.access(dirPath);
+          entryStats.push({ mtimeMs: 0, path: dirPath, size: 0 });
+        } catch {
+          // Absent workspace dirs simply don't contribute
+        }
+      }
+      return entryStats;
+    },
+  }).pipe(Effect.orElseSucceed(() => []));
+}
+
 function fingerprintAncestorInputs(
   cwd: string
 ): Effect.Effect<Array<PathFingerprint>, never> {
-  const names = [...ANCESTOR_MARKER_FILES, ...ANCESTOR_MARKER_DIRS];
+  const names = ancestorMarkerInputs().map((input) => input.name);
+  const rootMarkers = cwdMarkerInputs().map((input) => input.name);
   return Effect.tryPromise({
     catch: (cause) => new FileSystemError({ cause, path: cwd }),
     try: async () => {
       const entryStats: Array<PathFingerprint> = [];
       let current = dirname(cwd);
-      while (current !== dirname(current)) {
+      let reachedRoot = false;
+      while (!reachedRoot && current !== dirname(current)) {
         for (const name of names) {
           const inputPath = resolvePath(current, name);
           try {
@@ -181,13 +221,16 @@ function fingerprintAncestorInputs(
             // Absent inputs don't contribute
           }
         }
-        const gitPath = resolvePath(current, '.git');
-        try {
-          await fs.access(gitPath);
-          entryStats.push({ mtimeMs: 0, path: gitPath, size: 0 });
-          break;
-        } catch {
-          // No .git here, keep walking up
+        for (const marker of rootMarkers) {
+          const markerPath = resolvePath(current, marker);
+          try {
+            await fs.access(markerPath);
+            entryStats.push({ mtimeMs: 0, path: markerPath, size: 0 });
+            reachedRoot = true;
+            break;
+          } catch {
+            // No marker here, keep walking up
+          }
         }
         current = dirname(current);
       }
@@ -199,17 +242,19 @@ function fingerprintAncestorInputs(
 export function computeFingerprint(cwd: string): Promise<ProjectFingerprint> {
   return Effect.runPromise(
     Effect.gen(function* () {
-      const pkgJsonPath = resolvePath(cwd, 'package.json');
+      const pkgJsonPath = resolvePath(cwd, packageJsonInput().name);
       const packageJson = yield* statPath(pkgJsonPath);
-      const lockfile = yield* findLockfile(cwd);
+      const lockfiles = yield* fingerprintLockfiles(cwd);
       const configDirs = yield* fingerprintConfigDirs(cwd);
       const rootInputs = yield* fingerprintRootInputs(cwd);
+      const cwdInputs = yield* fingerprintCwdInputs(cwd);
       const ancestorInputs = yield* fingerprintAncestorInputs(cwd);
 
       return {
         ancestorInputs,
         configDirs,
-        lockfile,
+        cwdInputs,
+        lockfiles,
         packageJson: packageJson ?? {
           mtimeMs: 0,
           path: pkgJsonPath,
@@ -221,54 +266,39 @@ export function computeFingerprint(cwd: string): Promise<ProjectFingerprint> {
   );
 }
 
+function samePathFingerprint(
+  stored: PathFingerprint,
+  current: PathFingerprint
+): boolean {
+  return (
+    stored.path === current.path &&
+    stored.mtimeMs === current.mtimeMs &&
+    stored.size === current.size
+  );
+}
+
 export function isCacheValid(
   stored: ProfileCacheEntry,
   current: ProjectFingerprint
 ): boolean {
-  if (stored.version !== 2) {
+  if (stored.version !== PROFILE_CACHE_VERSION) {
     return false;
   }
 
   const s = stored.fingerprint;
   const c = current;
 
-  if (
-    s.packageJson.path !== c.packageJson.path ||
-    s.packageJson.mtimeMs !== c.packageJson.mtimeMs ||
-    s.packageJson.size !== c.packageJson.size
-  ) {
+  if (!samePathFingerprint(s.packageJson, c.packageJson)) {
     return false;
   }
 
-  if (s.lockfile === null && c.lockfile !== null) {
-    return false;
-  }
-  if (s.lockfile !== null && c.lockfile === null) {
-    return false;
-  }
-  if (
-    s.lockfile !== null &&
-    c.lockfile !== null &&
-    (s.lockfile.path !== c.lockfile.path ||
-      s.lockfile.mtimeMs !== c.lockfile.mtimeMs ||
-      s.lockfile.size !== c.lockfile.size)
-  ) {
-    return false;
-  }
-
-  if (!samePathFingerprints(s.configDirs, c.configDirs)) {
-    return false;
-  }
-  if (!samePathFingerprints(s.rootInputs, c.rootInputs)) {
-    return false;
-  }
-
-  const sAncestors = s.ancestorInputs;
-  if (!(sAncestors && samePathFingerprints(sAncestors, c.ancestorInputs))) {
-    return false;
-  }
-
-  return true;
+  return (
+    samePathFingerprints(s.configDirs, c.configDirs) &&
+    samePathFingerprints(s.lockfiles, c.lockfiles) &&
+    samePathFingerprints(s.rootInputs, c.rootInputs) &&
+    samePathFingerprints(s.cwdInputs, c.cwdInputs) &&
+    samePathFingerprints(s.ancestorInputs, c.ancestorInputs)
+  );
 }
 
 function samePathFingerprints(
@@ -312,31 +342,50 @@ export function readProfileCache(
   );
 }
 
+function isPathFingerprint(value: unknown): value is PathFingerprint {
+  if (typeof value !== 'object' || value === null) {
+    return false;
+  }
+  const fp = value as Record<string, unknown>;
+  return (
+    typeof fp.path === 'string' &&
+    typeof fp.mtimeMs === 'number' &&
+    typeof fp.size === 'number'
+  );
+}
+
+function isPathFingerprintArray(
+  value: unknown
+): value is Array<PathFingerprint> {
+  return Array.isArray(value) && value.every(isPathFingerprint);
+}
+
 function isValidCacheEntry(value: unknown): value is ProfileCacheEntry {
   if (typeof value !== 'object' || value === null) {
     return false;
   }
   const entry = value as Record<string, unknown>;
-  if (entry.version !== 2) {
-    return false;
-  }
-  if (typeof entry.fingerprint !== 'object' || entry.fingerprint === null) {
+  if (entry.version !== PROFILE_CACHE_VERSION) {
     return false;
   }
   if (typeof entry.profile !== 'object' || entry.profile === null) {
     return false;
   }
+  if (typeof entry.fingerprint !== 'object' || entry.fingerprint === null) {
+    return false;
+  }
+
   const fp = entry.fingerprint as Record<string, unknown>;
-  if (typeof fp.packageJson !== 'object' || fp.packageJson === null) {
+  if (!isPathFingerprint(fp.packageJson)) {
     return false;
   }
-  if (!Array.isArray(fp.rootInputs)) {
-    return false;
-  }
-  if (!Array.isArray(fp.ancestorInputs)) {
-    return false;
-  }
-  return true;
+  return (
+    isPathFingerprintArray(fp.configDirs) &&
+    isPathFingerprintArray(fp.lockfiles) &&
+    isPathFingerprintArray(fp.cwdInputs) &&
+    isPathFingerprintArray(fp.rootInputs) &&
+    isPathFingerprintArray(fp.ancestorInputs)
+  );
 }
 
 export function writeProfileCache(

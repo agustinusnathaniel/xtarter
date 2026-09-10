@@ -2,6 +2,7 @@ import { detectPackageManager as detectPM } from 'nypm';
 
 import { fileExists, resolvePath } from '@/utils/fs.js';
 
+import { inputById, type LockfileInput } from './registry/index.js';
 import type { Framework, PackageManager } from './types.js';
 
 /**
@@ -28,6 +29,18 @@ export function isStringRecord(
 }
 
 /**
+ * Lockfile fallback order when nypm cannot detect the package manager. The
+ * names and package manager mappings come from the detection registry.
+ */
+const FALLBACK_LOCKFILE_IDS: ReadonlyArray<LockfileInput['id']> = [
+  'bun-lockb',
+  'bun-lock',
+  'pnpm-lock',
+  'yarn-lock',
+  'npm-lock',
+];
+
+/**
  * Detects the package manager from lockfiles or nypm
  * @param cwd - Current working directory
  * @returns Detected package manager
@@ -46,20 +59,14 @@ export async function detectPackageManager(
   }
 
   // Fallback to lockfile detection if nypm fails
-  if (await fileExists(resolvePath(cwd, 'bun.lockb'))) {
-    return 'bun';
-  }
-  if (await fileExists(resolvePath(cwd, 'bun.lock'))) {
-    return 'bun';
-  }
-  if (await fileExists(resolvePath(cwd, 'pnpm-lock.yaml'))) {
-    return 'pnpm';
-  }
-  if (await fileExists(resolvePath(cwd, 'yarn.lock'))) {
-    return 'yarn';
-  }
-  if (await fileExists(resolvePath(cwd, 'package-lock.json'))) {
-    return 'npm';
+  for (const id of FALLBACK_LOCKFILE_IDS) {
+    const input = inputById(id);
+    if (input.kind !== 'lockfile') {
+      continue;
+    }
+    if (await fileExists(resolvePath(cwd, input.name))) {
+      return input.packageManager;
+    }
   }
 
   return 'npm';

@@ -1,30 +1,33 @@
 import { findConfigFile } from '@/utils/fs.js';
 
+import { rootFileInputByBasename } from './registry/index.js';
 import type { Bundler } from './types.js';
 
-/** File extensions to search when looking up bundler config files. */
-const CONFIG_EXTENSIONS: Array<string> = [
-  '.ts',
-  '.js',
-  '.mts',
-  '.mjs',
-  '.cts',
-  '.cjs',
-];
+function defaultConfigExtensions(baseName: string): Array<string> {
+  const input = rootFileInputByBasename(baseName);
+  if (!input) {
+    throw new Error(
+      `No detection registry root file input declares "${baseName}"`
+    );
+  }
+  return [...input.extensions];
+}
 
 /**
  * Checks if a bundler config file exists
  * @param cwd - Current working directory
  * @param baseName - Base name of config file (e.g., 'vite.config')
- * @param extensions - Array of file extensions to check
+ * @param extensions - File extensions to check; defaults to the extensions
+ * declared by the matching registry root file input
  * @returns Promise resolving to true if config file exists
  */
 export async function hasBundlerConfig(
   cwd: string,
   baseName: string,
-  extensions: Array<string> = CONFIG_EXTENSIONS
+  extensions?: Array<string>
 ): Promise<boolean> {
-  return Boolean(await findConfigFile(cwd, baseName, extensions));
+  const resolved = extensions ?? defaultConfigExtensions(baseName);
+  return Boolean(await findConfigFile(cwd, baseName, resolved));
 }
 
 /**

@@ -17,7 +17,7 @@ When you run `init`, xtarterize scans your project to build a `ProjectProfile`:
 - **Router** - [TanStack Router](https://tanstack.com/router/latest), [React Router](https://reactrouter.com/), [Vue Router](https://router.vuejs.org/), [Expo Router](https://docs.expo.dev/router/introduction/), or none
 - **Styling** - [Tailwind CSS](https://tailwindcss.com/), [CSS Modules](https://github.com/css-modules/css-modules), [Styled Components](https://styled-components.com/), [Vanilla Extract](https://vanilla-extract.style/), [NativeWind](https://www.nativewind.dev/), or Vanilla
 - **Package Manager** - [pnpm](https://pnpm.io/), [npm](https://www.npmjs.com/), [yarn](https://yarnpkg.com/), or [bun](https://bun.sh/) (from lockfiles or `packageManager` field)
-- **Monorepo** - Detected via [`pnpm-workspace.yaml`](https://pnpm.io/pnpm-workspace_yaml), [`turbo.json`](https://turbo.build/repo/docs/reference/configuration), `packages/` + `apps/` dirs
+- **Monorepo** - Detected via [`pnpm-workspace.yaml`](https://pnpm.io/pnpm-workspace_yaml), [`turbo.json`](https://turbo.build/repo/docs/reference/configuration), [`nx.json`](https://nx.dev/reference/nx-json), [`lerna.json`](https://lerna.js.org/docs/configuration), or at least two of the `packages/`, `apps/`, `services/` directories
 - **GitHub** - [`.github/`](https://docs.github.com/en/actions/using-workflows/about-workflows) directory presence
 - **Existing Configs** - Checks for [`biome.json`](https://biomejs.dev/reference/configuration/), [`tsconfig.json`](https://www.typescriptlang.org/tsconfig/), [`renovate.json`](https://docs.renovatebot.com/configuration-options/), [`vite.config.*`](https://vitejs.dev/config/), [`.versionrc`](https://github.com/absolute-version/commit-and-tag-version#configuration), [`.gitignore`](https://git-scm.com/docs/gitignore), etc.
 
@@ -60,7 +60,7 @@ flowchart TD
     Framework, bundler, router, styling, and TypeScript are all detected from [`dependencies`](https://docs.npmjs.com/cli/v10/configuring-npm/package-json#dependencies) and [`devDependencies`](https://docs.npmjs.com/cli/v10/configuring-npm/package-json#devdependencies).
   </TabItem>
   <TabItem label="Lock files">
-    Package manager is detected from lock file presence: [`pnpm-lock.yaml`](https://pnpm.io/), [`yarn.lock`](https://yarnpkg.com/features/zero-installs), [`package-lock.json`](https://docs.npmjs.com/cli/v10/configuring-npm/package-lock-json), or [`bun.lock`](https://bun.sh/docs/install/lockfile).
+    Package manager is detected from lock file presence: [`pnpm-lock.yaml`](https://pnpm.io/), [`yarn.lock`](https://yarnpkg.com/features/zero-installs), [`package-lock.json`](https://docs.npmjs.com/cli/v10/configuring-npm/package-lock-json), [`bun.lock`](https://bun.sh/docs/install/lockfile), or `bun.lockb`.
   </TabItem>
   <TabItem label="File system">
     Monorepo status, GitHub, and existing configs are detected by checking for specific files and directories.

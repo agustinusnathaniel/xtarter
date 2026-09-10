@@ -1,3 +1,5 @@
+import type { PackageJson } from 'pkg-types';
+
 import {
   fileExists,
   findConfigFile,
@@ -6,16 +8,36 @@ import {
 } from '@/utils/fs.js';
 import { readPackageJson } from '@/utils/pkg.js';
 
+import { detectBundler } from './detect/bundler.js';
 import {
   computeFingerprint,
   isCacheValid,
+  PROFILE_CACHE_VERSION,
   readProfileCache,
   writeProfileCache,
 } from './detect/cache.js';
+import { detectMonorepo } from './detect/monorepo.js';
 import {
-  type DetectorRootInput,
-  ROOT_DETECTOR_INPUTS,
-} from './detect/root-inputs.js';
+  detectFrameworkVersion,
+  detectPackageManager,
+  isStringRecord,
+} from './detect/package-manager.js';
+import {
+  type ConfigDirInput,
+  type CustomDetectorEntry,
+  completeExistingConfig,
+  configDirInputsFor,
+  EXISTING_ENTRIES,
+  type ExistingConfig,
+  type ExistingEntry,
+  type ExistingValue,
+  type FlagEntry,
+  isFileDetectorEntry,
+  type ListEntry,
+  type RootFileInput,
+  rootFileInputFor,
+  rootFileInputsFor,
+} from './detect/registry/index.js';
 import type {
   Bundler,
   Framework,
@@ -35,15 +57,6 @@ export type {
   Router,
   Styling,
 };
-
-import { detectBundler } from './detect/bundler.js';
-import { detectMonorepo } from './detect/monorepo.js';
-import {
-  detectFrameworkVersion,
-  detectPackageManager,
-  isStringRecord,
-} from './detect/package-manager.js';
-
 export { detectPackageManager };
 
 // ── Inline framework detection (was detect/framework.ts) ──
@@ -146,67 +159,65 @@ function detectStyling(deps: Record<string, string>): Array<Styling> {
   return result;
 }
 
-// ── Declarative file-existence detectors ──
+// ── Custom detectors ──
 
-interface FileDetectorSpec {
-  basename: string;
-  extensions: Array<string>;
-  key: keyof ProjectProfile['existing'];
+interface CustomDetectorContext {
+  cwd: string;
+  deps: Record<string, string>;
+  dirs: Array<ConfigDirInput>;
+  files: Array<RootFileInput>;
 }
 
-const FILE_DETECTORS: Array<FileDetectorSpec> = [
-  ...ROOT_DETECTOR_INPUTS.filter(
-    (
-      input
-    ): input is DetectorRootInput & {
-      key: keyof ProjectProfile['existing'];
-    } => input.key !== undefined
-  ).map(({ key, basename, extensions }) => ({ basename, extensions, key })),
-  {
-    basename: '.vscode/settings',
-    extensions: ['.json'],
-    key: 'vscodeSettings',
-  },
-];
+type CustomDetectorMap = {
+  [E in CustomDetectorEntry as E['id']]: (
+    context: CustomDetectorContext
+  ) => Promise<ExistingValue<E>>;
+};
 
-// ── Custom detectors for complex cases ──
+function detectRootFile(cwd: string, input: RootFileInput): Promise<boolean> {
+  if (input.extensions.length === 0) {
+    return fileExists(resolvePath(cwd, input.basename));
+  }
+  return findConfigFile(cwd, input.basename, [...input.extensions]).then(
+    Boolean
+  );
+}
 
-async function detectEslint(
+async function anyRootFileExists(
   cwd: string,
-  deps?: Record<string, string>
+  inputs: Array<RootFileInput>
 ): Promise<boolean> {
-  const hasConfigFile = await findConfigFile(cwd, '.eslintrc', [
-    '.js',
-    '.cjs',
-    '.json',
-    '.yaml',
-    '.yml',
-  ]).then(Boolean);
-  if (hasConfigFile) {
-    return true;
-  }
-
-  const hasFlatConfig = await findConfigFile(cwd, 'eslint.config', [
-    '.js',
-    '.mjs',
-    '.cjs',
-    '.ts',
-    '.mts',
-    '.cts',
-  ]).then(Boolean);
-  if (hasFlatConfig) {
-    return true;
-  }
-
-  if (deps) {
-    return !!deps.eslint;
-  }
-  const pkg = await readPackageJson(cwd);
-  return !!(pkg?.devDependencies?.eslint ?? pkg?.dependencies?.eslint);
+  const results = await Promise.all(
+    inputs.map((input) => detectRootFile(cwd, input))
+  );
+  return results.some(Boolean);
 }
 
-async function detectGitHubWorkflows(cwd: string): Promise<Array<string>> {
-  const workflowsDir = resolvePath(cwd, '.github', 'workflows');
+function detectAnyRootFile(context: CustomDetectorContext): Promise<boolean> {
+  return anyRootFileExists(context.cwd, context.files);
+}
+
+async function detectEslint({
+  cwd,
+  deps,
+  files,
+}: CustomDetectorContext): Promise<boolean> {
+  if (await anyRootFileExists(cwd, files)) {
+    return true;
+  }
+  return Boolean(deps.eslint);
+}
+
+async function detectGitHubWorkflows({
+  cwd,
+  dirs,
+}: CustomDetectorContext): Promise<Array<string>> {
+  const githubDir = dirs[0];
+  if (!githubDir) {
+    return [];
+  }
+
+  const workflowsDir = resolvePath(cwd, githubDir.dir, 'workflows');
   if (!(await fileExists(workflowsDir))) {
     return [];
   }
@@ -221,116 +232,101 @@ async function detectGitHubWorkflows(cwd: string): Promise<Array<string>> {
     .map((e) => e.replace(/\.(yml|yaml)$/, ''));
 }
 
-async function detectChangeset(
-  cwd: string,
-  deps?: Record<string, string>
-): Promise<boolean> {
-  const hasConfig = await fileExists(
-    resolvePath(cwd, '.changeset', 'config.json')
-  );
+async function detectChangeset({
+  cwd,
+  deps,
+  dirs,
+}: CustomDetectorContext): Promise<boolean> {
+  const hasConfig = await Promise.all(
+    dirs.map((dir) => fileExists(resolvePath(cwd, dir.dir, 'config.json')))
+  ).then((results) => results.some(Boolean));
   if (hasConfig) {
     return true;
   }
-  if (deps) {
-    return !!deps['@changesets/cli'];
-  }
-  const pkg = await readPackageJson(cwd);
-  return !!(
-    pkg?.devDependencies?.['@changesets/cli'] ??
-    pkg?.dependencies?.['@changesets/cli']
-  );
+  return Boolean(deps['@changesets/cli']);
 }
 
-async function detectAgentsMd(cwd: string): Promise<boolean> {
-  const found = await findConfigFile(cwd, 'AGENTS', ['.md']).then(Boolean);
-  if (found) {
-    return true;
-  }
-  return fileExists(resolvePath(cwd, 'CLAUDE.md'));
-}
-
-async function detectOxlint(cwd: string): Promise<boolean> {
-  const oldFormat = await findConfigFile(cwd, '.oxlintrc', [
-    '.json',
-    '.jsonc',
-  ]).then(Boolean);
-  if (oldFormat) {
-    return true;
-  }
-
-  return findConfigFile(cwd, 'oxlint.config', ['.ts', '.js', '.mjs']).then(
-    Boolean
-  );
-}
-
-async function detectOxfmt(cwd: string): Promise<boolean> {
-  const oldFormat = await findConfigFile(cwd, '.oxfmtrc', [
-    '.json',
-    '.jsonc',
-  ]).then(Boolean);
-  if (oldFormat) {
-    return true;
-  }
-
-  return findConfigFile(cwd, 'oxfmt.config', ['.ts', '.js', '.mjs']).then(
-    Boolean
-  );
-}
-
-// ── Custom detectors ──
-
-type CustomDetector = {
-  key: keyof ProjectProfile['existing'];
-  detect: (
-    cwd: string,
-    deps?: Record<string, string>
-  ) => Promise<boolean | Array<string>>;
+const CUSTOM_DETECTORS: CustomDetectorMap = {
+  agentsMd: detectAnyRootFile,
+  changeset: detectChangeset,
+  eslint: detectEslint,
+  githubWorkflows: detectGitHubWorkflows,
+  oxfmt: detectAnyRootFile,
+  oxlint: detectAnyRootFile,
 };
 
-const CUSTOM_DETECTORS: Array<CustomDetector> = [
-  { detect: detectEslint, key: 'eslint' },
-  { detect: detectOxlint, key: 'oxlint' },
-  { detect: detectOxfmt, key: 'oxfmt' },
-  { detect: detectGitHubWorkflows, key: 'githubWorkflows' },
-  { detect: detectChangeset, key: 'changeset' },
-  { detect: detectAgentsMd, key: 'agentsMd' },
-];
+// ── Existing config assembly (registry-driven) ──
 
-// ── Unified detection runner ──
+type ResolvedExisting =
+  | { key: FlagEntry['key']; kind: 'flag'; value: boolean }
+  | { key: ListEntry['key']; kind: 'list'; value: Array<string> };
 
-async function detectFileConfig(
+function customDetectorContext(
+  entry: CustomDetectorEntry,
   cwd: string,
-  spec: FileDetectorSpec
-): Promise<boolean> {
-  if (spec.extensions.length === 0) {
-    return fileExists(resolvePath(cwd, spec.basename));
+  deps: Record<string, string>
+): CustomDetectorContext {
+  return {
+    cwd,
+    deps,
+    dirs: configDirInputsFor(entry),
+    files: rootFileInputsFor(entry),
+  };
+}
+
+async function resolveExistingEntry(
+  entry: ExistingEntry,
+  cwd: string,
+  deps: Record<string, string>
+): Promise<ResolvedExisting> {
+  if (isFileDetectorEntry(entry)) {
+    return {
+      key: entry.key,
+      kind: 'flag',
+      value: await detectRootFile(cwd, rootFileInputFor(entry)),
+    };
   }
-  return findConfigFile(cwd, spec.basename, spec.extensions).then(Boolean);
+
+  if (entry.existing === 'list') {
+    const detect = CUSTOM_DETECTORS[entry.id];
+    return {
+      key: entry.key,
+      kind: 'list',
+      value: await detect(customDetectorContext(entry, cwd, deps)),
+    };
+  }
+  const detect = CUSTOM_DETECTORS[entry.id];
+  return {
+    key: entry.key,
+    kind: 'flag',
+    value: await detect(customDetectorContext(entry, cwd, deps)),
+  };
 }
 
 async function detectExistingConfigs(
   cwd: string,
-  deps?: Record<string, string>
-): Promise<ProjectProfile['existing']> {
-  const fileResults = await Promise.all(
-    FILE_DETECTORS.map((d) => detectFileConfig(cwd, d))
+  deps: Record<string, string>
+): Promise<ExistingConfig> {
+  const resolved = await Promise.all(
+    EXISTING_ENTRIES.map((entry) => resolveExistingEntry(entry, cwd, deps))
   );
-  const customResults = await Promise.all(
-    CUSTOM_DETECTORS.map((d) => d.detect(cwd, deps))
-  );
-  const existing: Partial<ProjectProfile['existing']> = {};
-  for (let i = 0; i < FILE_DETECTORS.length; i++) {
-    (existing as Record<string, unknown>)[FILE_DETECTORS[i].key] =
-      fileResults[i];
-  }
-  for (let i = 0; i < CUSTOM_DETECTORS.length; i++) {
-    (existing as Record<string, unknown>)[CUSTOM_DETECTORS[i].key] =
-      customResults[i];
-  }
-  return existing as ProjectProfile['existing'];
+
+  const partial = resolved.reduce<Partial<ExistingConfig>>((acc, item) => {
+    if (item.kind === 'flag') {
+      acc[item.key] = item.value;
+    } else {
+      acc[item.key] = item.value;
+    }
+    return acc;
+  }, {});
+
+  return completeExistingConfig(partial);
 }
 
-async function detectNodeVersion(cwd: string): Promise<string> {
+async function detectNodeVersion(
+  cwd: string,
+  pkg: PackageJson | null
+): Promise<string> {
   const nvmrcPath = resolvePath(cwd, '.nvmrc');
   const nvmrcExists = await fileExists(nvmrcPath);
   if (nvmrcExists) {
@@ -341,7 +337,6 @@ async function detectNodeVersion(cwd: string): Promise<string> {
     }
   }
 
-  const pkg = await readPackageJson(cwd);
   const enginesNode = pkg?.engines?.node;
   if (enginesNode) {
     const match = String(enginesNode).match(/\d+/);
@@ -353,30 +348,40 @@ async function detectNodeVersion(cwd: string): Promise<string> {
   return '22';
 }
 
-// ── Shared base profile fields ──
+function collectDeps(pkg: PackageJson | null): Record<string, string> {
+  const deps: Record<string, string> = {};
+  if (pkg && isStringRecord(pkg.dependencies)) {
+    Object.assign(deps, pkg.dependencies);
+  }
+  if (pkg && isStringRecord(pkg.devDependencies)) {
+    Object.assign(deps, pkg.devDependencies);
+  }
+  return deps;
+}
 
-async function computeBaseProfile(cwd: string): Promise<{
-  monorepo: boolean;
-  monorepoTool: 'turbo' | 'nx' | 'lerna' | null;
-  workspaceRoot: boolean;
-  nodeVersion: string;
-  hasGitHub: boolean;
-  hasGit: boolean;
-  existing: ProjectProfile['existing'];
-  packageManager: PackageManager;
-}> {
-  const [monorepoInfo, hasGitHub, hasGit, packageManager, nodeVersion] =
-    await Promise.all([
-      detectMonorepo(cwd),
-      fileExists(resolvePath(cwd, '.github')),
-      fileExists(resolvePath(cwd, '.git')),
-      detectPackageManager(cwd),
-      detectNodeVersion(cwd),
-    ]);
+// ── Internal detection logic (no caching) ──
 
-  const existing = await detectExistingConfigs(cwd);
+async function computeProjectProfile(cwd: string): Promise<ProjectProfile> {
+  const pkg = await readPackageJson(cwd);
+  const deps = collectDeps(pkg);
 
-  return {
+  const [
+    monorepoInfo,
+    hasGitHub,
+    hasGit,
+    packageManager,
+    nodeVersion,
+    existing,
+  ] = await Promise.all([
+    detectMonorepo(cwd),
+    fileExists(resolvePath(cwd, '.github')),
+    fileExists(resolvePath(cwd, '.git')),
+    detectPackageManager(cwd),
+    detectNodeVersion(cwd, pkg),
+    detectExistingConfigs(cwd, deps),
+  ]);
+
+  const base = {
     existing,
     hasGit,
     hasGitHub,
@@ -386,13 +391,6 @@ async function computeBaseProfile(cwd: string): Promise<{
     packageManager,
     workspaceRoot: monorepoInfo.workspaceRoot,
   };
-}
-
-// ── Internal detection logic (no caching) ──
-
-async function computeProjectProfile(cwd: string): Promise<ProjectProfile> {
-  const base = await computeBaseProfile(cwd);
-  const pkg = await readPackageJson(cwd);
 
   if (!pkg) {
     return {
@@ -402,35 +400,25 @@ async function computeProjectProfile(cwd: string): Promise<ProjectProfile> {
       router: null,
       runtime: 'node',
       styling: ['vanilla'],
-      typescript: base.existing.tsconfig,
+      typescript: existing.tsconfig,
       vitePlus: false,
       ...base,
     };
   }
 
-  const allDeps: Record<string, string> = {};
-  if (isStringRecord(pkg.dependencies)) {
-    Object.assign(allDeps, pkg.dependencies);
-  }
-  if (isStringRecord(pkg.devDependencies)) {
-    Object.assign(allDeps, pkg.devDependencies);
-  }
-
-  const framework = detectFramework(allDeps);
-  const bundler = await detectBundler(allDeps, cwd);
-  const typescript =
-    'typescript' in allDeps ||
-    (await fileExists(resolvePath(cwd, 'tsconfig.json')));
+  const framework = detectFramework(deps);
+  const bundler = await detectBundler(deps, cwd);
+  const typescript = 'typescript' in deps || existing.tsconfig;
 
   return {
     bundler,
     framework,
     frameworkVersion: detectFrameworkVersion(pkg, framework),
-    router: detectRouter(allDeps, bundler),
+    router: detectRouter(deps, bundler),
     runtime: detectRuntime(framework, bundler),
-    styling: detectStyling(allDeps),
+    styling: detectStyling(deps),
     typescript,
-    vitePlus: detectVitePlus(allDeps),
+    vitePlus: detectVitePlus(deps),
     ...base,
   };
 }
@@ -453,7 +441,7 @@ export async function detectProject(cwd: string): Promise<ProjectProfile> {
     durationMs,
     fingerprint,
     profile,
-    version: 2,
+    version: PROFILE_CACHE_VERSION,
   });
 
   return profile;

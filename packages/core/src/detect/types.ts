@@ -1,5 +1,7 @@
 // Centralized detection types
 
+import type { ExistingConfig } from './registry/index.js';
+
 export type Framework =
   | 'react'
   | 'react-native'
@@ -45,25 +47,7 @@ export interface MonorepoDetection {
 
 export interface ProjectProfile {
   bundler: Bundler;
-  existing: {
-    biome: boolean;
-    oxlint: boolean;
-    oxfmt: boolean;
-    eslint: boolean;
-    tsconfig: boolean;
-    renovate: boolean;
-    commitlint: boolean;
-    knip: boolean;
-    plop: boolean;
-    turbo: boolean;
-    vscodeSettings: boolean;
-    agentsMd: boolean;
-    githubWorkflows: Array<string>;
-    viteConfig: boolean;
-    versionrc: boolean;
-    gitignore: boolean;
-    changeset: boolean;
-  };
+  existing: ExistingConfig;
   framework: Framework;
   frameworkVersion: string | null;
   hasGit: boolean;

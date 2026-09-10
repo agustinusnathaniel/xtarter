@@ -5,6 +5,9 @@ import { FileSystemError } from '@/errors.js';
 import { fileExists, resolvePath } from '@/utils/fs.js';
 import { readPackageJson } from '@/utils/pkg.js';
 
+import { lockfileInputs } from './detect/registry/index.js';
+import type { PackageManager } from './detect/types.js';
+
 export interface DiagnosticCheck {
   message: string;
   name: string;
@@ -119,14 +122,10 @@ export function runEnvironmentChecks(
   );
 }
 
-function lockfileEntries(): Array<readonly [string, string]> {
-  return [
-    ['pnpm-lock.yaml', 'pnpm'],
-    ['package-lock.json', 'npm'],
-    ['yarn.lock', 'yarn'],
-    ['bun.lock', 'bun'],
-    ['bun.lockb', 'bun'],
-  ];
+function lockfileEntries(): Array<readonly [string, PackageManager]> {
+  return lockfileInputs().map(
+    (input) => [input.name, input.packageManager] as const
+  );
 }
 
 function checkLockfile(

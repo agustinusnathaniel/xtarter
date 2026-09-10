@@ -26,8 +26,9 @@ The `existing` keys are hand-written and assembled through an index cast.
 
 ## Decision
 
-One registry module, `packages/core/src/detect/registry.ts`, declares what
-detection reads and which detectors consume it.
+One registry module, `packages/core/src/detect/registry/index.ts` (with
+`inputs`, `entries`, and `selectors` parts behind that single import path),
+declares what detection reads and which detectors consume it.
 
 - Input kinds: root file with extensions, config directory, lockfile with
   package-manager mapping, ancestor marker, cwd marker, and `package.json`.

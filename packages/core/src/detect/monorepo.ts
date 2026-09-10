@@ -3,15 +3,22 @@ import { dirname, relative } from 'pathe';
 import { fileExists, resolvePath } from '@/utils/fs.js';
 import { isPnpmWorkspace } from '@/utils/pkg.js';
 
+import { monorepoMarkerFiles, workspacePackageDirs } from './registry/index.js';
 import type { MonorepoDetection } from './types.js';
 
-const MONOREPO_MARKERS = [
-  'pnpm-workspace.yaml',
-  'turbo.json',
-  'nx.json',
-  'lerna.json',
-];
-const WORKSPACE_PACKAGE_DIRS = ['apps/', 'packages/', 'services/'];
+const MONOREPO_MARKERS = monorepoMarkerFiles();
+const WORKSPACE_DIR_NAMES = workspacePackageDirs();
+const WORKSPACE_PACKAGE_DIRS = WORKSPACE_DIR_NAMES.map((dir) => `${dir}/`);
+
+/** A directory must contain at least two workspace dirs to count as a root. */
+const MIN_WORKSPACE_DIRS = 2;
+
+async function hasWorkspaceDirs(dir: string): Promise<boolean> {
+  const results = await Promise.all(
+    WORKSPACE_DIR_NAMES.map((name) => fileExists(resolvePath(dir, name)))
+  );
+  return results.filter(Boolean).length >= MIN_WORKSPACE_DIRS;
+}
 
 async function hasMonorepoMarkers(dir: string): Promise<boolean> {
   const results = await Promise.all(
@@ -20,11 +27,7 @@ async function hasMonorepoMarkers(dir: string): Promise<boolean> {
   if (results.some(Boolean)) {
     return true;
   }
-  const [hasPackagesDir, hasAppsDir] = await Promise.all([
-    fileExists(resolvePath(dir, 'packages')),
-    fileExists(resolvePath(dir, 'apps')),
-  ]);
-  return hasPackagesDir && hasAppsDir;
+  return hasWorkspaceDirs(dir);
 }
 
 function detectMonorepoTool(flags: {
@@ -92,22 +95,20 @@ export async function detectMonorepo(cwd: string): Promise<MonorepoDetection> {
     hasTurboJson,
     hasNxJson,
     hasLernaJson,
-    hasPackagesDir,
-    hasAppsDir,
+    hasWorkspaceDirsAtRoot,
   ] = await Promise.all([
     isPnpmWorkspace(cwd).then((v) => !!v),
     fileExists(resolvePath(cwd, 'turbo.json')),
     fileExists(resolvePath(cwd, 'nx.json')),
     fileExists(resolvePath(cwd, 'lerna.json')),
-    fileExists(resolvePath(cwd, 'packages')),
-    fileExists(resolvePath(cwd, 'apps')),
+    hasWorkspaceDirs(cwd),
   ]);
   const monorepo =
     hasPnpmWorkspace ||
     hasTurboJson ||
     hasNxJson ||
     hasLernaJson ||
-    (hasPackagesDir && hasAppsDir);
+    hasWorkspaceDirsAtRoot;
   const monorepoTool = detectMonorepoTool({
     hasLernaJson,
     hasNxJson,

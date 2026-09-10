@@ -2,8 +2,19 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { detectProject } from '@xtarterize/core';
+import { detectProject, runConflictChecks } from '@xtarterize/core';
 import { afterAll, describe, expect } from 'vite-plus/test';
+
+import {
+  DETECTOR_ENTRIES,
+  DETECTOR_INPUTS,
+  EXISTING_ENTRIES,
+  existingKeys,
+  inputById,
+  lockfileInputs,
+  rootFileInputByBasename,
+  workspacePackageDirs,
+} from '../../packages/core/src/detect/registry/index.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const fixtures = path.resolve(__dirname, '../fixtures');
@@ -398,6 +409,123 @@ describe('detectProject', () => {
     expect(profile.vitePlus).toBe(false);
     expect(profile.existing.biome).toBe(false);
     expect(profile.existing.eslint).toBe(false);
+  });
+
+  test('detects .eslintrc.mjs consistently with the doctor legacy check', async () => {
+    const tmpDir = await fs.mkdtemp(
+      path.join(os.tmpdir(), 'xtarterize-eslintrc-mjs-')
+    );
+    try {
+      await fs.writeFile(
+        path.join(tmpDir, 'package.json'),
+        JSON.stringify({ name: 'legacy-eslint-project' })
+      );
+      await fs.writeFile(
+        path.join(tmpDir, '.eslintrc.mjs'),
+        'export default {}\n'
+      );
+
+      const profile = await detectProject(tmpDir);
+      expect(profile.existing.eslint).toBe(true);
+
+      const checks = await runConflictChecks(tmpDir);
+      const legacyCheck = checks.find(
+        (check) => check.name === 'Legacy config'
+      );
+      expect(legacyCheck?.message).toContain('.eslintrc.mjs');
+    } finally {
+      await fs.rm(tmpDir, { force: true, recursive: true });
+    }
+  });
+
+  test('tsconfig.jsonc sets both existing.tsconfig and typescript', async () => {
+    const tmpDir = await fs.mkdtemp(
+      path.join(os.tmpdir(), 'xtarterize-tsconfig-jsonc-')
+    );
+    try {
+      await fs.writeFile(
+        path.join(tmpDir, 'package.json'),
+        JSON.stringify({ name: 'jsonc-tsconfig-project' })
+      );
+      await fs.writeFile(
+        path.join(tmpDir, 'tsconfig.jsonc'),
+        JSON.stringify({ compilerOptions: {} })
+      );
+
+      const profile = await detectProject(tmpDir);
+      expect(profile.existing.tsconfig).toBe(true);
+      expect(profile.typescript).toBe(true);
+    } finally {
+      await fs.rm(tmpDir, { force: true, recursive: true });
+    }
+  });
+
+  test('detects a workspace package under services/ from workspace dirs', async () => {
+    const root = await fs.mkdtemp(
+      path.join(os.tmpdir(), 'xtarterize-services-')
+    );
+    try {
+      await fs.mkdir(path.join(root, 'packages'), { recursive: true });
+      const apiDir = path.join(root, 'services', 'api');
+      await fs.mkdir(apiDir, { recursive: true });
+      await fs.writeFile(
+        path.join(apiDir, 'package.json'),
+        JSON.stringify({ name: 'api', version: '1.0.0' })
+      );
+
+      const profile = await detectProject(apiDir);
+      expect(profile.monorepo).toBe(true);
+      expect(profile.workspaceRoot).toBe(false);
+      expect(profile.monorepoTool).toBeNull();
+    } finally {
+      await fs.rm(root, { force: true, recursive: true });
+    }
+  });
+});
+
+describe('detection registry integrity', () => {
+  test('declares unique input and entry ids', () => {
+    const inputIds = DETECTOR_INPUTS.map((input) => input.id);
+    expect(new Set(inputIds).size).toBe(inputIds.length);
+
+    const entryIds = DETECTOR_ENTRIES.map((entry) => entry.id);
+    expect(new Set(entryIds).size).toBe(entryIds.length);
+  });
+
+  test('every entry declares at least one registered input', () => {
+    for (const entry of DETECTOR_ENTRIES) {
+      expect(entry.inputs.length).toBeGreaterThan(0);
+      for (const inputId of entry.inputs) {
+        expect(() => inputById(inputId)).not.toThrow();
+      }
+    }
+  });
+
+  test('declares the drift-prone inputs used by detection', () => {
+    const lockfileNames = lockfileInputs().map((input) => input.name);
+    expect(lockfileNames).toContain('bun.lock');
+    expect(lockfileNames).toContain('bun.lockb');
+    expect(workspacePackageDirs()).toContain('services');
+    expect(rootFileInputByBasename('.eslintrc')?.extensions).toContain('.mjs');
+    expect(rootFileInputByBasename('tsconfig')?.extensions).toContain('.jsonc');
+  });
+
+  test('detection produces every derived existing key with the declared kind', async () => {
+    const profile = await detectProject(
+      path.join(fixtures, 'react-vite-tailwind')
+    );
+    expect(Object.keys(profile.existing).sort()).toEqual(
+      [...existingKeys()].sort()
+    );
+
+    for (const entry of EXISTING_ENTRIES) {
+      const value = profile.existing[entry.key];
+      if (entry.existing === 'list') {
+        expect(Array.isArray(value)).toBe(true);
+      } else {
+        expect(typeof value).toBe('boolean');
+      }
+    }
   });
 });
 
