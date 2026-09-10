@@ -1,7 +1,12 @@
 #!/usr/bin/env node
 import { resolve } from 'node:path';
 import { cancel, intro, note, outro } from '@clack/prompts';
-import { consola, findFirstPositionalIndex, pc } from '@xtarterize/core';
+import {
+  consola,
+  createInvocationGuard,
+  findFirstPositionalIndex,
+  pc,
+} from '@xtarterize/core';
 import {
   type ArgsDef,
   type CommandDef,
@@ -23,7 +28,6 @@ import {
   scaffoldProject,
 } from '@/scaffold';
 import type { PackageManager } from '@/types';
-import { createInvocationGuard } from '@/utils/invocation-guard';
 
 // ── Helpers ──
 

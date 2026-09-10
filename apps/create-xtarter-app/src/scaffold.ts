@@ -32,7 +32,9 @@ export interface ScaffoldResult {
 }
 
 /**
- * Resolve project path and create/verify directory.
+ * Validate the target directory and apply `--force` overwrite semantics.
+ * Creation is owned by `scaffoldProject` so a failed scaffold can clean up
+ * the directory it created.
  */
 export async function prepareProjectDir(
   projectName: string,
@@ -40,7 +42,6 @@ export async function prepareProjectDir(
   force?: boolean
 ): Promise<void> {
   if (!existsSync(projectPath)) {
-    await mkdir(projectPath, { recursive: true });
     return;
   }
 
@@ -54,7 +55,6 @@ export async function prepareProjectDir(
       `Directory "${projectPath}" exists and is not empty. Overwriting...`
     );
     await rm(projectPath, { force: true, recursive: true });
-    await mkdir(projectPath, { recursive: true });
     return;
   }
 

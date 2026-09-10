@@ -50,11 +50,3 @@ export async function installDependencies({
     throw error;
   }
 }
-
-export function getInstallCommand(packageManager: PackageManager): string {
-  return `${packageManager} install`;
-}
-
-export function getDevCommand(packageManager: PackageManager): string {
-  return `${packageManager} dev`;
-}
