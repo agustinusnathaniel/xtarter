@@ -8,6 +8,14 @@ export type {
   TaskSearchMeta,
   TaskStatus,
 } from '@/_base.js';
+export type { ExecutePlanOptions } from '@/apply/execute.js';
+export { executePlan } from '@/apply/execute.js';
+export type {
+  ApplyPlan,
+  ApplyPlanEntry,
+  PlanTasksOptions,
+} from '@/apply/plan.js';
+export { planTasks } from '@/apply/plan.js';
 export type { ApplyOptions, ApplyResult } from '@/apply.js';
 export { applyTasks } from '@/apply.js';
 export type { Backup, RunManifest } from '@/backup.js';

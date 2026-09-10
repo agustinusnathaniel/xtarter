@@ -10,6 +10,7 @@ import {
   logInfo,
   logSuccess,
   logWarn,
+  planTasks,
   resolveProjectTasks,
 } from '@xtarterize/core';
 
@@ -24,7 +25,6 @@ import {
   printProjectProfile,
 } from '@/utils/project.js';
 import { resolveRuntimeFlags } from '@/utils/runtime-flags.js';
-import { collectTaskDiffs } from '@/utils/task-diffs.js';
 import { formatTimingJson, printTiming } from '@/utils/timing-display.js';
 
 interface CommandArgs {
@@ -148,14 +148,31 @@ interface DryRunOptions {
   cwd: string;
   format?: string;
   profile: Awaited<ReturnType<typeof detectProjectWithAmbiguity>>;
+  statuses?: ReadonlyMap<string, TaskStatus>;
   tasks: Array<Task>;
   timing: ResolveTiming;
 }
 
 async function handleDryRun(options: DryRunOptions): Promise<void> {
-  const { tasks, cwd, profile, timing, format } = options;
-  const { diffs, failures } = await collectTaskDiffs(tasks, cwd, profile);
-  const mergedDiffs = mergeFileDiffs(diffs);
+  const { tasks, cwd, profile, timing, format, statuses } = options;
+  const plan = await planTasks({
+    cwd,
+    includeConflicts: true,
+    profile,
+    statuses,
+    tasks,
+  });
+  const failures = plan.entries.filter(
+    (entry) => entry.dryRunError !== undefined
+  ).length;
+  for (const entry of plan.entries) {
+    if (entry.dryRunError) {
+      logError(`Failed to dryRun ${entry.dryRunError}`);
+    }
+  }
+  const mergedDiffs = mergeFileDiffs(
+    plan.entries.flatMap((entry) => entry.diffs)
+  );
   if (mergedDiffs.length > 0 || failures > 0) {
     process.exitCode = 1;
   }
@@ -227,7 +244,15 @@ async function handleApplyAllFlow(
 }
 
 async function promptAndApply(options: PromptAndApplyOptions): Promise<void> {
-  const { actionableTasks, cwd, profile, timing, runOptions, format } = options;
+  const {
+    actionableTasks,
+    cwd,
+    profile,
+    timing,
+    runOptions,
+    format,
+    statuses,
+  } = options;
   const action = await select({
     message: runOptions.confirmMessage,
     options: [
@@ -247,6 +272,7 @@ async function promptAndApply(options: PromptAndApplyOptions): Promise<void> {
       cwd,
       format,
       profile,
+      statuses,
       tasks: actionableTasks,
       timing,
     });
@@ -358,6 +384,7 @@ export async function runCommand(
       cwd,
       format,
       profile,
+      statuses,
       tasks: actionableTasks,
       timing,
     });

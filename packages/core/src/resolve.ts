@@ -7,7 +7,14 @@ import { TaskError } from '@/errors.js';
 import type { ResolveTiming } from '@/timing.js';
 import { logWarn } from '@/utils/logger.js';
 
-const CONCURRENCY = 8;
+export const CONCURRENCY = 8;
+
+export interface TaskCheckResult {
+  checkError?: string;
+  checkMs: number;
+  status: TaskStatus;
+  task: Task;
+}
 
 export function resolveTasks(
   profile: ProjectProfile,
@@ -33,11 +40,16 @@ export function resolveTasks(
   });
 }
 
-export function checkTask(
+interface CheckOutcome {
+  checkError?: string;
+  status: TaskStatus;
+}
+
+function runCheckTask(
   task: Task,
   cwd: string,
   profile: ProjectProfile
-): Effect.Effect<TaskStatus, never> {
+): Effect.Effect<CheckOutcome, never> {
   return Effect.tryPromise({
     catch: (cause) =>
       new TaskError({
@@ -47,36 +59,51 @@ export function checkTask(
       }),
     try: (_signal) => task.check(cwd, profile),
   }).pipe(
+    Effect.map((status): CheckOutcome => ({ status })),
     Effect.catchTag('TaskError', (error) => {
       const detail =
         error.cause instanceof Error
           ? error.cause.message
           : String(error.cause);
       logWarn(`Failed to check ${task.id}: ${detail}`);
-      return Effect.succeed('conflict' as TaskStatus);
+      return Effect.succeed<CheckOutcome>({
+        checkError: detail,
+        status: 'conflict',
+      });
     })
   );
 }
 
-function checkTaskWithTiming(
-  task: Task,
-  cwd: string,
-  profile: ProjectProfile
-): Effect.Effect<[string, TaskStatus, number], never> {
-  return Effect.gen(function* () {
-    const start = performance.now();
-    const status = yield* checkTask(task, cwd, profile);
-    const duration = performance.now() - start;
-    return [task.id, status, duration] as [string, TaskStatus, number];
-  });
-}
-
-function runConcurrent<T>(
-  tasks: Array<Task>,
-  makeEffect: (task: Task) => Effect.Effect<T, never>
-): Promise<Array<T>> {
+export function collectTaskChecks(options: {
+  cwd: string;
+  profile: ProjectProfile;
+  statuses?: ReadonlyMap<string, TaskStatus>;
+  tasks: Array<Task>;
+}): Promise<Array<TaskCheckResult>> {
+  const { cwd, profile, statuses, tasks } = options;
   return Effect.runPromise(
-    Effect.all(tasks.map(makeEffect), { concurrency: CONCURRENCY })
+    Effect.all(
+      tasks.map((task) => {
+        const precomputed = statuses?.get(task.id);
+        if (precomputed !== undefined) {
+          return Effect.succeed<TaskCheckResult>({
+            checkMs: 0,
+            status: precomputed,
+            task,
+          });
+        }
+        return Effect.gen(function* () {
+          const start = performance.now();
+          const outcome = yield* runCheckTask(task, cwd, profile);
+          return {
+            checkMs: performance.now() - start,
+            task,
+            ...outcome,
+          };
+        });
+      }),
+      { concurrency: CONCURRENCY }
+    )
   );
 }
 
@@ -85,26 +112,10 @@ export function resolveTaskStatuses(
   cwd: string,
   profile: ProjectProfile
 ): Promise<Map<string, TaskStatus>> {
-  return runConcurrent(tasks, (task) =>
-    checkTask(task, cwd, profile).pipe(
-      Effect.map((status) => [task.id, status] as [string, TaskStatus])
-    )
-  ).then((entries) => new Map(entries));
-}
-
-async function resolveStatusesWithTiming(
-  tasks: Array<Task>,
-  cwd: string,
-  profile: ProjectProfile
-): Promise<{ statuses: Map<string, TaskStatus>; checkSumMs: number }> {
-  const results = await runConcurrent(tasks, (task) =>
-    checkTaskWithTiming(task, cwd, profile)
+  return collectTaskChecks({ cwd, profile, tasks }).then(
+    (results) =>
+      new Map(results.map(({ task, status }) => [task.id, status] as const))
   );
-  const statuses = new Map(
-    results.map(([id, status]) => [id, status] as [string, TaskStatus])
-  );
-  const checkSumMs = results.reduce((sum, [, , duration]) => sum + duration, 0);
-  return { checkSumMs, statuses };
 }
 
 export async function resolveProjectTasks(
@@ -131,12 +142,20 @@ export async function resolveProjectTasks(
   const applicableTasks = resolveTasks(profile, mergedTasks);
 
   const resolutionStart = performance.now();
-  const { statuses, checkSumMs } = await resolveStatusesWithTiming(
-    applicableTasks,
+  const checkResults = await collectTaskChecks({
     cwd,
-    profile
-  );
+    profile,
+    tasks: applicableTasks,
+  });
   const resolutionMs = performance.now() - resolutionStart;
+
+  const statuses = new Map(
+    checkResults.map(({ task, status }) => [task.id, status] as const)
+  );
+  const checkSumMs = checkResults.reduce(
+    (sum, { checkMs }) => sum + checkMs,
+    0
+  );
 
   return {
     profile,

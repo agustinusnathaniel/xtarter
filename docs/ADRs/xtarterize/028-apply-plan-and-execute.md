@@ -74,6 +74,9 @@ preview, and `utils/task-diffs.ts` is deleted.
 - `ApplyPlan` becomes a public shape that must stay compatible.
 - A run whose install fails now reports failure where it previously logged and
   continued; this is a user-facing behavior change and needs a changeset.
+- `ApplyResult.timing.applyMs` now measures execution only (backup, install,
+  apply) after planning, while planning time is carried per entry in `checkMs`
+  and `dryRunMs`.
 
 ### Related Decisions
 

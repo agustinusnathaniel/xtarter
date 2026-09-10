@@ -2,13 +2,13 @@ import {
   ensureXtarterizeGitignore,
   logError,
   logSuccess,
+  planTasks,
 } from '@xtarterize/core';
 import { defineCommand } from 'citty';
 
 import { displayDiffs } from '@/ui/diff-display.js';
 import { mergeFileDiffs } from '@/ui/merge-file-diffs.js';
 import { resolveCliContext, scanProject } from '@/utils/project.js';
-import { collectTaskDiffs } from '@/utils/task-diffs.js';
 import { printTiming } from '@/utils/timing-display.js';
 
 export const diffCommand = defineCommand({
@@ -43,13 +43,25 @@ export const diffCommand = defineCommand({
       const status = statuses.get(task.id);
       return status === 'new' || status === 'patch' || status === 'conflict';
     });
-    const { diffs, failures } = await collectTaskDiffs(
-      actionableTasks,
-      ctx.cwd,
-      profile
-    );
+    const plan = await planTasks({
+      cwd: ctx.cwd,
+      includeConflicts: true,
+      profile,
+      statuses,
+      tasks: actionableTasks,
+    });
+    const failures = plan.entries.filter(
+      (entry) => entry.dryRunError !== undefined
+    ).length;
+    for (const entry of plan.entries) {
+      if (entry.dryRunError) {
+        logError(`Failed to dryRun ${entry.dryRunError}`);
+      }
+    }
 
-    const mergedDiffs = mergeFileDiffs(diffs);
+    const mergedDiffs = mergeFileDiffs(
+      plan.entries.flatMap((entry) => entry.diffs)
+    );
 
     if (mergedDiffs.length > 0 || failures > 0) {
       process.exitCode = 1;
