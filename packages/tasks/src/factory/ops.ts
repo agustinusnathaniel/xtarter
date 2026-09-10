@@ -1,5 +1,11 @@
 import type { FileDiff } from '@xtarterize/core';
-import { ensureDir, resolvePath, TaskError, writeFile } from '@xtarterize/core';
+import {
+  ensureDir,
+  readPackageJson,
+  resolvePath,
+  TaskError,
+  writeFile,
+} from '@xtarterize/core';
 
 export function wrapTask<A>(
   taskId: string,
@@ -21,15 +27,13 @@ export function wrapTask<A>(
  */
 export async function checkMissingDeps(
   cwd: string,
-  options: { depName?: string; depNames?: Array<string> }
+  depNames: Array<string>
 ): Promise<'patch' | null> {
-  if (!(options.depName || options.depNames)) {
+  if (depNames.length === 0) {
     return null;
   }
-  const { readPackageJson } = await import('@xtarterize/core');
   const pkg = await readPackageJson(cwd);
-  const deps = options.depNames ?? (options.depName ? [options.depName] : []);
-  for (const dep of deps) {
+  for (const dep of depNames) {
     if (!(pkg?.devDependencies?.[dep] || pkg?.dependencies?.[dep])) {
       return 'patch';
     }

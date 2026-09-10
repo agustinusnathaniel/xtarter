@@ -8,7 +8,7 @@ import {
 import { patchJson } from '@xtarterize/patchers';
 import type { PackageJson } from 'pkg-types';
 
-const PACKAGE_JSON_FILENAME = 'package.json';
+export const PACKAGE_JSON_FILENAME = 'package.json';
 
 export interface PackageJsonChange {
   after: string;

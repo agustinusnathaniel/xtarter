@@ -1,7 +1,7 @@
-import { defineTask } from '@/factory/define-task.js';
+import { defineSingleTargetTask } from '@/factory/define-task.js';
 import { renderKnipConfig } from '@/templates/knip-config.js';
 
-export const knipTask = defineTask({
+export const knipTask = defineSingleTargetTask({
   applicable: () => true,
   group: 'Quality',
   id: 'quality/knip',
@@ -16,13 +16,11 @@ export const knipTask = defineTask({
     ],
     tags: ['dead-code', 'quality', 'analysis', 'detection'],
   },
-  targets: [
-    {
-      extensions: ['.ts', '.mts', '.js', '.json'],
-      filepath: 'knip.config',
-      kind: 'text',
-      render: (profile) =>
-        renderKnipConfig(profile, profile.typescript ? 'ts' : 'js'),
-    },
-  ],
+  target: {
+    extensions: ['.ts', '.mts', '.js', '.json'],
+    filepath: 'knip.config',
+    kind: 'text',
+    render: (profile) =>
+      renderKnipConfig(profile, profile.typescript ? 'ts' : 'js'),
+  },
 });

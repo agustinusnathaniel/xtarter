@@ -7,7 +7,7 @@ import { releaseWorkflowTask } from '@/ci/release.js';
 import { plopTask } from '@/codegen/plop.js';
 import { renovateTask } from '@/deps/renovate.js';
 import { vscodeTask } from '@/editor/vscode.js';
-import { defineTask } from '@/factory/define-task.js';
+import { defineSingleTargetTask } from '@/factory/define-task.js';
 import { packageScriptsTask } from '@/factory/package-scripts.js';
 import { biomeTask } from '@/lint/biome.js';
 import { oxfmtTask, oxlintTask } from '@/lint/oxlint.js';
@@ -31,20 +31,10 @@ import { viteCheckerTask } from '@/vite/checker.js';
 import { viteVisualizerTask } from '@/vite/visualizer.js';
 import { pnpmWorkspaceTask } from '@/workspace/pnpm-workspace.js';
 
-export {
-  areEquivalent,
-  extractTool,
-  findEquivalentScriptKey,
-  hasScriptWithEquivalentValue,
-  isExecutableFile,
-  lintToolScripts,
-  normalizeCommand,
-  resolveLintTool,
-  writeTaskDiffs,
-} from '@/factory/index.js';
+export { isExecutableFile, writeTaskDiffs } from '@/factory/ops.js';
 
 // Inline agent task definitions
-const agentsMdTask = defineTask({
+const agentsMdTask = defineSingleTargetTask({
   applicable: () => true,
   group: 'Agent',
   id: 'agent/agents-md',
@@ -53,13 +43,11 @@ const agentsMdTask = defineTask({
     keywords: ['agents', 'ai', 'claude', 'opencode', 'agent config', 'llm'],
     tags: ['ai', 'agent', 'documentation', 'setup'],
   },
-  targets: [
-    {
-      filepath: 'AGENTS.md',
-      kind: 'text',
-      render: (profile, existing) => existing ?? renderAgentsMd(profile),
-    },
-  ],
+  target: {
+    filepath: 'AGENTS.md',
+    kind: 'text',
+    render: (profile, existing) => existing ?? renderAgentsMd(profile),
+  },
 });
 
 export {

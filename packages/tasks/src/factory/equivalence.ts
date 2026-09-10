@@ -29,19 +29,19 @@ export function extractTool(cmd: string): string | null {
   return null;
 }
 
-export function extractScriptRef(cmd: string): string | null {
+function extractScriptRef(cmd: string): string | null {
   const norm = normalizeCommand(cmd);
   const match = norm.match(PM_SCRIPT_REF_PATTERN);
   return match ? match[1] : null;
 }
 
-export function extractCompositeTasks(cmd: string): string | null {
+function extractCompositeTasks(cmd: string): string | null {
   const norm = normalizeCommand(cmd).toLowerCase();
   const match = norm.match(/turbo\s+run\s+(.+)$/);
   return match ? match[1].trim() : null;
 }
 
-export function isCompositeCommand(cmd: string): boolean {
+function isCompositeCommand(cmd: string): boolean {
   const norm = normalizeCommand(cmd).toLowerCase();
   return norm.startsWith('turbo run') || norm.startsWith('turborepo run');
 }
@@ -64,7 +64,7 @@ const EQUIVALENT_SUBCOMMANDS: Record<string, Array<string>> = {
   vp: ['lint', 'check', 'fmt', 'staged'],
 };
 
-export function normalizeTool(tool: string | null): string | null {
+function normalizeTool(tool: string | null): string | null {
   if (!tool) {
     return null;
   }
@@ -73,173 +73,72 @@ export function normalizeTool(tool: string | null): string | null {
       return canonical;
     }
   }
-  return tool?.toLowerCase() ?? null;
+  return tool.toLowerCase();
 }
 
-// EquivalenceRule: returns true (equivalent), false (not equivalent), or null (continue to next rule)
-type EquivalenceRule = {
-  name: string;
-  check: (ctx: EquivalenceContext) => boolean | null;
-};
-
-type EquivalenceContext = {
-  normA: string;
-  normB: string;
-  isCompositeA: boolean;
-  isCompositeB: boolean;
-  hasShellOpA: boolean;
-  hasShellOpB: boolean;
-  toolA: string | null;
-  toolB: string | null;
-  argsA: string;
-  argsB: string;
-  refA: string | null;
-  refB: string | null;
-};
-
-function buildContext(a: string, b: string): EquivalenceContext {
+/**
+ * Rules apply in a fixed order and short-circuit: exact match, composite
+ * commands, shell operators, tool mismatch, same tool and args, equivalent
+ * subcommands, then package-manager script refs. The order is semantic.
+ */
+export function areEquivalent(a: string, b: string): boolean {
   const normA = normalizeCommand(a);
   const normB = normalizeCommand(b);
-  const isCompositeA = isCompositeCommand(normA);
-  const isCompositeB = isCompositeCommand(normB);
-  const hasShellOpA = /[&|;]/.test(a);
-  const hasShellOpB = /[&|;]/.test(b);
-  const toolA = extractTool(normA);
-  const toolB = extractTool(normB);
-  const argsA = normA.slice(toolA?.length ?? 0).trimStart();
-  const argsB = normB.slice(toolB?.length ?? 0).trimStart();
-  const refA = extractScriptRef(normA);
-  const refB = extractScriptRef(normB);
-
-  return {
-    argsA,
-    argsB,
-    hasShellOpA,
-    hasShellOpB,
-    isCompositeA,
-    isCompositeB,
-    normA,
-    normB,
-    refA,
-    refB,
-    toolA,
-    toolB,
-  };
-}
-
-const EQUIVALENCE_RULES: Array<EquivalenceRule> = [
-  {
-    check: (ctx) => {
-      if (ctx.normA === ctx.normB) {
-        return true;
-      }
-      return null;
-    },
-    name: 'exact-match',
-  },
-  {
-    check: (ctx) => {
-      if (ctx.isCompositeA && ctx.isCompositeB) {
-        return (
-          extractCompositeTasks(ctx.normA) === extractCompositeTasks(ctx.normB)
-        );
-      }
-      return null;
-    },
-    name: 'composite-same-tasks',
-  },
-  {
-    check: (ctx) => {
-      if (ctx.isCompositeA || ctx.isCompositeB) {
-        return false;
-      }
-      return null;
-    },
-    name: 'composite-mixed-reject',
-  },
-  {
-    check: (ctx) => {
-      if (ctx.hasShellOpA !== ctx.hasShellOpB) {
-        return false;
-      }
-      return null;
-    },
-    name: 'shell-operator-mismatch',
-  },
-  {
-    check: (ctx) => {
-      if (ctx.toolA === null || ctx.toolB === null) {
-        return false;
-      }
-      if (normalizeTool(ctx.toolA) !== normalizeTool(ctx.toolB)) {
-        return false;
-      }
-      return null;
-    },
-    name: 'tool-mismatch',
-  },
-  {
-    check: (ctx) => {
-      const normalizeArgs = (args: string) =>
-        args.replace(/(\s+\.)?\s*$/, '').trim();
-      if (normalizeArgs(ctx.argsA) === normalizeArgs(ctx.argsB)) {
-        return true;
-      }
-      return null;
-    },
-    name: 'same-tool-same-args',
-  },
-  {
-    check: (ctx) => {
-      if (!ctx.toolA) {
-        return null;
-      }
-      const equivSubcommands = EQUIVALENT_SUBCOMMANDS[ctx.toolA.toLowerCase()];
-      if (!equivSubcommands) {
-        return null;
-      }
-      const subcommandPattern = new RegExp(
-        `^(${equivSubcommands.join('|')})\\s*`
-      );
-      const normalizeArgs = (args: string) =>
-        args
-          .replace(subcommandPattern, '')
-          .replace(/^--write\s*/, '')
-          .trim();
-      return normalizeArgs(ctx.argsA) === normalizeArgs(ctx.argsB);
-    },
-    name: 'equivalent-subcommands',
-  },
-  {
-    check: (ctx) => {
-      if (ctx.refA !== null && ctx.refB !== null) {
-        return ctx.refA === ctx.refB;
-      }
-      if (ctx.refA !== null || ctx.refB !== null) {
-        return false;
-      }
-      return null;
-    },
-    name: 'script-ref-mismatch',
-  },
-];
-
-export function areEquivalent(a: string, b: string): boolean {
-  const ctx = buildContext(a, b);
-
-  for (const rule of EQUIVALENCE_RULES) {
-    const result = rule.check(ctx);
-    if (result !== null) {
-      return result;
-    }
+  if (normA === normB) {
+    return true;
   }
 
+  const isCompositeA = isCompositeCommand(normA);
+  const isCompositeB = isCompositeCommand(normB);
+  if (isCompositeA && isCompositeB) {
+    return extractCompositeTasks(normA) === extractCompositeTasks(normB);
+  }
+  if (isCompositeA || isCompositeB) {
+    return false;
+  }
+
+  if (/[&|;]/.test(a) !== /[&|;]/.test(b)) {
+    return false;
+  }
+
+  const toolA = extractTool(normA);
+  const toolB = extractTool(normB);
+  if (toolA === null || toolB === null) {
+    return false;
+  }
+  if (normalizeTool(toolA) !== normalizeTool(toolB)) {
+    return false;
+  }
+
+  const argsA = normA.slice(toolA.length).trimStart();
+  const argsB = normB.slice(toolB.length).trimStart();
+  const trimTrailingDot = (args: string) =>
+    args.replace(/(\s+\.)?\s*$/, '').trim();
+  if (trimTrailingDot(argsA) === trimTrailingDot(argsB)) {
+    return true;
+  }
+
+  const subcommands = EQUIVALENT_SUBCOMMANDS[toolA.toLowerCase()];
+  if (subcommands) {
+    const subcommandPattern = new RegExp(`^(${subcommands.join('|')})\\s*`);
+    const trimSubcommand = (args: string) =>
+      args
+        .replace(subcommandPattern, '')
+        .replace(/^--write\s*/, '')
+        .trim();
+    return trimSubcommand(argsA) === trimSubcommand(argsB);
+  }
+
+  const refA = extractScriptRef(normA);
+  const refB = extractScriptRef(normB);
+  if (refA !== null && refB !== null) {
+    return refA === refB;
+  }
   return false;
 }
 
 export function findEquivalentScriptKey(
   scripts: PackageScriptsMap,
-  _script: string,
   targetValue: string
 ): string | null {
   for (const [key, value] of Object.entries(scripts)) {

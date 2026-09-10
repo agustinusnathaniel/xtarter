@@ -145,9 +145,10 @@ async function applyDependencyStatus(
   if (deps.length === 0) {
     return drafts.map((draft) => draft.target);
   }
-  const missing = await checkMissingDeps(cwd, {
-    depNames: deps.map((dep) => dep.depName),
-  });
+  const missing = await checkMissingDeps(
+    cwd,
+    deps.map((dep) => dep.depName)
+  );
   if (missing === null) {
     return drafts.map((draft) => draft.target);
   }
@@ -273,4 +274,11 @@ export function defineTask(spec: TaskSpec): Task {
     scope: spec.scope,
     searchMeta: resolveSearchMeta(spec),
   };
+}
+
+/** defineTask sugar for the common case of exactly one static target. */
+export function defineSingleTargetTask(
+  spec: Omit<TaskSpec, 'targets'> & { target: TaskTarget }
+): Task {
+  return defineTask({ ...spec, targets: [spec.target] });
 }

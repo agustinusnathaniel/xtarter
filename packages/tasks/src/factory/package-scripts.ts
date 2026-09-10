@@ -52,21 +52,17 @@ export interface LintConfig {
 }
 
 function resolveProjectLintConfig(
-  pkg: Record<string, unknown> | null,
+  pkg: PackageJson | null,
   profile: {
     existing: { eslint: boolean; oxlint: boolean; oxfmt: boolean };
     vitePlus: boolean;
     framework: Framework;
   }
 ): LintConfig {
-  const pkgDeps =
-    (pkg?.dependencies as Record<string, string> | undefined) ?? {};
-  const pkgDevDeps =
-    (pkg?.devDependencies as Record<string, string> | undefined) ?? {};
-  const hasBiomeDep = !!(
-    pkgDevDeps['@biomejs/biome'] ?? pkgDeps['@biomejs/biome']
-  );
-  const useUltracite = !!(pkgDevDeps.ultracite ?? pkgDeps.ultracite);
+  const deps = pkg?.dependencies ?? {};
+  const devDeps = pkg?.devDependencies ?? {};
+  const hasBiomeDep = !!(devDeps['@biomejs/biome'] ?? deps['@biomejs/biome']);
+  const useUltracite = !!(devDeps.ultracite ?? deps.ultracite);
   const oxlintPlugins = oxlintPluginFlags({ framework: profile.framework });
   const lintTool = resolveLintTool({
     existingEslint: profile.existing.eslint,
@@ -117,34 +113,41 @@ export function lintToolScripts(
   }
 }
 
+function firstScriptKey(
+  existingScripts: Record<string, string>,
+  tool: string
+): string | null {
+  for (const [key, value] of Object.entries(existingScripts)) {
+    if (extractTool(value) === tool) {
+      return key;
+    }
+  }
+  return null;
+}
+
 function lintTurboTasks(
   tool: LintTool | null,
   existingScripts: Record<string, string>,
   typescript: boolean
 ): Array<string> {
-  const taskKey = tool === 'vp' || tool === 'oxlint' ? 'lint' : (tool ?? '');
-  const baseTasks: Array<string> = tool
-    ? [tool === 'vp' || tool === 'oxlint' ? 'lint' : tool, 'typecheck', 'test']
+  const lintKey = tool === 'vp' || tool === 'oxlint' ? 'lint' : tool;
+  const baseTasks: Array<string> = lintKey
+    ? [lintKey, 'typecheck', 'test']
     : ['typecheck', 'test'];
-
-  let recommendedKeys: Array<string>;
-  if (!tool) {
-    recommendedKeys = ['typecheck', 'test'];
-  } else if (tool === 'ultracite') {
-    recommendedKeys = ['ultracite:check'];
-  } else {
-    recommendedKeys = baseTasks;
+  const tasks: Array<string> = [];
+  for (const task of baseTasks) {
+    const mapped = firstScriptKey(existingScripts, task) ?? task;
+    // The old composite filter dropped a mapped `typecheck` for non-TS
+    // projects and the literal `ultracite` key, which no generated script uses.
+    if (mapped === 'typecheck' && !typescript) {
+      continue;
+    }
+    if (tool === 'ultracite' && mapped === lintKey) {
+      continue;
+    }
+    tasks.push(mapped);
   }
-
-  return getCompositeTasks(existingScripts, baseTasks).filter((t) => {
-    if (t === 'typecheck' && !typescript) {
-      return false;
-    }
-    if (taskKey && t === taskKey && !recommendedKeys.includes(taskKey)) {
-      return false;
-    }
-    return true;
-  });
+  return tasks;
 }
 
 function oxlintPluginFlags(profile: { framework: Framework }): string {
@@ -170,101 +173,6 @@ function getUpgradeCommand(pm: string): string {
   }
 }
 
-function addCoreScripts(params: {
-  existingScripts: ScriptsMap;
-  lintTool: LintTool | null;
-  oxlintPlugins: string;
-  pm: string;
-  scripts: Array<ScriptEntry>;
-}): void {
-  pushAllIfMissing(
-    params.scripts,
-    params.existingScripts,
-    lintToolScripts(params.lintTool, params.oxlintPlugins)
-  );
-  pushIfMissing(params.scripts, params.existingScripts, {
-    script: 'test',
-    value: 'vitest run',
-  });
-  pushIfMissing(params.scripts, params.existingScripts, {
-    script: 'upgrade',
-    value: getUpgradeCommand(params.pm),
-  });
-}
-
-function addReleaseScripts(params: {
-  existingScripts: ScriptsMap;
-  hasChangeset: boolean;
-  scripts: Array<ScriptEntry>;
-}): void {
-  if (params.hasChangeset) {
-    pushAllIfMissing(params.scripts, params.existingScripts, [
-      { script: 'changeset', value: 'changeset' },
-      { script: 'version-packages', value: 'changeset version' },
-      { script: 'release', value: 'changeset publish' },
-    ]);
-  } else {
-    pushIfMissing(params.scripts, params.existingScripts, {
-      script: 'release',
-      value: 'commit-and-tag-version',
-    });
-  }
-}
-
-function addTypescriptScripts(params: {
-  existingScripts: ScriptsMap;
-  scripts: Array<ScriptEntry>;
-  typescript: boolean;
-}): void {
-  if (params.typescript) {
-    pushIfMissing(params.scripts, params.existingScripts, {
-      script: 'typecheck',
-      value: 'tsc --noEmit',
-    });
-    pushIfMissing(params.scripts, params.existingScripts, {
-      script: 'knip',
-      value: 'knip',
-    });
-  }
-}
-
-function addTurboScript(params: {
-  existingScripts: ScriptsMap;
-  lintTool: LintTool | null;
-  pkg: Record<string, unknown> | null;
-  profile: {
-    existing: { turbo: boolean };
-    monorepoTool: string | null;
-    typescript: boolean;
-  };
-  scripts: Array<ScriptEntry>;
-}): void {
-  const hasTurbo =
-    params.profile.monorepoTool === 'turbo' ||
-    params.profile.existing.turbo ||
-    !!(params.pkg?.devDependencies as Record<string, string> | undefined)
-      ?.turborepo ||
-    !!(params.pkg?.devDependencies as Record<string, string> | undefined)
-      ?.turbo;
-  if (hasTurbo) {
-    const turboTasks = lintTurboTasks(
-      params.lintTool,
-      params.existingScripts,
-      params.profile.typescript
-    );
-    const existingCheckTurbo = params.existingScripts['check:turbo'];
-    const newCheckTurboValue = `turbo run ${turboTasks.join(' ')}`;
-    if (
-      !(
-        existingCheckTurbo &&
-        areEquivalent(existingCheckTurbo, newCheckTurboValue)
-      )
-    ) {
-      params.scripts.push({ script: 'check:turbo', value: newCheckTurboValue });
-    }
-  }
-}
-
 function pushIfMissing(
   scripts: Array<ScriptEntry>,
   existing: ScriptsMap,
@@ -273,41 +181,68 @@ function pushIfMissing(
   if (
     !(
       Object.hasOwn(existing, entry.script) ||
-      findEquivalentScriptKey(existing, entry.script, entry.value)
+      findEquivalentScriptKey(existing, entry.value)
     )
   ) {
     scripts.push(entry);
   }
 }
 
-function pushAllIfMissing(
-  scripts: Array<ScriptEntry>,
-  existing: ScriptsMap,
-  entries: Array<ScriptEntry>
-): void {
-  for (const entry of entries) {
-    pushIfMissing(scripts, existing, entry);
+function collectScriptCandidates(params: {
+  existingScripts: ScriptsMap;
+  lintTool: LintTool | null;
+  oxlintPlugins: string;
+  pkg: PackageJson | null;
+  profile: ProjectProfile;
+  scripts: Array<ScriptEntry>;
+}): void {
+  const { existingScripts, pkg, profile, scripts } = params;
+  const candidates: Array<ScriptEntry> = [
+    ...lintToolScripts(params.lintTool, params.oxlintPlugins),
+    { script: 'test', value: 'vitest run' },
+    { script: 'upgrade', value: getUpgradeCommand(profile.packageManager) },
+    ...(profile.existing.changeset
+      ? [
+          { script: 'changeset', value: 'changeset' },
+          { script: 'version-packages', value: 'changeset version' },
+          { script: 'release', value: 'changeset publish' },
+        ]
+      : [{ script: 'release', value: 'commit-and-tag-version' }]),
+    { script: 'plop', value: 'plop' },
+    ...(profile.typescript
+      ? [
+          { script: 'typecheck', value: 'tsc --noEmit' },
+          { script: 'knip', value: 'knip' },
+        ]
+      : []),
+  ];
+  for (const entry of candidates) {
+    pushIfMissing(scripts, existingScripts, entry);
   }
-}
 
-function getCompositeTasks(
-  existingScripts: Record<string, string>,
-  recommendedKeys: Array<string>
-): Array<string> {
-  const tasks: Array<string> = [];
-  for (const key of recommendedKeys) {
-    let foundKey: string | null = null;
-    for (const [existingKey, existingValue] of Object.entries(
-      existingScripts
-    )) {
-      if (extractTool(existingValue) === key) {
-        foundKey = existingKey;
-        break;
-      }
-    }
-    tasks.push(foundKey ?? key);
+  const devDeps = pkg?.devDependencies;
+  const hasTurbo =
+    profile.monorepoTool === 'turbo' ||
+    profile.existing.turbo ||
+    !!devDeps?.turborepo ||
+    !!devDeps?.turbo;
+  if (!hasTurbo) {
+    return;
   }
-  return tasks;
+  const newCheckTurboValue = `turbo run ${lintTurboTasks(
+    params.lintTool,
+    existingScripts,
+    profile.typescript
+  ).join(' ')}`;
+  const existingCheckTurbo = existingScripts['check:turbo'];
+  if (
+    !(
+      existingCheckTurbo &&
+      areEquivalent(existingCheckTurbo, newCheckTurboValue)
+    )
+  ) {
+    scripts.push({ script: 'check:turbo', value: newCheckTurboValue });
+  }
 }
 
 interface PackageScriptsResolution extends ScriptsState {
@@ -372,28 +307,11 @@ async function resolvePackageScripts(
   const { lintTool, oxlintPlugins } = resolveProjectLintConfig(pkg, profile);
   const scripts: Array<ScriptEntry> = [];
 
-  addCoreScripts({
+  collectScriptCandidates({
     existingScripts,
     lintTool,
     oxlintPlugins,
-    pm: profile.packageManager,
-    scripts,
-  });
-  addReleaseScripts({
-    existingScripts,
-    hasChangeset: !!profile.existing.changeset,
-    scripts,
-  });
-  pushIfMissing(scripts, existingScripts, { script: 'plop', value: 'plop' });
-  addTypescriptScripts({
-    existingScripts,
-    scripts,
-    typescript: !!profile.typescript,
-  });
-  addTurboScript({
-    existingScripts,
-    lintTool,
-    pkg: pkg as Record<string, unknown> | null,
+    pkg,
     profile,
     scripts,
   });

@@ -1,11 +1,12 @@
+import { describe, expect } from 'vite-plus/test';
+
 import {
   areEquivalent,
   extractTool,
   findEquivalentScriptKey,
   hasScriptWithEquivalentValue,
   normalizeCommand,
-} from '@xtarterize/tasks';
-import { describe, expect } from 'vite-plus/test';
+} from '../../packages/tasks/src/factory/equivalence.js';
 
 describe('normalizeCommand', () => {
   test('trims and collapses whitespace', () => {
@@ -42,32 +43,28 @@ describe('extractTool', () => {
 describe('findEquivalentScriptKey', () => {
   test('returns key when exact value match exists', () => {
     const scripts = { build: 'tsc --noEmit' };
-    expect(findEquivalentScriptKey(scripts, 'typecheck', 'tsc --noEmit')).toBe(
-      'build'
-    );
+    expect(findEquivalentScriptKey(scripts, 'tsc --noEmit')).toBe('build');
   });
 
   test('returns null when scripts object is empty', () => {
-    expect(findEquivalentScriptKey({}, 'build', 'tsc')).toBeNull();
+    expect(findEquivalentScriptKey({}, 'tsc')).toBeNull();
   });
 
   test('returns null when no equivalent value exists', () => {
     const scripts = { build: 'tsc' };
-    expect(findEquivalentScriptKey(scripts, 'lint', 'eslint .')).toBeNull();
+    expect(findEquivalentScriptKey(scripts, 'eslint .')).toBeNull();
   });
 
   test('finds equivalent via release tool aliases', () => {
     const scripts = { rel: 'standard-version' };
-    expect(
-      findEquivalentScriptKey(scripts, 'release', 'commit-and-tag-version')
-    ).toBe('rel');
+    expect(findEquivalentScriptKey(scripts, 'commit-and-tag-version')).toBe(
+      'rel'
+    );
   });
 
   test('finds equivalent via script ref match', () => {
     const scripts = { build: 'npm run build' };
-    expect(findEquivalentScriptKey(scripts, 'build', 'pnpm run build')).toBe(
-      'build'
-    );
+    expect(findEquivalentScriptKey(scripts, 'pnpm run build')).toBe('build');
   });
 });
 
