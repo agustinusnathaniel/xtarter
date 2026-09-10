@@ -1,30 +1,32 @@
-import { createMultiFileTask } from '@/factory';
+import type { TaskTarget } from '@/factory/define-task.js';
+import { defineTask } from '@/factory/define-task.js';
 import {
   getPlopTemplateFiles,
   plopTemplates,
   renderPlopfile,
 } from '@/templates/plopfile.js';
 
-export const plopTask = createMultiFileTask({
+export const plopTask = defineTask({
   applicable: (profile) => profile.framework !== null,
-  depName: 'plop',
-  files: (profile) => [
-    {
-      content: (p) => renderPlopfile(p),
-      filepath: 'plopfile.ts',
-    },
-    ...getPlopTemplateFiles(profile).map((filename) => ({
-      content: (_p: typeof profile) => plopTemplates[filename],
-      filepath: `plop/${filename}`,
-    })),
-  ],
+  deps: [{ depName: 'plop', dev: true }],
   group: 'Codegen',
   id: 'codegen/plop',
-  installDev: true,
   label: 'Plop (code generator)',
   searchMeta: {
     configTargets: ['plopfile.ts'],
     keywords: ['plop', 'code generator', 'scaffold', 'templates', 'codegen'],
     tags: ['codegen', 'scaffold', 'generator', 'templates'],
   },
+  targets: (_cwd, profile): Array<TaskTarget> => [
+    {
+      filepath: 'plopfile.ts',
+      kind: 'text',
+      render: () => renderPlopfile(profile),
+    },
+    ...getPlopTemplateFiles(profile).map((filename) => ({
+      filepath: `plop/${filename}`,
+      kind: 'text' as const,
+      render: () => plopTemplates[filename],
+    })),
+  ],
 });

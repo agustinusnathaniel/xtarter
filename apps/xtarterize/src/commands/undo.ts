@@ -1,7 +1,5 @@
 import fs from 'node:fs/promises';
-import { confirm } from '@clack/prompts';
 import {
-  abortIfCancelled,
   createSpinner,
   listBackups,
   logError,
@@ -13,43 +11,36 @@ import {
 } from '@xtarterize/core';
 import { defineCommand } from 'citty';
 
-import { resolveCwdWithPreflight } from '@/utils/preflight.js';
-import { resolveRuntimeFlags } from '@/utils/runtime-flags.js';
+import { openSession } from '@/session.js';
+import { getPrompter, type Prompter } from '@/ui/prompter.js';
+import { commonArgs, formatArgs } from '@/utils/args.js';
 
 export const undoCommand = defineCommand({
   args: {
-    cwd: {
-      description: 'Target directory (default: current working directory)',
-      type: 'string',
-    },
-    format: {
-      description: 'Output format (terminal|json)',
-      type: 'string',
-    },
-    json: {
-      description: 'Output machine-readable JSON',
-      type: 'boolean',
-    },
-    quiet: {
-      description: 'Suppress interactive prompts (auto-confirm)',
-      type: 'boolean',
-    },
+    ...commonArgs,
+    ...formatArgs,
   },
   meta: {
     description: 'Undo the last xtarterize run by restoring backed-up files',
     name: 'undo',
   },
   async run({ args }) {
-    const cwd = await resolveCwdWithPreflight(args);
-    const { format, quiet: runtimeQuiet } = resolveRuntimeFlags(args);
-    const jsonMode = format === 'json';
-    const quiet = jsonMode || runtimeQuiet;
+    const session = await openSession(args, { resolveTasks: false });
+    if (!session) {
+      return;
+    }
+    const { runtime } = session;
+    const cwd = runtime.cwd;
+    const jsonMode = runtime.format === 'json';
+    const quiet = jsonMode || runtime.quiet;
     const manifest = await loadAndValidateManifest(cwd, jsonMode, quiet);
     if (!manifest) {
       return;
     }
     displayManifestPreview(manifest, jsonMode);
-    if (!(await promptRestoreConfirm(manifest, quiet))) {
+    const proceed = await promptRestoreConfirm(manifest, quiet, getPrompter());
+    if (!proceed) {
+      session.report(session.cancelled());
       return;
     }
     const { restored, removedCount, errors } = await restoreManifestFiles(
@@ -102,16 +93,15 @@ function displayManifestPreview(
 
 async function promptRestoreConfirm(
   manifest: { files: Array<string> },
-  quiet: boolean
-): Promise<boolean> {
+  quiet: boolean,
+  prompter: Prompter
+): Promise<boolean | null> {
   if (quiet) {
     return true;
   }
-  const proceed = await confirm({
+  return prompter.confirm({
     message: `Restore ${manifest.files.length} file(s) to their previous state?`,
   });
-  abortIfCancelled(proceed, 'Undo cancelled');
-  return Boolean(proceed);
 }
 
 async function restoreManifestFiles(

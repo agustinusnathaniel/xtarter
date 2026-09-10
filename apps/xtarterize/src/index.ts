@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { defineCommand, runMain } from 'citty';
 
+import { cwdArg, jsonArg, timingArg } from '@/utils/args.js';
 import { createInvocationGuard } from '@/utils/invocation-guard.js';
 
 import { version } from '^/package.json';
@@ -23,18 +24,9 @@ const subcommandLoaders = {
 
 const main = defineCommand({
   args: {
-    cwd: {
-      description: 'Target directory (default: current working directory)',
-      type: 'string',
-    },
-    json: {
-      description: 'Output machine-readable JSON',
-      type: 'boolean',
-    },
-    timing: {
-      description: 'Show detailed per-task timing breakdown',
-      type: 'boolean',
-    },
+    cwd: cwdArg,
+    json: jsonArg,
+    timing: timingArg,
   },
   meta: {
     description: 'Apply conformance configuration to JS/TS projects',

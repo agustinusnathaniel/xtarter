@@ -1,5 +1,4 @@
-import { groupMultiselect } from '@clack/prompts';
-
+import type { Prompter } from '@/ui/prompter.js';
 import { statusHint } from '@/utils/display.js';
 
 import type { TaskWithStatus } from './types.js';
@@ -32,22 +31,15 @@ function getDefaultSelectedIds(
     .map((t) => t.task.id);
 }
 
+/** Resolve the selected task IDs, or `null` when the user cancels. */
 export async function selectTasksGrouped(
-  tasksWithStatus: Array<TaskWithStatus>
-): Promise<Array<string>> {
-  const groups = buildGroupedOptions(tasksWithStatus);
-  const defaultSelected = getDefaultSelectedIds(tasksWithStatus);
-
-  const selected = await groupMultiselect({
-    initialValues: defaultSelected,
+  tasksWithStatus: Array<TaskWithStatus>,
+  prompter: Prompter
+): Promise<Array<string> | null> {
+  return prompter.groupMultiselect({
+    initialValues: getDefaultSelectedIds(tasksWithStatus),
     message: 'Select tasks to add:',
-    options: groups,
+    options: buildGroupedOptions(tasksWithStatus),
     required: true,
   });
-
-  if (Array.isArray(selected)) {
-    return selected as Array<string>;
-  }
-
-  return [];
 }

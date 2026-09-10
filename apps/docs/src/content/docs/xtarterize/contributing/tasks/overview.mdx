@@ -21,6 +21,10 @@ interface Task {
   check: (cwd: string, profile: ProjectProfile) => Promise<TaskStatus>
   dryRun: (cwd: string, profile: ProjectProfile) => Promise<FileDiff[]>
   apply: (cwd: string, profile: ProjectProfile) => Promise<void>
+  getDeps?: (
+    cwd: string,
+    profile: ProjectProfile
+  ) => Promise<Array<{ depName: string; dev: boolean }>>
 }
 ```
 
@@ -28,6 +32,9 @@ interface Task {
   `'root'` (monorepo root only), `'package'` (workspace packages
   only), or `'both'` (everywhere). Defaults to `'both'` when
   omitted. Ignored in non-monorepo projects.
+- **`getDeps`** - Optional dependency declaration. The apply plan collects
+  these across the selected tasks and installs them in one batch before any
+  `apply()` runs.
 
 ## Task Architecture
 
@@ -41,6 +48,7 @@ classDiagram
         +check(cwd, profile) TaskStatus
         +dryRun(cwd, profile) FileDiff[]
         +apply(cwd, profile) void
+        +getDeps(cwd, profile) TaskDep[]
     }
     class TaskStatus {
         <<enumeration>>
@@ -67,6 +75,51 @@ classDiagram
     Task --> ProjectProfile
 ```
 
+## Task Spec
+
+Most tasks are declared with `defineTask()` in [`factory/define-task.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/tasks/src/factory/define-task.ts) instead of hand-writing the interface. A spec declares metadata, applicability, targets and actions, and dependencies:
+
+```typescript
+export interface TaskSpec {
+  id: string
+  label: string
+  group: string
+  scope?: TaskScope
+  applicable: (profile: ProjectProfile) => boolean
+  targets?: Array<TaskTarget> | TargetResolver
+  actions?: Array<TaskAction>
+  deps?: DepsDeclaration
+  searchMeta?: SpecSearchMeta
+}
+```
+
+`defineTask()` resolves the spec once per call, so `check`, `dryRun`, `apply`, and `getDeps` all project from the same resolution. Status is a projection of the resolution, not a separate `check` implementation, which is why a task can no longer report `skip` while its diffs would change.
+
+### Target kinds
+
+A target is one file the task claims, plus how its content is computed:
+
+| Kind | Computes | Default status projection |
+|------|----------|---------------------------|
+| `text` | Rendered content with `render(profile, existing)` | absent is `new`, differing content is `conflict`, equal content is `skip` |
+| `jsonMerge` | Incoming object merged into the existing JSON and patched back | absent is `new`, a real change is `patch`, no change is `skip` |
+| `packageJson` | A change applied through the package.json owner | same as `jsonMerge`, plus `new` when the file is absent |
+| `transform` | Content-in, content-out on a discovered file (for example a Vite config) | absent is `new` with no diff, a real change is `patch`, no change is `skip` |
+
+Each target accepts an optional `policy` hook. It sees the same `before` and `after` pair the diff was computed from and may override the projected status, for example to force `conflict` when a user set `strict: false`.
+
+### Actions
+
+An action has a status probe and a run effect and produces no file diff. `agent/skills-install` is the built-in example: it reports whether the skills are installed and runs the install without pretending a log file is a config target.
+
+### Dependencies
+
+Dependencies are part of the resolution. A `deps` declaration is either a static `TaskDep[]` or a resolver that receives the resolved status and diffs, so a task can request a package only when the resolution will actually need it. `getDeps` is derived from that resolution.
+
+### package.json owner
+
+[`factory/package-json.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/tasks/src/factory/package-json.ts) is the only xtarterize writer of `package.json`. It applies a patch against the current file text, which keeps comments, indentation, and key order intact, and it recomputes the change at apply time so entries added by the package manager or by another task survive.
+
 ## Task Directory Structure
 
 <FileTree>
@@ -85,14 +138,14 @@ classDiagram
   - editor/
     - vscode.ts
   - factory/
-    - equivalence.ts
-    - index.ts
-    - json-config.ts
-    - ops.ts
+    - define-task.ts
+    - targets.ts
+    - package-json.ts
     - package-scripts.ts
-    - scripts.ts
-    - task.ts
+    - equivalence.ts
+    - ops.ts
     - utils.ts
+    - index.ts
   - lint/
     - biome.ts
     - oxlint.ts
@@ -120,89 +173,59 @@ classDiagram
     - visualizer.ts
 </FileTree>
 
-## Task Factory
+## Adding New Tasks
 
-Most tasks are created through factory functions in [`factory/index.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/tasks/src/factory/index.ts) that eliminate boilerplate:
+1. Declare the task with `defineTask()` from `packages/tasks/src/factory/define-task.ts`
+2. Create your task file in `packages/tasks/src/<category>/<task>.ts`
+3. Export it from `packages/tasks/src/index.ts` and register it in `getAllTasks()`
+4. Add or update tests only when they provide meaningful regression protection. Extend the nearest existing suite when possible; see the repository [`docs/TESTING.md`](https://github.com/agustinusnathaniel/xtarterize/blob/main/docs/TESTING.md)
 
-- **`createFileTask`** - For tasks that write a single file (CI workflows, [renovate](https://docs.renovatebot.com/), [commitlint](https://commitlint.js.org/), [knip](https://knip.dev/), [`.gitignore`](https://git-scm.com/docs/gitignore), `AGENTS.md`). Supports exact-match comparison with `normalizeLineEndings` and optional custom `checkFn`.
-- **`createMultiFileTask`** - For tasks that write multiple text files with optional dependency install (e.g. [plop](https://plopjs.com/) writes both `plopfile.ts` and `plop/*.hbs` template files)
-- **`createJsonMergeTask`** - For tasks that deep-merge JSON configs ([`tsconfig.json`](https://www.typescriptlang.org/tsconfig/), [`biome.json`](https://biomejs.dev/reference/configuration/), [`turbo.json`](https://turbo.build/repo/docs/reference/configuration)). Uses shared JSON mutation helpers in [`factory/json-config.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/tasks/src/factory/json-config.ts)
-- **`createMultiFileJsonMergeTask`** - For tasks that merge multiple JSON files ([`.vscode/settings.json`](https://code.visualstudio.com/docs/getstarted/settings#_settingsjson) + [`.vscode/extensions.json`](https://code.visualstudio.com/docs/editor/extension-marketplace#_workspace-recommended-extensions)). Supports custom per-file merge functions and reuses [`factory/json-config.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/tasks/src/factory/json-config.ts)
-- **`createVitePluginTask`** - For injecting plugins into [`vite.config.ts`](https://vitejs.dev/config/) ([`vite-plugin-checker`](https://vite-plugin-checker.netlify.app/checkers/typescript.html), [`rollup-plugin-visualizer`](https://github.com/btd/rollup-plugin-visualizer))
-- **`createPackageJsonTask`** - For tasks that add scripts, deps, and extra files via [`package.json`](https://docs.npmjs.com/cli/v10/configuring-npm/package-json) ([`czg`](https://cz-git.qbb.sh/cli/), [`commit-and-tag-version`](https://github.com/absolute-version/commit-and-tag-version), package scripts)
-
-This reduces most tasks from 40-80 lines to 10-15 lines of declarative configuration.
-
-All factory option types accept an optional `scope` parameter, which
-is passed through to the constructed `Task`. For example:
+A minimal spec looks like this:
 
 ```typescript
-createFileTask({
-  id: 'my-task',
-  label: 'My Task',
-  scope: 'root',  // only offered at monorepo root
-  // ... other options
+import { defineTask } from '@/factory/define-task.js'
+
+export const myTask = defineTask({
+  applicable: (profile) => profile.typescript,
+  group: 'TypeScript',
+  id: 'ts/example',
+  label: 'Example TypeScript config',
+  targets: [
+    {
+      filepath: 'tsconfig.json',
+      kind: 'jsonMerge',
+      incoming: () => ({ compilerOptions: { noUncheckedIndexedAccess: true } }),
+    },
+  ],
 })
 ```
 
-Shared implementation seams used by the factory layer:
+## Helper Functions
 
-- [`factory/json-config.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/tasks/src/factory/json-config.ts) - centralized JSON config `check`/`dryRun` logic
-- [`factory/ops.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/tasks/src/factory/ops.ts) - shared dependency install and write operations
-- [`factory/equivalence.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/tasks/src/factory/equivalence.ts) - shared equivalence detection helpers (`deepEqual`, `normalizeExtends`, `hasScriptValue`)
+The task layer provides shared helpers for robust equivalence detection:
 
-### Helper Functions
-
-The factory provides several utilities for robust equivalence detection:
-
-| Helper | Purpose | Used By |
-|--------|---------|---------|
-| `deepEqual` | Compare objects regardless of key ordering | `createJsonMergeTask`, `createMultiFileJsonMergeTask` |
-| `normalizeExtends` | Normalize `"extends": "str"` to `"extends": ["str"]` | `biomeTask`, `renovateTask` |
-| `normalizeLineEndings` | Convert `\r\n` to `\n` before comparison | `createFileTask` |
-| `hasScriptValue` | Check if a command value already exists under any script name | `createPackageJsonTask` |
-
-#### `normalizeExtends`
-
-Config tools like [Renovate](https://docs.renovatebot.com/) and [Biome](https://biomejs.dev/) accept `extends` as either a string or array. `normalizeExtends` ensures both forms are treated as equivalent during comparison:
-
-```typescript
-normalizeExtends({ extends: "config:base" })
-// → { extends: ["config:base"] }
-```
-
-#### `hasScriptValue`
-
-Package script tasks skip adding a script not only when the key exists, but also when the **exact same command** already exists under a different name. This handles real-world aliases like `type:check` vs `typecheck`.
-
-## Adding New Tasks
-
-1. Implement the `Task` interface from `@xtarterize/core`
-2. Create your task file in `packages/tasks/src/<category>/<task>.ts`
-3. Export it from `packages/tasks/src/index.ts`
-4. Add or update tests only when they provide meaningful regression protection. Extend the nearest existing suite when possible; see the repository [`docs/TESTING.md`](https://github.com/agustinusnathaniel/xtarterize/blob/main/docs/TESTING.md)
-
-Each task must implement:
-- `applicable(profile)` - Should this task run for this project?
-- `check(cwd, profile)` - What's the current status?
-- `dryRun(cwd, profile)` - What would change?
-- `apply(cwd, profile)` - Make the changes
+| Helper | Purpose | Location |
+|--------|---------|----------|
+| `normalizeExtends` | Normalize `"extends": "str"` to `"extends": ["str"]` | `factory/utils.ts` |
+| `normalizeLineEndings` | Convert `\r\n` to `\n` before comparison | `factory/utils.ts` |
+| `resolveTaskFile` | Find a config file across declared extensions | `factory/utils.ts` |
+| `hasScriptWithEquivalentValue` | Check if an equivalent command already exists under another script name | `factory/equivalence.ts` |
 
 ## Conflict Detection Pattern
 
-For tasks that patch JSON config files, use a **tristate detection pattern** to avoid permanent patch loops:
+Targets that patch JSON config files project a **tristate** status to avoid permanent patch loops:
 
 | State | Condition | Status | Behavior |
 |-------|-----------|--------|----------|
-| **Missing** | Key does not exist | `patch` | Add the key |
+| **Missing** | Key does not exist | `new` | Add the key |
 | **Match** | Key exists with expected value | `skip` | No changes |
 | **Mismatch** | Key exists with different value | `conflict` | Alert user, don't overwrite |
 
-This prevents infinite loops when a user explicitly sets a value that differs from xtarterize's recommendation (e.g., [`strict: false`](https://www.typescriptlang.org/tsconfig/#strict) in tsconfig).
+For mismatches that must never be overwritten (for example `strict: false` in tsconfig), the target's `policy` hook forces `conflict` explicitly. This prevents infinite loops when a user deliberately sets a value that differs from xtarterize's recommendation.
 
 ## References
 
-- [defu](https://github.com/unjs/defu) - Deep merge utility used by JSON merge tasks
+- [defu](https://github.com/unjs/defu) - Deep merge utility used by JSON merge targets
 - [magicast](https://github.com/unjs/magicast) - AST manipulation for Vite plugin injection
 - [TypeScript tsconfig](https://www.typescriptlang.org/tsconfig/) - Compiler configuration reference
 - [Biome Configuration](https://biomejs.dev/reference/configuration/) - `biome.json` schema
@@ -213,7 +236,5 @@ This prevents infinite loops when a user explicitly sets a value that differs fr
 - [Knip Documentation](https://knip.dev/) - Unused code detection
 - [Plop Documentation](https://plopjs.com/documentation/) - Code scaffolding
 - [VS Code Settings](https://code.visualstudio.com/docs/getstarted/settings) - Editor configuration
-- [VS Code Extensions](https://code.visualstudio.com/docs/editor/extension-marketplace#_workspace-recommended-extensions) - Workspace recommendations
-- [Renovate Configuration](https://docs.renovatebot.com/configuration-options/) - Dependency automation
 
 <LinkButton href="/xtarterize/contributing/architecture/overview/">Learn about the overall architecture →</LinkButton>

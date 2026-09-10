@@ -1,25 +1,22 @@
-import { createFileTask } from '@/factory';
+import { defineTask, type TargetPolicy } from '@/factory/define-task.js';
 import { renderCommitlintConfig } from '@/templates/commitlint-config.js';
 
-export const commitlintTask = createFileTask({
+const CONFIG_CONVENTIONAL_EXTENDS = /['"]@commitlint\/config-conventional['"]/;
+
+const commitlintPolicy: TargetPolicy = ({ before }) => {
+  if (before === null) {
+    return;
+  }
+  return CONFIG_CONVENTIONAL_EXTENDS.test(before) ? 'skip' : 'conflict';
+};
+
+export const commitlintTask = defineTask({
   applicable: () => true,
-  checkFn: async ({ fullPath, content }) => {
-    if (!(fullPath && content)) {
-      return 'new';
-    }
-    // Check if the config already extends @commitlint/config-conventional
-    const hasExtends = /['"]@commitlint\/config-conventional['"]/.test(content);
-    return hasExtends ? 'skip' : 'conflict';
-  },
-  extensions: ['.ts', '.js', '.mjs', '.mts', '.cts'],
-  filepath: 'commitlint.config',
   group: 'Release',
   id: 'release/commitlint',
   label: 'Commitlint config',
-  render: (profile, _existing) => renderCommitlintConfig(profile),
   scope: 'root',
   searchMeta: {
-    configTargets: ['commitlint.config.ts'],
     keywords: [
       'commitlint',
       'commit message',
@@ -28,4 +25,13 @@ export const commitlintTask = createFileTask({
     ],
     tags: ['commit', 'linting', 'conventional-commits'],
   },
+  targets: [
+    {
+      extensions: ['.ts', '.js', '.mjs', '.mts', '.cts'],
+      filepath: 'commitlint.config',
+      kind: 'text',
+      policy: commitlintPolicy,
+      render: (profile) => renderCommitlintConfig(profile),
+    },
+  ],
 });

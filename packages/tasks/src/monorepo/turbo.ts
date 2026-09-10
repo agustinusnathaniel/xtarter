@@ -1,7 +1,7 @@
 import type { ProjectProfile } from '@xtarterize/core';
 import { readPackageJson } from '@xtarterize/core';
 
-import { createJsonMergeTask } from '@/factory';
+import { defineTask } from '@/factory/define-task.js';
 
 interface TurboTaskConfig {
   cache?: boolean;
@@ -49,23 +49,15 @@ function buildTurboJson(
   };
 }
 
-export const turboTask = createJsonMergeTask({
+export const turboTask = defineTask({
   applicable: (profile) =>
     profile.monorepoTool === 'turbo' || profile.existing.turbo,
-  depName: 'turbo',
-  filepath: 'turbo.json',
+  deps: [{ depName: 'turbo', dev: true }],
   group: 'Monorepo',
   id: 'monorepo/turbo',
-  incoming: async (cwd, profile: ProjectProfile) => {
-    const pkg = await readPackageJson(cwd);
-    const scripts = Object.keys(pkg?.scripts ?? {});
-    return buildTurboJson(scripts, profile);
-  },
-  installDev: true,
   label: 'Turbo',
   scope: 'root',
   searchMeta: {
-    configTargets: ['turbo.json'],
     keywords: [
       'turbo',
       'turborepo',
@@ -75,4 +67,15 @@ export const turboTask = createJsonMergeTask({
     ],
     tags: ['monorepo', 'build', 'orchestration', 'caching'],
   },
+  targets: [
+    {
+      filepath: 'turbo.json',
+      incoming: async (cwd, profile) => {
+        const pkg = await readPackageJson(cwd);
+        const scripts = Object.keys(pkg?.scripts ?? {});
+        return buildTurboJson(scripts, profile);
+      },
+      kind: 'jsonMerge',
+    },
+  ],
 });

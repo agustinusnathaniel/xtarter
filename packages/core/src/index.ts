@@ -8,6 +8,14 @@ export type {
   TaskSearchMeta,
   TaskStatus,
 } from '@/_base.js';
+export type { ExecutePlanOptions } from '@/apply/execute.js';
+export { executePlan } from '@/apply/execute.js';
+export type {
+  ApplyPlan,
+  ApplyPlanEntry,
+  PlanTasksOptions,
+} from '@/apply/plan.js';
+export { planTasks } from '@/apply/plan.js';
 export type { ApplyOptions, ApplyResult } from '@/apply.js';
 export { applyTasks } from '@/apply.js';
 export type { Backup, RunManifest } from '@/backup.js';
@@ -90,7 +98,6 @@ export {
   resolveTasks,
 } from '@/resolve.js';
 export type { ApplyTiming, ResolveTiming, TaskTiming } from '@/timing.js';
-export { deepEqual } from '@/utils/deep-equal.js';
 export {
   computeChangeStats,
   computeSemanticJsonDiff,
@@ -128,7 +135,6 @@ export {
   installDependenciesBatch,
   installDependency,
   readPackageJson,
-  writePackageJson,
 } from '@/utils/pkg.js';
 export { abortIfCancelled, createSpinner, isCI } from '@/utils/prompts.js';
 export type { TagColor } from '@/utils/tags.js';

@@ -1,11 +1,5 @@
 import type { FileDiff } from '@xtarterize/core';
-import {
-  ensureDir,
-  installDependency,
-  resolvePath,
-  TaskError,
-  writeFile,
-} from '@xtarterize/core';
+import { ensureDir, resolvePath, TaskError, writeFile } from '@xtarterize/core';
 
 export function wrapTask<A>(
   taskId: string,
@@ -41,30 +35,6 @@ export async function checkMissingDeps(
     }
   }
   return null;
-}
-
-export async function ensureTaskDependency(options: {
-  cwd: string;
-  depName?: string;
-  depInstallName?: string;
-  installDev?: boolean;
-}): Promise<void> {
-  if (!options.depName) {
-    return;
-  }
-  await installDependency(
-    options.cwd,
-    options.depInstallName ?? options.depName,
-    options.installDev ?? true
-  );
-}
-
-export async function ensureTaskParentDir(
-  cwd: string,
-  filepath: string
-): Promise<void> {
-  const fullPath = resolvePath(cwd, filepath);
-  await ensureDir(resolvePath(fullPath, '..'));
 }
 
 export function isExecutableFile(filepath: string): boolean {

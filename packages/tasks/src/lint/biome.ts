@@ -1,7 +1,7 @@
-import { createJsonMergeTask } from '@/factory';
+import { defineTask } from '@/factory/define-task.js';
 import { renderBiomeJson } from '@/templates/biome-json.js';
 
-export const biomeTask = createJsonMergeTask({
+export const biomeTask = defineTask({
   applicable: (profile) =>
     !(
       profile.existing.eslint ||
@@ -9,17 +9,23 @@ export const biomeTask = createJsonMergeTask({
       profile.existing.oxfmt
     ) &&
     (profile.existing.biome || !profile.vitePlus),
-  depNames: ['@biomejs/biome', 'ultracite'],
-  extensions: ['.json', '.jsonc'],
-  filepath: 'biome.json',
+  deps: [
+    { depName: '@biomejs/biome', dev: true },
+    { depName: 'ultracite', dev: true },
+  ],
   group: 'Linting & Formatting',
   id: 'lint/biome',
-  incoming: (_cwd, profile) => JSON.parse(renderBiomeJson(profile)),
-  installDev: true,
   label: 'Biome (lint + format)',
   searchMeta: {
-    configTargets: ['biome.json'],
     keywords: ['biome', 'linter', 'formatter', 'lint', 'format', 'all-in-one'],
     tags: ['linting', 'formatting', 'all-in-one', 'quality'],
   },
+  targets: [
+    {
+      extensions: ['.json', '.jsonc'],
+      filepath: 'biome.json',
+      incoming: (_cwd, profile) => JSON.parse(renderBiomeJson(profile)),
+      kind: 'jsonMerge',
+    },
+  ],
 });

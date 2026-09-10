@@ -39,7 +39,7 @@ The `packageManager.version` is set based on the detected package manager:
 | **Config Target** | `package.json` |
 
 <Aside type="tip">
-  This task uses `createJsonMergeTask` and merges into an existing
-  `devEngines` field rather than replacing it. Existing values take precedence
-  over incoming values.
+  This task writes `package.json` through the package.json owner and merges
+  into an existing `devEngines` field rather than replacing it. Existing values
+  take precedence over incoming values.
 </Aside>

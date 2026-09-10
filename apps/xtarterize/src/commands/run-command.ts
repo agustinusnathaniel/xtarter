@@ -1,31 +1,16 @@
-import { select } from '@clack/prompts';
-import type { ResolveTiming, Task, TaskStatus } from '@xtarterize/core';
-import {
-  abortIfCancelled,
-  applyTaskSelection,
-  applyTasks,
-  isCI,
-  loadSelectionConfig,
-  logError,
-  logInfo,
-  logSuccess,
-  logWarn,
-  resolveProjectTasks,
-} from '@xtarterize/core';
+import type { Task, TaskStatus } from '@xtarterize/core';
+import { applyTaskSelection, logInfo, logWarn } from '@xtarterize/core';
 
-import { type DisplayFormat, displayDiffs } from '@/ui/diff-display.js';
-import { formatRunResult } from '@/ui/json-formatter.js';
-import { mergeFileDiffs } from '@/ui/merge-file-diffs.js';
-import { displayPlan } from '@/ui/plan-display.js';
-import { selectTasks } from '@/ui/select-menu.js';
 import {
-  detectProjectWithAmbiguity,
-  getAllTasksWithPlugins,
-  printProjectProfile,
-} from '@/utils/project.js';
-import { resolveRuntimeFlags } from '@/utils/runtime-flags.js';
-import { collectTaskDiffs } from '@/utils/task-diffs.js';
-import { formatTimingJson, printTiming } from '@/utils/timing-display.js';
+  type CommandSession,
+  openSession,
+  type SessionOutcome,
+} from '@/session.js';
+import { getPrompter } from '@/ui/prompter.js';
+import { reportPlan } from '@/ui/reporter.js';
+import { selectTasks } from '@/ui/select-menu.js';
+import { printProjectProfile } from '@/utils/project.js';
+import type { RuntimeContext } from '@/utils/runtime.js';
 
 interface CommandArgs {
   dryRun?: boolean;
@@ -39,81 +24,18 @@ interface CommandArgs {
   yes?: boolean;
 }
 
-interface RunCommandOptions {
+export interface RunCommandOptions {
   actionableStatuses: Array<TaskStatus>;
   confirmMessage: string;
   emptyMessage: string;
-  orderedTasks?: Array<Task>;
+  orderTasks?: (tasks: Array<Task>, runtime: RuntimeContext) => Array<Task>;
 }
 
-interface ApplyAndReportOptions {
-  includeConflicts?: boolean;
-  quiet?: boolean;
-  recordTiming?: boolean;
-  selectedIds?: Array<string>;
-}
-
-interface ApplyAndReportInput {
-  cwd: string;
-  format?: string;
-  options: ApplyAndReportOptions;
-  profile: Awaited<ReturnType<typeof detectProjectWithAmbiguity>>;
-  statuses?: ReadonlyMap<string, TaskStatus>;
-  tasks: Array<Task>;
-  timing: ResolveTiming;
-}
-
-async function applyAndReport({
-  tasks,
-  cwd,
-  profile,
-  timing,
-  format,
-  options,
-  statuses,
-}: ApplyAndReportInput): Promise<void> {
-  const { selectedIds, includeConflicts, quiet, recordTiming } = options;
-  const result = await applyTasks({
-    cwd,
-    includeConflicts,
-    profile,
-    quiet: quiet ?? isCI(),
-    selectedIds,
-    statuses,
-    tasks,
-  });
-
-  if (format === 'json') {
-    console.log(
-      formatRunResult({
-        applied: result.applied,
-        errors: result.errors,
-        ok: result.errors.length === 0,
-        skipped: result.skipped,
-        timing: recordTiming
-          ? formatTimingJson(timing, result.timing)
-          : undefined,
-      })
-    );
-    if (result.errors.length > 0) {
-      process.exitCode = 1;
-    }
-    return;
-  }
-
-  console.log('');
-  logSuccess(`Applied ${result.applied} tasks`);
-  if (result.errors.length > 0) {
-    logError(`${result.errors.length} errors`);
-    for (const error of result.errors) {
-      logError(`  - ${error}`);
-    }
-    process.exitCode = 1;
-  }
-  const quietFlag = quiet ?? isCI();
-  if (!quietFlag) {
-    printTiming(timing, result.timing, { recordTiming });
-  }
+interface FlowContext {
+  actionableTasks: Array<Task>;
+  args: CommandArgs;
+  confirmMessage: string;
+  session: CommandSession;
 }
 
 interface ResolveActionableTasksOptions {
@@ -144,146 +66,11 @@ function resolveActionableTasks(
   });
 }
 
-interface DryRunOptions {
-  cwd: string;
-  format?: string;
-  profile: Awaited<ReturnType<typeof detectProjectWithAmbiguity>>;
-  tasks: Array<Task>;
-  timing: ResolveTiming;
-}
-
-async function handleDryRun(options: DryRunOptions): Promise<void> {
-  const { tasks, cwd, profile, timing, format } = options;
-  const { diffs, failures } = await collectTaskDiffs(tasks, cwd, profile);
-  const mergedDiffs = mergeFileDiffs(diffs);
-  if (mergedDiffs.length > 0 || failures > 0) {
-    process.exitCode = 1;
-  }
-  const resolvedFormat: DisplayFormat = format === 'json' ? 'json' : 'terminal';
-  displayDiffs(mergedDiffs, resolvedFormat, failures);
-  if (format !== 'json') {
-    printTiming(timing);
-  }
-}
-
-interface PromptAndApplyOptions {
-  actionableTasks: Array<Task>;
-  args: CommandArgs;
-  cwd: string;
-  format?: string;
-  profile: Awaited<ReturnType<typeof detectProjectWithAmbiguity>>;
-  runOptions: RunCommandOptions;
-  statuses: Map<string, TaskStatus>;
-  timing: ResolveTiming;
-}
-
-async function handleSelectTasksFlow(
-  options: PromptAndApplyOptions
-): Promise<boolean> {
-  const { actionableTasks, cwd, profile, statuses, timing, args, format } =
-    options;
-  const selected = await selectTasks(actionableTasks, statuses);
-  if (selected.length === 0) {
-    logInfo('No tasks selected');
-    return true;
-  }
-  await applyAndReport({
-    cwd,
-    format,
-    options: {
-      includeConflicts: args.includeConflicts,
-      quiet: args.quiet,
-      recordTiming: args.timing,
-      selectedIds: selected,
-    },
-    profile,
-    statuses,
-    tasks: actionableTasks,
-    timing,
-  });
-  return true;
-}
-
-async function handleApplyAllFlow(
-  options: PromptAndApplyOptions
-): Promise<void> {
-  const { actionableTasks, cwd, profile, statuses, timing, args, format } =
-    options;
-  const selectedIds = actionableTasks.map((task) => task.id);
-  await applyAndReport({
-    cwd,
-    format,
-    options: {
-      includeConflicts: args.includeConflicts,
-      quiet: args.quiet,
-      recordTiming: args.timing,
-      selectedIds,
-    },
-    profile,
-    statuses,
-    tasks: actionableTasks,
-    timing,
-  });
-}
-
-async function promptAndApply(options: PromptAndApplyOptions): Promise<void> {
-  const { actionableTasks, cwd, profile, timing, runOptions, format } = options;
-  const action = await select({
-    message: runOptions.confirmMessage,
-    options: [
-      { label: 'Apply all', value: 'apply-all' },
-      { label: 'Select tasks', value: 'select' },
-      { label: 'Dry run', value: 'dry-run' },
-      { label: 'Quit', value: 'quit' },
-    ],
-  });
-  abortIfCancelled(action);
-  if (action === 'quit') {
-    logInfo('Cancelled');
-    return;
-  }
-  if (action === 'dry-run') {
-    await handleDryRun({
-      cwd,
-      format,
-      profile,
-      tasks: actionableTasks,
-      timing,
-    });
-    return;
-  }
-  if (action === 'select') {
-    await handleSelectTasksFlow(options);
-    return;
-  }
-  await handleApplyAllFlow(options);
-}
-
-async function loadProjectContext(
-  cwd: string,
-  quiet: boolean,
-  orderedTasks: Array<Task> | undefined
-) {
-  const allTasks = orderedTasks ?? (await getAllTasksWithPlugins(cwd));
-  const {
-    profile: baseProfile,
-    tasks,
-    statuses,
-    timing,
-  } = await resolveProjectTasks(cwd, allTasks);
-  const profile = await detectProjectWithAmbiguity(cwd, quiet, baseProfile);
-  if (!quiet) {
-    printProjectProfile(profile);
-  }
-  const selection = await loadSelectionConfig(cwd);
-  return { profile, selection, statuses, tasks, timing };
-}
-
 function warnUnknownSelection(
   selection: { skip: Array<string>; only: Array<string> },
   tasks: Array<Task>,
   quiet: boolean
-) {
+): void {
   if (quiet || selection.skip.length + selection.only.length === 0) {
     return;
   }
@@ -297,41 +84,94 @@ function warnUnknownSelection(
   }
 }
 
-function handleEmptyActionable(options: {
-  actionableTasks: Array<Task>;
-  jsonMode: boolean;
-  quiet: boolean;
-  timing: ResolveTiming;
-  emptyMessage: string;
-}): boolean {
-  const { actionableTasks, jsonMode, quiet, timing, emptyMessage } = options;
-  if (actionableTasks.length > 0) {
-    return false;
+function reportOutcome(session: CommandSession, outcome: SessionOutcome): void {
+  session.report(outcome);
+  if (!outcome.ok) {
+    process.exitCode = 1;
   }
-  if (jsonMode) {
-    console.log(
-      formatRunResult({ applied: 0, errors: [], ok: true, skipped: 0 })
-    );
-  } else {
-    logSuccess(emptyMessage);
-    if (!quiet) {
-      printTiming(timing);
-    }
-  }
-  return true;
 }
 
-export async function runCommand(
-  cwd: string,
+async function dryRunFlow(
+  session: CommandSession,
+  tasks: Array<Task>
+): Promise<void> {
+  reportOutcome(session, await session.dryRun(tasks));
+}
+
+async function applyTasksFlow(
+  session: CommandSession,
+  tasks: Array<Task>,
+  args: CommandArgs
+): Promise<void> {
+  const outcome = await session.apply(tasks, {
+    includeConflicts: args.includeConflicts,
+    recordTiming: args.timing,
+  });
+  reportOutcome(session, outcome);
+}
+
+async function handleSelectTasksFlow(options: FlowContext): Promise<void> {
+  const { actionableTasks, args, session } = options;
+  const selected = await selectTasks(
+    actionableTasks,
+    session.statuses,
+    getPrompter()
+  );
+  if (selected === null) {
+    reportOutcome(session, session.cancelled());
+    return;
+  }
+  if (selected.length === 0) {
+    logInfo('No tasks selected');
+    return;
+  }
+  const selectedIds = new Set(selected);
+  await applyTasksFlow(
+    session,
+    actionableTasks.filter((task) => selectedIds.has(task.id)),
+    args
+  );
+}
+
+async function handleApplyAllFlow(options: FlowContext): Promise<void> {
+  await applyTasksFlow(options.session, options.actionableTasks, options.args);
+}
+
+async function promptAndApply(options: FlowContext): Promise<void> {
+  const action = await getPrompter().select({
+    message: options.confirmMessage,
+    options: [
+      { label: 'Apply all', value: 'apply-all' },
+      { label: 'Select tasks', value: 'select' },
+      { label: 'Dry run', value: 'dry-run' },
+      { label: 'Quit', value: 'quit' },
+    ],
+  });
+  if (action === null || action === 'quit') {
+    reportOutcome(options.session, options.session.cancelled());
+    return;
+  }
+  if (action === 'dry-run') {
+    await dryRunFlow(options.session, options.actionableTasks);
+    return;
+  }
+  if (action === 'select') {
+    await handleSelectTasksFlow(options);
+    return;
+  }
+  await handleApplyAllFlow(options);
+}
+
+async function runSession(
+  session: CommandSession,
   args: CommandArgs,
   options: RunCommandOptions
 ): Promise<void> {
-  const { format, quiet: runtimeQuiet } = resolveRuntimeFlags(args);
-  const jsonMode = format === 'json';
-  const quiet = jsonMode || runtimeQuiet;
-  const { profile, tasks, statuses, timing, selection } =
-    await loadProjectContext(cwd, quiet, options.orderedTasks);
-  warnUnknownSelection(selection, tasks, quiet);
+  const { profile, runtime, selection, statuses, tasks } = session;
+  if (!runtime.quiet) {
+    printProjectProfile(profile);
+  }
+  warnUnknownSelection(selection, tasks, runtime.quiet);
   const actionableTasks = resolveActionableTasks(tasks, statuses, {
     actionableStatuses: options.actionableStatuses,
     configOnly: selection.only,
@@ -339,98 +179,36 @@ export async function runCommand(
     only: args.only,
     skip: args.skip,
   });
-  if (
-    handleEmptyActionable({
-      actionableTasks,
-      emptyMessage: options.emptyMessage,
-      jsonMode,
-      quiet,
-      timing,
-    })
-  ) {
+  if (actionableTasks.length === 0) {
+    reportOutcome(session, session.empty(options.emptyMessage));
     return;
   }
-  if (!quiet) {
-    displayPlan(actionableTasks, statuses);
-  }
+  reportPlan(actionableTasks, statuses, runtime);
   if (args.dryRun) {
-    await handleDryRun({
-      cwd,
-      format,
-      profile,
-      tasks: actionableTasks,
-      timing,
-    });
+    await dryRunFlow(session, actionableTasks);
     return;
   }
-  if (args.yes || quiet) {
-    await applyAndReport({
-      cwd,
-      format,
-      options: {
-        includeConflicts: args.includeConflicts,
-        quiet,
-        recordTiming: args.timing,
-      },
-      profile,
-      statuses,
-      tasks: actionableTasks,
-      timing,
-    });
+  if (args.yes || runtime.quiet) {
+    await applyTasksFlow(session, actionableTasks, args);
     return;
   }
   await promptAndApply({
     actionableTasks,
     args,
-    cwd,
-    format,
-    profile,
-    runOptions: options,
-    statuses,
-    timing,
+    confirmMessage: options.confirmMessage,
+    session,
   });
 }
 
-export const sharedRunArgs = {
-  cwd: {
-    description: 'Target directory (default: current working directory)',
-    type: 'string',
-  },
-  dryRun: {
-    description: 'Preview changes without applying',
-    type: 'boolean',
-  },
-  format: {
-    description: 'Output format (terminal|json)',
-    type: 'string',
-  },
-  includeConflicts: {
-    description: 'Include conflicting tasks when applying (default: false)',
-    type: 'boolean',
-  },
-  json: {
-    description: 'Output machine-readable JSON',
-    type: 'boolean',
-  },
-  only: {
-    description: 'Apply only a specific task',
-    type: 'string',
-  },
-  quiet: {
-    description: 'Suppress interactive prompts and verbose output',
-    type: 'boolean',
-  },
-  skip: {
-    description: 'Exclude a specific task (comma-separated)',
-    type: 'string',
-  },
-  timing: {
-    description: 'Show detailed per-task timing breakdown',
-    type: 'boolean',
-  },
-  yes: {
-    alias: 'y',
-    description: 'Skip all confirmations, apply all',
-    type: 'boolean',
-  },
-} as const;
+export async function runCommand(
+  args: CommandArgs,
+  options: RunCommandOptions
+): Promise<void> {
+  const session = await openSession(args, {
+    orderTasks: options.orderTasks,
+  });
+  if (!session) {
+    return;
+  }
+  await runSession(session, args, options);
+}

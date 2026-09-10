@@ -2,7 +2,11 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { detectProject } from '@xtarterize/core';
+import {
+  detectProject,
+  type ProjectProfile,
+  planTasks,
+} from '@xtarterize/core';
 import { skillsInstallTask } from '@xtarterize/tasks';
 import { describe, expect, vi } from 'vite-plus/test';
 
@@ -20,6 +24,20 @@ vi.mock('/packages/tasks/node_modules/tinyexec/dist/main.mjs', () => ({
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const fixtures = path.resolve(__dirname, '../fixtures');
+
+// The action has no file diff, so the install command captures are the
+// observable surface for which skills the task selects.
+const installOutput = async (
+  cwd: string,
+  profile: ProjectProfile
+): Promise<string> => {
+  mockX.mockClear();
+  mockX.mockResolvedValue({ exitCode: 0 });
+  await skillsInstallTask.apply(cwd, profile);
+  return mockX.mock.calls
+    .map(([command, args]) => [command, ...(args ?? [])].join(' '))
+    .join('\n');
+};
 
 describe('skillsInstallTask', () => {
   test('is applicable to TypeScript projects', async () => {
@@ -46,176 +64,128 @@ describe('skillsInstallTask', () => {
     expect(status).toBe('new');
   });
 
-  test('dryRun includes react and frontend skills for react projects', async () => {
-    const profile = await detectProject(
-      path.join(fixtures, 'react-vite-tailwind')
-    );
-    const diffs = await skillsInstallTask.dryRun(
+  test('dryRun reports no file diff and the plan backs up nothing', async () => {
+    const cwd = path.join(fixtures, 'react-vite-tailwind');
+    const profile = await detectProject(cwd);
+    await expect(skillsInstallTask.dryRun(cwd, profile)).resolves.toEqual([]);
+    const plan = await planTasks({ cwd, profile, tasks: [skillsInstallTask] });
+    expect(plan.files).toEqual([]);
+  });
+
+  test('installs react and frontend skills for react projects', async () => {
+    const commands = await installOutput(
       path.join(fixtures, 'react-vite-tailwind'),
-      profile
+      await detectProject(path.join(fixtures, 'react-vite-tailwind'))
     );
-    expect(diffs.length).toBe(1);
-    expect(diffs[0].filepath).toBe('.xtarterize/skills-install.log');
-    expect(diffs[0].before).toBeNull();
-    const after = diffs[0].after ?? '';
     // React skills
-    expect(after).toContain('vercel-react-best-practices');
-    expect(after).toContain('vercel-composition-patterns');
-    expect(after).toContain('react-dev');
-    expect(after).toContain('react-useeffect');
+    expect(commands).toContain('vercel-react-best-practices');
+    expect(commands).toContain('vercel-composition-patterns');
+    expect(commands).toContain('react-dev');
+    expect(commands).toContain('react-useeffect');
     // Frontend / UI skills
-    expect(after).toContain('frontend-design');
-    expect(after).toContain('web-design-guidelines');
-    expect(after).toContain('baseline-ui');
-    expect(after).toContain('fixing-accessibility');
-    expect(after).toContain('fixing-metadata');
-    expect(after).toContain('fixing-motion-performance');
+    expect(commands).toContain('frontend-design');
+    expect(commands).toContain('web-design-guidelines');
+    expect(commands).toContain('baseline-ui');
+    expect(commands).toContain('fixing-accessibility');
+    expect(commands).toContain('fixing-metadata');
+    expect(commands).toContain('fixing-motion-performance');
     // Build tool skills
-    expect(after).toContain('vite');
+    expect(commands).toContain('vite');
     // General skills
-    expect(after).toContain('opensrc');
-    expect(after).toContain('grill-me');
-    expect(after).toContain('handoff');
-    expect(after).toContain('improve-codebase-architecture');
-    expect(after).toContain('writing-for-agents');
+    expect(commands).toContain('opensrc');
+    expect(commands).toContain('grill-me');
+    expect(commands).toContain('handoff');
+    expect(commands).toContain('improve-codebase-architecture');
+    expect(commands).toContain('writing-for-agents');
   });
 
-  test('dryRun includes vue and frontend skills for vue projects', async () => {
-    const profile = await detectProject(path.join(fixtures, 'vue-vite'));
-    const diffs = await skillsInstallTask.dryRun(
-      path.join(fixtures, 'vue-vite'),
-      profile
-    );
-    expect(diffs.length).toBe(1);
-    const after = diffs[0].after ?? '';
+  test('installs vue and frontend skills for vue projects', async () => {
+    const cwd = path.join(fixtures, 'vue-vite');
+    const commands = await installOutput(cwd, await detectProject(cwd));
     // Vue skills
-    expect(after).toContain('vue');
-    expect(after).toContain('vue-best-practices');
+    expect(commands).toContain('vue');
+    expect(commands).toContain('vue-best-practices');
     // Frontend / UI skills
-    expect(after).toContain('frontend-design');
-    expect(after).toContain('web-design-guidelines');
-    expect(after).toContain('baseline-ui');
+    expect(commands).toContain('frontend-design');
+    expect(commands).toContain('web-design-guidelines');
+    expect(commands).toContain('baseline-ui');
     // Build tool skills
-    expect(after).toContain('vite');
+    expect(commands).toContain('vite');
     // React skills should NOT be present
-    expect(after).not.toContain('vercel-react-best-practices');
-    expect(after).not.toContain('vercel-composition-patterns');
-    expect(after).not.toContain('react-dev');
-    expect(after).not.toContain('react-useeffect');
+    expect(commands).not.toContain('vercel-react-best-practices');
+    expect(commands).not.toContain('vercel-composition-patterns');
+    expect(commands).not.toContain('react-dev');
+    expect(commands).not.toContain('react-useeffect');
   });
 
-  test('dryRun includes nextjs skills for nextjs projects', async () => {
-    const profile = await detectProject(path.join(fixtures, 'nextjs'));
-    const diffs = await skillsInstallTask.dryRun(
-      path.join(fixtures, 'nextjs'),
-      profile
-    );
-    expect(diffs.length).toBe(1);
-    const after = diffs[0].after ?? '';
+  test('installs nextjs skills for nextjs projects', async () => {
+    const cwd = path.join(fixtures, 'nextjs');
+    const commands = await installOutput(cwd, await detectProject(cwd));
     // Next.js skills
-    expect(after).toContain('next-dev-loop');
-    expect(after).toContain('next-cache-components-optimizer');
-    expect(after).toContain('next-cache-components-adoption');
+    expect(commands).toContain('next-dev-loop');
+    expect(commands).toContain('next-cache-components-optimizer');
+    expect(commands).toContain('next-cache-components-adoption');
     // React skills (Next.js is React)
-    expect(after).toContain('vercel-react-best-practices');
-    expect(after).toContain('react-dev');
-    expect(after).toContain('react-useeffect');
+    expect(commands).toContain('vercel-react-best-practices');
+    expect(commands).toContain('react-dev');
+    expect(commands).toContain('react-useeffect');
     // Frontend / UI skills
-    expect(after).toContain('baseline-ui');
+    expect(commands).toContain('baseline-ui');
   });
 
-  test('dryRun includes expo skills for expo projects', async () => {
-    const profile = await detectProject(
-      path.join(fixtures, 'react-native-expo')
-    );
-    const diffs = await skillsInstallTask.dryRun(
-      path.join(fixtures, 'react-native-expo'),
-      profile
-    );
-    expect(diffs.length).toBe(1);
-    const after = diffs[0].after ?? '';
-    expect(after).toContain('expo-overview');
-    expect(after).toContain('expo-router');
-    expect(after).toContain('eas-workflows');
-    expect(after).toContain('eas-app-stores');
-    expect(after).toContain('eas-update');
-    expect(after).toContain('expo-dev-client');
-    expect(after).toContain('expo-native-ui');
-    expect(after).toContain('expo-data-fetching');
-    expect(after).toContain('expo-module');
-    expect(after).toContain('expo-upgrade');
-    expect(after).toContain('vercel-react-native-skills');
+  test('installs expo skills for expo projects', async () => {
+    const cwd = path.join(fixtures, 'react-native-expo');
+    const commands = await installOutput(cwd, await detectProject(cwd));
+    expect(commands).toContain('expo-overview');
+    expect(commands).toContain('expo-router');
+    expect(commands).toContain('eas-workflows');
+    expect(commands).toContain('eas-app-stores');
+    expect(commands).toContain('eas-update');
+    expect(commands).toContain('expo-dev-client');
+    expect(commands).toContain('expo-native-ui');
+    expect(commands).toContain('expo-data-fetching');
+    expect(commands).toContain('expo-module');
+    expect(commands).toContain('expo-upgrade');
+    expect(commands).toContain('vercel-react-native-skills');
   });
 
-  test('dryRun includes antd skill for projects with antd', async () => {
-    const profile = await detectProject(
-      path.join(fixtures, 'react-ui-libraries')
-    );
-    const diffs = await skillsInstallTask.dryRun(
-      path.join(fixtures, 'react-ui-libraries'),
-      profile
-    );
-    expect(diffs.length).toBe(1);
-    const after = diffs[0].after ?? '';
-    expect(after).toContain('antd');
-    expect(after).toContain('ant-design/ant-design-cli');
+  test('installs antd skill for projects with antd', async () => {
+    const cwd = path.join(fixtures, 'react-ui-libraries');
+    const commands = await installOutput(cwd, await detectProject(cwd));
+    expect(commands).toContain('antd');
+    expect(commands).toContain('ant-design/ant-design-cli');
   });
 
-  test('dryRun includes heroui-react skill for projects with @heroui/react', async () => {
-    const profile = await detectProject(
-      path.join(fixtures, 'react-ui-libraries')
-    );
-    const diffs = await skillsInstallTask.dryRun(
-      path.join(fixtures, 'react-ui-libraries'),
-      profile
-    );
-    const after = diffs[0].after ?? '';
-    expect(after).toContain('heroui-react');
-    expect(after).toContain('heroui-inc/heroui');
+  test('installs heroui-react skill for projects with @heroui/react', async () => {
+    const cwd = path.join(fixtures, 'react-ui-libraries');
+    const commands = await installOutput(cwd, await detectProject(cwd));
+    expect(commands).toContain('heroui-react');
+    expect(commands).toContain('heroui-inc/heroui');
   });
 
-  test('dryRun includes chakra-ui skills for projects with @chakra-ui/react', async () => {
-    const profile = await detectProject(
-      path.join(fixtures, 'react-ui-libraries')
-    );
-    const diffs = await skillsInstallTask.dryRun(
-      path.join(fixtures, 'react-ui-libraries'),
-      profile
-    );
-    const after = diffs[0].after ?? '';
-    expect(after).toContain('chakra-ui-builder');
-    expect(after).toContain('chakra-ui-refactor');
-    expect(after).toContain('chakra-ui/chakra-ui');
+  test('installs chakra-ui skills for projects with @chakra-ui/react', async () => {
+    const cwd = path.join(fixtures, 'react-ui-libraries');
+    const commands = await installOutput(cwd, await detectProject(cwd));
+    expect(commands).toContain('chakra-ui-builder');
+    expect(commands).toContain('chakra-ui-refactor');
+    expect(commands).toContain('chakra-ui/chakra-ui');
   });
 
-  test('dryRun includes heroui-native skill for react-native projects with heroui-native', async () => {
-    const profile = await detectProject(
-      path.join(fixtures, 'react-native-hero')
-    );
-    const diffs = await skillsInstallTask.dryRun(
-      path.join(fixtures, 'react-native-hero'),
-      profile
-    );
-    expect(diffs.length).toBe(1);
-    const after = diffs[0].after ?? '';
-    expect(after).toContain('heroui-native');
-    expect(after).toContain('heroui-inc/heroui');
+  test('installs heroui-native skill for react-native projects with heroui-native', async () => {
+    const cwd = path.join(fixtures, 'react-native-hero');
+    const commands = await installOutput(cwd, await detectProject(cwd));
+    expect(commands).toContain('heroui-native');
+    expect(commands).toContain('heroui-inc/heroui');
   });
 
   test('does not include component library skills in plain react projects', async () => {
-    const profile = await detectProject(
-      path.join(fixtures, 'react-vite-tailwind')
-    );
-    const diffs = await skillsInstallTask.dryRun(
-      path.join(fixtures, 'react-vite-tailwind'),
-      profile
-    );
-    const after = diffs[0].after ?? '';
-    expect(after).not.toContain('antd');
-    expect(after).not.toContain('heroui-react');
-    expect(after).not.toContain('heroui-native');
-    expect(after).not.toContain('chakra-ui-builder');
-    expect(after).not.toContain('chakra-ui-refactor');
+    const cwd = path.join(fixtures, 'react-vite-tailwind');
+    const commands = await installOutput(cwd, await detectProject(cwd));
+    expect(commands).not.toContain('antd');
+    expect(commands).not.toContain('heroui-react');
+    expect(commands).not.toContain('heroui-native');
+    expect(commands).not.toContain('chakra-ui-builder');
+    expect(commands).not.toContain('chakra-ui-refactor');
   });
 
   test('returns new for node-only projects with general skills', async () => {
@@ -230,19 +200,15 @@ describe('skillsInstallTask', () => {
     expect(status).toBe('new');
   });
 
-  test('returns general skills for node-only projects', async () => {
-    const profile = await detectProject(path.join(fixtures, 'node-only'));
+  test('installs general skills for node-only projects', async () => {
+    const cwd = path.join(fixtures, 'node-only');
+    const profile = await detectProject(cwd);
     if (!skillsInstallTask.applicable(profile)) {
       return;
     }
-    const diffs = await skillsInstallTask.dryRun(
-      path.join(fixtures, 'node-only'),
-      profile
-    );
-    expect(diffs.length).toBe(1);
-    const after = diffs[0].after ?? '';
-    expect(after).toContain('opensrc');
-    expect(after).toContain('writing-for-agents');
+    const commands = await installOutput(cwd, profile);
+    expect(commands).toContain('opensrc');
+    expect(commands).toContain('writing-for-agents');
   });
 
   test('returns patch when some skills are already installed', async () => {
@@ -305,16 +271,12 @@ describe('skillsInstallTask', () => {
   });
 
   test('batches skills from the same source into a single command', async () => {
-    const profile = await detectProject(
-      path.join(fixtures, 'react-native-expo')
-    );
-    const diffs = await skillsInstallTask.dryRun(
-      path.join(fixtures, 'react-native-expo'),
-      profile
-    );
-    const after = diffs[0].after ?? '';
+    const cwd = path.join(fixtures, 'react-native-expo');
+    const commands = await installOutput(cwd, await detectProject(cwd));
     // expo/skills has 10 skills - they should appear in a single command
-    const expoLine = after.split('\n').find((l) => l.includes('expo/skills'));
+    const expoLine = commands
+      .split('\n')
+      .find((l) => l.includes('expo/skills'));
     expect(expoLine).toBeDefined();
     expect(expoLine).toContain('--skill expo-overview');
     expect(expoLine).toContain('--skill expo-router');
@@ -327,7 +289,7 @@ describe('skillsInstallTask', () => {
     expect(expoLine).toContain('--skill expo-module');
     expect(expoLine).toContain('--skill expo-upgrade');
     // Should NOT have separate lines for the same source
-    const expoLines = after
+    const expoLines = commands
       .split('\n')
       .filter((l) => l.includes('expo/skills'));
     expect(expoLines.length).toBe(1);
@@ -383,11 +345,9 @@ describe('skillsInstallTask', () => {
     });
 
     const profile = await detectProject(tmpDir);
-    const diffs = await skillsInstallTask.dryRun(tmpDir, profile);
-    const after = diffs[0]?.after ?? '';
+    const commands = await installOutput(tmpDir, profile);
 
-    expect(diffs.length).toBe(1);
-    expect(after).toContain('--skill react-dev');
+    expect(commands).toContain('--skill react-dev');
   });
 });
 

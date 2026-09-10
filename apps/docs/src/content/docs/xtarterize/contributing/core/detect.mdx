@@ -7,7 +7,7 @@ import { Aside, Tabs, TabItem } from '@astrojs/starlight/components'
 
 The `@xtarterize/core` package provides the `detectProject()` function - the foundation of xtarterize's context-aware behavior. It analyzes your project directory to build a [`ProjectProfile`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/detect.ts) that drives which conformance tasks are applicable.
 
-`detectProject()` is the orchestration layer in [`packages/core/src/detect.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/detect.ts). Bundler, cache, monorepo, package-manager, and shared type definitions live in [`packages/core/src/detect/`](https://github.com/agustinusnathaniel/xtarterize/tree/main/packages/core/src/detect); framework, router, styling, runtime, and Vite+ detection remain in `detect.ts`.
+`detectProject()` is the orchestration layer in [`packages/core/src/detect.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/detect.ts). The [detection registry](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/detect/registry/index.ts) declares the inputs and keyed detectors that drive the fingerprint, doctor checks, cache validation, and the `existing` profile keys. Bundler, cache, monorepo, package-manager, and shared type definitions live alongside it in [`packages/core/src/detect/`](https://github.com/agustinusnathaniel/xtarterize/tree/main/packages/core/src/detect); framework, router, styling, runtime, and Vite+ detection remain in `detect.ts`.
 
 ## Overview
 
@@ -15,9 +15,16 @@ Project detection is the first step in every xtarterize command. It analyzes you
 
 ### Profile caching
 
-Detection results are cached to avoid redundant I/O on repeated invocations. The cache is stored in `.xtarterize/cache/profile-fingerprint.json` and keyed by a fingerprint of `package.json`, lockfile, and config directories (`.github/`, `.vscode/`, `.changeset/`).
+Detection results are cached to avoid redundant I/O on repeated invocations. The cache is stored in `.xtarterize/cache/profile-fingerprint.json` and keyed by a fingerprint of the registry's declared inputs (cache format version 3):
 
-The cache is invalidated when any of these inputs change (mtime or size). Corrupt or missing cache files fall through to full re-computation - the cache is always best-effort. A cache hit typically completes in under 1ms vs 50-150ms for a full detection run.
+- `package.json`
+- Root config files (`biome.json`, `tsconfig.json`/`tsconfig.jsonc`, `.nvmrc`, `.eslintrc.*`, `.gitignore`, and the rest of the registry's root file inputs)
+- Lockfiles (`pnpm-lock.yaml`, `yarn.lock`, `package-lock.json`, `bun.lock`, `bun.lockb`)
+- Config directories (`.github/`, `.vscode/`, `.changeset/`)
+- Ancestor markers (`pnpm-workspace.yaml`, `turbo.json`, `nx.json`, `lerna.json`, and the `packages/`, `apps/`, `services/` workspace directories)
+- The `.git` cwd marker
+
+The cache is invalidated when any of these inputs change (mtime or size). Ancestor markers are presence-only: the fingerprint records that they exist, not their contents. Corrupt, malformed (for example, a missing `configDirs` or `lockfiles` field), or missing cache files fall through to full re-computation - the cache is always best-effort. A cache hit typically completes in under 1ms vs 50-150ms for a full detection run.
 
 See the file `docs/ADRs/xtarterize/021-fingerprint-profile-caching.md` for the full design. The `.xtarterize/` directory is now automatically gitignored via ADR 026 (replacing the manual approach outlined in ADR 021).
 
@@ -102,11 +109,11 @@ discovered via parent-directory walk-up. In non-monorepos,
 ### Detection modules
 
 - [`detect.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/detect.ts) - orchestration plus framework, runtime, router, styling, and Vite+ detection
+- [`registry/index.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/detect/registry/index.ts) - declares detection inputs and detector entries (ADR 032)
 - [`bundler.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/detect/bundler.ts) - bundler detection from dependencies and config files
 - [`cache.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/detect/cache.ts) - profile fingerprinting and cache validation
 - [`package-manager.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/detect/package-manager.ts) - package-manager and framework-version detection
 - [`monorepo.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/detect/monorepo.ts) - workspace and monorepo detection
-- [`root-inputs.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/detect/root-inputs.ts) - files used to invalidate the profile cache
 - [`types.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/detect/types.ts) - shared detection types
 
 ## Detection Sources
@@ -123,9 +130,9 @@ discovered via parent-directory walk-up. In non-monorepos,
   <TabItem label="Filesystem">
     | Signal | Source |
     |--------|--------|
-    | TypeScript | [`tsconfig.json`](https://www.typescriptlang.org/tsconfig/) existence, `typescript` in deps |
-    | Package manager | Lockfile presence ([`pnpm-lock.yaml`](https://pnpm.io/), [`yarn.lock`](https://yarnpkg.com/), etc.) |
-    | Monorepo | [`pnpm-workspace.yaml`](https://pnpm.io/workspaces), [`turbo.json`](https://turbo.build/repo/docs), `packages/` + `apps/` dirs |
+    | TypeScript | [`tsconfig.json`](https://www.typescriptlang.org/tsconfig/) or `tsconfig.jsonc` existence, `typescript` in deps |
+    | Package manager | Lockfile presence ([`pnpm-lock.yaml`](https://pnpm.io/), [`yarn.lock`](https://yarnpkg.com/), [`package-lock.json`](https://docs.npmjs.com/cli/v10/configuring-npm/package-lock-json), [`bun.lock`](https://bun.sh/docs/install/lockfile), `bun.lockb`) |
+    | Monorepo | [`pnpm-workspace.yaml`](https://pnpm.io/workspaces), [`turbo.json`](https://turbo.build/repo/docs), [`nx.json`](https://nx.dev/reference/nx-json), [`lerna.json`](https://lerna.js.org/docs/configuration), or at least two of `packages/`, `apps/`, `services/` |
     | GitHub | [`.github/`](https://docs.github.com/en/actions) directory presence |
   </TabItem>
 </Tabs>

@@ -1,5 +1,5 @@
 import { addDependency } from 'nypm';
-import { type PackageJson, readPackageJSON, writePackageJSON } from 'pkg-types';
+import { readPackageJSON } from 'pkg-types';
 
 import { detectPackageManager } from '@/detect/package-manager.js';
 import { fileExists, resolvePath } from '@/utils/fs.js';
@@ -18,13 +18,6 @@ export async function readPackageJson(cwd: string) {
     return null;
   }
   return readPackageJSON(pkgPath);
-}
-
-export async function writePackageJson(
-  cwd: string,
-  pkg: PackageJson
-): Promise<void> {
-  await writePackageJSON(resolvePath(cwd, 'package.json'), pkg);
 }
 
 export function hasDependency(

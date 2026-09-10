@@ -10,15 +10,3 @@ export default defineConfig({
 });
 `;
 }
-
-export function renderOxfmtJsonConfig(_profile: ProjectProfile): string {
-  const config = {
-    $schema: './node_modules/oxfmt/configuration_schema.json',
-    indentStyle: 'space',
-    indentWidth: 2,
-    lineWidth: 80,
-    quotes: 'single',
-  };
-
-  return JSON.stringify(config, null, 2);
-}

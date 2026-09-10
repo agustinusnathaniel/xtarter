@@ -1,16 +1,11 @@
-import { createJsonMergeTask } from '@/factory';
+import { defineTask } from '@/factory/define-task.js';
 
-export const incrementalTask = createJsonMergeTask({
+export const incrementalTask = defineTask({
   applicable: (profile) => profile.typescript,
-  filepath: 'tsconfig.json',
   group: 'TypeScript',
   id: 'ts/incremental',
-  incoming: () => ({
-    compilerOptions: { incremental: true, tsBuildInfoFile: '.tsbuildinfo' },
-  }),
   label: 'tsconfig - incremental: true',
   searchMeta: {
-    configTargets: ['tsconfig.json'],
     keywords: [
       'incremental',
       'build speed',
@@ -19,4 +14,13 @@ export const incrementalTask = createJsonMergeTask({
     ],
     tags: ['typescript', 'performance', 'build-speed'],
   },
+  targets: [
+    {
+      filepath: 'tsconfig.json',
+      incoming: () => ({
+        compilerOptions: { incremental: true, tsBuildInfoFile: '.tsbuildinfo' },
+      }),
+      kind: 'jsonMerge',
+    },
+  ],
 });

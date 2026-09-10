@@ -190,6 +190,92 @@ describe('init/sync/add json output', () => {
     }
   }, 120_000);
 
+  test('add ts/strict --json ignores check errors from unrelated tasks', async () => {
+    const cwd = await createMinimalProject();
+    process.exitCode = 0;
+    try {
+      // A malformed unrelated config makes the lint/biome check fail; the
+      // requested ts/strict task must still apply and report success.
+      await fs.writeFile(path.join(cwd, 'biome.json'), '{ not valid json');
+
+      const output = (await captureJsonOutput(async () => {
+        await addCommand.run?.({
+          args: { cwd, json: true, taskId: 'ts/strict' },
+        } as never);
+      })) as {
+        ok: boolean;
+        applied: number;
+        errors: Array<string>;
+        taskId: string;
+      };
+
+      expect(process.exitCode).toBe(0);
+      expect(output.ok).toBe(true);
+      expect(output.applied).toBe(1);
+      expect(output.taskId).toBe('ts/strict');
+
+      const tsconfig = JSON.parse(
+        await fs.readFile(path.join(cwd, 'tsconfig.json'), 'utf-8')
+      ) as { compilerOptions?: { strict?: boolean } };
+      expect(tsconfig.compilerOptions?.strict).toBe(true);
+    } finally {
+      process.exitCode = 0;
+      await fs.rm(cwd, { force: true, recursive: true });
+    }
+  }, 120_000);
+
+  test('add ts/strict --json reports the requested task check failure', async () => {
+    const cwd = await createMinimalProject();
+    process.exitCode = 0;
+    try {
+      // The requested task's own check reads a malformed tsconfig.json, so
+      // the run must fail with that task's check error.
+      await fs.writeFile(path.join(cwd, 'tsconfig.json'), '{ not valid json');
+
+      const output = (await captureJsonOutput(async () => {
+        await addCommand.run?.({
+          args: { cwd, json: true, taskId: 'ts/strict' },
+        } as never);
+      })) as { ok: boolean; errors: Array<string> };
+
+      expect(process.exitCode).toBe(1);
+      expect(output.ok).toBe(false);
+      expect(
+        output.errors.some((error) =>
+          error.includes('Failed to check ts/strict')
+        )
+      ).toBe(true);
+    } finally {
+      process.exitCode = 0;
+      await fs.rm(cwd, { force: true, recursive: true });
+    }
+  }, 60_000);
+
+  test('add --json without a terminal reports check errors instead of false success', async () => {
+    const cwd = await createMinimalProject();
+    process.exitCode = 0;
+    try {
+      // In test runs stdout is not a TTY, so --json takes the non-interactive
+      // path. A malformed unrelated config must surface as a failed payload.
+      await fs.writeFile(path.join(cwd, 'biome.json'), '{ not valid json');
+
+      const output = (await captureJsonOutput(async () => {
+        await addCommand.run?.({ args: { cwd, json: true } } as never);
+      })) as { ok: boolean; errors: Array<string> };
+
+      expect(process.exitCode).toBe(1);
+      expect(output.ok).toBe(false);
+      expect(
+        output.errors.some((error) =>
+          error.includes('Failed to check lint/biome')
+        )
+      ).toBe(true);
+    } finally {
+      process.exitCode = 0;
+      await fs.rm(cwd, { force: true, recursive: true });
+    }
+  }, 60_000);
+
   test('add --all --format json emits a summary payload', async () => {
     const cwd = await createProjectFixture();
     try {

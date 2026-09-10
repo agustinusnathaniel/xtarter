@@ -1,14 +1,19 @@
-import { createPackageJsonTask } from '@/factory';
+import { defineTask, type TargetPolicy } from '@/factory/define-task.js';
+import {
+  hasInstalledDependency,
+  resolveScriptsResolution,
+  toScriptsPatch,
+} from '@/factory/scripts.js';
 
-export const czgTask = createPackageJsonTask({
+const CANDIDATES = [{ script: 'commit', value: 'czg' }];
+
+export const czgTask = defineTask({
   applicable: () => true,
-  depName: 'czg',
+  deps: [{ depName: 'czg', dev: true }],
   group: 'Release',
   id: 'release/czg',
-  installDev: true,
   label: 'czg (commitizen)',
   scope: 'root',
-  scripts: [{ script: 'commit', value: 'czg' }],
   searchMeta: {
     configTargets: ['package.json'],
     keywords: [
@@ -19,5 +24,23 @@ export const czgTask = createPackageJsonTask({
       'interactive',
     ],
     tags: ['commit', 'cli', 'conventional-commits', 'interactive'],
+  },
+  targets: async (cwd) => {
+    const { missingScripts, pkg } = await resolveScriptsResolution(
+      cwd,
+      CANDIDATES
+    );
+    const hasDep = hasInstalledDependency(pkg, 'czg');
+    // The packageJson factory reported `new` when the whole script was absent
+    // and the dependency was not installed, and `patch` once it was.
+    const policy: TargetPolicy = () =>
+      missingScripts.length > 0 && !hasDep ? 'new' : undefined;
+    return [
+      {
+        change: () => toScriptsPatch(missingScripts),
+        kind: 'packageJson',
+        policy,
+      },
+    ];
   },
 });

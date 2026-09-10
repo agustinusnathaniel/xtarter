@@ -1,4 +1,14 @@
-import { createPackageJsonTask } from '@/factory';
+import { fileExists, resolvePath } from '@xtarterize/core';
+
+import { defineTask, type TargetPolicy } from '@/factory/define-task.js';
+import {
+  hasInstalledDependency,
+  resolveScriptsResolution,
+  toScriptsPatch,
+} from '@/factory/scripts.js';
+
+const VERSIONRC_FILEPATH = '.versionrc';
+const CANDIDATES = [{ script: 'release', value: 'commit-and-tag-version' }];
 
 const VERSIONRC_TEMPLATE = `{
   "packageFiles": ["package.json"],
@@ -15,21 +25,13 @@ const VERSIONRC_TEMPLATE = `{
   ]
 }`;
 
-export const catVersionTask = createPackageJsonTask({
+export const catVersionTask = defineTask({
   applicable: () => true,
-  depName: 'commit-and-tag-version',
-  files: [
-    {
-      filepath: '.versionrc',
-      render: () => VERSIONRC_TEMPLATE,
-    },
-  ],
+  deps: [{ depName: 'commit-and-tag-version', dev: true }],
   group: 'Release',
   id: 'release/cat-version',
-  installDev: true,
   label: 'commit-and-tag-version',
   scope: 'root',
-  scripts: [{ script: 'release', value: 'commit-and-tag-version' }],
   searchMeta: {
     configTargets: ['.versionrc'],
     keywords: [
@@ -40,5 +42,40 @@ export const catVersionTask = createPackageJsonTask({
       'semver',
     ],
     tags: ['release', 'version', 'changelog', 'semver'],
+  },
+  targets: async (cwd) => {
+    const { missingScripts, pkg } = await resolveScriptsResolution(
+      cwd,
+      CANDIDATES
+    );
+    const hasDep = hasInstalledDependency(pkg, 'commit-and-tag-version');
+    const hasVersionrc = await fileExists(resolvePath(cwd, VERSIONRC_FILEPATH));
+    const allMissing =
+      missingScripts.length === CANDIDATES.length && !hasVersionrc;
+    // The packageJson factory reported `new` only when every script and side
+    // file was missing and the dependency was not installed.
+    const scriptsPolicy: TargetPolicy = () =>
+      allMissing && !hasDep ? 'new' : undefined;
+    // Existing side files were never overwritten: content was never compared
+    // and only missing files were written.
+    const filePolicy: TargetPolicy = ({ before }) => {
+      if (before !== null) {
+        return 'skip';
+      }
+      return missingScripts.length === 0 ? 'patch' : undefined;
+    };
+    return [
+      {
+        change: () => toScriptsPatch(missingScripts),
+        kind: 'packageJson',
+        policy: scriptsPolicy,
+      },
+      {
+        filepath: VERSIONRC_FILEPATH,
+        kind: 'text',
+        policy: filePolicy,
+        render: () => VERSIONRC_TEMPLATE,
+      },
+    ];
   },
 });

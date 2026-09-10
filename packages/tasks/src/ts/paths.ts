@@ -1,6 +1,6 @@
 import type { ProjectProfile } from '@xtarterize/core';
 
-import { createJsonMergeTask } from '@/factory';
+import { defineTask, type TargetPolicy } from '@/factory/define-task.js';
 
 import { getCompilerOptions } from './utils.js';
 
@@ -36,36 +36,32 @@ function getPathStatus(
   return 'match';
 }
 
-export const pathsTask = createJsonMergeTask({
+/**
+ * ADR 008 tristate: a missing alias projects `patch`, a valid alias (plus
+ * `baseUrl: "."` outside Next) projects `skip`, and anything else projects
+ * `conflict` so an existing alias is never silently overwritten.
+ */
+const pathsPolicy: TargetPolicy = ({ before }, { profile }) => {
+  if (before === null) {
+    return;
+  }
+  const status = getPathStatus(before, profile);
+  if (status === 'match') {
+    return 'skip';
+  }
+  if (status === 'missing') {
+    return 'patch';
+  }
+  return 'conflict';
+};
+
+export const pathsTask = defineTask({
   applicable: (profile) => profile.typescript,
-  checkFn: async ({ profile, fullPath, content }) => {
-    if (!(fullPath && content)) {
-      return 'new';
-    }
-    const status = getPathStatus(content, profile);
-    if (status === 'match') {
-      return 'skip';
-    }
-    if (status === 'missing') {
-      return 'patch';
-    }
-    return 'conflict';
-  },
-  filepath: 'tsconfig.json',
   group: 'TypeScript',
   id: 'ts/paths',
-  incoming: (_cwd, profile) => ({
-    compilerOptions: {
-      ...(profile.bundler === 'nextjs' ? {} : { baseUrl: '.' }),
-      paths: {
-        '@/*': [profile.bundler === 'nextjs' ? './*' : './src/*'],
-      },
-    },
-  }),
   label: 'tsconfig - path aliases',
   scope: 'package',
   searchMeta: {
-    configTargets: ['tsconfig.json'],
     keywords: [
       'path aliases',
       'import paths',
@@ -75,4 +71,19 @@ export const pathsTask = createJsonMergeTask({
     ],
     tags: ['typescript', 'paths', 'aliases', 'imports'],
   },
+  targets: [
+    {
+      filepath: 'tsconfig.json',
+      incoming: (_cwd, profile) => ({
+        compilerOptions: {
+          ...(profile.bundler === 'nextjs' ? {} : { baseUrl: '.' }),
+          paths: {
+            '@/*': [profile.bundler === 'nextjs' ? './*' : './src/*'],
+          },
+        },
+      }),
+      kind: 'jsonMerge',
+      policy: pathsPolicy,
+    },
+  ],
 });

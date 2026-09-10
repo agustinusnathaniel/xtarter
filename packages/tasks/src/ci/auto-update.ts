@@ -1,16 +1,13 @@
-import { createFileTask } from '@/factory';
+import { defineTask } from '@/factory/define-task.js';
 import { renderAutoUpdateWorkflow } from '@/templates/workflows/auto-update-yml.js';
 
-export const autoUpdateWorkflowTask = createFileTask({
+export const autoUpdateWorkflowTask = defineTask({
   applicable: (profile) => profile.hasGitHub,
-  filepath: '.github/workflows/auto-update.yml',
   group: 'CI/CD',
   id: 'ci/auto-update',
   label: 'GitHub auto-update workflow',
-  render: (profile) => renderAutoUpdateWorkflow(profile),
   scope: 'root',
   searchMeta: {
-    configTargets: ['.github/workflows/auto-update.yml'],
     keywords: [
       'auto update',
       'dependency update',
@@ -20,4 +17,11 @@ export const autoUpdateWorkflowTask = createFileTask({
     ],
     tags: ['ci', 'dependencies', 'maintenance', 'github-actions'],
   },
+  targets: [
+    {
+      filepath: '.github/workflows/auto-update.yml',
+      kind: 'text',
+      render: (profile) => renderAutoUpdateWorkflow(profile),
+    },
+  ],
 });

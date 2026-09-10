@@ -1,6 +1,7 @@
-import type { ProjectProfile, Task, TaskStatus } from '@xtarterize/core';
+import type { Task, TaskStatus } from '@xtarterize/core';
 
-import type { DisplayFormat } from '@/ui/diff-display.js';
+import type { CommandSession } from '@/session.js';
+import type { Prompter } from '@/ui/prompter.js';
 
 export interface TaskWithStatus {
   status: TaskStatus;
@@ -8,25 +9,17 @@ export interface TaskWithStatus {
 }
 
 export interface RunSingleTaskOptions {
-  allTasks: Array<Task>;
-  cwd: string;
-  detectionMs: number;
-  format: DisplayFormat;
   includeConflicts: boolean;
-  profile: ProjectProfile;
-  quiet: boolean;
+  prompter: Prompter;
   recordTiming: boolean;
+  session: CommandSession;
   taskId: string;
 }
 
 export interface RunInteractiveOptions {
   all?: boolean;
-  allTasks: Array<Task>;
-  cwd: string;
-  detectionMs: number;
-  format: DisplayFormat;
   includeConflicts: boolean;
-  profile: ProjectProfile;
-  quiet: boolean;
+  prompter: Prompter;
   recordTiming: boolean;
+  session: CommandSession;
 }

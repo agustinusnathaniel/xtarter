@@ -1,3 +1,5 @@
+import fs from 'node:fs/promises';
+import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { detectProject } from '@xtarterize/core';
@@ -93,5 +95,30 @@ describe('oxfmt config validation', () => {
     expect(content).toContain('import { defineConfig } from "oxfmt"');
     expect(content).toContain('import ultracite from "ultracite/oxfmt"');
     expect(content).toContain('singleQuote: true');
+  });
+
+  test('reports conflict when an existing oxfmt.config.ts differs from the template', async () => {
+    const tmpDir = await fs.mkdtemp(
+      path.join(os.tmpdir(), 'xtarterize-oxfmt-status-')
+    );
+    try {
+      await fs.writeFile(
+        path.join(tmpDir, 'package.json'),
+        JSON.stringify({
+          devDependencies: { 'vite-plus': '^0.1.0' },
+          name: 'vp-oxfmt-status',
+          type: 'module',
+        })
+      );
+      await fs.writeFile(
+        path.join(tmpDir, 'oxfmt.config.ts'),
+        'export default {}\n'
+      );
+
+      const profile = await detectProject(tmpDir);
+      await expect(oxfmtTask.check(tmpDir, profile)).resolves.toBe('conflict');
+    } finally {
+      await fs.rm(tmpDir, { force: true, recursive: true });
+    }
   });
 });

@@ -18,7 +18,7 @@ const { mockGetAllTasks } = vi.hoisted(() => ({
 }));
 
 // Module-global mock: spread the original module so every other export
-// (resolveCliContext, scanProject, ...) keeps its real implementation, and
+// (scanProject, getAllTasksWithPlugins, ...) keeps its real implementation, and
 // default getAllTasksWithPlugins to the real one so un-mocked tests are
 // unaffected. Individual tests override with mockImplementationOnce.
 vi.mock('@xtarterize/app/utils/project.js', async (importOriginal) => {

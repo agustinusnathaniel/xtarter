@@ -1,7 +1,5 @@
-import { select } from '@clack/prompts';
 import type { Backup } from '@xtarterize/core';
 import {
-  abortIfCancelled,
   createSpinner,
   listBackups,
   logError,
@@ -10,8 +8,9 @@ import {
 } from '@xtarterize/core';
 import { defineCommand } from 'citty';
 
-import { resolveCwdWithPreflight } from '@/utils/preflight.js';
-import { resolveRuntimeFlags } from '@/utils/runtime-flags.js';
+import { openSession } from '@/session.js';
+import { getPrompter, type Prompter } from '@/ui/prompter.js';
+import { commonArgs, formatArgs, yesArg } from '@/utils/args.js';
 
 function validateRestoreArgs(filepath: unknown, jsonMode: boolean): boolean {
   if (filepath) {
@@ -53,20 +52,19 @@ async function loadAndValidateBackups(options: {
 
 async function promptRestoreConfirm(
   backups: Array<Backup>,
-  yes: boolean
-): Promise<Backup> {
+  yes: boolean,
+  prompter: Prompter
+): Promise<Backup | null> {
   if (backups.length === 1 || yes) {
     return backups[0];
   }
-  const result = await select({
+  return prompter.select<Backup>({
     message: 'Select backup to restore:',
     options: backups.map((b) => ({
       label: `${b.timestamp} - ${b.backupPath}`,
       value: b,
     })),
   });
-  abortIfCancelled(result);
-  return result;
 }
 
 async function executeRestore(options: {
@@ -104,42 +102,28 @@ async function executeRestore(options: {
 
 export const restoreCommand = defineCommand({
   args: {
-    cwd: {
-      description: 'Target directory (default: current working directory)',
-      type: 'string',
-    },
+    ...commonArgs,
+    ...formatArgs,
     filepath: {
       description: 'File to restore (e.g., tsconfig.json)',
       type: 'positional',
     },
-    format: {
-      description: 'Output format (terminal|json)',
-      type: 'string',
-    },
-    json: {
-      description: 'Output machine-readable JSON',
-      type: 'boolean',
-    },
-    quiet: {
-      description: 'Suppress verbose output',
-      type: 'boolean',
-    },
-    yes: {
-      alias: 'y',
-      description: 'Skip confirmation, restore latest backup',
-      type: 'boolean',
-    },
+    yes: yesArg,
   },
   meta: {
     description: 'Restore a file from backup',
     name: 'restore',
   },
   async run({ args }) {
-    const cwd = await resolveCwdWithPreflight(args);
+    const session = await openSession(args, { resolveTasks: false });
+    if (!session) {
+      return;
+    }
+    const { runtime } = session;
+    const cwd = runtime.cwd;
     const filepath = args.filepath as string | undefined;
-    const { format, quiet: runtimeQuiet } = resolveRuntimeFlags(args);
-    const jsonMode = format === 'json';
-    const quiet = jsonMode || runtimeQuiet;
+    const jsonMode = runtime.format === 'json';
+    const quiet = jsonMode || runtime.quiet;
     const yes = args.yes === true || jsonMode;
     if (!validateRestoreArgs(filepath, jsonMode)) {
       return;
@@ -153,7 +137,11 @@ export const restoreCommand = defineCommand({
     if (!backups) {
       return;
     }
-    const selected = await promptRestoreConfirm(backups, yes);
+    const selected = await promptRestoreConfirm(backups, yes, getPrompter());
+    if (selected === null) {
+      session.report(session.cancelled());
+      return;
+    }
     await executeRestore({
       cwd,
       filepath: filepath as string,
