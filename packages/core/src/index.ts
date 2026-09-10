@@ -8,7 +8,7 @@ export type {
   TaskSearchMeta,
   TaskStatus,
 } from '@/_base.js';
-export type { ExecutePlanOptions } from '@/apply/execute.js';
+export type { ApplyResult, ExecutePlanOptions } from '@/apply/execute.js';
 export { executePlan } from '@/apply/execute.js';
 export type {
   ApplyPlan,
@@ -16,12 +16,9 @@ export type {
   PlanTasksOptions,
 } from '@/apply/plan.js';
 export { planTasks } from '@/apply/plan.js';
-export type { ApplyOptions, ApplyResult } from '@/apply.js';
-export { applyTasks } from '@/apply.js';
 export type { Backup, RunManifest } from '@/backup.js';
 export {
   backupFile,
-  listAllBackups,
   listBackups,
   readRunManifest,
   restoreBackup,
@@ -57,8 +54,6 @@ export {
 } from '@/detect.js';
 export type { DiagnosticCheck } from '@/diagnostics.js';
 export {
-  checkToolInstalled,
-  getToolVersion,
   runConflictChecks,
   runEnvironmentChecks,
   runProjectHealthChecks,
@@ -81,6 +76,7 @@ export type {
   RelevanceSignal,
   WeightConfig,
 } from '@/inquiry/types.js';
+export { createInvocationGuard } from '@/invocation-guard.js';
 // Plugin/extension system — @internal: stable but untested in production
 export type { PluginConfig, TaskSelectionConfig } from '@/plugins.js';
 export {
@@ -104,24 +100,20 @@ export {
   computeUnifiedHunks,
   enhanceDiff,
   formatDiffHeader,
-  generateDiff,
 } from '@/utils/diff.js';
 // Re-export utilities needed by tasks
 export {
-  copyFile,
+  assertPathWithin,
   ensureDir,
   fileExists,
   findConfigFile,
   readFile,
   readJson,
-  readJsonIfExists,
   resolvePath,
   writeFile,
-  writeJson,
 } from '@/utils/fs.js';
 export {
   consola,
-  log,
   logError,
   logInfo,
   logSuccess,
@@ -129,11 +121,8 @@ export {
   pc,
 } from '@/utils/logger.js';
 export {
-  getDependencyVersion,
-  getNodeVersion,
   hasDependency,
   installDependenciesBatch,
-  installDependency,
   readPackageJson,
 } from '@/utils/pkg.js';
 export { abortIfCancelled, createSpinner, isCI } from '@/utils/prompts.js';

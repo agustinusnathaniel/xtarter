@@ -31,9 +31,7 @@ import {
   type ExistingConfig,
   type ExistingEntry,
   type ExistingValue,
-  type FlagEntry,
   isFileDetectorEntry,
-  type ListEntry,
   type RootFileInput,
   rootFileInputFor,
   rootFileInputsFor,
@@ -257,9 +255,10 @@ const CUSTOM_DETECTORS: CustomDetectorMap = {
 
 // ── Existing config assembly (registry-driven) ──
 
-type ResolvedExisting =
-  | { key: FlagEntry['key']; kind: 'flag'; value: boolean }
-  | { key: ListEntry['key']; kind: 'list'; value: Array<string> };
+type ResolvedExisting = {
+  key: ExistingEntry['key'];
+  value: boolean | Array<string>;
+};
 
 function customDetectorContext(
   entry: CustomDetectorEntry,
@@ -282,24 +281,15 @@ async function resolveExistingEntry(
   if (isFileDetectorEntry(entry)) {
     return {
       key: entry.key,
-      kind: 'flag',
       value: await detectRootFile(cwd, rootFileInputFor(entry)),
     };
   }
 
-  if (entry.existing === 'list') {
-    const detect = CUSTOM_DETECTORS[entry.id];
-    return {
-      key: entry.key,
-      kind: 'list',
-      value: await detect(customDetectorContext(entry, cwd, deps)),
-    };
-  }
-  const detect = CUSTOM_DETECTORS[entry.id];
   return {
     key: entry.key,
-    kind: 'flag',
-    value: await detect(customDetectorContext(entry, cwd, deps)),
+    value: await CUSTOM_DETECTORS[entry.id](
+      customDetectorContext(entry, cwd, deps)
+    ),
   };
 }
 
@@ -311,14 +301,9 @@ async function detectExistingConfigs(
     EXISTING_ENTRIES.map((entry) => resolveExistingEntry(entry, cwd, deps))
   );
 
-  const partial = resolved.reduce<Partial<ExistingConfig>>((acc, item) => {
-    if (item.kind === 'flag') {
-      acc[item.key] = item.value;
-    } else {
-      acc[item.key] = item.value;
-    }
-    return acc;
-  }, {});
+  const partial = Object.fromEntries(
+    resolved.map((entry) => [entry.key, entry.value])
+  ) as Partial<ExistingConfig>;
 
   return completeExistingConfig(partial);
 }

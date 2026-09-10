@@ -10,10 +10,6 @@ export const consola = createConsola({
   level: process.env.NODE_ENV === 'test' ? -1 : 3,
 });
 
-export function log(...args: Array<unknown>): void {
-  consola.log(...(args as [unknown]));
-}
-
 export function logSuccess(message: string): void {
   consola.success(message);
 }

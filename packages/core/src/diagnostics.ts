@@ -59,22 +59,6 @@ function runTool(
   );
 }
 
-export function getToolVersion(
-  tool: string,
-  cwd: string
-): Promise<string | null> {
-  return Effect.runPromise(runTool(tool, cwd));
-}
-
-export function checkToolInstalled(
-  tool: string,
-  cwd: string
-): Promise<boolean> {
-  return Effect.runPromise(
-    runTool(tool, cwd).pipe(Effect.map((v) => v !== null))
-  );
-}
-
 export function runEnvironmentChecks(
   cwd: string
 ): Promise<Array<DiagnosticCheck>> {

@@ -3,7 +3,7 @@ import { Effect } from 'effect';
 import { join, normalize } from 'pathe';
 
 import { BackupError } from '@/errors.js';
-import { resolvePath } from '@/utils/fs.js';
+import { assertPathWithin, resolvePath } from '@/utils/fs.js';
 
 const BACKUP_DIR = '.xtarterize/backups';
 
@@ -126,35 +126,24 @@ export function restoreBackup(cwd: string, backup: Backup): Promise<void> {
       })
     );
   }
-  const resolvedDest = resolvePath(cwd, backup.filepath);
-  const resolvedCwd = resolvePath(cwd);
-  if (
-    !resolvedDest.startsWith(`${resolvedCwd}/`) &&
-    resolvedDest !== resolvedCwd
-  ) {
-    return Promise.reject(
-      new BackupError({
-        cause: new Error(`Path traversal detected: ${backup.filepath}`),
-        path: backup.filepath,
-      })
-    );
+  let resolvedDest: string;
+  try {
+    resolvedDest = assertPathWithin(cwd, backup.filepath);
+  } catch (cause) {
+    return Promise.reject(new BackupError({ cause, path: backup.filepath }));
   }
 
   // Validate source path (backupPath) is within the backup directory
   const backupDir = resolvePath(cwd, BACKUP_DIR);
-  const resolvedSource = resolvePath(backupDir, backup.backupPath);
-  if (
-    !resolvedSource.startsWith(`${backupDir}/`) &&
-    resolvedSource !== backupDir
-  ) {
-    return Promise.reject(
-      new BackupError({
-        cause: new Error(
-          `Source path traversal detected: ${backup.backupPath}`
-        ),
-        path: backup.backupPath,
-      })
+  let resolvedSource: string;
+  try {
+    resolvedSource = assertPathWithin(
+      backupDir,
+      backup.backupPath,
+      `Source path traversal detected: ${backup.backupPath}`
     );
+  } catch (cause) {
+    return Promise.reject(new BackupError({ cause, path: backup.backupPath }));
   }
 
   return Effect.runPromise(
@@ -200,17 +189,5 @@ export async function readRunManifest(
     return JSON.parse(content) as RunManifest;
   } catch {
     return null;
-  }
-}
-
-export async function listAllBackups(
-  cwd: string
-): Promise<Record<string, Array<Backup>>> {
-  const indexPath = resolvePath(cwd, BACKUP_DIR, '.index.json');
-  try {
-    const content = await fs.readFile(indexPath, 'utf-8');
-    return JSON.parse(content) as Record<string, Array<Backup>>;
-  } catch {
-    return {};
   }
 }

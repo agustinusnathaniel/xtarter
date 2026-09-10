@@ -122,30 +122,8 @@ function scoreTaskForQuery(
   const { tokens, expanded, weights } = queryTerms;
   const allTerms = [...new Set([...tokens, ...expanded])];
 
-  // For each original token, find the BEST match per signal across
-  // all terms (original + synonyms). Then average over original tokens
-  // only - avoids dilution from low-scoring synonyms.
-  let labelSum = 0;
-  let idSum = 0;
-  let groupSum = 0;
-  let kwSum = 0;
-  let configSum = 0;
-
-  for (const _token of tokens) {
-    const best = getBestScores(task, allTerms);
-    labelSum += best.bestLabel;
-    idSum += best.bestId;
-    groupSum += best.bestGroup;
-    kwSum += best.bestKw;
-    configSum += best.bestConfig;
-  }
-
-  const n = tokens.length || 1;
-  const labelScore = labelSum / n;
-  const idScore = idSum / n;
-  const groupScore = groupSum / n;
-  const kwScore = kwSum / n;
-  const configScore = configSum / n;
+  // Best match per signal across all terms (original + synonyms).
+  const best = getBestScores(task, allTerms);
 
   // Coverage bonus: proportion of original tokens that matched >= 0.55 on any signal
   const matchedTokenCount = tokens.filter((t) => {
@@ -156,19 +134,19 @@ function scoreTaskForQuery(
     tokens.length > 0 ? (matchedTokenCount / tokens.length) * 0.1 : 0;
 
   const signals: Array<RelevanceSignal> = [
-    { name: 'label', score: labelScore },
-    { name: 'id', score: idScore },
-    { name: 'group', score: groupScore },
-    { name: 'keywords', score: kwScore },
-    { name: 'config', score: configScore },
+    { name: 'label', score: best.bestLabel },
+    { name: 'id', score: best.bestId },
+    { name: 'group', score: best.bestGroup },
+    { name: 'keywords', score: best.bestKw },
+    { name: 'config', score: best.bestConfig },
   ];
 
   const weightedScore =
-    labelScore * weights.label +
-    idScore * weights.id +
-    groupScore * weights.group +
-    kwScore * weights.keywords +
-    configScore * weights.config +
+    best.bestLabel * weights.label +
+    best.bestId * weights.id +
+    best.bestGroup * weights.group +
+    best.bestKw * weights.keywords +
+    best.bestConfig * weights.config +
     coverageBonus;
 
   return { score: Math.min(1.0, Math.max(0, weightedScore)), signals };

@@ -4,7 +4,6 @@ import path from 'node:path';
 import {
   BackupError,
   backupFile,
-  listAllBackups,
   listBackups,
   readRunManifest,
   restoreBackup,
@@ -110,37 +109,6 @@ describe('run manifest', () => {
 
     const manifest = await readRunManifest(tmpDir);
     expect(manifest).toBeNull();
-
-    await fs.rm(tmpDir, { force: true, recursive: true });
-  });
-});
-
-describe('listAllBackups', () => {
-  test('returns all backups grouped by filepath', async () => {
-    const tmpDir = await fs.mkdtemp(
-      path.join(os.tmpdir(), 'xtarterize-backup-')
-    );
-    await fs.writeFile(path.join(tmpDir, 'a.txt'), 'a', 'utf-8');
-    await fs.writeFile(path.join(tmpDir, 'b.txt'), 'b', 'utf-8');
-
-    await backupFile(tmpDir, 'a.txt');
-    await backupFile(tmpDir, 'b.txt');
-
-    const all = await listAllBackups(tmpDir);
-    expect(Object.keys(all).sort()).toEqual(['a.txt', 'b.txt']);
-    expect(all['a.txt']?.length).toBe(1);
-    expect(all['b.txt']?.length).toBe(1);
-
-    await fs.rm(tmpDir, { force: true, recursive: true });
-  });
-
-  test('returns empty object when no index exists', async () => {
-    const tmpDir = await fs.mkdtemp(
-      path.join(os.tmpdir(), 'xtarterize-backup-')
-    );
-
-    const all = await listAllBackups(tmpDir);
-    expect(all).toEqual({});
 
     await fs.rm(tmpDir, { force: true, recursive: true });
   });

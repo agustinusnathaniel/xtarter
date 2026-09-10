@@ -259,6 +259,9 @@ importers:
       '@clack/prompts':
         specifier: 'catalog:'
         version: 1.7.0
+      citty:
+        specifier: 'catalog:'
+        version: 0.2.2
       consola:
         specifier: 'catalog:'
         version: 3.4.2
@@ -305,9 +308,6 @@ importers:
       defu:
         specifier: 'catalog:'
         version: 6.1.7
-      js-yaml:
-        specifier: ^5.3.0
-        version: 5.3.0
       json5:
         specifier: 'catalog:'
         version: 2.2.3
@@ -321,9 +321,6 @@ importers:
         specifier: 'catalog:'
         version: 2.0.3
     devDependencies:
-      '@types/js-yaml':
-        specifier: ^4.0.9
-        version: 4.0.9
       '@types/node':
         specifier: 'catalog:'
         version: 26.2.0
@@ -3243,10 +3240,6 @@ packages:
 
   js-yaml@4.3.1:
     resolution: {integrity: sha512-CY6crGq313MX8GkwvB7tzgp99vjQxY1++5y10/BKN/GUfHqWaOGQMNZkBvqSzsZKWk/ijwHlWzzkLulsGHhjWQ==}
-    hasBin: true
-
-  js-yaml@5.3.0:
-    resolution: {integrity: sha512-muutsYr+e2+d3rTgUGslq5rxbBlUy3cJ61IsHag2QNDQV+7zXWjkUpmALIajhrlLlrgRUiymj6U3zUr/TMK84Q==}
     hasBin: true
 
   json-fixer@1.6.15:
@@ -7825,10 +7818,6 @@ snapshots:
   js-tokens@4.0.0: {}
 
   js-yaml@4.3.1:
-    dependencies:
-      argparse: 2.0.1
-
-  js-yaml@5.3.0:
     dependencies:
       argparse: 2.0.1
 

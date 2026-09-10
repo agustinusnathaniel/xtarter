@@ -4,30 +4,8 @@ import {
   computeUnifiedHunks,
   enhanceDiff,
   formatDiffHeader,
-  generateDiff,
 } from '@xtarterize/core';
 import { describe, expect } from 'vite-plus/test';
-
-describe('generateDiff', () => {
-  test('shows added lines', () => {
-    const result = generateDiff(null, 'line1\nline2\n');
-    expect(result).toContain('+ line1');
-    expect(result).toContain('+ line2');
-  });
-
-  test('shows removed lines', () => {
-    const result = generateDiff('old\n', 'new\n');
-    const lines = result.split('\n');
-    expect(lines.some((l) => l.includes('- old'))).toBe(true);
-    expect(lines.some((l) => l.includes('+ new'))).toBe(true);
-  });
-
-  test('shows unchanged lines without prefix', () => {
-    const result = generateDiff('keep\n', 'keep\n');
-    expect(result).not.toContain('+');
-    expect(result).not.toContain('-');
-  });
-});
 
 describe('computeChangeStats', () => {
   test('counts added and removed lines', () => {

@@ -1,5 +1,4 @@
-import { diffLines, diffWords } from 'diff';
-import pc from 'picocolors';
+import { diffLines } from 'diff';
 
 import type {
   ChangeStats,
@@ -9,29 +8,6 @@ import type {
 } from '@/_base.js';
 
 export type { ChangeStats, DiffHunk, FileDiff, SemanticEntry };
-
-export function generateDiff(before: string | null, after: string): string {
-  const useWords = isWordLevelDiff(before, after);
-  const changes = useWords
-    ? diffWords(before ?? '', after)
-    : diffLines(before ?? '', after);
-  const lines: Array<string> = [];
-
-  for (const change of changes) {
-    const prefix = change.added ? '+ ' : change.removed ? '- ' : '  ';
-    const color = change.added ? pc.green : change.removed ? pc.red : String;
-    const _reset = change.added || change.removed ? pc.reset : String;
-
-    for (const line of change.value.split('\n')) {
-      if (line === '' && change.value.endsWith('\n')) {
-        continue;
-      }
-      lines.push(color(`${prefix}${line}`));
-    }
-  }
-
-  return lines.join('\n');
-}
 
 export function computeChangeStats(
   before: string | null,
@@ -137,21 +113,6 @@ export function enhanceDiff(diff: FileDiff): FileDiff {
     : undefined;
 
   return { ...diff, hunks, semantic, stats };
-}
-
-function isWordLevelDiff(before: string | null, after: string): boolean {
-  if (before === null) {
-    return false;
-  }
-  const bLines = before.split('\n');
-  const aLines = after.split('\n');
-  if (bLines.length !== aLines.length) {
-    return false;
-  }
-  if (bLines.length > 50) {
-    return false;
-  }
-  return true;
 }
 
 function deepDiff(

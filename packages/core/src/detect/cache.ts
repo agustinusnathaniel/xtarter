@@ -41,229 +41,187 @@ export interface ProfileCacheEntry {
   version: typeof PROFILE_CACHE_VERSION;
 }
 
-function statOrFail(
-  filePath: string
-): Effect.Effect<PathFingerprint, FileSystemError> {
-  return Effect.tryPromise({
-    catch: (cause) => new FileSystemError({ cause, path: filePath }),
-    try: () =>
-      fs.stat(filePath).then(
-        (s) =>
-          ({
-            mtimeMs: s.mtimeMs,
-            path: filePath,
-            size: s.size,
-          }) as PathFingerprint
-      ),
-  });
-}
+type PathKind = 'any' | 'file' | 'presence';
 
-function statPath(
-  filePath: string
-): Effect.Effect<PathFingerprint | null, never> {
-  return statOrFail(filePath).pipe(Effect.orElseSucceed(() => null));
-}
-
-function fingerprintLockfiles(
-  cwd: string
-): Effect.Effect<Array<PathFingerprint>, never> {
-  return Effect.gen(function* () {
-    const fingerprints: Array<PathFingerprint> = [];
-    for (const input of lockfileInputs()) {
-      const fingerprint = yield* statPath(resolvePath(cwd, input.name));
-      if (fingerprint) {
-        fingerprints.push(fingerprint);
-      }
+async function fingerprintPath(
+  filePath: string,
+  kind: PathKind
+): Promise<PathFingerprint | null> {
+  try {
+    if (kind === 'presence') {
+      await fs.access(filePath);
+      return { mtimeMs: 0, path: filePath, size: 0 };
     }
-    return fingerprints;
-  });
+    const s = await fs.stat(filePath);
+    if (kind === 'file' && !s.isFile()) {
+      return null;
+    }
+    return { mtimeMs: s.mtimeMs, path: filePath, size: s.size };
+  } catch {
+    return null;
+  }
 }
 
-function fingerprintConfigDirs(
+async function fingerprintPaths(
+  paths: Array<string>,
+  kind: PathKind
+): Promise<Array<PathFingerprint>> {
+  const fingerprints: Array<PathFingerprint> = [];
+  for (const filePath of paths) {
+    const fingerprint = await fingerprintPath(filePath, kind);
+    if (fingerprint) {
+      fingerprints.push(fingerprint);
+    }
+  }
+  return fingerprints;
+}
+
+function fingerprintLockfiles(cwd: string): Promise<Array<PathFingerprint>> {
+  return fingerprintPaths(
+    lockfileInputs().map((input) => resolvePath(cwd, input.name)),
+    'any'
+  );
+}
+
+async function fingerprintConfigDirs(
   cwd: string
-): Effect.Effect<Array<PathFingerprint>, never> {
-  const dirs = configDirInputs().map((input) => input.dir);
-  return Effect.tryPromise({
-    catch: (cause) => new FileSystemError({ cause, path: cwd }),
-    try: () =>
-      Promise.all(
-        dirs.map(async (dir) => {
-          const dirPath = resolvePath(cwd, dir);
-          try {
-            const entries = await fs.readdir(dirPath, {
-              recursive: true,
-              withFileTypes: true,
-            });
-            const entryStats: Array<PathFingerprint> = [];
-            for (const entry of entries) {
-              if (entry.isFile()) {
-                const parent =
-                  (entry as unknown as { parentPath?: string; path?: string })
-                    .parentPath ??
-                  (entry as unknown as { parentPath?: string; path?: string })
-                    .path ??
-                  dirPath;
-                const fullPath = resolvePath(String(parent), entry.name);
-                const s = await fs.stat(fullPath);
-                entryStats.push({
-                  mtimeMs: s.mtimeMs,
-                  path: fullPath,
-                  size: s.size,
-                });
-              }
-            }
-            // If directory is empty, stat the directory itself so it still appears in the fingerprint
-            if (entryStats.length === 0) {
-              const s = await fs.stat(dirPath);
-              entryStats.push({
-                mtimeMs: s.mtimeMs,
-                path: dirPath,
-                size: s.size,
-              });
-            }
-            return entryStats;
-          } catch {
-            return [] as Array<PathFingerprint>;
+): Promise<Array<PathFingerprint>> {
+  const results = await Promise.all(
+    configDirInputs().map(async (input) => {
+      const dirPath = resolvePath(cwd, input.dir);
+      try {
+        const entries = await fs.readdir(dirPath, {
+          recursive: true,
+          withFileTypes: true,
+        });
+        const entryStats: Array<PathFingerprint> = [];
+        for (const entry of entries) {
+          if (!entry.isFile()) {
+            continue;
           }
-        })
-      ).then((results) => results.flat()),
-  }).pipe(Effect.orElseSucceed(() => []));
-}
-
-function fingerprintRootInputs(
-  cwd: string
-): Effect.Effect<Array<PathFingerprint>, never> {
-  return Effect.tryPromise({
-    catch: (cause) => new FileSystemError({ cause, path: cwd }),
-    try: async () => {
-      const entryStats: Array<PathFingerprint> = [];
-      for (const input of rootFileInputs()) {
-        const names =
-          input.extensions.length === 0
-            ? [input.basename]
-            : input.extensions.map((ext) => `${input.basename}${ext}`);
-        for (const name of names) {
-          const filePath = resolvePath(cwd, name);
-          try {
-            const s = await fs.stat(filePath);
-            if (s.isFile()) {
-              entryStats.push({
-                mtimeMs: s.mtimeMs,
-                path: filePath,
-                size: s.size,
-              });
-            }
-          } catch {
-            // Absent or unreadable inputs simply don't contribute
+          const fingerprint = await fingerprintPath(
+            resolvePath(entry.parentPath ?? dirPath, entry.name),
+            'any'
+          );
+          if (fingerprint) {
+            entryStats.push(fingerprint);
           }
         }
-      }
-      return entryStats;
-    },
-  }).pipe(Effect.orElseSucceed(() => []));
-}
-
-function fingerprintCwdInputs(
-  cwd: string
-): Effect.Effect<Array<PathFingerprint>, never> {
-  return Effect.tryPromise({
-    catch: (cause) => new FileSystemError({ cause, path: cwd }),
-    try: async () => {
-      const entryStats: Array<PathFingerprint> = [];
-      for (const input of cwdMarkerInputs()) {
-        const inputPath = resolvePath(cwd, input.name);
-        try {
-          const s = await fs.stat(inputPath);
-          entryStats.push({
-            mtimeMs: s.mtimeMs,
-            path: inputPath,
-            size: s.size,
-          });
-        } catch {
-          // Absent markers simply don't contribute
-        }
-      }
-      // Workspace dirs feed root-level monorepo detection, so their presence
-      // matters but their contents do not. Presence-only entries keep dir
-      // mtime churn from invalidating the cache.
-      for (const dir of workspacePackageDirs()) {
-        const dirPath = resolvePath(cwd, dir);
-        try {
-          await fs.access(dirPath);
-          entryStats.push({ mtimeMs: 0, path: dirPath, size: 0 });
-        } catch {
-          // Absent workspace dirs simply don't contribute
-        }
-      }
-      return entryStats;
-    },
-  }).pipe(Effect.orElseSucceed(() => []));
-}
-
-function fingerprintAncestorInputs(
-  cwd: string
-): Effect.Effect<Array<PathFingerprint>, never> {
-  const names = ancestorMarkerInputs().map((input) => input.name);
-  const rootMarkers = cwdMarkerInputs().map((input) => input.name);
-  return Effect.tryPromise({
-    catch: (cause) => new FileSystemError({ cause, path: cwd }),
-    try: async () => {
-      const entryStats: Array<PathFingerprint> = [];
-      let current = dirname(cwd);
-      let reachedRoot = false;
-      while (!reachedRoot && current !== dirname(current)) {
-        for (const name of names) {
-          const inputPath = resolvePath(current, name);
-          try {
-            await fs.access(inputPath);
-            entryStats.push({ mtimeMs: 0, path: inputPath, size: 0 });
-          } catch {
-            // Absent inputs don't contribute
+        // If directory is empty, stat the directory itself so it still appears in the fingerprint
+        if (entryStats.length === 0) {
+          const fingerprint = await fingerprintPath(dirPath, 'any');
+          if (fingerprint) {
+            entryStats.push(fingerprint);
           }
         }
-        for (const marker of rootMarkers) {
-          const markerPath = resolvePath(current, marker);
-          try {
-            await fs.access(markerPath);
-            entryStats.push({ mtimeMs: 0, path: markerPath, size: 0 });
-            reachedRoot = true;
-            break;
-          } catch {
-            // No marker here, keep walking up
-          }
-        }
-        current = dirname(current);
+        return entryStats;
+      } catch {
+        return [] as Array<PathFingerprint>;
       }
-      return entryStats;
-    },
-  }).pipe(Effect.orElseSucceed(() => []));
-}
-
-export function computeFingerprint(cwd: string): Promise<ProjectFingerprint> {
-  return Effect.runPromise(
-    Effect.gen(function* () {
-      const pkgJsonPath = resolvePath(cwd, packageJsonInput().name);
-      const packageJson = yield* statPath(pkgJsonPath);
-      const lockfiles = yield* fingerprintLockfiles(cwd);
-      const configDirs = yield* fingerprintConfigDirs(cwd);
-      const rootInputs = yield* fingerprintRootInputs(cwd);
-      const cwdInputs = yield* fingerprintCwdInputs(cwd);
-      const ancestorInputs = yield* fingerprintAncestorInputs(cwd);
-
-      return {
-        ancestorInputs,
-        configDirs,
-        cwdInputs,
-        lockfiles,
-        packageJson: packageJson ?? {
-          mtimeMs: 0,
-          path: pkgJsonPath,
-          size: 0,
-        },
-        rootInputs,
-      };
     })
   );
+  return results.flat();
+}
+
+function fingerprintRootInputs(cwd: string): Promise<Array<PathFingerprint>> {
+  const paths = rootFileInputs().flatMap((input) => {
+    const names =
+      input.extensions.length === 0
+        ? [input.basename]
+        : input.extensions.map((ext) => `${input.basename}${ext}`);
+    return names.map((name) => resolvePath(cwd, name));
+  });
+  return fingerprintPaths(paths, 'file');
+}
+
+async function fingerprintCwdInputs(
+  cwd: string
+): Promise<Array<PathFingerprint>> {
+  const results = await Promise.all([
+    fingerprintPaths(
+      cwdMarkerInputs().map((input) => resolvePath(cwd, input.name)),
+      'any'
+    ),
+    // Workspace dirs feed root-level monorepo detection, so their presence
+    // matters but their contents do not. Presence-only entries keep dir
+    // mtime churn from invalidating the cache.
+    fingerprintPaths(
+      workspacePackageDirs().map((dir) => resolvePath(cwd, dir)),
+      'presence'
+    ),
+  ]);
+  return results.flat();
+}
+
+async function fingerprintAncestorInputs(
+  cwd: string
+): Promise<Array<PathFingerprint>> {
+  const names = ancestorMarkerInputs().map((input) => input.name);
+  const rootMarkers = cwdMarkerInputs().map((input) => input.name);
+  const entryStats: Array<PathFingerprint> = [];
+  let current = dirname(cwd);
+  while (current !== dirname(current)) {
+    for (const name of names) {
+      const fingerprint = await fingerprintPath(
+        resolvePath(current, name),
+        'presence'
+      );
+      if (fingerprint) {
+        entryStats.push(fingerprint);
+      }
+    }
+    let reachedRoot = false;
+    for (const marker of rootMarkers) {
+      const fingerprint = await fingerprintPath(
+        resolvePath(current, marker),
+        'presence'
+      );
+      if (fingerprint) {
+        entryStats.push(fingerprint);
+        reachedRoot = true;
+        break;
+      }
+    }
+    if (reachedRoot) {
+      break;
+    }
+    current = dirname(current);
+  }
+  return entryStats;
+}
+
+export async function computeFingerprint(
+  cwd: string
+): Promise<ProjectFingerprint> {
+  const pkgJsonPath = resolvePath(cwd, packageJsonInput().name);
+  const [
+    packageJson,
+    lockfiles,
+    configDirs,
+    rootInputs,
+    cwdInputs,
+    ancestorInputs,
+  ] = await Promise.all([
+    fingerprintPath(pkgJsonPath, 'any'),
+    fingerprintLockfiles(cwd),
+    fingerprintConfigDirs(cwd),
+    fingerprintRootInputs(cwd),
+    fingerprintCwdInputs(cwd),
+    fingerprintAncestorInputs(cwd),
+  ]);
+
+  return {
+    ancestorInputs,
+    configDirs,
+    cwdInputs,
+    lockfiles,
+    packageJson: packageJson ?? {
+      mtimeMs: 0,
+      path: pkgJsonPath,
+      size: 0,
+    },
+    rootInputs,
+  };
 }
 
 function samePathFingerprint(
