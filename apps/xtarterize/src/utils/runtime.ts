@@ -40,6 +40,6 @@ export function resolveRuntimeContext(args: RuntimeArgs): RuntimeContext {
   const json = args.json === true;
   const ci = isCI();
   const format = resolveFormat(args.format, json);
-  const quiet = args.quiet === true || ci || json || format === 'json';
+  const quiet = args.quiet === true || ci || format === 'json';
   return { ci, cwd: resolveCwd(args), format, json, quiet };
 }
