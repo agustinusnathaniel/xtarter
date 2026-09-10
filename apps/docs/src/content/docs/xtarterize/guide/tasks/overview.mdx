@@ -173,9 +173,9 @@ The `quality/package-engines` task adds a `devEngines` field to `package.json`:
 The `agent/skills-install` task installs [agent skills](https://skills.sh) from
 the catalog in [`packages/tasks/src/agent/catalog.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/tasks/src/agent/catalog.ts).
 It combines general skills with entries selected from the detected runtime,
-framework, bundler, and dependencies. Before installing, it checks
-`skills-lock.json` and local skill directories so existing skills are not
-installed again.
+framework, bundler, and dependencies. Before installing, it checks local skill
+directories (`.agents/skills`, `.claude/skills`, and `.cursor/skills`) so
+existing skills are not installed again.
 
 The catalog is the source of truth. Its current groups include:
 

@@ -88,7 +88,7 @@ for the full list.
 xtarterize/
 ├── packages/
 │   ├── core/          # Detection engine, task interface, utils, resolve/apply/backup
-│   ├── patchers/      # JSON merge, YAML merge, AST patching (magicast)
+│   ├── patchers/      # JSON merge and AST patching (magicast)
 │   └── tasks/         # All task implementations + templates
 ├── apps/
 │   ├── xtarterize/          # Conformance CLI (citty + @clack/prompts)
@@ -105,7 +105,7 @@ xtarterize/
 | Package                | Description                                                                    | Publishable |
 | ---------------------- | ------------------------------------------------------------------------------ | ----------- |
 | `@xtarterize/core`     | Project detection, task interface, file utilities, resolve/apply/backup engine | Yes         |
-| `@xtarterize/patchers` | Deep merge (defu), YAML merge, AST patching (magicast) for config files        | Yes         |
+| `@xtarterize/patchers` | Deep JSON merge (defu), AST patching (magicast) for config files                | Yes         |
 | `@xtarterize/tasks`    | All task implementations and template renderers                                | Internal    |
 | `xtarterize`           | CLI for applying conformance configurations to existing projects               | Yes         |
 | `create-xtarter-app`   | CLI for scaffolding new projects from templates                                | Yes         |

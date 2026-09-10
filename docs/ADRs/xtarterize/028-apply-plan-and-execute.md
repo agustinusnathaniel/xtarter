@@ -38,6 +38,9 @@ Split the pipeline into a side-effect-free plan and an executor:
 are deleted. The CLI uses `planTasks` for diff, dry run, and interactive
 preview, and `utils/task-diffs.ts` is deleted.
 
+Update (2026-09-11): The decision stands, but `applyTasks` was removed after
+this ADR. Callers now compose `planTasks` and `executePlan` directly.
+
 ## Rationale
 
 - One resolution feeds diff, dry run, apply, and reporting, so the four paths
