@@ -1,4 +1,3 @@
-import { readFile, writeFile } from 'node:fs/promises';
 import { generateCode, parseExpression, parseModule } from 'magicast';
 import { basename } from 'pathe';
 
@@ -28,7 +27,6 @@ function parseImportSpecifier(specifier: string): {
 
 export interface InjectVitePluginOptions {
   configPath: string;
-  dryRun?: boolean;
   importName: string;
   importPath: string;
   pluginExpression: string;
@@ -42,10 +40,8 @@ export interface InjectVitePluginResult {
 }
 
 /**
- * Content-level counterpart of `injectVitePlugin`: transform config source
- * text in memory, with no filesystem access. `injectVitePlugin` uses it after
- * reading the file. `dryRun` is accepted on the options for signature parity
- * and intentionally ignored: callers decide what to do with `generatedCode`.
+ * Transform Vite config source text in memory and return the generated code.
+ * Callers decide whether and where to write the result.
  */
 export function injectVitePluginIntoCode(
   code: string,
@@ -116,36 +112,4 @@ export function injectVitePluginIntoCode(
       success: false,
     };
   }
-}
-
-export async function injectVitePlugin(
-  options: InjectVitePluginOptions
-): Promise<InjectVitePluginResult> {
-  const { configPath, dryRun } = options;
-  const configLabel = getConfigLabel(configPath);
-
-  let before: string;
-  try {
-    before = await readFile(configPath, 'utf-8');
-  } catch (error) {
-    return {
-      fallback: `AST patching failed: ${error instanceof Error ? error.message : 'Unknown error'}. Add plugin manually to ${configLabel}.`,
-      success: false,
-    };
-  }
-
-  const result = injectVitePluginIntoCode(before, options);
-  if (!result.success) {
-    return result;
-  }
-
-  const generatedCode = result.generatedCode ?? before;
-  if (dryRun) {
-    return { beforeCode: before, generatedCode, success: true };
-  }
-
-  if (generatedCode !== before) {
-    await writeFile(configPath, generatedCode);
-  }
-  return { success: true };
 }
