@@ -128,7 +128,6 @@ export {
   installDependenciesBatch,
   installDependency,
   readPackageJson,
-  writePackageJson,
 } from '@/utils/pkg.js';
 export { abortIfCancelled, createSpinner, isCI } from '@/utils/prompts.js';
 export type { TagColor } from '@/utils/tags.js';

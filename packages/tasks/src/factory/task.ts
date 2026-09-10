@@ -9,37 +9,18 @@ import type {
 import {
   fileExists,
   installDependenciesBatch,
-  readFile,
-  readPackageJson,
   resolvePath,
   writeFile,
-  writePackageJson,
 } from '@xtarterize/core';
-import { patchJson } from '@xtarterize/patchers';
 import type { PackageJson } from 'pkg-types';
 
 import { wrapTask } from './ops.js';
 import {
-  filterMissingScripts,
-  mergeScripts,
-  resolveScripts,
-} from './scripts.js';
-
-const __pkgCache = new Map<string, PackageJson | null>();
-
-async function getPackageJson(cwd: string): Promise<PackageJson | null> {
-  const cached = __pkgCache.get(cwd);
-  if (cached !== undefined) {
-    return cached;
-  }
-  const pkg = await readPackageJson(cwd);
-  __pkgCache.set(cwd, pkg);
-  return pkg;
-}
-
-function invalidatePackageJsonCache(cwd: string): void {
-  __pkgCache.delete(cwd);
-}
+  applyPackageJsonChange,
+  computePackageJsonChange,
+  readPackageJson,
+} from './package-json.js';
+import { filterMissingScripts, resolveScripts } from './scripts.js';
 
 export interface PackageJsonScriptEntry {
   script: string;
@@ -154,7 +135,7 @@ async function computePackageJsonChanges(
   cwd: string,
   profile: ProjectProfile
 ): Promise<PackageJsonChanges> {
-  const pkg = await getPackageJson(cwd);
+  const pkg = await readPackageJson(cwd);
 
   const scripts = await resolveScripts(options, cwd, profile);
   const scriptsMap = pkg?.scripts ?? {};
@@ -274,6 +255,16 @@ async function dryRunPackageJsonTask(
   return diffs;
 }
 
+function toScriptsPatch(missingScripts: Array<PackageJsonScriptEntry>): {
+  scripts: Record<string, string>;
+} {
+  const scripts: Record<string, string> = {};
+  for (const s of missingScripts) {
+    scripts[s.script] = s.value;
+  }
+  return { scripts };
+}
+
 async function collectPackageJsonScriptDiff(options: {
   cwd: string;
   missingScripts: Array<PackageJsonScriptEntry>;
@@ -281,17 +272,17 @@ async function collectPackageJsonScriptDiff(options: {
   diffs: Array<FileDiff>;
 }): Promise<void> {
   const { cwd, missingScripts, pkg, diffs } = options;
-  const pkgPath = resolvePath(cwd, 'package.json');
-  const pkgExists = await fileExists(pkgPath);
-  if (pkgExists && pkg && missingScripts.length > 0) {
-    const before = await readFile(pkgPath);
-    const incomingScripts: Record<string, string> = {};
-    for (const s of missingScripts) {
-      incomingScripts[s.script] = s.value;
-    }
-    const after = patchJson(before, { scripts: incomingScripts });
-    if (after !== before) {
-      diffs.push({ after, before, filepath: 'package.json' });
+  if (pkg && missingScripts.length > 0) {
+    const change = await computePackageJsonChange(
+      cwd,
+      toScriptsPatch(missingScripts)
+    );
+    if (change) {
+      diffs.push({
+        after: change.after,
+        before: change.before,
+        filepath: change.filepath,
+      });
     }
   }
 }
@@ -340,9 +331,7 @@ async function applyPackageJsonTask(
   }
 
   if (pkg && missingScripts.length > 0) {
-    pkg.scripts = mergeScripts(pkg.scripts, missingScripts);
-    await writePackageJson(cwd, pkg);
-    invalidatePackageJsonCache(cwd);
+    await applyPackageJsonChange(cwd, toScriptsPatch(missingScripts));
   }
 
   if (neededDeps.length > 0) {

@@ -25,23 +25,6 @@ export async function resolveScripts(
   return options.scripts ?? [];
 }
 
-export function mergeScripts(
-  current: PackageScriptsMap | undefined,
-  incoming: Array<PackageJsonScriptEntry>
-): PackageScriptsMap {
-  const next = { ...current };
-  for (const s of incoming) {
-    if (Object.hasOwn(next, s.script)) {
-      continue;
-    }
-    if (hasScriptWithEquivalentValue(next, s.value)) {
-      continue;
-    }
-    next[s.script] = s.value;
-  }
-  return next;
-}
-
 export function filterMissingScripts(
   existing: PackageScriptsMap,
   candidates: Array<PackageJsonScriptEntry>
