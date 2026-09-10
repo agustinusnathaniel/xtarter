@@ -1,19 +1,15 @@
-import { createVitePluginTask } from '@/factory';
+import { defineTask } from '@/factory/define-task.js';
+import { createVitePluginTarget } from '@/vite/plugin.js';
 
-export const viteVisualizerTask = createVitePluginTask({
+export const viteVisualizerTask = defineTask({
   applicable: (profile) =>
     profile.bundler === 'vite' && profile.runtime !== 'node',
-  checkString: 'rollup-plugin-visualizer',
-  depName: 'rollup-plugin-visualizer',
+  deps: [{ depName: 'rollup-plugin-visualizer', dev: true }],
   group: 'Vite Plugins',
   id: 'vite/visualizer',
-  importName: 'visualizer',
-  importStyle: 'named',
   label: 'rollup-plugin-visualizer',
-  pluginCall: 'visualizer({ open: false, gzipSize: true })',
   scope: 'package',
   searchMeta: {
-    configTargets: ['vite.config.ts'],
     keywords: [
       'visualizer',
       'bundle analysis',
@@ -23,4 +19,13 @@ export const viteVisualizerTask = createVitePluginTask({
     ],
     tags: ['vite', 'plugin', 'bundle', 'analysis'],
   },
+  targets: [
+    createVitePluginTarget({
+      depName: 'rollup-plugin-visualizer',
+      id: 'vite/visualizer',
+      importName: 'visualizer',
+      importStyle: 'named',
+      pluginCall: 'visualizer({ open: false, gzipSize: true })',
+    }),
+  ],
 });

@@ -1,19 +1,15 @@
-import { createVitePluginTask } from '@/factory';
+import { defineTask } from '@/factory/define-task.js';
+import { createVitePluginTarget } from '@/vite/plugin.js';
 
-export const viteCheckerTask = createVitePluginTask({
+export const viteCheckerTask = defineTask({
   applicable: (profile) =>
     profile.bundler === 'vite' && profile.runtime !== 'node',
-  checkString: 'vite-plugin-checker',
-  depName: 'vite-plugin-checker',
+  deps: [{ depName: 'vite-plugin-checker', dev: true }],
   group: 'Vite Plugins',
   id: 'vite/checker',
-  importName: 'checker',
-  importStyle: 'default',
   label: 'vite-plugin-checker',
-  pluginCall: 'checker({ typescript: true })',
   scope: 'package',
   searchMeta: {
-    configTargets: ['vite.config.ts'],
     keywords: [
       'vite checker',
       'type checking',
@@ -22,4 +18,13 @@ export const viteCheckerTask = createVitePluginTask({
     ],
     tags: ['vite', 'plugin', 'type-checking', 'linting'],
   },
+  targets: [
+    createVitePluginTarget({
+      depName: 'vite-plugin-checker',
+      id: 'vite/checker',
+      importName: 'checker',
+      importStyle: 'default',
+      pluginCall: 'checker({ typescript: true })',
+    }),
+  ],
 });

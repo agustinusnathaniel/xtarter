@@ -1,17 +1,12 @@
-import { createFileTask } from '@/factory';
+import { defineTask } from '@/factory/define-task.js';
 import { renderKnipConfig } from '@/templates/knip-config.js';
 
-export const knipTask = createFileTask({
+export const knipTask = defineTask({
   applicable: () => true,
-  extensions: ['.ts', '.mts', '.js', '.json'],
-  filepath: 'knip.config',
   group: 'Quality',
   id: 'quality/knip',
   label: 'Knip (unused code detection)',
-  render: (profile) =>
-    renderKnipConfig(profile, profile.typescript ? 'ts' : 'js'),
   searchMeta: {
-    configTargets: ['knip.config.ts'],
     keywords: [
       'knip',
       'dead code',
@@ -21,4 +16,13 @@ export const knipTask = createFileTask({
     ],
     tags: ['dead-code', 'quality', 'analysis', 'detection'],
   },
+  targets: [
+    {
+      extensions: ['.ts', '.mts', '.js', '.json'],
+      filepath: 'knip.config',
+      kind: 'text',
+      render: (profile) =>
+        renderKnipConfig(profile, profile.typescript ? 'ts' : 'js'),
+    },
+  ],
 });

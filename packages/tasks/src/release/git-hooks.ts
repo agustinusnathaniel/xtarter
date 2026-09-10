@@ -1,21 +1,41 @@
 import type { ProjectProfile } from '@xtarterize/core';
-import { readPackageJson } from '@xtarterize/core';
+import { fileExists, readPackageJson, resolvePath } from '@xtarterize/core';
 import { dlxCommand, type PackageManagerName, runScriptCommand } from 'nypm';
 
-import { createPackageJsonTask } from '@/factory';
+import {
+  defineTask,
+  type TargetPolicy,
+  type TaskTarget,
+} from '@/factory/define-task.js';
+import {
+  hasInstalledDependency,
+  resolveScriptsResolution,
+  toScriptsPatch,
+} from '@/factory/scripts.js';
+
+const HOOK_NAMES = [
+  'commit-msg',
+  'prepare-commit-msg',
+  'pre-commit',
+  'pre-push',
+] as const;
+
+type HookName = (typeof HOOK_NAMES)[number];
+
+const CANDIDATES = [{ script: 'prepare', value: 'husky' }];
 
 function commitMsgHook(pm: PackageManagerName): string {
   return `${dlxCommand(pm, 'commitlint', { short: true })} --edit $1\n`;
 }
 
 async function preCommitHook(
-  _cwd: string,
+  cwd: string,
   profile: ProjectProfile
 ): Promise<string> {
   if (profile.vitePlus) {
     return 'vp staged\n';
   }
-  const pkg = await readPackageJson(_cwd);
+  const pkg = await readPackageJson(cwd);
   const hasLintStaged = !!(
     pkg?.devDependencies?.['lint-staged'] || pkg?.dependencies?.['lint-staged']
   );
@@ -37,10 +57,10 @@ function prePushHook(profile: ProjectProfile): string {
 }
 
 async function prepareCommitMsgHook(
-  _cwd: string,
+  cwd: string,
   profile: ProjectProfile
 ): Promise<string> {
-  const pkg = await readPackageJson(_cwd);
+  const pkg = await readPackageJson(cwd);
   const hasCz = !!(
     pkg?.devDependencies?.czg ||
     pkg?.dependencies?.czg ||
@@ -54,39 +74,54 @@ async function prepareCommitMsgHook(
   return `exec < /dev/tty && ${runScriptCommand(pm, 'cz')} --hook || true\n`;
 }
 
-export const gitHooksTask = createPackageJsonTask({
+async function renderHookContents(
+  cwd: string,
+  profile: ProjectProfile
+): Promise<Record<HookName, string>> {
+  return {
+    'commit-msg': commitMsgHook(profile.packageManager),
+    'pre-commit': await preCommitHook(cwd, profile),
+    'pre-push': prePushHook(profile),
+    'prepare-commit-msg': await prepareCommitMsgHook(cwd, profile),
+  };
+}
+
+function hookFilepath(profile: ProjectProfile, name: HookName): string {
+  return profile.vitePlus ? `.vite-hooks/${name}` : `.husky/${name}`;
+}
+
+async function allHooksExist(
+  cwd: string,
+  profile: ProjectProfile
+): Promise<boolean> {
+  for (const name of HOOK_NAMES) {
+    if (!(await fileExists(resolvePath(cwd, hookFilepath(profile, name))))) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function hookTarget(options: {
+  content: string;
+  name: HookName;
+  policy: TargetPolicy;
+  profile: ProjectProfile;
+}): TaskTarget {
+  return {
+    filepath: hookFilepath(options.profile, options.name),
+    kind: 'text',
+    policy: options.policy,
+    render: () => options.content,
+  };
+}
+
+export const gitHooksTask = defineTask({
   applicable: () => true,
-  depCondition: (profile) => !profile.vitePlus,
-  depName: 'husky',
-  files: [
-    {
-      filepath: (profile) =>
-        profile.vitePlus ? '.vite-hooks/commit-msg' : '.husky/commit-msg',
-      render: (_cwd, profile) => commitMsgHook(profile.packageManager),
-    },
-    {
-      filepath: (profile) =>
-        profile.vitePlus
-          ? '.vite-hooks/prepare-commit-msg'
-          : '.husky/prepare-commit-msg',
-      render: (cwd, profile) => prepareCommitMsgHook(cwd, profile),
-    },
-    {
-      filepath: (profile) =>
-        profile.vitePlus ? '.vite-hooks/pre-commit' : '.husky/pre-commit',
-      render: (cwd, profile) => preCommitHook(cwd, profile),
-    },
-    {
-      filepath: (profile) =>
-        profile.vitePlus ? '.vite-hooks/pre-push' : '.husky/pre-push',
-      render: (_cwd, profile) => prePushHook(profile),
-    },
-  ],
-  getScripts: async (_cwd, profile) =>
-    profile.vitePlus ? [] : [{ script: 'prepare', value: 'husky' }],
+  deps: (_resolution, { profile }) =>
+    profile.vitePlus ? [] : [{ depName: 'husky', dev: true }],
   group: 'Release',
   id: 'release/git-hooks',
-  installDev: true,
   label: 'Git hooks (commit-msg, prepare-commit-msg, pre-commit, pre-push)',
   scope: 'root',
   searchMeta: {
@@ -107,5 +142,37 @@ export const gitHooksTask = createPackageJsonTask({
       'quality gates',
     ],
     tags: ['git', 'hooks', 'husky', 'quality'],
+  },
+  targets: async (cwd, profile) => {
+    const [contents, hooksExist] = await Promise.all([
+      renderHookContents(cwd, profile),
+      allHooksExist(cwd, profile),
+    ]);
+    const scripts = profile.vitePlus
+      ? null
+      : await resolveScriptsResolution(cwd, CANDIDATES);
+    const forceNew =
+      scripts !== null &&
+      !hooksExist &&
+      scripts.missingScripts.length === CANDIDATES.length &&
+      !hasInstalledDependency(scripts.pkg, 'husky');
+    const filePolicy: TargetPolicy = ({ before }) => {
+      if (before !== null) {
+        // Existing hook scripts were never compared or overwritten.
+        return 'skip';
+      }
+      return forceNew ? undefined : 'patch';
+    };
+    const targets: Array<TaskTarget> = HOOK_NAMES.map((name) =>
+      hookTarget({ content: contents[name], name, policy: filePolicy, profile })
+    );
+    if (scripts !== null) {
+      targets.push({
+        change: () => toScriptsPatch(scripts.missingScripts),
+        kind: 'packageJson',
+        policy: () => (forceNew ? 'new' : undefined),
+      });
+    }
+    return targets;
   },
 });

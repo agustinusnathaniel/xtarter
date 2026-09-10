@@ -1,4 +1,4 @@
-import { createMultiFileJsonMergeTask } from '@/factory';
+import { defineTask } from '@/factory/define-task.js';
 import { renderVscodeExtensions } from '@/templates/vscode/extensions.js';
 import { renderVscodeSettings } from '@/templates/vscode/settings.js';
 
@@ -17,27 +17,13 @@ function mergeExtensions(existing: object, incoming: object): object {
   return { ...existing, recommendations: union };
 }
 
-export const vscodeTask = createMultiFileJsonMergeTask({
+export const vscodeTask = defineTask({
   applicable: () => true,
-  files: [
-    {
-      extensions: ['.json'],
-      filepath: '.vscode/settings.json',
-      incoming: (profile) => JSON.parse(renderVscodeSettings(profile)),
-    },
-    {
-      extensions: ['.json'],
-      filepath: '.vscode/extensions.json',
-      incoming: (profile) => JSON.parse(renderVscodeExtensions(profile)),
-      merge: mergeExtensions,
-    },
-  ],
   group: 'Editor',
   id: 'editor/vscode',
   label: 'VSCode settings + extensions',
   scope: 'root',
   searchMeta: {
-    configTargets: ['.vscode/settings.json', '.vscode/extensions.json'],
     keywords: [
       'vscode',
       'visual studio code',
@@ -47,4 +33,19 @@ export const vscodeTask = createMultiFileJsonMergeTask({
     ],
     tags: ['editor', 'ide', 'settings', 'extensions'],
   },
+  targets: [
+    {
+      extensions: ['.json'],
+      filepath: '.vscode/settings.json',
+      incoming: (_cwd, profile) => JSON.parse(renderVscodeSettings(profile)),
+      kind: 'jsonMerge',
+    },
+    {
+      extensions: ['.json'],
+      filepath: '.vscode/extensions.json',
+      incoming: (_cwd, profile) => JSON.parse(renderVscodeExtensions(profile)),
+      kind: 'jsonMerge',
+      merge: mergeExtensions,
+    },
+  ],
 });

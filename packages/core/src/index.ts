@@ -98,7 +98,6 @@ export {
   resolveTasks,
 } from '@/resolve.js';
 export type { ApplyTiming, ResolveTiming, TaskTiming } from '@/timing.js';
-export { deepEqual } from '@/utils/deep-equal.js';
 export {
   computeChangeStats,
   computeSemanticJsonDiff,

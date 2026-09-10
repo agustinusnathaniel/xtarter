@@ -1,9 +1,9 @@
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
+import { isDeepStrictEqual } from 'node:util';
 import {
   backupFile,
-  deepEqual,
   findConfigFile,
   findFirstPositionalIndex,
   findUnknownFlags,
@@ -248,41 +248,41 @@ describe('validateInvocation', () => {
   });
 });
 
-describe('deepEqual', () => {
+describe('isDeepStrictEqual (node:util)', () => {
   test('returns true for identical primitives', () => {
-    expect(deepEqual(1, 1)).toBe(true);
-    expect(deepEqual('a', 'a')).toBe(true);
-    expect(deepEqual(true, true)).toBe(true);
-    expect(deepEqual(null, null)).toBe(true);
-    expect(deepEqual(undefined, undefined)).toBe(true);
+    expect(isDeepStrictEqual(1, 1)).toBe(true);
+    expect(isDeepStrictEqual('a', 'a')).toBe(true);
+    expect(isDeepStrictEqual(true, true)).toBe(true);
+    expect(isDeepStrictEqual(null, null)).toBe(true);
+    expect(isDeepStrictEqual(undefined, undefined)).toBe(true);
   });
 
   test('returns false for different primitives', () => {
-    expect(deepEqual(1, 2)).toBe(false);
-    expect(deepEqual('a', 'b')).toBe(false);
-    expect(deepEqual(true, false)).toBe(false);
+    expect(isDeepStrictEqual(1, 2)).toBe(false);
+    expect(isDeepStrictEqual('a', 'b')).toBe(false);
+    expect(isDeepStrictEqual(true, false)).toBe(false);
   });
 
   test('returns false for different types', () => {
-    expect(deepEqual(1, '1')).toBe(false);
-    expect(deepEqual({}, [])).toBe(false);
+    expect(isDeepStrictEqual(1, '1')).toBe(false);
+    expect(isDeepStrictEqual({}, [])).toBe(false);
   });
 
   test('compares flat objects', () => {
-    expect(deepEqual({ a: 1, b: 2 }, { a: 1, b: 2 })).toBe(true);
-    expect(deepEqual({ a: 1, b: 2 }, { a: 1, b: 3 })).toBe(false);
-    expect(deepEqual({ a: 1 }, { a: 1, b: 2 })).toBe(false);
+    expect(isDeepStrictEqual({ a: 1, b: 2 }, { a: 1, b: 2 })).toBe(true);
+    expect(isDeepStrictEqual({ a: 1, b: 2 }, { a: 1, b: 3 })).toBe(false);
+    expect(isDeepStrictEqual({ a: 1 }, { a: 1, b: 2 })).toBe(false);
   });
 
   test('compares nested objects', () => {
-    expect(deepEqual({ a: { b: 1 } }, { a: { b: 1 } })).toBe(true);
-    expect(deepEqual({ a: { b: 1 } }, { a: { b: 2 } })).toBe(false);
+    expect(isDeepStrictEqual({ a: { b: 1 } }, { a: { b: 1 } })).toBe(true);
+    expect(isDeepStrictEqual({ a: { b: 1 } }, { a: { b: 2 } })).toBe(false);
   });
 
   test('compares arrays', () => {
-    expect(deepEqual([1, 2, 3], [1, 2, 3])).toBe(true);
-    expect(deepEqual([1, 2, 3], [3, 2, 1])).toBe(false);
-    expect(deepEqual([1, 2], [1, 2, 3])).toBe(false);
+    expect(isDeepStrictEqual([1, 2, 3], [1, 2, 3])).toBe(true);
+    expect(isDeepStrictEqual([1, 2, 3], [3, 2, 1])).toBe(false);
+    expect(isDeepStrictEqual([1, 2], [1, 2, 3])).toBe(false);
   });
 });
 

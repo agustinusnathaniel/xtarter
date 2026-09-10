@@ -25,6 +25,15 @@ export function readPackageJson(cwd: string): Promise<PackageJson | null> {
 }
 
 /**
+ * Read the current package.json text, or null when the file is absent. Used
+ * when a no-op change still needs the text it was compared against.
+ */
+export async function readPackageJsonText(cwd: string): Promise<string | null> {
+  const absolutePath = resolvePath(cwd, PACKAGE_JSON_FILENAME);
+  return (await fileExists(absolutePath)) ? readFile(absolutePath) : null;
+}
+
+/**
  * Compute a package.json change from a JSON merge patch against the current
  * file text, so comments, indentation, key order, and trailing whitespace
  * survive. Returns null when the patch changes nothing.

@@ -1,6 +1,6 @@
 import { readPackageJson } from '@xtarterize/core';
 
-import { createPackageJsonTask } from '@/factory';
+import { defineTask } from '@/factory/define-task.js';
 
 async function lintCmd(cwd: string): Promise<string> {
   const pkg = await readPackageJson(cwd);
@@ -10,28 +10,22 @@ async function lintCmd(cwd: string): Promise<string> {
   return hasUltracite ? 'ultracite fix' : 'biome check --write';
 }
 
-export const lintStagedTask = createPackageJsonTask({
-  applicable: (profile) => !profile.vitePlus,
-  depName: 'lint-staged',
-  files: [
+function renderLintStagedConfig(cmd: string): string {
+  return `${JSON.stringify(
     {
-      filepath: '.lintstagedrc.json',
-      render: async (cwd) => {
-        const cmd = await lintCmd(cwd);
-        return `${JSON.stringify(
-          {
-            '*.{js,jsx,ts,tsx,mjs,mts,cjs,cts}': [cmd],
-            '*.{json,md,yaml,yml}': [cmd],
-          },
-          null,
-          2
-        )}\n`;
-      },
+      '*.{js,jsx,ts,tsx,mjs,mts,cjs,cts}': [cmd],
+      '*.{json,md,yaml,yml}': [cmd],
     },
-  ],
+    null,
+    2
+  )}\n`;
+}
+
+export const lintStagedTask = defineTask({
+  applicable: (profile) => !profile.vitePlus,
+  deps: [{ depName: 'lint-staged', dev: true }],
   group: 'Quality',
   id: 'quality/lint-staged',
-  installDev: true,
   label: 'lint-staged config',
   searchMeta: {
     configTargets: ['.lintstagedrc.json'],
@@ -43,5 +37,18 @@ export const lintStagedTask = createPackageJsonTask({
       'quality gate',
     ],
     tags: ['git-hooks', 'pre-commit', 'linting', 'quality'],
+  },
+  targets: async (cwd) => {
+    const content = renderLintStagedConfig(await lintCmd(cwd));
+    return [
+      {
+        filepath: '.lintstagedrc.json',
+        kind: 'text',
+        // A missing config reported `patch`; an existing config was never
+        // compared or overwritten.
+        policy: ({ before }) => (before === null ? 'patch' : 'skip'),
+        render: () => content,
+      },
+    ];
   },
 });

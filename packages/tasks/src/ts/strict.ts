@@ -1,6 +1,6 @@
-import { deepEqual } from '@xtarterize/core';
+import { isDeepStrictEqual } from 'node:util';
 
-import { createJsonMergeTask } from '@/factory';
+import { defineTask, type TargetPolicy } from '@/factory/define-task.js';
 
 import { getCompilerOptions } from './utils.js';
 
@@ -11,7 +11,7 @@ const EXPECTED_OPTIONS = {
   verbatimModuleSyntax: true,
 } as const;
 
-function getCompilerOption(content: string | null, key: string): unknown {
+function getCompilerOption(content: string, key: string): unknown {
   const options = getCompilerOptions(content);
   if (!options) {
     return undefined;
@@ -22,42 +22,43 @@ function getCompilerOption(content: string | null, key: string): unknown {
   return options[key];
 }
 
-export const strictTask = createJsonMergeTask({
+/**
+ * ADR 008 tristate: a missing option projects `patch`, a matching option
+ * `skip`, and an option the project explicitly sets to another value projects
+ * `conflict`. Conflict wins over missing so an explicit override is reported.
+ */
+const strictPolicy: TargetPolicy = ({ before }) => {
+  if (before === null) {
+    return;
+  }
+
+  let hasMissing = false;
+  let hasConflict = false;
+
+  for (const [key, value] of Object.entries(EXPECTED_OPTIONS)) {
+    const actual = getCompilerOption(before, key);
+    if (actual === undefined) {
+      hasMissing = true;
+    } else if (!isDeepStrictEqual(actual, value)) {
+      hasConflict = true;
+    }
+  }
+
+  if (hasConflict) {
+    return 'conflict';
+  }
+  if (hasMissing) {
+    return 'patch';
+  }
+  return 'skip';
+};
+
+export const strictTask = defineTask({
   applicable: (profile) => profile.typescript,
-  checkFn: async ({ fullPath, content }) => {
-    if (!(fullPath && content)) {
-      return 'new';
-    }
-
-    let hasMissing = false;
-    let hasConflict = false;
-
-    for (const [key, value] of Object.entries(EXPECTED_OPTIONS)) {
-      const actual = getCompilerOption(content, key);
-      if (actual === undefined) {
-        hasMissing = true;
-      } else if (!deepEqual(actual, value)) {
-        hasConflict = true;
-      }
-    }
-
-    if (hasConflict) {
-      return 'conflict';
-    }
-    if (hasMissing) {
-      return 'patch';
-    }
-    return 'skip';
-  },
-  filepath: 'tsconfig.json',
   group: 'TypeScript',
   id: 'ts/strict',
-  incoming: () => ({
-    compilerOptions: { ...EXPECTED_OPTIONS },
-  }),
   label: 'tsconfig - strict compiler options',
   searchMeta: {
-    configTargets: ['tsconfig.json'],
     keywords: [
       'strict',
       'typescript strict',
@@ -78,4 +79,14 @@ export const strictTask = createJsonMergeTask({
       'quality',
     ],
   },
+  targets: [
+    {
+      filepath: 'tsconfig.json',
+      incoming: () => ({
+        compilerOptions: { ...EXPECTED_OPTIONS },
+      }),
+      kind: 'jsonMerge',
+      policy: strictPolicy,
+    },
+  ],
 });

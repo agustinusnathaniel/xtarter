@@ -19,10 +19,3 @@ ${profile.framework ? `${profile.framework.charAt(0).toUpperCase() + profile.fra
 - **Test**: \`${runCmd('test')}\`
 `;
 }
-
-export function renderAgentsMdFiles(): Array<{
-  filepath: string;
-  content: string;
-}> {
-  return [];
-}

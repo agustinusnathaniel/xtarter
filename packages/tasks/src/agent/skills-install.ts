@@ -1,4 +1,3 @@
-import type { Task } from '@xtarterize/core';
 import {
   fileExists,
   readFile,
@@ -9,7 +8,7 @@ import {
 import { x } from 'tinyexec';
 
 import { getSkillsToInstall, type SkillEntry } from '@/agent/catalog.js';
-import { createExecTask } from '@/factory/exec.js';
+import { defineTask } from '@/factory/define-task.js';
 
 function getAllDeps(pkg: Record<string, unknown>): Record<string, string> {
   const deps: Record<string, string> = {};
@@ -138,106 +137,74 @@ function groupBySource(skills: Array<SkillEntry>): Map<string, Array<string>> {
   return normalized;
 }
 
-function formatCommands(skills: Array<SkillEntry>): string {
-  const grouped = groupBySource(skills);
-  const lines: Array<string> = [];
-  for (const [source, skillNames] of grouped) {
-    const skillFlags = skillNames.map((s) => `--skill ${s}`).join(' ');
-    lines.push(`npx skills@latest add ${source} ${skillFlags}`);
-  }
-  return lines.join('\n');
-}
+export const skillsInstallTask = defineTask({
+  actions: [
+    {
+      async check(cwd, profile) {
+        const pkg = await readPackageJson(cwd);
+        const deps = pkg ? getAllDeps(pkg as Record<string, unknown>) : {};
+        const skills = getSkillsToInstall(profile, deps);
 
-export const skillsInstallTask: Task = createExecTask({
-  applicable: (profile) => profile.typescript,
+        if (skills.length === 0) {
+          return 'skip';
+        }
 
-  async apply(cwd, profile) {
-    const pkg = await readPackageJson(cwd);
-    const deps = pkg ? getAllDeps(pkg as Record<string, unknown>) : {};
-    const skills = getSkillsToInstall(profile, deps);
+        const installed = await getInstalledSkills(cwd);
+        const missing = skills.filter((s) => !installed.has(s.skill));
 
-    if (skills.length === 0) {
-      return;
-    }
-
-    const installed = await getInstalledSkills(cwd);
-    const missing = skills.filter((s) => !installed.has(s.skill));
-
-    const grouped = groupBySource(missing);
-    for (const [source, skillNames] of grouped) {
-      const args = [
-        '--yes',
-        'skills@latest',
-        'add',
-        source,
-        ...skillNames.flatMap((s) => ['--skill', s]),
-        '-y',
-      ];
-      const result = await x('npx', args, {
-        nodeOptions: { cwd, stdio: 'inherit' },
-        timeout: 60_000,
-      });
-      if (result.exitCode !== 0) {
-        throw new TaskError({
-          message: `Failed to install skills from ${source}: ${skillNames.join(', ')}`,
-          taskId: 'skillsInstallTask.apply',
-        });
-      }
-    }
-  },
-
-  async check(cwd, profile) {
-    const pkg = await readPackageJson(cwd);
-    const deps = pkg ? getAllDeps(pkg as Record<string, unknown>) : {};
-    const skills = getSkillsToInstall(profile, deps);
-
-    if (skills.length === 0) {
-      return 'skip';
-    }
-
-    const installed = await getInstalledSkills(cwd);
-    const missing = skills.filter((s) => !installed.has(s.skill));
-
-    if (missing.length === 0) {
-      return 'skip';
-    }
-    if (missing.length === skills.length) {
-      return 'new';
-    }
-    return 'patch';
-  },
-
-  async dryRun(cwd, profile) {
-    const pkg = await readPackageJson(cwd);
-    const deps = pkg ? getAllDeps(pkg as Record<string, unknown>) : {};
-    const skills = getSkillsToInstall(profile, deps);
-
-    if (skills.length === 0) {
-      return [];
-    }
-
-    const installed = await getInstalledSkills(cwd);
-    const missing = skills.filter((s) => !installed.has(s.skill));
-
-    if (missing.length === 0) {
-      return [];
-    }
-
-    return [
-      {
-        after: `# Skills to install (${missing.length} of ${skills.length}):\n${formatCommands(missing)}\n`,
-        before: null,
-        filepath: '.xtarterize/skills-install.log',
+        if (missing.length === 0) {
+          return 'skip';
+        }
+        if (missing.length === skills.length) {
+          return 'new';
+        }
+        return 'patch';
       },
-    ];
-  },
+      kind: 'action',
+      async run(cwd, profile) {
+        const pkg = await readPackageJson(cwd);
+        const deps = pkg ? getAllDeps(pkg as Record<string, unknown>) : {};
+        const skills = getSkillsToInstall(profile, deps);
+
+        if (skills.length === 0) {
+          return;
+        }
+
+        const installed = await getInstalledSkills(cwd);
+        const missing = skills.filter((s) => !installed.has(s.skill));
+
+        const grouped = groupBySource(missing);
+        for (const [source, skillNames] of grouped) {
+          const args = [
+            '--yes',
+            'skills@latest',
+            'add',
+            source,
+            ...skillNames.flatMap((s) => ['--skill', s]),
+            '-y',
+          ];
+          const result = await x('npx', args, {
+            nodeOptions: { cwd, stdio: 'inherit' },
+            timeout: 60_000,
+          });
+          if (result.exitCode !== 0) {
+            throw new TaskError({
+              message: `Failed to install skills from ${source}: ${skillNames.join(', ')}`,
+              taskId: 'skillsInstallTask.run',
+            });
+          }
+        }
+      },
+    },
+  ],
+  applicable: (profile) => profile.typescript,
   group: 'Agent',
   id: 'agent/skills-install',
   label: 'Install agent skills',
   scope: 'both',
 
   searchMeta: {
-    configTargets: ['.xtarterize/skills-install.log'],
+    configTargets: [],
     keywords: [
       'skills',
       'agent skills',

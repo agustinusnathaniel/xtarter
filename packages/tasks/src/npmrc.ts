@@ -1,4 +1,4 @@
-import { createFileTask } from '@/factory';
+import { defineTask } from '@/factory/define-task.js';
 
 function npmrcContent(): string {
   return [
@@ -9,16 +9,13 @@ function npmrcContent(): string {
   ].join('\n');
 }
 
-export const npmrcTask = createFileTask({
+export const npmrcTask = defineTask({
   applicable: () => true,
-  filepath: '.npmrc',
   group: 'Scripts',
   id: 'scripts/npmrc',
   label: '.npmrc - package manager config',
-  render: () => npmrcContent(),
   scope: 'root',
   searchMeta: {
-    configTargets: ['.npmrc'],
     keywords: [
       'npmrc',
       'npm config',
@@ -28,4 +25,11 @@ export const npmrcTask = createFileTask({
     ],
     tags: ['package-manager', 'config', 'registry'],
   },
+  targets: [
+    {
+      filepath: '.npmrc',
+      kind: 'text',
+      render: () => npmrcContent(),
+    },
+  ],
 });

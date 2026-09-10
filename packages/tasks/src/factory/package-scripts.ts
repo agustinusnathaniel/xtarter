@@ -1,16 +1,22 @@
-import { readPackageJson } from '@xtarterize/core';
+import type { Framework, ProjectProfile } from '@xtarterize/core';
+import type { PackageJson } from 'pkg-types';
 
+import { defineTask, type TaskDep } from './define-task.js';
 import {
   areEquivalent,
   extractTool,
   findEquivalentScriptKey,
 } from './equivalence.js';
-import type { PackageJsonTaskDep } from './task.js';
-import { createPackageJsonTask } from './task.js';
+import {
+  filterMissingScripts,
+  readScriptsState,
+  type ScriptEntry,
+  type ScriptsMap,
+  type ScriptsState,
+  toScriptsPatch,
+} from './scripts.js';
 
 export type LintTool = 'ultracite' | 'biome' | 'oxlint' | 'vp';
-
-export type ScriptEntry = { script: string; value: string };
 
 export function resolveLintTool(params: {
   existingEslint: boolean;
@@ -50,7 +56,7 @@ function resolveProjectLintConfig(
   profile: {
     existing: { eslint: boolean; oxlint: boolean; oxfmt: boolean };
     vitePlus: boolean;
-    framework: import('@xtarterize/core').Framework;
+    framework: Framework;
   }
 ): LintConfig {
   const pkgDeps =
@@ -141,9 +147,7 @@ function lintTurboTasks(
   });
 }
 
-function oxlintPluginFlags(profile: {
-  framework: import('@xtarterize/core').Framework;
-}): string {
+function oxlintPluginFlags(profile: { framework: Framework }): string {
   const plugins = ['--import-plugin'];
   if (profile.framework === 'react') {
     plugins.push('--react-plugin', '--jsx-a11y-plugin');
@@ -164,18 +168,6 @@ function getUpgradeCommand(pm: string): string {
     default:
       return 'npx npm-check-updates -i';
   }
-}
-
-type ScriptsMap = Record<string, string>;
-
-function toScriptsMap(raw: Record<string, unknown>): ScriptsMap {
-  const mapped: ScriptsMap = {};
-  for (const [key, value] of Object.entries(raw)) {
-    if (value !== undefined) {
-      mapped[key] = value as string;
-    }
-  }
-  return mapped;
 }
 
 function addCoreScripts(params: {
@@ -318,111 +310,107 @@ function getCompositeTasks(
   return tasks;
 }
 
-export const packageScriptsTask = createPackageJsonTask({
+interface PackageScriptsResolution extends ScriptsState {
+  deps: Array<TaskDep>;
+  missingScripts: Array<ScriptEntry>;
+  patch: object;
+}
+
+/**
+ * Dependencies are gated by the same missing-script resolution that produces
+ * the diff: a script-linked dependency is only needed while its script is
+ * missing. This matches the old `filterDepsByMissingScripts` behaviour.
+ */
+function resolvePackageScriptsDeps(
+  pkg: PackageJson | null,
+  profile: ProjectProfile,
+  missingScripts: Array<ScriptEntry>
+): Array<TaskDep> {
+  const missing = new Set(missingScripts.map((s) => s.script));
+  const { hasBiomeDep, lintTool } = resolveProjectLintConfig(pkg, profile);
+  const deps: Array<TaskDep> = [];
+
+  if (missing.has('test')) {
+    deps.push({ depName: 'vitest', dev: true });
+  }
+  if (lintTool === 'biome' && !hasBiomeDep && missing.has('biome')) {
+    deps.push({ depName: '@biomejs/biome', dev: true });
+  }
+  if (profile.typescript) {
+    if (missing.has('typecheck')) {
+      deps.push({ depName: 'typescript', dev: true });
+    }
+    if (missing.has('knip')) {
+      deps.push({ depName: 'knip', dev: true });
+    }
+  }
+  if (profile.existing.changeset) {
+    if (missing.has('changeset')) {
+      deps.push({ depName: '@changesets/cli', dev: true });
+    }
+  } else if (missing.has('release')) {
+    deps.push({ depName: 'commit-and-tag-version', dev: true });
+  }
+  if (missing.has('plop')) {
+    deps.push({ depName: 'plop', dev: true });
+  }
+
+  return deps;
+}
+
+/**
+ * The single scripts resolution: status, diffs and dependencies all derive
+ * from this result. The old `checkFn` only covered the core script groups, so
+ * `check` could report `skip` while `getScripts` still had scripts to add.
+ */
+async function resolvePackageScripts(
+  cwd: string,
+  profile: ProjectProfile
+): Promise<PackageScriptsResolution> {
+  const state = await readScriptsState(cwd);
+  const { existingScripts, pkg } = state;
+  const { lintTool, oxlintPlugins } = resolveProjectLintConfig(pkg, profile);
+  const scripts: Array<ScriptEntry> = [];
+
+  addCoreScripts({
+    existingScripts,
+    lintTool,
+    oxlintPlugins,
+    pm: profile.packageManager,
+    scripts,
+  });
+  addReleaseScripts({
+    existingScripts,
+    hasChangeset: !!profile.existing.changeset,
+    scripts,
+  });
+  pushIfMissing(scripts, existingScripts, { script: 'plop', value: 'plop' });
+  addTypescriptScripts({
+    existingScripts,
+    scripts,
+    typescript: !!profile.typescript,
+  });
+  addTurboScript({
+    existingScripts,
+    lintTool,
+    pkg: pkg as Record<string, unknown> | null,
+    profile,
+    scripts,
+  });
+
+  const missingScripts = filterMissingScripts(existingScripts, scripts);
+  return {
+    ...state,
+    deps: resolvePackageScriptsDeps(pkg, profile, missingScripts),
+    missingScripts,
+    patch: toScriptsPatch(missingScripts),
+  };
+}
+
+export const packageScriptsTask = defineTask({
   applicable: () => true,
-  async checkFn(_cwd, profile, pkg) {
-    const existingScripts = (pkg.scripts as Record<string, string>) ?? {};
-    const hasExistingScripts = Object.keys(existingScripts).length > 0;
-    const scriptsMap = toScriptsMap(
-      existingScripts as unknown as Record<string, unknown>
-    );
-    const { lintTool, oxlintPlugins } = resolveProjectLintConfig(pkg, profile);
-    const scripts: Array<ScriptEntry> = [];
-    addCoreScripts({
-      existingScripts: scriptsMap,
-      lintTool,
-      oxlintPlugins,
-      pm: profile.packageManager,
-      scripts,
-    });
-    if (scripts.length === 0) {
-      return 'skip';
-    }
-    return hasExistingScripts ? 'patch' : 'new';
-  },
-  getDeps: async (cwd, profile) => {
-    const deps: Array<PackageJsonTaskDep> = [];
-
-    deps.push({ depName: 'vitest', installDev: true, script: 'test' });
-
-    const pkg = await readPackageJson(cwd);
-    const { lintTool } = resolveProjectLintConfig(pkg, profile);
-    if (
-      lintTool === 'biome' &&
-      !(
-        pkg?.devDependencies?.['@biomejs/biome'] ??
-        pkg?.dependencies?.['@biomejs/biome']
-      )
-    ) {
-      deps.push({
-        depName: '@biomejs/biome',
-        installDev: true,
-        script: 'biome',
-      });
-    }
-
-    if (profile.typescript) {
-      deps.push({
-        depName: 'typescript',
-        installDev: true,
-        script: 'typecheck',
-      });
-      deps.push({ depName: 'knip', installDev: true, script: 'knip' });
-    }
-
-    if (profile.existing.changeset) {
-      deps.push({
-        depName: '@changesets/cli',
-        installDev: true,
-        script: 'changeset',
-      });
-    } else {
-      deps.push({
-        depName: 'commit-and-tag-version',
-        installDev: true,
-        script: 'release',
-      });
-    }
-
-    deps.push({ depName: 'plop', installDev: true, script: 'plop' });
-
-    return deps;
-  },
-  getScripts: async (cwd, profile) => {
-    const pm = profile.packageManager;
-    const pkg = await readPackageJson(cwd);
-    const existingScripts = toScriptsMap(
-      (pkg?.scripts as Record<string, unknown>) ?? {}
-    );
-    const { lintTool, oxlintPlugins } = resolveProjectLintConfig(pkg, profile);
-    const scripts: Array<ScriptEntry> = [];
-    addCoreScripts({
-      existingScripts,
-      lintTool,
-      oxlintPlugins,
-      pm,
-      scripts,
-    });
-    addReleaseScripts({
-      existingScripts,
-      hasChangeset: !!profile.existing.changeset,
-      scripts,
-    });
-    pushIfMissing(scripts, existingScripts, { script: 'plop', value: 'plop' });
-    addTypescriptScripts({
-      existingScripts,
-      scripts,
-      typescript: !!profile.typescript,
-    });
-    addTurboScript({
-      existingScripts,
-      lintTool,
-      pkg: pkg as Record<string, unknown> | null,
-      profile,
-      scripts,
-    });
-    return scripts;
-  },
+  deps: async (_resolution, { cwd, profile }) =>
+    (await resolvePackageScripts(cwd, profile)).deps,
   group: 'Scripts',
   id: 'scripts/package-scripts',
   label: 'package.json scripts',
@@ -437,5 +425,19 @@ export const packageScriptsTask = createPackageJsonTask({
       'build scripts',
     ],
     tags: ['scripts', 'package.json', 'commands'],
+  },
+  targets: async (cwd, profile) => {
+    const { hasExistingScripts, missingScripts, patch } =
+      await resolvePackageScripts(cwd, profile);
+    return [
+      {
+        change: () => patch,
+        kind: 'packageJson',
+        // Old checkFn: with no existing scripts the whole change projected
+        // `new`, otherwise `patch`.
+        policy: () =>
+          missingScripts.length > 0 && !hasExistingScripts ? 'new' : undefined,
+      },
+    ];
   },
 });

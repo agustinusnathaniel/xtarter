@@ -7,7 +7,7 @@ import { releaseWorkflowTask } from '@/ci/release.js';
 import { plopTask } from '@/codegen/plop.js';
 import { renovateTask } from '@/deps/renovate.js';
 import { vscodeTask } from '@/editor/vscode.js';
-import { createFileTask } from '@/factory';
+import { defineTask } from '@/factory/define-task.js';
 import { packageScriptsTask } from '@/factory/package-scripts.js';
 import { biomeTask } from '@/lint/biome.js';
 import { oxfmtTask, oxlintTask } from '@/lint/oxlint.js';
@@ -33,10 +33,6 @@ import { pnpmWorkspaceTask } from '@/workspace/pnpm-workspace.js';
 
 export {
   areEquivalent,
-  checkJsonConfigTask,
-  dryRunJsonConfigTask,
-  ensureTaskDependency,
-  ensureTaskParentDir,
   extractTool,
   findEquivalentScriptKey,
   hasScriptWithEquivalentValue,
@@ -48,19 +44,22 @@ export {
 } from '@/factory/index.js';
 
 // Inline agent task definitions
-const agentsMdTask = createFileTask({
+const agentsMdTask = defineTask({
   applicable: () => true,
-  checkFn: async ({ content }) => (content ? 'skip' : 'new'),
-  filepath: 'AGENTS.md',
   group: 'Agent',
   id: 'agent/agents-md',
   label: 'AGENTS.md',
-  render: (profile) => renderAgentsMd(profile),
   searchMeta: {
-    configTargets: ['AGENTS.md'],
     keywords: ['agents', 'ai', 'claude', 'opencode', 'agent config', 'llm'],
     tags: ['ai', 'agent', 'documentation', 'setup'],
   },
+  targets: [
+    {
+      filepath: 'AGENTS.md',
+      kind: 'text',
+      render: (profile, existing) => existing ?? renderAgentsMd(profile),
+    },
+  ],
 });
 
 export {
@@ -96,41 +95,39 @@ export {
   vscodeTask,
 };
 
-let _allTasks: Array<Task> | null = null;
+/** The built-in task registry: the single source for `getAllTasks()`. */
+const taskRegistry: Array<Task> = [
+  biomeTask,
+  oxlintTask,
+  oxfmtTask,
+  strictTask,
+  pathsTask,
+  incrementalTask,
+  gitignoreTsbuildinfoTask,
+  viteCheckerTask,
+  viteVisualizerTask,
+  releaseWorkflowTask,
+  autoUpdateWorkflowTask,
+  ciWorkflowTask,
+  renovateTask,
+  commitlintTask,
+  czgTask,
+  catVersionTask,
+  gitHooksTask,
+  knipTask,
+  lintStagedTask,
+  packageEnginesTask,
+  plopTask,
+  pnpmWorkspaceTask,
+  turboTask,
+  versionrcTask,
+  vscodeTask,
+  agentsMdTask,
+  skillsInstallTask,
+  packageScriptsTask,
+  npmrcTask,
+];
 
 export function getAllTasks(): Array<Task> {
-  if (!_allTasks) {
-    _allTasks = [
-      biomeTask,
-      oxlintTask,
-      oxfmtTask,
-      strictTask,
-      pathsTask,
-      incrementalTask,
-      gitignoreTsbuildinfoTask,
-      viteCheckerTask,
-      viteVisualizerTask,
-      releaseWorkflowTask,
-      autoUpdateWorkflowTask,
-      ciWorkflowTask,
-      renovateTask,
-      commitlintTask,
-      czgTask,
-      catVersionTask,
-      gitHooksTask,
-      knipTask,
-      lintStagedTask,
-      packageEnginesTask,
-      plopTask,
-      pnpmWorkspaceTask,
-      turboTask,
-      versionrcTask,
-      vscodeTask,
-      agentsMdTask,
-      skillsInstallTask,
-      packageScriptsTask,
-      npmrcTask,
-    ];
-  }
-  return _allTasks;
+  return taskRegistry;
 }

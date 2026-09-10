@@ -1,6 +1,4 @@
-import type { TaskStatus } from '@xtarterize/core';
-
-import { type CheckFnContext, createFileTask } from '@/factory';
+import { defineTask, type TargetPolicy } from '@/factory/define-task.js';
 import { renderReleaseWorkflow } from '@/templates/workflows/release-yml.js';
 
 function hasReleaseJob(content: string): boolean {
@@ -11,47 +9,32 @@ function usesChangesetsAction(content: string): boolean {
   return /changesets\/action@v\d+/.test(content);
 }
 
-async function checkReleaseWorkflow({
-  profile,
-  content,
-}: CheckFnContext): Promise<TaskStatus> {
-  if (!content) {
-    return 'new';
+/**
+ * The rendered template identifies whether the project uses changesets, which
+ * decides how an existing release job is classified.
+ */
+const releaseWorkflowPolicy: TargetPolicy = ({ before, after }) => {
+  if (before === null || before.trim() === after.trim()) {
+    return;
   }
 
-  const expected = renderReleaseWorkflow(profile, content);
-
-  if (content.trim() === expected.trim()) {
-    return 'skip';
-  }
-
-  if (profile.existing.changeset) {
-    if (usesChangesetsAction(content)) {
-      return 'patch';
-    }
-    if (hasReleaseJob(content)) {
-      return 'conflict';
-    }
-    return 'new';
-  }
-
-  if (hasReleaseJob(content)) {
+  const changesetProject = usesChangesetsAction(after);
+  if (usesChangesetsAction(before)) {
     return 'patch';
   }
-  return 'conflict';
-}
+  if (hasReleaseJob(before)) {
+    return changesetProject ? 'conflict' : 'patch';
+  }
+  return changesetProject ? 'new' : 'conflict';
+};
 
-export const releaseWorkflowTask = createFileTask({
+export const releaseWorkflowTask = defineTask({
   applicable: (profile) => profile.hasGitHub,
-  checkFn: checkReleaseWorkflow,
-  filepath: '.github/workflows/release.yml',
   group: 'CI/CD',
   id: 'ci/release',
   label: 'GitHub release workflow',
-  render: (profile, existing) => renderReleaseWorkflow(profile, existing),
   scope: 'root',
   searchMeta: {
-    configTargets: ['.github/workflows/release.yml'],
     keywords: [
       'release',
       'publish',
@@ -62,4 +45,12 @@ export const releaseWorkflowTask = createFileTask({
     ],
     tags: ['ci', 'cd', 'release', 'github-actions'],
   },
+  targets: [
+    {
+      filepath: '.github/workflows/release.yml',
+      kind: 'text',
+      policy: releaseWorkflowPolicy,
+      render: (profile, existing) => renderReleaseWorkflow(profile, existing),
+    },
+  ],
 });

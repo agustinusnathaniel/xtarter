@@ -1,6 +1,6 @@
 import type { ProjectProfile } from '@xtarterize/core';
 
-import { createFileTask } from '@/factory';
+import { defineTask } from '@/factory/define-task.js';
 
 function pnpmWorkspaceContent(profile: ProjectProfile): string {
   if (profile.monorepo) {
@@ -9,16 +9,13 @@ function pnpmWorkspaceContent(profile: ProjectProfile): string {
   return '# pnpm workspace config\n';
 }
 
-export const pnpmWorkspaceTask = createFileTask({
+export const pnpmWorkspaceTask = defineTask({
   applicable: (profile) => profile.packageManager === 'pnpm',
-  filepath: 'pnpm-workspace.yaml',
   group: 'Workspace',
   id: 'workspace/pnpm-workspace',
   label: 'pnpm-workspace.yaml - pnpm workspace config',
-  render: (profile, _existing) => pnpmWorkspaceContent(profile),
   scope: 'root',
   searchMeta: {
-    configTargets: ['pnpm-workspace.yaml'],
     keywords: [
       'pnpm',
       'workspace',
@@ -29,4 +26,11 @@ export const pnpmWorkspaceTask = createFileTask({
     ],
     tags: ['workspace', 'pnpm', 'package-manager'],
   },
+  targets: [
+    {
+      filepath: 'pnpm-workspace.yaml',
+      kind: 'text',
+      render: (profile) => pnpmWorkspaceContent(profile),
+    },
+  ],
 });
