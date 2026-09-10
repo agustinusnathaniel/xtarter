@@ -2,9 +2,61 @@ import type { Task } from '@xtarterize/core';
 import { scoreTasks } from '@xtarterize/core';
 import { defineCommand } from 'citty';
 
-import { runCommand, sharedRunArgs } from '@/commands/run-command.js';
-import { resolveCwdWithPreflight } from '@/utils/preflight.js';
-import { getAllTasksWithPlugins, resolveCliContext } from '@/utils/project.js';
+import { runCommand } from '@/commands/run-command.js';
+import { sharedRunArgs } from '@/utils/args.js';
+import type { RuntimeContext } from '@/utils/runtime.js';
+
+interface ComposeArgs {
+  compose?: string;
+  threshold?: string;
+}
+
+function composeThreshold(args: ComposeArgs): number {
+  if (!args.threshold) {
+    return 0.1;
+  }
+  return Math.min(
+    1,
+    Math.max(0, Number.parseFloat(String(args.threshold)) || 0.1)
+  );
+}
+
+function orderTasksByCompose(
+  tasks: Array<Task>,
+  args: ComposeArgs,
+  runtime: RuntimeContext
+): Array<Task> {
+  if (!args.compose) {
+    return tasks;
+  }
+
+  const composeQuery = String(args.compose);
+  const scored = scoreTasks(tasks, composeQuery, {
+    minScore: composeThreshold(args),
+  });
+  const rankedIds = new Map(
+    scored.map((result, index) => [result.taskId, index])
+  );
+  const ordered = [...tasks].sort((a, b) => {
+    const aScore = rankedIds.get(a.id) ?? Number.POSITIVE_INFINITY;
+    const bScore = rankedIds.get(b.id) ?? Number.POSITIVE_INFINITY;
+    return aScore - bScore;
+  });
+
+  if (runtime.format !== 'json') {
+    console.log('');
+    console.log(`Composing plan for: "${composeQuery}"`);
+    if (scored.length > 0) {
+      const topTask = scored[0].task;
+      console.log(
+        `Best match: ${topTask.label} (${(scored[0].relevance * 100).toFixed(0)}% relevance)`
+      );
+    }
+    console.log(`Tasks ranked by relevance across ${scored.length} matches`);
+  }
+
+  return ordered;
+}
 
 export const initCommand = defineCommand({
   args: {
@@ -24,51 +76,11 @@ export const initCommand = defineCommand({
     name: 'init',
   },
   async run({ args }) {
-    const cwd = await resolveCwdWithPreflight(args);
-
-    let orderedTasks: Array<Task> | undefined;
-
-    if (args.compose) {
-      const composeQuery = String(args.compose);
-      const allTasks = await getAllTasksWithPlugins(cwd);
-      const composeThreshold = args.threshold
-        ? Math.min(
-            1,
-            Math.max(0, Number.parseFloat(String(args.threshold)) || 0.1)
-          )
-        : 0.1;
-      const scored = scoreTasks(allTasks, composeQuery, {
-        minScore: composeThreshold,
-      });
-
-      const rankedIds = new Map(scored.map((r, i) => [r.taskId, i]));
-      orderedTasks = [...allTasks].sort((a, b) => {
-        const aScore = rankedIds.get(a.id) ?? Number.POSITIVE_INFINITY;
-        const bScore = rankedIds.get(b.id) ?? Number.POSITIVE_INFINITY;
-        return aScore - bScore;
-      });
-
-      const ctx = resolveCliContext(args);
-      if (ctx.format !== 'json') {
-        console.log('');
-        console.log(`Composing plan for: "${composeQuery}"`);
-        if (scored.length > 0) {
-          const topTask = scored[0].task;
-          console.log(
-            `Best match: ${topTask.label} (${(scored[0].relevance * 100).toFixed(0)}% relevance)`
-          );
-        }
-        console.log(
-          `Tasks ranked by relevance across ${scored.length} matches`
-        );
-      }
-    }
-
-    await runCommand(cwd, args, {
+    await runCommand(args, {
       actionableStatuses: ['new', 'patch', 'conflict'],
       confirmMessage: 'How would you like to proceed?',
       emptyMessage: 'Project is already fully conformant!',
-      orderedTasks,
+      orderTasks: (tasks, runtime) => orderTasksByCompose(tasks, args, runtime),
     });
   },
 });

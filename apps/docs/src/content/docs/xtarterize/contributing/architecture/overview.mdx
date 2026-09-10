@@ -17,9 +17,9 @@ xtarterize is organized as a monorepo using [Turborepo](https://turbo.build/repo
 
 <FileTree>
 - packages/
-  - core/ - [`@xtarterize/core`](https://github.com/agustinusnathaniel/xtarterize/tree/main/packages/core) - [`detect.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/detect.ts) + [`detect/`](https://github.com/agustinusnathaniel/xtarterize/tree/main/packages/core/src/detect), [`resolve.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/resolve.ts), [`apply.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/apply.ts), [`backup.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/backup.ts), [`preflight.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/preflight.ts)
+  - core/ - [`@xtarterize/core`](https://github.com/agustinusnathaniel/xtarterize/tree/main/packages/core) - [`detect.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/detect.ts) + [`detect/`](https://github.com/agustinusnathaniel/xtarterize/tree/main/packages/core/src/detect), [`resolve.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/resolve.ts), [`apply.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/apply.ts) + [`apply/`](https://github.com/agustinusnathaniel/xtarterize/tree/main/packages/core/src/apply), [`backup.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/backup.ts), [`preflight.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/preflight.ts)
   - patchers/ - [`@xtarterize/patchers`](https://github.com/agustinusnathaniel/xtarterize/tree/main/packages/patchers) - [`json-merge.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/patchers/src/json-merge.ts), [`ast-patch.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/patchers/src/ast-patch.ts)
-  - tasks/ - [`@xtarterize/tasks`](https://github.com/agustinusnathaniel/xtarterize/tree/main/packages/tasks) - [`factory/`](https://github.com/agustinusnathaniel/xtarterize/tree/main/packages/tasks/src/factory), all task implementations
+  - tasks/ - [`@xtarterize/tasks`](https://github.com/agustinusnathaniel/xtarterize/tree/main/packages/tasks) - [`factory/define-task.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/tasks/src/factory/define-task.ts), [`factory/package-json.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/tasks/src/factory/package-json.ts), all task implementations
 - apps/
   - xtarterize/ - **xtarterize** - CLI binary ([citty](https://github.com/unjs/citty) + [@clack/prompts](https://github.com/natemoo-re/clack))
   - create-xtarter-app/ - **create-xtarter-app** - Template scaffolding CLI ([citty](https://github.com/unjs/citty) + [giget](https://github.com/unjs/giget))
@@ -55,42 +55,44 @@ flowchart TD
 sequenceDiagram
     participant User
     participant CLI as CLI (citty)
+    participant Session as CommandSession
     participant Core as @xtarterize/core
     participant Tasks as @xtarterize/tasks
     participant Patchers as @xtarterize/patchers
 
     User->>CLI: xtarterize init
-    CLI->>Core: runPreflight(cwd)
-    Core-->>CLI: PreflightResult
-    CLI->>Core: detectProject(cwd)
-    Core-->>CLI: ProjectProfile
-    CLI->>Tasks: getAllTasks()
-    Tasks-->>CLI: Task[]
-    CLI->>Core: resolveTasks(profile, tasks)
-    Core-->>CLI: ApplicableTask[]
-    CLI->>Core: resolveTaskStatuses(tasks, cwd, profile)
-    Core-->>CLI: Map<taskId, TaskStatus>
-    CLI->>User: Display plan
-    User->>CLI: Confirm
-    CLI->>Core: applyTasks(tasks, cwd, profile)
-    Core->>Core: backupFile(cwd, filepath)
+    CLI->>Session: open(args)
+    Session->>Core: ensureXtarterizeGitignore(cwd)
+    Session->>Core: runPreflight(cwd)
+    Core-->>Session: PreflightResult
+    Session->>Core: detectProject(cwd) + resolveProjectTasks(tasks)
+    Core-->>Session: ProjectProfile + statuses + timing
+    Session->>Core: planTasks(tasks, statuses)
+    Core-->>Session: ApplyPlan (diffs, dependencies, files)
+    Session->>User: reportPlan / confirm (injected prompter)
+    User->>Session: Confirm
+    Session->>Core: executePlan(plan)
+    Core->>Core: backupFile(cwd, filepath) + writeRunManifest
+    Core->>Core: installDependenciesBatch(dependencies)
     Core->>Tasks: task.apply(cwd, profile)
-    Tasks->>Patchers: mergeJson / mergeYaml / injectVitePlugin
+    Tasks->>Patchers: mergeJson / patchJson / injectVitePlugin
     Patchers-->>Tasks: Modified content
     Tasks-->>Core: Applied
-    Core-->>CLI: { applied, skipped, errors }
-    CLI->>User: Summary
+    Core-->>Session: ApplyResult
+    Session->>User: report outcome (terminal or JSON)
 ```
 
 ## Key Design Decisions
 
 - **Detection lives in core** - No CLI dependency, reusable by other consumers
 - **Tasks are independent** - Each task can run standalone via `add <task-id>`
-- **Dry-run is exact** - `dryRun()` output is bit-for-bit identical to what `apply()` writes
+- **One resolution per task** - A task spec resolves once and drives check, dry-run, apply, and dependencies, so status and diffs cannot disagree
+- **Plan, then execute** - `planTasks()` computes statuses, diffs, dependencies, and the backup set without writing; `executePlan()` replays one plan with one backup set and one run manifest
+- **Dry-run is exact** - The plan's diffs are the content `executePlan()` writes
 - **Idempotency is non-negotiable** - Running twice produces no changes on second run
 - **Templates are parameterized** - All templates receive `ProjectProfile` and adapt accordingly
-- **Factory-based task creation** - Most tasks use `createFileTask`, `createJsonMergeTask`, or `createMultiFileTask` to eliminate boilerplate, with shared seams in `json-config.ts` and `ops.ts`
-- **Shared command orchestration** - `init` and `sync` share a `runCommand()` helper in the CLI layer
+- **One command session** - `CommandSession` owns open, plan, execute, and report; commands declare selection policy and output shape, and prompts are injected (clack in production, scripted in tests)
+- **Batch install failures surface** - A failed dependency install is reported in the apply result and exit code instead of being logged and ignored
 
 ## Development Workflow
 

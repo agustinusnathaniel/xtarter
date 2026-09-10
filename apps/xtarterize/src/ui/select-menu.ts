@@ -1,13 +1,14 @@
-import { multiselect } from '@clack/prompts';
 import type { Task, TaskStatus } from '@xtarterize/core';
-import { abortIfCancelled } from '@xtarterize/core';
 
+import type { Prompter } from '@/ui/prompter.js';
 import { statusHint } from '@/utils/display.js';
 
+/** Resolve selected task IDs, or `null` when the user cancels the prompt. */
 export async function selectTasks(
   tasks: Array<Task>,
-  statuses: Map<string, TaskStatus>
-): Promise<Array<string>> {
+  statuses: Map<string, TaskStatus>,
+  prompter: Prompter
+): Promise<Array<string> | null> {
   const options = tasks.map((task) => ({
     hint: statusHint(statuses.get(task.id)),
     label: `${task.label} (${task.id})`,
@@ -21,17 +22,9 @@ export async function selectTasks(
     })
     .map((t) => t.id);
 
-  const selected = await multiselect({
+  return prompter.multiselect<string>({
     initialValues: defaultSelected,
     message: 'Select tasks to apply:',
     options,
   });
-
-  abortIfCancelled(selected);
-
-  if (Array.isArray(selected)) {
-    return selected as Array<string>;
-  }
-
-  return [];
 }

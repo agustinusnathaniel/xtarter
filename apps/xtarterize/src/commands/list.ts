@@ -1,36 +1,28 @@
-import { ensureXtarterizeGitignore, pc, statusTag } from '@xtarterize/core';
+import { pc, statusTag } from '@xtarterize/core';
 import { defineCommand } from 'citty';
 
+import { openSession } from '@/session.js';
 import { formatListResult } from '@/ui/json-formatter.js';
+import { commonArgs } from '@/utils/args.js';
 import { taskStatusIcon } from '@/utils/display.js';
-import { resolveCliContext, scanProject } from '@/utils/project.js';
 import { printTiming } from '@/utils/timing-display.js';
 
 export const listCommand = defineCommand({
   args: {
-    cwd: {
-      description: 'Target directory (default: current working directory)',
-      type: 'string',
-    },
-    json: {
-      description: 'Output machine-readable JSON',
-      type: 'boolean',
-    },
-    quiet: {
-      description: 'Suppress verbose output',
-      type: 'boolean',
-    },
+    ...commonArgs,
   },
   meta: {
     description: 'List all available tasks',
     name: 'list',
   },
   async run({ args }) {
-    const ctx = resolveCliContext(args);
-    await ensureXtarterizeGitignore(ctx.cwd);
-    const { profile, tasks, statuses, timing } = await scanProject(ctx);
+    const session = await openSession(args);
+    if (!session) {
+      return;
+    }
+    const { profile, runtime, statuses, tasks, timing } = session;
 
-    if (ctx.json) {
+    if (runtime.json) {
       console.log(formatListResult({ profile, statuses, tasks, timing }));
       return;
     }

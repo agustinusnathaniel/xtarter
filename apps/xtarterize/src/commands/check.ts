@@ -1,7 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import {
-  ensureXtarterizeGitignore,
   logSuccess,
   pc,
   runConflictChecks,
@@ -10,11 +9,12 @@ import {
 } from '@xtarterize/core';
 import { defineCommand } from 'citty';
 
+import { openSession } from '@/session.js';
 import { formatCheckAnnotations } from '@/ui/annotations.js';
 import { generateBadgeSvg } from '@/ui/badge.js';
 import { computeCheckOk, formatCheckResult } from '@/ui/json-formatter.js';
+import { commonArgs } from '@/utils/args.js';
 import { diagnosticIcon, taskStatusIcon } from '@/utils/display.js';
-import { resolveCliContext, scanProject } from '@/utils/project.js';
 import { printTiming } from '@/utils/timing-display.js';
 
 function emitAnnotations(options: {
@@ -147,18 +147,7 @@ export const checkCommand = defineCommand({
         'Generate conformance badge SVG (provide output path, or - for stdout)',
       type: 'string',
     },
-    cwd: {
-      description: 'Target directory (default: current working directory)',
-      type: 'string',
-    },
-    json: {
-      description: 'Output machine-readable JSON',
-      type: 'boolean',
-    },
-    quiet: {
-      description: 'Suppress verbose output',
-      type: 'boolean',
-    },
+    ...commonArgs,
     verbose: {
       description: 'Show tool installation and conflict checks',
       type: 'boolean',
@@ -169,11 +158,13 @@ export const checkCommand = defineCommand({
     name: 'check',
   },
   async run({ args }) {
-    const ctx = resolveCliContext(args);
+    const session = await openSession(args);
+    if (!session) {
+      return;
+    }
+    const ctx = session.runtime;
+    const { statuses, tasks, timing } = session;
     const badgeToStdout = args.badge === '-';
-    const scanCtx = badgeToStdout ? { ...ctx, quiet: true } : ctx;
-    await ensureXtarterizeGitignore(ctx.cwd);
-    const { tasks, statuses, timing } = await scanProject(scanCtx);
     const conflictChecks = await runConflictChecks(ctx.cwd);
     const installChecks = await runToolInstallationChecks(ctx.cwd);
     const diagnostics = [...installChecks, ...conflictChecks];

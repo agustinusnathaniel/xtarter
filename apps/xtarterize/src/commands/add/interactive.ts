@@ -1,270 +1,39 @@
-import { confirm } from '@clack/prompts';
-import type {
-  ApplyTiming,
-  ProjectProfile,
-  Task,
-  TaskStatus,
-} from '@xtarterize/core';
-import {
-  abortIfCancelled,
-  applyTasks,
-  createSpinner,
-  logError,
-  logInfo,
-  logSuccess,
-  logWarn,
-  resolveTaskStatuses,
-} from '@xtarterize/core';
+import type { TaskStatus } from '@xtarterize/core';
+import { logWarn } from '@xtarterize/core';
 
-import { type DisplayFormat, displayDiffs } from '@/ui/diff-display.js';
-import { formatRunResult } from '@/ui/json-formatter.js';
-import { detectionOnlyTiming, printTiming } from '@/utils/timing-display.js';
+import type { CommandSession } from '@/session.js';
+import { displayDiffs } from '@/ui/diff-display.js';
+import type { Prompter } from '@/ui/prompter.js';
 
 import { selectTasksGrouped } from './selection.js';
 import type { RunInteractiveOptions, TaskWithStatus } from './types.js';
 
-function handleNoApplicable(options: { jsonMode: boolean }): boolean {
-  if (options.jsonMode) {
-    console.log(
-      formatRunResult({ applied: 0, errors: [], ok: true, skipped: 0 })
-    );
-  } else {
-    logInfo('No tasks applicable for this project');
+function isActionable(status: TaskStatus, includeConflicts: boolean): boolean {
+  if (status === 'new' || status === 'patch') {
+    return true;
   }
-  return true;
+  return includeConflicts && status === 'conflict';
 }
 
-function createWrappedTasks(options: {
-  tasks: Array<Task>;
-  jsonMode: boolean;
-  checkErrors: Array<string>;
-}): Array<Task> {
-  return options.tasks.map((task) => ({
-    ...task,
-    check: async (cwd: string, p: ProjectProfile): Promise<TaskStatus> => {
-      try {
-        return await task.check(cwd, p);
-      } catch (error) {
-        const message = error instanceof Error ? error.message : String(error);
-        const detail = `Failed to check ${task.id}: ${message}`;
-        options.checkErrors.push(detail);
-        if (!options.jsonMode) {
-          logError(detail);
-        }
-        process.exitCode = 1;
-        return 'conflict';
-      }
-    },
-  }));
-}
-
-function buildTasksWithStatus(options: {
-  tasks: Array<Task>;
-  statuses: Map<string, TaskStatus>;
-}): Array<TaskWithStatus> {
-  return options.tasks.map((task) => ({
-    status: options.statuses.get(task.id) ?? 'new',
+function buildTasksWithStatus(session: CommandSession): Array<TaskWithStatus> {
+  return session.tasks.map((task) => ({
+    status: session.statuses.get(task.id) ?? 'new',
     task,
   }));
 }
 
-function handleQuietNoSelection(options: {
-  jsonMode: boolean;
-  checkErrors: Array<string>;
-}): boolean {
-  const { jsonMode, checkErrors } = options;
-  if (jsonMode) {
-    console.log(
-      formatRunResult({
-        applied: 0,
-        errors: checkErrors,
-        ok: checkErrors.length === 0,
-        skipped: 0,
-      })
-    );
-  } else {
-    logInfo('Interactive mode requires a terminal. Use a task ID instead.');
-  }
-  return true;
-}
-
-async function getSelectedIds(options: {
+function warnConflictsSkipped(options: {
   allFlag: boolean | undefined;
-  tasksWithStatus: Array<TaskWithStatus>;
-  includeConflicts: boolean;
-}): Promise<Array<string>> {
-  if (options.allFlag) {
-    return options.tasksWithStatus
-      .filter(
-        (t) =>
-          t.status === 'new' ||
-          t.status === 'patch' ||
-          (options.includeConflicts && t.status === 'conflict')
-      )
-      .map((t) => t.task.id);
-  }
-  return selectTasksGrouped(options.tasksWithStatus);
-}
-
-function handleEmptySelection(options: {
-  jsonMode: boolean;
-  checkErrors: Array<string>;
-}): boolean {
-  if (options.jsonMode) {
-    console.log(
-      formatRunResult({
-        applied: 0,
-        errors: options.checkErrors,
-        ok: options.checkErrors.length === 0,
-        skipped: 0,
-      })
-    );
-  } else {
-    logInfo('No tasks to apply');
-  }
-  return true;
-}
-
-async function applyAllTasks(options: {
-  selectedTasks: Array<TaskWithStatus>;
-  cwd: string;
-  profile: ProjectProfile;
   includeConflicts: boolean;
   jsonMode: boolean;
-  statuses: Map<string, TaskStatus>;
-}): Promise<{
-  applied: number;
-  errors: Array<string>;
-  timing: ApplyTiming | undefined;
-}> {
-  const { selectedTasks, cwd, profile, includeConflicts, jsonMode, statuses } =
-    options;
-  const result = await applyTasks({
-    cwd,
-    includeConflicts,
-    profile,
-    quiet: true,
-    statuses,
-    tasks: selectedTasks.map((e) => e.task),
-  });
-  if (!jsonMode) {
-    for (const error of result.errors) {
-      logError(error);
-    }
-  }
-  return {
-    applied: result.applied,
-    errors: [...result.errors],
-    timing: result.timing,
-  };
-}
-
-async function confirmTaskApply(label: string): Promise<boolean> {
-  const proceed = await confirm({ message: `Apply ${label}?` });
-  abortIfCancelled(proceed, 'Add cancelled');
-  return Boolean(proceed);
-}
-
-async function applyOneInteractiveTask(options: {
-  entry: TaskWithStatus;
-  cwd: string;
-  profile: ProjectProfile;
-  format: DisplayFormat;
-  jsonMode: boolean;
-  includeConflicts: boolean;
-  statuses: Map<string, TaskStatus>;
-}): Promise<{
-  appliedDelta: number;
-  errors: Array<string>;
-  timing: ApplyTiming | undefined;
-}> {
-  const diffs = await options.entry.task.dryRun(options.cwd, options.profile);
-  if (!options.jsonMode) {
-    displayDiffs(diffs, options.format);
-  }
-  const proceed = await confirmTaskApply(options.entry.task.label);
-  if (!proceed) {
-    return { appliedDelta: 0, errors: [], timing: undefined };
-  }
-  const result = await applyTasks({
-    cwd: options.cwd,
-    includeConflicts: options.includeConflicts,
-    profile: options.profile,
-    quiet: true,
-    selectedIds: [options.entry.task.id],
-    statuses: options.statuses,
-    tasks: [options.entry.task],
-  });
-  if (result.applied > 0) {
-    if (!options.jsonMode) {
-      logSuccess(`${options.entry.task.id} applied`);
-    }
-    return { appliedDelta: 1, errors: [], timing: result.timing };
-  }
-  if (result.errors.length > 0) {
-    if (!options.jsonMode) {
-      logError(`${options.entry.task.id}: ${result.errors.join(', ')}`);
-    }
-    return {
-      appliedDelta: 0,
-      errors: [...result.errors],
-      timing: result.timing,
-    };
-  }
-  if (!options.jsonMode) {
-    logWarn(
-      `${options.entry.task.id} skipped (${options.entry.status}) - not applied`
-    );
-  }
-  return { appliedDelta: 0, errors: [], timing: result.timing };
-}
-
-async function applyInteractively(options: {
-  selectedTasks: Array<TaskWithStatus>;
-  cwd: string;
-  profile: ProjectProfile;
-  format: DisplayFormat;
-  jsonMode: boolean;
-  includeConflicts: boolean;
-  statuses: Map<string, TaskStatus>;
-}): Promise<{
-  applied: number;
-  errors: Array<string>;
-  timing: ApplyTiming | undefined;
-}> {
-  let applied = 0;
-  const errors: Array<string> = [];
-  let timing: ApplyTiming | undefined;
-  for (const entry of options.selectedTasks) {
-    const r = await applyOneInteractiveTask({
-      cwd: options.cwd,
-      entry,
-      format: options.format,
-      includeConflicts: options.includeConflicts,
-      jsonMode: options.jsonMode,
-      profile: options.profile,
-      statuses: options.statuses,
-    });
-    applied += r.appliedDelta;
-    errors.push(...r.errors);
-    if (r.timing) {
-      timing = r.timing;
-    }
-  }
-  return { applied, errors, timing };
-}
-
-function maybeWarnConflictsSkipped(options: {
-  allFlag: boolean | undefined;
-  jsonMode: boolean;
-  includeConflicts: boolean;
   tasksWithStatus: Array<TaskWithStatus>;
 }): void {
+  const { allFlag, includeConflicts, jsonMode, tasksWithStatus } = options;
   if (
-    options.allFlag &&
-    !options.jsonMode &&
-    !options.includeConflicts &&
-    options.tasksWithStatus.some((t) => t.status === 'conflict')
+    allFlag &&
+    !jsonMode &&
+    !includeConflicts &&
+    tasksWithStatus.some((entry) => entry.status === 'conflict')
   ) {
     logWarn(
       'Conflicting tasks skipped. Pass --include-conflicts to apply them anyway.'
@@ -272,244 +41,166 @@ function maybeWarnConflictsSkipped(options: {
   }
 }
 
-function outputJsonResult(options: {
-  allErrors: Array<string>;
-  checkErrors: Array<string>;
-  applied: number;
-  selectedCount: number;
-}): void {
-  console.log(
-    formatRunResult({
-      applied: options.applied,
-      errors: [...options.checkErrors, ...options.allErrors],
-      ok: options.allErrors.length === 0 && options.checkErrors.length === 0,
-      skipped: options.selectedCount - options.applied,
-    })
-  );
-  if (options.allErrors.length > 0 || options.checkErrors.length > 0) {
-    process.exitCode = 1;
-  }
-}
-
-function outputHumanSummary(options: {
-  allErrors: Array<string>;
-  checkErrors: Array<string>;
-  applied: number;
-  selectedCount: number;
-  quiet: boolean;
-  detectionMs: number;
-  timing: ApplyTiming | undefined;
-  recordTiming: boolean;
-}): void {
-  console.log('');
-  if (options.allErrors.length > 0 || options.checkErrors.length > 0) {
-    logError(
-      `${options.allErrors.length + options.checkErrors.length} error(s)`
-    );
-    process.exitCode = 1;
-  }
-  logSuccess(`${options.applied}/${options.selectedCount} tasks applied`);
-  if (!options.quiet && options.timing) {
-    printTiming(detectionOnlyTiming(options.detectionMs), options.timing, {
-      recordTiming: options.recordTiming,
-    });
-  }
-}
-
-async function resolveStatusesWithSpinner(options: {
-  applicable: Array<Task>;
-  cwd: string;
-  profile: ProjectProfile;
-  quiet: boolean;
-  jsonMode: boolean;
-  checkErrors: Array<string>;
-}): Promise<{
-  statuses: Map<string, TaskStatus>;
-  tasksWithStatus: Array<TaskWithStatus>;
-}> {
-  const spinner = createSpinner(options.quiet);
-  spinner.start('Checking task statuses...');
-  const wrapped = createWrappedTasks({
-    checkErrors: options.checkErrors,
-    jsonMode: options.jsonMode,
-    tasks: options.applicable,
-  });
-  const statuses = await resolveTaskStatuses(
-    wrapped,
-    options.cwd,
-    options.profile
-  );
-  const tasksWithStatus = buildTasksWithStatus({
-    statuses,
-    tasks: options.applicable,
-  });
-  spinner.stop('Tasks checked');
-  return { statuses, tasksWithStatus };
-}
-
-async function executeSelectedTasks(options: {
-  selectedTasks: Array<TaskWithStatus>;
-  allFlag: boolean | undefined;
-  cwd: string;
-  profile: ProjectProfile;
-  format: DisplayFormat;
-  jsonMode: boolean;
-  includeConflicts: boolean;
-  statuses: Map<string, TaskStatus>;
-}): Promise<{
-  applied: number;
-  errors: Array<string>;
-  timing: ApplyTiming | undefined;
-}> {
-  if (options.allFlag) {
-    return applyAllTasks({
-      cwd: options.cwd,
-      includeConflicts: options.includeConflicts,
-      jsonMode: options.jsonMode,
-      profile: options.profile,
-      selectedTasks: options.selectedTasks,
-      statuses: options.statuses,
-    });
-  }
-  return applyInteractively({
-    cwd: options.cwd,
-    format: options.format,
-    includeConflicts: options.includeConflicts,
-    jsonMode: options.jsonMode,
-    profile: options.profile,
-    selectedTasks: options.selectedTasks,
-    statuses: options.statuses,
-  });
-}
-
-async function getValidatedSelection(options: {
-  allFlag: boolean | undefined;
-  tasksWithStatus: Array<TaskWithStatus>;
+async function confirmSelected(options: {
   includeConflicts: boolean;
   jsonMode: boolean;
-  checkErrors: Array<string>;
+  prompter: Prompter;
+  selected: Array<TaskWithStatus>;
+  session: CommandSession;
 }): Promise<Array<TaskWithStatus> | null> {
-  const selectedIds = await getSelectedIds({
-    allFlag: options.allFlag,
-    includeConflicts: options.includeConflicts,
-    tasksWithStatus: options.tasksWithStatus,
-  });
-  if (selectedIds.length === 0) {
-    handleEmptySelection({
-      checkErrors: options.checkErrors,
-      jsonMode: options.jsonMode,
+  const { includeConflicts, jsonMode, prompter, selected, session } = options;
+  const confirmed: Array<TaskWithStatus> = [];
+
+  for (const entry of selected) {
+    const plan = await session.plan({
+      includeConflicts,
+      tasks: [entry.task],
     });
+    if (!jsonMode) {
+      displayDiffs(plan.entries[0]?.diffs ?? [], session.runtime.format);
+    }
+    const proceed = await prompter.confirm({
+      message: `Apply ${entry.task.label}?`,
+    });
+    if (proceed === null) {
+      return null;
+    }
+    if (proceed) {
+      confirmed.push(entry);
+    }
+  }
+
+  return confirmed;
+}
+
+async function resolveSelection(options: {
+  allFlag: boolean | undefined;
+  includeConflicts: boolean;
+  prompter: Prompter;
+  tasksWithStatus: Array<TaskWithStatus>;
+}): Promise<Array<TaskWithStatus> | null> {
+  const { allFlag, includeConflicts, prompter, tasksWithStatus } = options;
+  if (allFlag) {
+    return tasksWithStatus.filter((entry) =>
+      isActionable(entry.status, includeConflicts)
+    );
+  }
+
+  const selectedIds = await selectTasksGrouped(tasksWithStatus, prompter);
+  if (selectedIds === null) {
     return null;
   }
-  return options.tasksWithStatus.filter((e) => selectedIds.includes(e.task.id));
+  return tasksWithStatus.filter((entry) => selectedIds.includes(entry.task.id));
 }
 
-function finalizeInteractiveOutput(options: {
-  result: {
-    applied: number;
-    errors: Array<string>;
-    timing: ApplyTiming | undefined;
-  };
-  checkErrors: Array<string>;
-  selectedCount: number;
-  jsonMode: boolean;
-  allFlag: boolean | undefined;
-  includeConflicts: boolean;
-  tasksWithStatus: Array<TaskWithStatus>;
-  quiet: boolean;
-  detectionMs: number;
-  recordTiming: boolean;
-}): void {
-  maybeWarnConflictsSkipped({
-    allFlag: options.allFlag,
-    includeConflicts: options.includeConflicts,
-    jsonMode: options.jsonMode,
-    tasksWithStatus: options.tasksWithStatus,
-  });
-  if (options.jsonMode) {
-    outputJsonResult({
-      allErrors: options.result.errors,
-      applied: options.result.applied,
-      checkErrors: options.checkErrors,
-      selectedCount: options.selectedCount,
-    });
-    return;
+function reportEmptyOutcome(session: CommandSession, message: string): void {
+  const checkErrors = session.checkErrorMessages;
+  session.report(
+    checkErrors.length > 0
+      ? session.blocked(message, { errors: checkErrors })
+      : session.empty(message)
+  );
+  if (checkErrors.length > 0) {
+    process.exitCode = 1;
   }
-  outputHumanSummary({
-    allErrors: options.result.errors,
-    applied: options.result.applied,
-    checkErrors: options.checkErrors,
-    detectionMs: options.detectionMs,
-    quiet: options.quiet,
-    recordTiming: options.recordTiming,
-    selectedCount: options.selectedCount,
-    timing: options.result.timing,
+}
+
+async function executeConfirmed(options: {
+  confirmed: Array<TaskWithStatus>;
+  includeConflicts: boolean;
+  recordTiming: boolean;
+  selected: Array<TaskWithStatus>;
+  session: CommandSession;
+}): Promise<void> {
+  const { confirmed, includeConflicts, recordTiming, selected, session } =
+    options;
+  // One plan for the whole confirmed selection: one backup set and one run
+  // manifest, so `undo` restores the entire `add`.
+  const plan = await session.plan({
+    includeConflicts,
+    tasks: confirmed.map((entry) => entry.task),
   });
+  const result = await session.execute(plan);
+  const outcome = session.outcomeFor(result, {
+    includeCheckErrors: true,
+    recordTiming,
+    skipped: selected.length - result.applied,
+  });
+  session.report(outcome);
+  if (!outcome.ok) {
+    process.exitCode = 1;
+  }
 }
 
 export async function runInteractive(
   options: RunInteractiveOptions
 ): Promise<void> {
   const {
-    allTasks,
-    profile,
-    cwd,
-    quiet,
-    format,
-    detectionMs,
-    recordTiming,
     all: allFlag,
     includeConflicts,
-  } = options;
-  const jsonMode = format === 'json';
-  const applicable = allTasks.filter((t) => t.applicable(profile));
-  if (applicable.length === 0) {
-    handleNoApplicable({ jsonMode });
-    return;
-  }
-  const checkErrors: Array<string> = [];
-  const { statuses, tasksWithStatus } = await resolveStatusesWithSpinner({
-    applicable,
-    checkErrors,
-    cwd,
-    jsonMode,
-    profile,
-    quiet,
-  });
-  if (quiet && !allFlag) {
-    handleQuietNoSelection({ checkErrors, jsonMode });
-    return;
-  }
-  const selectedTasks = await getValidatedSelection({
-    allFlag,
-    checkErrors,
-    includeConflicts,
-    jsonMode,
-    tasksWithStatus,
-  });
-  if (!selectedTasks) {
-    return;
-  }
-  const result = await executeSelectedTasks({
-    allFlag,
-    cwd,
-    format,
-    includeConflicts,
-    jsonMode,
-    profile,
-    selectedTasks,
-    statuses,
-  });
-  finalizeInteractiveOutput({
-    allFlag,
-    checkErrors,
-    detectionMs,
-    includeConflicts,
-    jsonMode,
-    quiet,
+    prompter,
     recordTiming,
-    result,
-    selectedCount: selectedTasks.length,
+    session,
+  } = options;
+  const { runtime, tasks } = session;
+  const jsonMode = runtime.format === 'json';
+
+  if (tasks.length === 0) {
+    session.report(session.empty('No tasks applicable for this project'));
+    return;
+  }
+
+  const tasksWithStatus = buildTasksWithStatus(session);
+
+  if (runtime.quiet && !allFlag) {
+    reportEmptyOutcome(
+      session,
+      'Interactive mode requires a terminal. Use a task ID instead.'
+    );
+    return;
+  }
+
+  const selected = await resolveSelection({
+    allFlag,
+    includeConflicts,
+    prompter,
     tasksWithStatus,
+  });
+  if (selected === null) {
+    session.report(session.cancelled());
+    return;
+  }
+  if (selected.length === 0) {
+    reportEmptyOutcome(session, 'No tasks to apply');
+    return;
+  }
+
+  warnConflictsSkipped({
+    allFlag,
+    includeConflicts,
+    jsonMode,
+    tasksWithStatus,
+  });
+
+  const confirmed = allFlag
+    ? selected
+    : await confirmSelected({
+        includeConflicts,
+        jsonMode,
+        prompter,
+        selected,
+        session,
+      });
+  if (confirmed === null) {
+    session.report(session.cancelled());
+    return;
+  }
+
+  await executeConfirmed({
+    confirmed,
+    includeConflicts,
+    recordTiming,
+    selected,
+    session,
   });
 }

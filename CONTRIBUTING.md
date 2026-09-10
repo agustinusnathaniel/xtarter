@@ -38,16 +38,14 @@ Each task must implement:
 - `check(cwd, profile)` - What's the current status?
 - `dryRun(cwd, profile)` - What would change?
 - `apply(cwd, profile)` - Make the changes
+- `getDeps(cwd, profile)` - Optional packages the apply plan should install
 
-Use the factory functions in `packages/tasks/src/factory/`:
+Declare tasks with `defineTask()` from `packages/tasks/src/factory/define-task.ts`. A spec declares metadata, applicability, targets and actions, and dependencies, and resolves once so status, diffs, apply, and deps cannot disagree:
 
-- `createFileTask` - For files with creation and check logic
-- `createMultiFileTask` - For tasks producing multiple files
-- `createJsonMergeTask` - For JSON config files that should merge
-- `createMultiFileJsonMergeTask` - For tasks that merge multiple JSON configs
-- `createPackageJsonTask` - For package.json scripts + deps
-- `createExecTask` - For tasks that run shell commands
-- `createVitePluginTask` - For vite.config plugin injection
+- `targets` - `text`, `jsonMerge`, `packageJson`, or `transform` targets. Each declares a filepath and how its content is computed, with an optional `policy` hook for conflict projection.
+- `actions` - A status probe plus a run effect with no file diff.
+- `deps` - A static list or a resolver that receives the resolved status and diffs.
+- `packageJson` targets go through `factory/package-json.ts`, the only xtarterize writer of `package.json`.
 
 ## Quality Standards
 

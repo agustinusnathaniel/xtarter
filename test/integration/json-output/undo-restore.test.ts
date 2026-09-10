@@ -179,7 +179,7 @@ describe('undo and restore json output', () => {
 });
 
 describe('json flag declarations', () => {
-  // These commands honor --json through resolveCliContext/resolveRuntimeFlags and
+  // These commands honor --json through the shared runtime context and
   // the docs advertise it, so the flag must be declared in their args definition
   // to stay visible in --help.
   test('check, list, and query declare the --json flag they honor', () => {

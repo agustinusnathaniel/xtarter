@@ -123,6 +123,7 @@ export async function resolveProjectTasks(
   allTasks: Array<Task>,
   externalTasks?: Array<Task>
 ): Promise<{
+  checkErrors: Map<string, string>;
   profile: ProjectProfile;
   tasks: Array<Task>;
   statuses: Map<string, TaskStatus>;
@@ -152,12 +153,19 @@ export async function resolveProjectTasks(
   const statuses = new Map(
     checkResults.map(({ task, status }) => [task.id, status] as const)
   );
+  const checkErrors = new Map<string, string>();
+  for (const { checkError, task } of checkResults) {
+    if (checkError !== undefined) {
+      checkErrors.set(task.id, checkError);
+    }
+  }
   const checkSumMs = checkResults.reduce(
     (sum, { checkMs }) => sum + checkMs,
     0
   );
 
   return {
+    checkErrors,
     profile,
     statuses,
     tasks: applicableTasks,

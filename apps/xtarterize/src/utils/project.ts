@@ -1,48 +1,13 @@
-import { select } from '@clack/prompts';
-import type {
-  ProjectProfile,
-  ResolveTiming,
-  Task,
-  TaskStatus,
-} from '@xtarterize/core';
+import type { ProjectProfile, Task } from '@xtarterize/core';
 import {
-  abortIfCancelled,
-  createSpinner,
   detectProject,
   pc,
   readPackageJson,
   resolveExternalTasks,
-  resolveProjectTasks,
-  runPreflight,
 } from '@xtarterize/core';
 import { getAllTasks } from '@xtarterize/tasks';
 
-import type { DisplayFormat } from '@/ui/diff-display.js';
-
-import { resolveCwd } from './cwd.js';
-import { handlePreflightFailure } from './preflight.js';
-import { resolveRuntimeFlags } from './runtime-flags.js';
-
-export interface CliContext {
-  cwd: string;
-  format: DisplayFormat;
-  json: boolean;
-  quiet: boolean;
-  timing: boolean;
-}
-
-export function resolveCliContext(args: {
-  quiet?: boolean | string | number | Array<string>;
-  json?: boolean | string | number | Array<string>;
-  format?: string;
-  cwd?: string;
-  timing?: boolean;
-  _?: Array<string | number>;
-}): CliContext {
-  const cwd = resolveCwd(args);
-  const { json, quiet, format } = resolveRuntimeFlags(args);
-  return { cwd, format, json, quiet, timing: args.timing === true };
-}
+import type { Prompter } from '@/ui/prompter.js';
 
 /**
  * Combine built-in tasks with external plugin tasks.
@@ -57,32 +22,17 @@ export async function getAllTasksWithPlugins(
   return external.length > 0 ? [...internal, ...external] : internal;
 }
 
-export interface ScanResult {
-  profile: ProjectProfile;
-  statuses: Map<string, TaskStatus>;
-  tasks: Array<Task>;
-  timing: ResolveTiming;
-}
-
-export async function scanProject(ctx: CliContext): Promise<ScanResult> {
-  const preflight = await runPreflight(ctx.cwd);
-  handlePreflightFailure(preflight, ctx.json);
-
-  const s = createSpinner(ctx.quiet);
-  s.start('Scanning project...');
-
-  const allTasks = await getAllTasksWithPlugins(ctx.cwd);
-  const result = await resolveProjectTasks(ctx.cwd, allTasks);
-
-  s.stop('Project scanned');
-  return result;
+export interface DetectProjectWithAmbiguityOptions {
+  baseProfile?: ProjectProfile;
+  cwd: string;
+  prompter: Prompter;
+  quiet: boolean;
 }
 
 export async function detectProjectWithAmbiguity(
-  cwd: string,
-  quiet: boolean,
-  baseProfile?: ProjectProfile
+  options: DetectProjectWithAmbiguityOptions
 ): Promise<ProjectProfile> {
+  const { cwd, quiet, baseProfile, prompter } = options;
   let profile = baseProfile ?? (await detectProject(cwd));
 
   if (profile.framework === null && !quiet) {
@@ -99,8 +49,12 @@ export async function detectProjectWithAmbiguity(
     const hasReact = !!allDeps.react;
 
     if (hasReactNative && hasReact) {
-      const resolved = await resolveAmbiguousFramework();
-      profile = { ...profile, framework: resolved };
+      const resolved = await resolveAmbiguousFramework(prompter);
+      // A cancelled prompt keeps the detected profile: framework stays null
+      // instead of exiting the process.
+      if (resolved !== null) {
+        profile = { ...profile, framework: resolved };
+      }
     }
   }
 
@@ -115,10 +69,10 @@ export function printProjectProfile(profile: ProjectProfile): void {
   console.log('');
 }
 
-async function resolveAmbiguousFramework(): Promise<
-  'react' | 'react-native' | 'node'
-> {
-  const choice = await select({
+async function resolveAmbiguousFramework(
+  prompter: Prompter
+): Promise<'react' | 'react-native' | 'node' | null> {
+  return prompter.select<'react' | 'react-native' | 'node'>({
     message:
       'Detected both React and React Native dependencies. Which best describes this project?',
     options: [
@@ -127,8 +81,4 @@ async function resolveAmbiguousFramework(): Promise<
       { label: 'Universal (web + native, treating as Node)', value: 'node' },
     ],
   });
-
-  abortIfCancelled(choice);
-
-  return choice as 'react' | 'react-native' | 'node';
 }

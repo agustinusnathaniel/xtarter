@@ -5,17 +5,15 @@ import {
   pc,
   runConflictChecks,
   runEnvironmentChecks,
-  runPreflight,
   runProjectHealthChecks,
   runToolInstallationChecks,
 } from '@xtarterize/core';
 import { defineCommand } from 'citty';
 
+import { openSession } from '@/session.js';
 import { formatDoctorResult } from '@/ui/json-formatter.js';
-import { resolveCwd } from '@/utils/cwd.js';
+import { commonArgs } from '@/utils/args.js';
 import { diagnosticIcon } from '@/utils/display.js';
-import { handlePreflightFailure } from '@/utils/preflight.js';
-import { resolveRuntimeFlags } from '@/utils/runtime-flags.js';
 import { detectionOnlyTiming, printTiming } from '@/utils/timing-display.js';
 
 interface DiagnosticGroup {
@@ -25,18 +23,7 @@ interface DiagnosticGroup {
 
 export const doctorCommand = defineCommand({
   args: {
-    cwd: {
-      description: 'Target directory (default: current working directory)',
-      type: 'string',
-    },
-    json: {
-      description: 'Output machine-readable JSON',
-      type: 'boolean',
-    },
-    quiet: {
-      description: 'Suppress detailed output',
-      type: 'boolean',
-    },
+    ...commonArgs,
     verbose: {
       description: 'Show additional system information',
       type: 'boolean',
@@ -47,11 +34,17 @@ export const doctorCommand = defineCommand({
     name: 'doctor',
   },
   async run({ args }) {
-    const cwd = resolveCwd(args);
-    const { json, quiet } = resolveRuntimeFlags(args);
+    // Doctor opts out of fail-fast: an invalid project still gets diagnosed
+    // instead of exiting before the checks run.
+    const session = await openSession(args, {
+      allowInvalidProject: true,
+      resolveTasks: false,
+    });
+    if (!session) {
+      return;
+    }
+    const { cwd, json, quiet } = session.runtime;
     const verbose = args.verbose === true;
-    const preflight = await runPreflight(cwd);
-    handlePreflightFailure(preflight, json);
     const s = createSpinner(quiet);
     s.start('Running diagnostics...');
     const diagStart = performance.now();

@@ -3,7 +3,9 @@ import os from 'node:os';
 import path from 'node:path';
 import { checkCommand } from '@xtarterize/app/commands/check.js';
 import { diffCommand } from '@xtarterize/app/commands/diff.js';
+import { initCommand } from '@xtarterize/app/commands/init.js';
 import { listCommand } from '@xtarterize/app/commands/list.js';
+import { type Prompter, setPrompter } from '@xtarterize/app/ui/prompter.js';
 import { describe, expect, it, vi } from 'vite-plus/test';
 
 const CONFORMANCE_SUMMARY_REGEX = /conformant|Conformance audit/;
@@ -145,6 +147,98 @@ describe('cli json output', () => {
     process.exitCode = 0;
     await fs.rm(cwd, { force: true, recursive: true });
   });
+
+  test('diff --quiet omits the timing section', async () => {
+    const cwd = await createProjectFixture();
+    const logs: Array<string> = [];
+    const originalLog = console.log;
+    console.log = (...args: Array<unknown>) => {
+      logs.push(args.map((arg) => String(arg)).join(' '));
+    };
+
+    try {
+      await diffCommand.run?.({ args: { cwd, quiet: true } } as never);
+    } finally {
+      console.log = originalLog;
+      process.exitCode = 0;
+      await fs.rm(cwd, { force: true, recursive: true });
+    }
+
+    expect(logs.join('\n')).not.toContain('Timing');
+  });
+
+  test('init --dry-run --format json implies quiet and keeps stdout machine-readable', async () => {
+    const cwd = await createProjectFixture();
+    const previousCi = process.env.CI;
+    process.env.CI = 'false';
+    const prompt = vi.fn();
+    const prompter: Prompter = {
+      confirm: async () => {
+        prompt();
+        return null;
+      },
+      groupMultiselect: async () => {
+        prompt();
+        return null;
+      },
+      multiselect: async () => {
+        prompt();
+        return null;
+      },
+      select: async () => {
+        prompt();
+        return null;
+      },
+    };
+    setPrompter(prompter);
+
+    try {
+      const output = (await captureJsonOutput(async () => {
+        await initCommand.run?.({
+          args: { cwd, dryRun: true, format: 'json' },
+        } as never);
+      })) as {
+        files: Array<unknown>;
+        ok: boolean;
+        summary: { total: number };
+      };
+
+      // --format json implies quiet: no profile, plan, or timing text may
+      // precede the payload, and the dry run must never prompt.
+      expect(prompt).not.toHaveBeenCalled();
+      expect(typeof output.ok).toBe('boolean');
+      expect(Array.isArray(output.files)).toBe(true);
+      expect(typeof output.summary.total).toBe('number');
+    } finally {
+      if (previousCi === undefined) {
+        delete process.env.CI;
+      } else {
+        process.env.CI = previousCi;
+      }
+      setPrompter(null);
+      process.exitCode = 0;
+      await fs.rm(cwd, { force: true, recursive: true });
+    }
+  }, 60_000);
+});
+
+it('emits a JSON preflight failure payload on invalid projects', async () => {
+  // No .git and no package.json: session.open fails before any command work.
+  const cwd = await fs.mkdtemp(path.join(os.tmpdir(), 'xtarterize-json-'));
+
+  try {
+    const output = (await captureJsonOutput(async () => {
+      await listCommand.run?.({ args: { cwd, json: true } } as never);
+    })) as { errors: Array<{ code: string }>; ok: boolean };
+
+    expect(output.ok).toBe(false);
+    expect(output.errors.length).toBeGreaterThan(0);
+    expect(output.errors[0]?.code).toBe('MISSING_PACKAGE_JSON');
+    expect(process.exitCode).toBe(1);
+  } finally {
+    process.exitCode = 0;
+    await fs.rm(cwd, { force: true, recursive: true });
+  }
 });
 
 it('check --json keeps stdout machine-readable when annotations are enabled', async () => {

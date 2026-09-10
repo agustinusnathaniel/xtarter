@@ -1,37 +1,64 @@
 ---
 title: Apply Engine
-description: How xtarterize applies conformance tasks with backups and error handling.
+description: How xtarterize plans and applies conformance tasks with backups and error handling.
 ---
 
 import { Aside } from '@astrojs/starlight/components'
 
-The apply engine is the final stage of the conformance pipeline. It runs applicable tasks, backs up modified files, and handles errors gracefully.
+The apply engine is the final stage of the conformance pipeline. It plans a task set, backs up modified files, installs dependencies in one batch, runs the tasks, and reports errors.
 
-### `applyTasks(options)`
+## Plan and Execute
 
-The [`applyTasks`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/apply.ts) function orchestrates the entire process:
+The pipeline is split into a side-effect-free plan and an execution step, so previews are exact and `executePlan()` replays exactly what was planned.
 
-1. **Filter** - Uses `selectedIds` when the user picks specific tasks; otherwise applies all
-2. **Check** - Re-runs `task.check()` to get current status (skips `skip` tasks, optionally includes `conflict`)
-3. **Backup** - Collects all unique filepaths from `task.dryRun()` and backs them up once before writing anything
-4. **Batch Install** - After backup, the engine calls `task.getDeps()` on each task (if implemented) to collect all required npm dependencies. These are deduplicated and installed in a single batch operation (grouped by dev/prod). This ensures all packages are available before any `apply()` runs. Each task's `apply()` then finds deps already present and skips re-installation. Errors are logged but don't abort the pipeline.
-5. **Apply** - Executes `task.apply()` for each task sequentially (deps are already installed from the batch phase)
-6. **Report** - Returns `{ applied, skipped, errors }` counts
+### `planTasks(options)`
+
+[`planTasks`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/apply/plan.ts) computes an `ApplyPlan`:
+
+1. **Check** - Resolves each task's status, reusing statuses already computed during session open
+2. **Dry-run** - Collects the diffs for tasks that are not skipped or conflicting
+3. **Dependencies** - Asks each runnable task's `getDeps()` for its packages
+4. **Files** - Collects the unique filepaths from the diffs, which is also the backup set
+
+`planTasks()` performs no writes, no backups, and no installs:
 
 ```typescript
-import { applyTasks } from '@xtarterize/core'
+import { planTasks } from '@xtarterize/core'
 
-const result = await applyTasks({
+const plan = await planTasks({
   cwd: '/path/to/project',
   profile,
-  selectedIds, // optional: only apply these
+  statuses, // optional: reuse statuses from session open
   tasks,
   includeConflicts: true, // optional: allow conflicts
 })
 
-console.log(result.applied) // number of successfully applied tasks
-console.log(result.errors)  // error messages for failed tasks
+console.log(plan.entries)      // per-task status, diffs, and timing
+console.log(plan.dependencies) // deduplicated packages to install
+console.log(plan.files)        // files to back up, one manifest for the run
 ```
+
+### `executePlan(options)`
+
+[`executePlan`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/apply/execute.ts) runs the plan:
+
+1. **Backup** - Backs up every file in the plan once and writes one run manifest
+2. **Batch Install** - Installs the plan's deduplicated dependencies in a single call, grouped by dev/prod
+3. **Apply** - Runs `task.apply()` sequentially for each planned task
+4. **Report** - Returns `{ applied, skipped, errors, timing }`
+
+```typescript
+import { executePlan } from '@xtarterize/core'
+
+const result = await executePlan({ cwd: '/path/to/project', plan, profile })
+
+console.log(result.applied) // number of successfully applied tasks
+console.log(result.errors)  // error messages for failed tasks and installs
+```
+
+### `applyTasks(options)`
+
+The [`applyTasks`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/apply.ts) wrapper chains both steps for callers that do not need the plan separately.
 
 ## Backup System
 
@@ -54,13 +81,12 @@ Before any file is modified, the engine creates timestamped backups in `.xtarter
 
 Errors are collected and reported without aborting the entire run:
 
-- **Check/dryRun failures** - Logged as errors; the file is not backed up and the task is skipped
-- **Backup failures** - Reject the apply before task execution, so no task is applied
-- **Install failures** - If batch installation fails, the error is logged and the pipeline continues. Individual tasks may fail if required packages are missing, but file-generation tasks (lint configs, editor settings) can proceed.
+- **Check failures** - A throwing `check()` becomes a `conflict` with an error message and the task is skipped
+- **Dry-run failures** - Collected in the plan and reported; the file is not backed up and the task is skipped
+- **Batch install failures** - Recorded in `ApplyResult.errors`. Tasks whose `apply()` needs the missing packages fail individually, while file-only tasks still run
 - **Apply failures** - Logged with the task ID and error message; subsequent tasks continue
 
-Check, dry-run, and task-apply failures are collected in the result. Backup or
-manifest failures can reject the apply before task execution begins.
+Check, dry-run, install, and task-apply failures are collected in the result. Backup or manifest failures can reject the apply before task execution begins.
 
 ## References
 

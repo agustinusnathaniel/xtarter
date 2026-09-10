@@ -105,7 +105,7 @@ const result = patchJson(existing, incoming)
 | `mergeJson` | Object-level logic, deep merging | None (returns new object) |
 | `patchJson` | Writing changes back to a file | Comments, formatting, key order |
 
-`createJsonMergeTask` and `createMultiFileJsonMergeTask` use both functions:
-`mergeJson` computes the target state, then `patchJson` applies it surgically to
-the original text. In `@xtarterize/tasks`, this shared behavior is centralized
-in [`factory/json-config.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/tasks/src/factory/json-config.ts).
+`jsonMerge` targets in `@xtarterize/tasks` use both functions: `mergeJson`
+computes the target state, then `patchJson` applies it surgically to the
+original text. This shared behavior lives in
+[`factory/targets.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/tasks/src/factory/targets.ts).

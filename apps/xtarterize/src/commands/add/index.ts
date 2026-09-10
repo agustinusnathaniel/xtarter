@@ -1,9 +1,14 @@
-import { createSpinner, detectProject, logWarn } from '@xtarterize/core';
+import { logWarn } from '@xtarterize/core';
 import { defineCommand } from 'citty';
 
-import { resolveCwdWithPreflight } from '@/utils/preflight.js';
-import { getAllTasksWithPlugins } from '@/utils/project.js';
-import { resolveRuntimeFlags } from '@/utils/runtime-flags.js';
+import { openSession } from '@/session.js';
+import { getPrompter } from '@/ui/prompter.js';
+import {
+  commonArgs,
+  formatArgs,
+  includeConflictsArg,
+  timingArg,
+} from '@/utils/args.js';
 
 import { runInteractive } from './interactive.js';
 import { runSingleTask } from './single-task.js';
@@ -15,35 +20,15 @@ export const addCommand = defineCommand({
         'Apply all applicable new and patch tasks without interaction',
       type: 'boolean',
     },
-    cwd: {
-      description: 'Target directory (default: current working directory)',
-      type: 'string',
-    },
-    format: {
-      description: 'Output format (terminal|json)',
-      type: 'string',
-    },
-    includeConflicts: {
-      description: 'Include conflicting tasks when applying (default: false)',
-      type: 'boolean',
-    },
-    json: {
-      description: 'Output machine-readable JSON',
-      type: 'boolean',
-    },
-    quiet: {
-      description: 'Suppress interactive prompts',
-      type: 'boolean',
-    },
+    ...commonArgs,
+    ...formatArgs,
+    includeConflicts: includeConflictsArg,
     taskId: {
       description: 'Task ID (e.g., lint/biome). Omit to pick interactively.',
       required: false,
       type: 'positional',
     },
-    timing: {
-      description: 'Show detailed per-task timing breakdown',
-      type: 'boolean',
-    },
+    timing: timingArg,
   },
   meta: {
     description: 'Add a specific task (or pick interactively)',
@@ -66,20 +51,14 @@ interface AddCommandArgs {
 }
 
 async function handleAddCommand(args: AddCommandArgs): Promise<void> {
-  const cwd = await resolveCwdWithPreflight(args as { cwd?: string });
-  const { format, quiet: runtimeQuiet } = resolveRuntimeFlags(args);
-  const jsonMode = format === 'json';
-  const quiet = jsonMode || Boolean(runtimeQuiet);
+  const session = await openSession(args);
+  if (!session) {
+    return;
+  }
+
+  const prompter = getPrompter();
+  const includeConflicts = args.includeConflicts === true;
   const recordTiming = args.timing === true;
-
-  const spinner = createSpinner(quiet);
-  spinner.start('Scanning project...');
-  const detectionStart = performance.now();
-  const profile = await detectProject(cwd);
-  const detectionMs = performance.now() - detectionStart;
-  spinner.stop('Project scanned');
-
-  const allTasks = await getAllTasksWithPlugins(cwd);
 
   if (args.all && args.taskId) {
     logWarn(
@@ -90,41 +69,29 @@ async function handleAddCommand(args: AddCommandArgs): Promise<void> {
   if (args.all) {
     await runInteractive({
       all: true,
-      allTasks,
-      cwd,
-      detectionMs,
-      format,
-      includeConflicts: args.includeConflicts === true,
-      profile,
-      quiet,
+      includeConflicts,
+      prompter,
       recordTiming,
+      session,
     });
     return;
   }
 
   if (args.taskId) {
     await runSingleTask({
-      allTasks,
-      cwd,
-      detectionMs,
-      format,
-      includeConflicts: args.includeConflicts === true,
-      profile,
-      quiet,
+      includeConflicts,
+      prompter,
       recordTiming,
+      session,
       taskId: args.taskId,
     });
     return;
   }
 
   await runInteractive({
-    allTasks,
-    cwd,
-    detectionMs,
-    format,
-    includeConflicts: args.includeConflicts === true,
-    profile,
-    quiet,
+    includeConflicts,
+    prompter,
     recordTiming,
+    session,
   });
 }
