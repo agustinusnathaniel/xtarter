@@ -10,9 +10,9 @@ const packagesDir = join(root, 'packages');
  * Effects and return them; they never run them. Matching is a plain
  * substring scan, so it errs toward flagging rather than missing a call.
  *
- * The bare `runPromise(` and `runSync(` patterns also catch destructured or
- * aliased calls such as `const { runPromise } = Effect; runPromise(...)`.
- * `runPromise(` does not match `runPromiseExit(`.
+ * The bare `runPromise(` and `runSync(` patterns also catch destructured
+ * forms such as `const { runPromise } = Effect; runPromise(...)`; renamed
+ * bindings are not detected. `runPromise(` does not match `runPromiseExit(`.
  */
 const FORBIDDEN_PATTERNS = [
   'Effect.runPromise(',

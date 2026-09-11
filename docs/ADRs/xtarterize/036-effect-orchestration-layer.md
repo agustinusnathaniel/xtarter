@@ -62,8 +62,8 @@ restore `Equal.equals` (ADR 031 keeps `isDeepStrictEqual`).
   `pnpm check` and `pnpm check:ci` through `verify:effect-boundaries`. The
   script scans `packages/*/src/**/*.ts` and fails with `file:line` output on
   `runPromise`, `runPromiseExit`, `runSync`, or `ManagedRuntime` outside
-  comments, including destructured or aliased forms such as
-  `const { runPromise } = Effect`.
+  comments, including destructured forms such as
+  `const { runPromise } = Effect`; renamed bindings are not detected.
 
 ### Task contract and plugin compatibility
 
