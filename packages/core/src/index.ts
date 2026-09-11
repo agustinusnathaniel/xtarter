@@ -8,13 +8,9 @@ export type {
   TaskSearchMeta,
   TaskStatus,
 } from '@/_base.js';
-export type { ApplyResult, ExecutePlanOptions } from '@/apply/execute.js';
+export type { ApplyResult } from '@/apply/execute.js';
 export { executePlan } from '@/apply/execute.js';
-export type {
-  ApplyPlan,
-  ApplyPlanEntry,
-  PlanTasksOptions,
-} from '@/apply/plan.js';
+export type { ApplyPlan, ApplyPlanEntry } from '@/apply/plan.js';
 export { planTasks } from '@/apply/plan.js';
 export type { Backup, RunManifest } from '@/backup.js';
 export {
@@ -24,12 +20,7 @@ export {
   restoreBackup,
   writeRunManifest,
 } from '@/backup.js';
-export type {
-  CliArgDefinition,
-  CliArgsDefinition,
-  InvocationValidationOptions,
-  UnknownFlag,
-} from '@/cli-args.js';
+export type { CliArgsDefinition } from '@/cli-args.js';
 export {
   findFirstPositionalIndex,
   findUnknownFlags,
@@ -40,18 +31,13 @@ export {
 export type {
   Bundler,
   Framework,
-  MonorepoDetection,
   PackageManager,
   ProjectProfile,
   Router,
   Styling,
 } from '@/detect.js';
 // Detection functions - only re-export what users need
-export {
-  detectFramework,
-  detectPackageManager,
-  detectProject,
-} from '@/detect.js';
+export { detectPackageManager, detectProject } from '@/detect.js';
 export type {
   DiagnosticCheck,
   DiagnosticGroup,
@@ -107,7 +93,6 @@ export {
   fileExists,
   findConfigFile,
   readFile,
-  readJson,
   resolvePath,
   writeFile,
 } from '@/utils/fs.js';
@@ -126,5 +111,4 @@ export {
   readPackageJson,
 } from '@/utils/pkg.js';
 export { abortIfCancelled, createSpinner, isCI } from '@/utils/prompts.js';
-export type { TagColor } from '@/utils/tags.js';
 export { actionTag, statusTag, tag } from '@/utils/tags.js';
