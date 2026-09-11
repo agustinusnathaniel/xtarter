@@ -119,6 +119,7 @@ export {
   pc,
 } from '@/utils/logger.js';
 export {
+  collectDependencyVersions,
   hasDependency,
   installDependenciesBatch,
   readPackageJson,

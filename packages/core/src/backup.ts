@@ -23,6 +23,26 @@ function tryIo<A>(
   });
 }
 
+async function writeJsonAtomically(path: string, data: unknown): Promise<void> {
+  const tempPath = `${path}.${process.pid}.${Date.now()}.tmp`;
+  await fs.writeFile(tempPath, `${JSON.stringify(data, null, 2)}\n`, 'utf-8');
+  try {
+    await fs.rename(tempPath, path);
+  } catch (error) {
+    await fs.unlink(tempPath).catch(() => {});
+    throw error;
+  }
+}
+
+async function readJsonOrNull<T>(path: string): Promise<T | null> {
+  try {
+    const content = await fs.readFile(path, 'utf-8');
+    return JSON.parse(content) as T;
+  } catch {
+    return null;
+  }
+}
+
 export function backupFile(cwd: string, filepath: string): Promise<void> {
   return Effect.runPromise(
     Effect.gen(function* () {
@@ -72,20 +92,7 @@ function writeIndexAtomically(
   indexPath: string,
   indexContent: Record<string, Array<Backup>>
 ) {
-  const tempPath = `${indexPath}.${process.pid}.${Date.now()}.tmp`;
-  return tryIo(indexPath, async () => {
-    await fs.writeFile(
-      tempPath,
-      `${JSON.stringify(indexContent, null, 2)}\n`,
-      'utf-8'
-    );
-    try {
-      await fs.rename(tempPath, indexPath);
-    } catch (error) {
-      await fs.unlink(tempPath).catch(() => {});
-      throw error;
-    }
-  });
+  return tryIo(indexPath, () => writeJsonAtomically(indexPath, indexContent));
 }
 
 export function listBackups(
@@ -93,28 +100,22 @@ export function listBackups(
   filepath: string
 ): Promise<Array<Backup>> {
   const indexPath = resolvePath(cwd, BACKUP_DIR, '.index.json');
-  return Effect.runPromise(
-    Effect.orElseSucceed(
-      tryIo(indexPath, async () => {
-        const content = await fs.readFile(indexPath, 'utf-8');
-        const index = JSON.parse(content) as Record<string, unknown>;
-        if (!(index[filepath] && Array.isArray(index[filepath]))) {
-          return [] as Array<Backup>;
-        }
-        return (index[filepath] as Array<unknown>)
-          .filter(
-            (entry): entry is Backup =>
-              typeof entry === 'object' &&
-              entry !== null &&
-              typeof (entry as Backup).filepath === 'string' &&
-              typeof (entry as Backup).backupPath === 'string' &&
-              typeof (entry as Backup).timestamp === 'string'
-          )
-          .sort((a, b) => b.timestamp.localeCompare(a.timestamp));
-      }),
-      () => [] as Array<Backup>
-    )
-  );
+  return readJsonOrNull<Record<string, unknown>>(indexPath).then((index) => {
+    const entries = index?.[filepath];
+    if (!(entries && Array.isArray(entries))) {
+      return [] as Array<Backup>;
+    }
+    return (entries as Array<unknown>)
+      .filter(
+        (entry): entry is Backup =>
+          typeof entry === 'object' &&
+          entry !== null &&
+          typeof (entry as Backup).filepath === 'string' &&
+          typeof (entry as Backup).backupPath === 'string' &&
+          typeof (entry as Backup).timestamp === 'string'
+      )
+      .sort((a, b) => b.timestamp.localeCompare(a.timestamp));
+  });
 }
 
 export function restoreBackup(cwd: string, backup: Backup): Promise<void> {
@@ -166,28 +167,12 @@ export async function writeRunManifest(
     timestamp: new Date().toISOString(),
   };
   await fs.mkdir(resolvePath(cwd, BACKUP_DIR), { recursive: true });
-  const tempPath = `${manifestPath}.${process.pid}.${Date.now()}.tmp`;
-  await fs.writeFile(
-    tempPath,
-    `${JSON.stringify(manifest, null, 2)}\n`,
-    'utf-8'
-  );
-  try {
-    await fs.rename(tempPath, manifestPath);
-  } catch (error) {
-    await fs.unlink(tempPath).catch(() => {});
-    throw error;
-  }
+  await writeJsonAtomically(manifestPath, manifest);
 }
 
 export async function readRunManifest(
   cwd: string
 ): Promise<RunManifest | null> {
   const manifestPath = resolvePath(cwd, BACKUP_DIR, 'last-run.json');
-  try {
-    const content = await fs.readFile(manifestPath, 'utf-8');
-    return JSON.parse(content) as RunManifest;
-  } catch {
-    return null;
-  }
+  return readJsonOrNull<RunManifest>(manifestPath);
 }

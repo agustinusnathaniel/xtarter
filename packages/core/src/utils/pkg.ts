@@ -1,7 +1,10 @@
 import { addDependency } from 'nypm';
 import { readPackageJSON } from 'pkg-types';
 
-import { detectPackageManager } from '@/detect/package-manager.js';
+import {
+  detectPackageManager,
+  isStringRecord,
+} from '@/detect/package-manager.js';
 import { fileExists, resolvePath } from '@/utils/fs.js';
 
 export async function isPnpmWorkspace(cwd: string): Promise<boolean> {
@@ -15,6 +18,26 @@ export async function readPackageJson(cwd: string) {
     return null;
   }
   return readPackageJSON(pkgPath);
+}
+
+/**
+ * Merge `dependencies` and `devDependencies` into one flat version record.
+ * Malformed records whose values are not strings are ignored.
+ */
+export function collectDependencyVersions(
+  pkg: {
+    dependencies?: unknown;
+    devDependencies?: unknown;
+  } | null
+): Record<string, string> {
+  const deps: Record<string, string> = {};
+  if (pkg && isStringRecord(pkg.dependencies)) {
+    Object.assign(deps, pkg.dependencies);
+  }
+  if (pkg && isStringRecord(pkg.devDependencies)) {
+    Object.assign(deps, pkg.devDependencies);
+  }
+  return deps;
 }
 
 export function hasDependency(

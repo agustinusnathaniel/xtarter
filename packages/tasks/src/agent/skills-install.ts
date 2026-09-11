@@ -1,5 +1,6 @@
 import type { ProjectProfile } from '@xtarterize/core';
 import {
+  collectDependencyVersions,
   fileExists,
   readPackageJson,
   resolvePath,
@@ -9,25 +10,6 @@ import { x } from 'tinyexec';
 
 import { getSkillsToInstall, type SkillEntry } from '@/agent/catalog.js';
 import { defineTask } from '@/factory/define-task.js';
-
-function getAllDeps(pkg: Record<string, unknown>): Record<string, string> {
-  const deps: Record<string, string> = {};
-  if (
-    typeof pkg.dependencies === 'object' &&
-    pkg.dependencies !== null &&
-    !Array.isArray(pkg.dependencies)
-  ) {
-    Object.assign(deps, pkg.dependencies as Record<string, string>);
-  }
-  if (
-    typeof pkg.devDependencies === 'object' &&
-    pkg.devDependencies !== null &&
-    !Array.isArray(pkg.devDependencies)
-  ) {
-    Object.assign(deps, pkg.devDependencies as Record<string, string>);
-  }
-  return deps;
-}
 
 async function isDirNonEmpty(dirPath: string): Promise<boolean> {
   try {
@@ -87,7 +69,7 @@ async function resolveMissingSkills(
   profile: ProjectProfile
 ): Promise<{ missing: Array<SkillEntry>; total: number }> {
   const pkg = await readPackageJson(cwd);
-  const deps = pkg ? getAllDeps(pkg as Record<string, unknown>) : {};
+  const deps = collectDependencyVersions(pkg);
   const skills = getSkillsToInstall(profile, deps);
   if (skills.length === 0) {
     return { missing: [], total: 0 };

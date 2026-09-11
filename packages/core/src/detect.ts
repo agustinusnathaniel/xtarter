@@ -6,7 +6,7 @@ import {
   readFile,
   resolvePath,
 } from '@/utils/fs.js';
-import { readPackageJson } from '@/utils/pkg.js';
+import { collectDependencyVersions, readPackageJson } from '@/utils/pkg.js';
 
 import { detectBundler } from './detect/bundler.js';
 import {
@@ -20,7 +20,6 @@ import { detectMonorepo } from './detect/monorepo.js';
 import {
   detectFrameworkVersion,
   detectPackageManager,
-  isStringRecord,
 } from './detect/package-manager.js';
 import {
   type ConfigDirInput,
@@ -333,22 +332,11 @@ async function detectNodeVersion(
   return '22';
 }
 
-function collectDeps(pkg: PackageJson | null): Record<string, string> {
-  const deps: Record<string, string> = {};
-  if (pkg && isStringRecord(pkg.dependencies)) {
-    Object.assign(deps, pkg.dependencies);
-  }
-  if (pkg && isStringRecord(pkg.devDependencies)) {
-    Object.assign(deps, pkg.devDependencies);
-  }
-  return deps;
-}
-
 // ── Internal detection logic (no caching) ──
 
 async function computeProjectProfile(cwd: string): Promise<ProjectProfile> {
   const pkg = await readPackageJson(cwd);
-  const deps = collectDeps(pkg);
+  const deps = collectDependencyVersions(pkg);
 
   const [
     monorepoInfo,

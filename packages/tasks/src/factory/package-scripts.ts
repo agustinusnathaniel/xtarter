@@ -1,4 +1,8 @@
-import type { Framework, ProjectProfile } from '@xtarterize/core';
+import {
+  collectDependencyVersions,
+  type Framework,
+  type ProjectProfile,
+} from '@xtarterize/core';
 import type { PackageJson } from 'pkg-types';
 
 import { defineTask, type TaskDep } from './define-task.js';
@@ -59,10 +63,9 @@ function resolveProjectLintConfig(
     framework: Framework;
   }
 ): LintConfig {
-  const deps = pkg?.dependencies ?? {};
-  const devDeps = pkg?.devDependencies ?? {};
-  const hasBiomeDep = !!(devDeps['@biomejs/biome'] ?? deps['@biomejs/biome']);
-  const useUltracite = !!(devDeps.ultracite ?? deps.ultracite);
+  const deps = collectDependencyVersions(pkg);
+  const hasBiomeDep = !!deps['@biomejs/biome'];
+  const useUltracite = !!deps.ultracite;
   const oxlintPlugins = oxlintPluginFlags({ framework: profile.framework });
   const lintTool = resolveLintTool({
     existingEslint: profile.existing.eslint,
