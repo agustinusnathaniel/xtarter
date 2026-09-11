@@ -26,9 +26,8 @@ describe('viteCheckerTask', () => {
     const profile = await detectProject(
       path.join(fixtures, 'react-vite-tailwind')
     );
-    const status = await viteCheckerTask.check(
-      path.join(fixtures, 'react-vite-tailwind'),
-      profile
+    const status = await run(
+      viteCheckerTask.check(path.join(fixtures, 'react-vite-tailwind'), profile)
     );
     expect(status).toBe('patch');
   });
@@ -53,7 +52,7 @@ describe('viteCheckerTask', () => {
         `import checker from 'vite-plugin-checker'\nexport default { plugins: [checker()] }\n`
       );
       const profile = await detectProject(tmpDir);
-      await expect(viteCheckerTask.check(tmpDir, profile)).resolves.toBe(
+      await expect(run(viteCheckerTask.check(tmpDir, profile))).resolves.toBe(
         'skip'
       );
     } finally {
@@ -66,7 +65,7 @@ describe('viteCheckerTask', () => {
       path.join(fixtures, 'react-vite-tailwind')
     );
     const cwd = path.join(fixtures, 'react-vite-tailwind');
-    const diffs = await viteCheckerTask.dryRun(cwd, profile);
+    const diffs = await run(viteCheckerTask.dryRun(cwd, profile));
     expect(diffs.length).toBe(1);
     expect(diffs[0].filepath).toBe('vite.config.ts');
 
@@ -95,7 +94,7 @@ describe('viteCheckerTask', () => {
       `import { defineConfig } from 'vite'\nexport default defineConfig({})`
     );
     const profile = await detectProject(tmpDir);
-    await viteCheckerTask.apply(tmpDir, profile);
+    await run(viteCheckerTask.apply(tmpDir, profile));
     const content = await fs.readFile(
       path.join(tmpDir, 'vite.config.ts'),
       'utf-8'
@@ -117,9 +116,11 @@ describe('viteVisualizerTask', () => {
     const profile = await detectProject(
       path.join(fixtures, 'react-vite-tailwind')
     );
-    const status = await viteVisualizerTask.check(
-      path.join(fixtures, 'react-vite-tailwind'),
-      profile
+    const status = await run(
+      viteVisualizerTask.check(
+        path.join(fixtures, 'react-vite-tailwind'),
+        profile
+      )
     );
     expect(status).toBe('patch');
   });

@@ -10,6 +10,8 @@ import {
 } from '@xtarterize/tasks';
 import { describe, expect } from 'vite-plus/test';
 
+import { run } from '../helpers/run.js';
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const fixtures = path.resolve(__dirname, '../fixtures');
 
@@ -56,9 +58,8 @@ describe('pnpmWorkspaceTask', () => {
 
   test('skips when pnpm-workspace.yaml already exists', async () => {
     const profile = await detectProject(path.join(fixtures, 'monorepo-turbo'));
-    const status = await pnpmWorkspaceTask.check(
-      path.join(fixtures, 'monorepo-turbo'),
-      profile
+    const status = await run(
+      pnpmWorkspaceTask.check(path.join(fixtures, 'monorepo-turbo'), profile)
     );
     expect(status).toBe('skip');
   });
@@ -75,7 +76,7 @@ describe('pnpmWorkspaceTask', () => {
       // Write a pnpm lockfile so detection returns pnpm
       await fs.writeFile(path.join(tmpDir, 'pnpm-lock.yaml'), '');
       const profile = await detectProject(tmpDir);
-      const status = await pnpmWorkspaceTask.check(tmpDir, profile);
+      const status = await run(pnpmWorkspaceTask.check(tmpDir, profile));
       expect(status).toBe('new');
     } finally {
       await fs.rm(tmpDir, { force: true, recursive: true });
@@ -96,8 +97,8 @@ describe('pnpmWorkspaceTask', () => {
       await fs.mkdir(path.join(tmpDir, 'packages'), { recursive: true });
       await fs.mkdir(path.join(tmpDir, 'apps'), { recursive: true });
       const profile = await detectProject(tmpDir);
-      expect(await pnpmWorkspaceTask.check(tmpDir, profile)).toBe('new');
-      const diffs = await pnpmWorkspaceTask.dryRun(tmpDir, profile);
+      expect(await run(pnpmWorkspaceTask.check(tmpDir, profile))).toBe('new');
+      const diffs = await run(pnpmWorkspaceTask.dryRun(tmpDir, profile));
       expect(diffs.length).toBe(1);
       expect(diffs[0].filepath).toBe('pnpm-workspace.yaml');
       expect(diffs[0].before).toBeNull();
@@ -120,7 +121,7 @@ describe('pnpmWorkspaceTask', () => {
       );
       await fs.writeFile(path.join(tmpDir, 'pnpm-lock.yaml'), '');
       const profile = await detectProject(tmpDir);
-      const diffs = await pnpmWorkspaceTask.dryRun(tmpDir, profile);
+      const diffs = await run(pnpmWorkspaceTask.dryRun(tmpDir, profile));
       expect(diffs.length).toBe(1);
       expect(diffs[0].filepath).toBe('pnpm-workspace.yaml');
       expect(diffs[0].before).toBeNull();
@@ -145,7 +146,7 @@ describe('pnpmWorkspaceTask', () => {
       await fs.mkdir(path.join(tmpDir, 'packages'), { recursive: true });
       await fs.mkdir(path.join(tmpDir, 'apps'), { recursive: true });
       const profile = await detectProject(tmpDir);
-      await pnpmWorkspaceTask.apply(tmpDir, profile);
+      await run(pnpmWorkspaceTask.apply(tmpDir, profile));
       const content = await fs.readFile(
         path.join(tmpDir, 'pnpm-workspace.yaml'),
         'utf-8'
@@ -168,7 +169,7 @@ describe('pnpmWorkspaceTask', () => {
       );
       await fs.writeFile(path.join(tmpDir, 'pnpm-lock.yaml'), '');
       const profile = await detectProject(tmpDir);
-      await pnpmWorkspaceTask.apply(tmpDir, profile);
+      await run(pnpmWorkspaceTask.apply(tmpDir, profile));
       const content = await fs.readFile(
         path.join(tmpDir, 'pnpm-workspace.yaml'),
         'utf-8'
@@ -197,8 +198,8 @@ describe('pnpmWorkspaceTask', () => {
     ].join('\n');
     await withPnpmProject(async (cwd) => {
       const profile = await detectProject(cwd);
-      expect(await pnpmWorkspaceTask.check(cwd, profile)).toBe('skip');
-      expect(await pnpmWorkspaceTask.dryRun(cwd, profile)).toEqual([]);
+      expect(await run(pnpmWorkspaceTask.check(cwd, profile))).toBe('skip');
+      expect(await run(pnpmWorkspaceTask.dryRun(cwd, profile))).toEqual([]);
       await expect(readWorkspace(cwd)).resolves.toBe(content);
     }, content);
   });
@@ -229,14 +230,14 @@ describe('pnpmWorkspaceTask', () => {
     ].join('\n');
     await withPnpmProject(async (cwd) => {
       const profile = await detectProject(cwd);
-      expect(await pnpmWorkspaceTask.check(cwd, profile)).toBe('patch');
-      const diffs = await pnpmWorkspaceTask.dryRun(cwd, profile);
+      expect(await run(pnpmWorkspaceTask.check(cwd, profile))).toBe('patch');
+      const diffs = await run(pnpmWorkspaceTask.dryRun(cwd, profile));
       expect(diffs[0].after).toBe(expected);
-      await pnpmWorkspaceTask.apply(cwd, profile);
+      await run(pnpmWorkspaceTask.apply(cwd, profile));
       await expect(readWorkspace(cwd)).resolves.toBe(expected);
       // Idempotency: the patched file is satisfied on the next check.
-      expect(await pnpmWorkspaceTask.check(cwd, profile)).toBe('skip');
-      expect(await pnpmWorkspaceTask.dryRun(cwd, profile)).toEqual([]);
+      expect(await run(pnpmWorkspaceTask.check(cwd, profile))).toBe('skip');
+      expect(await run(pnpmWorkspaceTask.dryRun(cwd, profile))).toEqual([]);
     }, content);
   });
 
@@ -246,8 +247,8 @@ describe('pnpmWorkspaceTask', () => {
       // The workspace file makes detection report a monorepo, yet a keyless
       // settings file must stay byte-identical.
       const profile = await detectProject(cwd);
-      expect(await pnpmWorkspaceTask.check(cwd, profile)).toBe('skip');
-      expect(await pnpmWorkspaceTask.dryRun(cwd, profile)).toEqual([]);
+      expect(await run(pnpmWorkspaceTask.check(cwd, profile))).toBe('skip');
+      expect(await run(pnpmWorkspaceTask.dryRun(cwd, profile))).toEqual([]);
       await expect(readWorkspace(cwd)).resolves.toBe(content);
     }, content);
   });
@@ -255,8 +256,8 @@ describe('pnpmWorkspaceTask', () => {
   test('skips an existing empty file', async () => {
     await withPnpmProject(async (cwd) => {
       const profile = await detectProject(cwd);
-      expect(await pnpmWorkspaceTask.check(cwd, profile)).toBe('skip');
-      expect(await pnpmWorkspaceTask.dryRun(cwd, profile)).toEqual([]);
+      expect(await run(pnpmWorkspaceTask.check(cwd, profile))).toBe('skip');
+      expect(await run(pnpmWorkspaceTask.dryRun(cwd, profile))).toEqual([]);
       await expect(readWorkspace(cwd)).resolves.toBe('');
     }, '');
   });
@@ -282,8 +283,8 @@ describe('pnpmWorkspaceTask', () => {
     ].join('\n');
     await withPnpmProject(async (cwd) => {
       const profile = await detectProject(cwd);
-      expect(await pnpmWorkspaceTask.check(cwd, profile)).toBe('patch');
-      await pnpmWorkspaceTask.apply(cwd, profile);
+      expect(await run(pnpmWorkspaceTask.check(cwd, profile))).toBe('patch');
+      await run(pnpmWorkspaceTask.apply(cwd, profile));
       await expect(readWorkspace(cwd)).resolves.toBe(expected);
     }, content);
   });
@@ -295,7 +296,7 @@ describe('pnpmWorkspaceTask', () => {
     );
     await withPnpmProject(async (cwd) => {
       const profile = await detectProject(cwd);
-      await pnpmWorkspaceTask.apply(cwd, profile);
+      await run(pnpmWorkspaceTask.apply(cwd, profile));
       await expect(readWorkspace(cwd)).resolves.toBe(expected);
     }, content);
 
@@ -308,7 +309,7 @@ describe('pnpmWorkspaceTask', () => {
     ].join('\n');
     await withPnpmProject(async (cwd) => {
       const profile = await detectProject(cwd);
-      await pnpmWorkspaceTask.apply(cwd, profile);
+      await run(pnpmWorkspaceTask.apply(cwd, profile));
       await expect(readWorkspace(cwd)).resolves.toBe(unquotedExpected);
     }, unquoted);
   });
@@ -317,8 +318,8 @@ describe('pnpmWorkspaceTask', () => {
     const content = 'packages: [apps/*, "./packages/*"]\n';
     await withPnpmProject(async (cwd) => {
       const profile = await detectProject(cwd);
-      expect(await pnpmWorkspaceTask.check(cwd, profile)).toBe('skip');
-      expect(await pnpmWorkspaceTask.dryRun(cwd, profile)).toEqual([]);
+      expect(await run(pnpmWorkspaceTask.check(cwd, profile))).toBe('skip');
+      expect(await run(pnpmWorkspaceTask.dryRun(cwd, profile))).toEqual([]);
     }, content);
   });
 
@@ -326,7 +327,7 @@ describe('pnpmWorkspaceTask', () => {
     const content = 'packages: [apps/*]\n';
     await withPnpmProject(async (cwd) => {
       const profile = await detectProject(cwd);
-      expect(await pnpmWorkspaceTask.check(cwd, profile)).toBe('conflict');
+      expect(await run(pnpmWorkspaceTask.check(cwd, profile))).toBe('conflict');
       await expect(readWorkspace(cwd)).resolves.toBe(content);
     }, content);
   });
@@ -335,7 +336,7 @@ describe('pnpmWorkspaceTask', () => {
     const content = 'packages: { apps: true }\n';
     await withPnpmProject(async (cwd) => {
       const profile = await detectProject(cwd);
-      expect(await pnpmWorkspaceTask.check(cwd, profile)).toBe('conflict');
+      expect(await run(pnpmWorkspaceTask.check(cwd, profile))).toBe('conflict');
       await expect(readWorkspace(cwd)).resolves.toBe(content);
     }, content);
   });
@@ -346,11 +347,11 @@ describe('pnpmWorkspaceTask', () => {
       "packages:\r\n  - 'apps/*'\r\n  - 'packages/*'\r\ncatalog:\r\n  react: ^19.0.0\r\n";
     await withPnpmProject(async (cwd) => {
       const profile = await detectProject(cwd);
-      const diffs = await pnpmWorkspaceTask.dryRun(cwd, profile);
+      const diffs = await run(pnpmWorkspaceTask.dryRun(cwd, profile));
       expect(diffs[0].after).toBe(expected);
-      await pnpmWorkspaceTask.apply(cwd, profile);
+      await run(pnpmWorkspaceTask.apply(cwd, profile));
       await expect(readWorkspace(cwd)).resolves.toBe(expected);
-      expect(await pnpmWorkspaceTask.check(cwd, profile)).toBe('skip');
+      expect(await run(pnpmWorkspaceTask.check(cwd, profile))).toBe('skip');
     }, content);
   });
 
@@ -361,14 +362,14 @@ describe('pnpmWorkspaceTask', () => {
     );
     await withPnpmProject(async (cwd) => {
       const profile = await detectProject(cwd);
-      expect(await pnpmWorkspaceTask.check(cwd, profile)).toBe('patch');
-      await pnpmWorkspaceTask.apply(cwd, profile);
+      expect(await run(pnpmWorkspaceTask.check(cwd, profile))).toBe('patch');
+      await run(pnpmWorkspaceTask.apply(cwd, profile));
       const applied = await readWorkspace(cwd);
       expect(applied).toBe(expected);
       // `check` only returns `skip` when the file parses and both globs are
       // separate sequence items.
-      expect(await pnpmWorkspaceTask.check(cwd, profile)).toBe('skip');
-      expect(await pnpmWorkspaceTask.dryRun(cwd, profile)).toEqual([]);
+      expect(await run(pnpmWorkspaceTask.check(cwd, profile))).toBe('skip');
+      expect(await run(pnpmWorkspaceTask.dryRun(cwd, profile))).toEqual([]);
     }, content);
   });
 
@@ -379,12 +380,12 @@ describe('pnpmWorkspaceTask', () => {
     );
     await withPnpmProject(async (cwd) => {
       const profile = await detectProject(cwd);
-      expect(await pnpmWorkspaceTask.check(cwd, profile)).toBe('patch');
-      await pnpmWorkspaceTask.apply(cwd, profile);
+      expect(await run(pnpmWorkspaceTask.check(cwd, profile))).toBe('patch');
+      await run(pnpmWorkspaceTask.apply(cwd, profile));
       const applied = await readWorkspace(cwd);
       expect(applied).toBe(expected);
-      expect(await pnpmWorkspaceTask.check(cwd, profile)).toBe('skip');
-      expect(await pnpmWorkspaceTask.dryRun(cwd, profile)).toEqual([]);
+      expect(await run(pnpmWorkspaceTask.check(cwd, profile))).toBe('skip');
+      expect(await run(pnpmWorkspaceTask.dryRun(cwd, profile))).toEqual([]);
     }, content);
   });
 
@@ -398,7 +399,7 @@ describe('pnpmWorkspaceTask', () => {
     ].join('\n');
     await withPnpmProject(async (cwd) => {
       const profile = await detectProject(cwd);
-      expect(await pnpmWorkspaceTask.check(cwd, profile)).toBe('conflict');
+      expect(await run(pnpmWorkspaceTask.check(cwd, profile))).toBe('conflict');
       await expect(readWorkspace(cwd)).resolves.toBe(content);
     }, content);
   });
@@ -414,10 +415,10 @@ describe('pnpmWorkspaceTask', () => {
     ].join('\n');
     await withPnpmProject(async (cwd) => {
       const profile = await detectProject(cwd);
-      expect(await pnpmWorkspaceTask.check(cwd, profile)).toBe('patch');
-      await pnpmWorkspaceTask.apply(cwd, profile);
+      expect(await run(pnpmWorkspaceTask.check(cwd, profile))).toBe('patch');
+      await run(pnpmWorkspaceTask.apply(cwd, profile));
       await expect(readWorkspace(cwd)).resolves.toBe(expected);
-      expect(await pnpmWorkspaceTask.check(cwd, profile)).toBe('skip');
+      expect(await run(pnpmWorkspaceTask.check(cwd, profile))).toBe('skip');
     }, content);
   });
 
@@ -429,8 +430,8 @@ describe('pnpmWorkspaceTask', () => {
       const profile = await detectProject(cwd);
       const content = ['onlyBuiltDependencies:', '  - esbuild', ''].join('\n');
       await fs.writeFile(workspacePath(cwd), content);
-      expect(await pnpmWorkspaceTask.check(cwd, profile)).toBe('skip');
-      expect(await pnpmWorkspaceTask.dryRun(cwd, profile)).toEqual([]);
+      expect(await run(pnpmWorkspaceTask.check(cwd, profile))).toBe('skip');
+      expect(await run(pnpmWorkspaceTask.dryRun(cwd, profile))).toEqual([]);
       await expect(readWorkspace(cwd)).resolves.toBe(content);
     });
   });
@@ -454,7 +455,7 @@ describe('versionrcTask', () => {
         JSON.stringify({ name: 'vrc-check-test' })
       );
       const profile = await detectProject(tmpDir);
-      const status = await versionrcTask.check(tmpDir, profile);
+      const status = await run(versionrcTask.check(tmpDir, profile));
       expect(status).toBe('new');
     } finally {
       await fs.rm(tmpDir, { force: true, recursive: true });
@@ -471,7 +472,7 @@ describe('versionrcTask', () => {
         JSON.stringify({ name: 'vrc-dryrun-test' })
       );
       const profile = await detectProject(tmpDir);
-      const diffs = await versionrcTask.dryRun(tmpDir, profile);
+      const diffs = await run(versionrcTask.dryRun(tmpDir, profile));
       expect(diffs.length).toBe(1);
       expect(diffs[0].filepath).toBe('.versionrc.json');
       expect(diffs[0].before).toBeNull();
@@ -494,7 +495,7 @@ describe('versionrcTask', () => {
         JSON.stringify({ name: 'apply-test' })
       );
       const profile = await detectProject(tmpDir);
-      await versionrcTask.apply(tmpDir, profile);
+      await run(versionrcTask.apply(tmpDir, profile));
       const content = await fs.readFile(
         path.join(tmpDir, '.versionrc.json'),
         'utf-8'

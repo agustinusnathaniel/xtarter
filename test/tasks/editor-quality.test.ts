@@ -11,6 +11,8 @@ import {
 } from '@xtarterize/tasks';
 import { describe, expect } from 'vite-plus/test';
 
+import { run } from '../helpers/run.js';
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const fixtures = path.resolve(__dirname, '../fixtures');
 
@@ -31,9 +33,8 @@ describe('knipTask', () => {
     const profile = await detectProject(
       path.join(fixtures, 'react-vite-tailwind')
     );
-    const status = await knipTask.check(
-      path.join(fixtures, 'react-vite-tailwind'),
-      profile
+    const status = await run(
+      knipTask.check(path.join(fixtures, 'react-vite-tailwind'), profile)
     );
     expect(status).toBe('new');
   });
@@ -51,9 +52,8 @@ describe('vscodeTask', () => {
     const profile = await detectProject(
       path.join(fixtures, 'react-vite-tailwind')
     );
-    const diffs = await vscodeTask.dryRun(
-      path.join(fixtures, 'react-vite-tailwind'),
-      profile
+    const diffs = await run(
+      vscodeTask.dryRun(path.join(fixtures, 'react-vite-tailwind'), profile)
     );
     expect(diffs.length).toBe(2);
     expect(diffs.some((d) => d.filepath.includes('settings.json'))).toBe(true);
@@ -66,9 +66,8 @@ describe('vscodeTask', () => {
     const profile = await detectProject(
       path.join(fixtures, 'react-vite-tailwind')
     );
-    const diffs = await vscodeTask.dryRun(
-      path.join(fixtures, 'react-vite-tailwind'),
-      profile
+    const diffs = await run(
+      vscodeTask.dryRun(path.join(fixtures, 'react-vite-tailwind'), profile)
     );
     const settings = JSON.parse(
       diffs.find((d) => d.filepath.includes('settings.json'))?.after ?? '{}'
@@ -88,9 +87,8 @@ describe('vscodeTask', () => {
     const profile = await detectProject(
       path.join(fixtures, 'react-vite-tailwind')
     );
-    const diffs = await vscodeTask.dryRun(
-      path.join(fixtures, 'react-vite-tailwind'),
-      profile
+    const diffs = await run(
+      vscodeTask.dryRun(path.join(fixtures, 'react-vite-tailwind'), profile)
     );
     const settings = diffs.find((d) => d.filepath.includes('settings.json'));
     const extensions = diffs.find((d) =>
@@ -166,7 +164,7 @@ describe('vscodeTask', () => {
     );
 
     const profile = await detectProject(tmpDir);
-    const diffs = await vscodeTask.dryRun(tmpDir, profile);
+    const diffs = await run(vscodeTask.dryRun(tmpDir, profile));
     const extDiff = diffs.find((d) => d.filepath.includes('extensions.json'));
     const result = JSON.parse(extDiff?.after ?? '{}');
 
@@ -186,7 +184,7 @@ describe('vscodeTask', () => {
     await fs.mkdir(path.join(tmpDir, '.vscode'));
 
     const profile = await detectProject(tmpDir);
-    const settingsDiffs = await vscodeTask.dryRun(tmpDir, profile);
+    const settingsDiffs = await run(vscodeTask.dryRun(tmpDir, profile));
     const settingsAfter = JSON.parse(
       settingsDiffs.find((d) => d.filepath.includes('settings.json'))?.after ??
         '{}'
@@ -205,7 +203,7 @@ describe('vscodeTask', () => {
       JSON.stringify(extAfter)
     );
 
-    const status = await vscodeTask.check(tmpDir, profile);
+    const status = await run(vscodeTask.check(tmpDir, profile));
     expect(status).toBe('skip');
 
     await fs.rm(tmpDir, { recursive: true });
@@ -223,7 +221,7 @@ describe('vscodeTask', () => {
       })
     );
     const profile = await detectProject(tmpDir);
-    await vscodeTask.apply(tmpDir, profile);
+    await run(vscodeTask.apply(tmpDir, profile));
     const settingsPath = path.join(tmpDir, '.vscode', 'settings.json');
     const exists = await fs
       .access(settingsPath)
@@ -246,9 +244,8 @@ describe('agentsMdTask', () => {
     const profile = await detectProject(
       path.join(fixtures, 'react-vite-tailwind')
     );
-    const status = await agentsMdTask.check(
-      path.join(fixtures, 'react-vite-tailwind'),
-      profile
+    const status = await run(
+      agentsMdTask.check(path.join(fixtures, 'react-vite-tailwind'), profile)
     );
     expect(status).toBe('new');
   });
@@ -257,9 +254,8 @@ describe('agentsMdTask', () => {
     const profile = await detectProject(
       path.join(fixtures, 'react-vite-tailwind')
     );
-    const [diff] = await agentsMdTask.dryRun(
-      path.join(fixtures, 'react-vite-tailwind'),
-      profile
+    const [diff] = await run(
+      agentsMdTask.dryRun(path.join(fixtures, 'react-vite-tailwind'), profile)
     );
 
     expect(diff.after).toContain('## Commands');

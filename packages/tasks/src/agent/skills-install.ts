@@ -3,11 +3,13 @@ import type { ProjectProfile } from '@xtarterize/core';
 import {
   collectDependencyVersions,
   fileExists,
+  ProcessRunner,
   readPackageJson,
   resolvePath,
   TaskError,
+  toTaskEffect,
 } from '@xtarterize/core';
-import { x } from 'tinyexec';
+import { Duration, Effect } from 'effect';
 
 import { getSkillsToInstall, type SkillEntry } from '@/agent/catalog.js';
 import { defineTask } from '@/factory/define-task.js';
@@ -107,30 +109,47 @@ export const skillsInstallTask = defineTask({
         return missing.length === total ? 'new' : 'patch';
       },
       kind: 'action',
-      async run(cwd, profile) {
-        const { missing } = await resolveMissingSkills(cwd, profile);
-        const grouped = groupBySource(missing);
-        for (const [source, skillNames] of grouped) {
-          const args = [
-            '--yes',
-            'skills@latest',
-            'add',
-            source,
-            ...skillNames.flatMap((s) => ['--skill', s]),
-            '-y',
-          ];
-          const result = await x('npx', args, {
-            nodeOptions: { cwd, stdio: 'inherit' },
-            timeout: 60_000,
-          });
-          if (result.exitCode !== 0) {
-            throw new TaskError({
-              message: `Failed to install skills from ${source}: ${skillNames.join(', ')}`,
-              taskId: 'skillsInstallTask.run',
-            });
+      run: (cwd, profile) =>
+        Effect.gen(function* () {
+          const { missing } = yield* toTaskEffect(
+            'skillsInstallTask.run',
+            'resolveMissingSkills',
+            () => resolveMissingSkills(cwd, profile)
+          );
+          const runner = yield* ProcessRunner;
+          const grouped = groupBySource(missing);
+          for (const [source, skillNames] of grouped) {
+            const args = [
+              '--yes',
+              'skills@latest',
+              'add',
+              source,
+              ...skillNames.flatMap((s) => ['--skill', s]),
+              '-y',
+            ];
+            const result = yield* Effect.mapError(
+              runner.run('npx', args, {
+                cwd,
+                stdio: 'inherit',
+                timeout: Duration.millis(60_000),
+              }),
+              (cause) =>
+                new TaskError({
+                  cause: cause.cause ?? cause,
+                  message: cause.message,
+                  taskId: 'skillsInstallTask.run',
+                })
+            );
+            if (result.exitCode !== 0) {
+              return yield* Effect.fail(
+                new TaskError({
+                  message: `Failed to install skills from ${source}: ${skillNames.join(', ')}`,
+                  taskId: 'skillsInstallTask.run',
+                })
+              );
+            }
           }
-        }
-      },
+        }),
     },
   ],
   applicable: (profile) => profile.typescript,

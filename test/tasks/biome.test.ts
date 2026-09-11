@@ -6,6 +6,8 @@ import { detectProject } from '@xtarterize/core';
 import { biomeTask, oxfmtTask, oxlintTask } from '@xtarterize/tasks';
 import { describe, expect } from 'vite-plus/test';
 
+import { run } from '../helpers/run.js';
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const fixtures = path.resolve(__dirname, '../fixtures');
 
@@ -102,9 +104,8 @@ describe('biomeTask', () => {
     const profile = await detectProject(
       path.join(fixtures, 'react-vite-tailwind')
     );
-    const status = await biomeTask.check(
-      path.join(fixtures, 'react-vite-tailwind'),
-      profile
+    const status = await run(
+      biomeTask.check(path.join(fixtures, 'react-vite-tailwind'), profile)
     );
     expect(status).toBe('new');
   });
@@ -113,9 +114,8 @@ describe('biomeTask', () => {
     const profile = await detectProject(
       path.join(fixtures, 'react-vite-tailwind')
     );
-    const diffs = await biomeTask.dryRun(
-      path.join(fixtures, 'react-vite-tailwind'),
-      profile
+    const diffs = await run(
+      biomeTask.dryRun(path.join(fixtures, 'react-vite-tailwind'), profile)
     );
     expect(diffs.length).toBeGreaterThan(0);
     expect(diffs[0].filepath).toBe('biome.json');
@@ -126,9 +126,8 @@ describe('biomeTask', () => {
     const profile = await detectProject(
       path.join(fixtures, 'react-vite-tailwind')
     );
-    const diffs = await biomeTask.dryRun(
-      path.join(fixtures, 'react-vite-tailwind'),
-      profile
+    const diffs = await run(
+      biomeTask.dryRun(path.join(fixtures, 'react-vite-tailwind'), profile)
     );
     const config = JSON.parse(diffs[0].after ?? '{}');
     expect(config.css?.parser?.tailwindDirectives).toBe(true);
@@ -138,9 +137,8 @@ describe('biomeTask', () => {
     const profile = await detectProject(
       path.join(fixtures, 'react-vite-no-styling')
     );
-    const diffs = await biomeTask.dryRun(
-      path.join(fixtures, 'react-vite-no-styling'),
-      profile
+    const diffs = await run(
+      biomeTask.dryRun(path.join(fixtures, 'react-vite-no-styling'), profile)
     );
     const config = JSON.parse(diffs[0].after ?? '{}');
     expect(config.css).toBeUndefined();
@@ -216,7 +214,7 @@ describe('oxlintTask', () => {
     );
 
     const profile = await detectProject(tmpDir);
-    const diffs = await oxlintTask.dryRun(tmpDir, profile);
+    const diffs = await run(oxlintTask.dryRun(tmpDir, profile));
 
     expect(diffs.length).toBeGreaterThan(0);
     expect(diffs[0].filepath).toBe('oxlint.config.ts');
@@ -241,7 +239,7 @@ describe('oxfmtTask', () => {
     );
 
     const profile = await detectProject(tmpDir);
-    const diffs = await oxfmtTask.dryRun(tmpDir, profile);
+    const diffs = await run(oxfmtTask.dryRun(tmpDir, profile));
 
     expect(diffs.length).toBeGreaterThan(0);
     expect(diffs[0].filepath).toBe('oxfmt.config.ts');

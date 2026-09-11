@@ -5,6 +5,8 @@ import { detectProject } from '@xtarterize/core';
 import { packageScriptsTask } from '@xtarterize/tasks';
 import { describe, expect } from 'vite-plus/test';
 
+import { run } from '../helpers/run.js';
+
 describe('packageScriptsTask', () => {
   describe('edge cases', () => {
     test('handles empty scripts object', async () => {
@@ -27,8 +29,8 @@ describe('packageScriptsTask', () => {
       );
 
       const profile = await detectProject(tmpDir);
-      const status = await packageScriptsTask.check(tmpDir, profile);
-      const diffs = await packageScriptsTask.dryRun(tmpDir, profile);
+      const status = await run(packageScriptsTask.check(tmpDir, profile));
+      const diffs = await run(packageScriptsTask.dryRun(tmpDir, profile));
       const pkgDiff = diffs.find((d) => d.filepath === 'package.json');
 
       expect(status).toBe('new');
@@ -61,7 +63,7 @@ describe('packageScriptsTask', () => {
       );
 
       const profile = await detectProject(tmpDir);
-      const diffs = await packageScriptsTask.dryRun(tmpDir, profile);
+      const diffs = await run(packageScriptsTask.dryRun(tmpDir, profile));
       const pkgDiff = diffs.find((d) => d.filepath === 'package.json');
 
       expect(pkgDiff?.after).toContain('"biome"');
@@ -92,7 +94,7 @@ describe('packageScriptsTask', () => {
       );
 
       const profile = await detectProject(tmpDir);
-      const diffs = await packageScriptsTask.dryRun(tmpDir, profile);
+      const diffs = await run(packageScriptsTask.dryRun(tmpDir, profile));
       const pkgDiff = diffs.find((d) => d.filepath === 'package.json');
 
       expect(pkgDiff?.after).not.toContain('"biome"');
@@ -123,7 +125,7 @@ describe('packageScriptsTask', () => {
       );
 
       const profile = await detectProject(tmpDir);
-      const diffs = await packageScriptsTask.dryRun(tmpDir, profile);
+      const diffs = await run(packageScriptsTask.dryRun(tmpDir, profile));
       const pkgDiff = diffs.find((d) => d.filepath === 'package.json');
 
       expect(pkgDiff?.after).toContain('"biome"');
@@ -157,7 +159,7 @@ describe('packageScriptsTask', () => {
       );
 
       const profile = await detectProject(tmpDir);
-      const diffs = await packageScriptsTask.dryRun(tmpDir, profile);
+      const diffs = await run(packageScriptsTask.dryRun(tmpDir, profile));
       const pkgDiff = diffs.find((d) => d.filepath === 'package.json');
 
       expect(pkgDiff?.after).toContain('"typecheck"');
@@ -188,7 +190,7 @@ describe('packageScriptsTask', () => {
       );
 
       const profile = await detectProject(tmpDir);
-      const diffs = await packageScriptsTask.dryRun(tmpDir, profile);
+      const diffs = await run(packageScriptsTask.dryRun(tmpDir, profile));
       const pkgDiff = diffs.find((d) => d.filepath === 'package.json');
 
       expect(pkgDiff?.after).not.toContain('"typecheck"');
@@ -217,7 +219,7 @@ describe('packageScriptsTask', () => {
       );
 
       const profile = await detectProject(tmpDir);
-      const diffs = await packageScriptsTask.dryRun(tmpDir, profile);
+      const diffs = await run(packageScriptsTask.dryRun(tmpDir, profile));
       const pkgDiff = diffs.find((d) => d.filepath === 'package.json');
 
       expect(pkgDiff?.after).not.toContain('check:turbo');
@@ -249,7 +251,7 @@ describe('packageScriptsTask', () => {
         );
 
         const profile = await detectProject(tmpDir);
-        const diffs = await packageScriptsTask.dryRun(tmpDir, profile);
+        const diffs = await run(packageScriptsTask.dryRun(tmpDir, profile));
         const pkgDiff = diffs.find((d) => d.filepath === 'package.json');
 
         expect(pkgDiff?.after).toContain('"check:turbo"');
@@ -281,7 +283,7 @@ describe('packageScriptsTask', () => {
         );
 
         const profile = await detectProject(tmpDir);
-        const diffs = await packageScriptsTask.dryRun(tmpDir, profile);
+        const diffs = await run(packageScriptsTask.dryRun(tmpDir, profile));
         const pkgDiff = diffs.find((d) => d.filepath === 'package.json');
 
         expect(pkgDiff?.after).toContain('"check:turbo"');
@@ -313,8 +315,8 @@ describe('packageScriptsTask', () => {
         );
 
         const profile = await detectProject(tmpDir);
-        const status = await packageScriptsTask.check(tmpDir, profile);
-        const diffs = await packageScriptsTask.dryRun(tmpDir, profile);
+        const status = await run(packageScriptsTask.check(tmpDir, profile));
+        const diffs = await run(packageScriptsTask.dryRun(tmpDir, profile));
 
         expect(status).toBe('new');
         expect(diffs.find((d) => d.filepath === 'package.json')).toBeDefined();
@@ -340,7 +342,7 @@ describe('packageScriptsTask', () => {
       );
 
       const profile = await detectProject(tmpDir);
-      const diffs = await packageScriptsTask.dryRun(tmpDir, profile);
+      const diffs = await run(packageScriptsTask.dryRun(tmpDir, profile));
       const pkgDiff = diffs.find((d) => d.filepath === 'package.json');
 
       expect(pkgDiff?.after).toContain('"upgrade"');
@@ -365,7 +367,7 @@ describe('packageScriptsTask', () => {
       );
 
       const profile = await detectProject(tmpDir);
-      const diffs = await packageScriptsTask.dryRun(tmpDir, profile);
+      const diffs = await run(packageScriptsTask.dryRun(tmpDir, profile));
       const pkgDiff = diffs.find((d) => d.filepath === 'package.json');
 
       expect(pkgDiff?.after).toContain('"upgrade"');
@@ -398,8 +400,8 @@ describe('packageScriptsTask', () => {
       );
 
       const profile = await detectProject(tmpDir);
-      const status = await packageScriptsTask.check(tmpDir, profile);
-      const diffs = await packageScriptsTask.dryRun(tmpDir, profile);
+      const status = await run(packageScriptsTask.check(tmpDir, profile));
+      const diffs = await run(packageScriptsTask.dryRun(tmpDir, profile));
       const pkgDiff = diffs.find((d) => d.filepath === 'package.json');
 
       expect(status).toBe('patch');
@@ -431,7 +433,7 @@ describe('packageScriptsTask', () => {
       );
 
       const profile = await detectProject(tmpDir);
-      const diffs = await packageScriptsTask.dryRun(tmpDir, profile);
+      const diffs = await run(packageScriptsTask.dryRun(tmpDir, profile));
       const pkgDiff = diffs.find((d) => d.filepath === 'package.json');
 
       expect(pkgDiff?.after).toContain('"typecheck"');
@@ -463,7 +465,7 @@ describe('packageScriptsTask', () => {
       );
 
       const profile = await detectProject(tmpDir);
-      const diffs = await packageScriptsTask.dryRun(tmpDir, profile);
+      const diffs = await run(packageScriptsTask.dryRun(tmpDir, profile));
       const pkgDiff = diffs.find((d) => d.filepath === 'package.json');
 
       expect(pkgDiff?.after).toContain('"biome":');
@@ -496,8 +498,8 @@ describe('packageScriptsTask', () => {
       );
 
       const profile = await detectProject(tmpDir);
-      const status = await packageScriptsTask.check(tmpDir, profile);
-      const diffs = await packageScriptsTask.dryRun(tmpDir, profile);
+      const status = await run(packageScriptsTask.check(tmpDir, profile));
+      const diffs = await run(packageScriptsTask.dryRun(tmpDir, profile));
       const pkgDiff = diffs.find((d) => d.filepath === 'package.json');
 
       expect(status).toBe('patch');
@@ -528,8 +530,8 @@ describe('packageScriptsTask', () => {
       );
 
       const profile = await detectProject(tmpDir);
-      const status = await packageScriptsTask.check(tmpDir, profile);
-      const diffs = await packageScriptsTask.dryRun(tmpDir, profile);
+      const status = await run(packageScriptsTask.check(tmpDir, profile));
+      const diffs = await run(packageScriptsTask.dryRun(tmpDir, profile));
       const pkgDiff = diffs.find((d) => d.filepath === 'package.json');
 
       expect(status).toBe('patch');

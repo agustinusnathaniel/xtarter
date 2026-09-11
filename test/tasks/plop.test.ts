@@ -6,6 +6,8 @@ import { detectProject } from '@xtarterize/core';
 import { packageScriptsTask, plopTask } from '@xtarterize/tasks';
 import { describe, expect } from 'vite-plus/test';
 
+import { run } from '../helpers/run.js';
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const fixtures = path.resolve(__dirname, '../fixtures');
 
@@ -21,9 +23,8 @@ describe('plopTask', () => {
     const profile = await detectProject(
       path.join(fixtures, 'react-vite-tailwind')
     );
-    const status = await plopTask.check(
-      path.join(fixtures, 'react-vite-tailwind'),
-      profile
+    const status = await run(
+      plopTask.check(path.join(fixtures, 'react-vite-tailwind'), profile)
     );
     expect(status).toBe('new');
   });
@@ -32,9 +33,8 @@ describe('plopTask', () => {
     const profile = await detectProject(
       path.join(fixtures, 'react-vite-tailwind')
     );
-    const diffs = await plopTask.dryRun(
-      path.join(fixtures, 'react-vite-tailwind'),
-      profile
+    const diffs = await run(
+      plopTask.dryRun(path.join(fixtures, 'react-vite-tailwind'), profile)
     );
 
     expect(diffs[0].after).toContain("plop.setGenerator('component'");
@@ -61,7 +61,7 @@ describe('plopTask', () => {
     );
 
     const profile = await detectProject(tmpDir);
-    const diffs = await packageScriptsTask.dryRun(tmpDir, profile);
+    const diffs = await run(packageScriptsTask.dryRun(tmpDir, profile));
     const pkgDiff = diffs.find((d) => d.filepath === 'package.json');
 
     expect(pkgDiff?.after).toContain('"lint": "vp lint"');
@@ -91,7 +91,7 @@ describe('plopTask', () => {
     );
 
     const profile = await detectProject(tmpDir);
-    const diffs = await packageScriptsTask.dryRun(tmpDir, profile);
+    const diffs = await run(packageScriptsTask.dryRun(tmpDir, profile));
     const pkgDiff = diffs.find((d) => d.filepath === 'package.json');
 
     expect(pkgDiff?.after).toContain('"biome": "biome check ."');
@@ -121,7 +121,7 @@ describe('plopTask', () => {
     );
 
     const profile = await detectProject(tmpDir);
-    const diffs = await packageScriptsTask.dryRun(tmpDir, profile);
+    const diffs = await run(packageScriptsTask.dryRun(tmpDir, profile));
     const pkgDiff = diffs.find((d) => d.filepath === 'package.json');
 
     expect(pkgDiff?.after).not.toContain('"biome"');
@@ -152,7 +152,7 @@ describe('plopTask', () => {
     );
 
     const profile = await detectProject(tmpDir);
-    const diffs = await packageScriptsTask.dryRun(tmpDir, profile);
+    const diffs = await run(packageScriptsTask.dryRun(tmpDir, profile));
     const pkgDiff = diffs.find((d) => d.filepath === 'package.json');
 
     expect(pkgDiff?.after).toContain('"lint": "oxlint --import-plugin"');

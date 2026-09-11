@@ -12,6 +12,8 @@ import {
 } from '@xtarterize/tasks';
 import { describe, expect } from 'vite-plus/test';
 
+import { run } from '../helpers/run.js';
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const fixtures = path.resolve(__dirname, '../fixtures');
 
@@ -27,9 +29,8 @@ describe('commitlintTask', () => {
     const profile = await detectProject(
       path.join(fixtures, 'react-vite-tailwind')
     );
-    const status = await commitlintTask.check(
-      path.join(fixtures, 'react-vite-tailwind'),
-      profile
+    const status = await run(
+      commitlintTask.check(path.join(fixtures, 'react-vite-tailwind'), profile)
     );
     expect(status).toBe('new');
   });
@@ -38,9 +39,8 @@ describe('commitlintTask', () => {
     const profile = await detectProject(
       path.join(fixtures, 'react-vite-tailwind')
     );
-    const diffs = await commitlintTask.dryRun(
-      path.join(fixtures, 'react-vite-tailwind'),
-      profile
+    const diffs = await run(
+      commitlintTask.dryRun(path.join(fixtures, 'react-vite-tailwind'), profile)
     );
     expect(diffs.length).toBeGreaterThan(0);
     expect(diffs[0].before).toBeNull();
@@ -59,9 +59,8 @@ describe('czgTask', () => {
     const profile = await detectProject(
       path.join(fixtures, 'react-vite-tailwind')
     );
-    const status = await czgTask.check(
-      path.join(fixtures, 'react-vite-tailwind'),
-      profile
+    const status = await run(
+      czgTask.check(path.join(fixtures, 'react-vite-tailwind'), profile)
     );
     expect(status).toBe('new');
   });
@@ -70,9 +69,8 @@ describe('czgTask', () => {
     const profile = await detectProject(
       path.join(fixtures, 'react-vite-tailwind')
     );
-    const diffs = await czgTask.dryRun(
-      path.join(fixtures, 'react-vite-tailwind'),
-      profile
+    const diffs = await run(
+      czgTask.dryRun(path.join(fixtures, 'react-vite-tailwind'), profile)
     );
     const pkgDiff = diffs.find((d) => d.filepath === 'package.json');
     expect(pkgDiff).toBeDefined();
@@ -92,9 +90,8 @@ describe('catVersionTask', () => {
     const profile = await detectProject(
       path.join(fixtures, 'react-vite-tailwind')
     );
-    const status = await catVersionTask.check(
-      path.join(fixtures, 'react-vite-tailwind'),
-      profile
+    const status = await run(
+      catVersionTask.check(path.join(fixtures, 'react-vite-tailwind'), profile)
     );
     expect(status).toBe('new');
   });
@@ -103,9 +100,8 @@ describe('catVersionTask', () => {
     const profile = await detectProject(
       path.join(fixtures, 'react-vite-tailwind')
     );
-    const diffs = await catVersionTask.dryRun(
-      path.join(fixtures, 'react-vite-tailwind'),
-      profile
+    const diffs = await run(
+      catVersionTask.dryRun(path.join(fixtures, 'react-vite-tailwind'), profile)
     );
     const versionrcDiff = diffs.find((d) => d.filepath === '.versionrc');
     expect(versionrcDiff).toBeDefined();
@@ -134,8 +130,8 @@ describe('catVersionTask', () => {
     );
 
     const profile = await detectProject(tmpDir);
-    const status = await catVersionTask.check(tmpDir, profile);
-    const diffs = await catVersionTask.dryRun(tmpDir, profile);
+    const status = await run(catVersionTask.check(tmpDir, profile));
+    const diffs = await run(catVersionTask.dryRun(tmpDir, profile));
     const pkgDiff = diffs.find((d) => d.filepath === 'package.json');
 
     expect(status).toBe('patch');
@@ -202,9 +198,11 @@ describe('releaseWorkflowTask', () => {
     const profile = await detectProject(
       path.join(fixtures, 'react-vite-tailwind')
     );
-    const status = await releaseWorkflowTask.check(
-      path.join(fixtures, 'react-vite-tailwind'),
-      profile
+    const status = await run(
+      releaseWorkflowTask.check(
+        path.join(fixtures, 'react-vite-tailwind'),
+        profile
+      )
     );
     expect(status).toBe('new');
   });
@@ -229,7 +227,7 @@ describe('releaseWorkflowTask', () => {
       rendered
     );
 
-    const status = await releaseWorkflowTask.check(tmpDir, profile);
+    const status = await run(releaseWorkflowTask.check(tmpDir, profile));
     expect(status).toBe('skip');
   });
 
@@ -274,7 +272,7 @@ jobs:
     );
 
     const profile = await detectProject(tmpDir);
-    const status = await releaseWorkflowTask.check(tmpDir, profile);
+    const status = await run(releaseWorkflowTask.check(tmpDir, profile));
     expect(status).toBe('patch');
   });
 
@@ -315,7 +313,7 @@ jobs:
     );
 
     const profile = await detectProject(tmpDir);
-    const status = await releaseWorkflowTask.check(tmpDir, profile);
+    const status = await run(releaseWorkflowTask.check(tmpDir, profile));
     expect(status).toBe('conflict');
   });
 });

@@ -3,23 +3,8 @@ import {
   ensureDir,
   readPackageJson,
   resolvePath,
-  TaskError,
   writeFile,
 } from '@xtarterize/core';
-
-export function wrapTask<A>(
-  taskId: string,
-  method: string,
-  fn: () => Promise<A>
-): Promise<A> {
-  return fn().catch((cause) => {
-    throw new TaskError({
-      cause,
-      message: `${method} failed: ${String(cause)}`,
-      taskId,
-    });
-  });
-}
 
 /**
  * Check if required dependencies are missing from package.json.

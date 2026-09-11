@@ -6,6 +6,8 @@ import { detectProject } from '@xtarterize/core';
 import { oxfmtTask, oxlintTask } from '@xtarterize/tasks';
 import { describe, expect } from 'vite-plus/test';
 
+import { run } from '../helpers/run.js';
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const fixtures = path.resolve(__dirname, '../fixtures');
 
@@ -13,7 +15,7 @@ describe('oxlint config validation', () => {
   test('generated oxlint.config.ts has expected imports and rules', async () => {
     const testDir = path.join(fixtures, 'vite-plus-no-lint');
     const profile = await detectProject(testDir);
-    const diffs = await oxlintTask.dryRun(testDir, profile);
+    const diffs = await run(oxlintTask.dryRun(testDir, profile));
     const configFile = diffs.find((d) => d.filepath === 'oxlint.config.ts');
     if (!configFile) {
       throw new Error('Expected oxlint.config.ts diff to exist');
@@ -39,7 +41,7 @@ describe('oxlint config validation', () => {
   test('generated oxlint.config.json preserves existing settings', async () => {
     const testDir = path.join(fixtures, 'vite-plus-oxlint');
     const profile = await detectProject(testDir);
-    const diffs = await oxlintTask.dryRun(testDir, profile);
+    const diffs = await run(oxlintTask.dryRun(testDir, profile));
     const configFile = diffs.find((d) => d.filepath === 'oxlint.config.json');
     if (!configFile) {
       throw new Error('Expected oxlint.config.json diff to exist');
@@ -65,7 +67,7 @@ describe('oxlint config validation', () => {
   test('includes ultracite react preset when framework is react', async () => {
     const testDir = path.join(fixtures, 'vite-plus-no-lint');
     const profile = await detectProject(testDir);
-    const diffs = await oxlintTask.dryRun(testDir, profile);
+    const diffs = await run(oxlintTask.dryRun(testDir, profile));
     const configFile = diffs.find((d) => d.filepath === 'oxlint.config.ts');
 
     if (!configFile) {
@@ -83,7 +85,7 @@ describe('oxfmt config validation', () => {
   test('generated oxfmt.config.ts has expected imports and options', async () => {
     const testDir = path.join(fixtures, 'vite-plus-no-lint');
     const profile = await detectProject(testDir);
-    const diffs = await oxfmtTask.dryRun(testDir, profile);
+    const diffs = await run(oxfmtTask.dryRun(testDir, profile));
     const configFile = diffs.find((d) => d.filepath === 'oxfmt.config.ts');
 
     if (!configFile) {
@@ -116,7 +118,9 @@ describe('oxfmt config validation', () => {
       );
 
       const profile = await detectProject(tmpDir);
-      await expect(oxfmtTask.check(tmpDir, profile)).resolves.toBe('conflict');
+      await expect(run(oxfmtTask.check(tmpDir, profile))).resolves.toBe(
+        'conflict'
+      );
     } finally {
       await fs.rm(tmpDir, { force: true, recursive: true });
     }

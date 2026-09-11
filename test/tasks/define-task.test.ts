@@ -9,7 +9,7 @@ import {
   defineTask,
   type TargetPolicyInput,
 } from '../../packages/tasks/src/factory/define-task.js';
-import { run as runEffect } from '../helpers/run.js';
+import { run } from '../helpers/run.js';
 
 const withTempDir = async (
   run: (cwd: string) => Promise<void>
@@ -52,8 +52,8 @@ describe('defineTask status projection', () => {
       });
       const profile = await detectProject(cwd);
 
-      expect(await task.check(cwd, profile)).toBe('new');
-      const created = await task.dryRun(cwd, profile);
+      expect(await run(task.check(cwd, profile))).toBe('new');
+      const created = await run(task.dryRun(cwd, profile));
       expect(created).toHaveLength(1);
       expect(created[0]).toEqual({
         after: '# Agents\n',
@@ -62,15 +62,15 @@ describe('defineTask status projection', () => {
       });
 
       await writeFile(cwd, 'AGENTS.md', '# Different\n');
-      expect(await task.check(cwd, profile)).toBe('conflict');
-      const changed = await task.dryRun(cwd, profile);
+      expect(await run(task.check(cwd, profile))).toBe('conflict');
+      const changed = await run(task.dryRun(cwd, profile));
       expect(changed).toHaveLength(1);
       expect(changed[0].before).toBe('# Different\n');
       expect(changed[0].after).toBe('# Agents\n');
 
       await writeFile(cwd, 'AGENTS.md', '# Agents\n');
-      expect(await task.check(cwd, profile)).toBe('skip');
-      expect(await task.dryRun(cwd, profile)).toEqual([]);
+      expect(await run(task.check(cwd, profile))).toBe('skip');
+      expect(await run(task.dryRun(cwd, profile))).toEqual([]);
     });
   });
 
@@ -88,15 +88,15 @@ describe('defineTask status projection', () => {
       });
       const profile = await detectProject(cwd);
 
-      expect(await task.check(cwd, profile)).toBe('new');
-      const created = await task.dryRun(cwd, profile);
+      expect(await run(task.check(cwd, profile))).toBe('new');
+      const created = await run(task.dryRun(cwd, profile));
       expect(created).toHaveLength(1);
       expect(created[0].filepath).toBe('tsconfig.json');
       expect(created[0].before).toBeNull();
 
       await writeFile(cwd, 'tsconfig.json', '{\n  "compilerOptions": {}\n}\n');
-      expect(await task.check(cwd, profile)).toBe('patch');
-      const changed = await task.dryRun(cwd, profile);
+      expect(await run(task.check(cwd, profile))).toBe('patch');
+      const changed = await run(task.dryRun(cwd, profile));
       expect(changed).toHaveLength(1);
       expect(changed[0].after).toContain('"strict": true');
 
@@ -105,8 +105,8 @@ describe('defineTask status projection', () => {
         'tsconfig.json',
         '{\n  "compilerOptions": { "strict": true }\n}\n'
       );
-      expect(await task.check(cwd, profile)).toBe('skip');
-      expect(await task.dryRun(cwd, profile)).toEqual([]);
+      expect(await run(task.check(cwd, profile))).toBe('skip');
+      expect(await run(task.dryRun(cwd, profile))).toEqual([]);
     });
   });
 
@@ -123,14 +123,14 @@ describe('defineTask status projection', () => {
       });
       const profile = await detectProject(cwd);
 
-      expect(await task.check(cwd, profile)).toBe('new');
-      const created = await task.dryRun(cwd, profile);
+      expect(await run(task.check(cwd, profile))).toBe('new');
+      const created = await run(task.dryRun(cwd, profile));
       expect(created).toHaveLength(1);
       expect(created[0].before).toBeNull();
 
       await writeFile(cwd, 'package.json', '{\n  "name": "example"\n}\n');
-      expect(await task.check(cwd, profile)).toBe('patch');
-      const changed = await task.dryRun(cwd, profile);
+      expect(await run(task.check(cwd, profile))).toBe('patch');
+      const changed = await run(task.dryRun(cwd, profile));
       expect(changed).toHaveLength(1);
       expect(changed[0].after).toContain('"test": "vitest run"');
 
@@ -139,8 +139,8 @@ describe('defineTask status projection', () => {
         'package.json',
         '{\n  "scripts": {\n    "test": "vitest run"\n  }\n}\n'
       );
-      expect(await task.check(cwd, profile)).toBe('skip');
-      expect(await task.dryRun(cwd, profile)).toEqual([]);
+      expect(await run(task.check(cwd, profile))).toBe('skip');
+      expect(await run(task.dryRun(cwd, profile))).toEqual([]);
     });
   });
 
@@ -159,16 +159,16 @@ describe('defineTask status projection', () => {
       });
       const profile = await detectProject(cwd);
 
-      expect(await task.check(cwd, profile)).toBe('new');
-      expect(await task.dryRun(cwd, profile)).toEqual([]);
+      expect(await run(task.check(cwd, profile))).toBe('new');
+      expect(await run(task.dryRun(cwd, profile))).toEqual([]);
 
       await writeFile(
         cwd,
         'vite.config.ts',
         'export default { plugins: [] }\n'
       );
-      expect(await task.check(cwd, profile)).toBe('patch');
-      const changed = await task.dryRun(cwd, profile);
+      expect(await run(task.check(cwd, profile))).toBe('patch');
+      const changed = await run(task.dryRun(cwd, profile));
       expect(changed).toHaveLength(1);
       expect(changed[0].filepath).toBe('vite.config.ts');
 
@@ -177,8 +177,8 @@ describe('defineTask status projection', () => {
         'vite.config.ts',
         "export default { plugins: ['plugin'] }\n"
       );
-      expect(await task.check(cwd, profile)).toBe('skip');
-      expect(await task.dryRun(cwd, profile)).toEqual([]);
+      expect(await run(task.check(cwd, profile))).toBe('skip');
+      expect(await run(task.dryRun(cwd, profile))).toEqual([]);
     });
   });
 
@@ -196,8 +196,8 @@ describe('defineTask status projection', () => {
       });
       const profile = await detectProject(cwd);
 
-      expect(await task.check(cwd, profile)).toBe('patch');
-      expect(await task.dryRun(cwd, profile)).toEqual([]);
+      expect(await run(task.check(cwd, profile))).toBe('patch');
+      expect(await run(task.dryRun(cwd, profile))).toEqual([]);
     });
   });
 });
@@ -227,8 +227,8 @@ describe('defineTask policy hook', () => {
       });
       const profile = await detectProject(cwd);
 
-      expect(await task.check(cwd, profile)).toBe('conflict');
-      const diffs = await task.dryRun(cwd, profile);
+      expect(await run(task.check(cwd, profile))).toBe('conflict');
+      const diffs = await run(task.dryRun(cwd, profile));
       expect(diffs).toHaveLength(1);
       expect(seen).toHaveLength(2);
       for (const input of seen) {
@@ -257,7 +257,7 @@ describe('defineTask dependencies', () => {
       });
       const profile = await detectProject(cwd);
 
-      const deps = await task.getDeps?.(cwd, profile);
+      const deps = await run(task.getDeps(cwd, profile));
       expect(deps).toEqual([{ depName: 'acme', dev: true }]);
     });
   });
@@ -276,13 +276,13 @@ describe('defineTask dependencies', () => {
       });
       const profile = await detectProject(cwd);
 
-      const needed = await task.getDeps?.(cwd, profile);
+      const needed = await run(task.getDeps(cwd, profile));
       expect(needed).toEqual([
         { depName: 'needed-only-when-changed', dev: true },
       ]);
 
       await writeFile(cwd, 'acme.json', '{}\n');
-      const satisfied = await task.getDeps?.(cwd, profile);
+      const satisfied = await run(task.getDeps(cwd, profile));
       expect(satisfied).toEqual([]);
     });
   });
@@ -299,12 +299,12 @@ describe('defineTask dependencies', () => {
       });
       const profile = await detectProject(cwd);
 
-      expect(await task.check(cwd, profile)).toBe('patch');
-      expect(await task.dryRun(cwd, profile)).toEqual([]);
-      const deps = await task.getDeps?.(cwd, profile);
+      expect(await run(task.check(cwd, profile))).toBe('patch');
+      expect(await run(task.dryRun(cwd, profile))).toEqual([]);
+      const deps = await run(task.getDeps(cwd, profile));
       expect(deps).toEqual([{ depName: 'acme', dev: true }]);
 
-      const plan = await runEffect(planTasks({ cwd, profile, tasks: [task] }));
+      const plan = await run(planTasks({ cwd, profile, tasks: [task] }));
       expect(plan.dependencies).toEqual([{ depName: 'acme', dev: true }]);
       expect(plan.files).toEqual([]);
     });
@@ -331,8 +331,8 @@ describe('defineTask dependencies', () => {
       });
       const profile = await detectProject(cwd);
 
-      expect(await task.check(cwd, profile)).toBe('skip');
-      expect(await task.dryRun(cwd, profile)).toEqual([]);
+      expect(await run(task.check(cwd, profile))).toBe('skip');
+      expect(await run(task.dryRun(cwd, profile))).toEqual([]);
     });
   });
 
@@ -347,8 +347,8 @@ describe('defineTask dependencies', () => {
       });
       const profile = await detectProject(cwd);
 
-      expect(await task.check(cwd, profile)).toBe('new');
-      const deps = await task.getDeps?.(cwd, profile);
+      expect(await run(task.check(cwd, profile))).toBe('new');
+      const deps = await run(task.getDeps(cwd, profile));
       expect(deps).toEqual([{ depName: 'acme', dev: true }]);
     });
   });
@@ -365,8 +365,8 @@ describe('defineTask dependencies', () => {
       });
       const profile = await detectProject(cwd);
 
-      expect(await task.check(cwd, profile)).toBe('patch');
-      const deps = await task.getDeps?.(cwd, profile);
+      expect(await run(task.check(cwd, profile))).toBe('patch');
+      const deps = await run(task.getDeps(cwd, profile));
       expect(deps).toEqual([{ depName: 'acme-tool', dev: false }]);
     });
   });
@@ -393,13 +393,13 @@ describe('defineTask transform target', () => {
       });
       const profile = await detectProject(cwd);
 
-      const diffs = await task.dryRun(cwd, profile);
+      const diffs = await run(task.dryRun(cwd, profile));
       expect(diffs).toHaveLength(1);
       expect(diffs[0].filepath).toBe('vite.config.ts');
       expect(diffs[0].before).toContain('[]');
       expect(diffs[0].after).toContain("['checked']");
 
-      await task.apply(cwd, profile);
+      await run(task.apply(cwd, profile));
       await expect(readFile(cwd, 'vite.config.ts')).resolves.toContain(
         "['checked']"
       );
@@ -430,14 +430,14 @@ describe('defineTask action', () => {
       });
       const profile = await detectProject(cwd);
 
-      expect(await task.check(cwd, profile)).toBe('new');
-      expect(await task.dryRun(cwd, profile)).toEqual([]);
+      expect(await run(task.check(cwd, profile))).toBe('new');
+      expect(await run(task.dryRun(cwd, profile))).toEqual([]);
 
-      const plan = await runEffect(planTasks({ cwd, profile, tasks: [task] }));
+      const plan = await run(planTasks({ cwd, profile, tasks: [task] }));
       expect(plan.files).toEqual([]);
       expect(plan.entries[0].diffs).toEqual([]);
 
-      await task.apply(cwd, profile);
+      await run(task.apply(cwd, profile));
       expect(runs).toBe(1);
     });
   });

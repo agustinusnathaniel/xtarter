@@ -4,6 +4,8 @@ import path from 'node:path';
 import { detectProject } from '@xtarterize/core';
 import { describe, expect } from 'vite-plus/test';
 
+import { run } from '../helpers/run.js';
+
 describe('pnpm workspace root', () => {
   test('detects workspace root and handles task apply correctly', async () => {
     const tmpDir = await fs.mkdtemp(
@@ -34,14 +36,14 @@ describe('pnpm workspace root', () => {
       expect(profile.packageManager).toBe('pnpm');
 
       const { czgTask } = await import('@xtarterize/tasks');
-      const status = await czgTask.check(tmpDir, profile);
+      const status = await run(czgTask.check(tmpDir, profile));
       expect(status).toBe('patch');
 
-      const diffs = await czgTask.dryRun(tmpDir, profile);
+      const diffs = await run(czgTask.dryRun(tmpDir, profile));
       const pkgDiff = diffs.find((d) => d.filepath === 'package.json');
       expect(pkgDiff?.after).toContain('"commit": "czg"');
 
-      await czgTask.apply(tmpDir, profile);
+      await run(czgTask.apply(tmpDir, profile));
 
       const pkg = JSON.parse(
         await fs.readFile(path.join(tmpDir, 'package.json'), 'utf-8')
