@@ -45,24 +45,20 @@ export interface Prompter {
   select: <Value>(options: SelectPromptOptions<Value>) => Promise<Value | null>;
 }
 
+async function unwrapCancel<T>(answer: Promise<T | symbol>): Promise<T | null> {
+  const result = await answer;
+  return isCancel(result) ? null : result;
+}
+
 export function createClackPrompter(): Prompter {
   return {
-    async confirm({ message }) {
-      const answer = await confirm({ message });
-      return isCancel(answer) ? null : answer;
-    },
-    async groupMultiselect(options) {
-      const answer = await groupMultiselect(options);
-      return isCancel(answer) ? null : answer;
-    },
-    async multiselect(options) {
-      const answer = await multiselect(options);
-      return isCancel(answer) ? null : answer;
-    },
-    async select(options) {
-      const answer = await select(options);
-      return isCancel(answer) ? null : answer;
-    },
+    confirm: async ({ message }) => unwrapCancel(confirm({ message })),
+    groupMultiselect: async (options) =>
+      unwrapCancel(groupMultiselect(options)),
+    multiselect: async <Value>(options: MultiSelectPromptOptions<Value>) =>
+      unwrapCancel(multiselect<Value>(options)),
+    select: async <Value>(options: SelectPromptOptions<Value>) =>
+      unwrapCancel(select<Value>(options)),
   };
 }
 
@@ -92,18 +88,10 @@ export function createScriptedPrompter(
   const selects = [...(answers.selects ?? [])];
 
   return {
-    async confirm() {
-      return shiftOrNull<boolean>(confirms);
-    },
-    async groupMultiselect() {
-      return shiftOrNull<Array<string>>(groupMultiselects);
-    },
-    async multiselect<Value>() {
-      return shiftOrNull<Array<Value>>(multiselects);
-    },
-    async select<Value>() {
-      return shiftOrNull<Value>(selects);
-    },
+    confirm: async () => shiftOrNull<boolean>(confirms),
+    groupMultiselect: async () => shiftOrNull<Array<string>>(groupMultiselects),
+    multiselect: async <Value>() => shiftOrNull<Array<Value>>(multiselects),
+    select: async <Value>() => shiftOrNull<Value>(selects),
   };
 }
 

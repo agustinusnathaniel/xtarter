@@ -2,6 +2,8 @@ import type { DiffHunk, FileDiff } from '@xtarterize/core';
 import { actionTag, formatDiffHeader, pc } from '@xtarterize/core';
 import Table from 'cli-table3';
 
+import { CLI_TABLE_CHARS } from './table-chars.js';
+
 export type DisplayFormat = 'terminal' | 'json';
 
 export function displayDiffs(
@@ -28,23 +30,7 @@ function displayTerminalDiffs(diffs: Array<FileDiff>): void {
   const totalStats = computeTotalStats(diffs);
 
   const table = new Table({
-    chars: {
-      bottom: '─',
-      'bottom-left': '└',
-      'bottom-mid': '┴',
-      'bottom-right': '┘',
-      left: '│',
-      'left-mid': '├',
-      mid: '─',
-      'mid-mid': '┼',
-      middle: '│',
-      right: '│',
-      'right-mid': '┤',
-      top: '─',
-      'top-left': '┌',
-      'top-mid': '┬',
-      'top-right': '┐',
-    },
+    chars: CLI_TABLE_CHARS,
     head: [pc.bold('Action'), pc.bold('File'), pc.bold('Changes')],
     style: { border: [], head: [] },
   });
@@ -135,29 +121,14 @@ function buildJsonOutput(diffs: Array<FileDiff>, failures = 0): JsonOutput {
 }
 
 interface JsonOutput {
-  files: Array<{
-    filepath: string;
-    action: 'create' | 'modify';
-    stats?: { added: number; removed: number };
-    semantic?: {
-      added?: Record<string, string>;
-      removed?: Record<string, string>;
-      modified?: Record<string, { before: string; after: string }>;
-    };
-    hunks?: Array<{
-      header: string;
-      lines: Array<string>;
-      added: number;
-      removed: number;
-    }>;
-    before?: string;
-    after: string;
-  }>;
+  files: Array<
+    Omit<FileDiff, 'before'> & { action: 'create' | 'modify'; before?: string }
+  >;
   ok: boolean;
   summary: {
     total: number;
     failures?: number;
-    stats?: { added: number; removed: number };
+    stats?: FileDiff['stats'];
   };
 }
 

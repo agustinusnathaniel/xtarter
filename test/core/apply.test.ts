@@ -294,8 +294,7 @@ describe('planTasks', () => {
       expect(plan.dependencies).toEqual([{ depName: 'plan-dep', dev: true }]);
 
       // The task plan must not write its target file, create backups, or
-      // install dependencies. (`detectProject` may create the profile cache
-      // under .xtarterize/cache, so only the backups directory is checked.)
+      // install dependencies.
       await expect(fs.access(path.join(tmpDir, 'test.txt'))).rejects.toThrow();
       await expect(
         fs.access(path.join(tmpDir, '.xtarterize', 'backups'))

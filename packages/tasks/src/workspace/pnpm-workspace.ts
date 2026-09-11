@@ -1,4 +1,5 @@
 import type { ProjectProfile } from '@xtarterize/core';
+import { isNode, isScalar, isSeq, type Node, parseDocument } from 'yaml';
 
 import {
   defineSingleTargetTask,
@@ -7,12 +8,6 @@ import {
 
 const REQUIRED_PACKAGES = ['apps/*', 'packages/*'] as const;
 
-/** Top-level `packages:` key. Anchored so commented-out keys are ignored. */
-const PACKAGES_KEY = /^packages\s*:/;
-
-/** YAML list item, capturing its indentation and raw value. */
-const LIST_ITEM = /^(\s*)-\s+(.+)$/;
-
 type WorkspaceStatus = 'conflict' | 'patch' | 'satisfied';
 
 interface WorkspacePlan {
@@ -20,116 +15,111 @@ interface WorkspacePlan {
   status: WorkspaceStatus;
 }
 
-interface PackagesBlock {
-  entries: Set<string>;
-  indent: string;
-  insertAt: number;
-  quote: string;
+function isSatisfied(entries: Set<string>): boolean {
+  return REQUIRED_PACKAGES.every((glob) => entries.has(glob));
+}
+
+/** Normalize entries so `'./apps/*'`, `"apps/*"`, and `apps/*` compare equal. */
+function packageEntries(items: Iterable<unknown>): Set<string> {
+  const entries = new Set<string>();
+  for (const item of items) {
+    if (!isScalar(item) || typeof item.value !== 'string') {
+      continue;
+    }
+    const glob = item.value.trim();
+    entries.add(glob.startsWith('./') ? glob.slice(2).trim() : glob);
+  }
+  return entries;
 }
 
 function detectLineEnding(content: string): string {
   return content.includes('\r\n') ? '\r\n' : '\n';
 }
 
-/** Drop a trailing `# ...` comment unless it sits inside quotes. */
-function stripInlineComment(value: string): string {
-  let quote: string | null = null;
-  for (let index = 0; index < value.length; index += 1) {
-    const char = value[index];
-    if (quote !== null) {
-      if (char === quote) {
-        quote = null;
-      }
-      continue;
-    }
-    if (char === '"' || char === "'") {
-      quote = char;
-      continue;
-    }
-    if (char === '#' && (index === 0 || /\s/.test(value[index - 1]))) {
-      return value.slice(0, index);
-    }
-  }
-  return value;
+/** Offset just past the line that contains `offset`. */
+function lineEndAfter(content: string, offset: number): number {
+  const newline = content.indexOf('\n', offset);
+  return newline === -1 ? content.length : newline + 1;
 }
 
-/** Normalize a glob entry so `'./apps/*'` and `"apps/*"` compare equal. */
-function normalizePackageGlob(value: string): string {
-  let glob = stripInlineComment(value).trim();
-  const quote = glob[0];
-  if ((quote === '"' || quote === "'") && glob.endsWith(quote)) {
-    glob = glob.slice(1, -1);
-  }
-  if (glob.startsWith('./')) {
-    glob = glob.slice(2);
-  }
-  return glob.trim();
+/** Leading whitespace of the line that `offset` starts on. */
+function indentAt(content: string, offset: number): string {
+  const lineStart = content.lastIndexOf('\n', offset - 1) + 1;
+  return /^[ \t]*/.exec(content.slice(lineStart, offset))?.[0] ?? '';
 }
 
-/** Quote character an entry uses, or `null` when it is unquoted. */
-function quoteStyleOf(value: string): string | null {
-  const quote = stripInlineComment(value).trim()[0];
-  return quote === '"' || quote === "'" ? quote : null;
+/** Quote character an existing entry uses, or `''` for a plain entry. */
+function quoteStyleOf(node: unknown): string {
+  if (isScalar(node) && node.type === 'QUOTE_SINGLE') {
+    return "'";
+  }
+  if (isScalar(node) && node.type === 'QUOTE_DOUBLE') {
+    return '"';
+  }
+  return '';
 }
 
-/** Parse a single-line flow list, or `null` when it is malformed. */
-function parseFlowList(value: string): Set<string> | null {
-  const end = value.indexOf(']');
-  if (!value.startsWith('[') || end === -1) {
-    return null;
-  }
-  const body = value.slice(1, end).trim();
-  const entries = new Set<string>();
-  if (body === '') {
-    return entries;
-  }
-  for (const part of body.split(',')) {
-    entries.add(normalizePackageGlob(part));
-  }
-  return entries;
+/** The missing globs, indent, insert offset, and quote style for a patch. */
+interface InsertionPlan {
+  entries: Set<string>;
+  indent: string;
+  insertAt: number;
+  quote: string;
 }
 
-function isSatisfied(entries: Set<string>): boolean {
-  return REQUIRED_PACKAGES.every((glob) => entries.has(glob));
+/** Splice the missing globs in after `insertAt`, keeping the document intact. */
+function patchContent(existing: string, plan: InsertionPlan): WorkspacePlan {
+  const lineEnding = detectLineEnding(existing);
+  const inserted = REQUIRED_PACKAGES.filter((glob) => !plan.entries.has(glob))
+    .map(
+      (glob) => `${plan.indent}- ${plan.quote}${glob}${plan.quote}${lineEnding}`
+    )
+    .join('');
+  // `insertAt` can land at EOF when the file has no trailing newline; start
+  // the inserted block on a fresh line instead of gluing it to the last item.
+  const separator =
+    plan.insertAt > 0 && existing[plan.insertAt - 1] !== '\n' ? lineEnding : '';
+  return {
+    content:
+      existing.slice(0, plan.insertAt) +
+      separator +
+      inserted +
+      existing.slice(plan.insertAt),
+    status: 'patch',
+  };
 }
 
-/**
- * Walk a block-style `packages:` list. Returns `null` for shapes the editor
- * cannot safely rewrite, such as a scalar value or nested mapping.
- */
-function scanPackagesBlock(
-  lines: Array<string>,
-  startIndex: number
-): PackagesBlock | null {
-  const block: PackagesBlock = {
+function patchBlock(
+  existing: string,
+  items: Array<unknown>,
+  entries: Set<string>
+): WorkspacePlan {
+  const last = items.at(-1);
+  const range = isNode(last) ? last.range : null;
+  // A multi-line last item (for example a block scalar) cannot be extended
+  // without splitting it; the line-based editor reported this as `conflict`.
+  if (!range || existing.slice(range[0], range[1]).includes('\n')) {
+    return { content: existing, status: 'conflict' };
+  }
+  return patchContent(existing, {
+    entries,
+    indent: indentAt(existing, range[0]),
+    insertAt: lineEndAfter(existing, range[0]),
+    quote: quoteStyleOf(last),
+  });
+}
+
+function patchEmpty(existing: string, node: Node): WorkspacePlan {
+  const range = node.range;
+  if (!range) {
+    return { content: existing, status: 'conflict' };
+  }
+  return patchContent(existing, {
     entries: new Set(),
     indent: '  ',
-    insertAt: startIndex,
+    insertAt: lineEndAfter(existing, range[1]),
     quote: "'",
-  };
-  for (let index = startIndex + 1; index < lines.length; index += 1) {
-    const line = lines[index];
-    const trimmed = line.trim();
-    if (trimmed === '' || trimmed.startsWith('#')) {
-      continue;
-    }
-    if (trimmed === '---' || trimmed === '...') {
-      break;
-    }
-    const item = LIST_ITEM.exec(line);
-    if (item) {
-      block.indent = item[1];
-      block.quote = quoteStyleOf(item[2]) ?? '';
-      block.entries.add(normalizePackageGlob(item[2]));
-      block.insertAt = index;
-      continue;
-    }
-    if (/^\s/.test(line)) {
-      return null;
-    }
-    break;
-  }
-  return block;
+  });
 }
 
 /**
@@ -139,41 +129,27 @@ function scanPackagesBlock(
  * reported `satisfied` so the task leaves the user's settings-only file alone.
  */
 function planWorkspace(existing: string): WorkspacePlan {
-  const lineEnding = detectLineEnding(existing);
-  const lines = existing.split(/\r?\n/);
-  const keyIndex = lines.findIndex((line) => PACKAGES_KEY.test(line));
-  if (keyIndex === -1) {
+  const document = parseDocument(existing);
+  const packages = document.get('packages', true);
+  if (packages === undefined) {
     return { content: existing, status: 'satisfied' };
   }
-  const keyLine = lines[keyIndex];
-  const inlineValue = stripInlineComment(
-    keyLine.slice(keyLine.indexOf(':') + 1)
-  ).trim();
-  if (inlineValue !== '') {
-    const entries = parseFlowList(inlineValue);
-    if (entries !== null && isSatisfied(entries)) {
+  if (document.errors.length > 0) {
+    return { content: existing, status: 'conflict' };
+  }
+  if (isSeq(packages)) {
+    const entries = packageEntries(packages.items);
+    if (isSatisfied(entries)) {
       return { content: existing, status: 'satisfied' };
     }
-    return { content: existing, status: 'conflict' };
+    return packages.flow
+      ? { content: existing, status: 'conflict' }
+      : patchBlock(existing, packages.items, entries);
   }
-  const block = scanPackagesBlock(lines, keyIndex);
-  if (block === null) {
-    return { content: existing, status: 'conflict' };
+  if (isScalar(packages) && packages.value === null) {
+    return patchEmpty(existing, packages);
   }
-  if (isSatisfied(block.entries)) {
-    return { content: existing, status: 'satisfied' };
-  }
-  const missing = REQUIRED_PACKAGES.filter((glob) => !block.entries.has(glob));
-  const quote = block.quote;
-  const inserted = missing.map(
-    (glob) => `${block.indent}- ${quote}${glob}${quote}`
-  );
-  const content = [
-    ...lines.slice(0, block.insertAt + 1),
-    ...inserted,
-    ...lines.slice(block.insertAt + 1),
-  ].join(lineEnding);
-  return { content, status: 'patch' };
+  return { content: existing, status: 'conflict' };
 }
 
 function pnpmWorkspaceContent(

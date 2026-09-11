@@ -7,6 +7,7 @@ import type {
   TaskStatus,
 } from '@xtarterize/core';
 
+import type { SessionOutcome } from '@/session.js';
 import { formatTimingJson } from '@/utils/timing-display.js';
 
 export interface TaskJson {
@@ -97,11 +98,10 @@ interface QueryResultOptions {
   query: string;
   results: Array<InquiryResult>;
   statuses?: Map<string, TaskStatus>;
-  timing?: ResolveTiming;
 }
 
 export function formatQueryResult(options: QueryResultOptions): string {
-  const { results, query, statuses, timing } = options;
+  const { results, query, statuses } = options;
   const data: Record<string, unknown> = {
     count: results.length,
     query,
@@ -115,49 +115,31 @@ export function formatQueryResult(options: QueryResultOptions): string {
     })),
     type: 'query',
   };
-  if (timing) {
-    data.timing = formatTimingJson(timing);
-  }
   return JSON.stringify(data, null, 2);
 }
 
 export function formatDoctorResult(
-  diagnostics: Array<DiagnosticCheck>
+  diagnostics: Array<DiagnosticCheck>,
+  summary: { pass: number; warn: number; fail: number; total: number }
 ): string {
-  const summary = {
-    fail: diagnostics.filter((d) => d.status === 'fail').length,
-    pass: diagnostics.filter((d) => d.status === 'pass').length,
-    total: diagnostics.length,
-    warn: diagnostics.filter((d) => d.status === 'warn').length,
-  };
   return JSON.stringify({ diagnostics, ok: summary.fail === 0, summary });
 }
 
-export interface RunResult {
-  applied: number;
-  errors: Array<string>;
-  ok: boolean;
-  skipped: number;
-  status?: string;
-  taskId?: string;
-  timing?: Record<string, unknown>;
-}
-
-export function formatRunResult(options: RunResult): string {
+export function formatRunResult(outcome: SessionOutcome): string {
   const result: Record<string, unknown> = {
-    applied: options.applied,
-    errors: options.errors,
-    ok: options.ok,
-    skipped: options.skipped,
+    applied: outcome.applied,
+    errors: outcome.errors,
+    ok: outcome.ok,
+    skipped: outcome.skipped,
   };
-  if (options.taskId !== undefined) {
-    result.taskId = options.taskId;
+  if (outcome.taskId !== undefined) {
+    result.taskId = outcome.taskId;
   }
-  if (options.status !== undefined) {
-    result.status = options.status;
+  if (outcome.taskStatus !== undefined) {
+    result.status = outcome.taskStatus;
   }
-  if (options.timing) {
-    result.timing = options.timing;
+  if (outcome.recordTiming) {
+    result.timing = formatTimingJson(outcome.timing, outcome.applyTiming);
   }
   return JSON.stringify(result);
 }

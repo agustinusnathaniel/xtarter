@@ -1,5 +1,5 @@
 import type { Prompter } from '@/ui/prompter.js';
-import { statusHint } from '@/utils/display.js';
+import { defaultSelectedIds, statusHint } from '@/utils/display.js';
 
 import type { TaskWithStatus } from './types.js';
 
@@ -23,21 +23,13 @@ function buildGroupedOptions(
   return groups;
 }
 
-function getDefaultSelectedIds(
-  tasksWithStatus: Array<TaskWithStatus>
-): Array<string> {
-  return tasksWithStatus
-    .filter((t) => t.status === 'new' || t.status === 'patch')
-    .map((t) => t.task.id);
-}
-
 /** Resolve the selected task IDs, or `null` when the user cancels. */
 export async function selectTasksGrouped(
   tasksWithStatus: Array<TaskWithStatus>,
   prompter: Prompter
 ): Promise<Array<string> | null> {
   return prompter.groupMultiselect({
-    initialValues: getDefaultSelectedIds(tasksWithStatus),
+    initialValues: defaultSelectedIds(tasksWithStatus),
     message: 'Select tasks to add:',
     options: buildGroupedOptions(tasksWithStatus),
     required: true,

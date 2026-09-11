@@ -54,7 +54,6 @@ export interface SessionOutcome {
   ok: boolean;
   recordTiming?: boolean;
   skipped: number;
-  statuses: Map<string, TaskStatus>;
   taskId?: string;
   taskStatus?: SessionTaskOutcome;
   timing: ResolveTiming;
@@ -116,16 +115,6 @@ interface SessionContext {
   timing: ResolveTiming;
 }
 
-const EMPTY_TIMING: ResolveTiming = {
-  detectionMs: 0,
-  resolutionMs: 0,
-  resolutionSumMs: 0,
-};
-
-function formatCheckError(taskId: string, detail: string): string {
-  return `Failed to check ${taskId}: ${detail}`;
-}
-
 function buildDryRunOutcome(
   plan: ApplyPlan,
   context: SessionContext
@@ -145,7 +134,6 @@ function buildDryRunOutcome(
     kind: 'dry-run',
     ok: diffs.length === 0 && failures === 0,
     skipped: 0,
-    statuses: context.statuses,
     timing: context.timing,
   };
 }
@@ -185,7 +173,7 @@ export class CommandSession {
           selection: { only: [], skip: [] },
           statuses: new Map(),
           tasks: [],
-          timing: EMPTY_TIMING,
+          timing: { detectionMs: 0, resolutionMs: 0, resolutionSumMs: 0 },
         }),
       };
     }
@@ -235,8 +223,8 @@ export class CommandSession {
 
   /** Per-task check failures formatted like `ApplyResult.errors` entries. */
   get checkErrorMessages(): Array<string> {
-    return [...this.context.checkErrors].map(([taskId, detail]) =>
-      formatCheckError(taskId, detail)
+    return [...this.context.checkErrors].map(
+      ([taskId, detail]) => `Failed to check ${taskId}: ${detail}`
     );
   }
 
@@ -305,7 +293,6 @@ export class CommandSession {
       ok: errors.length === 0,
       recordTiming: options.recordTiming === true,
       skipped: options.skipped ?? result.skipped,
-      statuses: this.context.statuses,
       taskId: options.taskId,
       taskStatus: options.taskStatus,
       timing: this.context.timing,
@@ -370,7 +357,6 @@ export class CommandSession {
       message,
       ok: kind !== 'blocked',
       skipped: 0,
-      statuses: this.context.statuses,
       taskId: details.taskId,
       taskStatus: details.taskStatus,
       timing: this.context.timing,

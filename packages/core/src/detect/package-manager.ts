@@ -73,33 +73,22 @@ export async function detectPackageManager(
 }
 
 /**
- * Detects framework version from package.json
- * @param pkg - Package.json content
+ * Detects framework version from the merged dependency map.
+ * @param deps - Dependency versions collected from package.json
  * @param framework - Detected framework
  * @returns Framework version string or null if not found
  */
 export function detectFrameworkVersion(
-  pkg: unknown,
+  deps: Record<string, string>,
   framework: Framework
 ): string | null {
-  if (!isRecord(pkg)) {
-    return null;
-  }
-  const allDeps: Record<string, string> = {};
-  if (isStringRecord(pkg.dependencies)) {
-    Object.assign(allDeps, pkg.dependencies);
-  }
-  if (isStringRecord(pkg.devDependencies)) {
-    Object.assign(allDeps, pkg.devDependencies);
-  }
-
   const frameworkPkg =
     framework === 'react-native'
-      ? (allDeps['react-native'] ?? allDeps.expo)
+      ? (deps['react-native'] ?? deps.expo)
       : framework === 'node'
         ? null
         : framework
-          ? allDeps[framework === 'solid' ? 'solid-js' : framework]
+          ? deps[framework === 'solid' ? 'solid-js' : framework]
           : null;
 
   if (!frameworkPkg) {

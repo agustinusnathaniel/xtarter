@@ -1,5 +1,4 @@
 import fs from 'node:fs/promises';
-import { Effect } from 'effect';
 import { join, normalize } from 'pathe';
 
 import { BackupError } from '@/errors.js';
@@ -11,16 +10,6 @@ export interface Backup {
   backupPath: string;
   filepath: string;
   timestamp: string;
-}
-
-function tryIo<A>(
-  path: string,
-  f: () => Promise<A>
-): Effect.Effect<A, BackupError> {
-  return Effect.tryPromise({
-    catch: (cause) => new BackupError({ cause, path }),
-    try: (_signal) => f(),
-  });
 }
 
 async function writeJsonAtomically(path: string, data: unknown): Promise<void> {
@@ -43,56 +32,48 @@ async function readJsonOrNull<T>(path: string): Promise<T | null> {
   }
 }
 
-export function backupFile(cwd: string, filepath: string): Promise<void> {
-  return Effect.runPromise(
-    Effect.gen(function* () {
-      const sourcePath = resolvePath(cwd, filepath);
-      const exists = yield* tryIo(sourcePath, () =>
-        fs
-          .access(sourcePath)
-          .then(() => true)
-          .catch(() => false)
-      );
-      if (!exists) {
-        return;
-      }
+export async function backupFile(cwd: string, filepath: string): Promise<void> {
+  const sourcePath = resolvePath(cwd, filepath);
+  const exists = await fs
+    .access(sourcePath)
+    .then(() => true)
+    .catch(() => false);
+  if (!exists) {
+    return;
+  }
 
-      const backupDir = resolvePath(cwd, BACKUP_DIR);
-      yield* tryIo(backupDir, () => fs.mkdir(backupDir, { recursive: true }));
+  const backupDir = resolvePath(cwd, BACKUP_DIR);
+  try {
+    await fs.mkdir(backupDir, { recursive: true });
+  } catch (cause) {
+    throw new BackupError({ cause, path: backupDir });
+  }
 
-      const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-      const safeName = normalize(filepath)
-        .replace(/_/g, '__') // escape underscore first
-        .replace(/\//g, '_s') // slash → _s
-        .replace(/\\/g, '_b'); // backslash → _b
-      const backupName = `${safeName}.${timestamp}`;
-      const backupPath = join(backupDir, backupName);
+  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+  const safeName = normalize(filepath)
+    .replace(/_/g, '__') // escape underscore first
+    .replace(/\//g, '_s') // slash → _s
+    .replace(/\\/g, '_b'); // backslash → _b
+  const backupName = `${safeName}.${timestamp}`;
+  const backupPath = join(backupDir, backupName);
 
-      yield* tryIo(sourcePath, () => fs.cp(sourcePath, backupPath));
+  try {
+    await fs.cp(sourcePath, backupPath);
+  } catch (cause) {
+    throw new BackupError({ cause, path: sourcePath });
+  }
 
-      const indexPath = resolvePath(cwd, BACKUP_DIR, '.index.json');
-      const indexContent: Record<
-        string,
-        Array<Backup>
-      > = yield* Effect.orElseSucceed(
-        tryIo(indexPath, () =>
-          fs.readFile(indexPath, 'utf-8').then((c) => JSON.parse(c))
-        ),
-        () => ({})
-      );
-      const backups = indexContent[filepath] ?? [];
-      backups.push({ backupPath, filepath, timestamp });
-      indexContent[filepath] = backups;
-      yield* writeIndexAtomically(indexPath, indexContent);
-    })
-  );
-}
-
-function writeIndexAtomically(
-  indexPath: string,
-  indexContent: Record<string, Array<Backup>>
-) {
-  return tryIo(indexPath, () => writeJsonAtomically(indexPath, indexContent));
+  const indexPath = resolvePath(cwd, BACKUP_DIR, '.index.json');
+  const indexContent =
+    (await readJsonOrNull<Record<string, Array<Backup>>>(indexPath)) ?? {};
+  const backups = indexContent[filepath] ?? [];
+  backups.push({ backupPath, filepath, timestamp });
+  indexContent[filepath] = backups;
+  try {
+    await writeJsonAtomically(indexPath, indexContent);
+  } catch (cause) {
+    throw new BackupError({ cause, path: indexPath });
+  }
 }
 
 export function listBackups(
@@ -118,20 +99,23 @@ export function listBackups(
   });
 }
 
-export function restoreBackup(cwd: string, backup: Backup): Promise<void> {
+export async function restoreBackup(
+  cwd: string,
+  backup: Backup
+): Promise<void> {
   if (!(backup.backupPath && backup.filepath)) {
-    return Promise.reject(
-      new BackupError({
-        cause: new Error('Invalid backup: missing filepath or backupPath'),
-        path: backup.backupPath ?? 'unknown',
-      })
-    );
+    throw new BackupError({
+      cause: new Error('Invalid backup: missing filepath or backupPath'),
+      path: backup.backupPath ?? 'unknown',
+    });
   }
+
+  // Validate destination path is within the project directory
   let resolvedDest: string;
   try {
     resolvedDest = assertPathWithin(cwd, backup.filepath);
   } catch (cause) {
-    return Promise.reject(new BackupError({ cause, path: backup.filepath }));
+    throw new BackupError({ cause, path: backup.filepath });
   }
 
   // Validate source path (backupPath) is within the backup directory
@@ -144,12 +128,14 @@ export function restoreBackup(cwd: string, backup: Backup): Promise<void> {
       `Source path traversal detected: ${backup.backupPath}`
     );
   } catch (cause) {
-    return Promise.reject(new BackupError({ cause, path: backup.backupPath }));
+    throw new BackupError({ cause, path: backup.backupPath });
   }
 
-  return Effect.runPromise(
-    tryIo(resolvedSource, () => fs.cp(resolvedSource, resolvedDest))
-  );
+  try {
+    await fs.cp(resolvedSource, resolvedDest);
+  } catch (cause) {
+    throw new BackupError({ cause, path: resolvedSource });
+  }
 }
 
 export interface RunManifest {

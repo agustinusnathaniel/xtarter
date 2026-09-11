@@ -1,3 +1,4 @@
+/// <reference lib="es2024.object" />
 import type {
   InquiryResult,
   PackageManager,
@@ -43,18 +44,11 @@ interface DisplayQueryOptions {
 }
 
 function groupResults(results: Array<InquiryResult>): Array<GroupedResults> {
-  const groupMap = new Map<string, Array<InquiryResult>>();
-  for (const r of results) {
-    const g = r.task.group;
-    if (!groupMap.has(g)) {
-      groupMap.set(g, []);
-    }
-    groupMap.get(g)?.push(r);
-  }
-  return Array.from(groupMap.entries())
+  const grouped = Object.groupBy(results, (r) => r.task.group);
+  return Object.entries(grouped)
     .map(([group, tasks]) => ({
       group,
-      tasks: tasks.sort((a, b) => b.relevance - a.relevance),
+      tasks: (tasks ?? []).sort((a, b) => b.relevance - a.relevance),
     }))
     .sort((a, b) => b.tasks[0].relevance - a.tasks[0].relevance);
 }

@@ -1,17 +1,43 @@
-import { Data } from 'effect';
-
-export class FileSystemError extends Data.TaggedError('FileSystemError')<{
+export class FileSystemError extends Error {
   readonly path: string;
   readonly cause: unknown;
-}> {}
 
-export class BackupError extends Data.TaggedError('BackupError')<{
+  constructor({ path, cause }: { path: string; cause: unknown }) {
+    super();
+    this.name = 'FileSystemError';
+    this.path = path;
+    this.cause = cause;
+  }
+}
+
+export class BackupError extends Error {
   readonly path: string;
   readonly cause: unknown;
-}> {}
 
-export class TaskError extends Data.TaggedError('TaskError')<{
+  constructor({ path, cause }: { path: string; cause: unknown }) {
+    super();
+    this.name = 'BackupError';
+    this.path = path;
+    this.cause = cause;
+  }
+}
+
+export class TaskError extends Error {
   readonly taskId: string;
-  readonly message: string;
   readonly cause?: unknown;
-}> {}
+
+  constructor({
+    taskId,
+    message,
+    cause,
+  }: {
+    taskId: string;
+    message: string;
+    cause?: unknown;
+  }) {
+    super(message);
+    this.name = 'TaskError';
+    this.taskId = taskId;
+    this.cause = cause;
+  }
+}

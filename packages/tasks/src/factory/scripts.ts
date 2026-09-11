@@ -16,8 +16,8 @@ export type ScriptsMap = Record<string, string>;
 export function toScriptsMap(raw: Record<string, unknown>): ScriptsMap {
   const mapped: ScriptsMap = {};
   for (const [key, value] of Object.entries(raw)) {
-    if (value !== undefined) {
-      mapped[key] = value as string;
+    if (typeof value === 'string') {
+      mapped[key] = value;
     }
   }
   return mapped;

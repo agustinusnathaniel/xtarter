@@ -54,6 +54,10 @@ describes the state at the time of this decision.
   the owner because core cannot depend on patchers (ADR 002), and ADR 021's
   profile cache stays separate.
 
+Update (2026-09-11): the ADR 021 profile cache was removed (ADR 034). The
+owner's fresh-read rule is unchanged; there is simply no other cache to stay
+separate from.
+
 ## Alternatives Considered
 
 - **Object-based writes in core.** Loses comments and ordered keys (ADR 010).
@@ -78,4 +82,4 @@ describes the state at the time of this decision.
 ### Related Decisions
 
 - ADR 002 (package boundaries), ADR 010 (JSON patching), ADR 021 (profile
-  cache), Plan 043 Phase 1.
+  cache, superseded by ADR 034), Plan 043 Phase 1.

@@ -1,5 +1,6 @@
 import type { ProjectProfile, Task } from '@xtarterize/core';
 import {
+  collectDependencyVersions,
   detectProject,
   pc,
   readPackageJson,
@@ -37,13 +38,7 @@ export async function detectProjectWithAmbiguity(
 
   if (profile.framework === null && !quiet) {
     const pkg = await readPackageJson(cwd);
-    const allDeps: Record<string, string> = {};
-    if (pkg?.dependencies) {
-      Object.assign(allDeps, pkg.dependencies);
-    }
-    if (pkg?.devDependencies) {
-      Object.assign(allDeps, pkg.devDependencies);
-    }
+    const allDeps = collectDependencyVersions(pkg);
 
     const hasReactNative = !!(allDeps['react-native'] || allDeps.expo);
     const hasReact = !!allDeps.react;

@@ -80,6 +80,15 @@ export function mergeVary(existingHeaderValue) {
   return ['Accept', 'Accept-Encoding', ...tokens].join(', ');
 }
 
+function withVary(
+  response,
+  { status = response.status, statusText = response.statusText } = {}
+) {
+  const headers = new Headers(response.headers);
+  headers.set('Vary', mergeVary(response.headers.get('vary')));
+  return new Response(response.body, { headers, status, statusText });
+}
+
 const MARKDOWN_404_BODY = `# 404 - Not Found
 
 The requested page was not found.
@@ -108,10 +117,9 @@ async function fetchMarkdownAsset(candidatePath, requestUrl, env) {
 }
 
 function markdownResponse(asset) {
-  const headers = new Headers(asset.headers);
-  headers.set('Content-Type', 'text/markdown; charset=utf-8');
-  headers.set('Vary', mergeVary(asset.headers.get('vary')));
-  return new Response(asset.body, { headers, status: asset.status });
+  const response = withVary(asset, { statusText: '' });
+  response.headers.set('Content-Type', 'text/markdown; charset=utf-8');
+  return response;
 }
 
 async function handleRequest(request, env) {
@@ -150,26 +158,14 @@ async function handleRequest(request, env) {
           new Request(new URL('/404.html', request.url))
         );
         if (explicit && explicit.status === 200) {
-          const h = new Headers(explicit.headers);
-          h.set('Vary', mergeVary(explicit.headers.get('vary')));
-          return new Response(explicit.body, {
-            headers: h,
-            status: 404,
-            statusText: explicit.statusText,
-          });
+          return withVary(explicit, { status: 404 });
         }
       } catch {}
     }
   }
   const ct = response.headers.get('content-type') ?? '';
   if (ct.startsWith('text/html') || ct.startsWith('text/markdown')) {
-    const headers = new Headers(response.headers);
-    headers.set('Vary', mergeVary(response.headers.get('vary')));
-    return new Response(response.body, {
-      headers,
-      status: response.status,
-      statusText: response.statusText,
-    });
+    return withVary(response);
   }
   return response;
 }

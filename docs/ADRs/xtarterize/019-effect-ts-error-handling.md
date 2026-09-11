@@ -2,7 +2,9 @@
 
 ## Status
 
-Accepted
+Superseded
+
+Superseded by [ADR 035](035-effect-removal-async-await.md).
 
 ## Date
 

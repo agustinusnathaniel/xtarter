@@ -1,16 +1,9 @@
 import { generateCode, parseExpression, parseModule } from 'magicast';
 import { basename } from 'pathe';
 
-const CONFIG_FILE_NAMES: Record<string, string> = {
-  'vite.config.cjs': 'vite.config',
-  'vite.config.js': 'vite.config',
-  'vite.config.mts': 'vite.config',
-  'vite.config.ts': 'vite.config',
-};
-
 function getConfigLabel(configPath: string): string {
   const basenameName = basename(configPath);
-  return CONFIG_FILE_NAMES[basenameName] || basenameName;
+  return basenameName.startsWith('vite.config.') ? 'vite.config' : basenameName;
 }
 
 function parseImportSpecifier(specifier: string): {
@@ -33,7 +26,6 @@ export interface InjectVitePluginOptions {
 }
 
 export interface InjectVitePluginResult {
-  beforeCode?: string;
   fallback?: string;
   generatedCode?: string;
   success: boolean;
@@ -54,7 +46,7 @@ export function injectVitePluginIntoCode(
     const mod = parseModule(code);
 
     if (code.includes(importPath) || code.includes(importName)) {
-      return { beforeCode: code, generatedCode: code, success: true };
+      return { generatedCode: code, success: true };
     }
 
     const defaultExport = mod.exports.default;
@@ -101,7 +93,6 @@ export function injectVitePluginIntoCode(
     const { code: generatedCode } = generateCode(mod);
 
     return {
-      beforeCode: code,
       fallback: undefined,
       generatedCode,
       success: true,

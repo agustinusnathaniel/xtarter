@@ -8,15 +8,17 @@ import AllPackageManagers from '@/components/AllPackageManagers.astro'
 
 The xtarterize CLI provides commands to detect, apply, and maintain conformance configuration for [JavaScript](https://developer.mozilla.org/en-US/docs/Web/JavaScript)/[TypeScript](https://www.typescriptlang.org/) projects.
 
-## Global Options
+## Options
 
-| Option | Description |
-|--------|-------------|
-| `--cwd <path>` | Target directory (default: current working directory) |
-| `--json` | Output machine-readable JSON |
-| `--timing` | Show detailed per-task timing breakdown |
-| `--help` | Show help for a command |
-| `--version` | Show version number |
+Flags are declared per command and must be passed after the command name. The entry command declares no options of its own, so `xtarterize --json check` is rejected with an actionable error; use `xtarterize check --json` instead.
+
+| Option | Commands | Description |
+|--------|----------|-------------|
+| `--cwd <path>` | all | Target directory (default: current working directory) |
+| `--json` | all | Output machine-readable JSON |
+| `--quiet` | all except `query` | Suppress interactive prompts and verbose output |
+| `--help` | all | Show help for a command |
+| `--version` | entry | Show version number |
 
 ## Available Commands
 
@@ -171,14 +173,11 @@ Audit which tasks are conformant and which need attention. Also runs diagnostics
 
 | Option | Description |
 |--------|-------------|
-| `--verbose` | Show tool installation and conflict checks |
 | `--quiet` | Suppress verbose output |
 | `--badge <path>` | Generate a conformance badge SVG (use `-` for stdout) |
 | `--annotations` | Emit GitHub Actions workflow command annotations (auto-enabled in CI) |
 
 <AllPackageManagers type="exec" pkg="xtarterize@latest" args="check" />
-
-<AllPackageManagers type="exec" pkg="xtarterize@latest" args="check --verbose" title="Verbose" />
 
 <AllPackageManagers type="exec" pkg="xtarterize@latest" args="check --badge conformance.svg" title="Badge" />
 
@@ -191,7 +190,7 @@ Output shows:
 | ✗ | `new` | Missing entirely - will be created |
 | ⚠ | `conflict` | Incompatible config - needs manual resolution |
 
-In verbose mode, `check` also displays diagnostics for:
+`check` also displays diagnostics for:
 - **Conflicting tools** - Biome + ESLint/Prettier detected together
 - **Legacy configs** - ESLint flat config migration recommendations
 - **Tool installations** - Tools in package.json but not installed locally

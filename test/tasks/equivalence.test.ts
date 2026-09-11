@@ -112,6 +112,14 @@ describe('areEquivalent', () => {
     test('returns false when composite mixed with non-composite', () => {
       expect(areEquivalent('turbo run build', 'tsc --noEmit')).toBe(false);
     });
+
+    test('returns false for turborepo variants whose tasks cannot be extracted', () => {
+      expect(areEquivalent('turborepo run a', 'turborepo run b')).toBe(false);
+    });
+
+    test('keeps exact matches for non-extractable composite variants', () => {
+      expect(areEquivalent('turborepo run a', 'turborepo run a')).toBe(true);
+    });
   });
 
   describe('SHELL_OPERATOR_MISMATCH rule', () => {

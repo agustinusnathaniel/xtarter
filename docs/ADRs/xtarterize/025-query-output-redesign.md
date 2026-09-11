@@ -41,7 +41,7 @@ the scoring engine (ADR 024) but has proven too noisy for everyday use.
 
 ### Design goals
 
-- **Compact**: one line per result, no signal breakdown (available via `--verbose` or `--json`)
+- **Compact**: one line per result, no signal breakdown (signals remain in `--json` output)
 - **Scannable**: colored relevance percentage as the primary visual anchor
 - **Informative**: show config target as context for relevance judgment
 - **Actionable**: hint at the bottom tells the user how to proceed
@@ -164,6 +164,10 @@ to determine available space. If the row would exceed terminal width:
 - **`--verbose`** (future): if users need signal breakdown, add a `--verbose`
   flag to print the second line. Not implemented in this change - defer until
   someone asks.
+
+Update (2026-09-11): `--verbose` was never added to `query`. The command
+accepts `--cwd`, `--json`, `--limit`, and `--threshold`; `--json` remains the
+way to see signal scores.
 
 ## Consequences
 

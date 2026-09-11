@@ -27,13 +27,6 @@ export interface RunCommandOptions {
   orderTasks?: (tasks: Array<Task>, runtime: RuntimeContext) => Array<Task>;
 }
 
-interface FlowContext {
-  actionableTasks: Array<Task>;
-  args: CommandArgs;
-  confirmMessage: string;
-  session: CommandSession;
-}
-
 interface ResolveActionableTasksOptions {
   actionableStatuses: Array<TaskStatus>;
   /** Persisted selection: when non-empty, restrict runs to these IDs */
@@ -80,14 +73,7 @@ function warnUnknownSelection(
   }
 }
 
-async function dryRunFlow(
-  session: CommandSession,
-  tasks: Array<Task>
-): Promise<void> {
-  session.reportOutcome(await session.dryRun(tasks));
-}
-
-async function applyTasksFlow(
+async function applyTasks(
   session: CommandSession,
   tasks: Array<Task>,
   args: CommandArgs
@@ -100,13 +86,33 @@ async function applyTasksFlow(
   );
 }
 
-async function handleSelectTasksFlow(options: FlowContext): Promise<void> {
-  const { actionableTasks, args, session } = options;
-  const selected = await selectTasks(
-    actionableTasks,
-    session.statuses,
-    getPrompter()
-  );
+async function promptAndApply(
+  session: CommandSession,
+  tasks: Array<Task>,
+  { args, confirmMessage }: { args: CommandArgs; confirmMessage: string }
+): Promise<void> {
+  const action = await getPrompter().select({
+    message: confirmMessage,
+    options: [
+      { label: 'Apply all', value: 'apply-all' },
+      { label: 'Select tasks', value: 'select' },
+      { label: 'Dry run', value: 'dry-run' },
+      { label: 'Quit', value: 'quit' },
+    ],
+  });
+  if (action === null || action === 'quit') {
+    session.reportOutcome(session.cancelled());
+    return;
+  }
+  if (action === 'dry-run') {
+    session.reportOutcome(await session.dryRun(tasks));
+    return;
+  }
+  if (action !== 'select') {
+    await applyTasks(session, tasks, args);
+    return;
+  }
+  const selected = await selectTasks(tasks, session.statuses, getPrompter());
   if (selected === null) {
     session.reportOutcome(session.cancelled());
     return;
@@ -116,40 +122,11 @@ async function handleSelectTasksFlow(options: FlowContext): Promise<void> {
     return;
   }
   const selectedIds = new Set(selected);
-  await applyTasksFlow(
+  await applyTasks(
     session,
-    actionableTasks.filter((task) => selectedIds.has(task.id)),
+    tasks.filter((task) => selectedIds.has(task.id)),
     args
   );
-}
-
-async function handleApplyAllFlow(options: FlowContext): Promise<void> {
-  await applyTasksFlow(options.session, options.actionableTasks, options.args);
-}
-
-async function promptAndApply(options: FlowContext): Promise<void> {
-  const action = await getPrompter().select({
-    message: options.confirmMessage,
-    options: [
-      { label: 'Apply all', value: 'apply-all' },
-      { label: 'Select tasks', value: 'select' },
-      { label: 'Dry run', value: 'dry-run' },
-      { label: 'Quit', value: 'quit' },
-    ],
-  });
-  if (action === null || action === 'quit') {
-    options.session.reportOutcome(options.session.cancelled());
-    return;
-  }
-  if (action === 'dry-run') {
-    await dryRunFlow(options.session, options.actionableTasks);
-    return;
-  }
-  if (action === 'select') {
-    await handleSelectTasksFlow(options);
-    return;
-  }
-  await handleApplyAllFlow(options);
 }
 
 async function runSession(
@@ -175,18 +152,16 @@ async function runSession(
   }
   reportPlan(actionableTasks, statuses, runtime);
   if (args.dryRun) {
-    await dryRunFlow(session, actionableTasks);
+    session.reportOutcome(await session.dryRun(actionableTasks));
     return;
   }
   if (args.yes || runtime.quiet) {
-    await applyTasksFlow(session, actionableTasks, args);
+    await applyTasks(session, actionableTasks, args);
     return;
   }
-  await promptAndApply({
-    actionableTasks,
+  await promptAndApply(session, actionableTasks, {
     args,
     confirmMessage: options.confirmMessage,
-    session,
   });
 }
 

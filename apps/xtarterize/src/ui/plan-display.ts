@@ -2,6 +2,8 @@ import type { Task, TaskStatus } from '@xtarterize/core';
 import { pc, statusTag } from '@xtarterize/core';
 import Table from 'cli-table3';
 
+import { CLI_TABLE_CHARS } from './table-chars.js';
+
 export function displayPlan(
   tasks: Array<Task>,
   statuses: Map<string, TaskStatus>,
@@ -12,23 +14,7 @@ export function displayPlan(
   console.log('');
 
   const table = new Table({
-    chars: {
-      bottom: '─',
-      'bottom-left': '└',
-      'bottom-mid': '┴',
-      'bottom-right': '┘',
-      left: '│',
-      'left-mid': '├',
-      mid: '─',
-      'mid-mid': '┼',
-      middle: '│',
-      right: '│',
-      'right-mid': '┤',
-      top: '─',
-      'top-left': '┌',
-      'top-mid': '┬',
-      'top-right': '┐',
-    },
+    chars: CLI_TABLE_CHARS,
     head: [pc.bold('Status'), pc.bold('Task'), pc.bold('ID'), pc.bold('Group')],
     style: { border: [], head: [] },
   });

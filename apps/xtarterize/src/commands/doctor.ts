@@ -6,7 +6,7 @@ import { openSession } from '@/session.js';
 import { formatDoctorResult } from '@/ui/json-formatter.js';
 import { commonArgs } from '@/utils/args.js';
 import { diagnosticIcon } from '@/utils/display.js';
-import { detectionOnlyTiming, printTiming } from '@/utils/timing-display.js';
+import { printTiming } from '@/utils/timing-display.js';
 
 export const doctorCommand = defineCommand({
   args: {
@@ -62,7 +62,7 @@ function formatDoctorOutput(options: {
 }): boolean {
   const { allDiagnostics, summary, flags } = options;
   if (flags.json) {
-    console.log(formatDoctorResult(allDiagnostics));
+    console.log(formatDoctorResult(allDiagnostics, summary));
     return true;
   }
   if (flags.quiet && !flags.verbose) {
@@ -97,5 +97,5 @@ function printDoctorSummary(
       `${summary.pass} passed, ${summary.warn} warnings, ${summary.fail} failed (${summary.total} checks)`
     )
   );
-  printTiming(detectionOnlyTiming(diagMs));
+  printTiming({ detectionMs: diagMs, resolutionMs: 0, resolutionSumMs: 0 });
 }

@@ -29,105 +29,57 @@ import {
 } from '@/scaffold';
 import type { PackageManager } from '@/types';
 
-// ── Helpers ──
-
-/**
- * Resolve a CLI argument: use explicit arg value when provided,
- * fall back to `defaultValue` in --yes mode, otherwise prompt the user.
- */
-async function resolveArg<T>(
-  argValue: T | undefined,
-  prompt: () => Promise<T>,
-  defaultValue?: T
-): Promise<T> {
-  if (argValue !== undefined) {
-    return argValue;
-  }
-  if (defaultValue !== undefined) {
-    return defaultValue;
-  }
-  return prompt();
-}
-
 // ── Argument definitions ──
 
+type ArgDef = ArgsDef[string];
+type BooleanArg = Extract<ArgDef, { type?: 'boolean' }>;
+type ValueArg = Extract<ArgDef, { type?: 'string' }>;
+type PositionalArg = Extract<ArgDef, { type?: 'positional' }>;
+type FlagOptions = Pick<
+  BooleanArg,
+  'alias' | 'default' | 'negativeDescription'
+>;
+type ValueOptions = Pick<ValueArg, 'alias'>;
+
+function flag(description: string, options: FlagOptions = {}): BooleanArg {
+  return { ...options, description, type: 'boolean' };
+}
+
+function value(description: string, options: ValueOptions = {}): ValueArg {
+  return { ...options, description, type: 'string' };
+}
+
+function positional(description: string): PositionalArg {
+  return { description, required: false, type: 'positional' };
+}
+
 const scaffoldArgs = {
-  clean: {
-    description: 'Remove CI/CD configs',
-    required: false,
-    type: 'boolean',
-  },
-  color: {
+  clean: flag('Remove CI/CD configs'),
+  color: flag('Colorize output', {
     default: true,
-    description: 'Colorize output',
     negativeDescription: 'Disable colorized output',
-    required: false,
-    type: 'boolean',
-  },
-  force: {
-    alias: 'f',
-    description: 'Overwrite existing directory',
-    required: false,
-    type: 'boolean',
-  },
-  git: {
+  }),
+  force: flag('Overwrite existing directory', { alias: 'f' }),
+  git: flag('Initialize a git repository', {
     default: true,
-    description: 'Initialize a git repository',
     negativeDescription: 'Skip git initialization',
-    required: false,
-    type: 'boolean',
-  },
-  json: {
+  }),
+  json: flag('Output scaffold result as JSON', { default: false }),
+  name: positional('Project name (use "." for current directory)'),
+  pm: value('Package manager (pnpm|npm|bun|yarn)', { alias: 'p' }),
+  quiet: flag('Suppress banners, progress output, and decorative text', {
     default: false,
-    description: 'Output scaffold result as JSON',
-    required: false,
-    type: 'boolean',
-  },
-  name: {
-    description: 'Project name (use "." for current directory)',
-    required: false,
-    type: 'positional',
-  },
-  pm: {
-    alias: 'p',
-    description: 'Package manager (pnpm|npm|bun|yarn)',
-    required: false,
-    type: 'string',
-  },
-  quiet: {
-    default: false,
-    description: 'Suppress banners, progress output, and decorative text',
-    required: false,
-    type: 'boolean',
-  },
-  ref: {
-    description: 'Git ref (branch/tag/commit) to download',
-    required: false,
-    type: 'string',
-  },
-  template: {
-    alias: 't',
-    description: 'Template to use',
-    required: false,
-    type: 'string',
-  },
-  yes: {
-    alias: 'y',
-    description: 'Use defaults (pnpm, git init, no clean)',
-    required: false,
-    type: 'boolean',
-  },
-} as const;
+  }),
+  ref: value('Git ref (branch/tag/commit) to download'),
+  template: value('Template to use', { alias: 't' }),
+  yes: flag('Use defaults (pnpm, git init, no clean)', { alias: 'y' }),
+} satisfies ArgsDef;
 
 // ── Sub-commands ──
 
 const previewCommand = defineCommand({
   args: {
-    template: {
-      description: 'Template ID to preview',
-      required: false,
-      type: 'positional',
-    },
+    template: positional('Template ID to preview'),
   },
   meta: {
     description: 'Preview template details',
@@ -138,29 +90,9 @@ const previewCommand = defineCommand({
   },
 });
 
-function parseArgs(args: Record<string, unknown>) {
-  const quiet = Boolean(args.quiet || args.json);
-  const json = Boolean(args.json);
-  if (args.color === false) {
-    process.env.NO_COLOR = '1';
-  }
-  if (quiet) {
-    consola.level = 0;
-  } else {
-    console.log(BANNER);
-  }
-  return {
-    defaultPackageManager: 'pnpm' as PackageManager,
-    json,
-    quiet,
-    useDefaults: args.yes === true,
-  };
-}
-
 async function promptProjectDetails(
   args: Record<string, unknown>,
-  useDefaults: boolean,
-  defaultPackageManager: PackageManager
+  useDefaults: boolean
 ) {
   let projectName = args.name as string | undefined;
   let projectPath: string;
@@ -172,34 +104,27 @@ async function promptProjectDetails(
     projectName = await promptProjectName();
     projectPath = resolve(process.cwd(), projectName);
   }
-  await prepareProjectDir(
-    projectName,
-    projectPath,
-    args.force as boolean | undefined
-  );
   const template = await promptTemplate(
     args.yes && !args.template
       ? DEFAULT_TEMPLATE
       : (args.template as string | undefined)
   );
-  const packageManager = await resolveArg(
-    args.pm as PackageManager | undefined,
-    promptPackageManager,
-    useDefaults ? defaultPackageManager : undefined
+  const packageManager = await promptPackageManager(
+    (args.pm as PackageManager | undefined) ??
+      (useDefaults ? 'pnpm' : undefined)
   );
-  const shouldCleanCI = await resolveArg(
-    args.clean as boolean | undefined,
-    promptCleanCI,
-    useDefaults ? false : undefined
-  );
+  const shouldCleanCI =
+    (args.clean as boolean | undefined) ??
+    (useDefaults ? false : await promptCleanCI());
   const shouldInitGit =
-    args.git === false
-      ? false
-      : await resolveArg(
-          undefined,
-          promptGitInit,
-          useDefaults ? true : undefined
-        );
+    args.git === false ? false : useDefaults || (await promptGitInit());
+  // Resolve the target last: `--force` must not delete an existing
+  // directory before every explicit input has been validated.
+  await prepareProjectDir(
+    projectName,
+    projectPath,
+    args.force as boolean | undefined
+  );
   return {
     packageManager,
     projectName,
@@ -236,7 +161,7 @@ async function scaffoldAndInstall(options: {
   json: boolean;
 }) {
   const { details, args, quiet, json } = options;
-  await scaffoldProject({
+  const result = await scaffoldProject({
     cleanCI: details.shouldCleanCI,
     initGit: details.shouldInitGit,
     packageManager: details.packageManager,
@@ -248,22 +173,22 @@ async function scaffoldAndInstall(options: {
   if (!quiet) {
     outro(pc.green(`Successfully created ${pc.cyan(details.projectName)}!`));
   }
+  const cdCommand = args.name === '.' ? undefined : `cd ${details.projectName}`;
   if (json) {
-    const cdCommand = args.name === '.' ? '' : `cd ${details.projectName}`;
     process.stdout.write(
       `${JSON.stringify(
         {
-          ciConfigsCleaned: details.shouldCleanCI,
-          dependenciesInstalled: true,
-          gitInitialized: details.shouldInitGit,
+          ciConfigsCleaned: result.ciCleaned,
+          dependenciesInstalled: result.dependenciesInstalled,
+          gitInitialized: result.gitInitialized,
           nextSteps: [
             ...(cdCommand ? [cdCommand] : []),
-            `${details.packageManager} dev`,
+            `${result.packageManager} dev`,
           ],
-          packageManager: details.packageManager,
-          projectPath: details.projectPath,
+          packageManager: result.packageManager,
+          projectPath: result.projectPath,
           success: true as const,
-          template: details.template.id,
+          template: result.template.id,
         },
         null,
         2
@@ -274,16 +199,12 @@ async function scaffoldAndInstall(options: {
   if (quiet) {
     return;
   }
-  const cdCommand =
-    args.name === '.'
-      ? ''
-      : `  ${pc.dim('1.')} ${pc.cyan(`cd ${details.projectName}`)}\n`;
   console.log(`\n${pc.bold('Next steps:')}
-${cdCommand}  ${pc.dim('2.')} ${pc.cyan(`${details.packageManager} dev`)}
+${cdCommand ? `  ${pc.dim('1.')} ${pc.cyan(cdCommand)}\n` : ''}  ${pc.dim('2.')} ${pc.cyan(`${result.packageManager} dev`)}
   ${pc.dim('3.')} Open ${pc.cyan('http://localhost:3000')} (or the port shown)
 
-${pc.bold('Template:')} ${details.template.name}
-${pc.bold('Docs:')} ${pc.underline(`https://github.com/${details.template.repo}`)}
+${pc.bold('Template:')} ${result.template.name}
+${pc.bold('Docs:')} ${pc.underline(`https://github.com/${result.template.repo}`)}
 `);
 }
 
@@ -311,6 +232,8 @@ function invocationTargetsPreview(): boolean {
   return argv[commandIndex] === 'preview';
 }
 
+const isPreviewInvocation = invocationTargetsPreview();
+
 const mainCommand = defineCommand({
   args: scaffoldArgs,
   meta: {
@@ -328,20 +251,26 @@ const mainCommand = defineCommand({
   async run(ctx) {
     // citty runs the parent's `run` even after dispatching a subcommand;
     // bail out so a preview is not followed by the scaffold flow.
-    if (invocationTargetsPreview()) {
+    if (isPreviewInvocation) {
       return;
     }
     const args = ctx.args as Record<string, unknown>;
-    const { quiet, json, useDefaults, defaultPackageManager } = parseArgs(args);
+    const json = Boolean(args.json);
+    const quiet = Boolean(args.quiet || args.json);
+    const useDefaults = args.yes === true;
+    if (args.color === false) {
+      process.env.NO_COLOR = '1';
+    }
+    if (quiet) {
+      consola.level = 0;
+    } else {
+      console.log(BANNER);
+    }
     try {
       if (!quiet) {
         intro(`${APP_NAME} - Let's create your project!`);
       }
-      const details = await promptProjectDetails(
-        args,
-        useDefaults,
-        defaultPackageManager
-      );
+      const details = await promptProjectDetails(args, useDefaults);
       reportScaffoldSettings(details, quiet);
       await scaffoldAndInstall({ args, details, json, quiet });
     } catch (error) {
@@ -352,7 +281,7 @@ const mainCommand = defineCommand({
   // but positionals here are project names. Only expose `preview` as a
   // subcommand when the invocation actually targets it.
   subCommands: (): SubCommandsDef =>
-    invocationTargetsPreview() ? { preview: previewCommand } : {},
+    isPreviewInvocation ? { preview: previewCommand } : {},
 });
 
 function renderUsageWithPreview<T extends ArgsDef>(

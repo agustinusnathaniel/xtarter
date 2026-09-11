@@ -7,8 +7,6 @@ import type {
   SemanticEntry,
 } from '@/_base.js';
 
-export type { ChangeStats, DiffHunk, FileDiff, SemanticEntry };
-
 export function isJsonFile(filepath: string): boolean {
   return (
     filepath.endsWith('.json') ||

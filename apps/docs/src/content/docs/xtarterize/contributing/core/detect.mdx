@@ -7,26 +7,19 @@ import { Aside, Tabs, TabItem } from '@astrojs/starlight/components'
 
 The `@xtarterize/core` package provides the `detectProject()` function - the foundation of xtarterize's context-aware behavior. It analyzes your project directory to build a [`ProjectProfile`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/detect.ts) that drives which conformance tasks are applicable.
 
-`detectProject()` is the orchestration layer in [`packages/core/src/detect.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/detect.ts). The [detection registry](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/detect/registry/index.ts) declares the inputs and keyed detectors that drive the fingerprint, doctor checks, cache validation, and the `existing` profile keys. Bundler, cache, monorepo, package-manager, and shared type definitions live alongside it in [`packages/core/src/detect/`](https://github.com/agustinusnathaniel/xtarterize/tree/main/packages/core/src/detect); framework, router, styling, runtime, and Vite+ detection remain in `detect.ts`.
+`detectProject()` is the orchestration layer in [`packages/core/src/detect.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/detect.ts). It runs inline detection for framework, router, styling, runtime, and Vite+, and calls the helper modules in [`packages/core/src/detect/`](https://github.com/agustinusnathaniel/xtarterize/tree/main/packages/core/src/detect) for bundler, monorepo, and package-manager detection. The [detection registry](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/detect/registry/index.ts) contributes the keyed detector entries behind the `existing` profile keys plus the inputs consumed by those helpers and by doctor checks (ADR 032).
 
 ## Overview
 
 Project detection is the first step in every xtarterize command. It analyzes your project directory to build a `ProjectProfile` that drives which conformance tasks are applicable.
 
-### Profile caching
+### Direct detection
 
-Detection results are cached to avoid redundant I/O on repeated invocations. The cache is stored in `.xtarterize/cache/profile-fingerprint.json` and keyed by a fingerprint of the registry's declared inputs (cache format version 3):
+Detection runs directly on every invocation. There is no profile cache: `detectProject()` inspects the project directory (`package.json`, root config files, lockfiles, config directories, and ancestor markers) and computes a fresh `ProjectProfile` each time. Inline detection modules read most files directly; the registry supplies shared declarations for the keyed detector entries, bundler config extensions, monorepo markers, and lockfile checks.
 
-- `package.json`
-- Root config files (`biome.json`, `tsconfig.json`/`tsconfig.jsonc`, `.nvmrc`, `.eslintrc.*`, `.gitignore`, and the rest of the registry's root file inputs)
-- Lockfiles (`pnpm-lock.yaml`, `yarn.lock`, `package-lock.json`, `bun.lock`, `bun.lockb`)
-- Config directories (`.github/`, `.vscode/`, `.changeset/`)
-- Ancestor markers (`pnpm-workspace.yaml`, `turbo.json`, `nx.json`, `lerna.json`, and the `packages/`, `apps/`, `services/` workspace directories)
-- The `.git` cwd marker
+Earlier versions cached the profile in `.xtarterize/cache/profile-fingerprint.json`, keyed by a fingerprint of those inputs (ADR 021, superseded by ADR 034). The cache was removed because a warm cache hit measured about 2.2ms versus about 1.3ms for direct detection, so it added I/O and state without a measurable benefit.
 
-The cache is invalidated when any of these inputs change (mtime or size). Ancestor markers are presence-only: the fingerprint records that they exist, not their contents. Corrupt, malformed (for example, a missing `configDirs` or `lockfiles` field), or missing cache files fall through to full re-computation - the cache is always best-effort. A cache hit typically completes in under 1ms vs 50-150ms for a full detection run.
-
-See the file `docs/ADRs/xtarterize/021-fingerprint-profile-caching.md` for the full design. The `.xtarterize/` directory is now automatically gitignored via ADR 026 (replacing the manual approach outlined in ADR 021).
+The registry does not declare every detector: framework, router, styling, runtime, Vite+, and Node version have no registry consumer and run inline in the detection modules; bundler, monorepo, and package manager run inline but consume registry inputs. The registry declares the keyed detector entries that produce the `existing` keys plus the inputs consumed by bundler config extension lookup, monorepo markers, and doctor lockfile checks.
 
 ## detectProject Function
 
@@ -109,9 +102,8 @@ discovered via parent-directory walk-up. In non-monorepos,
 ### Detection modules
 
 - [`detect.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/detect.ts) - orchestration plus framework, runtime, router, styling, and Vite+ detection
-- [`registry/index.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/detect/registry/index.ts) - declares detection inputs and detector entries (ADR 032)
+- [`registry/index.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/detect/registry/index.ts) - declares the keyed detector entries and the inputs consumed by detection helpers and doctor checks (ADR 032)
 - [`bundler.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/detect/bundler.ts) - bundler detection from dependencies and config files
-- [`cache.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/detect/cache.ts) - profile fingerprinting and cache validation
 - [`package-manager.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/detect/package-manager.ts) - package-manager and framework-version detection
 - [`monorepo.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/detect/monorepo.ts) - workspace and monorepo detection
 - [`types.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/detect/types.ts) - shared detection types
