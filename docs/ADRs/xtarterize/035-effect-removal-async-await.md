@@ -2,7 +2,9 @@
 
 ## Status
 
-Accepted
+Superseded by [ADR 036](036-effect-orchestration-layer.md).
+
+Update (2026-09-12): ADR 036 re-adopted Effect as the CLI orchestration layer; the task contract is now a `PromiseTask | EffectTask` union, and `mapWithConcurrency` was replaced by `Effect.forEach`. The body below records the state at the time of this decision.
 
 ## Date
 
