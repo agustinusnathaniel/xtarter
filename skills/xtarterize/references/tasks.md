@@ -94,4 +94,4 @@ All available tasks, organized by group. Each task has a unique `id` used with `
 
 | ID | Label | Applied when |
 |----|-------|-------------|
-| `workspace/pnpm-workspace` | pnpm-workspace.yaml | pnpm project; existing files are never rewritten: a `packages:` list gets missing `apps/*` and `packages/*` globs inserted, keyless settings files stay as they are |
+| `workspace/pnpm-workspace` | pnpm-workspace.yaml | pnpm project; existing files are never replaced: a `packages:` list gets missing `apps/*` and `packages/*` globs inserted, keyless settings files stay as they are |
