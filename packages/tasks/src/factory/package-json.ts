@@ -1,12 +1,5 @@
-import {
-  fileExists,
-  readPackageJson as readCorePackageJson,
-  readFile,
-  resolvePath,
-  writeFile,
-} from '@xtarterize/core';
+import { fileExists, readFile, resolvePath, writeFile } from '@xtarterize/core';
 import { patchJson } from '@xtarterize/patchers';
-import type { PackageJson } from 'pkg-types';
 
 export const PACKAGE_JSON_FILENAME = 'package.json';
 
@@ -14,14 +7,6 @@ export interface PackageJsonChange {
   after: string;
   before: string | null;
   filepath: string;
-}
-
-/**
- * Read package.json fresh. No second parser and no cache, so writes made by
- * external writers such as the package manager are always visible.
- */
-export function readPackageJson(cwd: string): Promise<PackageJson | null> {
-  return readCorePackageJson(cwd);
 }
 
 /**

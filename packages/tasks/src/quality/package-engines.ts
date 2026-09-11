@@ -1,8 +1,8 @@
 import type { ProjectProfile } from '@xtarterize/core';
+import { readPackageJson } from '@xtarterize/core';
 import { mergeJson } from '@xtarterize/patchers';
 
 import { defineSingleTargetTask } from '@/factory/define-task.js';
-import { readPackageJson } from '@/factory/package-json.js';
 
 const TASK_ID = 'quality/package-engines';
 
