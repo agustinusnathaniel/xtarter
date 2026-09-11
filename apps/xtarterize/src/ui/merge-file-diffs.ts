@@ -1,4 +1,4 @@
-import { enhanceDiff, type FileDiff } from '@xtarterize/core';
+import { enhanceDiff, type FileDiff, isJsonFile } from '@xtarterize/core';
 import { patchJson } from '@xtarterize/patchers';
 
 export function mergeFileDiffs(diffs: Array<FileDiff>): Array<FileDiff> {
@@ -15,11 +15,7 @@ export function mergeFileDiffs(diffs: Array<FileDiff>): Array<FileDiff> {
 
     if (list.length === 1) {
       result = list[0];
-    } else if (
-      filepath.endsWith('.json') ||
-      filepath.endsWith('.jsonc') ||
-      filepath.endsWith('.json5')
-    ) {
+    } else if (isJsonFile(filepath)) {
       const first = list.find((d) => d.before !== null);
       const before = first?.before ?? list[0].before;
       let after = before ?? '{}';
