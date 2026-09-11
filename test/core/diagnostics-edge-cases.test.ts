@@ -1,8 +1,15 @@
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { runConflictChecks, runEnvironmentChecks } from '@xtarterize/core';
+import { runDiagnostics } from '@xtarterize/core';
 import { describe, expect } from 'vite-plus/test';
+
+type DiagnosticGroupId = 'configuration' | 'environment' | 'project' | 'tools';
+
+async function checksFor(cwd: string, group: DiagnosticGroupId) {
+  const { groups } = await runDiagnostics(cwd, { groups: [group] });
+  return groups.flatMap((entry) => entry.checks);
+}
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -45,7 +52,7 @@ describe('runEnvironmentChecks with engine edge cases', () => {
     const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'xtarterize-diag-'));
     await createPkg(tmpDir, { name: 'test', version: '1.0.0' });
     try {
-      const checks = await runEnvironmentChecks(tmpDir);
+      const checks = await checksFor(tmpDir, 'environment');
       const nodeCheck = checks.find((c) => c.name === 'Node.js');
       expect(nodeCheck).toBeDefined();
       // no engine constraint → always pass
@@ -63,7 +70,7 @@ describe('runEnvironmentChecks with engine edge cases', () => {
       version: '1.0.0',
     });
     try {
-      const checks = await runEnvironmentChecks(tmpDir);
+      const checks = await checksFor(tmpDir, 'environment');
       const nodeCheck = checks.find((c) => c.name === 'Node.js');
       expect(nodeCheck).toBeDefined();
       // engineMajor should be 16 (first numeric segment), not NaN
@@ -81,7 +88,7 @@ describe('runEnvironmentChecks with engine edge cases', () => {
       version: '1.0.0',
     });
     try {
-      const checks = await runEnvironmentChecks(tmpDir);
+      const checks = await checksFor(tmpDir, 'environment');
       const nodeCheck = checks.find((c) => c.name === 'Node.js');
       expect(nodeCheck).toBeDefined();
       // engineMajor should be 20 (not NaN from "-rc")
@@ -99,7 +106,7 @@ describe('runConflictChecks edge cases', () => {
       { '@biomejs/biome': '^1.0.0', eslint: '^8.0.0' }
     );
     try {
-      const checks = await runConflictChecks(tmpDir);
+      const checks = await checksFor(tmpDir, 'configuration');
       const biomeslint = checks.filter((c) =>
         c.message.includes('Biome and ESLint')
       );
@@ -116,7 +123,7 @@ describe('runConflictChecks edge cases', () => {
       { '@biomejs/biome': '^1.0.0', prettier: '^3.0.0' }
     );
     try {
-      const checks = await runConflictChecks(tmpDir);
+      const checks = await checksFor(tmpDir, 'configuration');
       const biomePret = checks.filter((c) =>
         c.message.includes('Biome and Prettier')
       );
@@ -130,7 +137,7 @@ describe('runConflictChecks edge cases', () => {
   test('passes when only Biome is present (no conflict)', async () => {
     const tmpDir = await tmpProject({}, { '@biomejs/biome': '^1.0.0' });
     try {
-      const checks = await runConflictChecks(tmpDir);
+      const checks = await checksFor(tmpDir, 'configuration');
       const passCheck = checks.find((c) => c.status === 'pass');
       expect(passCheck).toBeDefined();
       expect(checks.filter((c) => c.status === 'warn')).toHaveLength(0);
@@ -142,7 +149,7 @@ describe('runConflictChecks edge cases', () => {
   test('passes when none of Biome, ESLint, Prettier are present', async () => {
     const tmpDir = await tmpProject({}, { typescript: '^5.0.0' });
     try {
-      const checks = await runConflictChecks(tmpDir);
+      const checks = await checksFor(tmpDir, 'configuration');
       const passCheck = checks.find((c) => c.status === 'pass');
       expect(passCheck).toBeDefined();
       expect(checks.filter((c) => c.status === 'warn')).toHaveLength(0);
@@ -161,7 +168,7 @@ describe('runConflictChecks edge cases', () => {
       }
     );
     try {
-      const checks = await runConflictChecks(tmpDir);
+      const checks = await checksFor(tmpDir, 'configuration');
       const warnings = checks.filter((c) => c.status === 'warn');
       expect(warnings).toHaveLength(2);
       expect(warnings.some((c) => c.message.includes('Biome and ESLint'))).toBe(

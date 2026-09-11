@@ -1,9 +1,11 @@
+import os from 'node:os';
 import { Effect } from 'effect';
 import { x } from 'tinyexec';
 
 import { FileSystemError } from '@/errors.js';
+import { tryEffect, tryReadPackageJson } from '@/utils/effect-io.js';
 import { fileExists, resolvePath } from '@/utils/fs.js';
-import { readPackageJson } from '@/utils/pkg.js';
+import { collectDependencyVersions } from '@/utils/pkg.js';
 
 import { lockfileInputs } from './detect/registry/index.js';
 import type { PackageManager } from './detect/types.js';
@@ -14,30 +16,37 @@ export interface DiagnosticCheck {
   status: 'pass' | 'warn' | 'fail';
 }
 
+export interface DiagnosticGroup {
+  checks: Array<DiagnosticCheck>;
+  title: string;
+}
+
+export interface DiagnosticsSummary {
+  fail: number;
+  pass: number;
+  total: number;
+  warn: number;
+}
+
+export type DiagnosticGroupId =
+  | 'configuration'
+  | 'environment'
+  | 'project'
+  | 'tools';
+
+export interface DiagnosticsOptions {
+  /** Subset of diagnostic groups to run. Defaults to every group. */
+  groups?: Array<DiagnosticGroupId>;
+  /** Include host platform info as an extra leading group. */
+  verbose?: boolean;
+}
+
 function makeCheck(
   name: string,
   status: 'pass' | 'warn' | 'fail',
   message: string
 ): DiagnosticCheck {
   return { message, name, status };
-}
-
-export function tryEffect<A>(
-  f: () => Promise<A>
-): Effect.Effect<A, FileSystemError> {
-  return Effect.tryPromise({
-    catch: (cause) => new FileSystemError({ cause, path: 'unknown' }),
-    try: (_signal) => f(),
-  });
-}
-
-export function tryReadPackageJson(
-  cwd: string
-): Effect.Effect<Awaited<ReturnType<typeof readPackageJson>>, FileSystemError> {
-  return Effect.orElseSucceed(
-    tryEffect(() => readPackageJson(cwd)),
-    () => null as Awaited<ReturnType<typeof readPackageJson>>
-  );
 }
 
 function runTool(
@@ -59,9 +68,7 @@ function runTool(
   );
 }
 
-export function runEnvironmentChecks(
-  cwd: string
-): Promise<Array<DiagnosticCheck>> {
+function runEnvironmentChecks(cwd: string): Promise<Array<DiagnosticCheck>> {
   return Effect.runPromise(
     Effect.gen(function* () {
       const pkg = yield* tryReadPackageJson(cwd);
@@ -181,16 +188,14 @@ function checkGitignore(
   });
 }
 
-export function runProjectHealthChecks(
-  cwd: string
-): Promise<Array<DiagnosticCheck>> {
+function runProjectHealthChecks(cwd: string): Promise<Array<DiagnosticCheck>> {
   return Effect.runPromise(
     Effect.gen(function* () {
       const pkg = yield* tryReadPackageJson(cwd);
       if (!pkg) {
         return [] as Array<DiagnosticCheck>;
       }
-      const deps = { ...pkg.dependencies, ...pkg.devDependencies };
+      const deps = collectDependencyVersions(pkg);
       const checks: Array<DiagnosticCheck> = [];
       checks.push(yield* checkLockfile(cwd));
       if (deps.typescript) {
@@ -257,16 +262,14 @@ function checkLegacyEslintConfig(
   });
 }
 
-export function runConflictChecks(
-  cwd: string
-): Promise<Array<DiagnosticCheck>> {
+function runConflictChecks(cwd: string): Promise<Array<DiagnosticCheck>> {
   return Effect.runPromise(
     Effect.gen(function* () {
       const pkg = yield* tryReadPackageJson(cwd);
       if (!pkg) {
         return [] as Array<DiagnosticCheck>;
       }
-      const deps = { ...pkg.dependencies, ...pkg.devDependencies };
+      const deps = collectDependencyVersions(pkg);
       const checks: Array<DiagnosticCheck> = [
         ...collectConflictingToolChecks(deps),
       ];
@@ -288,7 +291,7 @@ export function runConflictChecks(
   );
 }
 
-export function runToolInstallationChecks(
+function runToolInstallationChecks(
   cwd: string
 ): Promise<Array<DiagnosticCheck>> {
   return Effect.runPromise(
@@ -298,7 +301,7 @@ export function runToolInstallationChecks(
         return [] as Array<DiagnosticCheck>;
       }
 
-      const deps = { ...pkg.dependencies, ...pkg.devDependencies };
+      const deps = collectDependencyVersions(pkg);
       const checks: Array<DiagnosticCheck> = [];
 
       const toolsToCheck: Array<{ name: string; dep: string; cmd: string }> = [
@@ -327,4 +330,105 @@ export function runToolInstallationChecks(
       return checks;
     })
   );
+}
+
+interface DiagnosticGroupDefinition {
+  fallback: DiagnosticCheck;
+  id: DiagnosticGroupId;
+  run: (cwd: string) => Promise<Array<DiagnosticCheck>>;
+  title: string;
+}
+
+const DIAGNOSTIC_GROUPS: ReadonlyArray<DiagnosticGroupDefinition> = [
+  {
+    fallback: {
+      message: 'Failed to run environment checks',
+      name: 'Environment',
+      status: 'fail',
+    },
+    id: 'environment',
+    run: runEnvironmentChecks,
+    title: 'Environment',
+  },
+  {
+    fallback: {
+      message: 'Failed to run tool checks',
+      name: 'Tools',
+      status: 'fail',
+    },
+    id: 'tools',
+    run: runToolInstallationChecks,
+    title: 'Tools',
+  },
+  {
+    fallback: {
+      message: 'Failed to run project health checks',
+      name: 'Project',
+      status: 'fail',
+    },
+    id: 'project',
+    run: runProjectHealthChecks,
+    title: 'Project',
+  },
+  {
+    fallback: {
+      message: 'Failed to run conflict checks',
+      name: 'Configuration',
+      status: 'fail',
+    },
+    id: 'configuration',
+    run: runConflictChecks,
+    title: 'Configuration',
+  },
+];
+
+function systemGroup(): DiagnosticGroup {
+  const mem = Math.round(os.totalmem() / 1024 ** 3);
+  return {
+    checks: [
+      {
+        message: `${os.type()} ${os.release()} | ${os.arch()} | ${os.cpus().length} CPUs | ${mem} GB RAM`,
+        name: 'Platform',
+        status: 'pass',
+      },
+    ],
+    title: 'System',
+  };
+}
+
+function summarize(groups: Array<DiagnosticGroup>): DiagnosticsSummary {
+  const checks = groups.flatMap((group) => group.checks);
+  return {
+    fail: checks.filter((check) => check.status === 'fail').length,
+    pass: checks.filter((check) => check.status === 'pass').length,
+    total: checks.length,
+    warn: checks.filter((check) => check.status === 'warn').length,
+  };
+}
+
+/**
+ * Run the requested diagnostic groups, replacing a group that rejects with a
+ * single failure check so one broken check never hides the others.
+ */
+export async function runDiagnostics(
+  cwd: string,
+  options: DiagnosticsOptions = {}
+): Promise<{ groups: Array<DiagnosticGroup>; summary: DiagnosticsSummary }> {
+  const definitions = options.groups
+    ? DIAGNOSTIC_GROUPS.filter((group) => options.groups?.includes(group.id))
+    : DIAGNOSTIC_GROUPS;
+  const results = await Promise.allSettled(
+    definitions.map((definition) => definition.run(cwd))
+  );
+  const groups = definitions.map((definition, index) => ({
+    checks:
+      results[index]?.status === 'fulfilled'
+        ? results[index].value
+        : [definition.fallback],
+    title: definition.title,
+  }));
+  if (options.verbose) {
+    groups.unshift(systemGroup());
+  }
+  return { groups, summary: summarize(groups) };
 }

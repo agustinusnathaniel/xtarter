@@ -1,13 +1,5 @@
-import os from 'node:os';
-import type { DiagnosticCheck } from '@xtarterize/core';
-import {
-  createSpinner,
-  pc,
-  runConflictChecks,
-  runEnvironmentChecks,
-  runProjectHealthChecks,
-  runToolInstallationChecks,
-} from '@xtarterize/core';
+import type { DiagnosticCheck, DiagnosticGroup } from '@xtarterize/core';
+import { createSpinner, pc, runDiagnostics } from '@xtarterize/core';
 import { defineCommand } from 'citty';
 
 import { openSession } from '@/session.js';
@@ -15,11 +7,6 @@ import { formatDoctorResult } from '@/ui/json-formatter.js';
 import { commonArgs } from '@/utils/args.js';
 import { diagnosticIcon } from '@/utils/display.js';
 import { detectionOnlyTiming, printTiming } from '@/utils/timing-display.js';
-
-interface DiagnosticGroup {
-  checks: Array<DiagnosticCheck>;
-  title: string;
-}
 
 export const doctorCommand = defineCommand({
   args: {
@@ -48,9 +35,9 @@ export const doctorCommand = defineCommand({
     const s = createSpinner(quiet);
     s.start('Running diagnostics...');
     const diagStart = performance.now();
-    const groups = await runAllDiagnostics(cwd, verbose);
+    const { groups, summary } = await runDiagnostics(cwd, { verbose });
     s.stop('Diagnostics complete');
-    const { allDiagnostics, summary } = summarizeDiagnostics(groups);
+    const allDiagnostics = groups.flatMap((group) => group.checks);
     if (summary.fail > 0) {
       process.exitCode = 1;
     }
@@ -67,93 +54,6 @@ export const doctorCommand = defineCommand({
     printDoctorSummary(groups, summary, diagMs);
   },
 });
-
-function extractDiagnostics(
-  results: Array<PromiseSettledResult<Array<DiagnosticCheck>>>
-): [
-  Array<DiagnosticCheck>,
-  Array<DiagnosticCheck>,
-  Array<DiagnosticCheck>,
-  Array<DiagnosticCheck>,
-] {
-  const envChecks = extractSettledResult(results[0], [
-    {
-      message: 'Failed to run environment checks',
-      name: 'Environment',
-      status: 'fail' as const,
-    },
-  ]);
-  const installChecks = extractSettledResult(results[1], [
-    {
-      message: 'Failed to run tool checks',
-      name: 'Tools',
-      status: 'fail' as const,
-    },
-  ]);
-  const healthChecks = extractSettledResult(results[2], [
-    {
-      message: 'Failed to run project health checks',
-      name: 'Project',
-      status: 'fail' as const,
-    },
-  ]);
-  const conflictChecks = extractSettledResult(results[3], [
-    {
-      message: 'Failed to run conflict checks',
-      name: 'Configuration',
-      status: 'fail' as const,
-    },
-  ]);
-  return [envChecks, installChecks, healthChecks, conflictChecks];
-}
-
-async function runAllDiagnostics(
-  cwd: string,
-  verbose: boolean
-): Promise<Array<DiagnosticGroup>> {
-  const results = await Promise.allSettled([
-    runEnvironmentChecks(cwd),
-    runToolInstallationChecks(cwd),
-    runProjectHealthChecks(cwd),
-    runConflictChecks(cwd),
-  ]);
-  const [envChecks, installChecks, healthChecks, conflictChecks] =
-    extractDiagnostics(results);
-  const groups: Array<DiagnosticGroup> = [
-    { checks: envChecks, title: 'Environment' },
-    { checks: installChecks, title: 'Tools' },
-    { checks: healthChecks, title: 'Project' },
-    { checks: conflictChecks, title: 'Configuration' },
-  ];
-  if (!verbose) {
-    return groups;
-  }
-  const mem = Math.round(os.totalmem() / 1024 ** 3);
-  groups.unshift({
-    checks: [
-      {
-        message: `${os.type()} ${os.release()} | ${os.arch()} | ${os.cpus().length} CPUs | ${mem} GB RAM`,
-        name: 'Platform',
-        status: 'pass',
-      },
-    ],
-    title: 'System',
-  });
-  return groups;
-}
-
-function summarizeDiagnostics(groups: Array<DiagnosticGroup>) {
-  const allDiagnostics = groups.flatMap((g) => g.checks);
-  return {
-    allDiagnostics,
-    summary: {
-      fail: allDiagnostics.filter((d) => d.status === 'fail').length,
-      pass: allDiagnostics.filter((d) => d.status === 'pass').length,
-      total: allDiagnostics.length,
-      warn: allDiagnostics.filter((d) => d.status === 'warn').length,
-    },
-  };
-}
 
 function formatDoctorOutput(options: {
   allDiagnostics: Array<DiagnosticCheck>;
@@ -198,15 +98,4 @@ function printDoctorSummary(
     )
   );
   printTiming(detectionOnlyTiming(diagMs));
-}
-
-/**
- * Safely extract a value from a `PromiseSettledResult`, returning a fallback
- * if the promise was rejected.
- */
-function extractSettledResult<T>(
-  result: PromiseSettledResult<T>,
-  fallback: T
-): T {
-  return result.status === 'fulfilled' ? result.value : fallback;
 }

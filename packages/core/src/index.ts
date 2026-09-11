@@ -52,13 +52,11 @@ export {
   detectPackageManager,
   detectProject,
 } from '@/detect.js';
-export type { DiagnosticCheck } from '@/diagnostics.js';
-export {
-  runConflictChecks,
-  runEnvironmentChecks,
-  runProjectHealthChecks,
-  runToolInstallationChecks,
+export type {
+  DiagnosticCheck,
+  DiagnosticGroup,
 } from '@/diagnostics.js';
+export { runDiagnostics } from '@/diagnostics.js';
 export type { EnsureGitignoreResult } from '@/ensure-gitignore.js';
 // Gitignore management
 export { ensureXtarterizeGitignore } from '@/ensure-gitignore.js';

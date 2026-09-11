@@ -6,13 +6,7 @@ import type {
   Task,
   TaskStatus,
 } from '@xtarterize/core';
-import {
-  logSuccess,
-  pc,
-  runConflictChecks,
-  runToolInstallationChecks,
-  statusTag,
-} from '@xtarterize/core';
+import { logSuccess, pc, runDiagnostics, statusTag } from '@xtarterize/core';
 import { defineCommand } from 'citty';
 
 import { openSession } from '@/session.js';
@@ -159,9 +153,10 @@ export const checkCommand = defineCommand({
     const ctx = session.runtime;
     const { statuses, tasks, timing } = session;
     const badgeToStdout = args.badge === '-';
-    const conflictChecks = await runConflictChecks(ctx.cwd);
-    const installChecks = await runToolInstallationChecks(ctx.cwd);
-    const diagnostics = [...installChecks, ...conflictChecks];
+    const { groups } = await runDiagnostics(ctx.cwd, {
+      groups: ['tools', 'configuration'],
+    });
+    const diagnostics = groups.flatMap((group) => group.checks);
     const { conformant, total } = countCheckSummary(tasks, statuses);
     if (!computeCheckOk({ conformant, total }, diagnostics)) {
       process.exitCode = 1;
