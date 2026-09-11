@@ -2,10 +2,13 @@ import type {
   FileDiff,
   ProjectProfile,
   Task,
+  TaskDep,
   TaskScope,
   TaskSearchMeta,
   TaskStatus,
 } from '@xtarterize/core';
+
+export type { TaskDep } from '@xtarterize/core';
 
 import { checkMissingDeps, wrapTask, writeTaskDiffs } from './ops.js';
 import { applyPackageJsonChange } from './package-json.js';
@@ -25,12 +28,6 @@ export type {
   TaskTarget,
   TransformTarget,
 } from './targets.js';
-
-/** A dependency the apply plan installs before tasks run. */
-export interface TaskDep {
-  depName: string;
-  dev: boolean;
-}
 
 export interface TaskAction {
   check: (cwd: string, profile: ProjectProfile) => Promise<TaskStatus>;

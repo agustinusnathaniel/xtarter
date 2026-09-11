@@ -1,9 +1,13 @@
 export type {
   DiffHunk,
+  EffectTask,
   FileDiff,
+  PromiseTask,
   Task,
+  TaskDep,
   TaskScope,
   TaskSearchMeta,
+  TaskServices,
   TaskStatus,
 } from '@/_base.js';
 export type { ApplyResult } from '@/apply/execute.js';
@@ -39,7 +43,12 @@ export type {
 export { runDiagnostics } from '@/diagnostics.js';
 // Gitignore management
 export { ensureXtarterizeGitignore } from '@/ensure-gitignore.js';
-export { BackupError, TaskError } from '@/errors.js';
+export {
+  BackupError,
+  DepsInstallError,
+  ProcessError,
+  TaskError,
+} from '@/errors.js';
 // Task inquiry/query engine
 export {
   expandQuery,
@@ -65,6 +74,14 @@ export {
   resolveTaskStatuses,
   resolveTasks,
 } from '@/resolve.js';
+// Task services: the runtime dependencies Effect tasks may require
+export { DepsInstaller } from '@/services/deps-installer.js';
+export type {
+  CommandResult,
+  ProcessRunOptions,
+} from '@/services/process-runner.js';
+export { ProcessRunner } from '@/services/process-runner.js';
+export { toTaskEffect } from '@/task-effect.js';
 export type { ApplyTiming, ResolveTiming } from '@/timing.js';
 export {
   computeSemanticJsonDiff,

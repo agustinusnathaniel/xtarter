@@ -63,9 +63,15 @@
     "provenance": true
   },
   "inlinedDependencies": {
+    "confbox": "0.2.4",
     "consola": "3.4.2",
     "diff": "9.0.0",
+    "effect": "4.0.0-rc.113",
+    "exsolve": "1.1.1",
     "json5": "2.2.3",
-    "picocolors": "1.1.1"
+    "nypm": "0.6.9",
+    "pathe": "2.0.3",
+    "picocolors": "1.1.1",
+    "pkg-types": "2.3.1"
   }
 }
