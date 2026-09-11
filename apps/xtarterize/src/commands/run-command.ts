@@ -1,11 +1,7 @@
 import type { Task, TaskStatus } from '@xtarterize/core';
 import { applyTaskSelection, logInfo, logWarn } from '@xtarterize/core';
 
-import {
-  type CommandSession,
-  openSession,
-  type SessionOutcome,
-} from '@/session.js';
+import { type CommandSession, openSession } from '@/session.js';
 import { getPrompter } from '@/ui/prompter.js';
 import { reportPlan } from '@/ui/reporter.js';
 import { selectTasks } from '@/ui/select-menu.js';
@@ -84,18 +80,11 @@ function warnUnknownSelection(
   }
 }
 
-function reportOutcome(session: CommandSession, outcome: SessionOutcome): void {
-  session.report(outcome);
-  if (!outcome.ok) {
-    process.exitCode = 1;
-  }
-}
-
 async function dryRunFlow(
   session: CommandSession,
   tasks: Array<Task>
 ): Promise<void> {
-  reportOutcome(session, await session.dryRun(tasks));
+  session.reportOutcome(await session.dryRun(tasks));
 }
 
 async function applyTasksFlow(
@@ -103,11 +92,12 @@ async function applyTasksFlow(
   tasks: Array<Task>,
   args: CommandArgs
 ): Promise<void> {
-  const outcome = await session.apply(tasks, {
-    includeConflicts: args.includeConflicts,
-    recordTiming: args.timing,
-  });
-  reportOutcome(session, outcome);
+  session.reportOutcome(
+    await session.apply(tasks, {
+      includeConflicts: args.includeConflicts,
+      recordTiming: args.timing,
+    })
+  );
 }
 
 async function handleSelectTasksFlow(options: FlowContext): Promise<void> {
@@ -118,7 +108,7 @@ async function handleSelectTasksFlow(options: FlowContext): Promise<void> {
     getPrompter()
   );
   if (selected === null) {
-    reportOutcome(session, session.cancelled());
+    session.reportOutcome(session.cancelled());
     return;
   }
   if (selected.length === 0) {
@@ -148,7 +138,7 @@ async function promptAndApply(options: FlowContext): Promise<void> {
     ],
   });
   if (action === null || action === 'quit') {
-    reportOutcome(options.session, options.session.cancelled());
+    options.session.reportOutcome(options.session.cancelled());
     return;
   }
   if (action === 'dry-run') {
@@ -180,7 +170,7 @@ async function runSession(
     skip: args.skip,
   });
   if (actionableTasks.length === 0) {
-    reportOutcome(session, session.empty(options.emptyMessage));
+    session.reportOutcome(session.empty(options.emptyMessage));
     return;
   }
   reportPlan(actionableTasks, statuses, runtime);

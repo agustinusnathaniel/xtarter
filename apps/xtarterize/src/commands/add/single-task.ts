@@ -15,14 +15,15 @@ function reportMissingTask(options: {
 }): void {
   const { allTasks, jsonMode, session, taskId } = options;
   const message = `Task "${taskId}" not found`;
-  session.report(session.blocked(message, { errors: [message], taskId }));
+  session.reportOutcome(
+    session.blocked(message, { errors: [message], taskId })
+  );
   if (!jsonMode) {
     logInfo('Available tasks:');
     for (const task of allTasks) {
       console.log(`  ${task.id}`);
     }
   }
-  process.exitCode = 1;
 }
 
 function reportNotApplicable(session: CommandSession, taskId: string): void {
@@ -40,8 +41,9 @@ function reportCheckError(
   detail: string
 ): void {
   const message = `Failed to check ${taskId}: ${detail}`;
-  session.report(session.blocked(message, { errors: [message], taskId }));
-  process.exitCode = 1;
+  session.reportOutcome(
+    session.blocked(message, { errors: [message], taskId })
+  );
 }
 
 function reportSkip(
@@ -55,7 +57,7 @@ function reportSkip(
 }
 
 function reportConflict(session: CommandSession, taskId: string): void {
-  session.report(
+  session.reportOutcome(
     session.blocked(
       `Task "${taskId}" conflicts with existing configuration and was not applied`,
       {
@@ -65,7 +67,6 @@ function reportConflict(session: CommandSession, taskId: string): void {
       }
     )
   );
-  process.exitCode = 1;
 }
 
 async function confirmApply(prompter: Prompter): Promise<boolean | null> {
@@ -102,16 +103,14 @@ async function executeTask(options: {
   // Only this task's own failure may fail the run. Session-wide check errors
   // belong to unrelated tasks; the requested task's own check error is already
   // reported before execution by `runSingleTask`.
-  const outcome = session.outcomeFor(result, {
-    includeCheckErrors: false,
-    recordTiming,
-    taskId: task.id,
-    taskStatus: status,
-  });
-  session.report(outcome);
-  if (!outcome.ok) {
-    process.exitCode = 1;
-  }
+  session.reportOutcome(
+    session.outcomeFor(result, {
+      includeCheckErrors: false,
+      recordTiming,
+      taskId: task.id,
+      taskStatus: status,
+    })
+  );
 }
 
 export async function runSingleTask(

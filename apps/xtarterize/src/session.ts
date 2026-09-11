@@ -346,6 +346,14 @@ export class CommandSession {
     reportSessionOutcome(outcome, this.context.runtime);
   }
 
+  /** Report an outcome and fail the process when it reports errors. */
+  reportOutcome(outcome: SessionOutcome): void {
+    this.report(outcome);
+    if (!outcome.ok) {
+      process.exitCode = 1;
+    }
+  }
+
   private buildIdleOutcome(
     kind: 'blocked' | 'cancelled' | 'empty',
     message: string,
