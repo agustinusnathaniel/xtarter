@@ -40,7 +40,7 @@ export const undoCommand = defineCommand({
     displayManifestPreview(manifest, jsonMode);
     const proceed = await promptRestoreConfirm(manifest, quiet, getPrompter());
     if (!proceed) {
-      session.report(session.cancelled());
+      session.reportOutcome(session.cancelled());
       return;
     }
     const { restored, removedCount, errors } = await restoreManifestFiles(

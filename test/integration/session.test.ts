@@ -116,7 +116,7 @@ describe('command session', () => {
       }
 
       const outcome = await session.apply([task]);
-      session.report(outcome);
+      session.reportOutcome(outcome);
 
       expect(coreMocks.planTasks).toHaveBeenCalledTimes(1);
       expect(coreMocks.executePlan).toHaveBeenCalledTimes(1);

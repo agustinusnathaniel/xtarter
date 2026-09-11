@@ -27,7 +27,7 @@ function reportMissingTask(options: {
 }
 
 function reportNotApplicable(session: CommandSession, taskId: string): void {
-  session.report(
+  session.reportOutcome(
     session.empty(`Task "${taskId}" is not applicable for this project`, {
       taskId,
       taskStatus: 'not-applicable',
@@ -51,7 +51,7 @@ function reportSkip(
   taskId: string,
   status: SessionTaskOutcome
 ): void {
-  session.report(
+  session.reportOutcome(
     session.empty('Already conformant', { taskId, taskStatus: status })
   );
 }
@@ -91,7 +91,7 @@ async function executeTask(options: {
     displayDiffs(plan.entries[0]?.diffs ?? [], runtime.format);
     const proceed = await confirmApply(prompter);
     if (proceed === null) {
-      session.report(session.cancelled());
+      session.reportOutcome(session.cancelled());
       return;
     }
     if (!proceed) {

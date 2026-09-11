@@ -142,7 +142,9 @@ export async function runInteractive(
   const jsonMode = runtime.format === 'json';
 
   if (tasks.length === 0) {
-    session.report(session.empty('No tasks applicable for this project'));
+    session.reportOutcome(
+      session.empty('No tasks applicable for this project')
+    );
     return;
   }
 
@@ -163,7 +165,7 @@ export async function runInteractive(
     tasksWithStatus,
   });
   if (selected === null) {
-    session.report(session.cancelled());
+    session.reportOutcome(session.cancelled());
     return;
   }
   if (selected.length === 0) {
@@ -188,7 +190,7 @@ export async function runInteractive(
         session,
       });
   if (confirmed === null) {
-    session.report(session.cancelled());
+    session.reportOutcome(session.cancelled());
     return;
   }
 
