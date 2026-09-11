@@ -104,8 +104,8 @@ xtarterize/
 
 | Package                | Description                                                                    | Publishable |
 | ---------------------- | ------------------------------------------------------------------------------ | ----------- |
-| `@xtarterize/core`     | Project detection, task interface, file utilities, resolve/apply/backup engine | Yes         |
-| `@xtarterize/patchers` | Deep JSON merge (defu), AST patching (magicast) for config files                | Yes         |
+| `@xtarterize/core`     | Project detection, task interface, file utilities, resolve/apply/backup engine | Internal    |
+| `@xtarterize/patchers` | Deep JSON merge (defu), AST patching (magicast) for config files                | Internal    |
 | `@xtarterize/tasks`    | All task implementations and template renderers                                | Internal    |
 | `xtarterize`           | CLI for applying conformance configurations to existing projects               | Yes         |
 | `create-xtarter-app`   | CLI for scaffolding new projects from templates                                | Yes         |
@@ -114,7 +114,7 @@ xtarterize/
 
 ## Contributing a New Task
 
-1. Implement the `Task` interface from [`packages/core/src/_base.ts`](packages/core/src/_base.ts)
+1. Declare the task with `defineTask()` from [`packages/tasks/src/factory/define-task.ts`](packages/tasks/src/factory/define-task.ts); the [`Task`](packages/core/src/_base.ts) contract is a `PromiseTask | EffectTask` union
 2. Create your task file in `packages/tasks/src/<category>/<task>.ts`
 3. Export it from [`packages/tasks/src/index.ts`](packages/tasks/src/index.ts)
 4. Add or update tests only when they provide meaningful regression protection. Extend the nearest existing suite when possible; see [`docs/TESTING.md`](docs/TESTING.md)
@@ -125,6 +125,8 @@ Each task must implement:
 - `check(cwd, profile)` - What's the current status?
 - `dryRun(cwd, profile)` - What would change?
 - `apply(cwd, profile)` - Make the changes
+
+`defineTask()` returns an `EffectTask` whose spec functions may be synchronous, return a Promise, or return an Effect. External plugins may keep the original Promise-based contract; `toTaskEffect()` normalizes both shapes.
 
 ## Development
 

@@ -139,6 +139,8 @@ Restore with:
 }
 ```
 
+Plugin tasks may implement the original Promise-based `Task` contract or return Effects. Both shapes are normalized by `toTaskEffect()`, so existing plugins keep working and new plugins can use Effect services like `ProcessRunner` (ADR 036).
+
 Precedence rules:
 
 - CLI `--only` overrides the config `only` list when provided

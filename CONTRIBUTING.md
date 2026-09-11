@@ -27,7 +27,7 @@ test/               # Shared test fixtures and test suites
 
 ## Adding a New Task
 
-1. Implement the `Task` interface from `packages/core/src/_base.ts`
+1. Declare the task with `defineTask()` from `packages/tasks/src/factory/define-task.ts`; the `Task` contract in `packages/core/src/_base.ts` is a `PromiseTask | EffectTask` union
 2. Create your task file in `packages/tasks/src/<category>/<task>.ts`
 3. Export it from `packages/tasks/src/index.ts` and add to `getAllTasks()`
 4. Add or update tests only when they provide meaningful regression protection. Extend the nearest existing suite when possible; see [`docs/TESTING.md`](docs/TESTING.md)
@@ -46,6 +46,8 @@ Declare tasks with `defineTask()` from `packages/tasks/src/factory/define-task.t
 - `actions` - A status probe plus a run effect with no file diff.
 - `deps` - A static list or a resolver that receives the resolved status and diffs.
 - `packageJson` targets go through `factory/package-json.ts`, the only xtarterize writer of `package.json`.
+
+`defineTask()` returns an `EffectTask`: first-party task methods return Effects requiring `ProcessRunner`, and spec functions may be synchronous, return a Promise, or return an Effect. External plugins may keep the original Promise-based contract; `toTaskEffect()` normalizes both shapes.
 
 ## Quality Standards
 

@@ -23,6 +23,8 @@ The registry does not declare every detector: framework, router, styling, runtim
 
 ## detectProject Function
 
+`detectProject()` stays a Promise-returning leaf: it does not compose Effects and never calls a runtime. The engine lifts it with `Effect.tryPromise` at the nearest orchestration seam (for example `resolveProjectTasks` in `resolve.ts`). See ADR 036 for the boundary rule.
+
 ```typescript
 import { detectProject } from '@xtarterize/core'
 

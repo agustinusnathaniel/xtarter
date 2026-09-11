@@ -20,18 +20,21 @@ The pipeline is split into a side-effect-free plan and an execution step, so pre
 3. **Dependencies** - Asks each runnable task's `getDeps()` for its packages
 4. **Files** - Collects the unique filepaths from the diffs, which is also the backup set
 
-`planTasks()` performs no writes, no backups, and no installs:
+`planTasks()` performs no writes, no backups, and no installs. It returns an Effect that requires `TaskServices` (`ProcessRunner`):
 
 ```typescript
-import { planTasks } from '@xtarterize/core'
+import { Effect } from 'effect'
+import { planTasks, ProcessRunner } from '@xtarterize/core'
 
-const plan = await planTasks({
-  cwd: '/path/to/project',
-  profile,
-  statuses, // optional: reuse statuses from session open
-  tasks,
-  includeConflicts: true, // optional: allow conflicts
-})
+const plan = await Effect.runPromise(
+  planTasks({
+    cwd: '/path/to/project',
+    profile,
+    statuses, // optional: reuse statuses from session open
+    tasks,
+    includeConflicts: true, // optional: allow conflicts
+  }).pipe(Effect.provide(ProcessRunner.layer))
+)
 
 console.log(plan.entries)      // per-task status, diffs, and timing
 console.log(plan.dependencies) // collected packages to install
@@ -43,14 +46,22 @@ console.log(plan.files)        // files to back up, one manifest for the run
 [`executePlan`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/apply/execute.ts) runs the plan:
 
 1. **Backup** - Backs up every file in the plan once and writes one run manifest
-2. **Batch Install** - Installs the plan's collected dependencies in a single call, grouped by dev/prod
-3. **Apply** - Runs `task.apply()` sequentially for each planned task
+2. **Batch Install** - Installs the plan's collected dependencies in a single call through the `DepsInstaller` service, grouped by dev/prod
+3. **Apply** - Runs `task.apply()` sequentially for each planned task, accumulating per-entry errors instead of aborting
 4. **Report** - Returns `{ applied, skipped, errors, timing }`
 
-```typescript
-import { executePlan } from '@xtarterize/core'
+The apply spinner is created and stopped with `Effect.acquireUseRelease`, so it is released even on interruption or failure. `executePlan()` requires `DepsInstaller | TaskServices`:
 
-const result = await executePlan({ cwd: '/path/to/project', plan, profile })
+```typescript
+import { Effect, Layer } from 'effect'
+import { DepsInstaller, executePlan, ProcessRunner } from '@xtarterize/core'
+
+const services = Layer.mergeAll(DepsInstaller.layer, ProcessRunner.layer)
+const result = await Effect.runPromise(
+  executePlan({ cwd: '/path/to/project', plan, profile }).pipe(
+    Effect.provide(services)
+  )
+)
 
 console.log(result.applied) // number of successfully applied tasks
 console.log(result.errors)  // error messages for failed tasks and installs
@@ -58,13 +69,23 @@ console.log(result.errors)  // error messages for failed tasks and installs
 
 ### Composing both
 
-Callers that need the plan before executing, such as the CLI's diff preview and confirmation flow, run both steps directly:
+Callers that need the plan before executing, such as the CLI's diff preview and confirmation flow, compose both Effects in one program. The CLI provides the same services through `AppLayer` in `apps/xtarterize/src/runtime.ts`:
 
 ```typescript
-import { executePlan, planTasks } from '@xtarterize/core'
+import { Effect, Layer } from 'effect'
+import {
+  DepsInstaller,
+  executePlan,
+  planTasks,
+  ProcessRunner,
+} from '@xtarterize/core'
 
-const plan = await planTasks({ cwd: '/path/to/project', profile, tasks })
-const result = await executePlan({ cwd: '/path/to/project', plan, profile })
+const appLayer = Layer.mergeAll(DepsInstaller.layer, ProcessRunner.layer)
+const program = Effect.gen(function* () {
+  const plan = yield* planTasks({ cwd: '/path/to/project', profile, tasks })
+  return yield* executePlan({ cwd: '/path/to/project', plan, profile })
+})
+const result = await Effect.runPromise(Effect.provide(program, appLayer))
 ```
 
 ## Backup System
@@ -93,7 +114,7 @@ Errors are collected and reported without aborting the entire run:
 - **Batch install failures** - Recorded in `ApplyResult.errors`. Tasks whose `apply()` needs the missing packages fail individually, while file-only tasks still run
 - **Apply failures** - Logged with the task ID and error message; subsequent tasks continue
 
-Check, dry-run, install, and task-apply failures are collected in the result. Backup or manifest failures can reject the apply before task execution begins.
+Check, dry-run, install, and task-apply failures are collected in the result. Backup or manifest failures fail the Effect before task execution begins. Task methods are normalized with `toTaskEffect()`, so Promise plugins and Effect tasks follow the same failure rules.
 
 ## References
 

@@ -18,6 +18,7 @@
 ## Non-Obvious Architecture
 
 - The Task interface is the universal pattern: `applicable()` → `check()` → `dryRun()` → `apply()`. Anything that doesn't fit needs scrutiny.
+- Effect owns command orchestration: `packages/*` return Effects and never call a runtime; `apps/xtarterize/src/runtime.ts` is the only runtime edge (`runCliProgram` with `AppLayer`). Detection, filesystem, backup, and other leaves stay plain TypeScript, lifted at the nearest Effect seam. `Task` is a `PromiseTask | EffectTask` union, so external Promise plugins keep working. ADR 036 is authoritative for this boundary.
 - JSON modifications go through `packages/patchers/`. Direct string writes to config files are almost always wrong.
 - Package boundaries exist because crossing them created maintenance problems. Core has zero patcher or task deps. `docs` imports from published packages only. `create-xtarter-app` is intentionally isolated.
 - ADRs record every significant architecture decision. Read the relevant one before touching architecture.
@@ -69,10 +70,13 @@
 | Concern                | Location                        |
 | ---------------------- | ------------------------------- |
 | Task interface         | `packages/core/src/_base.ts`    |
+| Task Effect bridge     | `packages/core/src/task-effect.ts` |
+| Task services          | `packages/core/src/services/`   |
 | Core utilities         | `packages/core/src/`            |
 | Patching engine        | `packages/patchers/src/`        |
 | Task implementations   | `packages/tasks/src/`           |
 | CLI commands           | `apps/xtarterize/src/commands/` |
+| CLI runtime edge       | `apps/xtarterize/src/runtime.ts` |
 | Scaffolding CLI        | `apps/create-xtarter-app/src/`  |
 | vp create integration  | `apps/xtarter-create/`          |
 | Documentation site     | `apps/docs/`                    |
