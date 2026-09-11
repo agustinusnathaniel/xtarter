@@ -3,6 +3,9 @@ import JSON5 from 'json5';
 import { dirname, resolve } from 'pathe';
 
 import { FileSystemError } from '@/errors.js';
+import { fileExists } from '@/utils/file-exists.js';
+
+export { fileExists };
 
 export async function ensureDir(dirPath: string): Promise<void> {
   try {
@@ -30,15 +33,6 @@ export async function writeFile(
     await fs.writeFile(filePath, content, { mode });
   } catch (cause) {
     throw new FileSystemError({ cause, path: filePath });
-  }
-}
-
-export async function fileExists(filePath: string): Promise<boolean> {
-  try {
-    await fs.access(filePath);
-    return true;
-  } catch {
-    return false;
   }
 }
 

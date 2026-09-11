@@ -1,5 +1,5 @@
 import { text } from '@clack/prompts';
-import { abortIfCancelled, pc } from '@xtarterize/core';
+import { abortIfCancelled, pc } from '@xtarterize/core/plain';
 
 import { getTemplateById, TEMPLATES } from '@/templates/registry';
 

@@ -1,4 +1,4 @@
-import { consola } from '@xtarterize/core';
+import { consola } from '@xtarterize/core/plain';
 
 type Logger = ReturnType<typeof consola.withTag>;
 /** `[startMessage, failPrefix, level]`; `warn` marks the step non-fatal. */

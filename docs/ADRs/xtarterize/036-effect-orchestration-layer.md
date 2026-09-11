@@ -53,6 +53,11 @@ restore `Equal.equals` (ADR 031 keeps `isDeepStrictEqual`).
   `runCliProgram` with their command program.
 - **Apps own the only runtime.** `apps/create-xtarter-app` stays Promise-based
   and calls no Effect runtime either.
+- **Non-Effect consumers use the plain entry.** `@xtarterize/core/plain`
+  ([`packages/core/src/plain.ts`](../../../packages/core/src/plain.ts))
+  re-exports only leaf helpers whose import graph never reaches `effect`
+  (`cli-args`, `invocation-guard`, `logger`, `prompts`, and `fileExists`).
+  `apps/create-xtarter-app` imports that subpath exclusively.
 - The rule is upheld by review today. A dedicated
   `scripts/check-effect-boundaries.mjs` check is planned to enforce it
   mechanically; it is not in the repository yet. [verified: no `Effect.run*`
@@ -172,11 +177,14 @@ seam (`Effect.tryPromise` / `Effect.promise`), for example `liftLeaf` in
   (`SIGNAL_EXIT_GRACE_MS = 250`, an unref'd timer in
   `apps/xtarterize/src/index.ts`); a second SIGINT exits 0 immediately
   `[reported during the refactor; the code at HEAD matches]`.
-- The create-xtarter-app bundle grew because it imports `@xtarterize/core`
-  helpers and core now imports Effect. Built from both revisions `[verified]`,
-  the dist total goes from 138.08 kB on `main` to 209.58 kB on this branch,
-  and the scaffold chunk goes from 85.14 kB (gzip 26.43 kB) to 156.63 kB
-  (gzip 51.11 kB).
+- The create-xtarter-app bundle initially grew because it imported
+  `@xtarterize/core` helpers and core now imports Effect. Built from both
+  revisions `[verified]`, the dist total went from 138.08 kB on `main` to
+  209.58 kB, and the scaffold chunk from 85.14 kB (gzip 26.43 kB) to
+  156.63 kB (gzip 51.11 kB). After the `@xtarterize/core/plain` entry landed,
+  the app's dist total is 99.36 kB and its scaffold chunk is 46.42 kB (gzip
+  15.22 kB), with no `effect` in the output or in `inlinedDependencies`
+  `[verified]`.
 
 ## Rationale
 
@@ -229,10 +237,11 @@ seam (`Effect.tryPromise` / `Effect.promise`), for example `liftLeaf` in
 
 - The dependency is pinned to an exact release candidate, so upgrades are
   deliberate and RC API drift is a recurring maintenance item.
-- Development install size grows by about 52MB, and
-  `apps/create-xtarter-app` grows by about 71.5 kB of dist output (the
-  scaffold chunk's gzip size grows by about 24.7 kB) even though that app was
-  not migrated.
+- Development install size grows by about 52MB, and every non-Effect consumer
+  must import `@xtarterize/core/plain` instead of the root entry. Without it,
+  `apps/create-xtarter-app` carried about 71.5 kB of extra dist output; with
+  it, that app builds at 99.36 kB total (46.42 kB scaffold chunk, gzip
+  15.22 kB), below the 138.08 kB `main` baseline `[verified]`.
 - Contributors must understand the boundary rule, services, and layers to
   work on the CLI.
 - SIGINT during a prompt now waits through a 250ms grace period instead of

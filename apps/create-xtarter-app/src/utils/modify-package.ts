@@ -1,6 +1,6 @@
 import { readFile, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { fileExists } from '@xtarterize/core';
+import { fileExists } from '@xtarterize/core/plain';
 
 import { runStep } from '@/utils/run-step';
 

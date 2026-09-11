@@ -1,4 +1,4 @@
-import { consola } from '@xtarterize/core';
+import { consola } from '@xtarterize/core/plain';
 import { downloadTemplate } from 'giget';
 
 import type { TemplateConfig } from '@/templates/registry';
