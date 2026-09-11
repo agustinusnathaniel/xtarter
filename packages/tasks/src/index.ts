@@ -31,8 +31,6 @@ import { viteCheckerTask } from '@/vite/checker.js';
 import { viteVisualizerTask } from '@/vite/visualizer.js';
 import { pnpmWorkspaceTask } from '@/workspace/pnpm-workspace.js';
 
-export { isExecutableFile, writeTaskDiffs } from '@/factory/ops.js';
-
 // Inline agent task definitions
 const agentsMdTask = defineSingleTargetTask({
   applicable: () => true,

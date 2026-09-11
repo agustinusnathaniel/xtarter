@@ -1,8 +1,9 @@
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { writeTaskDiffs } from '@xtarterize/tasks';
 import { describe, expect } from 'vite-plus/test';
+
+import { writeTaskDiffs } from '../../packages/tasks/src/factory/ops.js';
 
 describe('writeTaskDiffs', () => {
   test('writes file diffs to disk', async () => {

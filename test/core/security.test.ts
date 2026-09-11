@@ -2,8 +2,12 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { detectProject, writeFile } from '@xtarterize/core';
-import { isExecutableFile, writeTaskDiffs } from '@xtarterize/tasks';
 import { describe, expect } from 'vite-plus/test';
+
+import {
+  isExecutableFile,
+  writeTaskDiffs,
+} from '../../packages/tasks/src/factory/ops.js';
 
 describe('security: profile value sanitization', () => {
   test('nodeVersion contains only digits from engines.node', async () => {
