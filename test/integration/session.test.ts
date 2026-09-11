@@ -10,7 +10,14 @@ import {
 } from '@xtarterize/app/ui/prompter.js';
 import { reportSessionOutcome } from '@xtarterize/app/ui/reporter.js';
 import { readRunManifest } from '@xtarterize/core';
-import { afterEach, describe, expect, test, vi } from 'vite-plus/test';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  test,
+  vi,
+} from 'vite-plus/test';
 
 const coreMocks = vi.hoisted(() => ({
   ensureXtarterizeGitignore: vi.fn(),
@@ -78,6 +85,14 @@ function setCi(value: string | undefined): void {
 const recordedOutcomes = () =>
   vi.mocked(reportSessionOutcome).mock.calls.map(([outcome]) => outcome);
 
+// `process.exitCode` starts undefined in a fresh worker, so initialize it
+// before each test instead of relying on a previous test's cleanup. The
+// success-path assertions then prove the command leaves it at 0 rather than
+// inheriting an unrelated value.
+beforeEach(() => {
+  process.exitCode = 0;
+});
+
 afterEach(() => {
   setPrompter(null);
   vi.clearAllMocks();
@@ -101,7 +116,7 @@ describe('command session', () => {
       }
 
       const outcome = await session.apply([task]);
-      session.report(outcome);
+      session.reportOutcome(outcome);
 
       expect(coreMocks.planTasks).toHaveBeenCalledTimes(1);
       expect(coreMocks.executePlan).toHaveBeenCalledTimes(1);

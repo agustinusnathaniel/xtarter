@@ -1,7 +1,12 @@
 #!/usr/bin/env node
 import { resolve } from 'node:path';
 import { cancel, intro, note, outro } from '@clack/prompts';
-import { consola, findFirstPositionalIndex, pc } from '@xtarterize/core';
+import {
+  consola,
+  createInvocationGuard,
+  findFirstPositionalIndex,
+  pc,
+} from '@xtarterize/core';
 import {
   type ArgsDef,
   type CommandDef,
@@ -23,7 +28,6 @@ import {
   scaffoldProject,
 } from '@/scaffold';
 import type { PackageManager } from '@/types';
-import { createInvocationGuard } from '@/utils/invocation-guard';
 
 // ── Helpers ──
 
@@ -43,23 +47,6 @@ async function resolveArg<T>(
     return defaultValue;
   }
   return prompt();
-}
-
-function formatJsonResult(options: {
-  success: true;
-  projectPath: string;
-  template: string;
-  packageManager: string;
-  gitInitialized: boolean;
-  dependenciesInstalled: boolean;
-  ciConfigsCleaned: boolean;
-  nextSteps: Array<string>;
-}): string {
-  return JSON.stringify(options, null, 2);
-}
-
-function formatJsonError(message: string): string {
-  return JSON.stringify({ error: message, success: false as const }, null, 2);
 }
 
 // ── Argument definitions ──
@@ -264,19 +251,23 @@ async function scaffoldAndInstall(options: {
   if (json) {
     const cdCommand = args.name === '.' ? '' : `cd ${details.projectName}`;
     process.stdout.write(
-      `${formatJsonResult({
-        ciConfigsCleaned: details.shouldCleanCI,
-        dependenciesInstalled: true,
-        gitInitialized: details.shouldInitGit,
-        nextSteps: [
-          ...(cdCommand ? [cdCommand] : []),
-          `${details.packageManager} dev`,
-        ],
-        packageManager: details.packageManager,
-        projectPath: details.projectPath,
-        success: true as const,
-        template: details.template.id,
-      })}\n`
+      `${JSON.stringify(
+        {
+          ciConfigsCleaned: details.shouldCleanCI,
+          dependenciesInstalled: true,
+          gitInitialized: details.shouldInitGit,
+          nextSteps: [
+            ...(cdCommand ? [cdCommand] : []),
+            `${details.packageManager} dev`,
+          ],
+          packageManager: details.packageManager,
+          projectPath: details.projectPath,
+          success: true as const,
+          template: details.template.id,
+        },
+        null,
+        2
+      )}\n`
     );
     return;
   }
@@ -299,7 +290,9 @@ ${pc.bold('Docs:')} ${pc.underline(`https://github.com/${details.template.repo}`
 function handleScaffoldError(error: unknown, json: boolean) {
   const message = error instanceof Error ? error.message : 'Unknown error';
   if (json) {
-    process.stderr.write(`${formatJsonError(message)}\n`);
+    process.stderr.write(
+      `${JSON.stringify({ error: message, success: false as const }, null, 2)}\n`
+    );
   } else {
     cancel(`${pc.red('Error:')} ${message}`);
   }

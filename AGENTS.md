@@ -18,7 +18,7 @@
 ## Non-Obvious Architecture
 
 - The Task interface is the universal pattern: `applicable()` → `check()` → `dryRun()` → `apply()`. Anything that doesn't fit needs scrutiny.
-- JSON/YAML modifications go through `packages/patchers/`. Direct string writes to config files are almost always wrong.
+- JSON modifications go through `packages/patchers/`. Direct string writes to config files are almost always wrong.
 - Package boundaries exist because crossing them created maintenance problems. Core has zero patcher or task deps. `docs` imports from published packages only. `create-xtarter-app` is intentionally isolated.
 - ADRs record every significant architecture decision. Read the relevant one before touching architecture.
 

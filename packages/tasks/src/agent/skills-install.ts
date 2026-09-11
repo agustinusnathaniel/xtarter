@@ -1,6 +1,8 @@
+import { readdir } from 'node:fs/promises';
+import type { ProjectProfile } from '@xtarterize/core';
 import {
+  collectDependencyVersions,
   fileExists,
-  readFile,
   readPackageJson,
   resolvePath,
   TaskError,
@@ -10,51 +12,8 @@ import { x } from 'tinyexec';
 import { getSkillsToInstall, type SkillEntry } from '@/agent/catalog.js';
 import { defineTask } from '@/factory/define-task.js';
 
-function getAllDeps(pkg: Record<string, unknown>): Record<string, string> {
-  const deps: Record<string, string> = {};
-  if (
-    typeof pkg.dependencies === 'object' &&
-    pkg.dependencies !== null &&
-    !Array.isArray(pkg.dependencies)
-  ) {
-    Object.assign(deps, pkg.dependencies as Record<string, string>);
-  }
-  if (
-    typeof pkg.devDependencies === 'object' &&
-    pkg.devDependencies !== null &&
-    !Array.isArray(pkg.devDependencies)
-  ) {
-    Object.assign(deps, pkg.devDependencies as Record<string, string>);
-  }
-  return deps;
-}
-
-async function readSkillLockFile(lockPath: string): Promise<Set<string>> {
-  const installed = new Set<string>();
-  if (!(await fileExists(lockPath))) {
-    return installed;
-  }
-
-  try {
-    const content = await readFile(lockPath);
-    const lock = JSON.parse(content) as {
-      skills?: Record<string, unknown>;
-    };
-    if (lock.skills && typeof lock.skills === 'object') {
-      for (const name of Object.keys(lock.skills)) {
-        installed.add(name);
-      }
-    }
-  } catch {
-    // ignore parse errors
-  }
-
-  return installed;
-}
-
 async function isDirNonEmpty(dirPath: string): Promise<boolean> {
   try {
-    const { readdir } = await import('node:fs/promises');
     const entries = await readdir(dirPath);
     return entries.length > 0;
   } catch {
@@ -69,7 +28,6 @@ async function readSkillsFromDir(skillsDir: string): Promise<Set<string>> {
   }
 
   try {
-    const { readdir } = await import('node:fs/promises');
     const entries = await readdir(skillsDir, { withFileTypes: true });
     for (const entry of entries) {
       if (entry.isDirectory()) {
@@ -87,39 +45,40 @@ async function readSkillsFromDir(skillsDir: string): Promise<Set<string>> {
   return installed;
 }
 
+/** A project skill counts as installed only when its directory has content. */
 async function getInstalledSkills(cwd: string): Promise<Set<string>> {
-  // Check project-local skill directories first
   const projectDirs = [
     resolvePath(cwd, '.agents', 'skills'),
     resolvePath(cwd, '.claude', 'skills'),
     resolvePath(cwd, '.cursor', 'skills'),
   ];
 
-  const skillDirsWithContent = new Set<string>();
-  for (const dir of projectDirs) {
-    const skills = await readSkillsFromDir(dir);
-    for (const s of skills) {
-      skillDirsWithContent.add(s);
-    }
-  }
-
-  // Validate lock file entries against actual directories
-  const lockPath = resolvePath(cwd, 'skills-lock.json');
-  const lockSkills = await readSkillLockFile(lockPath);
-
   const installed = new Set<string>();
-  // Only count lock file entries if they have actual content in the directory
-  for (const s of lockSkills) {
-    if (skillDirsWithContent.has(s)) {
-      installed.add(s);
+  for (const dir of projectDirs) {
+    for (const skill of await readSkillsFromDir(dir)) {
+      installed.add(skill);
     }
   }
-  // Also include any directory skills not in lock file (but only if they have content)
-  for (const s of skillDirsWithContent) {
-    installed.add(s);
+  return installed;
+}
+
+/** Read package.json once and project which catalog skills are still missing. */
+async function resolveMissingSkills(
+  cwd: string,
+  profile: ProjectProfile
+): Promise<{ missing: Array<SkillEntry>; total: number }> {
+  const pkg = await readPackageJson(cwd);
+  const deps = collectDependencyVersions(pkg);
+  const skills = getSkillsToInstall(profile, deps);
+  if (skills.length === 0) {
+    return { missing: [], total: 0 };
   }
 
-  return installed;
+  const installed = await getInstalledSkills(cwd);
+  return {
+    missing: skills.filter((s) => !installed.has(s.skill)),
+    total: skills.length,
+  };
 }
 
 function groupBySource(skills: Array<SkillEntry>): Map<string, Array<string>> {
@@ -141,38 +100,15 @@ export const skillsInstallTask = defineTask({
   actions: [
     {
       async check(cwd, profile) {
-        const pkg = await readPackageJson(cwd);
-        const deps = pkg ? getAllDeps(pkg as Record<string, unknown>) : {};
-        const skills = getSkillsToInstall(profile, deps);
-
-        if (skills.length === 0) {
-          return 'skip';
-        }
-
-        const installed = await getInstalledSkills(cwd);
-        const missing = skills.filter((s) => !installed.has(s.skill));
-
+        const { missing, total } = await resolveMissingSkills(cwd, profile);
         if (missing.length === 0) {
           return 'skip';
         }
-        if (missing.length === skills.length) {
-          return 'new';
-        }
-        return 'patch';
+        return missing.length === total ? 'new' : 'patch';
       },
       kind: 'action',
       async run(cwd, profile) {
-        const pkg = await readPackageJson(cwd);
-        const deps = pkg ? getAllDeps(pkg as Record<string, unknown>) : {};
-        const skills = getSkillsToInstall(profile, deps);
-
-        if (skills.length === 0) {
-          return;
-        }
-
-        const installed = await getInstalledSkills(cwd);
-        const missing = skills.filter((s) => !installed.has(s.skill));
-
+        const { missing } = await resolveMissingSkills(cwd, profile);
         const grouped = groupBySource(missing);
         for (const [source, skillNames] of grouped) {
           const args = [

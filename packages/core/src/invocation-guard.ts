@@ -1,15 +1,13 @@
-import { type CliArgsDefinition, validateInvocation } from '@xtarterize/core';
 import { type CittyPlugin, defineCittyPlugin, type Resolvable } from 'citty';
 
+import { type CliArgsDefinition, validateInvocation } from '@/cli-args.js';
+
 /**
- * Loaders returning each subcommand's definition. Typed structurally — the
- * guard only reads `args` — because citty erases subcommand maps to
+ * Loaders returning each subcommand's definition. Typed structurally - the
+ * guard only reads `args` - because citty erases subcommand maps to
  * `CommandDef<any>`, which the linter forbids spelling out.
  */
-export type SubcommandLoaders = Record<
-  string,
-  () => Promise<{ args?: unknown }>
->;
+type SubcommandLoaders = Record<string, () => Promise<{ args?: unknown }>>;
 
 interface PluginContext {
   cmd: { args?: unknown };

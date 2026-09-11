@@ -1,14 +1,14 @@
 import { addDependency } from 'nypm';
 import { readPackageJSON } from 'pkg-types';
 
-import { detectPackageManager } from '@/detect/package-manager.js';
+import {
+  detectPackageManager,
+  isStringRecord,
+} from '@/detect/package-manager.js';
 import { fileExists, resolvePath } from '@/utils/fs.js';
 
-export async function isPnpmWorkspace(
-  cwd: string
-): Promise<boolean | undefined> {
-  const exists = await fileExists(resolvePath(cwd, 'pnpm-workspace.yaml'));
-  return exists || undefined;
+export async function isPnpmWorkspace(cwd: string): Promise<boolean> {
+  return fileExists(resolvePath(cwd, 'pnpm-workspace.yaml'));
 }
 
 export async function readPackageJson(cwd: string) {
@@ -20,6 +20,26 @@ export async function readPackageJson(cwd: string) {
   return readPackageJSON(pkgPath);
 }
 
+/**
+ * Merge `dependencies` and `devDependencies` into one flat version record.
+ * Malformed records whose values are not strings are ignored.
+ */
+export function collectDependencyVersions(
+  pkg: {
+    dependencies?: unknown;
+    devDependencies?: unknown;
+  } | null
+): Record<string, string> {
+  const deps: Record<string, string> = {};
+  if (pkg && isStringRecord(pkg.dependencies)) {
+    Object.assign(deps, pkg.dependencies);
+  }
+  if (pkg && isStringRecord(pkg.devDependencies)) {
+    Object.assign(deps, pkg.devDependencies);
+  }
+  return deps;
+}
+
 export function hasDependency(
   pkg: {
     dependencies?: Record<string, string>;
@@ -28,25 +48,6 @@ export function hasDependency(
   name: string
 ): boolean {
   return !!(pkg.dependencies?.[name] || pkg.devDependencies?.[name]);
-}
-
-export function getDependencyVersion(
-  pkg: {
-    dependencies?: Record<string, string>;
-    devDependencies?: Record<string, string>;
-  },
-  name: string
-): string | undefined {
-  return pkg.dependencies?.[name] ?? pkg.devDependencies?.[name];
-}
-
-export function getNodeVersion(pkg: {
-  engines?: Record<string, string>;
-}): string {
-  if (pkg.engines?.node) {
-    return pkg.engines.node;
-  }
-  return '22';
 }
 
 /**
@@ -133,32 +134,5 @@ export async function installDependenciesBatch(
 
   if (errors.length > 0) {
     throw new Error(errors.join('\n'));
-  }
-}
-
-export async function installDependency(
-  cwd: string,
-  depName: string,
-  dev = true
-): Promise<void> {
-  const pkg = await readPackageJson(cwd);
-  if (pkg?.devDependencies?.[depName] || pkg?.dependencies?.[depName]) {
-    return;
-  }
-
-  const workspace = await isPnpmWorkspace(cwd);
-
-  const packageManager = await detectPackageManager(cwd);
-
-  try {
-    await addDependency([depName], {
-      cwd,
-      dev,
-      packageManager,
-      workspace,
-    });
-  } catch (cause) {
-    const message = cause instanceof Error ? cause.message : String(cause);
-    throw new Error(`Failed to install dependency '${depName}': ${message}`);
   }
 }

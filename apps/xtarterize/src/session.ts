@@ -153,7 +153,8 @@ function buildDryRunOutcome(
 /**
  * Owns one command lifecycle: open the project, plan a task set, execute the
  * plan, and report the outcome. The session never writes to the console;
- * `report` delegates to the terminal/JSON reporter.
+ * `reportOutcome` delegates to the terminal/JSON reporter and fails the
+ * process when the outcome reports errors.
  */
 export class CommandSession {
   private readonly context: SessionContext;
@@ -342,8 +343,16 @@ export class CommandSession {
     return this.buildIdleOutcome('cancelled', 'Cancelled');
   }
 
-  report(outcome: SessionOutcome): void {
+  private report(outcome: SessionOutcome): void {
     reportSessionOutcome(outcome, this.context.runtime);
+  }
+
+  /** Report an outcome and fail the process when it reports errors. */
+  reportOutcome(outcome: SessionOutcome): void {
+    this.report(outcome);
+    if (!outcome.ok) {
+      process.exitCode = 1;
+    }
   }
 
   private buildIdleOutcome(

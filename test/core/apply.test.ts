@@ -1,12 +1,8 @@
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import {
-  applyTasks,
-  detectProject,
-  executePlan,
-  planTasks,
-} from '@xtarterize/core';
+import type { ProjectProfile, Task, TaskStatus } from '@xtarterize/core';
+import { detectProject, executePlan, planTasks } from '@xtarterize/core';
 import { describe, expect, vi } from 'vite-plus/test';
 
 const { mockInstallDependenciesBatch } = vi.hoisted(() => ({
@@ -24,15 +20,50 @@ vi.mock('/packages/core/src/utils/pkg.js', async (importOriginal) => {
   };
 });
 
+/** Apply a selected task set the way the removed `applyTasks` helper did. */
+async function applyTasks(options: {
+  cwd: string;
+  includeConflicts?: boolean;
+  profile: ProjectProfile;
+  quiet?: boolean;
+  selectedIds?: Array<string>;
+  statuses?: ReadonlyMap<string, TaskStatus>;
+  tasks: Array<Task>;
+}) {
+  const { selectedIds } = options;
+  const tasks = selectedIds
+    ? options.tasks.filter((t) => selectedIds.includes(t.id))
+    : options.tasks;
+  const quiet = options.quiet ?? false;
+  const plan = await planTasks({
+    cwd: options.cwd,
+    includeConflicts: options.includeConflicts ?? false,
+    profile: options.profile,
+    quiet,
+    statuses: options.statuses,
+    tasks,
+  });
+  return executePlan({
+    cwd: options.cwd,
+    plan,
+    profile: options.profile,
+    quiet,
+  });
+}
+
+/** Create a temp project with a package.json and the given dir prefix. */
+async function setupProject(prefix: string): Promise<string> {
+  const dir = await fs.mkdtemp(path.join(os.tmpdir(), prefix));
+  await fs.writeFile(
+    path.join(dir, 'package.json'),
+    JSON.stringify({ name: 'test', version: '1.0.0' })
+  );
+  return dir;
+}
+
 describe('applyTasks', () => {
   test('applies a single task successfully', async () => {
-    const tmpDir = await fs.mkdtemp(
-      path.join(os.tmpdir(), 'xtarterize-apply-')
-    );
-    await fs.writeFile(
-      path.join(tmpDir, 'package.json'),
-      JSON.stringify({ name: 'test', version: '1.0.0' })
-    );
+    const tmpDir = await setupProject('xtarterize-apply-');
 
     const profile = await detectProject(tmpDir);
     const mockTask = {
@@ -61,11 +92,7 @@ describe('applyTasks', () => {
   });
 
   test('skips tasks that are already applied', async () => {
-    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'xtarterize-skip-'));
-    await fs.writeFile(
-      path.join(tmpDir, 'package.json'),
-      JSON.stringify({ name: 'test', version: '1.0.0' })
-    );
+    const tmpDir = await setupProject('xtarterize-skip-');
     await fs.writeFile(path.join(tmpDir, 'test.txt'), 'hello');
 
     const profile = await detectProject(tmpDir);
@@ -93,13 +120,7 @@ describe('applyTasks', () => {
   });
 
   test('backs up existing files before applying selected tasks', async () => {
-    const tmpDir = await fs.mkdtemp(
-      path.join(os.tmpdir(), 'xtarterize-backup-')
-    );
-    await fs.writeFile(
-      path.join(tmpDir, 'package.json'),
-      JSON.stringify({ name: 'test', version: '1.0.0' })
-    );
+    const tmpDir = await setupProject('xtarterize-backup-');
     await fs.writeFile(path.join(tmpDir, 'test.txt'), 'before');
 
     const profile = await detectProject(tmpDir);
@@ -143,13 +164,7 @@ describe('applyTasks', () => {
   });
 
   test('skips conflict tasks unless includeConflicts is set', async () => {
-    const tmpDir = await fs.mkdtemp(
-      path.join(os.tmpdir(), 'xtarterize-conflict-')
-    );
-    await fs.writeFile(
-      path.join(tmpDir, 'package.json'),
-      JSON.stringify({ name: 'test', version: '1.0.0' })
-    );
+    const tmpDir = await setupProject('xtarterize-conflict-');
 
     const profile = await detectProject(tmpDir);
     let applied = false;
@@ -201,13 +216,7 @@ describe('applyTasks', () => {
   });
 
   test('continues applying remaining tasks after one fails', async () => {
-    const tmpDir = await fs.mkdtemp(
-      path.join(os.tmpdir(), 'xtarterize-partial-')
-    );
-    await fs.writeFile(
-      path.join(tmpDir, 'package.json'),
-      JSON.stringify({ name: 'test', version: '1.0.0' })
-    );
+    const tmpDir = await setupProject('xtarterize-partial-');
 
     const profile = await detectProject(tmpDir);
     const failingTask = {
@@ -250,13 +259,8 @@ describe('applyTasks', () => {
 
 describe('planTasks', () => {
   test('plans diffs without writing, backing up, or installing', async () => {
-    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'xtarterize-plan-'));
+    const tmpDir = await setupProject('xtarterize-plan-');
     try {
-      await fs.writeFile(
-        path.join(tmpDir, 'package.json'),
-        JSON.stringify({ name: 'test', version: '1.0.0' })
-      );
-
       const profile = await detectProject(tmpDir);
       const mockTask = {
         applicable: () => true,
@@ -303,15 +307,8 @@ describe('planTasks', () => {
   });
 
   test('keeps skipped tasks in the plan without diffs or dependency installs', async () => {
-    const tmpDir = await fs.mkdtemp(
-      path.join(os.tmpdir(), 'xtarterize-plan-skip-')
-    );
+    const tmpDir = await setupProject('xtarterize-plan-skip-');
     try {
-      await fs.writeFile(
-        path.join(tmpDir, 'package.json'),
-        JSON.stringify({ name: 'test', version: '1.0.0' })
-      );
-
       const profile = await detectProject(tmpDir);
       const mockTask = {
         applicable: () => true,
@@ -344,14 +341,8 @@ describe('planTasks', () => {
 
 describe('executePlan', () => {
   test('backs up and manifests exactly the plan files', async () => {
-    const tmpDir = await fs.mkdtemp(
-      path.join(os.tmpdir(), 'xtarterize-exec-plan-')
-    );
+    const tmpDir = await setupProject('xtarterize-exec-plan-');
     try {
-      await fs.writeFile(
-        path.join(tmpDir, 'package.json'),
-        JSON.stringify({ name: 'test', version: '1.0.0' })
-      );
       await fs.writeFile(path.join(tmpDir, 'test.txt'), 'before');
 
       const profile = await detectProject(tmpDir);
@@ -406,15 +397,8 @@ describe('executePlan', () => {
   });
 
   test('reports per-entry apply errors and continues with remaining entries', async () => {
-    const tmpDir = await fs.mkdtemp(
-      path.join(os.tmpdir(), 'xtarterize-exec-errors-')
-    );
+    const tmpDir = await setupProject('xtarterize-exec-errors-');
     try {
-      await fs.writeFile(
-        path.join(tmpDir, 'package.json'),
-        JSON.stringify({ name: 'test', version: '1.0.0' })
-      );
-
       const profile = await detectProject(tmpDir);
       const failingTask = {
         applicable: () => true,
@@ -467,15 +451,8 @@ describe('executePlan', () => {
   });
 
   test('reports per-entry dry-run errors and excludes the entry from the plan', async () => {
-    const tmpDir = await fs.mkdtemp(
-      path.join(os.tmpdir(), 'xtarterize-dryrun-')
-    );
+    const tmpDir = await setupProject('xtarterize-dryrun-');
     try {
-      await fs.writeFile(
-        path.join(tmpDir, 'package.json'),
-        JSON.stringify({ name: 'test', version: '1.0.0' })
-      );
-
       const profile = await detectProject(tmpDir);
       const failingTask = {
         applicable: () => true,
@@ -508,15 +485,8 @@ describe('executePlan', () => {
   });
 
   test('surfaces batch install failure in ApplyResult.errors', async () => {
-    const tmpDir = await fs.mkdtemp(
-      path.join(os.tmpdir(), 'xtarterize-install-fail-')
-    );
+    const tmpDir = await setupProject('xtarterize-install-fail-');
     try {
-      await fs.writeFile(
-        path.join(tmpDir, 'package.json'),
-        JSON.stringify({ name: 'test', version: '1.0.0' })
-      );
-
       const profile = await detectProject(tmpDir);
       let applied = false;
       const mockTask = {

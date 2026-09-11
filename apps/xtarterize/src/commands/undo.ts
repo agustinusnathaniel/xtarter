@@ -1,12 +1,12 @@
 import fs from 'node:fs/promises';
 import {
+  assertPathWithin,
   createSpinner,
   listBackups,
   logError,
   logInfo,
   logSuccess,
   readRunManifest,
-  resolvePath,
   restoreBackup,
 } from '@xtarterize/core';
 import { defineCommand } from 'citty';
@@ -40,7 +40,7 @@ export const undoCommand = defineCommand({
     displayManifestPreview(manifest, jsonMode);
     const proceed = await promptRestoreConfirm(manifest, quiet, getPrompter());
     if (!proceed) {
-      session.report(session.cancelled());
+      session.reportOutcome(session.cancelled());
       return;
     }
     const { restored, removedCount, errors } = await restoreManifestFiles(
@@ -172,17 +172,9 @@ function reportUndoResult(options: {
 }
 
 /**
- * Delete a file that the run created. Mirrors the path-traversal guard used
- * by restoreBackup: the resolved path must stay inside the target directory.
+ * Delete a file that the run created. `assertPathWithin` rejects paths that
+ * escape the target directory, mirroring the guard in `restoreBackup`.
  */
 async function removeCreatedFile(cwd: string, filepath: string): Promise<void> {
-  const resolvedDest = resolvePath(cwd, filepath);
-  const resolvedCwd = resolvePath(cwd);
-  if (
-    !resolvedDest.startsWith(`${resolvedCwd}/`) &&
-    resolvedDest !== resolvedCwd
-  ) {
-    throw new Error(`Path traversal detected: ${filepath}`);
-  }
-  await fs.rm(resolvedDest, { force: true });
+  await fs.rm(assertPathWithin(cwd, filepath), { force: true });
 }

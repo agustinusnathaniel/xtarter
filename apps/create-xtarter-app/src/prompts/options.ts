@@ -1,11 +1,7 @@
 import { confirm } from '@clack/prompts';
 import { abortIfCancelled } from '@xtarterize/core';
 
-export async function promptGitInit(skipGit?: boolean): Promise<boolean> {
-  if (skipGit !== undefined) {
-    return !skipGit;
-  }
-
+export async function promptGitInit(): Promise<boolean> {
   const result = await confirm({
     initialValue: true,
     message: 'Initialize a git repository?',
@@ -16,11 +12,7 @@ export async function promptGitInit(skipGit?: boolean): Promise<boolean> {
   return result;
 }
 
-export async function promptCleanCI(cleanMode?: boolean): Promise<boolean> {
-  if (cleanMode !== undefined) {
-    return cleanMode;
-  }
-
+export async function promptCleanCI(): Promise<boolean> {
   const result = await confirm({
     initialValue: false,
     message: 'Remove CI/CD configurations (GitHub Actions, Vercel, etc.)?',

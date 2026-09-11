@@ -21,10 +21,12 @@ No package may import from a package it doesn't depend on. No circular dependenc
 
 | Package                        | Owns                                                                                                                                            | Depends on                                                              |
 | ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| `@xtarterize/core`             | `ProjectProfile`, `detectProject()`, `Task` interface, `resolveTasks()`, `applyTasks()`, `backup.ts`, all utils (`fs`, `pkg`, `diff`, `logger`) | npm: `fs-extra`, `diff`                                                 |
-| `@xtarterize/patchers`         | `mergeJson()`, `mergeYaml()`, `injectVitePlugin()`                                                                                              | npm: `defu`, `js-yaml`, `magicast`, `fs-extra`                          |
+| `@xtarterize/core`             | `ProjectProfile`, `detectProject()`, `Task` interface, `resolveTasks()`, `planTasks()`, `executePlan()`, `backup.ts`, all utils (`fs`, `pkg`, `diff`, `logger`) | npm: `@clack/prompts`, `citty`, `consola`, `diff`, `effect`, `json5`, `nypm`, `pathe`, `picocolors`, `pkg-types`, `tinyexec` |
+| `@xtarterize/patchers`         | `mergeJson()`, `parseJsonc()`, `patchJson()`, `injectVitePluginIntoCode()`                                                                      | npm: `defu`, `json5`, `jsonc-parser`, `magicast`, `pathe`               |
 | `@xtarterize/tasks`            | All 19 task implementations, all template renderers                                                                                             | `@xtarterize/core`, `@xtarterize/patchers`, npm: `nypm`                 |
 | `xtarterize` (apps/xtarterize) | CLI commands, UI components, citty entry point                                                                                                  | `@xtarterize/core`, `@xtarterize/tasks`, npm: `@clack/prompts`, `citty` |
+
+The YAML patcher (`mergeYaml`, `parseYaml`) and the filesystem `injectVitePlugin` wrapper were retired after this ADR: workflows are emitted as text templates, and Vite config patching is content-level via `injectVitePluginIntoCode`.
 
 ### Circular dependency resolution
 

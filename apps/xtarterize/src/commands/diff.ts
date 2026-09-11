@@ -23,9 +23,6 @@ export const diffCommand = defineCommand({
       return status === 'new' || status === 'patch' || status === 'conflict';
     });
     const outcome = await session.dryRun(actionableTasks);
-    session.report(outcome);
-    if (!outcome.ok) {
-      process.exitCode = 1;
-    }
+    session.reportOutcome(outcome);
   },
 });

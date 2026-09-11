@@ -96,33 +96,31 @@ if (!result.valid) {
 }
 ```
 
-### `runConflictChecks(cwd)`
+### `runDiagnostics(cwd, options)`
 
 ```typescript
-import { runConflictChecks } from '@xtarterize/core'
+import { runDiagnostics } from '@xtarterize/core'
 
-const checks = await runConflictChecks('/path/to/project')
+const { groups, summary } = await runDiagnostics('/path/to/project', {
+  groups: ['tools', 'configuration'],
+})
 
-for (const check of checks) {
-  console.log(check.name)    // 'Conflicting tools'
-  console.log(check.status)  // 'warn' | 'pass' | 'fail'
-  console.log(check.message) // 'Both Biome and ESLint are configured...'
+for (const group of groups) {
+  console.log(group.title) // 'Tools'
+  for (const check of group.checks) {
+    console.log(check.name)    // 'Biome installation'
+    console.log(check.status)  // 'pass' | 'warn' | 'fail'
+    console.log(check.message) // 'Biome is installed'
+  }
 }
+
+console.log(summary) // { pass, warn, fail, total }
 ```
 
-### `runToolInstallationChecks(cwd)`
-
-```typescript
-import { runToolInstallationChecks } from '@xtarterize/core'
-
-const checks = await runToolInstallationChecks('/path/to/project')
-
-for (const check of checks) {
-  console.log(check.name)    // 'Biome installation'
-  console.log(check.status)  // 'pass' | 'warn' | 'fail'
-  console.log(check.message) // 'Biome is installed'
-}
-```
+`options.groups` selects a subset of `'environment' | 'tools' | 'project' | 'configuration'`
+(defaults to all four); `options.verbose` prepends a `System` group with host
+platform information. A group whose checks throw is replaced by a single
+failure check, so one broken check never hides the others.
 
 ## References
 

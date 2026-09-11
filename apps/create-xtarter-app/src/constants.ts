@@ -19,27 +19,4 @@ ${pc.cyan(`╚${'═'.repeat(BOX)}╝`)}
 
 export const DEFAULT_TEMPLATE = 'next-chakra';
 
-export const SUPPORTED_PACKAGE_MANAGERS = {
-  bun: {
-    execCommand: 'bun',
-    installCommand: 'install',
-    name: 'bun',
-  },
-  npm: {
-    execCommand: 'npm',
-    installCommand: 'install',
-    name: 'npm',
-  },
-  pnpm: {
-    execCommand: 'pnpm',
-    installCommand: 'install',
-    name: 'pnpm',
-  },
-  yarn: {
-    execCommand: 'yarn',
-    installCommand: 'install',
-    name: 'yarn',
-  },
-} as const;
-
 export const VERSION: string = version;

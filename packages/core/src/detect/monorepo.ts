@@ -65,13 +65,11 @@ async function walkWorkspaceParents(
         ]);
         return {
           monorepo: true,
-          monorepoTool: hasTurbo
-            ? 'turbo'
-            : hasNx
-              ? 'nx'
-              : hasLerna
-                ? 'lerna'
-                : null,
+          monorepoTool: detectMonorepoTool({
+            hasLernaJson: hasLerna,
+            hasNxJson: hasNx,
+            hasTurboJson: hasTurbo,
+          }),
           workspaceRoot: false,
         };
       }
@@ -97,7 +95,7 @@ export async function detectMonorepo(cwd: string): Promise<MonorepoDetection> {
     hasLernaJson,
     hasWorkspaceDirsAtRoot,
   ] = await Promise.all([
-    isPnpmWorkspace(cwd).then((v) => !!v),
+    isPnpmWorkspace(cwd),
     fileExists(resolvePath(cwd, 'turbo.json')),
     fileExists(resolvePath(cwd, 'nx.json')),
     fileExists(resolvePath(cwd, 'lerna.json')),

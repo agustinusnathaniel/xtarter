@@ -32,7 +32,7 @@ function getDlxPrefix(pm: PackageManager): string {
     pnpm: 'pnpx xtarterize@latest',
     yarn: 'yarn dlx xtarterize@latest',
   };
-  return runners[pm] ?? 'npx xtarterize@latest';
+  return runners[pm];
 }
 
 interface DisplayQueryOptions {

@@ -1,55 +1,56 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import {
-  logSuccess,
-  pc,
-  runConflictChecks,
-  runToolInstallationChecks,
-  statusTag,
+import type {
+  DiagnosticCheck,
+  ResolveTiming,
+  Task,
+  TaskStatus,
 } from '@xtarterize/core';
+import { logSuccess, pc, runDiagnostics, statusTag } from '@xtarterize/core';
 import { defineCommand } from 'citty';
 
 import { openSession } from '@/session.js';
 import { formatCheckAnnotations } from '@/ui/annotations.js';
 import { generateBadgeSvg } from '@/ui/badge.js';
-import { computeCheckOk, formatCheckResult } from '@/ui/json-formatter.js';
+import {
+  computeCheckOk,
+  countCheckSummary,
+  formatCheckResult,
+} from '@/ui/json-formatter.js';
 import { commonArgs } from '@/utils/args.js';
 import { diagnosticIcon, taskStatusIcon } from '@/utils/display.js';
+import type { RuntimeContext } from '@/utils/runtime.js';
 import { printTiming } from '@/utils/timing-display.js';
 
 function emitAnnotations(options: {
-  args: Record<string, unknown>;
-  tasks: Array<unknown>;
-  statuses: Map<string, string>;
-  diagnostics: Array<unknown>;
+  annotations: boolean;
+  diagnostics: Array<DiagnosticCheck>;
+  statuses: Map<string, TaskStatus>;
+  tasks: Array<Task>;
 }) {
-  const { args, tasks, statuses, diagnostics } = options;
+  const { annotations, diagnostics, statuses, tasks } = options;
   const isGitHubActions = process.env.GITHUB_ACTIONS === 'true';
-  if (!(args.annotations || isGitHubActions)) {
+  if (!(annotations || isGitHubActions)) {
     return;
   }
-  const annotationOutput = formatCheckAnnotations(
-    tasks as Parameters<typeof formatCheckAnnotations>[0],
-    statuses as Parameters<typeof formatCheckAnnotations>[1],
-    diagnostics as Parameters<typeof formatCheckAnnotations>[2]
-  );
+  const annotationOutput = formatCheckAnnotations(tasks, statuses, diagnostics);
   if (annotationOutput) {
     process.stderr.write(`${annotationOutput}\n`);
   }
 }
 
 async function handleBadgeOutput(options: {
-  args: Record<string, unknown>;
-  ctx: { json?: boolean };
+  badge: string | undefined;
+  ctx: RuntimeContext;
   conformant: number;
   total: number;
 }) {
-  const { args, ctx, conformant, total } = options;
-  if (!args.badge) {
+  const { badge, ctx, conformant, total } = options;
+  if (!badge) {
     return;
   }
   const svg = generateBadgeSvg({ conformant, total });
-  let badgePath = String(args.badge);
+  let badgePath = badge;
   if (badgePath === '-') {
     if (ctx.json) {
       process.stderr.write(`${svg}\n`);
@@ -69,11 +70,11 @@ async function handleBadgeOutput(options: {
 }
 
 function renderCheckSummary(options: {
-  ctx: { json?: boolean; quiet?: boolean };
-  tasks: Array<{ id: string; label: string }>;
-  statuses: Map<string, string>;
-  diagnostics: Array<{ status: string; message: string }>;
-  timing: unknown;
+  ctx: RuntimeContext;
+  tasks: Array<Task>;
+  statuses: Map<string, TaskStatus>;
+  diagnostics: Array<DiagnosticCheck>;
+  timing: ResolveTiming;
   conformant: number;
   total: number;
   badgeToStdout: boolean;
@@ -89,18 +90,7 @@ function renderCheckSummary(options: {
     badgeToStdout,
   } = options;
   if (ctx.json) {
-    console.log(
-      formatCheckResult({
-        diagnostics: diagnostics as Parameters<
-          typeof formatCheckResult
-        >[0]['diagnostics'],
-        statuses: statuses as Parameters<
-          typeof formatCheckResult
-        >[0]['statuses'],
-        tasks: tasks as Parameters<typeof formatCheckResult>[0]['tasks'],
-        timing: timing as Parameters<typeof formatCheckResult>[0]['timing'],
-      })
-    );
+    console.log(formatCheckResult({ diagnostics, statuses, tasks, timing }));
     return;
   }
   const auditStream = badgeToStdout ? process.stderr : process.stdout;
@@ -108,12 +98,10 @@ function renderCheckSummary(options: {
     auditStream.write('\n');
     auditStream.write(`${pc.bold('Conformance audit')}\n\n`);
     for (const task of tasks) {
-      const status = (statuses.get(task.id) ?? 'new') as Parameters<
-        typeof taskStatusIcon
-      >[0];
+      const status = statuses.get(task.id) ?? 'new';
       const icon = taskStatusIcon(status, true);
       auditStream.write(
-        `  ${icon} ${task.label.padEnd(40)} ${pc.dim(task.id)} ${statusTag(status as Parameters<typeof statusTag>[0])}\n`
+        `  ${icon} ${task.label.padEnd(40)} ${pc.dim(task.id)} ${statusTag(status)}\n`
       );
     }
     auditStream.write('\n');
@@ -122,12 +110,12 @@ function renderCheckSummary(options: {
       auditStream.write(`\n${pc.bold('Diagnostics')}\n\n`);
       for (const check of diagnostics) {
         auditStream.write(
-          `  ${diagnosticIcon(check.status as Parameters<typeof diagnosticIcon>[0])} ${check.message}\n`
+          `  ${diagnosticIcon(check.status)} ${check.message}\n`
         );
       }
     }
     auditStream.write('\n');
-    printTiming(timing as Parameters<typeof printTiming>[0], undefined, {
+    printTiming(timing, undefined, {
       write: (line) => auditStream.write(`${line}\n`),
     });
     return;
@@ -165,24 +153,22 @@ export const checkCommand = defineCommand({
     const ctx = session.runtime;
     const { statuses, tasks, timing } = session;
     const badgeToStdout = args.badge === '-';
-    const conflictChecks = await runConflictChecks(ctx.cwd);
-    const installChecks = await runToolInstallationChecks(ctx.cwd);
-    const diagnostics = [...installChecks, ...conflictChecks];
-    if (!computeCheckOk(tasks, statuses, diagnostics)) {
+    const { groups } = await runDiagnostics(ctx.cwd, {
+      groups: ['tools', 'configuration'],
+    });
+    const diagnostics = groups.flatMap((group) => group.checks);
+    const { conformant, total } = countCheckSummary(tasks, statuses);
+    if (!computeCheckOk({ conformant, total }, diagnostics)) {
       process.exitCode = 1;
     }
     emitAnnotations({
-      args: args as Record<string, unknown>,
+      annotations: Boolean(args.annotations),
       diagnostics,
-      statuses: statuses as Map<string, string>,
+      statuses,
       tasks,
     });
-    const conformant = tasks.filter(
-      (t) => statuses.get(t.id) === 'skip'
-    ).length;
-    const total = tasks.length;
     await handleBadgeOutput({
-      args: args as Record<string, unknown>,
+      badge: args.badge,
       conformant,
       ctx,
       total,
@@ -192,7 +178,7 @@ export const checkCommand = defineCommand({
       conformant,
       ctx,
       diagnostics,
-      statuses: statuses as Map<string, string>,
+      statuses,
       tasks,
       timing,
       total,

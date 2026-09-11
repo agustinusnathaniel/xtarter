@@ -120,8 +120,7 @@ export function resolveTaskStatuses(
 
 export async function resolveProjectTasks(
   cwd: string,
-  allTasks: Array<Task>,
-  externalTasks?: Array<Task>
+  allTasks: Array<Task>
 ): Promise<{
   checkErrors: Map<string, string>;
   profile: ProjectProfile;
@@ -133,14 +132,7 @@ export async function resolveProjectTasks(
   const profile = await detectProject(cwd);
   const detectionMs = performance.now() - detectionStart;
 
-  const mergedTasks: Array<Task> = externalTasks
-    ? [
-        ...new Map(
-          [...allTasks, ...externalTasks].map((t) => [t.id, t])
-        ).values(),
-      ]
-    : allTasks;
-  const applicableTasks = resolveTasks(profile, mergedTasks);
+  const applicableTasks = resolveTasks(profile, allTasks);
 
   const resolutionStart = performance.now();
   const checkResults = await collectTaskChecks({

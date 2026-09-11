@@ -18,6 +18,7 @@
   },
   "dependencies": {
     "@clack/prompts": "catalog:",
+    "citty": "catalog:",
     "consola": "catalog:",
     "diff": "catalog:",
     "effect": "catalog:",

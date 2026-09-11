@@ -1,13 +1,13 @@
 import { readPackageJson } from '@xtarterize/core';
 
 import { defineTask } from '@/factory/define-task.js';
+import { hasInstalledDependency } from '@/factory/scripts.js';
 
 async function lintCmd(cwd: string): Promise<string> {
   const pkg = await readPackageJson(cwd);
-  const hasUltracite = !!(
-    pkg?.devDependencies?.ultracite || pkg?.dependencies?.ultracite
-  );
-  return hasUltracite ? 'ultracite fix' : 'biome check --write';
+  return hasInstalledDependency(pkg, 'ultracite')
+    ? 'ultracite fix'
+    : 'biome check --write';
 }
 
 function renderLintStagedConfig(cmd: string): string {

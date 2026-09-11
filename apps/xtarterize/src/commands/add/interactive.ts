@@ -95,14 +95,11 @@ async function resolveSelection(options: {
 
 function reportEmptyOutcome(session: CommandSession, message: string): void {
   const checkErrors = session.checkErrorMessages;
-  session.report(
+  session.reportOutcome(
     checkErrors.length > 0
       ? session.blocked(message, { errors: checkErrors })
       : session.empty(message)
   );
-  if (checkErrors.length > 0) {
-    process.exitCode = 1;
-  }
 }
 
 async function executeConfirmed(options: {
@@ -114,22 +111,21 @@ async function executeConfirmed(options: {
 }): Promise<void> {
   const { confirmed, includeConflicts, recordTiming, selected, session } =
     options;
-  // One plan for the whole confirmed selection: one backup set and one run
+  // One apply for the whole confirmed selection: one backup set and one run
   // manifest, so `undo` restores the entire `add`.
-  const plan = await session.plan({
-    includeConflicts,
-    tasks: confirmed.map((entry) => entry.task),
+  const outcome = await session.apply(
+    confirmed.map((entry) => entry.task),
+    {
+      includeCheckErrors: true,
+      includeConflicts,
+      recordTiming,
+    }
+  );
+  // Declined tasks count as skipped, alongside apply-time skips.
+  session.reportOutcome({
+    ...outcome,
+    skipped: selected.length - outcome.applied,
   });
-  const result = await session.execute(plan);
-  const outcome = session.outcomeFor(result, {
-    includeCheckErrors: true,
-    recordTiming,
-    skipped: selected.length - result.applied,
-  });
-  session.report(outcome);
-  if (!outcome.ok) {
-    process.exitCode = 1;
-  }
 }
 
 export async function runInteractive(
@@ -146,7 +142,9 @@ export async function runInteractive(
   const jsonMode = runtime.format === 'json';
 
   if (tasks.length === 0) {
-    session.report(session.empty('No tasks applicable for this project'));
+    session.reportOutcome(
+      session.empty('No tasks applicable for this project')
+    );
     return;
   }
 
@@ -167,7 +165,7 @@ export async function runInteractive(
     tasksWithStatus,
   });
   if (selected === null) {
-    session.report(session.cancelled());
+    session.reportOutcome(session.cancelled());
     return;
   }
   if (selected.length === 0) {
@@ -192,7 +190,7 @@ export async function runInteractive(
         session,
       });
   if (confirmed === null) {
-    session.report(session.cancelled());
+    session.reportOutcome(session.cancelled());
     return;
   }
 

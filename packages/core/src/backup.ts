@@ -3,7 +3,7 @@ import { Effect } from 'effect';
 import { join, normalize } from 'pathe';
 
 import { BackupError } from '@/errors.js';
-import { resolvePath } from '@/utils/fs.js';
+import { assertPathWithin, resolvePath } from '@/utils/fs.js';
 
 const BACKUP_DIR = '.xtarterize/backups';
 
@@ -21,6 +21,26 @@ function tryIo<A>(
     catch: (cause) => new BackupError({ cause, path }),
     try: (_signal) => f(),
   });
+}
+
+async function writeJsonAtomically(path: string, data: unknown): Promise<void> {
+  const tempPath = `${path}.${process.pid}.${Date.now()}.tmp`;
+  await fs.writeFile(tempPath, `${JSON.stringify(data, null, 2)}\n`, 'utf-8');
+  try {
+    await fs.rename(tempPath, path);
+  } catch (error) {
+    await fs.unlink(tempPath).catch(() => {});
+    throw error;
+  }
+}
+
+async function readJsonOrNull<T>(path: string): Promise<T | null> {
+  try {
+    const content = await fs.readFile(path, 'utf-8');
+    return JSON.parse(content) as T;
+  } catch {
+    return null;
+  }
 }
 
 export function backupFile(cwd: string, filepath: string): Promise<void> {
@@ -72,20 +92,7 @@ function writeIndexAtomically(
   indexPath: string,
   indexContent: Record<string, Array<Backup>>
 ) {
-  const tempPath = `${indexPath}.${process.pid}.${Date.now()}.tmp`;
-  return tryIo(indexPath, async () => {
-    await fs.writeFile(
-      tempPath,
-      `${JSON.stringify(indexContent, null, 2)}\n`,
-      'utf-8'
-    );
-    try {
-      await fs.rename(tempPath, indexPath);
-    } catch (error) {
-      await fs.unlink(tempPath).catch(() => {});
-      throw error;
-    }
-  });
+  return tryIo(indexPath, () => writeJsonAtomically(indexPath, indexContent));
 }
 
 export function listBackups(
@@ -93,28 +100,22 @@ export function listBackups(
   filepath: string
 ): Promise<Array<Backup>> {
   const indexPath = resolvePath(cwd, BACKUP_DIR, '.index.json');
-  return Effect.runPromise(
-    Effect.orElseSucceed(
-      tryIo(indexPath, async () => {
-        const content = await fs.readFile(indexPath, 'utf-8');
-        const index = JSON.parse(content) as Record<string, unknown>;
-        if (!(index[filepath] && Array.isArray(index[filepath]))) {
-          return [] as Array<Backup>;
-        }
-        return (index[filepath] as Array<unknown>)
-          .filter(
-            (entry): entry is Backup =>
-              typeof entry === 'object' &&
-              entry !== null &&
-              typeof (entry as Backup).filepath === 'string' &&
-              typeof (entry as Backup).backupPath === 'string' &&
-              typeof (entry as Backup).timestamp === 'string'
-          )
-          .sort((a, b) => b.timestamp.localeCompare(a.timestamp));
-      }),
-      () => [] as Array<Backup>
-    )
-  );
+  return readJsonOrNull<Record<string, unknown>>(indexPath).then((index) => {
+    const entries = index?.[filepath];
+    if (!(entries && Array.isArray(entries))) {
+      return [] as Array<Backup>;
+    }
+    return (entries as Array<unknown>)
+      .filter(
+        (entry): entry is Backup =>
+          typeof entry === 'object' &&
+          entry !== null &&
+          typeof (entry as Backup).filepath === 'string' &&
+          typeof (entry as Backup).backupPath === 'string' &&
+          typeof (entry as Backup).timestamp === 'string'
+      )
+      .sort((a, b) => b.timestamp.localeCompare(a.timestamp));
+  });
 }
 
 export function restoreBackup(cwd: string, backup: Backup): Promise<void> {
@@ -126,35 +127,24 @@ export function restoreBackup(cwd: string, backup: Backup): Promise<void> {
       })
     );
   }
-  const resolvedDest = resolvePath(cwd, backup.filepath);
-  const resolvedCwd = resolvePath(cwd);
-  if (
-    !resolvedDest.startsWith(`${resolvedCwd}/`) &&
-    resolvedDest !== resolvedCwd
-  ) {
-    return Promise.reject(
-      new BackupError({
-        cause: new Error(`Path traversal detected: ${backup.filepath}`),
-        path: backup.filepath,
-      })
-    );
+  let resolvedDest: string;
+  try {
+    resolvedDest = assertPathWithin(cwd, backup.filepath);
+  } catch (cause) {
+    return Promise.reject(new BackupError({ cause, path: backup.filepath }));
   }
 
   // Validate source path (backupPath) is within the backup directory
   const backupDir = resolvePath(cwd, BACKUP_DIR);
-  const resolvedSource = resolvePath(backupDir, backup.backupPath);
-  if (
-    !resolvedSource.startsWith(`${backupDir}/`) &&
-    resolvedSource !== backupDir
-  ) {
-    return Promise.reject(
-      new BackupError({
-        cause: new Error(
-          `Source path traversal detected: ${backup.backupPath}`
-        ),
-        path: backup.backupPath,
-      })
+  let resolvedSource: string;
+  try {
+    resolvedSource = assertPathWithin(
+      backupDir,
+      backup.backupPath,
+      `Source path traversal detected: ${backup.backupPath}`
     );
+  } catch (cause) {
+    return Promise.reject(new BackupError({ cause, path: backup.backupPath }));
   }
 
   return Effect.runPromise(
@@ -177,40 +167,12 @@ export async function writeRunManifest(
     timestamp: new Date().toISOString(),
   };
   await fs.mkdir(resolvePath(cwd, BACKUP_DIR), { recursive: true });
-  const tempPath = `${manifestPath}.${process.pid}.${Date.now()}.tmp`;
-  await fs.writeFile(
-    tempPath,
-    `${JSON.stringify(manifest, null, 2)}\n`,
-    'utf-8'
-  );
-  try {
-    await fs.rename(tempPath, manifestPath);
-  } catch (error) {
-    await fs.unlink(tempPath).catch(() => {});
-    throw error;
-  }
+  await writeJsonAtomically(manifestPath, manifest);
 }
 
 export async function readRunManifest(
   cwd: string
 ): Promise<RunManifest | null> {
   const manifestPath = resolvePath(cwd, BACKUP_DIR, 'last-run.json');
-  try {
-    const content = await fs.readFile(manifestPath, 'utf-8');
-    return JSON.parse(content) as RunManifest;
-  } catch {
-    return null;
-  }
-}
-
-export async function listAllBackups(
-  cwd: string
-): Promise<Record<string, Array<Backup>>> {
-  const indexPath = resolvePath(cwd, BACKUP_DIR, '.index.json');
-  try {
-    const content = await fs.readFile(indexPath, 'utf-8');
-    return JSON.parse(content) as Record<string, Array<Backup>>;
-  } catch {
-    return {};
-  }
+  return readJsonOrNull<RunManifest>(manifestPath);
 }

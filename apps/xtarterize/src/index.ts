@@ -1,8 +1,8 @@
 #!/usr/bin/env node
+import { createInvocationGuard } from '@xtarterize/core';
 import { defineCommand, runMain } from 'citty';
 
 import { cwdArg, jsonArg, timingArg } from '@/utils/args.js';
-import { createInvocationGuard } from '@/utils/invocation-guard.js';
 
 import { version } from '^/package.json';
 

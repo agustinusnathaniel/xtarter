@@ -139,7 +139,7 @@ export const restoreCommand = defineCommand({
     }
     const selected = await promptRestoreConfirm(backups, yes, getPrompter());
     if (selected === null) {
-      session.report(session.cancelled());
+      session.reportOutcome(session.cancelled());
       return;
     }
     await executeRestore({

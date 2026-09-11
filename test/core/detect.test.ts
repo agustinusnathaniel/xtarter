@@ -2,7 +2,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { detectProject, runConflictChecks } from '@xtarterize/core';
+import { detectProject, runDiagnostics } from '@xtarterize/core';
 import { afterAll, describe, expect } from 'vite-plus/test';
 
 import {
@@ -428,7 +428,10 @@ describe('detectProject', () => {
       const profile = await detectProject(tmpDir);
       expect(profile.existing.eslint).toBe(true);
 
-      const checks = await runConflictChecks(tmpDir);
+      const { groups } = await runDiagnostics(tmpDir, {
+        groups: ['configuration'],
+      });
+      const checks = groups.flatMap((group) => group.checks);
       const legacyCheck = checks.find(
         (check) => check.name === 'Legacy config'
       );

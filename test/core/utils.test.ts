@@ -7,8 +7,6 @@ import {
   findConfigFile,
   findFirstPositionalIndex,
   findUnknownFlags,
-  getDependencyVersion,
-  getNodeVersion,
   hasDependency,
   listBackups,
   readPackageJson,
@@ -367,45 +365,6 @@ describe('hasDependency', () => {
 
   test('handles empty deps', () => {
     expect(hasDependency({}, 'anything')).toBe(false);
-  });
-});
-
-describe('getDependencyVersion', () => {
-  test('returns version from dependencies', () => {
-    const pkg = {
-      dependencies: { react: '^18.0.0' },
-    };
-    expect(getDependencyVersion(pkg, 'react')).toBe('^18.0.0');
-  });
-
-  test('returns version from devDependencies', () => {
-    const pkg = {
-      devDependencies: { vite: '^5.0.0' },
-    };
-    expect(getDependencyVersion(pkg, 'vite')).toBe('^5.0.0');
-  });
-
-  test('prefers dependencies over devDependencies', () => {
-    const pkg = {
-      dependencies: { react: '^18.0.0' },
-      devDependencies: { react: '^19.0.0' },
-    };
-    expect(getDependencyVersion(pkg, 'react')).toBe('^18.0.0');
-  });
-
-  test('returns undefined for missing dep', () => {
-    expect(getDependencyVersion({}, 'missing')).toBeUndefined();
-  });
-});
-
-describe('getNodeVersion', () => {
-  test('returns version from engines', () => {
-    const pkg = { engines: { node: '>=18' } };
-    expect(getNodeVersion(pkg)).toBe('>=18');
-  });
-
-  test('defaults to 22 when no engines', () => {
-    expect(getNodeVersion({})).toBe('22');
   });
 });
 

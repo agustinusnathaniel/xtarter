@@ -5,6 +5,7 @@ import { relative } from 'pathe';
 
 import {
   computePackageJsonChange,
+  PACKAGE_JSON_FILENAME,
   readPackageJsonText,
 } from './package-json.js';
 import {
@@ -12,8 +13,6 @@ import {
   normalizeLineEndings,
   resolveTaskFile,
 } from './utils.js';
-
-const PACKAGE_JSON_FILENAME = 'package.json';
 
 /** What a target policy hook sees: the pair the diff was computed from. */
 export interface TargetPolicyInput {
@@ -110,35 +109,60 @@ export type TargetResolver = (
   profile: ProjectProfile
 ) => Array<TaskTarget> | Promise<Array<TaskTarget>>;
 
-async function resolveTextTarget(
-  target: TextTarget,
-  context: ResolveContext
-): Promise<TargetDraft> {
-  const { cwd, profile } = context;
+interface FileState {
+  before: string | null;
+  exists: boolean;
+  filepath: string;
+  kind: 'text' | 'jsonMerge' | 'transform';
+}
+
+async function resolveFileState(
+  cwd: string,
+  target: TextTarget | JsonMergeTarget | TransformTarget
+): Promise<FileState> {
   const fullPath = await resolveTaskFile(
     cwd,
     target.filepath,
     target.extensions
   );
   const exists = fullPath !== null && (await fileExists(fullPath));
-  const before = exists ? await readFile(fullPath) : null;
+  return {
+    before: exists ? await readFile(fullPath) : null,
+    exists,
+    filepath: exists
+      ? relative(cwd, fullPath)
+      : getDefaultFilepath(target.filepath, target.extensions),
+    kind: target.kind,
+  };
+}
+
+/** Project the status policy and the skip rule onto the shared draft shape. */
+function buildDraft(
+  state: FileState,
+  after: string,
+  status: TaskStatus
+): TargetDraft {
+  const { before, exists, filepath, kind } = state;
+  const diff = status === 'skip' ? null : { after, before, filepath };
+  return { exists, target: { diff, kind, status } };
+}
+
+async function resolveTextTarget(
+  target: TextTarget,
+  context: ResolveContext
+): Promise<TargetDraft> {
+  const { cwd, profile } = context;
+  const state = await resolveFileState(cwd, target);
+  const { before } = state;
   const after = target.render(profile, before);
-  const filepath = exists
-    ? relative(cwd, fullPath)
-    : getDefaultFilepath(target.filepath, target.extensions);
-  const fallback: TaskStatus = exists
+  const fallback: TaskStatus = state.exists
     ? normalizeLineEndings((before ?? '').trim()) ===
       normalizeLineEndings(after.trim())
       ? 'skip'
       : 'conflict'
     : 'new';
   const status = target.policy?.({ after, before }, { profile }) ?? fallback;
-  const resolved: ResolvedTarget = {
-    diff: status === 'skip' ? null : { after, before, filepath },
-    kind: 'text',
-    status,
-  };
-  return { exists, target: resolved };
+  return buildDraft(state, after, status);
 }
 
 function mergeIncoming(
@@ -156,33 +180,20 @@ async function resolveJsonMergeTarget(
   context: ResolveContext
 ): Promise<TargetDraft> {
   const { cwd, profile } = context;
-  const fullPath = await resolveTaskFile(
-    cwd,
-    target.filepath,
-    target.extensions
-  );
-  const exists = fullPath !== null && (await fileExists(fullPath));
-  const before = exists ? await readFile(fullPath) : null;
-  const filepath = exists
-    ? relative(cwd, fullPath)
-    : getDefaultFilepath(target.filepath, target.extensions);
+  const state = await resolveFileState(cwd, target);
+  const { before } = state;
   const incoming = await target.incoming(cwd, profile);
   const after =
     before === null
       ? JSON.stringify(incoming, null, 2)
       : patchJson(before, mergeIncoming(before, incoming, target.merge));
-  const fallback: TaskStatus = exists
+  const fallback: TaskStatus = state.exists
     ? after === before
       ? 'skip'
       : 'patch'
     : 'new';
   const status = target.policy?.({ after, before }, { profile }) ?? fallback;
-  const resolved: ResolvedTarget = {
-    diff: status === 'skip' ? null : { after, before, filepath },
-    kind: 'jsonMerge',
-    status,
-  };
-  return { exists, target: resolved };
+  return buildDraft(state, after, status);
 }
 
 async function resolvePackageJsonTarget(
@@ -221,33 +232,21 @@ async function resolveTransformTarget(
   context: ResolveContext
 ): Promise<TargetDraft> {
   const { cwd, profile } = context;
-  const fullPath = await resolveTaskFile(
-    cwd,
-    target.filepath,
-    target.extensions
-  );
-  if (fullPath === null || !(await fileExists(fullPath))) {
+  const state = await resolveFileState(cwd, target);
+  if (!state.exists) {
     // A transform cannot create content, so an absent file has no diff.
     return {
       exists: false,
       target: { diff: null, kind: 'transform', status: 'new' },
     };
   }
-  const before = await readFile(fullPath);
+  const before = state.before ?? '';
   const transformed = target.transform(before, profile);
   const after = transformed ?? before;
   const fallback: TaskStatus =
     transformed === null || after === before ? 'skip' : 'patch';
   const status = target.policy?.({ after, before }, { profile }) ?? fallback;
-  const resolved: ResolvedTarget = {
-    diff:
-      status === 'skip'
-        ? null
-        : { after, before, filepath: relative(cwd, fullPath) },
-    kind: 'transform',
-    status,
-  };
-  return { exists: true, target: resolved };
+  return buildDraft(state, after, status);
 }
 
 export function resolveTarget(

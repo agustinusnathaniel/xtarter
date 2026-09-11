@@ -3,7 +3,6 @@ import {
   access,
   mkdir,
   mkdtemp,
-  readdir,
   readFile,
   rm,
   writeFile,
@@ -60,11 +59,12 @@ describe('resolveProjectPath', () => {
 });
 
 describe('prepareProjectDir', () => {
-  test('should create a new directory', async () => {
-    const dir = await tempDir();
+  test('should accept a new directory path without creating it', async () => {
+    const parent = await tempDir();
+    const dir = join(parent, 'test');
     await prepareProjectDir('test', dir);
-    await expect(access(dir)).resolves.toBeUndefined();
-    await rm(dir, { force: true, recursive: true });
+    expect(existsSync(dir)).toBe(false);
+    await rm(parent, { force: true, recursive: true });
   });
 
   test('should accept existing empty directory', async () => {
@@ -84,13 +84,11 @@ describe('prepareProjectDir', () => {
     await rm(dir, { force: true, recursive: true });
   });
 
-  test('should overwrite non-empty directory with force', async () => {
+  test('should remove non-empty directory with force', async () => {
     const dir = await tempDir();
     await writeFixture(dir);
     await prepareProjectDir('test', dir, true);
-    await expect(access(dir)).resolves.toBeUndefined();
-    const files = await readdir(dir);
-    expect(files.length).toBe(0);
+    expect(existsSync(dir)).toBe(false);
     await rm(dir, { force: true, recursive: true });
   });
 });
@@ -169,6 +167,32 @@ describe('scaffoldProject', () => {
       vi.mocked(installDependencies).mockRejectedValueOnce(
         new Error('install failed')
       );
+      await expect(
+        scaffoldProject({
+          cleanCI: false,
+          initGit: false,
+          packageManager: 'pnpm',
+          projectName: 'fail',
+          projectPath: dir,
+          skipDownload: true,
+          template: TEMPLATES[0],
+        })
+      ).rejects.toThrow();
+
+      expect(existsSync(dir)).toBe(false);
+    } finally {
+      await rm(parent, { force: true, recursive: true });
+    }
+  });
+
+  test('should clean up a directory that prepareProjectDir accepted', async () => {
+    const parent = await tempDir();
+    const dir = join(parent, 'project');
+    await prepareProjectDir('project', dir);
+    vi.mocked(installDependencies).mockRejectedValueOnce(
+      new Error('install failed')
+    );
+    try {
       await expect(
         scaffoldProject({
           cleanCI: false,

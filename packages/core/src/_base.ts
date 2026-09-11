@@ -46,8 +46,8 @@ export interface Task {
   check: (cwd: string, profile: ProjectProfile) => Promise<TaskStatus>;
   dryRun: (cwd: string, profile: ProjectProfile) => Promise<Array<FileDiff>>;
   /** Optional: declare dependencies needed by this task.
-   * When implemented, the applyTasks pipeline batches these across
-   * all tasks into a single install call before running any apply(). */
+   * When implemented, the `planTasks`/`executePlan` pipeline batches these
+   * across all tasks into a single install call before running any apply(). */
   getDeps?: (
     cwd: string,
     profile: ProjectProfile

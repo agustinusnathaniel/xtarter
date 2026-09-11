@@ -1,6 +1,6 @@
 import { Effect } from 'effect';
 
-import { tryEffect, tryReadPackageJson } from '@/diagnostics.js';
+import { tryEffect, tryReadPackageJson } from '@/utils/effect-io.js';
 import { fileExists, resolvePath } from '@/utils/fs.js';
 
 export interface PreflightError {

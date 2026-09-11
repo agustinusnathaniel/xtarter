@@ -42,6 +42,10 @@ external writers: the owner never caches, so a fresh read absorbs their
 effects. The dead core writer `writePackageJson` is removed; the owner lives in
 `packages/tasks` because core cannot depend on patchers (ADR 002).
 
+Update (2026-09-11): `applyTasks` was removed after this ADR (see ADR 028).
+Callers now compose `planTasks` and `executePlan` directly; the reference above
+describes the state at the time of this decision.
+
 ## Rationale
 
 - Patch-based writes preserve formatting (ADR 010), and computing against

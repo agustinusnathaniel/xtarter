@@ -1,5 +1,9 @@
-import { lintToolScripts, resolveLintTool } from '@xtarterize/tasks';
 import { describe, expect } from 'vite-plus/test';
+
+import {
+  lintToolScripts,
+  resolveLintTool,
+} from '../../packages/tasks/src/factory/package-scripts.js';
 
 describe('resolveLintTool', () => {
   test('returns null when eslint is present', () => {

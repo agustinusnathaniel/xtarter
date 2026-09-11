@@ -132,6 +132,10 @@ impact on the rest of the command execution.
 A new file `packages/core/src/ensure-gitignore.ts` containing the function,
 re-exported from `packages/core/src/index.ts`.
 
+Update (2026-09-11): `applyTasks()` was removed after this ADR (see ADR 028).
+Callers now compose `planTasks()` and `executePlan()` directly; the references
+to `applyTasks()` above describe the state at the time of this decision.
+
 ## Rationale
 
 ### Why not a task

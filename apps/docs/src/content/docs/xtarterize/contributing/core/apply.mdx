@@ -34,7 +34,7 @@ const plan = await planTasks({
 })
 
 console.log(plan.entries)      // per-task status, diffs, and timing
-console.log(plan.dependencies) // deduplicated packages to install
+console.log(plan.dependencies) // collected packages to install
 console.log(plan.files)        // files to back up, one manifest for the run
 ```
 
@@ -43,7 +43,7 @@ console.log(plan.files)        // files to back up, one manifest for the run
 [`executePlan`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/apply/execute.ts) runs the plan:
 
 1. **Backup** - Backs up every file in the plan once and writes one run manifest
-2. **Batch Install** - Installs the plan's deduplicated dependencies in a single call, grouped by dev/prod
+2. **Batch Install** - Installs the plan's collected dependencies in a single call, grouped by dev/prod
 3. **Apply** - Runs `task.apply()` sequentially for each planned task
 4. **Report** - Returns `{ applied, skipped, errors, timing }`
 
@@ -56,9 +56,16 @@ console.log(result.applied) // number of successfully applied tasks
 console.log(result.errors)  // error messages for failed tasks and installs
 ```
 
-### `applyTasks(options)`
+### Composing both
 
-The [`applyTasks`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/apply.ts) wrapper chains both steps for callers that do not need the plan separately.
+Callers that need the plan before executing, such as the CLI's diff preview and confirmation flow, run both steps directly:
+
+```typescript
+import { executePlan, planTasks } from '@xtarterize/core'
+
+const plan = await planTasks({ cwd: '/path/to/project', profile, tasks })
+const result = await executePlan({ cwd: '/path/to/project', plan, profile })
+```
 
 ## Backup System
 

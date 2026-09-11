@@ -1,6 +1,7 @@
 import type { ProjectProfile } from '@xtarterize/core';
 import { fileExists, readPackageJson, resolvePath } from '@xtarterize/core';
 import { dlxCommand, type PackageManagerName, runScriptCommand } from 'nypm';
+import type { PackageJson } from 'pkg-types';
 
 import {
   defineTask,
@@ -8,8 +9,9 @@ import {
   type TaskTarget,
 } from '@/factory/define-task.js';
 import {
+  filterMissingScripts,
   hasInstalledDependency,
-  resolveScriptsResolution,
+  toScriptsMap,
   toScriptsPatch,
 } from '@/factory/scripts.js';
 
@@ -28,19 +30,15 @@ function commitMsgHook(pm: PackageManagerName): string {
   return `${dlxCommand(pm, 'commitlint', { short: true })} --edit $1\n`;
 }
 
-async function preCommitHook(
-  cwd: string,
+function preCommitHook(
+  pkg: PackageJson | null,
   profile: ProjectProfile
-): Promise<string> {
+): string {
   if (profile.vitePlus) {
     return 'vp staged\n';
   }
-  const pkg = await readPackageJson(cwd);
-  const hasLintStaged = !!(
-    pkg?.devDependencies?.['lint-staged'] || pkg?.dependencies?.['lint-staged']
-  );
   const pm = profile.packageManager;
-  return hasLintStaged
+  return hasInstalledDependency(pkg, 'lint-staged')
     ? `${dlxCommand(pm, 'lint-staged', { short: true })}\n`
     : `${dlxCommand(pm, 'biome', { short: true })} check --write\n`;
 }
@@ -56,17 +54,13 @@ function prePushHook(profile: ProjectProfile): string {
   return `${runScriptCommand(pm, 'test')}\n`;
 }
 
-async function prepareCommitMsgHook(
-  cwd: string,
+function prepareCommitMsgHook(
+  pkg: PackageJson | null,
   profile: ProjectProfile
-): Promise<string> {
-  const pkg = await readPackageJson(cwd);
-  const hasCz = !!(
-    pkg?.devDependencies?.czg ||
-    pkg?.dependencies?.czg ||
-    pkg?.devDependencies?.commitizen ||
-    pkg?.dependencies?.commitizen
-  );
+): string {
+  const hasCz =
+    hasInstalledDependency(pkg, 'czg') ||
+    hasInstalledDependency(pkg, 'commitizen');
   if (!hasCz) {
     return '# no-op: no commit wizard detected\nexit 0\n';
   }
@@ -74,15 +68,15 @@ async function prepareCommitMsgHook(
   return `exec < /dev/tty && ${runScriptCommand(pm, 'cz')} --hook || true\n`;
 }
 
-async function renderHookContents(
-  cwd: string,
+function renderHookContents(
+  pkg: PackageJson | null,
   profile: ProjectProfile
-): Promise<Record<HookName, string>> {
+): Record<HookName, string> {
   return {
     'commit-msg': commitMsgHook(profile.packageManager),
-    'pre-commit': await preCommitHook(cwd, profile),
+    'pre-commit': preCommitHook(pkg, profile),
     'pre-push': prePushHook(profile),
-    'prepare-commit-msg': await prepareCommitMsgHook(cwd, profile),
+    'prepare-commit-msg': prepareCommitMsgHook(pkg, profile),
   };
 }
 
@@ -144,18 +138,19 @@ export const gitHooksTask = defineTask({
     tags: ['git', 'hooks', 'husky', 'quality'],
   },
   targets: async (cwd, profile) => {
-    const [contents, hooksExist] = await Promise.all([
-      renderHookContents(cwd, profile),
+    const pkg = await readPackageJson(cwd);
+    const [hooksExist, contents] = await Promise.all([
       allHooksExist(cwd, profile),
+      renderHookContents(pkg, profile),
     ]);
-    const scripts = profile.vitePlus
-      ? null
-      : await resolveScriptsResolution(cwd, CANDIDATES);
+    const missingScripts = filterMissingScripts(
+      toScriptsMap((pkg?.scripts as Record<string, unknown> | undefined) ?? {}),
+      CANDIDATES
+    );
     const forceNew =
-      scripts !== null &&
-      !hooksExist &&
-      scripts.missingScripts.length === CANDIDATES.length &&
-      !hasInstalledDependency(scripts.pkg, 'husky');
+      !(profile.vitePlus || hooksExist) &&
+      missingScripts.length === CANDIDATES.length &&
+      !hasInstalledDependency(pkg, 'husky');
     const filePolicy: TargetPolicy = ({ before }) => {
       if (before !== null) {
         // Existing hook scripts were never compared or overwritten.
@@ -166,9 +161,9 @@ export const gitHooksTask = defineTask({
     const targets: Array<TaskTarget> = HOOK_NAMES.map((name) =>
       hookTarget({ content: contents[name], name, policy: filePolicy, profile })
     );
-    if (scripts !== null) {
+    if (!profile.vitePlus) {
       targets.push({
-        change: () => toScriptsPatch(scripts.missingScripts),
+        change: () => toScriptsPatch(missingScripts),
         kind: 'packageJson',
         policy: () => (forceNew ? 'new' : undefined),
       });

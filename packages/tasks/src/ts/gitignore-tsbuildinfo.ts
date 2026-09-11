@@ -1,4 +1,7 @@
-import { defineTask, type TargetPolicy } from '@/factory/define-task.js';
+import {
+  defineSingleTargetTask,
+  type TargetPolicy,
+} from '@/factory/define-task.js';
 
 const ENTRIES = ['*.tsbuildinfo', '.tsbuildinfo/'];
 
@@ -10,7 +13,7 @@ const gitignoreTsbuildinfoPolicy: TargetPolicy = ({ before }) => {
   return allPresent ? undefined : 'patch';
 };
 
-export const gitignoreTsbuildinfoTask = defineTask({
+export const gitignoreTsbuildinfoTask = defineSingleTargetTask({
   applicable: (profile) => profile.typescript,
   group: 'TypeScript',
   id: 'gitignore/tsbuildinfo',
@@ -25,22 +28,20 @@ export const gitignoreTsbuildinfoTask = defineTask({
     ],
     tags: ['typescript', 'gitignore', 'build-output'],
   },
-  targets: [
-    {
-      filepath: '.gitignore',
-      kind: 'text',
-      policy: gitignoreTsbuildinfoPolicy,
-      render: (_profile, existing) => {
-        const missing = ENTRIES.filter((entry) => !existing?.includes(entry));
-        if (missing.length === 0) {
-          return existing ?? '';
-        }
-        const header = '# TypeScript incremental build info';
-        if (!existing) {
-          return `${header}\n${missing.map((e) => e).join('\n')}\n`;
-        }
-        return `${existing.replace(/\n*$/, '')}\n\n${header}\n${missing.map((e) => e).join('\n')}\n`;
-      },
+  target: {
+    filepath: '.gitignore',
+    kind: 'text',
+    policy: gitignoreTsbuildinfoPolicy,
+    render: (_profile, existing) => {
+      const missing = ENTRIES.filter((entry) => !existing?.includes(entry));
+      if (missing.length === 0) {
+        return existing ?? '';
+      }
+      const header = '# TypeScript incremental build info';
+      if (!existing) {
+        return `${header}\n${missing.join('\n')}\n`;
+      }
+      return `${existing.replace(/\n*$/, '')}\n\n${header}\n${missing.join('\n')}\n`;
     },
-  ],
+  },
 });

@@ -6,7 +6,7 @@ import {
   readFile,
   resolvePath,
 } from '@/utils/fs.js';
-import { readPackageJson } from '@/utils/pkg.js';
+import { collectDependencyVersions, readPackageJson } from '@/utils/pkg.js';
 
 import { detectBundler } from './detect/bundler.js';
 import {
@@ -20,7 +20,6 @@ import { detectMonorepo } from './detect/monorepo.js';
 import {
   detectFrameworkVersion,
   detectPackageManager,
-  isStringRecord,
 } from './detect/package-manager.js';
 import {
   type ConfigDirInput,
@@ -31,9 +30,7 @@ import {
   type ExistingConfig,
   type ExistingEntry,
   type ExistingValue,
-  type FlagEntry,
   isFileDetectorEntry,
-  type ListEntry,
   type RootFileInput,
   rootFileInputFor,
   rootFileInputsFor,
@@ -257,9 +254,10 @@ const CUSTOM_DETECTORS: CustomDetectorMap = {
 
 // ── Existing config assembly (registry-driven) ──
 
-type ResolvedExisting =
-  | { key: FlagEntry['key']; kind: 'flag'; value: boolean }
-  | { key: ListEntry['key']; kind: 'list'; value: Array<string> };
+type ResolvedExisting = {
+  key: ExistingEntry['key'];
+  value: boolean | Array<string>;
+};
 
 function customDetectorContext(
   entry: CustomDetectorEntry,
@@ -282,24 +280,15 @@ async function resolveExistingEntry(
   if (isFileDetectorEntry(entry)) {
     return {
       key: entry.key,
-      kind: 'flag',
       value: await detectRootFile(cwd, rootFileInputFor(entry)),
     };
   }
 
-  if (entry.existing === 'list') {
-    const detect = CUSTOM_DETECTORS[entry.id];
-    return {
-      key: entry.key,
-      kind: 'list',
-      value: await detect(customDetectorContext(entry, cwd, deps)),
-    };
-  }
-  const detect = CUSTOM_DETECTORS[entry.id];
   return {
     key: entry.key,
-    kind: 'flag',
-    value: await detect(customDetectorContext(entry, cwd, deps)),
+    value: await CUSTOM_DETECTORS[entry.id](
+      customDetectorContext(entry, cwd, deps)
+    ),
   };
 }
 
@@ -311,14 +300,9 @@ async function detectExistingConfigs(
     EXISTING_ENTRIES.map((entry) => resolveExistingEntry(entry, cwd, deps))
   );
 
-  const partial = resolved.reduce<Partial<ExistingConfig>>((acc, item) => {
-    if (item.kind === 'flag') {
-      acc[item.key] = item.value;
-    } else {
-      acc[item.key] = item.value;
-    }
-    return acc;
-  }, {});
+  const partial = Object.fromEntries(
+    resolved.map((entry) => [entry.key, entry.value])
+  ) as Partial<ExistingConfig>;
 
   return completeExistingConfig(partial);
 }
@@ -348,22 +332,11 @@ async function detectNodeVersion(
   return '22';
 }
 
-function collectDeps(pkg: PackageJson | null): Record<string, string> {
-  const deps: Record<string, string> = {};
-  if (pkg && isStringRecord(pkg.dependencies)) {
-    Object.assign(deps, pkg.dependencies);
-  }
-  if (pkg && isStringRecord(pkg.devDependencies)) {
-    Object.assign(deps, pkg.devDependencies);
-  }
-  return deps;
-}
-
 // ── Internal detection logic (no caching) ──
 
 async function computeProjectProfile(cwd: string): Promise<ProjectProfile> {
   const pkg = await readPackageJson(cwd);
-  const deps = collectDeps(pkg);
+  const deps = collectDependencyVersions(pkg);
 
   const [
     monorepoInfo,

@@ -1,7 +1,7 @@
-import { defineTask } from '@/factory/define-task.js';
+import { defineSingleTargetTask } from '@/factory/define-task.js';
 import { renderBiomeJson } from '@/templates/biome-json.js';
 
-export const biomeTask = defineTask({
+export const biomeTask = defineSingleTargetTask({
   applicable: (profile) =>
     !(
       profile.existing.eslint ||
@@ -20,12 +20,10 @@ export const biomeTask = defineTask({
     keywords: ['biome', 'linter', 'formatter', 'lint', 'format', 'all-in-one'],
     tags: ['linting', 'formatting', 'all-in-one', 'quality'],
   },
-  targets: [
-    {
-      extensions: ['.json', '.jsonc'],
-      filepath: 'biome.json',
-      incoming: (_cwd, profile) => JSON.parse(renderBiomeJson(profile)),
-      kind: 'jsonMerge',
-    },
-  ],
+  target: {
+    extensions: ['.json', '.jsonc'],
+    filepath: 'biome.json',
+    incoming: (_cwd, profile) => JSON.parse(renderBiomeJson(profile)),
+    kind: 'jsonMerge',
+  },
 });

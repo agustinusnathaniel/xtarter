@@ -13,6 +13,34 @@ import { describe, expect } from 'vite-plus/test';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const fixtures = path.resolve(__dirname, '../fixtures');
 
+const withPnpmProject = async (
+  run: (cwd: string) => Promise<void>,
+  workspace?: string
+): Promise<void> => {
+  const tmpDir = await fs.mkdtemp(
+    path.join(os.tmpdir(), 'xtarterize-pnpm-workspace-')
+  );
+  try {
+    await fs.writeFile(
+      path.join(tmpDir, 'package.json'),
+      JSON.stringify({ name: 'pnpm-workspace-test' })
+    );
+    await fs.writeFile(path.join(tmpDir, 'pnpm-lock.yaml'), '');
+    if (workspace !== undefined) {
+      await fs.writeFile(path.join(tmpDir, 'pnpm-workspace.yaml'), workspace);
+    }
+    await run(tmpDir);
+  } finally {
+    await fs.rm(tmpDir, { force: true, recursive: true });
+  }
+};
+
+const workspacePath = (cwd: string): string =>
+  path.join(cwd, 'pnpm-workspace.yaml');
+
+const readWorkspace = (cwd: string): Promise<string> =>
+  fs.readFile(workspacePath(cwd), 'utf-8');
+
 describe('pnpmWorkspaceTask', () => {
   test('is applicable to pnpm projects', async () => {
     const profile = await detectProject(path.join(fixtures, 'monorepo-turbo'));
@@ -68,12 +96,14 @@ describe('pnpmWorkspaceTask', () => {
       await fs.mkdir(path.join(tmpDir, 'packages'), { recursive: true });
       await fs.mkdir(path.join(tmpDir, 'apps'), { recursive: true });
       const profile = await detectProject(tmpDir);
+      expect(await pnpmWorkspaceTask.check(tmpDir, profile)).toBe('new');
       const diffs = await pnpmWorkspaceTask.dryRun(tmpDir, profile);
       expect(diffs.length).toBe(1);
       expect(diffs[0].filepath).toBe('pnpm-workspace.yaml');
       expect(diffs[0].before).toBeNull();
-      expect(diffs[0].after).toContain("'apps/*'");
-      expect(diffs[0].after).toContain("'packages/*'");
+      expect(diffs[0].after).toBe(
+        ['packages:', "  - 'apps/*'", "  - 'packages/*'", ''].join('\n')
+      );
     } finally {
       await fs.rm(tmpDir, { force: true, recursive: true });
     }
@@ -149,6 +179,211 @@ describe('pnpmWorkspaceTask', () => {
     } finally {
       await fs.rm(tmpDir, { force: true, recursive: true });
     }
+  });
+
+  test('skips existing content that already declares both globs', async () => {
+    const content = [
+      '# workspace configuration',
+      'catalog:',
+      '  react: ^19.0.0',
+      'packages:',
+      "  - 'apps/*'",
+      "  - './packages/*'",
+      'overrides:',
+      '  esbuild: ^0.25.0',
+      'onlyBuiltDependencies:',
+      '  - esbuild',
+      '',
+    ].join('\n');
+    await withPnpmProject(async (cwd) => {
+      const profile = await detectProject(cwd);
+      expect(await pnpmWorkspaceTask.check(cwd, profile)).toBe('skip');
+      expect(await pnpmWorkspaceTask.dryRun(cwd, profile)).toEqual([]);
+      await expect(readWorkspace(cwd)).resolves.toBe(content);
+    }, content);
+  });
+
+  test('inserts missing globs and preserves the rest of the file', async () => {
+    const content = [
+      '# workspace configuration',
+      'catalog:',
+      '  react: ^19.0.0',
+      'packages:',
+      "  - 'apps/*'",
+      '',
+      'onlyBuiltDependencies:',
+      '  - esbuild',
+      '',
+    ].join('\n');
+    const expected = [
+      '# workspace configuration',
+      'catalog:',
+      '  react: ^19.0.0',
+      'packages:',
+      "  - 'apps/*'",
+      "  - 'packages/*'",
+      '',
+      'onlyBuiltDependencies:',
+      '  - esbuild',
+      '',
+    ].join('\n');
+    await withPnpmProject(async (cwd) => {
+      const profile = await detectProject(cwd);
+      expect(await pnpmWorkspaceTask.check(cwd, profile)).toBe('patch');
+      const diffs = await pnpmWorkspaceTask.dryRun(cwd, profile);
+      expect(diffs[0].after).toBe(expected);
+      await pnpmWorkspaceTask.apply(cwd, profile);
+      await expect(readWorkspace(cwd)).resolves.toBe(expected);
+      // Idempotency: the patched file is satisfied on the next check.
+      expect(await pnpmWorkspaceTask.check(cwd, profile)).toBe('skip');
+      expect(await pnpmWorkspaceTask.dryRun(cwd, profile)).toEqual([]);
+    }, content);
+  });
+
+  test('skips a settings-only file without a packages key', async () => {
+    const content = ['onlyBuiltDependencies:', '  - esbuild', ''].join('\n');
+    await withPnpmProject(async (cwd) => {
+      // The workspace file makes detection report a monorepo, yet a keyless
+      // settings file must stay byte-identical.
+      const profile = await detectProject(cwd);
+      expect(await pnpmWorkspaceTask.check(cwd, profile)).toBe('skip');
+      expect(await pnpmWorkspaceTask.dryRun(cwd, profile)).toEqual([]);
+      await expect(readWorkspace(cwd)).resolves.toBe(content);
+    }, content);
+  });
+
+  test('skips an existing empty file', async () => {
+    await withPnpmProject(async (cwd) => {
+      const profile = await detectProject(cwd);
+      expect(await pnpmWorkspaceTask.check(cwd, profile)).toBe('skip');
+      expect(await pnpmWorkspaceTask.dryRun(cwd, profile)).toEqual([]);
+      await expect(readWorkspace(cwd)).resolves.toBe('');
+    }, '');
+  });
+
+  test('inserts both globs into an empty packages list', async () => {
+    const content = [
+      'packages:',
+      '  # TODO add workspace globs',
+      '',
+      'catalog:',
+      '  react: ^19.0.0',
+      '',
+    ].join('\n');
+    const expected = [
+      'packages:',
+      "  - 'apps/*'",
+      "  - 'packages/*'",
+      '  # TODO add workspace globs',
+      '',
+      'catalog:',
+      '  react: ^19.0.0',
+      '',
+    ].join('\n');
+    await withPnpmProject(async (cwd) => {
+      const profile = await detectProject(cwd);
+      expect(await pnpmWorkspaceTask.check(cwd, profile)).toBe('patch');
+      await pnpmWorkspaceTask.apply(cwd, profile);
+      await expect(readWorkspace(cwd)).resolves.toBe(expected);
+    }, content);
+  });
+
+  test('matches the existing quote style when inserting', async () => {
+    const content = ['packages:', '  - "apps/*"', ''].join('\n');
+    const expected = ['packages:', '  - "apps/*"', '  - "packages/*"', ''].join(
+      '\n'
+    );
+    await withPnpmProject(async (cwd) => {
+      const profile = await detectProject(cwd);
+      await pnpmWorkspaceTask.apply(cwd, profile);
+      await expect(readWorkspace(cwd)).resolves.toBe(expected);
+    }, content);
+
+    const unquoted = ['packages:', '  - apps/*', ''].join('\n');
+    const unquotedExpected = [
+      'packages:',
+      '  - apps/*',
+      '  - packages/*',
+      '',
+    ].join('\n');
+    await withPnpmProject(async (cwd) => {
+      const profile = await detectProject(cwd);
+      await pnpmWorkspaceTask.apply(cwd, profile);
+      await expect(readWorkspace(cwd)).resolves.toBe(unquotedExpected);
+    }, unquoted);
+  });
+
+  test('skips a flow-style packages list with both globs', async () => {
+    const content = 'packages: [apps/*, "./packages/*"]\n';
+    await withPnpmProject(async (cwd) => {
+      const profile = await detectProject(cwd);
+      expect(await pnpmWorkspaceTask.check(cwd, profile)).toBe('skip');
+      expect(await pnpmWorkspaceTask.dryRun(cwd, profile)).toEqual([]);
+    }, content);
+  });
+
+  test('reports conflict for a flow-style list missing a glob', async () => {
+    const content = 'packages: [apps/*]\n';
+    await withPnpmProject(async (cwd) => {
+      const profile = await detectProject(cwd);
+      expect(await pnpmWorkspaceTask.check(cwd, profile)).toBe('conflict');
+      await expect(readWorkspace(cwd)).resolves.toBe(content);
+    }, content);
+  });
+
+  test('reports conflict for an unparseable packages value', async () => {
+    const content = 'packages: { apps: true }\n';
+    await withPnpmProject(async (cwd) => {
+      const profile = await detectProject(cwd);
+      expect(await pnpmWorkspaceTask.check(cwd, profile)).toBe('conflict');
+      await expect(readWorkspace(cwd)).resolves.toBe(content);
+    }, content);
+  });
+
+  test('preserves CRLF line endings when inserting', async () => {
+    const content = 'packages:\r\ncatalog:\r\n  react: ^19.0.0\r\n';
+    const expected =
+      "packages:\r\n  - 'apps/*'\r\n  - 'packages/*'\r\ncatalog:\r\n  react: ^19.0.0\r\n";
+    await withPnpmProject(async (cwd) => {
+      const profile = await detectProject(cwd);
+      const diffs = await pnpmWorkspaceTask.dryRun(cwd, profile);
+      expect(diffs[0].after).toBe(expected);
+      await pnpmWorkspaceTask.apply(cwd, profile);
+      await expect(readWorkspace(cwd)).resolves.toBe(expected);
+      expect(await pnpmWorkspaceTask.check(cwd, profile)).toBe('skip');
+    }, content);
+  });
+
+  test('inserts a missing glob before a document end marker', async () => {
+    const content = ['packages:', "  - 'apps/*'", '...', ''].join('\n');
+    const expected = [
+      'packages:',
+      "  - 'apps/*'",
+      "  - 'packages/*'",
+      '...',
+      '',
+    ].join('\n');
+    await withPnpmProject(async (cwd) => {
+      const profile = await detectProject(cwd);
+      expect(await pnpmWorkspaceTask.check(cwd, profile)).toBe('patch');
+      await pnpmWorkspaceTask.apply(cwd, profile);
+      await expect(readWorkspace(cwd)).resolves.toBe(expected);
+      expect(await pnpmWorkspaceTask.check(cwd, profile)).toBe('skip');
+    }, content);
+  });
+
+  test('leaves single-package workspace content untouched', async () => {
+    await withPnpmProject(async (cwd) => {
+      // Detection treats any directory holding pnpm-workspace.yaml as a
+      // monorepo root, so resolve the single-package profile before the file
+      // exists. Existing content such as onlyBuiltDependencies must survive.
+      const profile = await detectProject(cwd);
+      const content = ['onlyBuiltDependencies:', '  - esbuild', ''].join('\n');
+      await fs.writeFile(workspacePath(cwd), content);
+      expect(await pnpmWorkspaceTask.check(cwd, profile)).toBe('skip');
+      expect(await pnpmWorkspaceTask.dryRun(cwd, profile)).toEqual([]);
+      await expect(readWorkspace(cwd)).resolves.toBe(content);
+    });
   });
 });
 

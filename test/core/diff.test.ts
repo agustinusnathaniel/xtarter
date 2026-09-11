@@ -1,61 +1,9 @@
 import {
-  computeChangeStats,
   computeSemanticJsonDiff,
-  computeUnifiedHunks,
   enhanceDiff,
   formatDiffHeader,
-  generateDiff,
 } from '@xtarterize/core';
 import { describe, expect } from 'vite-plus/test';
-
-describe('generateDiff', () => {
-  test('shows added lines', () => {
-    const result = generateDiff(null, 'line1\nline2\n');
-    expect(result).toContain('+ line1');
-    expect(result).toContain('+ line2');
-  });
-
-  test('shows removed lines', () => {
-    const result = generateDiff('old\n', 'new\n');
-    const lines = result.split('\n');
-    expect(lines.some((l) => l.includes('- old'))).toBe(true);
-    expect(lines.some((l) => l.includes('+ new'))).toBe(true);
-  });
-
-  test('shows unchanged lines without prefix', () => {
-    const result = generateDiff('keep\n', 'keep\n');
-    expect(result).not.toContain('+');
-    expect(result).not.toContain('-');
-  });
-});
-
-describe('computeChangeStats', () => {
-  test('counts added and removed lines', () => {
-    const stats = computeChangeStats('a\nb\n', 'a\nc\nd\n');
-    expect(stats.added).toBe(2);
-    expect(stats.removed).toBe(1);
-  });
-
-  test('returns zeros for identical content', () => {
-    const stats = computeChangeStats('same\n', 'same\n');
-    expect(stats.added).toBe(0);
-    expect(stats.removed).toBe(0);
-  });
-});
-
-describe('computeUnifiedHunks', () => {
-  test('returns a single hunk with header', () => {
-    const hunks = computeUnifiedHunks('a\nb\n', 'a\nc\n');
-    expect(hunks.length).toBe(1);
-    expect(hunks[0].header).toMatch(/^@@/);
-  });
-
-  test('tracks added and removed counts', () => {
-    const hunks = computeUnifiedHunks('a\nb\n', 'a\nc\nd\n');
-    expect(hunks[0].added).toBe(2);
-    expect(hunks[0].removed).toBe(1);
-  });
-});
 
 describe('computeSemanticJsonDiff', () => {
   test('detects added keys', () => {
@@ -102,6 +50,46 @@ describe('computeSemanticJsonDiff', () => {
 });
 
 describe('enhanceDiff', () => {
+  test('counts added and removed lines in stats', () => {
+    const enhanced = enhanceDiff({
+      after: 'a\nc\nd\n',
+      before: 'a\nb\n',
+      filepath: 'test.txt',
+    });
+    expect(enhanced.stats?.added).toBe(2);
+    expect(enhanced.stats?.removed).toBe(1);
+  });
+
+  test('returns zero stats for identical content', () => {
+    const enhanced = enhanceDiff({
+      after: 'same\n',
+      before: 'same\n',
+      filepath: 'test.txt',
+    });
+    expect(enhanced.stats?.added).toBe(0);
+    expect(enhanced.stats?.removed).toBe(0);
+  });
+
+  test('returns a single hunk with header', () => {
+    const enhanced = enhanceDiff({
+      after: 'a\nc\n',
+      before: 'a\nb\n',
+      filepath: 'test.txt',
+    });
+    expect(enhanced.hunks?.length).toBe(1);
+    expect(enhanced.hunks?.[0]?.header).toMatch(/^@@/);
+  });
+
+  test('tracks added and removed counts in hunks', () => {
+    const enhanced = enhanceDiff({
+      after: 'a\nc\nd\n',
+      before: 'a\nb\n',
+      filepath: 'test.txt',
+    });
+    expect(enhanced.hunks?.[0]?.added).toBe(2);
+    expect(enhanced.hunks?.[0]?.removed).toBe(1);
+  });
+
   test('adds stats, hunks, and semantic to a diff', () => {
     const diff = {
       after: '{"a": 2}',

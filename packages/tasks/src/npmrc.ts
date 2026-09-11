@@ -1,4 +1,4 @@
-import { defineTask } from '@/factory/define-task.js';
+import { defineSingleTargetTask } from '@/factory/define-task.js';
 
 function npmrcContent(): string {
   return [
@@ -9,7 +9,7 @@ function npmrcContent(): string {
   ].join('\n');
 }
 
-export const npmrcTask = defineTask({
+export const npmrcTask = defineSingleTargetTask({
   applicable: () => true,
   group: 'Scripts',
   id: 'scripts/npmrc',
@@ -25,11 +25,9 @@ export const npmrcTask = defineTask({
     ],
     tags: ['package-manager', 'config', 'registry'],
   },
-  targets: [
-    {
-      filepath: '.npmrc',
-      kind: 'text',
-      render: () => npmrcContent(),
-    },
-  ],
+  target: {
+    filepath: '.npmrc',
+    kind: 'text',
+    render: () => npmrcContent(),
+  },
 });

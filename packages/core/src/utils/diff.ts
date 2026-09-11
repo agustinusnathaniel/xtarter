@@ -1,5 +1,4 @@
-import { diffLines, diffWords } from 'diff';
-import pc from 'picocolors';
+import { diffLines } from 'diff';
 
 import type {
   ChangeStats,
@@ -10,57 +9,36 @@ import type {
 
 export type { ChangeStats, DiffHunk, FileDiff, SemanticEntry };
 
-export function generateDiff(before: string | null, after: string): string {
-  const useWords = isWordLevelDiff(before, after);
-  const changes = useWords
-    ? diffWords(before ?? '', after)
-    : diffLines(before ?? '', after);
-  const lines: Array<string> = [];
-
-  for (const change of changes) {
-    const prefix = change.added ? '+ ' : change.removed ? '- ' : '  ';
-    const color = change.added ? pc.green : change.removed ? pc.red : String;
-    const _reset = change.added || change.removed ? pc.reset : String;
-
-    for (const line of change.value.split('\n')) {
-      if (line === '' && change.value.endsWith('\n')) {
-        continue;
-      }
-      lines.push(color(`${prefix}${line}`));
-    }
-  }
-
-  return lines.join('\n');
+export function isJsonFile(filepath: string): boolean {
+  return (
+    filepath.endsWith('.json') ||
+    filepath.endsWith('.jsonc') ||
+    filepath.endsWith('.json5')
+  );
 }
 
-export function computeChangeStats(
-  before: string | null,
-  after: string
-): ChangeStats {
+interface DiffParts {
+  hunks: Array<DiffHunk>;
+  stats: ChangeStats;
+}
+
+// One diffLines pass feeds both stats and hunks; do not split it back into two.
+function computeDiffParts(before: string | null, after: string): DiffParts {
   const changes = diffLines(before ?? '', after);
-  let added = 0;
-  let removed = 0;
+  const lines: Array<string> = [];
+  let statsAdded = 0;
+  let statsRemoved = 0;
+  let hunkAdded = 0;
+  let hunkRemoved = 0;
+
   for (const change of changes) {
     if (change.added) {
-      added += change.count ?? 0;
+      statsAdded += change.count ?? 0;
     }
     if (change.removed) {
-      removed += change.count ?? 0;
+      statsRemoved += change.count ?? 0;
     }
-  }
-  return { added, removed };
-}
 
-export function computeUnifiedHunks(
-  before: string | null,
-  after: string
-): Array<DiffHunk> {
-  const changes = diffLines(before ?? '', after);
-  const lines: Array<string> = [];
-  let added = 0;
-  let removed = 0;
-
-  for (const change of changes) {
     const rawLines = change.value.split('\n');
     if (rawLines.at(-1) === '') {
       rawLines.pop();
@@ -73,12 +51,12 @@ export function computeUnifiedHunks(
       for (const line of rawLines) {
         lines.push(`+ ${line}`);
       }
-      added += rawLines.length;
+      hunkAdded += rawLines.length;
     } else if (change.removed) {
       for (const line of rawLines) {
         lines.push(`- ${line}`);
       }
-      removed += rawLines.length;
+      hunkRemoved += rawLines.length;
     } else {
       for (const line of rawLines) {
         lines.push(`  ${line}`);
@@ -88,9 +66,12 @@ export function computeUnifiedHunks(
 
   const beforeLineCount = before ? before.split('\n').length : 0;
   const afterLineCount = after.split('\n').length;
-  const header = `@@ -${beforeLineCount},${removed} +${afterLineCount},${added} @@`;
+  const header = `@@ -${beforeLineCount},${hunkRemoved} +${afterLineCount},${hunkAdded} @@`;
 
-  return [{ added, header, lines, removed }];
+  return {
+    hunks: [{ added: hunkAdded, header, lines, removed: hunkRemoved }],
+    stats: { added: statsAdded, removed: statsRemoved },
+  };
 }
 
 export function computeSemanticJsonDiff(
@@ -126,32 +107,12 @@ export function computeSemanticJsonDiff(
 }
 
 export function enhanceDiff(diff: FileDiff): FileDiff {
-  const stats = computeChangeStats(diff.before, diff.after);
-  const hunks = computeUnifiedHunks(diff.before, diff.after);
-  const isJson =
-    diff.filepath.endsWith('.json') ||
-    diff.filepath.endsWith('.jsonc') ||
-    diff.filepath.endsWith('.json5');
-  const semantic = isJson
+  const { hunks, stats } = computeDiffParts(diff.before, diff.after);
+  const semantic = isJsonFile(diff.filepath)
     ? computeSemanticJsonDiff(diff.before, diff.after)
     : undefined;
 
   return { ...diff, hunks, semantic, stats };
-}
-
-function isWordLevelDiff(before: string | null, after: string): boolean {
-  if (before === null) {
-    return false;
-  }
-  const bLines = before.split('\n');
-  const aLines = after.split('\n');
-  if (bLines.length !== aLines.length) {
-    return false;
-  }
-  if (bLines.length > 50) {
-    return false;
-  }
-  return true;
 }
 
 function deepDiff(

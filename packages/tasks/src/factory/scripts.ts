@@ -1,11 +1,10 @@
-import { hasDependency } from '@xtarterize/core';
+import { hasDependency, readPackageJson } from '@xtarterize/core';
 import type { PackageJson } from 'pkg-types';
 
 import {
   hasScriptWithEquivalentValue,
   type PackageScriptsMap,
 } from './equivalence.js';
-import { readPackageJson } from './package-json.js';
 
 export interface ScriptEntry {
   script: string;

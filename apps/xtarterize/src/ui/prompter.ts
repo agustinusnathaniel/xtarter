@@ -11,8 +11,6 @@ export interface ConfirmPromptOptions {
   message: string;
 }
 
-export type SelectPromptOption<Value> = Option<Value>;
-
 export interface SelectPromptOptions<Value> {
   message: string;
   options: Array<Option<Value>>;

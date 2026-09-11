@@ -137,6 +137,27 @@ describe('packageEnginesTask', () => {
     await fs.rm(tmpDir, { recursive: true });
   });
 
+  test('derives package manager floor from packageManager field', async () => {
+    const tmpDir = await fs.mkdtemp(
+      path.join(os.tmpdir(), 'xtarterize-engines-pm-')
+    );
+    await fs.writeFile(
+      path.join(tmpDir, 'package.json'),
+      JSON.stringify({
+        name: 'engines-test',
+        packageManager: 'pnpm@11.8.0',
+      })
+    );
+
+    const profile = await detectProject(tmpDir);
+    const diffs = await packageEnginesTask.dryRun(tmpDir, profile);
+    expect(diffs.length).toBe(1);
+    const devEngines = JSON.parse(diffs[0].after).devEngines;
+    expect(devEngines.packageManager.version).toBe('>=11.8.0');
+
+    await fs.rm(tmpDir, { recursive: true });
+  });
+
   test('apply writes devEngines to package.json', async () => {
     const tmpDir = await fs.mkdtemp(
       path.join(os.tmpdir(), 'xtarterize-engines-apply-')

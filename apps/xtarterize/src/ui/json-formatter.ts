@@ -35,23 +35,31 @@ interface CheckResultOptions {
   timing?: ResolveTiming;
 }
 
-export function computeCheckOk(
+export function countCheckSummary(
   tasks: Array<Task>,
-  statuses: Map<string, TaskStatus>,
+  statuses: Map<string, TaskStatus>
+): { conformant: number; total: number } {
+  return {
+    conformant: tasks.filter((t) => statuses.get(t.id) === 'skip').length,
+    total: tasks.length,
+  };
+}
+
+export function computeCheckOk(
+  summary: { conformant: number; total: number },
   diagnostics: Array<DiagnosticCheck>
 ): boolean {
-  const conformant = tasks.filter((t) => statuses.get(t.id) === 'skip').length;
   const hasFailures = diagnostics.some((d) => d.status === 'fail');
-  return !hasFailures && conformant === tasks.length;
+  return !hasFailures && summary.conformant === summary.total;
 }
 
 export function formatCheckResult(options: CheckResultOptions): string {
   const { tasks, statuses, diagnostics, timing } = options;
-  const conformant = tasks.filter((t) => statuses.get(t.id) === 'skip').length;
+  const summary = countCheckSummary(tasks, statuses);
   const result: Record<string, unknown> = {
     diagnostics,
-    ok: computeCheckOk(tasks, statuses, diagnostics),
-    summary: { conformant, total: tasks.length },
+    ok: computeCheckOk(summary, diagnostics),
+    summary,
     tasks: formatTaskList(tasks, statuses),
   };
   if (timing) {

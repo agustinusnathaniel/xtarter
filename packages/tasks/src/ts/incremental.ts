@@ -1,6 +1,6 @@
-import { defineTask } from '@/factory/define-task.js';
+import { defineSingleTargetTask } from '@/factory/define-task.js';
 
-export const incrementalTask = defineTask({
+export const incrementalTask = defineSingleTargetTask({
   applicable: (profile) => profile.typescript,
   group: 'TypeScript',
   id: 'ts/incremental',
@@ -14,13 +14,11 @@ export const incrementalTask = defineTask({
     ],
     tags: ['typescript', 'performance', 'build-speed'],
   },
-  targets: [
-    {
-      filepath: 'tsconfig.json',
-      incoming: () => ({
-        compilerOptions: { incremental: true, tsBuildInfoFile: '.tsbuildinfo' },
-      }),
-      kind: 'jsonMerge',
-    },
-  ],
+  target: {
+    filepath: 'tsconfig.json',
+    incoming: () => ({
+      compilerOptions: { incremental: true, tsBuildInfoFile: '.tsbuildinfo' },
+    }),
+    kind: 'jsonMerge',
+  },
 });

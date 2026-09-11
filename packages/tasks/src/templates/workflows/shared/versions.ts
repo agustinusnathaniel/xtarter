@@ -4,5 +4,3 @@ export const ACTION_VERSIONS = {
   PNPM_SETUP: 'pnpm/setup@v1',
   SETUP_NODE: 'actions/setup-node@v6',
 } as const;
-
-export const NODE_VERSION = 22;

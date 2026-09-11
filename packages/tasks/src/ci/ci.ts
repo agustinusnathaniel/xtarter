@@ -1,7 +1,7 @@
-import { defineTask } from '@/factory/define-task.js';
+import { defineSingleTargetTask } from '@/factory/define-task.js';
 import { renderCiWorkflow } from '@/templates/workflows/ci-yml.js';
 
-export const ciWorkflowTask = defineTask({
+export const ciWorkflowTask = defineSingleTargetTask({
   applicable: (profile) => profile.hasGitHub,
   group: 'CI/CD',
   id: 'ci/ci',
@@ -18,11 +18,9 @@ export const ciWorkflowTask = defineTask({
     ],
     tags: ['ci', 'testing', 'github-actions', 'quality'],
   },
-  targets: [
-    {
-      filepath: '.github/workflows/ci.yml',
-      kind: 'text',
-      render: (profile) => renderCiWorkflow(profile),
-    },
-  ],
+  target: {
+    filepath: '.github/workflows/ci.yml',
+    kind: 'text',
+    render: (profile) => renderCiWorkflow(profile),
+  },
 });

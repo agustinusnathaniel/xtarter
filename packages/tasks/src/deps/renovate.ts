@@ -1,5 +1,4 @@
-import { defineTask } from '@/factory/define-task.js';
-import { normalizeExtends } from '@/factory/utils.js';
+import { defineSingleTargetTask } from '@/factory/define-task.js';
 
 const incomingRenovate = () => ({
   $schema: 'https://docs.renovatebot.com/renovate-schema.json',
@@ -23,7 +22,7 @@ const incomingRenovate = () => ({
   updatePinnedDependencies: false,
 });
 
-export const renovateTask = defineTask({
+export const renovateTask = defineSingleTargetTask({
   applicable: (profile) => profile.hasGitHub,
   group: 'Dependencies',
   id: 'deps/renovate',
@@ -39,12 +38,10 @@ export const renovateTask = defineTask({
     ],
     tags: ['dependencies', 'updates', 'maintenance', 'automation'],
   },
-  targets: [
-    {
-      extensions: ['.json', '.json5'],
-      filepath: 'renovate.json',
-      incoming: () => normalizeExtends(incomingRenovate()),
-      kind: 'jsonMerge',
-    },
-  ],
+  target: {
+    extensions: ['.json', '.json5'],
+    filepath: 'renovate.json',
+    incoming: () => incomingRenovate(),
+    kind: 'jsonMerge',
+  },
 });

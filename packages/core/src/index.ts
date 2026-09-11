@@ -8,31 +8,19 @@ export type {
   TaskSearchMeta,
   TaskStatus,
 } from '@/_base.js';
-export type { ExecutePlanOptions } from '@/apply/execute.js';
+export type { ApplyResult } from '@/apply/execute.js';
 export { executePlan } from '@/apply/execute.js';
-export type {
-  ApplyPlan,
-  ApplyPlanEntry,
-  PlanTasksOptions,
-} from '@/apply/plan.js';
+export type { ApplyPlan, ApplyPlanEntry } from '@/apply/plan.js';
 export { planTasks } from '@/apply/plan.js';
-export type { ApplyOptions, ApplyResult } from '@/apply.js';
-export { applyTasks } from '@/apply.js';
 export type { Backup, RunManifest } from '@/backup.js';
 export {
   backupFile,
-  listAllBackups,
   listBackups,
   readRunManifest,
   restoreBackup,
   writeRunManifest,
 } from '@/backup.js';
-export type {
-  CliArgDefinition,
-  CliArgsDefinition,
-  InvocationValidationOptions,
-  UnknownFlag,
-} from '@/cli-args.js';
+export type { CliArgsDefinition } from '@/cli-args.js';
 export {
   findFirstPositionalIndex,
   findUnknownFlags,
@@ -43,27 +31,18 @@ export {
 export type {
   Bundler,
   Framework,
-  MonorepoDetection,
   PackageManager,
   ProjectProfile,
   Router,
   Styling,
 } from '@/detect.js';
 // Detection functions - only re-export what users need
-export {
-  detectFramework,
-  detectPackageManager,
-  detectProject,
-} from '@/detect.js';
-export type { DiagnosticCheck } from '@/diagnostics.js';
-export {
-  checkToolInstalled,
-  getToolVersion,
-  runConflictChecks,
-  runEnvironmentChecks,
-  runProjectHealthChecks,
-  runToolInstallationChecks,
+export { detectPackageManager, detectProject } from '@/detect.js';
+export type {
+  DiagnosticCheck,
+  DiagnosticGroup,
 } from '@/diagnostics.js';
+export { runDiagnostics } from '@/diagnostics.js';
 export type { EnsureGitignoreResult } from '@/ensure-gitignore.js';
 // Gitignore management
 export { ensureXtarterizeGitignore } from '@/ensure-gitignore.js';
@@ -81,6 +60,7 @@ export type {
   RelevanceSignal,
   WeightConfig,
 } from '@/inquiry/types.js';
+export { createInvocationGuard } from '@/invocation-guard.js';
 // Plugin/extension system — @internal: stable but untested in production
 export type { PluginConfig, TaskSelectionConfig } from '@/plugins.js';
 export {
@@ -99,29 +79,23 @@ export {
 } from '@/resolve.js';
 export type { ApplyTiming, ResolveTiming, TaskTiming } from '@/timing.js';
 export {
-  computeChangeStats,
   computeSemanticJsonDiff,
-  computeUnifiedHunks,
   enhanceDiff,
   formatDiffHeader,
-  generateDiff,
+  isJsonFile,
 } from '@/utils/diff.js';
 // Re-export utilities needed by tasks
 export {
-  copyFile,
+  assertPathWithin,
   ensureDir,
   fileExists,
   findConfigFile,
   readFile,
-  readJson,
-  readJsonIfExists,
   resolvePath,
   writeFile,
-  writeJson,
 } from '@/utils/fs.js';
 export {
   consola,
-  log,
   logError,
   logInfo,
   logSuccess,
@@ -129,13 +103,10 @@ export {
   pc,
 } from '@/utils/logger.js';
 export {
-  getDependencyVersion,
-  getNodeVersion,
+  collectDependencyVersions,
   hasDependency,
   installDependenciesBatch,
-  installDependency,
   readPackageJson,
 } from '@/utils/pkg.js';
 export { abortIfCancelled, createSpinner, isCI } from '@/utils/prompts.js';
-export type { TagColor } from '@/utils/tags.js';
 export { actionTag, statusTag, tag } from '@/utils/tags.js';

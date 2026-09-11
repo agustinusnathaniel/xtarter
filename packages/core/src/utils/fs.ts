@@ -75,47 +75,26 @@ export async function readJson<T = Record<string, unknown>>(
   }
 }
 
-export async function writeJson(
-  filePath: string,
-  data: unknown
-): Promise<void> {
-  await Effect.runPromise(
-    Effect.tryPromise({
-      catch: (cause) => new FileSystemError({ cause, path: filePath }),
-      try: async () => {
-        await fs.mkdir(dirname(filePath), { recursive: true });
-        await fs.writeFile(
-          filePath,
-          `${JSON.stringify(data, null, 2)}\n`,
-          'utf-8'
-        );
-      },
-    })
-  );
-}
-
-export async function readJsonIfExists<T = Record<string, unknown>>(
-  filePath: string
-): Promise<T | null> {
-  const exists = await fileExists(filePath);
-  if (!exists) {
-    return null;
-  }
-  return readJson<T>(filePath);
-}
-
-export async function copyFile(src: string, dest: string): Promise<void> {
-  await Effect.runPromise(
-    Effect.tryPromise({
-      catch: (cause) => new FileSystemError({ cause, path: dest }),
-      try: async () => {
-        await fs.mkdir(dirname(dest), { recursive: true });
-        await fs.cp(src, dest);
-      },
-    })
-  );
-}
-
 export function resolvePath(cwd: string, ...segments: Array<string>): string {
   return resolve(cwd, ...segments);
+}
+
+/**
+ * Resolve `target` against `baseDir`, throwing when the result escapes
+ * `baseDir`. Returns the resolved path.
+ */
+export function assertPathWithin(
+  baseDir: string,
+  target: string,
+  errorMessage = `Path traversal detected: ${target}`
+): string {
+  const resolvedBase = resolvePath(baseDir);
+  const resolvedTarget = resolvePath(baseDir, target);
+  if (
+    resolvedTarget !== resolvedBase &&
+    !resolvedTarget.startsWith(`${resolvedBase}/`)
+  ) {
+    throw new Error(errorMessage);
+  }
+  return resolvedTarget;
 }
