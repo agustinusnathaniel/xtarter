@@ -20,6 +20,12 @@ side effect of normal operation:
   `.xtarterize/cache/profile-fingerprint.json` (ADR 021)
 - **`.xtarterize/skills-install.log`** - installation log for agent skills
 
+Update (2026-09-11): the profile cache was removed by ADR 034, so
+`.xtarterize/` now contains backups, the run manifest, and the skills-install
+log only. The command table below and the cache references that follow describe
+the state at the time of this decision; `ensureXtarterizeGitignore()` and its
+behavior are unchanged for the remaining artifacts.
+
 There is currently no mechanism that ensures these artifacts are gitignored.
 ADR 021 already flagged this gap explicitly:
 
@@ -126,6 +132,10 @@ silently handled per the **boundary pattern** from ADR 019:
 
 This means the gitignore mechanism is always optional - a failure has zero
 impact on the rest of the command execution.
+
+Update (2026-09-11): the Effect boundary pattern was replaced by plain
+`try/catch` (ADR 035). The best-effort behavior is unchanged:
+`ensureXtarterizeGitignore()` still returns `{ action: 'noop' }` on any error.
 
 ### Export location
 
@@ -250,7 +260,7 @@ Rejected because `undo` and `restore` read `.xtarterize/` via
 ### Related Decisions
 
 - ADR 021: Fingerprint-based Profile Caching - first identified the
-  `.gitignore` gap
+  `.gitignore` gap (cache later removed; superseded by ADR 034)
 - ADR 022: Run Manifest for Undo - added more `.xtarterize/backups/` artifacts
 - ADR 019: Effect TS Error Handling - established the boundary pattern for
   best-effort I/O

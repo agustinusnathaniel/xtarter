@@ -74,12 +74,14 @@ for a fully non-interactive run; otherwise the CLI still prompts for a name.
 
 - **Invalid template ID** - prints all valid template IDs and exits
 - **Invalid package manager** - prints valid options and exits
+- **Validation order** - template, package manager, and other explicit inputs are validated before the target directory is created, modified, or deleted, so `--force` never removes a directory for an invalid invocation
 - **Target directory exists** - cancels with an error unless `--force` is used
 - **Unknown option or command** - exits `1` before anything runs, with a suggested correction when one is close (for example, `Unknown option --jsn ... Did you mean --json?`), so a typo never silently changes behavior
 - **Invalid project name** - the interactive prompt rejects names containing characters outside letters, numbers, hyphens, and underscores
 - **Download failure** - network failures are retried up to 3 times, then the command exits with an error
-- **Install failure** - cleans up created directory (if scaffolded to a new path), then exits
-- **Partial scaffold** - if any step after download fails, created directories are cleaned up automatically
+- **Install failure** - cleans up the created directory (if the CLI created it), then exits
+- **Git init failure** - logs a warning and reports `gitInitialized: false` in `--json` output; the successful scaffold is not discarded
+- **Partial scaffold** - if a non-git scaffold step fails after download, a directory created by the CLI is cleaned up automatically
 
 ## Programmatic API
 

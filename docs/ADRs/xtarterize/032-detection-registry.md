@@ -50,6 +50,25 @@ declares what detection reads and which detectors consume it.
 Declarations with no consumer yet (css-modules, universal, frameworkVersion,
 and the unreachable ambiguity prompt) are documented as follow-up.
 
+Update (2026-09-11): the profile cache was removed by ADR 034. The registry
+still declares the inputs and keyed detector entries that detection and
+doctor consume, and the cache-specific changes above (fingerprint kinds,
+cache version 3, `isValidCacheEntry`) no longer apply and are kept as the
+record of this decision.
+
+Update (2026-09-11, follow-up): the nine logic detector declarations
+(framework, bundler, router, styling, runtime, vitePlus, packageManager,
+monorepo, nodeVersion) were removed. Their only consumer was the fingerprint
+deleted by ADR 034, so they were dead data; the Decision bullet that lists
+them is superseded by this update note, with the original text kept as the
+historical record, and the specs can return when a runtime consumer exists. The inputs they alone referenced (`pnpm-workspace`, `nx-config`,
+`lerna-config`, `.nvmrc`) and the two with no consumer at all (the `.git` cwd
+marker and the `.vscode` config dir) were removed with them. The registry now
+declares the keyed file and custom detector entries plus the inputs consumed
+by detection helpers (bundler config extensions, monorepo markers) and doctor
+lockfile checks. This resolves the open follow-up about entries declaring
+inputs with no consumer.
+
 ## Rationale
 
 - Adding or changing a detection input touches one place; cache validation and
@@ -77,4 +96,5 @@ and the unreachable ambiguity prompt) are documented as follow-up.
 
 ### Related Decisions
 
-- ADR 021 (profile caching), ADR 033 (ecosystem evaluation), Plan 043 Phase 5.
+- ADR 021 (profile caching, superseded by ADR 034), ADR 033 (ecosystem
+  evaluation), Plan 043 Phase 5.

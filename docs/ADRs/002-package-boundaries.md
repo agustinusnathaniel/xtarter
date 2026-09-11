@@ -28,6 +28,8 @@ No package may import from a package it doesn't depend on. No circular dependenc
 
 The YAML patcher (`mergeYaml`, `parseYaml`) and the filesystem `injectVitePlugin` wrapper were retired after this ADR: workflows are emitted as text templates, and Vite config patching is content-level via `injectVitePluginIntoCode`.
 
+Update (2026-09-11): `effect` was removed from `@xtarterize/core` (ADR 035). The dependency list in the table above reflects the state at the time of this decision.
+
 ### Circular dependency resolution
 
 The `Task` interface (`_base.ts`) lives in `@xtarterize/core` - not in `@xtarterize/tasks` - because:
