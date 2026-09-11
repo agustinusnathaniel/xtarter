@@ -10,6 +10,8 @@ import {
 import { skillsInstallTask } from '@xtarterize/tasks';
 import { describe, expect, vi } from 'vite-plus/test';
 
+import { SKILL_CATALOG } from '../../packages/tasks/src/agent/catalog.js';
+
 const { mockX } = vi.hoisted(() => ({
   mockX: vi.fn().mockResolvedValue({ exitCode: 0 }),
 }));
@@ -454,5 +456,71 @@ describe('skillsInstallTask apply', () => {
     } finally {
       await fs.rm(tmpDir, { force: true, recursive: true });
     }
+  });
+});
+
+// The catalog groups entries behind condition helpers, so the expansion is
+// only pinned by the install command order. Pin the full ordered catalog
+// once; per-profile selection is covered by the fixture tests above.
+describe('SKILL_CATALOG expansion', () => {
+  const expectedCatalog = [
+    'vercel-labs/opensrc:opensrc',
+    'mattpocock/skills:grill-me',
+    'mattpocock/skills:grill-with-docs',
+    'mattpocock/skills:handoff',
+    'mattpocock/skills:improve-codebase-architecture',
+    'shadcn/improve:improve',
+    'mattpocock/skills:writing-for-agents',
+    'anthropics/skills:frontend-design',
+    'vercel-labs/agent-skills:web-design-guidelines',
+    'ibelick/ui-skills:baseline-ui',
+    'ibelick/ui-skills:fixing-accessibility',
+    'ibelick/ui-skills:fixing-metadata',
+    'ibelick/ui-skills:fixing-motion-performance',
+    'vercel-labs/agent-skills:vercel-react-best-practices',
+    'vercel-labs/agent-skills:vercel-composition-patterns',
+    'softaworks/agent-toolkit:react-dev',
+    'softaworks/agent-toolkit:react-useeffect',
+    'vercel/next.js:next-dev-loop',
+    'vercel/next.js:next-cache-components-optimizer',
+    'vercel/next.js:next-cache-components-adoption',
+    'antfu/skills:vue',
+    'antfu/skills:vue-best-practices',
+    'antfu/skills:nuxt',
+    'shadcn-ui/ui:shadcn',
+    'haydenbleasel/ultracite:ultracite',
+    'ant-design/ant-design-cli:antd',
+    'heroui-inc/heroui:heroui-react',
+    'chakra-ui/chakra-ui:chakra-ui-builder',
+    'chakra-ui/chakra-ui:chakra-ui-refactor',
+    'expo/skills:expo-overview',
+    'expo/skills:expo-router',
+    'expo/skills:eas-workflows',
+    'expo/skills:eas-app-stores',
+    'expo/skills:eas-update',
+    'expo/skills:expo-dev-client',
+    'expo/skills:expo-native-ui',
+    'expo/skills:expo-data-fetching',
+    'expo/skills:expo-module',
+    'expo/skills:expo-upgrade',
+    'vercel-labs/agent-skills:vercel-react-native-skills',
+    'heroui-inc/heroui:heroui-native',
+    'antfu/skills:vite',
+    'antfu/skills:vitest',
+    'antfu/skills:tsdown',
+    'vercel/turborepo:turborepo',
+    'supabase/agent-skills:supabase-postgres-best-practices',
+    'ccheney/robust-skills:postgres-drizzle',
+    'mindrally/skills:redis-best-practices',
+    'better-auth/skills:better-auth-best-practices',
+    'better-auth/skills:create-auth',
+    'vercel/ai:ai-sdk',
+    'remotion-dev/skills:remotion-best-practices',
+  ];
+
+  test('expands to the same skills, sources, and order', () => {
+    expect(
+      SKILL_CATALOG.map(({ source, skill }) => `${source}:${skill}`)
+    ).toEqual(expectedCatalog);
   });
 });

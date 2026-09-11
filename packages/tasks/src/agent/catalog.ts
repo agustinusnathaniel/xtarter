@@ -46,329 +46,180 @@ export function hasAnyDep(
   return depNames.some((dep) => hasDep(deps, dep));
 }
 
+type SkillCondition = SkillDefinition['condition'];
+
+/** Shared conditions, so a group of entries does not retype its predicate. */
+const browser: SkillCondition = (p) =>
+  p.runtime === 'browser' || p.runtime === 'edge';
+const react: SkillCondition = (p) => p.framework === 'react';
+const expoNative: SkillCondition = (p) =>
+  p.bundler === 'expo' || p.framework === 'react-native';
+
+/** Expand one condition + source + skill names into catalog entries. */
+function skillsFor(
+  condition: SkillCondition,
+  source: string,
+  skills: Array<string>
+): Array<SkillDefinition> {
+  return skills.map((skill) => ({ condition, skill, source }));
+}
+
+function alwaysSkills(
+  source: string,
+  skills: Array<string>
+): Array<SkillDefinition> {
+  return skillsFor(() => true, source, skills);
+}
+
 /**
  * Declarative catalog of all installable skills, grouped by category.
  *
- * To add a new skill, append an entry with its source, skill name, and a
- * `condition` that returns `true` when the project stack matches.
+ * To add a new skill, append it to the `skillsFor`/`alwaysSkills` call for
+ * its source, or add a call with a `condition` that matches the project stack.
+ * Entry order is observable (it drives the install command order), so append
+ * new groups at the end rather than regrouping existing calls.
  */
 export const SKILL_CATALOG: Array<SkillDefinition> = [
-  // ═════════════════════════════════════════════════════════════════
-  //  General (always applicable)
-  // ═════════════════════════════════════════════════════════════════
-  {
-    condition: () => true,
-    skill: 'opensrc',
-    source: 'vercel-labs/opensrc',
-  },
-  {
-    condition: () => true,
-    skill: 'grill-me',
-    source: 'mattpocock/skills',
-  },
-  {
-    condition: () => true,
-    skill: 'grill-with-docs',
-    source: 'mattpocock/skills',
-  },
-  {
-    condition: () => true,
-    skill: 'handoff',
-    source: 'mattpocock/skills',
-  },
-  {
-    condition: () => true,
-    skill: 'improve-codebase-architecture',
-    source: 'mattpocock/skills',
-  },
-  {
-    condition: () => true,
-    skill: 'improve',
-    source: 'shadcn/improve',
-  },
-  {
-    condition: () => true,
-    skill: 'writing-for-agents',
-    source: 'mattpocock/skills',
-  },
+  // General (always applicable)
+  ...alwaysSkills('vercel-labs/opensrc', ['opensrc']),
+  ...alwaysSkills('mattpocock/skills', [
+    'grill-me',
+    'grill-with-docs',
+    'handoff',
+    'improve-codebase-architecture',
+  ]),
+  ...alwaysSkills('shadcn/improve', ['improve']),
+  ...alwaysSkills('mattpocock/skills', ['writing-for-agents']),
 
-  // ═════════════════════════════════════════════════════════════════
-  //  Frontend / UI
-  // ═════════════════════════════════════════════════════════════════
-  {
-    condition: (p) => p.runtime === 'browser' || p.runtime === 'edge',
-    skill: 'frontend-design',
-    source: 'anthropics/skills',
-  },
-  {
-    condition: (p) => p.runtime === 'browser' || p.runtime === 'edge',
-    skill: 'web-design-guidelines',
-    source: 'vercel-labs/agent-skills',
-  },
-  {
-    condition: (p) => p.runtime === 'browser' || p.runtime === 'edge',
-    skill: 'baseline-ui',
-    source: 'ibelick/ui-skills',
-  },
-  {
-    condition: (p) => p.runtime === 'browser' || p.runtime === 'edge',
-    skill: 'fixing-accessibility',
-    source: 'ibelick/ui-skills',
-  },
-  {
-    condition: (p) => p.runtime === 'browser' || p.runtime === 'edge',
-    skill: 'fixing-metadata',
-    source: 'ibelick/ui-skills',
-  },
-  {
-    condition: (p) => p.runtime === 'browser' || p.runtime === 'edge',
-    skill: 'fixing-motion-performance',
-    source: 'ibelick/ui-skills',
-  },
+  // Frontend / UI
+  ...skillsFor(browser, 'anthropics/skills', ['frontend-design']),
+  ...skillsFor(browser, 'vercel-labs/agent-skills', ['web-design-guidelines']),
+  ...skillsFor(browser, 'ibelick/ui-skills', [
+    'baseline-ui',
+    'fixing-accessibility',
+    'fixing-metadata',
+    'fixing-motion-performance',
+  ]),
 
-  // ═════════════════════════════════════════════════════════════════
-  //  React
-  // ═════════════════════════════════════════════════════════════════
-  {
-    condition: (p) => p.framework === 'react',
-    skill: 'vercel-react-best-practices',
-    source: 'vercel-labs/agent-skills',
-  },
-  {
-    condition: (p) => p.framework === 'react',
-    skill: 'vercel-composition-patterns',
-    source: 'vercel-labs/agent-skills',
-  },
-  {
-    condition: (p) => p.framework === 'react',
-    skill: 'react-dev',
-    source: 'softaworks/agent-toolkit',
-  },
-  {
-    condition: (p) => p.framework === 'react',
-    skill: 'react-useeffect',
-    source: 'softaworks/agent-toolkit',
-  },
+  // React
+  ...skillsFor(react, 'vercel-labs/agent-skills', [
+    'vercel-react-best-practices',
+    'vercel-composition-patterns',
+  ]),
+  ...skillsFor(react, 'softaworks/agent-toolkit', [
+    'react-dev',
+    'react-useeffect',
+  ]),
 
-  // ═════════════════════════════════════════════════════════════════
-  //  Next.js
-  // ═════════════════════════════════════════════════════════════════
-  {
-    condition: (p) => p.bundler === 'nextjs',
-    skill: 'next-dev-loop',
-    source: 'vercel/next.js',
-  },
-  {
-    condition: (p) => p.bundler === 'nextjs',
-    skill: 'next-cache-components-optimizer',
-    source: 'vercel/next.js',
-  },
-  {
-    condition: (p) => p.bundler === 'nextjs',
-    skill: 'next-cache-components-adoption',
-    source: 'vercel/next.js',
-  },
+  // Next.js
+  ...skillsFor((p) => p.bundler === 'nextjs', 'vercel/next.js', [
+    'next-dev-loop',
+    'next-cache-components-optimizer',
+    'next-cache-components-adoption',
+  ]),
 
-  // ═════════════════════════════════════════════════════════════════
-  //  Vue / Nuxt
-  // ═════════════════════════════════════════════════════════════════
-  {
-    condition: (p) => p.framework === 'vue',
-    skill: 'vue',
-    source: 'antfu/skills',
-  },
-  {
-    condition: (p) => p.framework === 'vue',
-    skill: 'vue-best-practices',
-    source: 'antfu/skills',
-  },
-  {
-    condition: (_p, d) => hasDep(d, 'nuxt'),
-    skill: 'nuxt',
-    source: 'antfu/skills',
-  },
+  // Vue / Nuxt
+  ...skillsFor((p) => p.framework === 'vue', 'antfu/skills', [
+    'vue',
+    'vue-best-practices',
+  ]),
+  ...skillsFor((_p, d) => hasDep(d, 'nuxt'), 'antfu/skills', ['nuxt']),
 
-  // ═════════════════════════════════════════════════════════════════
-  //  Shadcn
-  // ═════════════════════════════════════════════════════════════════
-  {
-    condition: (_p, d) =>
+  // Shadcn
+  ...skillsFor(
+    (_p, d) =>
       hasAnyDep(d, ['shadcn', 'shadcn-ui', '@shadcn/ui', '@shadcn-ui/cli']),
-    skill: 'shadcn',
-    source: 'shadcn-ui/ui',
-  },
+    'shadcn-ui/ui',
+    ['shadcn']
+  ),
 
-  // ═════════════════════════════════════════════════════════════════
-  //  Ultracite
-  // ═════════════════════════════════════════════════════════════════
-  {
-    condition: (_p, d) => hasDep(d, 'ultracite'),
-    skill: 'ultracite',
-    source: 'haydenbleasel/ultracite',
-  },
+  // Ultracite
+  ...skillsFor((_p, d) => hasDep(d, 'ultracite'), 'haydenbleasel/ultracite', [
+    'ultracite',
+  ]),
 
-  // ═════════════════════════════════════════════════════════════════
-  //  Component Libraries
-  // ═════════════════════════════════════════════════════════════════
-  {
-    condition: (_p, d) => hasDep(d, 'antd'),
-    skill: 'antd',
-    source: 'ant-design/ant-design-cli',
-  },
-  {
-    condition: (_p, d) => hasDep(d, '@heroui/react'),
-    skill: 'heroui-react',
-    source: 'heroui-inc/heroui',
-  },
-  {
-    condition: (_p, d) => hasDep(d, '@chakra-ui/react'),
-    skill: 'chakra-ui-builder',
-    source: 'chakra-ui/chakra-ui',
-  },
-  {
-    condition: (_p, d) => hasDep(d, '@chakra-ui/react'),
-    skill: 'chakra-ui-refactor',
-    source: 'chakra-ui/chakra-ui',
-  },
+  // Component libraries
+  ...skillsFor((_p, d) => hasDep(d, 'antd'), 'ant-design/ant-design-cli', [
+    'antd',
+  ]),
+  ...skillsFor((_p, d) => hasDep(d, '@heroui/react'), 'heroui-inc/heroui', [
+    'heroui-react',
+  ]),
+  ...skillsFor(
+    (_p, d) => hasDep(d, '@chakra-ui/react'),
+    'chakra-ui/chakra-ui',
+    ['chakra-ui-builder', 'chakra-ui-refactor']
+  ),
 
-  // ═════════════════════════════════════════════════════════════════
-  //  Expo / React Native
-  // ═════════════════════════════════════════════════════════════════
-  {
-    // Expo-only: per upstream guidance, a bare React Native project
-    // without an `expo` dependency is not Expo work.
-    condition: (p, d) => p.bundler === 'expo' || hasDep(d, 'expo'),
-    skill: 'expo-overview',
-    source: 'expo/skills',
-  },
-  {
-    condition: (p) => p.bundler === 'expo' || p.framework === 'react-native',
-    skill: 'expo-router',
-    source: 'expo/skills',
-  },
-  {
-    condition: (p) => p.bundler === 'expo' || p.framework === 'react-native',
-    skill: 'eas-workflows',
-    source: 'expo/skills',
-  },
-  {
-    condition: (p) => p.bundler === 'expo' || p.framework === 'react-native',
-    skill: 'eas-app-stores',
-    source: 'expo/skills',
-  },
-  {
-    condition: (p) => p.bundler === 'expo' || p.framework === 'react-native',
-    skill: 'eas-update',
-    source: 'expo/skills',
-  },
-  {
-    condition: (p) => p.bundler === 'expo' || p.framework === 'react-native',
-    skill: 'expo-dev-client',
-    source: 'expo/skills',
-  },
-  {
-    condition: (p) => p.bundler === 'expo' || p.framework === 'react-native',
-    skill: 'expo-native-ui',
-    source: 'expo/skills',
-  },
-  {
-    condition: (p) => p.bundler === 'expo' || p.framework === 'react-native',
-    skill: 'expo-data-fetching',
-    source: 'expo/skills',
-  },
-  {
-    condition: (p) => p.bundler === 'expo' || p.framework === 'react-native',
-    skill: 'expo-module',
-    source: 'expo/skills',
-  },
-  {
-    condition: (p) => p.bundler === 'expo' || p.framework === 'react-native',
-    skill: 'expo-upgrade',
-    source: 'expo/skills',
-  },
-  {
-    condition: (p) => p.bundler === 'expo' || p.framework === 'react-native',
-    skill: 'vercel-react-native-skills',
-    source: 'vercel-labs/agent-skills',
-  },
-  {
-    condition: (_p, d) =>
-      hasDep(d, 'heroui-native') && hasDep(d, 'react-native'),
-    skill: 'heroui-native',
-    source: 'heroui-inc/heroui',
-  },
+  // Expo / React Native
+  ...skillsFor(
+    (p, d) => p.bundler === 'expo' || hasDep(d, 'expo'),
+    'expo/skills',
+    ['expo-overview']
+  ),
+  ...skillsFor(expoNative, 'expo/skills', [
+    'expo-router',
+    'eas-workflows',
+    'eas-app-stores',
+    'eas-update',
+    'expo-dev-client',
+    'expo-native-ui',
+    'expo-data-fetching',
+    'expo-module',
+    'expo-upgrade',
+  ]),
+  ...skillsFor(expoNative, 'vercel-labs/agent-skills', [
+    'vercel-react-native-skills',
+  ]),
+  ...skillsFor(
+    (_p, d) => hasDep(d, 'heroui-native') && hasDep(d, 'react-native'),
+    'heroui-inc/heroui',
+    ['heroui-native']
+  ),
 
-  // ═════════════════════════════════════════════════════════════════
-  //  Build / Dev tools
-  // ═════════════════════════════════════════════════════════════════
-  {
-    condition: (p, d) => p.bundler === 'vite' || hasDep(d, 'vite'),
-    skill: 'vite',
-    source: 'antfu/skills',
-  },
-  {
-    condition: (_p, d) => hasDep(d, 'vitest'),
-    skill: 'vitest',
-    source: 'antfu/skills',
-  },
-  {
-    condition: (_p, d) => hasDep(d, 'tsdown'),
-    skill: 'tsdown',
-    source: 'antfu/skills',
-  },
-  {
-    condition: (p) => p.monorepoTool === 'turbo' || p.existing.turbo,
-    skill: 'turborepo',
-    source: 'vercel/turborepo',
-  },
+  // Build / dev tools
+  ...skillsFor(
+    (p, d) => p.bundler === 'vite' || hasDep(d, 'vite'),
+    'antfu/skills',
+    ['vite']
+  ),
+  ...skillsFor((_p, d) => hasDep(d, 'vitest'), 'antfu/skills', ['vitest']),
+  ...skillsFor((_p, d) => hasDep(d, 'tsdown'), 'antfu/skills', ['tsdown']),
+  ...skillsFor(
+    (p) => p.monorepoTool === 'turbo' || p.existing.turbo,
+    'vercel/turborepo',
+    ['turborepo']
+  ),
 
-  // ═════════════════════════════════════════════════════════════════
-  //  Database / Auth
-  // ═════════════════════════════════════════════════════════════════
-  {
-    condition: (_p, d) =>
+  // Database / Auth
+  ...skillsFor(
+    (_p, d) =>
       hasAnyDep(d, ['@supabase/supabase-js', 'supabase', 'pg', 'postgres']),
-    skill: 'supabase-postgres-best-practices',
-    source: 'supabase/agent-skills',
-  },
-  {
-    condition: (_p, d) => hasDep(d, 'drizzle-orm'),
-    skill: 'postgres-drizzle',
-    source: 'ccheney/robust-skills',
-  },
-  {
-    condition: (_p, d) => hasAnyDep(d, ['redis', 'ioredis']),
-    skill: 'redis-best-practices',
-    source: 'mindrally/skills',
-  },
-  {
-    condition: (_p, d) => hasDep(d, 'better-auth'),
-    skill: 'better-auth-best-practices',
-    source: 'better-auth/skills',
-  },
-  {
-    condition: (_p, d) => hasDep(d, 'better-auth'),
-    skill: 'create-auth',
-    source: 'better-auth/skills',
-  },
+    'supabase/agent-skills',
+    ['supabase-postgres-best-practices']
+  ),
+  ...skillsFor((_p, d) => hasDep(d, 'drizzle-orm'), 'ccheney/robust-skills', [
+    'postgres-drizzle',
+  ]),
+  ...skillsFor(
+    (_p, d) => hasAnyDep(d, ['redis', 'ioredis']),
+    'mindrally/skills',
+    ['redis-best-practices']
+  ),
+  ...skillsFor((_p, d) => hasDep(d, 'better-auth'), 'better-auth/skills', [
+    'better-auth-best-practices',
+    'create-auth',
+  ]),
 
-  // ═════════════════════════════════════════════════════════════════
-  //  AI / SDKs
-  // ═════════════════════════════════════════════════════════════════
-  {
-    condition: (_p, d) => hasDep(d, 'ai'),
-    skill: 'ai-sdk',
-    source: 'vercel/ai',
-  },
+  // AI / SDKs
+  ...skillsFor((_p, d) => hasDep(d, 'ai'), 'vercel/ai', ['ai-sdk']),
 
-  // ═════════════════════════════════════════════════════════════════
-  //  Media / Specialized
-  // ═════════════════════════════════════════════════════════════════
-  {
-    condition: (_p, d) => hasAnyDep(d, ['remotion', '@remotion/cli']),
-    skill: 'remotion-best-practices',
-    source: 'remotion-dev/skills',
-  },
+  // Media / Specialized
+  ...skillsFor(
+    (_p, d) => hasAnyDep(d, ['remotion', '@remotion/cli']),
+    'remotion-dev/skills',
+    ['remotion-best-practices']
+  ),
 ];
 
 /**
