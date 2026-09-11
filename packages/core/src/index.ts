@@ -79,9 +79,7 @@ export {
 } from '@/resolve.js';
 export type { ApplyTiming, ResolveTiming, TaskTiming } from '@/timing.js';
 export {
-  computeChangeStats,
   computeSemanticJsonDiff,
-  computeUnifiedHunks,
   enhanceDiff,
   formatDiffHeader,
   isJsonFile,

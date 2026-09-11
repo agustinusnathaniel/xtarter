@@ -22,6 +22,7 @@ interface DiffParts {
   stats: ChangeStats;
 }
 
+// One diffLines pass feeds both stats and hunks; do not split it back into two.
 function computeDiffParts(before: string | null, after: string): DiffParts {
   const changes = diffLines(before ?? '', after);
   const lines: Array<string> = [];
@@ -71,20 +72,6 @@ function computeDiffParts(before: string | null, after: string): DiffParts {
     hunks: [{ added: hunkAdded, header, lines, removed: hunkRemoved }],
     stats: { added: statsAdded, removed: statsRemoved },
   };
-}
-
-export function computeChangeStats(
-  before: string | null,
-  after: string
-): ChangeStats {
-  return computeDiffParts(before, after).stats;
-}
-
-export function computeUnifiedHunks(
-  before: string | null,
-  after: string
-): Array<DiffHunk> {
-  return computeDiffParts(before, after).hunks;
 }
 
 export function computeSemanticJsonDiff(
