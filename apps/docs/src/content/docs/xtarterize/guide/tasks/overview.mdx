@@ -71,7 +71,7 @@ For projects using [**pnpm**](https://pnpm.io/), CI workflows automatically incl
 
 ### Monorepo Workspace Config
 
-When running in a pnpm monorepo, the `workspace/pnpm-workspace` task generates a `pnpm-workspace.yaml` file:
+When running in a pnpm monorepo, the `workspace/pnpm-workspace` task ensures a `pnpm-workspace.yaml` file declares both workspace globs:
 
 ```yaml
 packages:
@@ -79,7 +79,7 @@ packages:
   - 'packages/*'
 ```
 
-This is the standard pnpm workspace layout. The task only applies when the detected package manager is pnpm.
+Existing files with a `packages:` list keep their comments, catalogs, overrides, and other settings; only missing globs are inserted, and files without the key are left untouched. Layouts that cannot be edited safely are reported as conflicts instead of being rewritten. The task only applies when the detected package manager is pnpm.
 
 ## Dependencies
 
@@ -116,7 +116,7 @@ This is the standard pnpm workspace layout. The task only applies when the detec
 | Task ID | Description | Applicable When |
 |---------|-------------|-----------------|
 | `monorepo/turbo` | Install [Turborepo](https://turbo.build/), write [`turbo.json`](https://turbo.build/repo/docs/reference/configuration) with [`pipeline`](https://turbo.build/repo/docs/reference/configuration#pipeline) for build/lint/test | Monorepo detected |
-| `workspace/pnpm-workspace` | Generate [`pnpm-workspace.yaml`](https://pnpm.io/pnpm-workspace_yaml) with `apps/*` and `packages/*` globs | `packageManager` is `pnpm` |
+| `workspace/pnpm-workspace` | Ensure [`pnpm-workspace.yaml`](https://pnpm.io/pnpm-workspace_yaml) declares the `apps/*` and `packages/*` globs, preserving existing settings | `packageManager` is `pnpm` |
 
 ## Editor
 

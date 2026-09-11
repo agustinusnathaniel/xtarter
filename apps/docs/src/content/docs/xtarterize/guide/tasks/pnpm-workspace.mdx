@@ -15,6 +15,21 @@ packages:
   - 'packages/*'
 ```
 
+## Existing files
+
+The task creates `pnpm-workspace.yaml` when it is missing. When the file
+already exists:
+
+- With a top-level `packages:` list, only the missing `apps/*` and `packages/*`
+  entries are inserted. Comments, other keys such as `catalog:`, `overrides:`,
+  and `onlyBuiltDependencies`, key order, indentation, quote style, and line
+  endings stay untouched.
+- Without a `packages:` key, the file is left untouched, so a settings-only
+  `pnpm-workspace.yaml` never gains workspace globs.
+
+Layouts that cannot be edited safely, such as a flow-style `packages:` list
+that is missing a glob, are reported as a conflict instead of being rewritten.
+
 ## Details
 
 | Property | Value |
