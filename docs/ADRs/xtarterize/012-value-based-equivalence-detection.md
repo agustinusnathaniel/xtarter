@@ -52,6 +52,8 @@ if (
 
 Previously, if `biome` existed with a different value (e.g., `"eslint ."`), the task returned `conflict`. Now it returns `patch` and only adds the **missing** scripts. Existing scripts are never overwritten.
 
+Update (2026-09-11): `normalizeExtends` was removed after this ADR; JSON config equivalence now flows through the `jsonMerge` target (`factory/targets.ts`). The `extends` references above describe the state at the time of this decision.
+
 ## Rationale
 
 - **Idempotency**: Running `xtarterize init` on an already-conformant project should truly produce zero changes
