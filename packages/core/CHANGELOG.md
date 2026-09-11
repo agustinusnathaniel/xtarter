@@ -1,5 +1,45 @@
 # @xtarterize/core
 
+## 1.25.2
+
+### Patch Changes
+
+- [#198](https://github.com/agustinusnathaniel/xtarter/pull/198) [`66512f1`](https://github.com/agustinusnathaniel/xtarter/commit/66512f139b863769400deaddf3186da5eed3c4e0) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Simplify plugin loading and session config reads
+  
+  - A plugin import that fails or exceeds the 10s load timeout is still warned and skipped without failing the command.
+  - `.xtarterizerc` (or the `package.json` `xtarterize` key) is read once per session and shared by task selection and plugin loading.
+
+- [#193](https://github.com/agustinusnathaniel/xtarter/pull/193) [`86c87c2`](https://github.com/agustinusnathaniel/xtarter/commit/86c87c28d4e6dd86bc99e0bd467996ed7dfa9126) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Consolidate the diagnostics and IO surface behind deep modules
+  
+  - `runDiagnostics(cwd, options)` is the single diagnostics entry point; the per-group runners are internal and `doctor`/`check` output is unchanged.
+  - Added `collectDependencyVersions(pkg)` and `isJsonFile(filepath)` for the shared dependency-record and JSON-file checks.
+  - `enhanceDiff` derives stats and hunks from one diff pass.
+  - Removed the unused `ExecutePlanOptions`, `PlanTasksOptions`, `UnknownFlag`, `MonorepoDetection`, `TagColor`, `InvocationValidationOptions`, and `CliArgDefinition` exports, the dead `readJson`/`detectFramework` re-exports, and the unused `externalTasks` parameter of `resolveProjectTasks`.
+
+- [#198](https://github.com/agustinusnathaniel/xtarter/pull/198) [`66512f1`](https://github.com/agustinusnathaniel/xtarter/commit/66512f139b863769400deaddf3186da5eed3c4e0) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Drop the `effect` dependency in favor of plain async/await
+  
+  - `FileSystemError`, `BackupError`, and `TaskError` remain plain `Error` subclasses with the same fields and names.
+  - Task status checks and apply dry-runs run through `mapWithConcurrency` (limit 8), a local bounded-parallel helper that preserves input order.
+  - Observable CLI output and generated files are unchanged.
+
+- [#198](https://github.com/agustinusnathaniel/xtarter/pull/198) [`66512f1`](https://github.com/agustinusnathaniel/xtarter/commit/66512f139b863769400deaddf3186da5eed3c4e0) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Remove the detection profile cache and compute the profile directly
+  
+  - `detectProject()` reads the detection registry inputs and computes a fresh `ProjectProfile` on every invocation; `packages/core/src/detect/cache.ts`, the fingerprint and cache-entry types, and `PROFILE_CACHE_VERSION` are removed.
+  - No `.xtarterize/cache/` directory is created; `.xtarterize/` now holds backups, the run manifest, and the skills-install log only.
+  - Measured, a warm cache hit (~2.2ms) was slower than direct detection (~1.3ms), so repeat runs are also faster.
+
+- [#193](https://github.com/agustinusnathaniel/xtarter/pull/193) [`0e15177`](https://github.com/agustinusnathaniel/xtarter/commit/0e151773c3e90f2b1106e72870c07a3a3d2b5596) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Remove test-only diff exports and route session reporting through `reportOutcome`
+  
+  - `@xtarterize/core` no longer exports the test-only `computeChangeStats` and `computeUnifiedHunks`; diff stats and hunks are reached through `enhanceDiff`, which derives both from a single pass.
+  - CLI command outcomes are reported through `CommandSession.reportOutcome`; messages and exit codes are unchanged.
+
+- [#193](https://github.com/agustinusnathaniel/xtarter/pull/193) [`affac6f`](https://github.com/agustinusnathaniel/xtarter/commit/affac6fd8a3d9a6dcbd88b04786ed6a94dfb9f95) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Remove dead exports and unused internal APIs from the maintained packages
+  
+  - Removed the `applyTasks` wrapper from core, so callers compose `planTasks` and `executePlan` directly, and consolidated the duplicate CLI invocation guard into `createInvocationGuard`.
+  - Removed the YAML patcher (`mergeYaml`/`parseYaml`) and the filesystem `injectVitePlugin`; `injectVitePluginIntoCode` is the single in-memory entry point.
+  - Dropped the unused `js-yaml` dependencies from the patchers package and the bundled CLI, so the `xtarterize` binary no longer inlines them.
+  - CLI behavior and generated configurations are unchanged.
+
 ## 1.25.1
 
 ## 1.25.0

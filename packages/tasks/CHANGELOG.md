@@ -1,5 +1,45 @@
 # @xtarterize/tasks
 
+## 1.25.2
+
+### Patch Changes
+
+- [#193](https://github.com/agustinusnathaniel/xtarter/pull/193) [`4bcf794`](https://github.com/agustinusnathaniel/xtarter/commit/4bcf7941d140cd7f5cdc60d8e1ba063b3393f57a) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Preserve existing `pnpm-workspace.yaml` content in the workspace task
+  
+  The `workspace/pnpm-workspace` task now patches an existing `packages:` list
+  in place instead of replacing the file with a fixed template. Only missing
+  `apps/*` and `packages/*` entries are inserted; comments, `catalog:`,
+  `overrides:`, `onlyBuiltDependencies`, extra keys, ordering, indentation,
+  quote style, and line endings are preserved. Files without a `packages:` key
+  are left untouched, so a settings-only `pnpm-workspace.yaml` never gains
+  workspace globs. Layouts that cannot be edited safely, such as a flow-style
+  `packages:` list missing a glob, are reported as conflicts rather than
+  rewritten.
+
+- [#193](https://github.com/agustinusnathaniel/xtarter/pull/193) [`8e0518f`](https://github.com/agustinusnathaniel/xtarter/commit/8e0518fcfe91f1b82e0fa84a32ad3985a739e7c0) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Trim repeated task and CLI plumbing without changing generated output
+  
+  - The skill catalog groups entries behind `skillsFor`/`alwaysSkills`; the expanded catalog, entry order, sources, and conditions are unchanged.
+  - `readPackageJson` is imported from core directly instead of a pass-through wrapper, and the skills task uses one static `node:fs/promises` import.
+  - CLI commands report outcomes through `CommandSession.reportOutcome`, and interactive `add` executes its confirmed selection through `session.apply`; messages, exit codes, backups, and manifests are unchanged.
+  - `create-xtarter-app` inlines its JSON result formatting, and merged diffs use core's `isJsonFile` predicate.
+
+- [#193](https://github.com/agustinusnathaniel/xtarter/pull/193) [`affac6f`](https://github.com/agustinusnathaniel/xtarter/commit/affac6fd8a3d9a6dcbd88b04786ed6a94dfb9f95) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Remove dead exports and unused internal APIs from the maintained packages
+  
+  - Removed the `applyTasks` wrapper from core, so callers compose `planTasks` and `executePlan` directly, and consolidated the duplicate CLI invocation guard into `createInvocationGuard`.
+  - Removed the YAML patcher (`mergeYaml`/`parseYaml`) and the filesystem `injectVitePlugin`; `injectVitePluginIntoCode` is the single in-memory entry point.
+  - Dropped the unused `js-yaml` dependencies from the patchers package and the bundled CLI, so the `xtarterize` binary no longer inlines them.
+  - CLI behavior and generated configurations are unchanged.
+
+- [#198](https://github.com/agustinusnathaniel/xtarter/pull/198) [`66512f1`](https://github.com/agustinusnathaniel/xtarter/commit/66512f139b863769400deaddf3186da5eed3c4e0) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Fix script equivalence, Turbo detection, and patcher exports
+  
+  - `turborepo run` is no longer treated as equivalent to `turbo run`; composite equivalence requires an extractable task list.
+  - Non-string script values in `package.json` are ignored instead of being coerced.
+  - Turbo detection checks both `dependencies` and `devDependencies`, and `check:turbo` recognizes renamed `typecheck`/`test` scripts through tool mapping.
+  - `@xtarterize/patchers` drops the unused `beforeCode` field and the `InjectVitePluginOptions`/`InjectVitePluginResult` type exports from its entry point.
+- Updated dependencies [[`66512f1`](https://github.com/agustinusnathaniel/xtarter/commit/66512f139b863769400deaddf3186da5eed3c4e0), [`86c87c2`](https://github.com/agustinusnathaniel/xtarter/commit/86c87c28d4e6dd86bc99e0bd467996ed7dfa9126), [`66512f1`](https://github.com/agustinusnathaniel/xtarter/commit/66512f139b863769400deaddf3186da5eed3c4e0), [`66512f1`](https://github.com/agustinusnathaniel/xtarter/commit/66512f139b863769400deaddf3186da5eed3c4e0), [`0e15177`](https://github.com/agustinusnathaniel/xtarter/commit/0e151773c3e90f2b1106e72870c07a3a3d2b5596), [`affac6f`](https://github.com/agustinusnathaniel/xtarter/commit/affac6fd8a3d9a6dcbd88b04786ed6a94dfb9f95), [`66512f1`](https://github.com/agustinusnathaniel/xtarter/commit/66512f139b863769400deaddf3186da5eed3c4e0)]:
+  - @xtarterize/core@1.25.2
+  - @xtarterize/patchers@1.25.2
+
 ## 1.25.1
 
 ### Patch Changes

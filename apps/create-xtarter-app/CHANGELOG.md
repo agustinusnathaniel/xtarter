@@ -1,5 +1,31 @@
 # Changelog
 
+## 1.17.0
+
+### Minor Changes
+
+- [#193](https://github.com/agustinusnathaniel/xtarter/pull/193) [`f01672f`](https://github.com/agustinusnathaniel/xtarter/commit/f01672f8669873c7b8edf0ed6c097301c92bfa81) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Clean up failed scaffolds and trim the programmatic entry point
+  
+  - A failed scaffold now removes the project directory it created, so a partial download, install, or git setup no longer leaves an empty or half-written directory behind.
+  - `prepareProjectDir` no longer creates the directory; `scaffoldProject` owns creation and cleanup.
+  - Removed the `CliOptions` type export from the package entry and dropped the unused `SUPPORTED_PACKAGE_MANAGERS` catalog plus the `getInstallCommand`/`getDevCommand` helpers.
+
+### Patch Changes
+
+- [#198](https://github.com/agustinusnathaniel/xtarter/pull/198) [`66512f1`](https://github.com/agustinusnathaniel/xtarter/commit/66512f139b863769400deaddf3186da5eed3c4e0) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Validate inputs before touching the target directory and report git failures truthfully
+  
+  - Template and package manager values are validated before `--force` can remove an existing directory, so an invalid invocation never deletes anything.
+  - A failed git initialization logs a warning and reports `gitInitialized: false` in `--json` output instead of discarding an otherwise successful scaffold.
+  - The exported `initializeGit` now resolves `false` on git failure instead of rejecting, so programmatic callers branch on the returned boolean.
+  - `--json` output reports the real scaffold result values.
+
+- [#193](https://github.com/agustinusnathaniel/xtarter/pull/193) [`8e0518f`](https://github.com/agustinusnathaniel/xtarter/commit/8e0518fcfe91f1b82e0fa84a32ad3985a739e7c0) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Trim repeated task and CLI plumbing without changing generated output
+  
+  - The skill catalog groups entries behind `skillsFor`/`alwaysSkills`; the expanded catalog, entry order, sources, and conditions are unchanged.
+  - `readPackageJson` is imported from core directly instead of a pass-through wrapper, and the skills task uses one static `node:fs/promises` import.
+  - CLI commands report outcomes through `CommandSession.reportOutcome`, and interactive `add` executes its confirmed selection through `session.apply`; messages, exit codes, backups, and manifests are unchanged.
+  - `create-xtarter-app` inlines its JSON result formatting, and merged diffs use core's `isJsonFile` predicate.
+
 ## 1.16.1
 
 ### Patch Changes

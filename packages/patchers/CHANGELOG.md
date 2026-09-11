@@ -1,5 +1,23 @@
 # @xtarterize/patchers
 
+## 1.25.2
+
+### Patch Changes
+
+- [#193](https://github.com/agustinusnathaniel/xtarter/pull/193) [`affac6f`](https://github.com/agustinusnathaniel/xtarter/commit/affac6fd8a3d9a6dcbd88b04786ed6a94dfb9f95) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Remove dead exports and unused internal APIs from the maintained packages
+  
+  - Removed the `applyTasks` wrapper from core, so callers compose `planTasks` and `executePlan` directly, and consolidated the duplicate CLI invocation guard into `createInvocationGuard`.
+  - Removed the YAML patcher (`mergeYaml`/`parseYaml`) and the filesystem `injectVitePlugin`; `injectVitePluginIntoCode` is the single in-memory entry point.
+  - Dropped the unused `js-yaml` dependencies from the patchers package and the bundled CLI, so the `xtarterize` binary no longer inlines them.
+  - CLI behavior and generated configurations are unchanged.
+
+- [#198](https://github.com/agustinusnathaniel/xtarter/pull/198) [`66512f1`](https://github.com/agustinusnathaniel/xtarter/commit/66512f139b863769400deaddf3186da5eed3c4e0) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Fix script equivalence, Turbo detection, and patcher exports
+  
+  - `turborepo run` is no longer treated as equivalent to `turbo run`; composite equivalence requires an extractable task list.
+  - Non-string script values in `package.json` are ignored instead of being coerced.
+  - Turbo detection checks both `dependencies` and `devDependencies`, and `check:turbo` recognizes renamed `typecheck`/`test` scripts through tool mapping.
+  - `@xtarterize/patchers` drops the unused `beforeCode` field and the `InjectVitePluginOptions`/`InjectVitePluginResult` type exports from its entry point.
+
 ## 1.25.1
 
 ## 1.25.0
