@@ -1,5 +1,66 @@
 # xtarterize
 
+## 1.25.2
+
+### Patch Changes
+
+- [#198](https://github.com/agustinusnathaniel/xtarter/pull/198) [`66512f1`](https://github.com/agustinusnathaniel/xtarter/commit/66512f139b863769400deaddf3186da5eed3c4e0) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Correct CLI option handling and quiet-mode output
+  
+  - Flags must be passed after the command (`xtarterize check --json`). Entry-level flags such as `xtarterize --json check` are rejected by the invocation guard instead of being silently dropped.
+  - Removed the dead `check --verbose` flag; `check` always reports the tool and configuration diagnostics it runs.
+  - `list --quiet` no longer prints the timing block, and `init --compose --quiet` no longer prints plan banners.
+
+- [#191](https://github.com/agustinusnathaniel/xtarter/pull/191) [`8df2e74`](https://github.com/agustinusnathaniel/xtarter/commit/8df2e7446b2db7d0c5fc6dca7070c3806f53d6a2) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Align project detection with the detection registry
+  
+  - Workspace packages under `services/` are detected consistently with `packages/` and `apps/`, and `hasGit` stays fresh when `.git` changes.
+  - `tsconfig.jsonc` now sets both `existing.tsconfig` and `typescript`, and `.eslintrc.mjs` is detected consistently with the doctor legacy-config check.
+  - Detection reads most inputs directly, and the registry declares the inputs and keyed detector entries that still have a runtime consumer; the profile cache was removed in a subsequent changeset.
+
+- [#193](https://github.com/agustinusnathaniel/xtarter/pull/193) [`4bcf794`](https://github.com/agustinusnathaniel/xtarter/commit/4bcf7941d140cd7f5cdc60d8e1ba063b3393f57a) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Preserve existing `pnpm-workspace.yaml` content in the workspace task
+  
+  The `workspace/pnpm-workspace` task now patches an existing `packages:` list
+  in place instead of replacing the file with a fixed template. Only missing
+  `apps/*` and `packages/*` entries are inserted; comments, `catalog:`,
+  `overrides:`, `onlyBuiltDependencies`, extra keys, ordering, indentation,
+  quote style, and line endings are preserved. Files without a `packages:` key
+  are left untouched, so a settings-only `pnpm-workspace.yaml` never gains
+  workspace globs. Layouts that cannot be edited safely, such as a flow-style
+  `packages:` list missing a glob, are reported as conflicts rather than
+  rewritten.
+
+- [#193](https://github.com/agustinusnathaniel/xtarter/pull/193) [`8e0518f`](https://github.com/agustinusnathaniel/xtarter/commit/8e0518fcfe91f1b82e0fa84a32ad3985a739e7c0) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Trim repeated task and CLI plumbing without changing generated output
+  
+  - The skill catalog groups entries behind `skillsFor`/`alwaysSkills`; the expanded catalog, entry order, sources, and conditions are unchanged.
+  - `readPackageJson` is imported from core directly instead of a pass-through wrapper, and the skills task uses one static `node:fs/promises` import.
+  - CLI commands report outcomes through `CommandSession.reportOutcome`, and interactive `add` executes its confirmed selection through `session.apply`; messages, exit codes, backups, and manifests are unchanged.
+  - `create-xtarter-app` inlines its JSON result formatting, and merged diffs use core's `isJsonFile` predicate.
+
+- [#198](https://github.com/agustinusnathaniel/xtarter/pull/198) [`66512f1`](https://github.com/agustinusnathaniel/xtarter/commit/66512f139b863769400deaddf3186da5eed3c4e0) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Remove the detection profile cache and compute the profile directly
+  
+  - `detectProject()` reads the detection registry inputs and computes a fresh `ProjectProfile` on every invocation; `packages/core/src/detect/cache.ts`, the fingerprint and cache-entry types, and `PROFILE_CACHE_VERSION` are removed.
+  - No `.xtarterize/cache/` directory is created; `.xtarterize/` now holds backups, the run manifest, and the skills-install log only.
+  - Measured, a warm cache hit (~2.2ms) was slower than direct detection (~1.3ms), so repeat runs are also faster.
+
+- [#193](https://github.com/agustinusnathaniel/xtarter/pull/193) [`0e15177`](https://github.com/agustinusnathaniel/xtarter/commit/0e151773c3e90f2b1106e72870c07a3a3d2b5596) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Remove test-only diff exports and route session reporting through `reportOutcome`
+  
+  - `@xtarterize/core` no longer exports the test-only `computeChangeStats` and `computeUnifiedHunks`; diff stats and hunks are reached through `enhanceDiff`, which derives both from a single pass.
+  - CLI command outcomes are reported through `CommandSession.reportOutcome`; messages and exit codes are unchanged.
+
+- [#193](https://github.com/agustinusnathaniel/xtarter/pull/193) [`affac6f`](https://github.com/agustinusnathaniel/xtarter/commit/affac6fd8a3d9a6dcbd88b04786ed6a94dfb9f95) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Remove dead exports and unused internal APIs from the maintained packages
+  
+  - Removed the `applyTasks` wrapper from core, so callers compose `planTasks` and `executePlan` directly, and consolidated the duplicate CLI invocation guard into `createInvocationGuard`.
+  - Removed the YAML patcher (`mergeYaml`/`parseYaml`) and the filesystem `injectVitePlugin`; `injectVitePluginIntoCode` is the single in-memory entry point.
+  - Dropped the unused `js-yaml` dependencies from the patchers package and the bundled CLI, so the `xtarterize` binary no longer inlines them.
+  - CLI behavior and generated configurations are unchanged.
+
+- [#191](https://github.com/agustinusnathaniel/xtarter/pull/191) [`a1d2202`](https://github.com/agustinusnathaniel/xtarter/commit/a1d220235423de0b90992716163a8e5fd7d864a3) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Surface apply failures and preserve existing files through the deepened task engine
+  
+  - Batch dependency install failures are now reported as apply errors and set a failing exit code instead of only logging to the console.
+  - Interactive `add` plans and executes the confirmed selection once, so one run manifest covers the whole operation and `undo` restores all of it.
+  - `package.json` changes are patched through the package.json owner, so comments, indentation, key order, and unrelated entries survive apply.
+  - Vite plugin tasks carry the real config filepath in their diffs and backups, so `undo` and `restore` cover the actual config file.
+  - A project without a Vite config no longer reports an apply error for Vite plugin tasks.
+
 ## 1.25.1
 
 ### Patch Changes
