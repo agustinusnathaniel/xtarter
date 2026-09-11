@@ -9,7 +9,14 @@ import {
 } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { beforeEach, describe, expect, test, vi } from 'vite-plus/test';
+import {
+  afterEach,
+  beforeEach,
+  describe,
+  expect,
+  test,
+  vi,
+} from 'vite-plus/test';
 
 import {
   prepareProjectDir,
@@ -24,7 +31,16 @@ vi.mock('@/utils/install', () => ({
 }));
 
 beforeEach(() => {
+  // Runners have no git identity, so commits would fail without this.
+  vi.stubEnv('GIT_AUTHOR_NAME', 'Test User');
+  vi.stubEnv('GIT_AUTHOR_EMAIL', 'test@test.com');
+  vi.stubEnv('GIT_COMMITTER_NAME', 'Test User');
+  vi.stubEnv('GIT_COMMITTER_EMAIL', 'test@test.com');
   vi.mocked(installDependencies).mockReset().mockResolvedValue(undefined);
+});
+
+afterEach(() => {
+  vi.unstubAllEnvs();
 });
 
 function tempDir(): Promise<string> {
