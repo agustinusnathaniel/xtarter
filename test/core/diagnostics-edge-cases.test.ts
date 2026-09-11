@@ -42,7 +42,7 @@ async function tmpProject(
   return tmpDir;
 }
 
-describe('runEnvironmentChecks with engine edge cases', () => {
+describe('runDiagnostics environment group with engine edge cases', () => {
   const currentMajor = Number.parseInt(
     process.version.slice(1).split('.')[0],
     10
@@ -99,7 +99,7 @@ describe('runEnvironmentChecks with engine edge cases', () => {
   });
 });
 
-describe('runConflictChecks edge cases', () => {
+describe('runDiagnostics configuration group edge cases', () => {
   test('warns when both Biome and ESLint are present', async () => {
     const tmpDir = await tmpProject(
       {},
