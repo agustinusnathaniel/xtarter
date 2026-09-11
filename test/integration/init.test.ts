@@ -8,6 +8,8 @@ import {
 import { getAllTasks } from '@xtarterize/tasks';
 import { describe, expect } from 'vite-plus/test';
 
+import { run } from '../helpers/run.js';
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const fixtures = path.resolve(__dirname, '../fixtures');
 
@@ -26,7 +28,7 @@ describe('init integration', () => {
     expect(tasks.some((t) => t.id === 'lint/oxlint')).toBe(false);
     expect(tasks.some((t) => t.id === 'lint/oxfmt')).toBe(false);
 
-    const statuses = await resolveTaskStatuses(tasks, testDir, profile);
+    const statuses = await run(resolveTaskStatuses(tasks, testDir, profile));
     const actionableTasks = tasks.filter((t) => {
       const status = statuses.get(t.id);
       return status === 'new' || status === 'patch';

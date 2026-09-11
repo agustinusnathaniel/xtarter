@@ -2,8 +2,10 @@ import type {
   ApplyPlan,
   ApplyResult,
   ApplyTiming,
+  DepsInstaller,
   FileDiff,
   PreflightError,
+  ProcessRunner,
   ProjectProfile,
   ResolveTiming,
   Task,
@@ -17,8 +19,11 @@ import {
   planTasks,
   resolveProjectTasks,
   runPreflight,
+  TaskError,
 } from '@xtarterize/core';
+import { Effect } from 'effect';
 
+import { runCliProgram } from '@/runtime.js';
 import { mergeFileDiffs } from '@/ui/merge-file-diffs.js';
 import { getPrompter } from '@/ui/prompter.js';
 import { reportPreflightFailure, reportSessionOutcome } from '@/ui/reporter.js';
@@ -31,6 +36,21 @@ import {
   type RuntimeContext,
   resolveRuntimeContext,
 } from '@/utils/runtime.js';
+
+function liftLeaf<A>(
+  label: string,
+  run: () => Promise<A>
+): Effect.Effect<A, TaskError> {
+  return Effect.tryPromise({
+    catch: (cause) =>
+      new TaskError({
+        cause,
+        message: cause instanceof Error ? cause.message : String(cause),
+        taskId: label,
+      }),
+    try: run,
+  });
+}
 
 export type SessionOutcomeKind =
   | 'apply'
@@ -151,65 +171,81 @@ export class CommandSession {
     this.context = context;
   }
 
-  static async open(
+  static open(
     args: RuntimeArgs,
     options: SessionOpenOptions = {}
-  ): Promise<SessionOpenResult> {
-    const runtime = resolveRuntimeContext(args);
-    await ensureXtarterizeGitignore(runtime.cwd);
-    const preflight = await runPreflight(runtime.cwd);
-    if (!(preflight.valid || options.allowInvalidProject)) {
-      return { errors: preflight.errors, ok: false, runtime };
-    }
+  ): Effect.Effect<
+    SessionOpenResult,
+    TaskError,
+    DepsInstaller | ProcessRunner
+  > {
+    return Effect.gen(function* () {
+      const runtime = resolveRuntimeContext(args);
+      yield* liftLeaf('ensure-gitignore', () =>
+        ensureXtarterizeGitignore(runtime.cwd)
+      );
+      const preflight = yield* liftLeaf('preflight', () =>
+        runPreflight(runtime.cwd)
+      );
+      if (!(preflight.valid || options.allowInvalidProject)) {
+        return { errors: preflight.errors, ok: false as const, runtime };
+      }
 
-    if (options.resolveTasks === false) {
+      if (options.resolveTasks === false) {
+        return {
+          ok: true as const,
+          session: new CommandSession({
+            allTasks: [],
+            checkErrors: new Map(),
+            profile: null,
+            runtime,
+            selection: { only: [], skip: [] },
+            statuses: new Map(),
+            tasks: [],
+            timing: { detectionMs: 0, resolutionMs: 0, resolutionSumMs: 0 },
+          }),
+        };
+      }
+
+      const discovered = yield* liftLeaf('plugin-tasks', () =>
+        getAllTasksWithPlugins(runtime.cwd)
+      );
+      const tasks = options.orderTasks
+        ? options.orderTasks(discovered, runtime)
+        : discovered;
+      const {
+        checkErrors,
+        profile: baseProfile,
+        tasks: resolvedTasks,
+        statuses,
+        timing,
+      } = yield* resolveProjectTasks(runtime.cwd, tasks);
+      const profile = yield* liftLeaf('framework-detection', () =>
+        detectProjectWithAmbiguity({
+          baseProfile,
+          cwd: runtime.cwd,
+          prompter: getPrompter(),
+          quiet: runtime.quiet,
+        })
+      );
+      const selection = yield* liftLeaf('selection-config', () =>
+        loadSelectionConfig(runtime.cwd)
+      );
+
       return {
-        ok: true,
+        ok: true as const,
         session: new CommandSession({
-          allTasks: [],
-          checkErrors: new Map(),
-          profile: null,
+          allTasks: tasks,
+          checkErrors,
+          profile,
           runtime,
-          selection: { only: [], skip: [] },
-          statuses: new Map(),
-          tasks: [],
-          timing: { detectionMs: 0, resolutionMs: 0, resolutionSumMs: 0 },
+          selection,
+          statuses,
+          tasks: resolvedTasks,
+          timing,
         }),
       };
-    }
-
-    const discovered = await getAllTasksWithPlugins(runtime.cwd);
-    const tasks = options.orderTasks
-      ? options.orderTasks(discovered, runtime)
-      : discovered;
-    const {
-      checkErrors,
-      profile: baseProfile,
-      tasks: resolvedTasks,
-      statuses,
-      timing,
-    } = await resolveProjectTasks(runtime.cwd, tasks);
-    const profile = await detectProjectWithAmbiguity({
-      baseProfile,
-      cwd: runtime.cwd,
-      prompter: getPrompter(),
-      quiet: runtime.quiet,
     });
-    const selection = await loadSelectionConfig(runtime.cwd);
-
-    return {
-      ok: true,
-      session: new CommandSession({
-        allTasks: tasks,
-        checkErrors,
-        profile,
-        runtime,
-        selection,
-        statuses,
-        tasks: resolvedTasks,
-        timing,
-      }),
-    };
   }
 
   get allTasks(): Array<Task> {
@@ -255,24 +291,28 @@ export class CommandSession {
     return this.context.timing;
   }
 
-  plan(options: SessionPlanOptions): Promise<ApplyPlan> {
-    return planTasks({
-      cwd: this.context.runtime.cwd,
-      includeConflicts: options.includeConflicts ?? false,
-      profile: this.profile,
-      quiet: this.context.runtime.quiet,
-      statuses: this.context.statuses,
-      tasks: options.tasks,
-    });
+  async plan(options: SessionPlanOptions): Promise<ApplyPlan> {
+    return runCliProgram(
+      planTasks({
+        cwd: this.context.runtime.cwd,
+        includeConflicts: options.includeConflicts ?? false,
+        profile: this.profile,
+        quiet: this.context.runtime.quiet,
+        statuses: this.context.statuses,
+        tasks: options.tasks,
+      })
+    );
   }
 
-  execute(plan: ApplyPlan): Promise<ApplyResult> {
-    return executePlan({
-      cwd: this.context.runtime.cwd,
-      plan,
-      profile: this.profile,
-      quiet: this.context.runtime.quiet,
-    });
+  async execute(plan: ApplyPlan): Promise<ApplyResult> {
+    return runCliProgram(
+      executePlan({
+        cwd: this.context.runtime.cwd,
+        plan,
+        profile: this.profile,
+        quiet: this.context.runtime.quiet,
+      })
+    );
   }
 
   /** Shape an executed plan result into a reportable outcome. */
@@ -372,7 +412,10 @@ export async function openSession(
   args: RuntimeArgs,
   options: SessionOpenOptions = {}
 ): Promise<CommandSession | null> {
-  const opened = await CommandSession.open(args, options);
+  const opened = await runCliProgram(CommandSession.open(args, options));
+  if (!opened) {
+    return null;
+  }
   if (opened.ok) {
     return opened.session;
   }

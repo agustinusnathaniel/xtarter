@@ -1,24 +1,56 @@
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import type { ProjectProfile, Task, TaskStatus } from '@xtarterize/core';
-import { detectProject, executePlan, planTasks } from '@xtarterize/core';
+import type {
+  ApplyPlan,
+  ApplyResult,
+  ProjectProfile,
+  Task,
+  TaskDep,
+  TaskStatus,
+} from '@xtarterize/core';
+import {
+  DepsInstallError,
+  DepsInstaller,
+  detectProject,
+  executePlan,
+  ProcessRunner,
+  planTasks,
+} from '@xtarterize/core';
+import { Effect, Layer } from 'effect';
 import { describe, expect, vi } from 'vite-plus/test';
 
-const { mockInstallDependenciesBatch } = vi.hoisted(() => ({
-  mockInstallDependenciesBatch: vi.fn(),
-}));
+import { runWith } from '../helpers/run.js';
 
-// Path-based mock so executePlan's internal `@/utils/pkg.js` import is
-// intercepted. The path is root-relative, matching how Vite resolves the
-// module inside packages/core; a bare specifier would not match.
-vi.mock('/packages/core/src/utils/pkg.js', async (importOriginal) => {
-  const actual = await importOriginal<Record<string, unknown>>();
-  return {
-    ...actual,
-    installDependenciesBatch: mockInstallDependenciesBatch,
-  };
-});
+const mockInstall = vi.fn<
+  (
+    cwd: string,
+    deps: ReadonlyArray<TaskDep>,
+    options?: { silent?: boolean }
+  ) => Effect.Effect<void, DepsInstallError>
+>(() => Effect.void);
+
+/** Real task services plus a scriptable installer stub. */
+const TestApplyLayer = Layer.mergeAll(
+  ProcessRunner.layer,
+  Layer.succeed(DepsInstaller, { install: mockInstall })
+);
+
+function runPlan(
+  cwd: string,
+  profile: ProjectProfile,
+  tasks: Array<Task>
+): Promise<ApplyPlan> {
+  return runWith(TestApplyLayer, planTasks({ cwd, profile, tasks }));
+}
+
+function runExecute(
+  cwd: string,
+  plan: ApplyPlan,
+  profile: ProjectProfile
+): Promise<ApplyResult> {
+  return runWith(TestApplyLayer, executePlan({ cwd, plan, profile }));
+}
 
 /** Apply a selected task set the way the removed `applyTasks` helper did. */
 async function applyTasks(options: {
@@ -35,20 +67,26 @@ async function applyTasks(options: {
     ? options.tasks.filter((t) => selectedIds.includes(t.id))
     : options.tasks;
   const quiet = options.quiet ?? false;
-  const plan = await planTasks({
-    cwd: options.cwd,
-    includeConflicts: options.includeConflicts ?? false,
-    profile: options.profile,
-    quiet,
-    statuses: options.statuses,
-    tasks,
-  });
-  return executePlan({
-    cwd: options.cwd,
-    plan,
-    profile: options.profile,
-    quiet,
-  });
+  const plan = await runWith(
+    TestApplyLayer,
+    planTasks({
+      cwd: options.cwd,
+      includeConflicts: options.includeConflicts ?? false,
+      profile: options.profile,
+      quiet,
+      statuses: options.statuses,
+      tasks,
+    })
+  );
+  return runWith(
+    TestApplyLayer,
+    executePlan({
+      cwd: options.cwd,
+      plan,
+      profile: options.profile,
+      quiet,
+    })
+  );
 }
 
 /** Create a temp project with a package.json and the given dir prefix. */
@@ -277,12 +315,8 @@ describe('planTasks', () => {
         label: 'Mock Plan',
       };
 
-      mockInstallDependenciesBatch.mockClear();
-      const plan = await planTasks({
-        cwd: tmpDir,
-        profile,
-        tasks: [mockTask],
-      });
+      mockInstall.mockClear();
+      const plan = await runPlan(tmpDir, profile, [mockTask]);
 
       expect(plan.entries).toHaveLength(1);
       expect(plan.entries[0]?.skipped).toBe(false);
@@ -299,7 +333,7 @@ describe('planTasks', () => {
       await expect(
         fs.access(path.join(tmpDir, '.xtarterize', 'backups'))
       ).rejects.toThrow();
-      expect(mockInstallDependenciesBatch).not.toHaveBeenCalled();
+      expect(mockInstall).not.toHaveBeenCalled();
     } finally {
       await fs.rm(tmpDir, { force: true, recursive: true });
     }
@@ -322,11 +356,7 @@ describe('planTasks', () => {
         label: 'Mock Plan Skip',
       };
 
-      const plan = await planTasks({
-        cwd: tmpDir,
-        profile,
-        tasks: [mockTask],
-      });
+      const plan = await runPlan(tmpDir, profile, [mockTask]);
 
       expect(plan.entries[0]?.skipped).toBe(true);
       expect(plan.entries[0]?.diffs).toEqual([]);
@@ -359,14 +389,10 @@ describe('executePlan', () => {
         label: 'Mock Plan Exec',
       };
 
-      const plan = await planTasks({
-        cwd: tmpDir,
-        profile,
-        tasks: [mockTask],
-      });
+      const plan = await runPlan(tmpDir, profile, [mockTask]);
       expect(plan.files).toEqual(['test.txt']);
 
-      const result = await executePlan({ cwd: tmpDir, plan, profile });
+      const result = await runExecute(tmpDir, plan, profile);
       expect(result.errors).toHaveLength(0);
       expect(result.applied).toBe(1);
       expect(result.skipped).toBe(0);
@@ -423,12 +449,8 @@ describe('executePlan', () => {
         label: 'Plan Good',
       };
 
-      const plan = await planTasks({
-        cwd: tmpDir,
-        profile,
-        tasks: [failingTask, goodTask],
-      });
-      const result = await executePlan({ cwd: tmpDir, plan, profile });
+      const plan = await runPlan(tmpDir, profile, [failingTask, goodTask]);
+      const result = await runExecute(tmpDir, plan, profile);
 
       expect(result.applied).toBe(1);
       expect(result.errors).toHaveLength(1);
@@ -466,17 +488,13 @@ describe('executePlan', () => {
         label: 'Plan Dry Run Fail',
       };
 
-      const plan = await planTasks({
-        cwd: tmpDir,
-        profile,
-        tasks: [failingTask],
-      });
+      const plan = await runPlan(tmpDir, profile, [failingTask]);
 
       expect(plan.entries[0]?.dryRunError).toContain('dryRun boom');
       expect(plan.files).toEqual([]);
       expect(plan.dependencies).toEqual([]);
 
-      const result = await executePlan({ cwd: tmpDir, plan, profile });
+      const result = await runExecute(tmpDir, plan, profile);
       expect(result.errors).toContain('mock/plan-dryrun-fail: dryRun boom');
     } finally {
       await fs.rm(tmpDir, { force: true, recursive: true });
@@ -501,16 +519,12 @@ describe('executePlan', () => {
         label: 'Mock Install Fail',
       };
 
-      const plan = await planTasks({
-        cwd: tmpDir,
-        profile,
-        tasks: [mockTask],
-      });
-      mockInstallDependenciesBatch.mockRejectedValueOnce(
-        new Error('install exploded')
+      const plan = await runPlan(tmpDir, profile, [mockTask]);
+      mockInstall.mockReturnValueOnce(
+        Effect.fail(new DepsInstallError({ message: 'install exploded' }))
       );
 
-      const result = await executePlan({ cwd: tmpDir, plan, profile });
+      const result = await runExecute(tmpDir, plan, profile);
 
       expect(
         result.errors.some(

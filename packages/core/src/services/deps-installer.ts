@@ -10,21 +10,25 @@ export class DepsInstaller extends Context.Service<
   {
     install: (
       cwd: string,
-      deps: ReadonlyArray<TaskDep>
+      deps: ReadonlyArray<TaskDep>,
+      options?: { silent?: boolean }
     ) => Effect.Effect<void, DepsInstallError>;
   }
 >()('xtarterize/DepsInstaller') {
   static readonly layer: Layer.Layer<DepsInstaller> = Layer.succeed(
     DepsInstaller,
     {
-      install: (cwd, deps) =>
+      install: (cwd, deps, options) =>
         Effect.tryPromise({
           catch: (cause) =>
             new DepsInstallError({
               cause,
               message: cause instanceof Error ? cause.message : String(cause),
             }),
-          try: () => installDependenciesBatch(cwd, [...deps]),
+          try: () =>
+            installDependenciesBatch(cwd, [...deps], {
+              silent: options?.silent,
+            }),
         }),
     }
   );

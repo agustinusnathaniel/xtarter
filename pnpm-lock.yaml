@@ -92,6 +92,9 @@ importers:
       all-contributors-cli:
         specifier: ^6.26.1
         version: 6.26.1
+      effect:
+        specifier: 'catalog:'
+        version: 4.0.0-rc.113
       node:
         specifier: runtime:24.16.0
         version: runtime:24.16.0
@@ -219,6 +222,9 @@ importers:
       cli-table3:
         specifier: ^0.6.5
         version: 0.6.5
+      effect:
+        specifier: 'catalog:'
+        version: 4.0.0-rc.113
       jsonc-parser:
         specifier: 'catalog:'
         version: 3.3.1

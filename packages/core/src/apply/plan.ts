@@ -1,13 +1,24 @@
-import type { FileDiff, Task, TaskStatus } from '@/_base.js';
+import { Cause, Effect, Exit } from 'effect';
+
+import type {
+  FileDiff,
+  Task,
+  TaskDep,
+  TaskServices,
+  TaskStatus,
+} from '@/_base.js';
 import type { ProjectProfile } from '@/detect.js';
+import type { TaskError } from '@/errors.js';
 import {
-  CONCURRENCY,
   collectTaskChecks,
-  mapWithConcurrency,
+  failureDetail,
   type TaskCheckResult,
 } from '@/resolve.js';
+import { toTaskEffect } from '@/task-effect.js';
 import { logInfo } from '@/utils/logger.js';
 import type { DepToInstall } from '@/utils/pkg.js';
+
+const TASK_CONCURRENCY = 8;
 
 export interface PlanTasksOptions {
   cwd: string;
@@ -81,23 +92,33 @@ interface DryRunOutcome {
   dryRunMs: number;
 }
 
-async function runDryRun(
+function runDryRun(
   task: Task,
   cwd: string,
   profile: ProjectProfile
-): Promise<DryRunOutcome> {
+): Effect.Effect<DryRunOutcome, never, TaskServices> {
   const start = performance.now();
-  try {
-    const diffs = await task.dryRun(cwd, profile);
-    return { diffs, dryRunMs: performance.now() - start };
-  } catch (error) {
-    const detail = error instanceof Error ? error.message : String(error);
-    return {
-      diffs: [] as Array<FileDiff>,
-      dryRunError: `${task.id}: ${detail}`,
-      dryRunMs: 0,
-    };
-  }
+  return Effect.exit(
+    toTaskEffect(task.id, 'dryRun', () => task.dryRun(cwd, profile))
+  ).pipe(
+    Effect.flatMap((exit) => {
+      if (Exit.isSuccess(exit)) {
+        return Effect.succeed({
+          diffs: exit.value,
+          dryRunMs: performance.now() - start,
+        });
+      }
+      if (Cause.hasInterruptsOnly(exit.cause)) {
+        return Effect.interrupt;
+      }
+      const detail = failureDetail(exit.cause);
+      return Effect.succeed({
+        diffs: [] as Array<FileDiff>,
+        dryRunError: `${task.id}: ${detail}`,
+        dryRunMs: 0,
+      });
+    })
+  );
 }
 
 function buildEntries(
@@ -144,51 +165,60 @@ function buildEntries(
   return { entries, files: [...files] };
 }
 
-async function collectDependencies(options: {
+function collectDependencies(options: {
   cwd: string;
   entries: Array<ApplyPlanEntry>;
   profile: ProjectProfile;
-}): Promise<Array<DepToInstall>> {
+}): Effect.Effect<Array<DepToInstall>, TaskError, TaskServices> {
   const { cwd, entries, profile } = options;
   const runnable = entries.filter(
     (entry) => !(entry.skipped || entry.dryRunError)
   );
-  const depArrays = await mapWithConcurrency(
+  return Effect.forEach(
     runnable,
-    CONCURRENCY,
     ({ task }) =>
-      task.getDeps
-        ? task.getDeps(cwd, profile)
-        : Promise.resolve([] as Array<DepToInstall>)
-  );
-  return depArrays.flat();
+      toTaskEffect(task.id, 'getDeps', () =>
+        task.getDeps
+          ? task.getDeps(cwd, profile)
+          : Promise.resolve([] as Array<TaskDep>)
+      ),
+    { concurrency: TASK_CONCURRENCY }
+  ).pipe(Effect.map((depArrays) => depArrays.flat()));
 }
 
-export async function planTasks(options: PlanTasksOptions): Promise<ApplyPlan> {
+export function planTasks(
+  options: PlanTasksOptions
+): Effect.Effect<ApplyPlan, TaskError, TaskServices> {
   const { cwd, profile, statuses, tasks } = options;
   const includeConflicts = options.includeConflicts ?? false;
   const quiet = options.quiet ?? false;
 
-  const checkResults = await collectTaskChecks({
-    cwd,
-    profile,
-    statuses,
-    tasks,
-  });
-  const classifications = classifyChecks(checkResults, includeConflicts, quiet);
-  const candidates = classifications
-    .filter(({ skipped }) => !skipped)
-    .map(({ result }) => result);
-  const dryRuns = await mapWithConcurrency(
-    candidates,
-    CONCURRENCY,
-    ({ task }) => runDryRun(task, cwd, profile)
-  );
-  const { entries, files } = buildEntries(classifications, dryRuns);
+  return Effect.gen(function* () {
+    const checkResults = yield* collectTaskChecks({
+      cwd,
+      profile,
+      statuses,
+      tasks,
+    });
+    const classifications = classifyChecks(
+      checkResults,
+      includeConflicts,
+      quiet
+    );
+    const candidates = classifications
+      .filter(({ skipped }) => !skipped)
+      .map(({ result }) => result);
+    const dryRuns = yield* Effect.forEach(
+      candidates,
+      ({ task }) => runDryRun(task, cwd, profile),
+      { concurrency: TASK_CONCURRENCY }
+    );
+    const { entries, files } = buildEntries(classifications, dryRuns);
 
-  return {
-    dependencies: await collectDependencies({ cwd, entries, profile }),
-    entries,
-    files,
-  };
+    return {
+      dependencies: yield* collectDependencies({ cwd, entries, profile }),
+      entries,
+      files,
+    };
+  });
 }

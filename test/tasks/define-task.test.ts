@@ -9,6 +9,7 @@ import {
   defineTask,
   type TargetPolicyInput,
 } from '../../packages/tasks/src/factory/define-task.js';
+import { run as runEffect } from '../helpers/run.js';
 
 const withTempDir = async (
   run: (cwd: string) => Promise<void>
@@ -303,7 +304,7 @@ describe('defineTask dependencies', () => {
       const deps = await task.getDeps?.(cwd, profile);
       expect(deps).toEqual([{ depName: 'acme', dev: true }]);
 
-      const plan = await planTasks({ cwd, profile, tasks: [task] });
+      const plan = await runEffect(planTasks({ cwd, profile, tasks: [task] }));
       expect(plan.dependencies).toEqual([{ depName: 'acme', dev: true }]);
       expect(plan.files).toEqual([]);
     });
@@ -432,7 +433,7 @@ describe('defineTask action', () => {
       expect(await task.check(cwd, profile)).toBe('new');
       expect(await task.dryRun(cwd, profile)).toEqual([]);
 
-      const plan = await planTasks({ cwd, profile, tasks: [task] });
+      const plan = await runEffect(planTasks({ cwd, profile, tasks: [task] }));
       expect(plan.files).toEqual([]);
       expect(plan.entries[0].diffs).toEqual([]);
 

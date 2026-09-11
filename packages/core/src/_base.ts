@@ -96,4 +96,4 @@ export interface EffectTask extends TaskBase {
   ) => Effect.Effect<Array<TaskDep>, TaskError, TaskServices>;
 }
 
-export type Task = PromiseTask;
+export type Task = PromiseTask | EffectTask;

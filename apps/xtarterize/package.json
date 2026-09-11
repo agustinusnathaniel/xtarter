@@ -42,6 +42,7 @@
     "@clack/prompts": "catalog:",
     "citty": "catalog:",
     "cli-table3": "^0.6.5",
+    "effect": "catalog:",
     "jsonc-parser": "catalog:"
   },
   "devDependencies": {
@@ -66,7 +67,6 @@
     "consola": "3.4.2",
     "defu": "6.1.7",
     "diff": "9.0.0",
-    "effect": "4.0.0-rc.113",
     "exsolve": "1.1.1",
     "json5": "2.2.3",
     "magicast": "0.5.4",

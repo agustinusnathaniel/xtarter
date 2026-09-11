@@ -2,6 +2,8 @@ import type { ProjectProfile, Task } from '@xtarterize/core';
 import { resolveProjectTasks, resolveTaskStatuses } from '@xtarterize/core';
 import { describe, expect } from 'vite-plus/test';
 
+import { run } from '../helpers/run.js';
+
 function makeTask(
   id: string,
   check: () => Promise<'new' | 'patch' | 'skip' | 'conflict'>
@@ -37,7 +39,7 @@ describe('resolveTaskStatuses error isolation', () => {
       makeTask('ok-task-2', async () => 'patch'),
     ];
 
-    const statuses = await resolveTaskStatuses(tasks, '/tmp', profile);
+    const statuses = await run(resolveTaskStatuses(tasks, '/tmp', profile));
     expect(statuses.get('ok-task')).toBe('skip');
     expect(statuses.get('ok-task-2')).toBe('patch');
     // A task whose check throws degrades to conflict (needs attention)
@@ -53,7 +55,7 @@ describe('resolveTaskStatuses error isolation', () => {
       makeTask('ok-task', async () => 'skip'),
     ];
 
-    const result = await resolveProjectTasks('/tmp', tasks);
+    const result = await run(resolveProjectTasks('/tmp', tasks));
     expect(result.tasks.length).toBe(2);
     expect(result.statuses.get('ok-task')).toBe('skip');
   });

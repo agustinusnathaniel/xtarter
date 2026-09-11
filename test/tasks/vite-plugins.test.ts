@@ -6,6 +6,8 @@ import { detectProject, planTasks } from '@xtarterize/core';
 import { viteCheckerTask, viteVisualizerTask } from '@xtarterize/tasks';
 import { describe, expect } from 'vite-plus/test';
 
+import { run } from '../helpers/run.js';
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const fixtures = path.resolve(__dirname, '../fixtures');
 
@@ -68,7 +70,9 @@ describe('viteCheckerTask', () => {
     expect(diffs.length).toBe(1);
     expect(diffs[0].filepath).toBe('vite.config.ts');
 
-    const plan = await planTasks({ cwd, profile, tasks: [viteCheckerTask] });
+    const plan = await run(
+      planTasks({ cwd, profile, tasks: [viteCheckerTask] })
+    );
     expect(plan.files).toEqual(['vite.config.ts']);
   });
 

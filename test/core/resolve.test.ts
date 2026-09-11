@@ -5,6 +5,8 @@ import { resolveTaskStatuses, resolveTasks } from '@xtarterize/core';
 import { getAllTasks } from '@xtarterize/tasks';
 import { describe, expect } from 'vite-plus/test';
 
+import { run } from '../helpers/run.js';
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const fixtures = path.resolve(__dirname, '../fixtures');
 
@@ -39,10 +41,12 @@ describe('resolveTaskStatuses', () => {
     );
     const allTasks = getAllTasks();
     const tasks = resolveTasks(profile, allTasks);
-    const statuses = await resolveTaskStatuses(
-      tasks,
-      path.join(fixtures, 'react-vite-tailwind'),
-      profile
+    const statuses = await run(
+      resolveTaskStatuses(
+        tasks,
+        path.join(fixtures, 'react-vite-tailwind'),
+        profile
+      )
     );
 
     for (const task of tasks) {

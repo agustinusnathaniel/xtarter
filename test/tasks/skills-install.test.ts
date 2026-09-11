@@ -11,6 +11,7 @@ import { skillsInstallTask } from '@xtarterize/tasks';
 import { beforeEach, describe, expect, vi } from 'vite-plus/test';
 
 import { SKILL_CATALOG } from '../../packages/tasks/src/agent/catalog.js';
+import { run } from '../helpers/run.js';
 
 const { mockX } = vi.hoisted(() => ({
   mockX: vi.fn().mockResolvedValue({ exitCode: 0 }),
@@ -77,7 +78,9 @@ describe('skillsInstallTask', () => {
     const cwd = path.join(fixtures, 'react-vite-tailwind');
     const profile = await detectProject(cwd);
     await expect(skillsInstallTask.dryRun(cwd, profile)).resolves.toEqual([]);
-    const plan = await planTasks({ cwd, profile, tasks: [skillsInstallTask] });
+    const plan = await run(
+      planTasks({ cwd, profile, tasks: [skillsInstallTask] })
+    );
     expect(plan.files).toEqual([]);
   });
 

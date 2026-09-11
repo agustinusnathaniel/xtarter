@@ -7,6 +7,7 @@ import {
 } from '@xtarterize/core';
 import { defineCommand } from 'citty';
 
+import { runCliProgram } from '@/runtime.js';
 import { type CommandSession, openSession } from '@/session.js';
 import { formatQueryResult } from '@/ui/json-formatter.js';
 import { displayQueryResults } from '@/ui/query-display.js';
@@ -60,10 +61,8 @@ async function resolveMatchedStatuses(options: {
     return statuses;
   }
 
-  const extraStatuses = await resolveTaskStatuses(
-    unresolved,
-    session.runtime.cwd,
-    session.profile
+  const extraStatuses = await runCliProgram(
+    resolveTaskStatuses(unresolved, session.runtime.cwd, session.profile)
   );
   for (const [taskId, status] of extraStatuses) {
     statuses.set(taskId, status);
