@@ -241,21 +241,6 @@ describe('skillsInstallTask', () => {
       JSON.stringify({ compilerOptions: { target: 'ES2022' } }, null, 2)
     );
 
-    await fs.writeFile(
-      path.join(tmpDir, 'skills-lock.json'),
-      JSON.stringify(
-        {
-          skills: {
-            'react-dev': {
-              source: 'softaworks/agent-toolkit',
-            },
-          },
-        },
-        null,
-        2
-      )
-    );
-
     await fs.mkdir(path.join(tmpDir, '.agents', 'skills', 'react-dev'), {
       recursive: true,
     });
@@ -295,7 +280,7 @@ describe('skillsInstallTask', () => {
     expect(expoLines.length).toBe(1);
   });
 
-  test('does not treat empty skill folders as installed when lock entry exists', async () => {
+  test('does not treat an empty skill directory as installed', async () => {
     const tmpDir = await fs.mkdtemp(
       path.join(os.tmpdir(), 'xtarterize-skills-empty-dir-')
     );
@@ -323,21 +308,6 @@ describe('skillsInstallTask', () => {
     await fs.writeFile(
       path.join(tmpDir, 'tsconfig.json'),
       JSON.stringify({ compilerOptions: { target: 'ES2022' } }, null, 2)
-    );
-
-    await fs.writeFile(
-      path.join(tmpDir, 'skills-lock.json'),
-      JSON.stringify(
-        {
-          skills: {
-            'react-dev': {
-              source: 'softaworks/agent-toolkit',
-            },
-          },
-        },
-        null,
-        2
-      )
     );
 
     await fs.mkdir(path.join(tmpDir, '.agents', 'skills', 'react-dev'), {

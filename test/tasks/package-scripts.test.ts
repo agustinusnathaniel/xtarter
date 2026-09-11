@@ -9,6 +9,29 @@ import { describe, expect } from 'vite-plus/test';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const fixtures = path.resolve(__dirname, '../fixtures');
 
+/** Dry-run `after` for a turbo + ultracite project, for the given scripts. */
+async function turboUltraciteAfter(scripts?: Record<string, string>) {
+  const tmpDir = await fs.mkdtemp(
+    path.join(os.tmpdir(), 'xtarterize-turbo-ultracite-')
+  );
+  await fs.writeFile(
+    path.join(tmpDir, 'package.json'),
+    JSON.stringify({
+      devDependencies: {
+        turbo: '^2.0.0',
+        typescript: '^5.3.0',
+        ultracite: '^1.0.0',
+      },
+      scripts,
+      type: 'module',
+    })
+  );
+  const profile = await detectProject(tmpDir);
+  const diffs = await packageScriptsTask.dryRun(tmpDir, profile);
+  await fs.rm(tmpDir, { force: true, recursive: true });
+  return diffs.find((d) => d.filepath === 'package.json')?.after ?? '';
+}
+
 describe('packageScriptsTask', () => {
   test('is applicable to all projects', async () => {
     const profile = await detectProject(
@@ -521,5 +544,25 @@ describe('packageScriptsTask', () => {
     expect(pkgDiff?.after).toContain('turbo run lint typecheck test');
 
     await fs.rm(tmpDir, { recursive: true });
+  });
+
+  test('omits ultracite from check:turbo when no ultracite script exists', async () => {
+    const after = await turboUltraciteAfter();
+
+    expect(after).toContain('"ultracite:check": "ultracite check"');
+    expect(after).toContain('"ultracite:fix": "ultracite fix"');
+    // No `ultracite` task key is generated, so referencing it would make
+    // `turbo run check:turbo` fail for consumers.
+    expect(after).toContain('"check:turbo": "turbo run typecheck test"');
+  });
+
+  test('references ultracite:check in check:turbo when it already exists', async () => {
+    const after = await turboUltraciteAfter({
+      'ultracite:check': 'ultracite check',
+    });
+
+    expect(after).toContain(
+      '"check:turbo": "turbo run ultracite:check typecheck test"'
+    );
   });
 });

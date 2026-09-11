@@ -88,7 +88,10 @@ describe('cli json output', () => {
     };
 
     expect(output.ok).toBe(false);
-    expect(output.summary.total).toBeGreaterThan(0);
+    // 22 tasks with no `skip` statuses: conformant counts only skips, so a
+    // predicate flip to `!== 'skip'` would report 22 conformant instead of 0.
+    expect(output.summary.conformant).toBe(0);
+    expect(output.summary.total).toBe(22);
     expect(Array.isArray(output.tasks)).toBe(true);
     expect(Array.isArray(output.diagnostics)).toBe(true);
 

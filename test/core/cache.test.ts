@@ -18,10 +18,8 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const fixtures = path.resolve(__dirname, '../fixtures');
 
 async function writePkg(dir: string, pkg: Record<string, unknown>) {
-  await fs.writeFile(
-    path.join(dir, 'package.json'),
-    `${JSON.stringify(pkg, null, 2)}\n`
-  );
+  const content = `${JSON.stringify(pkg, null, 2)}\n`;
+  await fs.writeFile(path.join(dir, 'package.json'), content);
 }
 
 async function createMinimalProject(dir: string): Promise<string> {
@@ -77,8 +75,7 @@ async function cachePath(dir: string) {
 }
 
 async function readCache(dir: string): Promise<ProfileCacheEntry> {
-  const content = await fs.readFile(await cachePath(dir), 'utf-8');
-  return JSON.parse(content) as ProfileCacheEntry;
+  return JSON.parse(await fs.readFile(await cachePath(dir), 'utf-8'));
 }
 
 type FingerprintAssert = (
@@ -86,6 +83,9 @@ type FingerprintAssert = (
   before: ProjectFingerprint
 ) => void;
 type Mutation = (root: string, project: string) => Promise<void>;
+
+const hasTsconfigRootInput = (f: ProjectFingerprint): boolean =>
+  f.rootInputs.some((e) => e.path.endsWith('tsconfig.json'));
 
 interface InvalidationCase {
   assertFingerprint?: FingerprintAssert;
@@ -111,12 +111,7 @@ interface InvalidationCase {
 const invalidationCases: Array<InvalidationCase> = [
   // ── root files ──
   {
-    assertFingerprint: (fingerprint) =>
-      expect(
-        fingerprint.rootInputs.some((entry) =>
-          entry.path.endsWith('tsconfig.json')
-        )
-      ).toBe(true),
+    assertFingerprint: (f) => expect(hasTsconfigRootInput(f)).toBe(true),
     assertProfile: (profile) => {
       expect(profile.existing.tsconfig).toBe(true);
       expect(profile.typescript).toBe(true);
@@ -133,6 +128,14 @@ const invalidationCases: Array<InvalidationCase> = [
     mutate: (_root, project) => writeFileIn(project, '.nvmrc', 'v18\n'),
     name: 'modifies .nvmrc',
     setup: (_root, project) => writeFileIn(project, '.nvmrc', '20\n'),
+  },
+  {
+    assertFingerprint: (f) => expect(hasTsconfigRootInput(f)).toBe(false),
+    create: createProjectWithoutConfigFiles,
+    keepCache: true,
+    kind: 'rootFile',
+    mutate: (_root, project) => fs.mkdir(path.join(project, 'tsconfig.json')),
+    name: 'ignores a directory named tsconfig.json',
   },
   {
     assertProfile: (profile) => {
