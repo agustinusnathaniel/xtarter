@@ -1,3 +1,4 @@
+import { readdir } from 'node:fs/promises';
 import type { ProjectProfile } from '@xtarterize/core';
 import {
   collectDependencyVersions,
@@ -13,7 +14,6 @@ import { defineTask } from '@/factory/define-task.js';
 
 async function isDirNonEmpty(dirPath: string): Promise<boolean> {
   try {
-    const { readdir } = await import('node:fs/promises');
     const entries = await readdir(dirPath);
     return entries.length > 0;
   } catch {
@@ -28,7 +28,6 @@ async function readSkillsFromDir(skillsDir: string): Promise<Set<string>> {
   }
 
   try {
-    const { readdir } = await import('node:fs/promises');
     const entries = await readdir(skillsDir, { withFileTypes: true });
     for (const entry of entries) {
       if (entry.isDirectory()) {
