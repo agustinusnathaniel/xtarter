@@ -19,6 +19,7 @@
   "dependencies": {
     "@xtarterize/core": "workspace:*",
     "@xtarterize/patchers": "workspace:*",
+    "effect": "catalog:",
     "nypm": "catalog:",
     "pathe": "catalog:",
     "pkg-types": "catalog:",
