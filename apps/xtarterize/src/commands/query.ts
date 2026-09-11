@@ -94,7 +94,7 @@ export const queryCommand = defineCommand({
     name: 'query',
   },
   async run({ args }) {
-    const session = await openSession(args);
+    const session = await runCliProgram(openSession(args));
     if (!session) {
       return;
     }

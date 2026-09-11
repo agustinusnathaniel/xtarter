@@ -1,12 +1,16 @@
 import type { TaskStatus } from '@xtarterize/core';
 import { logWarn } from '@xtarterize/core';
 
+import { runCliProgram } from '@/runtime.js';
 import type { CommandSession } from '@/session.js';
 import { displayDiffs } from '@/ui/diff-display.js';
 import type { Prompter } from '@/ui/prompter.js';
 
 import { selectTasksGrouped } from './selection.js';
 import type { RunInteractiveOptions, TaskWithStatus } from './types.js';
+
+/** Signals that a plan failed and was already rendered by the runtime edge. */
+const ABORT = Symbol('abort');
 
 function isActionable(status: TaskStatus, includeConflicts: boolean): boolean {
   if (status === 'new' || status === 'patch') {
@@ -47,15 +51,20 @@ async function confirmSelected(options: {
   prompter: Prompter;
   selected: Array<TaskWithStatus>;
   session: CommandSession;
-}): Promise<Array<TaskWithStatus> | null> {
+}): Promise<Array<TaskWithStatus> | null | typeof ABORT> {
   const { includeConflicts, jsonMode, prompter, selected, session } = options;
   const confirmed: Array<TaskWithStatus> = [];
 
   for (const entry of selected) {
-    const plan = await session.plan({
-      includeConflicts,
-      tasks: [entry.task],
-    });
+    const plan = await runCliProgram(
+      session.plan({
+        includeConflicts,
+        tasks: [entry.task],
+      })
+    );
+    if (!plan) {
+      return ABORT;
+    }
     if (!jsonMode) {
       displayDiffs(plan.entries[0]?.diffs ?? [], session.runtime.format);
     }
@@ -71,6 +80,44 @@ async function confirmSelected(options: {
   }
 
   return confirmed;
+}
+
+function requiresTerminal(options: {
+  allFlag: boolean | undefined;
+  quiet: boolean;
+  session: CommandSession;
+}): boolean {
+  const { allFlag, quiet, session } = options;
+  if (quiet && !allFlag) {
+    reportEmptyOutcome(
+      session,
+      'Interactive mode requires a terminal. Use a task ID instead.'
+    );
+    return true;
+  }
+  return false;
+}
+
+async function resolveConfirmed(options: {
+  allFlag: boolean | undefined;
+  includeConflicts: boolean;
+  jsonMode: boolean;
+  prompter: Prompter;
+  selected: Array<TaskWithStatus>;
+  session: CommandSession;
+}): Promise<Array<TaskWithStatus> | null | typeof ABORT> {
+  const { allFlag, includeConflicts, jsonMode, prompter, selected, session } =
+    options;
+  if (allFlag) {
+    return selected;
+  }
+  return confirmSelected({
+    includeConflicts,
+    jsonMode,
+    prompter,
+    selected,
+    session,
+  });
 }
 
 async function resolveSelection(options: {
@@ -113,14 +160,19 @@ async function executeConfirmed(options: {
     options;
   // One apply for the whole confirmed selection: one backup set and one run
   // manifest, so `undo` restores the entire `add`.
-  const outcome = await session.apply(
-    confirmed.map((entry) => entry.task),
-    {
-      includeCheckErrors: true,
-      includeConflicts,
-      recordTiming,
-    }
+  const outcome = await runCliProgram(
+    session.apply(
+      confirmed.map((entry) => entry.task),
+      {
+        includeCheckErrors: true,
+        includeConflicts,
+        recordTiming,
+      }
+    )
   );
+  if (!outcome) {
+    return;
+  }
   // Declined tasks count as skipped, alongside apply-time skips.
   session.reportOutcome({
     ...outcome,
@@ -150,11 +202,7 @@ export async function runInteractive(
 
   const tasksWithStatus = buildTasksWithStatus(session);
 
-  if (runtime.quiet && !allFlag) {
-    reportEmptyOutcome(
-      session,
-      'Interactive mode requires a terminal. Use a task ID instead.'
-    );
+  if (requiresTerminal({ allFlag, quiet: runtime.quiet, session })) {
     return;
   }
 
@@ -180,15 +228,17 @@ export async function runInteractive(
     tasksWithStatus,
   });
 
-  const confirmed = allFlag
-    ? selected
-    : await confirmSelected({
-        includeConflicts,
-        jsonMode,
-        prompter,
-        selected,
-        session,
-      });
+  const confirmed = await resolveConfirmed({
+    allFlag,
+    includeConflicts,
+    jsonMode,
+    prompter,
+    selected,
+    session,
+  });
+  if (confirmed === ABORT) {
+    return;
+  }
   if (confirmed === null) {
     session.reportOutcome(session.cancelled());
     return;

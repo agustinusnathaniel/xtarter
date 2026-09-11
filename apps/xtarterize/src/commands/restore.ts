@@ -8,6 +8,7 @@ import {
 } from '@xtarterize/core';
 import { defineCommand } from 'citty';
 
+import { runCliProgram } from '@/runtime.js';
 import { openSession } from '@/session.js';
 import { getPrompter, type Prompter } from '@/ui/prompter.js';
 import { commonArgs, formatArgs, yesArg } from '@/utils/args.js';
@@ -115,7 +116,9 @@ export const restoreCommand = defineCommand({
     name: 'restore',
   },
   async run({ args }) {
-    const session = await openSession(args, { resolveTasks: false });
+    const session = await runCliProgram(
+      openSession(args, { resolveTasks: false })
+    );
     if (!session) {
       return;
     }

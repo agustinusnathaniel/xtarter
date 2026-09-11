@@ -1,6 +1,7 @@
 import { logWarn } from '@xtarterize/core';
 import { defineCommand } from 'citty';
 
+import { runCliProgram } from '@/runtime.js';
 import { openSession } from '@/session.js';
 import { getPrompter } from '@/ui/prompter.js';
 import {
@@ -51,7 +52,7 @@ interface AddCommandArgs {
 }
 
 async function handleAddCommand(args: AddCommandArgs): Promise<void> {
-  const session = await openSession(args);
+  const session = await runCliProgram(openSession(args));
   if (!session) {
     return;
   }

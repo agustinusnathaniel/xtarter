@@ -8,7 +8,9 @@ import type {
 } from '@xtarterize/core';
 import { logSuccess, pc, runDiagnostics, statusTag } from '@xtarterize/core';
 import { defineCommand } from 'citty';
+import { Effect } from 'effect';
 
+import { runCliProgram } from '@/runtime.js';
 import { openSession } from '@/session.js';
 import { formatCheckAnnotations } from '@/ui/annotations.js';
 import { generateBadgeSvg } from '@/ui/badge.js';
@@ -142,17 +144,28 @@ export const checkCommand = defineCommand({
     name: 'check',
   },
   async run({ args }) {
-    const session = await openSession(args);
-    if (!session) {
+    const prepared = await runCliProgram(
+      Effect.gen(function* () {
+        const session = yield* openSession(args);
+        if (!session) {
+          return null;
+        }
+        const { groups } = yield* Effect.promise(() =>
+          runDiagnostics(session.runtime.cwd, {
+            groups: ['tools', 'configuration'],
+          })
+        );
+        return { groups, session };
+      })
+    );
+    if (!prepared) {
       return;
     }
+    const { session } = prepared;
     const ctx = session.runtime;
     const { statuses, tasks, timing } = session;
     const badgeToStdout = args.badge === '-';
-    const { groups } = await runDiagnostics(ctx.cwd, {
-      groups: ['tools', 'configuration'],
-    });
-    const diagnostics = groups.flatMap((group) => group.checks);
+    const diagnostics = prepared.groups.flatMap((group) => group.checks);
     const { conformant, total } = countCheckSummary(tasks, statuses);
     if (!computeCheckOk({ conformant, total }, diagnostics)) {
       process.exitCode = 1;

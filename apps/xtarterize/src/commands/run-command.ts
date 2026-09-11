@@ -1,6 +1,7 @@
 import type { Task, TaskStatus } from '@xtarterize/core';
 import { applyTaskSelection, logInfo, logWarn } from '@xtarterize/core';
 
+import { runCliProgram } from '@/runtime.js';
 import { type CommandSession, openSession } from '@/session.js';
 import { getPrompter } from '@/ui/prompter.js';
 import { reportPlan } from '@/ui/reporter.js';
@@ -78,12 +79,15 @@ async function applyTasks(
   tasks: Array<Task>,
   args: CommandArgs
 ): Promise<void> {
-  session.reportOutcome(
-    await session.apply(tasks, {
+  const outcome = await runCliProgram(
+    session.apply(tasks, {
       includeConflicts: args.includeConflicts,
       recordTiming: args.timing,
     })
   );
+  if (outcome) {
+    session.reportOutcome(outcome);
+  }
 }
 
 async function promptAndApply(
@@ -105,7 +109,10 @@ async function promptAndApply(
     return;
   }
   if (action === 'dry-run') {
-    session.reportOutcome(await session.dryRun(tasks));
+    const outcome = await runCliProgram(session.dryRun(tasks));
+    if (outcome) {
+      session.reportOutcome(outcome);
+    }
     return;
   }
   if (action !== 'select') {
@@ -152,7 +159,10 @@ async function runSession(
   }
   reportPlan(actionableTasks, statuses, runtime);
   if (args.dryRun) {
-    session.reportOutcome(await session.dryRun(actionableTasks));
+    const outcome = await runCliProgram(session.dryRun(actionableTasks));
+    if (outcome) {
+      session.reportOutcome(outcome);
+    }
     return;
   }
   if (args.yes || runtime.quiet) {
@@ -169,9 +179,11 @@ export async function runCommand(
   args: CommandArgs,
   options: RunCommandOptions
 ): Promise<void> {
-  const session = await openSession(args, {
-    orderTasks: options.orderTasks,
-  });
+  const session = await runCliProgram(
+    openSession(args, {
+      orderTasks: options.orderTasks,
+    })
+  );
   if (!session) {
     return;
   }

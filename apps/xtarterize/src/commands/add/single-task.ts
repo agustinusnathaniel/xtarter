@@ -1,6 +1,7 @@
 import type { Task, TaskStatus } from '@xtarterize/core';
 import { logInfo, statusTag } from '@xtarterize/core';
 
+import { runCliProgram } from '@/runtime.js';
 import type { CommandSession, SessionTaskOutcome } from '@/session.js';
 import { displayDiffs } from '@/ui/diff-display.js';
 import type { Prompter } from '@/ui/prompter.js';
@@ -86,7 +87,12 @@ async function executeTask(options: {
   const { runtime } = session;
   const jsonMode = runtime.format === 'json';
 
-  const plan = await session.plan({ includeConflicts, tasks: [task] });
+  const plan = await runCliProgram(
+    session.plan({ includeConflicts, tasks: [task] })
+  );
+  if (!plan) {
+    return;
+  }
   if (!(runtime.quiet || jsonMode)) {
     displayDiffs(plan.entries[0]?.diffs ?? [], runtime.format);
     const proceed = await confirmApply(prompter);
@@ -99,7 +105,10 @@ async function executeTask(options: {
     }
   }
 
-  const result = await session.execute(plan);
+  const result = await runCliProgram(session.execute(plan));
+  if (!result) {
+    return;
+  }
   // Only this task's own failure may fail the run. Session-wide check errors
   // belong to unrelated tasks; the requested task's own check error is already
   // reported before execution by `runSingleTask`.

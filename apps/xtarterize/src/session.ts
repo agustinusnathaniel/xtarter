@@ -2,6 +2,7 @@ import type {
   ApplyPlan,
   ApplyResult,
   ApplyTiming,
+  BackupError,
   DepsInstaller,
   FileDiff,
   PreflightError,
@@ -23,7 +24,6 @@ import {
 } from '@xtarterize/core';
 import { Effect } from 'effect';
 
-import { runCliProgram } from '@/runtime.js';
 import { mergeFileDiffs } from '@/ui/merge-file-diffs.js';
 import { getPrompter } from '@/ui/prompter.js';
 import { reportPreflightFailure, reportSessionOutcome } from '@/ui/reporter.js';
@@ -291,28 +291,28 @@ export class CommandSession {
     return this.context.timing;
   }
 
-  async plan(options: SessionPlanOptions): Promise<ApplyPlan> {
-    return runCliProgram(
-      planTasks({
-        cwd: this.context.runtime.cwd,
-        includeConflicts: options.includeConflicts ?? false,
-        profile: this.profile,
-        quiet: this.context.runtime.quiet,
-        statuses: this.context.statuses,
-        tasks: options.tasks,
-      })
-    );
+  plan(
+    options: SessionPlanOptions
+  ): Effect.Effect<ApplyPlan, TaskError, DepsInstaller | ProcessRunner> {
+    return planTasks({
+      cwd: this.context.runtime.cwd,
+      includeConflicts: options.includeConflicts ?? false,
+      profile: this.profile,
+      quiet: this.context.runtime.quiet,
+      statuses: this.context.statuses,
+      tasks: options.tasks,
+    });
   }
 
-  async execute(plan: ApplyPlan): Promise<ApplyResult> {
-    return runCliProgram(
-      executePlan({
-        cwd: this.context.runtime.cwd,
-        plan,
-        profile: this.profile,
-        quiet: this.context.runtime.quiet,
-      })
-    );
+  execute(
+    plan: ApplyPlan
+  ): Effect.Effect<ApplyResult, BackupError, DepsInstaller | ProcessRunner> {
+    return executePlan({
+      cwd: this.context.runtime.cwd,
+      plan,
+      profile: this.profile,
+      quiet: this.context.runtime.quiet,
+    });
   }
 
   /** Shape an executed plan result into a reportable outcome. */
@@ -339,21 +339,36 @@ export class CommandSession {
     };
   }
 
-  async dryRun(tasks: Array<Task>): Promise<SessionOutcome> {
-    const plan = await this.plan({ includeConflicts: true, tasks });
-    return buildDryRunOutcome(plan, this.context);
+  dryRun(
+    tasks: Array<Task>
+  ): Effect.Effect<
+    SessionOutcome,
+    TaskError | BackupError,
+    DepsInstaller | ProcessRunner
+  > {
+    return Effect.map(this.plan({ includeConflicts: true, tasks }), (plan) =>
+      buildDryRunOutcome(plan, this.context)
+    );
   }
 
-  async apply(
+  apply(
     tasks: Array<Task>,
     options: SessionApplyOptions = {}
-  ): Promise<SessionOutcome> {
-    const plan = await this.plan({
-      includeConflicts: options.includeConflicts,
-      tasks,
-    });
-    const result = await this.execute(plan);
-    return this.outcomeFor(result, options);
+  ): Effect.Effect<
+    SessionOutcome,
+    TaskError | BackupError,
+    DepsInstaller | ProcessRunner
+  > {
+    return Effect.flatMap(
+      this.plan({
+        includeConflicts: options.includeConflicts,
+        tasks,
+      }),
+      (plan) =>
+        Effect.map(this.execute(plan), (result) =>
+          this.outcomeFor(result, options)
+        )
+    );
   }
 
   /** Informational outcome with no writes (skip, not-applicable, no-op). */
@@ -408,19 +423,24 @@ export class CommandSession {
  * Open a session for a command, rendering a structured preflight failure as
  * terminal or JSON text and marking the process as failed when it is invalid.
  */
-export async function openSession(
+export function openSession(
   args: RuntimeArgs,
   options: SessionOpenOptions = {}
-): Promise<CommandSession | null> {
-  const opened = await runCliProgram(CommandSession.open(args, options));
-  if (!opened) {
-    return null;
-  }
-  if (opened.ok) {
-    return opened.session;
-  }
+): Effect.Effect<
+  CommandSession | null,
+  TaskError,
+  DepsInstaller | ProcessRunner
+> {
+  return Effect.gen(function* () {
+    const opened = yield* CommandSession.open(args, options);
+    if (opened.ok) {
+      return opened.session;
+    }
 
-  reportPreflightFailure(opened.errors, opened.runtime.format);
-  process.exitCode = 1;
-  return null;
+    yield* Effect.sync(() => {
+      reportPreflightFailure(opened.errors, opened.runtime.format);
+      process.exitCode = 1;
+    });
+    return null;
+  });
 }

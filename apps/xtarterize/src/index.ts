@@ -2,10 +2,22 @@
 import { createInvocationGuard } from '@xtarterize/core';
 import { defineCommand, runMain } from 'citty';
 
+import { abortCliProgram } from '@/runtime.js';
+
 import { version } from '^/package.json';
 
-process.on('SIGINT', () => process.exit(0));
-process.on('SIGTERM', () => process.exit(0));
+let interrupted = false;
+
+function handleSignal(): void {
+  if (interrupted) {
+    process.exit(0);
+  }
+  interrupted = true;
+  abortCliProgram();
+}
+
+process.on('SIGINT', handleSignal);
+process.on('SIGTERM', handleSignal);
 
 const subcommandLoaders = {
   add: () => import('@/commands/add/index.js').then((m) => m.addCommand),

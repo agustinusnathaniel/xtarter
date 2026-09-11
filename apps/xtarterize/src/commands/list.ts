@@ -1,6 +1,7 @@
 import { pc, statusTag } from '@xtarterize/core';
 import { defineCommand } from 'citty';
 
+import { runCliProgram } from '@/runtime.js';
 import { openSession } from '@/session.js';
 import { formatListResult } from '@/ui/json-formatter.js';
 import { commonArgs } from '@/utils/args.js';
@@ -16,7 +17,7 @@ export const listCommand = defineCommand({
     name: 'list',
   },
   async run({ args }) {
-    const session = await openSession(args);
+    const session = await runCliProgram(openSession(args));
     if (!session) {
       return;
     }

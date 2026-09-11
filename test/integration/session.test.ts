@@ -19,6 +19,8 @@ import {
   vi,
 } from 'vite-plus/test';
 
+import { run } from '../helpers/run.js';
+
 const coreMocks = vi.hoisted(() => ({
   ensureXtarterizeGitignore: vi.fn(),
   executePlan: vi.fn(),
@@ -103,7 +105,7 @@ describe('command session', () => {
   test('runs open, plan, execute, and report in lifecycle order', async () => {
     const cwd = await createMinimalProject();
     try {
-      const session = await openSession({ cwd, quiet: true });
+      const session = await run(openSession({ cwd, quiet: true }));
       expect(session).not.toBeNull();
       if (!session) {
         return;
@@ -115,7 +117,7 @@ describe('command session', () => {
         return;
       }
 
-      const outcome = await session.apply([task]);
+      const outcome = await run(session.apply([task]));
       session.reportOutcome(outcome);
 
       expect(coreMocks.planTasks).toHaveBeenCalledTimes(1);
@@ -138,7 +140,7 @@ describe('command session', () => {
   test('runs one gitignore and one preflight pass per open', async () => {
     const cwd = await createMinimalProject();
     try {
-      const session = await openSession({ cwd, quiet: true });
+      const session = await run(openSession({ cwd, quiet: true }));
       expect(session).not.toBeNull();
       expect(coreMocks.ensureXtarterizeGitignore).toHaveBeenCalledTimes(1);
       expect(coreMocks.runPreflight).toHaveBeenCalledTimes(1);
@@ -146,14 +148,14 @@ describe('command session', () => {
       if (session) {
         const task = session.tasks.find((entry) => entry.id === PANEL);
         if (task) {
-          await session.apply([task]);
+          await run(session.apply([task]));
         }
       }
       // Plan and execute must not repeat open's side effects.
       expect(coreMocks.ensureXtarterizeGitignore).toHaveBeenCalledTimes(1);
       expect(coreMocks.runPreflight).toHaveBeenCalledTimes(1);
 
-      await openSession({ cwd, quiet: true });
+      await run(openSession({ cwd, quiet: true }));
       expect(coreMocks.ensureXtarterizeGitignore).toHaveBeenCalledTimes(2);
       expect(coreMocks.runPreflight).toHaveBeenCalledTimes(2);
     } finally {

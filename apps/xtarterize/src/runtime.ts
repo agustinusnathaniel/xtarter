@@ -7,6 +7,13 @@ export const AppLayer = Layer.mergeAll(
   ProcessRunner.layer
 );
 
+const cliAbortController = new AbortController();
+
+/** Abort the in-flight command program (SIGINT/SIGTERM). */
+export function abortCliProgram(): void {
+  cliAbortController.abort();
+}
+
 export interface RunCliProgramOptions {
   signal?: AbortSignal;
 }
@@ -45,7 +52,7 @@ export async function runCliProgram<A, E>(
   options: RunCliProgramOptions = {}
 ): Promise<A> {
   const exit = await Effect.runPromiseExit(Effect.provide(program, AppLayer), {
-    signal: options.signal,
+    signal: options.signal ?? cliAbortController.signal,
   });
   if (Exit.isSuccess(exit)) {
     return exit.value;
