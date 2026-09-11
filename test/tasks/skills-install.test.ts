@@ -8,7 +8,7 @@ import {
   planTasks,
 } from '@xtarterize/core';
 import { skillsInstallTask } from '@xtarterize/tasks';
-import { describe, expect, vi } from 'vite-plus/test';
+import { beforeEach, describe, expect, vi } from 'vite-plus/test';
 
 import { SKILL_CATALOG } from '../../packages/tasks/src/agent/catalog.js';
 
@@ -40,6 +40,13 @@ const installOutput = async (
     .map(([command, args]) => [command, ...(args ?? [])].join(' '))
     .join('\n');
 };
+
+// Reset the mocked installer between tests so a failure-path result set by one
+// test cannot leak into a later test that applies directly.
+beforeEach(() => {
+  mockX.mockReset();
+  mockX.mockResolvedValue({ exitCode: 0 });
+});
 
 describe('skillsInstallTask', () => {
   test('is applicable to TypeScript projects', async () => {
