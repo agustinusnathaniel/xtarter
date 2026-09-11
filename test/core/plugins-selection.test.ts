@@ -4,13 +4,15 @@ import path from 'node:path';
 import { applyTaskSelection, loadSelectionConfig } from '@xtarterize/core';
 import { describe, expect } from 'vite-plus/test';
 
+import { run } from '../helpers/run.js';
+
 describe('loadSelectionConfig', () => {
   test('returns empty selection when no config file exists', async () => {
     const tmpDir = await fs.mkdtemp(
       path.join(os.tmpdir(), 'xtarter-selection-empty-')
     );
     try {
-      const selection = await loadSelectionConfig(tmpDir);
+      const selection = await run(loadSelectionConfig(tmpDir));
       expect(selection).toEqual({ only: [], skip: [] });
     } finally {
       await fs.rm(tmpDir, { force: true, recursive: true });
@@ -26,7 +28,7 @@ describe('loadSelectionConfig', () => {
         path.join(tmpDir, '.xtarterizerc'),
         JSON.stringify({ only: ['ts/strict'], skip: ['agent/skills-install'] })
       );
-      const selection = await loadSelectionConfig(tmpDir);
+      const selection = await run(loadSelectionConfig(tmpDir));
       expect(selection).toEqual({
         only: ['ts/strict'],
         skip: ['agent/skills-install'],
@@ -45,7 +47,7 @@ describe('loadSelectionConfig', () => {
         path.join(tmpDir, '.xtarterizerc.json'),
         JSON.stringify({ skip: ['lint/biome'] })
       );
-      const selection = await loadSelectionConfig(tmpDir);
+      const selection = await run(loadSelectionConfig(tmpDir));
       expect(selection).toEqual({ only: [], skip: ['lint/biome'] });
     } finally {
       await fs.rm(tmpDir, { force: true, recursive: true });
@@ -61,7 +63,7 @@ describe('loadSelectionConfig', () => {
         path.join(tmpDir, 'package.json'),
         JSON.stringify({ xtarterize: { skip: ['ts/incremental'] } })
       );
-      const selection = await loadSelectionConfig(tmpDir);
+      const selection = await run(loadSelectionConfig(tmpDir));
       expect(selection).toEqual({ only: [], skip: ['ts/incremental'] });
     } finally {
       await fs.rm(tmpDir, { force: true, recursive: true });
@@ -81,7 +83,7 @@ describe('loadSelectionConfig', () => {
         path.join(tmpDir, 'package.json'),
         JSON.stringify({ xtarterize: { skip: ['from-pkg'] } })
       );
-      const selection = await loadSelectionConfig(tmpDir);
+      const selection = await run(loadSelectionConfig(tmpDir));
       expect(selection).toEqual({ only: [], skip: ['from-file'] });
     } finally {
       await fs.rm(tmpDir, { force: true, recursive: true });
@@ -100,7 +102,7 @@ describe('loadSelectionConfig', () => {
           skip: ['  ts/strict  ', '', 42, null, 'lint/biome'],
         })
       );
-      const selection = await loadSelectionConfig(tmpDir);
+      const selection = await run(loadSelectionConfig(tmpDir));
       expect(selection).toEqual({
         only: ['ts/incremental'],
         skip: ['ts/strict', 'lint/biome'],
@@ -116,7 +118,7 @@ describe('loadSelectionConfig', () => {
     );
     try {
       await fs.writeFile(path.join(tmpDir, '.xtarterizerc'), 'not-json{');
-      const selection = await loadSelectionConfig(tmpDir);
+      const selection = await run(loadSelectionConfig(tmpDir));
       expect(selection).toEqual({ only: [], skip: [] });
     } finally {
       await fs.rm(tmpDir, { force: true, recursive: true });
@@ -132,7 +134,7 @@ describe('loadSelectionConfig', () => {
         path.join(tmpDir, '.xtarterizerc'),
         JSON.stringify({ only: [] })
       );
-      const selection = await loadSelectionConfig(tmpDir);
+      const selection = await run(loadSelectionConfig(tmpDir));
       expect(selection).toEqual({ only: [], skip: [] });
     } finally {
       await fs.rm(tmpDir, { force: true, recursive: true });

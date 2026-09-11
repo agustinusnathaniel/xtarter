@@ -7,6 +7,7 @@ import {
   resolveExternalTasks,
 } from '@xtarterize/core';
 import { getAllTasks } from '@xtarterize/tasks';
+import { Effect } from 'effect';
 
 import type { Prompter } from '@/ui/prompter.js';
 
@@ -15,12 +16,14 @@ import type { Prompter } from '@/ui/prompter.js';
  * External tasks are loaded from the project's plugin config
  * (`.xtarterizerc` or `"xtarterize"` key in `package.json`).
  */
-export async function getAllTasksWithPlugins(
+export function getAllTasksWithPlugins(
   cwd: string
-): Promise<Array<Task>> {
-  const internal = getAllTasks();
-  const external = await resolveExternalTasks(cwd);
-  return external.length > 0 ? [...internal, ...external] : internal;
+): Effect.Effect<Array<Task>> {
+  return Effect.gen(function* () {
+    const internal = getAllTasks();
+    const external = yield* resolveExternalTasks(cwd);
+    return external.length > 0 ? [...internal, ...external] : internal;
+  });
 }
 
 export interface DetectProjectWithAmbiguityOptions {

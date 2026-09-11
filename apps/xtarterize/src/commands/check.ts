@@ -150,11 +150,9 @@ export const checkCommand = defineCommand({
         if (!session) {
           return null;
         }
-        const { groups } = yield* Effect.promise(() =>
-          runDiagnostics(session.runtime.cwd, {
-            groups: ['tools', 'configuration'],
-          })
-        );
+        const { groups } = yield* runDiagnostics(session.runtime.cwd, {
+          groups: ['tools', 'configuration'],
+        });
         return { groups, session };
       })
     );

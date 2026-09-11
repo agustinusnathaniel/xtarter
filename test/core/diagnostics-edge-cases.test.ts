@@ -1,13 +1,35 @@
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { runDiagnostics } from '@xtarterize/core';
+import { ProcessError, runDiagnostics } from '@xtarterize/core';
+import { Effect } from 'effect';
 import { describe, expect } from 'vite-plus/test';
+
+import { processRunnerLayer, runWith } from '../helpers/run.js';
 
 type DiagnosticGroupId = 'configuration' | 'environment' | 'project' | 'tools';
 
+/**
+ * Stub ProcessRunner: Git reports an installed version, so environment checks
+ * do not depend on host binaries. Unknown commands act like missing binaries.
+ */
+const processRunner = processRunnerLayer((command) =>
+  command === 'git'
+    ? Effect.succeed({
+        exitCode: 0,
+        stderr: '',
+        stdout: 'git version 2.43.0',
+      })
+    : Effect.fail(
+        new ProcessError({ message: `Command "${command}" not found` })
+      )
+);
+
 async function checksFor(cwd: string, group: DiagnosticGroupId) {
-  const { groups } = await runDiagnostics(cwd, { groups: [group] });
+  const { groups } = await runWith(
+    processRunner,
+    runDiagnostics(cwd, { groups: [group] })
+  );
   return groups.flatMap((entry) => entry.checks);
 }
 

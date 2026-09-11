@@ -1,3 +1,8 @@
+import type {
+  CommandResult,
+  ProcessError,
+  ProcessRunOptions,
+} from '@xtarterize/core';
 import { DepsInstaller, ProcessRunner } from '@xtarterize/core';
 import { Effect, Layer } from 'effect';
 
@@ -20,6 +25,20 @@ export function runWith<A, E, R>(
   effect: Effect.Effect<A, E, R>
 ): Promise<A> {
   return Effect.runPromise(Effect.provide(effect, layer));
+}
+
+/** A stub `ProcessRunner.run` implementation for verification seams. */
+export type ProcessRunnerStub = (
+  command: string,
+  args: ReadonlyArray<string>,
+  options?: ProcessRunOptions
+) => Effect.Effect<CommandResult, ProcessError>;
+
+/** Layer that replaces `ProcessRunner` with a stub. */
+export function processRunnerLayer(
+  stub: ProcessRunnerStub
+): Layer.Layer<ProcessRunner> {
+  return Layer.succeed(ProcessRunner, { run: stub });
 }
 
 /** Run a program and capture its exit for failure assertions. */

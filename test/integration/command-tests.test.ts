@@ -11,6 +11,7 @@ import {
   readRunManifest,
   writeRunManifest,
 } from '@xtarterize/core';
+import { Effect } from 'effect';
 import { describe, expect, vi } from 'vite-plus/test';
 
 const { mockGetAllTasks } = vi.hoisted(() => ({
@@ -468,19 +469,21 @@ describe('add command', () => {
     try {
       // A misbehaving plugin task whose check() rejects must surface as
       // ok:false in the emitted JSON, agreeing with the exit code.
-      mockGetAllTasks.mockImplementationOnce(async () => [
-        {
-          applicable: () => true,
-          apply: async () => {},
-          check: async () => {
-            throw new Error('kaboom');
-          },
-          dryRun: async () => [],
-          group: 'test',
-          id: 'boom/failing',
-          label: 'Boom failing',
-        } as never,
-      ]);
+      mockGetAllTasks.mockImplementationOnce(() =>
+        Effect.succeed([
+          {
+            applicable: () => true,
+            apply: async () => {},
+            check: async () => {
+              throw new Error('kaboom');
+            },
+            dryRun: async () => [],
+            group: 'test',
+            id: 'boom/failing',
+            label: 'Boom failing',
+          } as never,
+        ])
+      );
 
       await addCommand.run?.({
         args: { all: true, cwd, format: 'json', quiet: true },

@@ -41,7 +41,7 @@ export const doctorCommand = defineCommand({
     const diagStart = performance.now();
     const diagnostics = await runCliProgram(
       Effect.ensuring(
-        Effect.promise(() => runDiagnostics(cwd, { verbose })),
+        runDiagnostics(cwd, { verbose }),
         Effect.sync(() => s.stop('Diagnostics complete'))
       )
     );

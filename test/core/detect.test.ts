@@ -15,6 +15,7 @@ import {
   rootFileInputByBasename,
   workspacePackageDirs,
 } from '../../packages/core/src/detect/registry/index.js';
+import { run } from '../helpers/run.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const fixtures = path.resolve(__dirname, '../fixtures');
@@ -428,9 +429,11 @@ describe('detectProject', () => {
       const profile = await detectProject(tmpDir);
       expect(profile.existing.eslint).toBe(true);
 
-      const { groups } = await runDiagnostics(tmpDir, {
-        groups: ['configuration'],
-      });
+      const { groups } = await run(
+        runDiagnostics(tmpDir, {
+          groups: ['configuration'],
+        })
+      );
       const checks = groups.flatMap((group) => group.checks);
       const legacyCheck = checks.find(
         (check) => check.name === 'Legacy config'

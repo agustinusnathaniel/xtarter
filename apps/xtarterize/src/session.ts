@@ -207,9 +207,7 @@ export class CommandSession {
         };
       }
 
-      const discovered = yield* liftLeaf('plugin-tasks', () =>
-        getAllTasksWithPlugins(runtime.cwd)
-      );
+      const discovered = yield* getAllTasksWithPlugins(runtime.cwd);
       const tasks = options.orderTasks
         ? options.orderTasks(discovered, runtime)
         : discovered;
@@ -228,9 +226,7 @@ export class CommandSession {
           quiet: runtime.quiet,
         })
       );
-      const selection = yield* liftLeaf('selection-config', () =>
-        loadSelectionConfig(runtime.cwd)
-      );
+      const selection = yield* loadSelectionConfig(runtime.cwd);
 
       return {
         ok: true as const,

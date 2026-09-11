@@ -4,13 +4,15 @@ import path from 'node:path';
 import { loadPluginConfig, resolveExternalTasks } from '@xtarterize/core';
 import { describe, expect } from 'vite-plus/test';
 
+import { run } from '../helpers/run.js';
+
 describe('loadPluginConfig', () => {
   test('returns null when no config file exists', async () => {
     const tmpDir = await fs.mkdtemp(
       path.join(os.tmpdir(), 'xtarter-plugins-empty-')
     );
     try {
-      const config = await loadPluginConfig(tmpDir);
+      const config = await run(loadPluginConfig(tmpDir));
       expect(config).toBeNull();
     } finally {
       await fs.rm(tmpDir, { force: true, recursive: true });
@@ -26,7 +28,7 @@ describe('loadPluginConfig', () => {
         path.join(tmpDir, '.xtarterizerc'),
         JSON.stringify({ plugins: ['@xtarterize/plugin-foo'] })
       );
-      const config = await loadPluginConfig(tmpDir);
+      const config = await run(loadPluginConfig(tmpDir));
       expect(config).not.toBeNull();
       expect(config?.plugins).toEqual(['@xtarterize/plugin-foo']);
     } finally {
@@ -43,7 +45,7 @@ describe('loadPluginConfig', () => {
         path.join(tmpDir, '.xtarterizerc.json'),
         JSON.stringify({ plugins: ['my-plugin'] })
       );
-      const config = await loadPluginConfig(tmpDir);
+      const config = await run(loadPluginConfig(tmpDir));
       expect(config).not.toBeNull();
       expect(config?.plugins).toEqual(['my-plugin']);
     } finally {
@@ -60,7 +62,7 @@ describe('loadPluginConfig', () => {
         path.join(tmpDir, '.xtarterizerc.json5'),
         JSON.stringify({ plugins: ['json5-plugin'] })
       );
-      const config = await loadPluginConfig(tmpDir);
+      const config = await run(loadPluginConfig(tmpDir));
       expect(config).not.toBeNull();
       expect(config?.plugins).toEqual(['json5-plugin']);
     } finally {
@@ -82,7 +84,7 @@ describe('loadPluginConfig', () => {
         path.join(tmpDir, '.xtarterizerc.json'),
         JSON.stringify({ plugins: ['from-json'] })
       );
-      const config = await loadPluginConfig(tmpDir);
+      const config = await run(loadPluginConfig(tmpDir));
       expect(config?.plugins).toEqual(['from-rc']);
     } finally {
       await fs.rm(tmpDir, { force: true, recursive: true });
@@ -100,7 +102,7 @@ describe('loadPluginConfig', () => {
           xtarterize: { plugins: ['@xtarterize/plugin-bar'] },
         })
       );
-      const config = await loadPluginConfig(tmpDir);
+      const config = await run(loadPluginConfig(tmpDir));
       expect(config).not.toBeNull();
       expect(config?.plugins).toEqual(['@xtarterize/plugin-bar']);
     } finally {
@@ -117,7 +119,7 @@ describe('loadPluginConfig', () => {
         path.join(tmpDir, 'package.json'),
         JSON.stringify({ name: 'test' })
       );
-      const config = await loadPluginConfig(tmpDir);
+      const config = await run(loadPluginConfig(tmpDir));
       expect(config).toBeNull();
     } finally {
       await fs.rm(tmpDir, { force: true, recursive: true });
@@ -130,7 +132,7 @@ describe('loadPluginConfig', () => {
     );
     try {
       await fs.writeFile(path.join(tmpDir, '.xtarterizerc'), 'not-json{');
-      const config = await loadPluginConfig(tmpDir);
+      const config = await run(loadPluginConfig(tmpDir));
       // Current behavior: returns { plugins: [] } on parse failure
       expect(config).toEqual({ plugins: [] });
     } finally {
@@ -147,7 +149,7 @@ describe('loadPluginConfig', () => {
         path.join(tmpDir, '.xtarterizerc'),
         JSON.stringify({})
       );
-      const config = await loadPluginConfig(tmpDir);
+      const config = await run(loadPluginConfig(tmpDir));
       // Current behavior: returns { plugins: [] } when plugins is missing
       expect(config).toEqual({ plugins: [] });
     } finally {
@@ -164,7 +166,7 @@ describe('loadPluginConfig', () => {
         path.join(tmpDir, '.xtarterizerc'),
         JSON.stringify({ plugins: 'string' })
       );
-      const config = await loadPluginConfig(tmpDir);
+      const config = await run(loadPluginConfig(tmpDir));
       // Current behavior: returns { plugins: [] } for non-array plugins
       expect(config).toEqual({ plugins: [] });
     } finally {
@@ -179,7 +181,7 @@ describe('resolveExternalTasks', () => {
       path.join(os.tmpdir(), 'xtarter-resolve-noconfig-')
     );
     try {
-      const tasks = await resolveExternalTasks(tmpDir);
+      const tasks = await run(resolveExternalTasks(tmpDir));
       expect(tasks).toEqual([]);
     } finally {
       await fs.rm(tmpDir, { force: true, recursive: true });
@@ -198,7 +200,7 @@ describe('resolveExternalTasks', () => {
         path.join(tmpDir, '.xtarterizerc'),
         JSON.stringify({ plugins: ['@xtarterize/some-plugin'] })
       );
-      const tasks = await resolveExternalTasks(tmpDir);
+      const tasks = await run(resolveExternalTasks(tmpDir));
       expect(tasks).toEqual([]);
     } finally {
       await fs.rm(tmpDir, { force: true, recursive: true });
@@ -217,7 +219,7 @@ describe('resolveExternalTasks', () => {
           plugins: ['../../malicious.js', 'file:///etc/passwd'],
         })
       );
-      const tasks = await resolveExternalTasks(tmpDir);
+      const tasks = await run(resolveExternalTasks(tmpDir));
       expect(tasks).toEqual([]);
     } finally {
       await fs.rm(tmpDir, { force: true, recursive: true });
@@ -237,7 +239,7 @@ describe('resolveExternalTasks', () => {
           plugins: ['@xtarterize/some-plugin', '@xtarterize/some-plugin'],
         })
       );
-      const tasks = await resolveExternalTasks(tmpDir);
+      const tasks = await run(resolveExternalTasks(tmpDir));
       expect(Array.isArray(tasks)).toBe(true);
     } finally {
       await fs.rm(tmpDir, { force: true, recursive: true });

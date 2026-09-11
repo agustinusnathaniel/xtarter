@@ -1,4 +1,7 @@
+import { Cause, Effect, Exit, Option } from 'effect';
+
 import type { Task } from '@/_base.js';
+import { describeCause } from '@/task-effect.js';
 import { findConfigFile, readJson } from '@/utils/fs.js';
 import { logWarn } from '@/utils/logger.js';
 
@@ -50,55 +53,81 @@ type RawConfigResult =
  *
  * Reports whether a config was found, missing, or present but unparsable.
  */
-async function readRawXtarterizeConfig(cwd: string): Promise<RawConfigResult> {
-  // 1. Standalone config file
-  for (const basename of CONFIG_BASENAMES) {
-    const path = await findConfigFile(cwd, basename, ['']);
-    if (path) {
-      let config: unknown;
-      try {
-        config = await readJson(path);
-      } catch {
+function readRawXtarterizeConfig(cwd: string): Effect.Effect<RawConfigResult> {
+  return Effect.gen(function* () {
+    // 1. Standalone config file
+    for (const basename of CONFIG_BASENAMES) {
+      const path = yield* Effect.promise(() =>
+        findConfigFile(cwd, basename, [''])
+      );
+      if (!path) {
+        continue;
+      }
+      const readExit = yield* Effect.exit(
+        Effect.tryPromise({
+          catch: (cause) => cause,
+          try: () => readJson(path),
+        })
+      );
+      if (Exit.isFailure(readExit)) {
         logWarn('Failed to parse .xtarterizerc');
-        return { status: 'parse-error' };
+        return { status: 'parse-error' } as RawConfigResult;
       }
+      const config = readExit.value;
       if (config && typeof config === 'object') {
-        return { config: config as Record<string, unknown>, status: 'found' };
+        return {
+          config: config as Record<string, unknown>,
+          status: 'found',
+        } as RawConfigResult;
       }
-      return { status: 'parse-error' };
+      return { status: 'parse-error' } as RawConfigResult;
     }
-  }
 
-  // 2. package.json under "xtarterize" key
-  try {
-    const pkg = await readJson<{ xtarterize?: Record<string, unknown> }>(
-      `${cwd}/package.json`
+    // 2. package.json under "xtarterize" key
+    const pkgExit = yield* Effect.exit(
+      Effect.tryPromise({
+        catch: (cause) => cause,
+        try: () =>
+          readJson<{ xtarterize?: Record<string, unknown> }>(
+            `${cwd}/package.json`
+          ),
+      })
     );
-    const config = pkg?.xtarterize;
-    if (config && typeof config === 'object' && !Array.isArray(config)) {
-      return { config, status: 'found' };
+    if (Exit.isSuccess(pkgExit)) {
+      const config = pkgExit.value?.xtarterize;
+      if (config && typeof config === 'object' && !Array.isArray(config)) {
+        return { config, status: 'found' } as RawConfigResult;
+      }
     }
-  } catch {
-    // Not a package.json or no such key - that's fine
-  }
 
-  return { status: 'missing' };
+    return { status: 'missing' } as RawConfigResult;
+  });
 }
 
 /**
- * Per-process memo for the raw config read. Selection and plugin loading in
- * the same session consume one parse instead of two.
+ * Per-process memo for the raw config read, keyed by cwd. Selection and plugin
+ * loading in the same session consume one parse instead of two.
+ *
+ * Each entry is an `Effect.cached` memo; the map only addresses the memo per
+ * cwd, preserving the pre-Effect behavior of sharing one read across every
+ * Effect run in the process.
  */
-const rawConfigCache = new Map<string, Promise<RawConfigResult>>();
+const rawConfigCache = new Map<string, Effect.Effect<RawConfigResult>>();
 
-function loadRawXtarterizeConfig(cwd: string): Promise<RawConfigResult> {
-  const cached = rawConfigCache.get(cwd);
-  if (cached) {
-    return cached;
-  }
-  const pending = readRawXtarterizeConfig(cwd);
-  rawConfigCache.set(cwd, pending);
-  return pending;
+function loadRawXtarterizeConfig(cwd: string): Effect.Effect<RawConfigResult> {
+  return Effect.suspend(() => {
+    const cached = rawConfigCache.get(cwd);
+    if (cached) {
+      return cached;
+    }
+    return Effect.flatMap(
+      Effect.cached(readRawXtarterizeConfig(cwd)),
+      (memoized) => {
+        rawConfigCache.set(cwd, memoized);
+        return memoized;
+      }
+    );
+  });
 }
 
 /**
@@ -110,17 +139,19 @@ function loadRawXtarterizeConfig(cwd: string): Promise<RawConfigResult> {
  *
  * Returns `null` when no config is found.
  */
-export async function loadPluginConfig(
+export function loadPluginConfig(
   cwd: string
-): Promise<PluginConfig | null> {
-  const result = await loadRawXtarterizeConfig(cwd);
-  if (result.status === 'missing') {
-    return null;
-  }
-  if (result.status !== 'found' || !Array.isArray(result.config.plugins)) {
-    return { plugins: [] };
-  }
-  return result.config as PluginConfig;
+): Effect.Effect<PluginConfig | null> {
+  return Effect.gen(function* () {
+    const result = yield* loadRawXtarterizeConfig(cwd);
+    if (result.status === 'missing') {
+      return null;
+    }
+    if (result.status !== 'found' || !Array.isArray(result.config.plugins)) {
+      return { plugins: [] };
+    }
+    return result.config as PluginConfig;
+  });
 }
 
 export interface TaskSelectionConfig {
@@ -148,21 +179,25 @@ function sanitizeStringArray(value: unknown): Array<string> {
  * - An EMPTY or ABSENT `only` array means "no restriction" (never "apply nothing").
  * - If a task ID appears in both skip and only, skip wins (task excluded).
  */
-export async function loadSelectionConfig(
+export function loadSelectionConfig(
   cwd: string
-): Promise<TaskSelectionConfig> {
-  try {
-    const result = await loadRawXtarterizeConfig(cwd);
-    if (result.status !== 'found') {
-      return { only: [], skip: [] };
-    }
-    return {
-      only: sanitizeStringArray(result.config.only),
-      skip: sanitizeStringArray(result.config.skip),
-    };
-  } catch {
-    return { only: [], skip: [] };
-  }
+): Effect.Effect<TaskSelectionConfig> {
+  const empty = (): TaskSelectionConfig => ({ only: [], skip: [] });
+  return Effect.catchCause(
+    Effect.map(loadRawXtarterizeConfig(cwd), (result) => {
+      if (result.status !== 'found') {
+        return empty();
+      }
+      return {
+        only: sanitizeStringArray(result.config.only),
+        skip: sanitizeStringArray(result.config.skip),
+      };
+    }),
+    (cause) =>
+      Cause.hasInterruptsOnly(cause)
+        ? Effect.interrupt
+        : Effect.succeed(empty())
+  );
 }
 
 interface TaskSelectionInput {
@@ -243,29 +278,27 @@ function validatePluginSpecifier(specifier: string): boolean {
   );
 }
 
-/** Import a plugin module, failing if it does not resolve within the timeout. */
-async function importWithTimeout(
+/**
+ * Import a plugin module, failing with the pre-Effect timeout message when it
+ * does not resolve within `PLUGIN_LOAD_TIMEOUT_MS`.
+ */
+function importWithTimeout(
   specifier: string
-): Promise<Record<string, unknown>> {
-  let timer: ReturnType<typeof setTimeout> | undefined;
-  try {
-    return await Promise.race([
-      import(/* @vite-ignore */ specifier),
-      new Promise<never>((_resolve, reject) => {
-        timer = setTimeout(
-          () =>
-            reject(
-              new Error(
-                `Plugin "${specifier}" failed to load within ${PLUGIN_LOAD_TIMEOUT_MS / 1000}s`
-              )
-            ),
-          PLUGIN_LOAD_TIMEOUT_MS
-        );
-      }),
-    ]);
-  } finally {
-    clearTimeout(timer);
-  }
+): Effect.Effect<Record<string, unknown>, Error> {
+  return Effect.tryPromise({
+    catch: (cause) =>
+      cause instanceof Error ? cause : new Error(String(cause)),
+    try: () => import(/* @vite-ignore */ specifier),
+  }).pipe(
+    Effect.timeout(PLUGIN_LOAD_TIMEOUT_MS),
+    Effect.catchTag('TimeoutError', () =>
+      Effect.fail(
+        new Error(
+          `Plugin "${specifier}" failed to load within ${PLUGIN_LOAD_TIMEOUT_MS / 1000}s`
+        )
+      )
+    )
+  );
 }
 
 /**
@@ -277,26 +310,38 @@ async function importWithTimeout(
  *   - a named export `tasks` that is `Task[]`
  *   - a named export `task` that is a single `Task`
  */
-export async function loadPluginTasks(
+export function loadPluginTasks(
   config: PluginConfig
-): Promise<Array<Task>> {
-  if (!config.plugins?.length) {
-    return [];
-  }
-
-  const allTasks: Array<Task> = [];
-  const seen = new Set<string>();
-
-  for (const specifier of config.plugins) {
-    if (!validatePluginSpecifier(specifier)) {
-      logWarn(
-        `Invalid xtarterize plugin specifier "${specifier}" - must be an npm package name. Skipping.`
-      );
-      continue;
+): Effect.Effect<Array<Task>> {
+  return Effect.gen(function* () {
+    if (!config.plugins?.length) {
+      return [];
     }
 
-    try {
-      const mod = await importWithTimeout(specifier);
+    const allTasks: Array<Task> = [];
+    const seen = new Set<string>();
+
+    for (const specifier of config.plugins) {
+      if (!validatePluginSpecifier(specifier)) {
+        logWarn(
+          `Invalid xtarterize plugin specifier "${specifier}" - must be an npm package name. Skipping.`
+        );
+        continue;
+      }
+
+      const loadExit = yield* Effect.exit(importWithTimeout(specifier));
+      if (Exit.isFailure(loadExit)) {
+        if (Cause.hasInterruptsOnly(loadExit.cause)) {
+          return yield* Effect.interrupt;
+        }
+        const error = Cause.findErrorOption(loadExit.cause);
+        const detail = Option.isSome(error)
+          ? describeCause(error.value)
+          : Cause.pretty(loadExit.cause);
+        logWarn(`Failed to load xtarterize plugin "${specifier}": ${detail}`);
+        continue;
+      }
+      const mod = loadExit.value;
 
       // Collect tasks from the module
       const moduleTasks: Array<Task> = [];
@@ -327,21 +372,19 @@ export async function loadPluginTasks(
           allTasks.push(t);
         }
       }
-    } catch (cause) {
-      logWarn(
-        `Failed to load xtarterize plugin "${specifier}": ${cause instanceof Error ? cause.message : String(cause)}`
-      );
     }
-  }
 
-  return allTasks;
+    return allTasks;
+  });
 }
 
 /**
  * Convenience: load config + tasks in one call.
  * Returns an empty array when no plugins are configured or loading fails.
  */
-export async function resolveExternalTasks(cwd: string): Promise<Array<Task>> {
-  const config = await loadPluginConfig(cwd);
-  return config ? loadPluginTasks(config) : [];
+export function resolveExternalTasks(cwd: string): Effect.Effect<Array<Task>> {
+  return Effect.gen(function* () {
+    const config = yield* loadPluginConfig(cwd);
+    return config ? yield* loadPluginTasks(config) : [];
+  });
 }
