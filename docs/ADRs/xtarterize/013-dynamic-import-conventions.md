@@ -57,7 +57,7 @@ async function detectGitHubWorkflows(cwd: string): Promise<string[]> {
 
 ```ts
 // BAD - already imported statically at the top of the file
-import { readJson } from "@xtarterize/core";
+import { readFile } from "@xtarterize/core";
 
 async function checkFn(cwd) {
   // Redundant dynamic import of the same package
@@ -70,7 +70,7 @@ In this case both utilities should be static imports:
 
 ```ts
 // GOOD
-import { readJson, readPackageJson } from "@xtarterize/core";
+import { readFile, readPackageJson } from "@xtarterize/core";
 ```
 
 ## Rationale
