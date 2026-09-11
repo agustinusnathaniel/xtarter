@@ -9,9 +9,14 @@ const packagesDir = join(root, 'packages');
  * Runtime entry points that only the CLI edge may use. Packages construct
  * Effects and return them; they never run them. Matching is a plain
  * substring scan, so it errs toward flagging rather than missing a call.
+ *
+ * The bare `runPromise(` and `runSync(` patterns also catch destructured or
+ * aliased calls such as `const { runPromise } = Effect; runPromise(...)`.
+ * `runPromise(` does not match `runPromiseExit(`.
  */
 const FORBIDDEN_PATTERNS = [
   'Effect.runPromise(',
+  'runPromise(',
   '.runPromiseExit(',
   'runPromiseExit(',
   'runSync(',

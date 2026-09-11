@@ -65,7 +65,7 @@ function runCheckTask(
   profile: ProjectProfile
 ): Effect.Effect<CheckOutcome, never, TaskServices> {
   return Effect.exit(
-    toTaskEffect(task.id, 'check', () => task.check(cwd, profile))
+    toTaskEffect(task.id, () => task.check(cwd, profile))
   ).pipe(
     Effect.flatMap((exit) => {
       if (Exit.isSuccess(exit)) {

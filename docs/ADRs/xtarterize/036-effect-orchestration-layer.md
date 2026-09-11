@@ -61,8 +61,9 @@ restore `Equal.equals` (ADR 031 keeps `isDeepStrictEqual`).
 - The rule is enforced by `scripts/check-effect-boundaries.mjs`, which runs in
   `pnpm check` and `pnpm check:ci` through `verify:effect-boundaries`. The
   script scans `packages/*/src/**/*.ts` and fails with `file:line` output on
-  `Effect.runPromise`, `runPromiseExit`, `runSync`, or `ManagedRuntime`
-  outside comments.
+  `runPromise`, `runPromiseExit`, `runSync`, or `ManagedRuntime` outside
+  comments, including destructured or aliased forms such as
+  `const { runPromise } = Effect`.
 
 ### Task contract and plugin compatibility
 
@@ -71,7 +72,7 @@ restore `Equal.equals` (ADR 031 keeps `isDeepStrictEqual`).
   `Effect.Effect<A, TaskError, TaskServices>`, where
   `TaskServices = ProcessRunner`. `PromiseTask` keeps the original Promise
   signatures.
-- `toTaskEffect(taskId, method, invoke)` in
+- `toTaskEffect(taskId, invoke)` in
   [`packages/core/src/task-effect.ts`](../../../packages/core/src/task-effect.ts)
   normalizes both shapes: the invocation is lazy (`Effect.suspend`), a
   synchronous throw or promise rejection becomes a `TaskError` with the

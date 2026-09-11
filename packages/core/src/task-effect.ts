@@ -17,12 +17,8 @@ export function describeCause(cause: unknown): string {
  */
 export function toTaskEffect<A>(
   taskId: string,
-  method: string,
   invoke: () => A | Promise<A> | Effect.Effect<A, TaskError, TaskServices>
 ): Effect.Effect<A, TaskError, TaskServices> {
-  // `method` names the operation in the public conversion contract; the
-  // engine still reports failures with the raw cause message it always did.
-  void method;
   return Effect.suspend(() => {
     let result: A | Promise<A> | Effect.Effect<A, TaskError, TaskServices>;
     try {

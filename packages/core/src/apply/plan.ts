@@ -99,7 +99,7 @@ function runDryRun(
 ): Effect.Effect<DryRunOutcome, never, TaskServices> {
   const start = performance.now();
   return Effect.exit(
-    toTaskEffect(task.id, 'dryRun', () => task.dryRun(cwd, profile))
+    toTaskEffect(task.id, () => task.dryRun(cwd, profile))
   ).pipe(
     Effect.flatMap((exit) => {
       if (Exit.isSuccess(exit)) {
@@ -177,7 +177,7 @@ function collectDependencies(options: {
   return Effect.forEach(
     runnable,
     ({ task }) =>
-      toTaskEffect(task.id, 'getDeps', () =>
+      toTaskEffect(task.id, () =>
         task.getDeps
           ? task.getDeps(cwd, profile)
           : Promise.resolve([] as Array<TaskDep>)

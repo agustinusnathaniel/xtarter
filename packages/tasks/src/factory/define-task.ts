@@ -188,7 +188,7 @@ function liftSpec<A>(
   spec: TaskSpec,
   invoke: () => SpecResult<A>
 ): Effect.Effect<A, TaskError, TaskServices> {
-  return toTaskEffect(spec.id, 'defineTask.spec', invoke);
+  return toTaskEffect(spec.id, invoke);
 }
 
 function resolveSpec(

@@ -111,10 +111,8 @@ export const skillsInstallTask = defineTask({
       kind: 'action',
       run: (cwd, profile) =>
         Effect.gen(function* () {
-          const { missing } = yield* toTaskEffect(
-            'skillsInstallTask.run',
-            'resolveMissingSkills',
-            () => resolveMissingSkills(cwd, profile)
+          const { missing } = yield* toTaskEffect('skillsInstallTask.run', () =>
+            resolveMissingSkills(cwd, profile)
           );
           const runner = yield* ProcessRunner;
           const grouped = groupBySource(missing);

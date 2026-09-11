@@ -146,9 +146,7 @@ function applyPendingEntries(options: {
         spinnerInstance?.start(`Applying ${entry.task.label}`)
       );
       const exit = yield* Effect.exit(
-        toTaskEffect(entry.task.id, 'apply', () =>
-          entry.task.apply(cwd, profile)
-        )
+        toTaskEffect(entry.task.id, () => entry.task.apply(cwd, profile))
       );
       if (Exit.isSuccess(exit)) {
         const timing = perTask.find((t) => t.id === entry.task.id);
