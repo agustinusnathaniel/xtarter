@@ -1,11 +1,9 @@
-import { Effect } from 'effect';
-
 import type { FileDiff, Task, TaskStatus } from '@/_base.js';
 import type { ProjectProfile } from '@/detect.js';
-import { TaskError } from '@/errors.js';
 import {
   CONCURRENCY,
   collectTaskChecks,
+  mapWithConcurrency,
   type TaskCheckResult,
 } from '@/resolve.js';
 import { logInfo } from '@/utils/logger.js';
@@ -83,40 +81,23 @@ interface DryRunOutcome {
   dryRunMs: number;
 }
 
-function runDryRun(
+async function runDryRun(
   task: Task,
   cwd: string,
   profile: ProjectProfile
-): Effect.Effect<DryRunOutcome, never> {
-  return Effect.gen(function* () {
-    const start = performance.now();
-    const diffs = yield* Effect.tryPromise({
-      catch: (cause) =>
-        new TaskError({
-          cause,
-          message: `Failed to dryRun ${task.id}`,
-          taskId: task.id,
-        }),
-      try: () => task.dryRun(cwd, profile),
-    });
+): Promise<DryRunOutcome> {
+  const start = performance.now();
+  try {
+    const diffs = await task.dryRun(cwd, profile);
     return { diffs, dryRunMs: performance.now() - start };
-  }).pipe(
-    Effect.catch((error: unknown) =>
-      Effect.sync(() => {
-        const detail =
-          error instanceof Error && error.cause instanceof Error
-            ? error.cause.message
-            : error instanceof Error
-              ? error.message
-              : String(error);
-        return {
-          diffs: [] as Array<FileDiff>,
-          dryRunError: `${task.id}: ${detail}`,
-          dryRunMs: 0,
-        };
-      })
-    )
-  );
+  } catch (error) {
+    const detail = error instanceof Error ? error.message : String(error);
+    return {
+      diffs: [] as Array<FileDiff>,
+      dryRunError: `${task.id}: ${detail}`,
+      dryRunMs: 0,
+    };
+  }
 }
 
 function buildEntries(
@@ -172,17 +153,13 @@ async function collectDependencies(options: {
   const runnable = entries.filter(
     (entry) => !(entry.skipped || entry.dryRunError)
   );
-  const depArrays = await Effect.runPromise(
-    Effect.all(
-      runnable.map(({ task }) =>
-        Effect.promise(() =>
-          task.getDeps
-            ? task.getDeps(cwd, profile)
-            : Promise.resolve([] as Array<DepToInstall>)
-        )
-      ),
-      { concurrency: CONCURRENCY }
-    )
+  const depArrays = await mapWithConcurrency(
+    runnable,
+    CONCURRENCY,
+    ({ task }) =>
+      task.getDeps
+        ? task.getDeps(cwd, profile)
+        : Promise.resolve([] as Array<DepToInstall>)
   );
   return depArrays.flat();
 }
@@ -202,11 +179,10 @@ export async function planTasks(options: PlanTasksOptions): Promise<ApplyPlan> {
   const candidates = classifications
     .filter(({ skipped }) => !skipped)
     .map(({ result }) => result);
-  const dryRuns = await Effect.runPromise(
-    Effect.all(
-      candidates.map(({ task }) => runDryRun(task, cwd, profile)),
-      { concurrency: CONCURRENCY }
-    )
+  const dryRuns = await mapWithConcurrency(
+    candidates,
+    CONCURRENCY,
+    ({ task }) => runDryRun(task, cwd, profile)
   );
   const { entries, files } = buildEntries(classifications, dryRuns);
 

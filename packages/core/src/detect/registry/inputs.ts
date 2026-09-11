@@ -1,9 +1,9 @@
 import type { PackageManager } from '../types.js';
 
 /**
- * The detection registry is the single declaration of what project detection
- * reads. The fingerprint, doctor lockfile checks, cache validation, and the
- * `existing` profile keys all derive from this module (ADR 032).
+ * Declares the detection inputs that have a runtime consumer: keyed detector
+ * entries, doctor lockfile checks, bundler config extensions, and monorepo
+ * markers. Detection that reads files directly bypasses this module (ADR 032).
  */
 
 type DetectorInputSpec =
@@ -27,7 +27,6 @@ type DetectorInputSpec =
       role: 'monorepoMarker' | 'workspaceDir';
       type: 'file' | 'dir';
     }
-  | { id: string; kind: 'cwdMarker'; name: string }
   | { id: string; kind: 'packageJson'; name: string };
 
 /**
@@ -78,19 +77,6 @@ export const DETECTOR_INPUTS = [
     id: 'turbo-config',
     kind: 'rootFile',
   },
-  { basename: 'nx', extensions: ['.json'], id: 'nx-config', kind: 'rootFile' },
-  {
-    basename: 'lerna',
-    extensions: ['.json'],
-    id: 'lerna-config',
-    kind: 'rootFile',
-  },
-  {
-    basename: 'pnpm-workspace',
-    extensions: ['.yaml'],
-    id: 'pnpm-workspace',
-    kind: 'rootFile',
-  },
   {
     basename: 'vite.config',
     extensions: ['.ts', '.js', '.mts', '.mjs', '.cts', '.cjs'],
@@ -123,7 +109,6 @@ export const DETECTOR_INPUTS = [
   },
   { basename: '.versionrc', extensions: [], id: 'versionrc', kind: 'rootFile' },
   { basename: '.gitignore', extensions: [], id: 'gitignore', kind: 'rootFile' },
-  { basename: '.nvmrc', extensions: [], id: 'nvmrc', kind: 'rootFile' },
   {
     basename: '.eslintrc',
     extensions: ['.js', '.cjs', '.mjs', '.json', '.yaml', '.yml'],
@@ -164,7 +149,6 @@ export const DETECTOR_INPUTS = [
   { basename: 'CLAUDE', extensions: ['.md'], id: 'claude', kind: 'rootFile' },
   // ── Config directories ──
   { dir: '.github', id: 'github-dir', kind: 'configDir' },
-  { dir: '.vscode', id: 'vscode-dir', kind: 'configDir' },
   { dir: '.changeset', id: 'changeset-dir', kind: 'configDir' },
   // ── Lockfiles ──
   {
@@ -242,8 +226,6 @@ export const DETECTOR_INPUTS = [
     role: 'workspaceDir',
     type: 'dir',
   },
-  // ── Cwd markers ──
-  { id: 'git', kind: 'cwdMarker', name: '.git' },
   // ── package.json ──
   { id: 'package-json', kind: 'packageJson', name: 'package.json' },
 ] as const satisfies ReadonlyArray<DetectorInputSpec>;
@@ -257,8 +239,6 @@ export type AncestorMarkerInput = Extract<
   DetectorInput,
   { kind: 'ancestorMarker' }
 >;
-export type CwdMarkerInput = Extract<DetectorInput, { kind: 'cwdMarker' }>;
-export type PackageJsonInput = Extract<DetectorInput, { kind: 'packageJson' }>;
 
 export function inputById(id: DetectorInputId): DetectorInput {
   const input = DETECTOR_INPUTS.find((candidate) => candidate.id === id);
@@ -276,14 +256,6 @@ export function inputsOfKind<K extends DetectorInput['kind']>(
   );
 }
 
-export function rootFileInputs(): Array<RootFileInput> {
-  return inputsOfKind('rootFile');
-}
-
-export function configDirInputs(): Array<ConfigDirInput> {
-  return inputsOfKind('configDir');
-}
-
 export function lockfileInputs(): Array<LockfileInput> {
   return inputsOfKind('lockfile');
 }
@@ -292,17 +264,9 @@ export function ancestorMarkerInputs(): Array<AncestorMarkerInput> {
   return inputsOfKind('ancestorMarker');
 }
 
-export function cwdMarkerInputs(): Array<CwdMarkerInput> {
-  return inputsOfKind('cwdMarker');
-}
-
-export function packageJsonInput(): PackageJsonInput {
-  return inputsOfKind('packageJson')[0];
-}
-
 /** The root file input declared with `basename`, if any. */
 export function rootFileInputByBasename(
   basename: string
 ): RootFileInput | undefined {
-  return rootFileInputs().find((input) => input.basename === basename);
+  return inputsOfKind('rootFile').find((input) => input.basename === basename);
 }

@@ -1,7 +1,7 @@
 import type { DetectorInputId } from './inputs.js';
 
 type DetectorEntrySpec = {
-  detector: 'file' | 'custom' | 'logic';
+  detector: 'file' | 'custom';
   id: string;
   inputs: ReadonlyArray<DetectorInputId>;
 } & (
@@ -10,9 +10,8 @@ type DetectorEntrySpec = {
 );
 
 /**
- * Every detector and the inputs it reads. Keyed entries project into
- * `ProjectProfile.existing`; logic entries feed the computed profile fields
- * and exist so the fingerprint covers their inputs.
+ * Every declared detector entry and the inputs it reads. Entries project into
+ * `ProjectProfile.existing`.
  */
 export const DETECTOR_ENTRIES = [
   // ── Keyed file detectors ──
@@ -136,57 +135,6 @@ export const DETECTOR_ENTRIES = [
     inputs: ['agents', 'claude'],
     key: 'agentsMd',
   },
-  // ── Logic detectors ──
-  { detector: 'logic', id: 'framework', inputs: ['package-json'] },
-  {
-    detector: 'logic',
-    id: 'bundler',
-    inputs: [
-      'package-json',
-      'next-config',
-      'vite-config',
-      'rspack-config',
-      'webpack-config',
-    ],
-  },
-  { detector: 'logic', id: 'router', inputs: ['package-json'] },
-  { detector: 'logic', id: 'styling', inputs: ['package-json'] },
-  { detector: 'logic', id: 'runtime', inputs: ['package-json'] },
-  { detector: 'logic', id: 'vitePlus', inputs: ['package-json'] },
-  {
-    detector: 'logic',
-    id: 'packageManager',
-    inputs: [
-      'package-json',
-      'pnpm-lock',
-      'yarn-lock',
-      'bun-lock',
-      'bun-lockb',
-      'npm-lock',
-    ],
-  },
-  {
-    detector: 'logic',
-    id: 'monorepo',
-    inputs: [
-      'pnpm-workspace',
-      'turbo-config',
-      'nx-config',
-      'lerna-config',
-      'monorepo-pnpm-workspace',
-      'monorepo-turbo',
-      'monorepo-nx',
-      'monorepo-lerna',
-      'workspace-packages',
-      'workspace-apps',
-      'workspace-services',
-    ],
-  },
-  {
-    detector: 'logic',
-    id: 'nodeVersion',
-    inputs: ['nvmrc', 'package-json'],
-  },
 ] as const satisfies ReadonlyArray<DetectorEntrySpec>;
 
 export type DetectorEntry = (typeof DETECTOR_ENTRIES)[number];
@@ -195,12 +143,9 @@ export type CustomDetectorEntry = Extract<
   DetectorEntry,
   { detector: 'custom' }
 >;
-export type LogicDetectorEntry = Extract<DetectorEntry, { detector: 'logic' }>;
 
 /** Entries that project into `ProjectProfile.existing`. */
 export type ExistingEntry = FileDetectorEntry | CustomDetectorEntry;
-export type FlagEntry = Extract<ExistingEntry, { existing: 'flag' }>;
-export type ListEntry = Extract<ExistingEntry, { existing: 'list' }>;
 export type ExistingKey = ExistingEntry['key'];
 export type ExistingValue<E extends ExistingEntry> =
   E['existing'] extends 'list' ? Array<string> : boolean;
@@ -210,19 +155,11 @@ export type ExistingConfig = {
   [E in ExistingEntry as E['key']]: ExistingValue<E>;
 };
 
-export const EXISTING_ENTRIES: ReadonlyArray<ExistingEntry> =
-  DETECTOR_ENTRIES.filter(
-    (entry): entry is ExistingEntry => entry.detector !== 'logic'
-  );
+/** Every declared entry projects into `ProjectProfile.existing`. */
+export const EXISTING_ENTRIES: ReadonlyArray<ExistingEntry> = DETECTOR_ENTRIES;
 
 export function isFileDetectorEntry(
   entry: DetectorEntry
 ): entry is FileDetectorEntry {
   return entry.detector === 'file';
-}
-
-export function isCustomDetectorEntry(
-  entry: DetectorEntry
-): entry is CustomDetectorEntry {
-  return entry.detector === 'custom';
 }

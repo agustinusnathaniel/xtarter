@@ -4,12 +4,11 @@ dist
 .turbo
 .plans
 .claude/
-.xtarterize/cache
 
 # Generated from @biomejs/biome configuration_schema.json
 packages/tasks/src/templates/_biome-config.generated.d.ts
 
-# Profile cache artifacts created by detection tests
+# xtarterize artifacts created in test fixtures
 test/fixtures/**/.xtarterize/
 
 **/10x/**/*

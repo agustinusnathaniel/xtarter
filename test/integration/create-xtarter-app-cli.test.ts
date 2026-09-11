@@ -28,14 +28,18 @@ interface CliRunResult {
   output: string;
 }
 
-async function runCli(rawArgs: Array<string>): Promise<CliRunResult> {
-  const cwd = await fs.mkdtemp(path.join(os.tmpdir(), 'cxa-cli-test-'));
+async function runCli(
+  rawArgs: Array<string>,
+  cwd?: string
+): Promise<CliRunResult> {
+  const workDir =
+    cwd ?? (await fs.mkdtemp(path.join(os.tmpdir(), 'cxa-cli-test-')));
   try {
     const { stdout, stderr } = await execFileAsync(
       process.execPath,
       [CLI_ENTRY, ...rawArgs],
       {
-        cwd,
+        cwd: workDir,
         killSignal: 'SIGKILL',
         // Non-interactive contract: the CLI must never wait on stdin.
         stdio: ['ignore', 'pipe', 'pipe'],
@@ -57,7 +61,9 @@ async function runCli(rawArgs: Array<string>): Promise<CliRunResult> {
       output: `${failure.stdout ?? ''}${failure.stderr ?? ''}`,
     };
   } finally {
-    await fs.rm(cwd, { force: true, recursive: true });
+    if (!cwd) {
+      await fs.rm(workDir, { force: true, recursive: true });
+    }
   }
 }
 
@@ -102,5 +108,54 @@ describe('create-xtarter-app cli dispatch', () => {
     expect(output).toContain(
       'Unknown option --json for "create-xtarter-app preview"'
     );
+  });
+});
+
+describe('create-xtarter-app input validation', () => {
+  async function probeInvalidFlag(flags: Array<string>): Promise<{
+    code: number | null;
+    markerExists: boolean;
+    output: string;
+  }> {
+    const cwd = await fs.mkdtemp(path.join(os.tmpdir(), 'cxa-cli-validation-'));
+    const target = path.join(cwd, 'existing');
+    const marker = path.join(target, 'keep-me.txt');
+    await fs.mkdir(target, { recursive: true });
+    await fs.writeFile(marker, 'keep');
+    try {
+      const { code, output } = await runCli(
+        ['existing', '--force', '--yes', '--quiet', ...flags],
+        cwd
+      );
+      let markerExists = true;
+      try {
+        await fs.access(marker);
+      } catch {
+        markerExists = false;
+      }
+      return { code, markerExists, output };
+    } finally {
+      await fs.rm(cwd, { force: true, recursive: true });
+    }
+  }
+
+  test('keeps an existing directory when --template is invalid', async () => {
+    const { code, markerExists, output } = await probeInvalidFlag([
+      '--template',
+      'not-a-template',
+    ]);
+    expect(code).toBe(1);
+    expect(output).toContain('Unknown template "not-a-template"');
+    expect(markerExists).toBe(true);
+  });
+
+  test('keeps an existing directory when --pm is invalid', async () => {
+    const { code, markerExists, output } = await probeInvalidFlag([
+      '--pm',
+      'not-a-pm',
+    ]);
+    expect(code).toBe(1);
+    expect(output).toContain('Unknown package manager "not-a-pm"');
+    expect(markerExists).toBe(true);
   });
 });

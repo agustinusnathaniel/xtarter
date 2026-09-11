@@ -29,21 +29,19 @@ export function extractTool(cmd: string): string | null {
   return null;
 }
 
-function extractScriptRef(cmd: string): string | null {
-  const norm = normalizeCommand(cmd);
-  const match = norm.match(PM_SCRIPT_REF_PATTERN);
-  return match ? match[1] : null;
-}
-
 function extractCompositeTasks(cmd: string): string | null {
   const norm = normalizeCommand(cmd).toLowerCase();
   const match = norm.match(/turbo\s+run\s+(.+)$/);
   return match ? match[1].trim() : null;
 }
 
+/**
+ * Composite equivalence only applies when the task list can be extracted, so
+ * `turbo run` and unknown variants such as `turborepo run` cannot be judged
+ * equivalent through the composite rule.
+ */
 function isCompositeCommand(cmd: string): boolean {
-  const norm = normalizeCommand(cmd).toLowerCase();
-  return norm.startsWith('turbo run') || norm.startsWith('turborepo run');
+  return extractCompositeTasks(cmd) !== null;
 }
 
 // Tool aliases - canonical tool name maps to known aliases
@@ -54,7 +52,7 @@ const TOOL_ALIASES: Record<string, Array<string>> = {
   release: ['commit-and-tag-version', 'standard-version', 'release-it'],
   scaffold: ['plop', 'hygen'],
   test: ['vitest', 'jest', 'mocha'],
-  typecheck: ['tsc', 'tsc --noEmit'],
+  typecheck: ['tsc'],
 };
 
 // For tools like biome/ultracite, these subcommands are equivalent
@@ -129,8 +127,8 @@ export function areEquivalent(a: string, b: string): boolean {
     return trimSubcommand(argsA) === trimSubcommand(argsB);
   }
 
-  const refA = extractScriptRef(normA);
-  const refB = extractScriptRef(normB);
+  const refA = normA.match(PM_SCRIPT_REF_PATTERN)?.[1] ?? null;
+  const refB = normB.match(PM_SCRIPT_REF_PATTERN)?.[1] ?? null;
   if (refA !== null && refB !== null) {
     return refA === refB;
   }

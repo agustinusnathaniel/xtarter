@@ -9,13 +9,6 @@ import {
 import { collectDependencyVersions, readPackageJson } from '@/utils/pkg.js';
 
 import { detectBundler } from './detect/bundler.js';
-import {
-  computeFingerprint,
-  isCacheValid,
-  PROFILE_CACHE_VERSION,
-  readProfileCache,
-  writeProfileCache,
-} from './detect/cache.js';
 import { detectMonorepo } from './detect/monorepo.js';
 import {
   detectFrameworkVersion,
@@ -38,22 +31,13 @@ import {
 import type {
   Bundler,
   Framework,
-  MonorepoDetection,
   PackageManager,
   ProjectProfile,
   Router,
   Styling,
 } from './detect/types.js';
 
-export type {
-  Bundler,
-  Framework,
-  MonorepoDetection,
-  PackageManager,
-  ProjectProfile,
-  Router,
-  Styling,
-};
+export type { Framework, PackageManager, ProjectProfile };
 export { detectPackageManager };
 
 // ── Inline framework detection (was detect/framework.ts) ──
@@ -332,9 +316,7 @@ async function detectNodeVersion(
   return '22';
 }
 
-// ── Internal detection logic (no caching) ──
-
-async function computeProjectProfile(cwd: string): Promise<ProjectProfile> {
+export async function detectProject(cwd: string): Promise<ProjectProfile> {
   const pkg = await readPackageJson(cwd);
   const deps = collectDependencyVersions(pkg);
 
@@ -386,7 +368,7 @@ async function computeProjectProfile(cwd: string): Promise<ProjectProfile> {
   return {
     bundler,
     framework,
-    frameworkVersion: detectFrameworkVersion(pkg, framework),
+    frameworkVersion: detectFrameworkVersion(deps, framework),
     router: detectRouter(deps, bundler),
     runtime: detectRuntime(framework, bundler),
     styling: detectStyling(deps),
@@ -394,28 +376,4 @@ async function computeProjectProfile(cwd: string): Promise<ProjectProfile> {
     vitePlus: detectVitePlus(deps),
     ...base,
   };
-}
-
-// ── Cached detection entry point ──
-
-export async function detectProject(cwd: string): Promise<ProjectProfile> {
-  const fingerprint = await computeFingerprint(cwd);
-  const cached = await readProfileCache(cwd);
-  if (cached && isCacheValid(cached, fingerprint)) {
-    return cached.profile;
-  }
-
-  const start = performance.now();
-  const profile = await computeProjectProfile(cwd);
-  const durationMs = performance.now() - start;
-
-  await writeProfileCache(cwd, {
-    computedAt: new Date().toISOString(),
-    durationMs,
-    fingerprint,
-    profile,
-    version: PROFILE_CACHE_VERSION,
-  });
-
-  return profile;
 }

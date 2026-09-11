@@ -1,7 +1,7 @@
 import type { Task, TaskStatus } from '@xtarterize/core';
 
 import type { Prompter } from '@/ui/prompter.js';
-import { statusHint } from '@/utils/display.js';
+import { defaultSelectedIds, statusHint } from '@/utils/display.js';
 
 /** Resolve selected task IDs, or `null` when the user cancels the prompt. */
 export async function selectTasks(
@@ -15,12 +15,9 @@ export async function selectTasks(
     value: task.id,
   }));
 
-  const defaultSelected = tasks
-    .filter((t) => {
-      const status = statuses.get(t.id);
-      return status === 'new' || status === 'patch';
-    })
-    .map((t) => t.id);
+  const defaultSelected = defaultSelectedIds(
+    tasks.map((task) => ({ status: statuses.get(task.id), task }))
+  );
 
   return prompter.multiselect<string>({
     initialValues: defaultSelected,

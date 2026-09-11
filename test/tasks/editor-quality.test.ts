@@ -84,6 +84,65 @@ describe('vscodeTask', () => {
     expect(extensions.recommendations).toContain('bradlc.vscode-tailwindcss');
   });
 
+  test('renders byte-identical settings and extensions', async () => {
+    const profile = await detectProject(
+      path.join(fixtures, 'react-vite-tailwind')
+    );
+    const diffs = await vscodeTask.dryRun(
+      path.join(fixtures, 'react-vite-tailwind'),
+      profile
+    );
+    const settings = diffs.find((d) => d.filepath.includes('settings.json'));
+    const extensions = diffs.find((d) =>
+      d.filepath.includes('extensions.json')
+    );
+
+    expect(settings?.after).toBe(
+      JSON.stringify(
+        // biome-ignore assist/source/useSortedKeys: key order defines the rendered bytes
+        {
+          '[javascript]': { 'editor.defaultFormatter': 'biomejs.biome' },
+          '[json]': { 'editor.defaultFormatter': 'biomejs.biome' },
+          '[jsonc]': { 'editor.defaultFormatter': 'biomejs.biome' },
+          '[typescript]': { 'editor.defaultFormatter': 'biomejs.biome' },
+          '[typescriptreact]': { 'editor.defaultFormatter': 'biomejs.biome' },
+          'editor.codeActionsOnSave': {
+            'source.fixAll.biome': 'explicit',
+            'source.organizeImports.biome': 'explicit',
+          },
+          'editor.defaultFormatter': 'biomejs.biome',
+          'editor.formatOnPaste': false,
+          'editor.formatOnSave': true,
+          'javascript.updateImportsOnFileMove.enabled': 'always',
+          'typescript.preferences.importModuleSpecifier': 'non-relative',
+          'typescript.updateImportsOnFileMove.enabled': 'always',
+          'files.associations': { '*.css': 'tailwindcss' },
+          'tailwindCSS.experimental.classRegex': [
+            ['cva\\(([^)]*)\\)', '["\'`]([^"\'`]*).*?["\'`]'],
+            ['cn\\(([^)]*)\\)', '["\'`]([^"\'`]*).*?["\'`]'],
+          ],
+          'typescript.disableAutomaticTypeAcquisition': true,
+          'typescript.enablePromptUseWorkspaceTsdk': true,
+        },
+        null,
+        2
+      )
+    );
+    expect(extensions?.after).toBe(
+      JSON.stringify(
+        {
+          recommendations: [
+            'biomejs.biome',
+            'ms-vscode.vscode-typescript-next',
+            'bradlc.vscode-tailwindcss',
+          ],
+        },
+        null,
+        2
+      )
+    );
+  });
+
   test('additively merges extensions into existing list', async () => {
     const tmpDir = await fs.mkdtemp(
       path.join(os.tmpdir(), 'xtarterize-vsc-ext-')

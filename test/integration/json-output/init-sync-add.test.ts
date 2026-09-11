@@ -109,6 +109,27 @@ describe('init/sync/add json output', () => {
     }
   }, 60_000);
 
+  test('init --compose --quiet suppresses the compose banner', async () => {
+    const cwd = await createProjectFixture();
+    try {
+      const logs = await captureConsoleLogs(async () => {
+        await initCommand.run?.({
+          args: {
+            compose: 'strict typescript',
+            cwd,
+            dryRun: true,
+            quiet: true,
+          },
+        } as never);
+      });
+
+      expect(logs.join('\n')).not.toContain('Composing plan');
+    } finally {
+      process.exitCode = 0;
+      await fs.rm(cwd, { force: true, recursive: true });
+    }
+  }, 60_000);
+
   test('init --yes --json emits an apply result payload', async () => {
     const cwd = await createProjectFixture();
     try {

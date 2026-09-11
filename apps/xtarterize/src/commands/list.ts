@@ -44,7 +44,9 @@ export const listCommand = defineCommand({
       );
     }
 
-    console.log('');
-    printTiming(timing);
+    if (!runtime.quiet) {
+      console.log('');
+      printTiming(timing);
+    }
   },
 });

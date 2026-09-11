@@ -1,6 +1,6 @@
 import type { ProjectProfile } from '@xtarterize/core';
 
-export function renderVscodeSettings(profile: ProjectProfile): string {
+export function vscodeSettings(profile: ProjectProfile) {
   const settings: Record<string, unknown> = {
     '[javascript]': { 'editor.defaultFormatter': 'biomejs.biome' },
     '[json]': { 'editor.defaultFormatter': 'biomejs.biome' },
@@ -75,5 +75,5 @@ export function renderVscodeSettings(profile: ProjectProfile): string {
     settings['typescript.enablePromptUseWorkspaceTsdk'] = true;
   }
 
-  return JSON.stringify(settings, null, 2);
+  return settings;
 }

@@ -1,54 +1,45 @@
 import fs from 'node:fs/promises';
-import { Effect } from 'effect';
 import JSON5 from 'json5';
 import { dirname, resolve } from 'pathe';
 
 import { FileSystemError } from '@/errors.js';
 
-export function ensureDir(dirPath: string): Promise<void> {
-  return Effect.runPromise(
-    Effect.tryPromise({
-      catch: (cause) => new FileSystemError({ cause, path: dirPath }),
-      try: () => fs.mkdir(dirPath, { recursive: true }).then(() => undefined),
-    })
-  );
+export async function ensureDir(dirPath: string): Promise<void> {
+  try {
+    await fs.mkdir(dirPath, { recursive: true });
+  } catch (cause) {
+    throw new FileSystemError({ cause, path: dirPath });
+  }
 }
 
-export function readFile(filePath: string): Promise<string> {
-  return Effect.runPromise(
-    Effect.tryPromise({
-      catch: (cause) => new FileSystemError({ cause, path: filePath }),
-      try: () => fs.readFile(filePath, 'utf-8'),
-    })
-  );
+export async function readFile(filePath: string): Promise<string> {
+  try {
+    return await fs.readFile(filePath, 'utf-8');
+  } catch (cause) {
+    throw new FileSystemError({ cause, path: filePath });
+  }
 }
 
-export function writeFile(
+export async function writeFile(
   filePath: string,
   content: string,
   mode?: number
 ): Promise<void> {
-  return Effect.runPromise(
-    Effect.tryPromise({
-      catch: (cause) => new FileSystemError({ cause, path: filePath }),
-      try: async () => {
-        await fs.mkdir(dirname(filePath), { recursive: true });
-        await fs.writeFile(filePath, content, { mode });
-      },
-    })
-  );
+  try {
+    await fs.mkdir(dirname(filePath), { recursive: true });
+    await fs.writeFile(filePath, content, { mode });
+  } catch (cause) {
+    throw new FileSystemError({ cause, path: filePath });
+  }
 }
 
-export function fileExists(filePath: string): Promise<boolean> {
-  return Effect.runPromise(
-    Effect.orElseSucceed(
-      Effect.tryPromise({
-        catch: (cause) => new FileSystemError({ cause, path: filePath }),
-        try: () => fs.access(filePath).then(() => true),
-      }),
-      () => false
-    )
-  );
+export async function fileExists(filePath: string): Promise<boolean> {
+  try {
+    await fs.access(filePath);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 export async function findConfigFile(
@@ -67,8 +58,8 @@ export async function findConfigFile(
 export async function readJson<T = Record<string, unknown>>(
   filePath: string
 ): Promise<T> {
-  const content = await readFile(filePath);
   try {
+    const content = await fs.readFile(filePath, 'utf-8');
     return JSON5.parse(content) as T;
   } catch (cause) {
     throw new FileSystemError({ cause, path: filePath });

@@ -170,6 +170,24 @@ describe('cli json output', () => {
     expect(logs.join('\n')).not.toContain('Timing');
   });
 
+  test('list --quiet omits the timing section', async () => {
+    const cwd = await createProjectFixture();
+    const logs: Array<string> = [];
+    const originalLog = console.log;
+    console.log = (...args: Array<unknown>) => {
+      logs.push(args.map((arg) => String(arg)).join(' '));
+    };
+
+    try {
+      await listCommand.run?.({ args: { cwd, quiet: true } } as never);
+    } finally {
+      console.log = originalLog;
+      await fs.rm(cwd, { force: true, recursive: true });
+    }
+
+    expect(logs.join('\n')).not.toContain('Timing');
+  });
+
   test('init --dry-run --format json implies quiet and keeps stdout machine-readable', async () => {
     const cwd = await createProjectFixture();
     const previousCi = process.env.CI;

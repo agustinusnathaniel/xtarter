@@ -114,6 +114,7 @@ describe('scaffoldProject', () => {
     expect(result.projectName).toBe('my-project');
     expect(result.gitInitialized).toBe(false);
     expect(result.ciCleaned).toBe(false);
+    expect(result.dependenciesInstalled).toBe(true);
     expect(installDependencies).toHaveBeenCalledWith({
       packageManager: 'pnpm',
       projectPath: dir,
@@ -157,6 +158,25 @@ describe('scaffoldProject', () => {
 
     expect(existsSync(join(dir, '.git'))).toBe(true);
     expect(result.gitInitialized).toBe(true);
+    await rm(dir, { force: true, recursive: true });
+  });
+
+  test('should report git failure without failing the scaffold', async () => {
+    const dir = await tempDir();
+
+    const result = await scaffoldProject({
+      cleanCI: false,
+      initGit: true,
+      packageManager: 'pnpm',
+      projectName: 'git-fail',
+      projectPath: dir,
+      skipDownload: true,
+      template: TEMPLATES[0],
+    });
+
+    expect(result.gitInitialized).toBe(false);
+    expect(result.dependenciesInstalled).toBe(true);
+    expect(existsSync(join(dir, '.git'))).toBe(true);
     await rm(dir, { force: true, recursive: true });
   });
 

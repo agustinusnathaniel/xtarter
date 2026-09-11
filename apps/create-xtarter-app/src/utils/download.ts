@@ -13,6 +13,7 @@ export interface DownloadOptions {
 
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 1000;
+const NETWORK_ERROR_PATTERN = /ENOTFOUND|ECONNREFUSED|ETIMEDOUT|network|fetch/;
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -25,17 +26,13 @@ export async function downloadTemplateFiles({
   ref,
 }: DownloadOptions): Promise<void> {
   const logger = consola.withTag('download');
-
-  let lastError: Error | null = null;
+  const source = `github:${template.repo}#${ref || template.branch}`;
 
   for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
     try {
       logger.start(
         `Downloading template ${template.name}...${attempt > 1 ? ` (attempt ${attempt}/${MAX_RETRIES})` : ''}`
       );
-
-      const resolvedRef = ref || template.branch;
-      const source = `github:${template.repo}#${resolvedRef}`;
 
       await downloadTemplate(source, {
         dir: targetPath,
@@ -46,24 +43,19 @@ export async function downloadTemplateFiles({
       logger.success(`Template downloaded to ${targetPath}`);
       return;
     } catch (error) {
-      lastError = error instanceof Error ? error : new Error('Unknown error');
+      const failure =
+        error instanceof Error ? error : new Error('Unknown error');
 
-      const isNetworkError =
-        lastError.message.includes('ENOTFOUND') ||
-        lastError.message.includes('ECONNREFUSED') ||
-        lastError.message.includes('ETIMEDOUT') ||
-        lastError.message.includes('network') ||
-        lastError.message.includes('fetch');
-
-      if (!isNetworkError || attempt === MAX_RETRIES) {
-        logger.fail(`Failed to download template: ${lastError.message}`);
-        throw lastError;
+      if (
+        !NETWORK_ERROR_PATTERN.test(failure.message) ||
+        attempt === MAX_RETRIES
+      ) {
+        logger.fail(`Failed to download template: ${failure.message}`);
+        throw failure;
       }
 
       logger.warn(`Network error, retrying in ${RETRY_DELAY / 1000}s...`);
       await sleep(RETRY_DELAY);
     }
   }
-
-  throw lastError || new Error('Download failed after retries');
 }

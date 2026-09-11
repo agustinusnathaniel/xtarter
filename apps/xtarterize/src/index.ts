@@ -2,8 +2,6 @@
 import { createInvocationGuard } from '@xtarterize/core';
 import { defineCommand, runMain } from 'citty';
 
-import { cwdArg, jsonArg, timingArg } from '@/utils/args.js';
-
 import { version } from '^/package.json';
 
 process.on('SIGINT', () => process.exit(0));
@@ -23,11 +21,6 @@ const subcommandLoaders = {
 };
 
 const main = defineCommand({
-  args: {
-    cwd: cwdArg,
-    json: jsonArg,
-    timing: timingArg,
-  },
   meta: {
     description: 'Apply conformance configuration to JS/TS projects',
     name: 'xtarterize',

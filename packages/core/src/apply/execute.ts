@@ -1,9 +1,7 @@
 import { spinner } from '@clack/prompts';
-import { Effect } from 'effect';
 
 import { backupFile, writeRunManifest } from '@/backup.js';
 import type { ProjectProfile } from '@/detect.js';
-import { TaskError } from '@/errors.js';
 import type { ApplyTiming } from '@/timing.js';
 import { logError, pc } from '@/utils/logger.js';
 import { installDependenciesBatch } from '@/utils/pkg.js';
@@ -118,20 +116,7 @@ async function applyPendingEntries(options: {
     try {
       const taskApplyStart = performance.now();
       spinnerInstance?.start(`Applying ${entry.task.label}`);
-      await Effect.runPromise(
-        Effect.tryPromise({
-          catch: (cause) => {
-            const causeMsg =
-              cause instanceof Error ? cause.message : String(cause);
-            return new TaskError({
-              cause,
-              message: causeMsg,
-              taskId: entry.task.id,
-            });
-          },
-          try: (_signal) => entry.task.apply(cwd, profile),
-        })
-      );
+      await entry.task.apply(cwd, profile);
       const timing = perTask.find((t) => t.id === entry.task.id);
       if (timing) {
         timing.applyMs = performance.now() - taskApplyStart;

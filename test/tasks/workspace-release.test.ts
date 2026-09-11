@@ -354,6 +354,55 @@ describe('pnpmWorkspaceTask', () => {
     }, content);
   });
 
+  test('inserts a missing glob when the file has no trailing newline', async () => {
+    const content = 'packages:\n  - apps/*';
+    const expected = ['packages:', '  - apps/*', '  - packages/*', ''].join(
+      '\n'
+    );
+    await withPnpmProject(async (cwd) => {
+      const profile = await detectProject(cwd);
+      expect(await pnpmWorkspaceTask.check(cwd, profile)).toBe('patch');
+      await pnpmWorkspaceTask.apply(cwd, profile);
+      const applied = await readWorkspace(cwd);
+      expect(applied).toBe(expected);
+      // `check` only returns `skip` when the file parses and both globs are
+      // separate sequence items.
+      expect(await pnpmWorkspaceTask.check(cwd, profile)).toBe('skip');
+      expect(await pnpmWorkspaceTask.dryRun(cwd, profile)).toEqual([]);
+    }, content);
+  });
+
+  test('inserts both globs when the packages key ends the file', async () => {
+    const content = 'packages:';
+    const expected = ['packages:', "  - 'apps/*'", "  - 'packages/*'", ''].join(
+      '\n'
+    );
+    await withPnpmProject(async (cwd) => {
+      const profile = await detectProject(cwd);
+      expect(await pnpmWorkspaceTask.check(cwd, profile)).toBe('patch');
+      await pnpmWorkspaceTask.apply(cwd, profile);
+      const applied = await readWorkspace(cwd);
+      expect(applied).toBe(expected);
+      expect(await pnpmWorkspaceTask.check(cwd, profile)).toBe('skip');
+      expect(await pnpmWorkspaceTask.dryRun(cwd, profile)).toEqual([]);
+    }, content);
+  });
+
+  test('reports conflict when the last packages item spans multiple lines', async () => {
+    const content = [
+      'packages:',
+      "  - 'apps/*'",
+      '  - |-',
+      '    internal/*',
+      '',
+    ].join('\n');
+    await withPnpmProject(async (cwd) => {
+      const profile = await detectProject(cwd);
+      expect(await pnpmWorkspaceTask.check(cwd, profile)).toBe('conflict');
+      await expect(readWorkspace(cwd)).resolves.toBe(content);
+    }, content);
+  });
+
   test('inserts a missing glob before a document end marker', async () => {
     const content = ['packages:', "  - 'apps/*'", '...', ''].join('\n');
     const expected = [

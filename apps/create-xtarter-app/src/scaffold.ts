@@ -24,6 +24,7 @@ export interface ScaffoldOptions {
 
 export interface ScaffoldResult {
   ciCleaned: boolean;
+  dependenciesInstalled: boolean;
   gitInitialized: boolean;
   packageManager: PackageManager;
   projectName: string;
@@ -116,8 +117,7 @@ export async function scaffoldProject(
     if (initGit) {
       const installed = await isGitInstalled();
       if (installed) {
-        await initializeGit({ projectPath });
-        gitInitialized = true;
+        gitInitialized = await initializeGit({ projectPath });
       } else {
         logWarn('Git is not installed. Skipping git initialization.');
       }
@@ -125,6 +125,7 @@ export async function scaffoldProject(
 
     return {
       ciCleaned: cleanCI,
+      dependenciesInstalled: true,
       gitInitialized,
       packageManager,
       projectName,

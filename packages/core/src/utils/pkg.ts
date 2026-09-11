@@ -20,6 +20,15 @@ export async function readPackageJson(cwd: string) {
   return readPackageJSON(pkgPath);
 }
 
+/** Read package.json, treating read or parse failures as `null`. */
+export async function readPackageJsonOrNull(cwd: string) {
+  try {
+    return await readPackageJson(cwd);
+  } catch {
+    return null;
+  }
+}
+
 /**
  * Merge `dependencies` and `devDependencies` into one flat version record.
  * Malformed records whose values are not strings are ignored.
@@ -93,42 +102,29 @@ export async function installDependenciesBatch(
   }
 
   const workspace = await isPnpmWorkspace(cwd);
-
-  // Group by dev vs prod (nypm's `dev` option applies to ALL names in one call)
-  const devDeps = missing.filter((d) => d.dev).map((d) => d.depName);
-  const prodDeps = missing.filter((d) => !d.dev).map((d) => d.depName);
+  const packageManager = await detectPackageManager(cwd);
+  const groups = [
+    { dev: true, label: 'Failed to install dev dependencies' },
+    { dev: false, label: 'Failed to install dependencies' },
+  ];
 
   const errors: Array<string> = [];
-
-  const packageManager = await detectPackageManager(cwd);
-
-  if (devDeps.length > 0) {
-    try {
-      await addDependency(devDeps, {
-        cwd,
-        dev: true,
-        packageManager,
-        silent: options?.silent,
-        workspace,
-      });
-    } catch (cause) {
-      const msg = cause instanceof Error ? cause.message : String(cause);
-      errors.push(`Failed to install dev dependencies: ${msg}`);
+  for (const { dev, label } of groups) {
+    const names = missing.filter((d) => d.dev === dev).map((d) => d.depName);
+    if (names.length === 0) {
+      continue;
     }
-  }
-
-  if (prodDeps.length > 0) {
     try {
-      await addDependency(prodDeps, {
+      await addDependency(names, {
         cwd,
-        dev: false,
+        dev,
         packageManager,
         silent: options?.silent,
         workspace,
       });
     } catch (cause) {
       const msg = cause instanceof Error ? cause.message : String(cause);
-      errors.push(`Failed to install dependencies: ${msg}`);
+      errors.push(`${label}: ${msg}`);
     }
   }
 

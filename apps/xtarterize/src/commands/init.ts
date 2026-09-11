@@ -43,7 +43,7 @@ function orderTasksByCompose(
     return aScore - bScore;
   });
 
-  if (runtime.format !== 'json') {
+  if (!runtime.quiet) {
     console.log('');
     console.log(`Composing plan for: "${composeQuery}"`);
     if (scored.length > 0) {

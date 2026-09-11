@@ -20,15 +20,9 @@ import {
 } from './targets.js';
 
 export type {
-  JsonMergeTarget,
-  PackageJsonTarget,
-  ResolvedTarget,
   TargetPolicy,
-  TargetPolicyContext,
   TargetPolicyInput,
-  TargetResolver,
   TaskTarget,
-  TextTarget,
   TransformTarget,
 } from './targets.js';
 

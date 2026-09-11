@@ -26,10 +26,6 @@ export function formatTimingJson(
   return obj;
 }
 
-export function detectionOnlyTiming(detectionMs: number): ResolveTiming {
-  return { detectionMs, resolutionMs: 0, resolutionSumMs: 0 };
-}
-
 export function printTiming(
   resolve: ResolveTiming,
   apply?: ApplyTiming,

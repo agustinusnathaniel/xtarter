@@ -3,7 +3,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { detectProject, runDiagnostics } from '@xtarterize/core';
-import { afterAll, describe, expect } from 'vite-plus/test';
+import { describe, expect } from 'vite-plus/test';
 
 import {
   DETECTOR_ENTRIES,
@@ -530,27 +530,4 @@ describe('detection registry integrity', () => {
       }
     }
   });
-});
-
-const detectTestFixtures = [
-  'react-vite-no-styling',
-  'react-vite-tailwind',
-  'vue-vite',
-  'nextjs',
-  'react-native-expo',
-  'node-only',
-  'monorepo-turbo',
-  'vite-plus-no-lint',
-  'vite-plus-biome',
-  'eslint-project',
-  'oxlint-standalone',
-];
-
-afterAll(async () => {
-  for (const name of detectTestFixtures) {
-    await fs.rm(path.join(fixtures, name, '.xtarterize'), {
-      force: true,
-      recursive: true,
-    });
-  }
 });

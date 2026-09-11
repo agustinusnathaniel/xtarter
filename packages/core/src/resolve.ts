@@ -1,13 +1,33 @@
-import { Effect } from 'effect';
-
 import type { Task, TaskStatus } from '@/_base.js';
 import type { ProjectProfile } from '@/detect.js';
 import { detectProject } from '@/detect.js';
-import { TaskError } from '@/errors.js';
 import type { ResolveTiming } from '@/timing.js';
 import { logWarn } from '@/utils/logger.js';
 
 export const CONCURRENCY = 8;
+
+/**
+ * Map over `items` with at most `limit` callbacks in flight at once.
+ * Results keep the input order regardless of completion order.
+ */
+export async function mapWithConcurrency<T, R>(
+  items: ReadonlyArray<T>,
+  limit: number,
+  fn: (item: T) => Promise<R>
+): Promise<Array<R>> {
+  const results = new Array<R>(items.length);
+  const workerCount = Math.min(items.length, Math.max(1, limit));
+  let nextIndex = 0;
+  const workers = Array.from({ length: workerCount }, async () => {
+    while (nextIndex < items.length) {
+      const index = nextIndex;
+      nextIndex += 1;
+      results[index] = await fn(items[index]);
+    }
+  });
+  await Promise.all(workers);
+  return results;
+}
 
 export interface TaskCheckResult {
   checkError?: string;
@@ -45,33 +65,18 @@ interface CheckOutcome {
   status: TaskStatus;
 }
 
-function runCheckTask(
+async function runCheckTask(
   task: Task,
   cwd: string,
   profile: ProjectProfile
-): Effect.Effect<CheckOutcome, never> {
-  return Effect.tryPromise({
-    catch: (cause) =>
-      new TaskError({
-        cause,
-        message: `Failed to check ${task.id}`,
-        taskId: task.id,
-      }),
-    try: (_signal) => task.check(cwd, profile),
-  }).pipe(
-    Effect.map((status): CheckOutcome => ({ status })),
-    Effect.catchTag('TaskError', (error) => {
-      const detail =
-        error.cause instanceof Error
-          ? error.cause.message
-          : String(error.cause);
-      logWarn(`Failed to check ${task.id}: ${detail}`);
-      return Effect.succeed<CheckOutcome>({
-        checkError: detail,
-        status: 'conflict',
-      });
-    })
-  );
+): Promise<CheckOutcome> {
+  try {
+    return { status: await task.check(cwd, profile) };
+  } catch (cause) {
+    const detail = cause instanceof Error ? cause.message : String(cause);
+    logWarn(`Failed to check ${task.id}: ${detail}`);
+    return { checkError: detail, status: 'conflict' };
+  }
 }
 
 export function collectTaskChecks(options: {
@@ -81,29 +86,26 @@ export function collectTaskChecks(options: {
   tasks: Array<Task>;
 }): Promise<Array<TaskCheckResult>> {
   const { cwd, profile, statuses, tasks } = options;
-  return Effect.runPromise(
-    Effect.all(
-      tasks.map((task) => {
-        const precomputed = statuses?.get(task.id);
-        if (precomputed !== undefined) {
-          return Effect.succeed<TaskCheckResult>({
-            checkMs: 0,
-            status: precomputed,
-            task,
-          });
-        }
-        return Effect.gen(function* () {
-          const start = performance.now();
-          const outcome = yield* runCheckTask(task, cwd, profile);
-          return {
-            checkMs: performance.now() - start,
-            task,
-            ...outcome,
-          };
-        });
-      }),
-      { concurrency: CONCURRENCY }
-    )
+  return mapWithConcurrency(
+    tasks,
+    CONCURRENCY,
+    async (task): Promise<TaskCheckResult> => {
+      const precomputed = statuses?.get(task.id);
+      if (precomputed !== undefined) {
+        return {
+          checkMs: 0,
+          status: precomputed,
+          task,
+        };
+      }
+      const start = performance.now();
+      const outcome = await runCheckTask(task, cwd, profile);
+      return {
+        checkMs: performance.now() - start,
+        task,
+        ...outcome,
+      };
+    }
   );
 }
 

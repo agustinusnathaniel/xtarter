@@ -20,14 +20,10 @@ function getProjectGlob(profile: ProjectProfile): Array<string> {
 
 export function renderKnipConfig(
   profile: ProjectProfile,
-  format: 'json' | 'ts' | 'js' = 'ts'
+  format: 'ts' | 'js' = 'ts'
 ): string {
   const entry = getEntryFiles(profile);
   const project = getProjectGlob(profile);
-
-  if (format === 'json') {
-    return `${JSON.stringify({ entry, project }, null, 2)}\n`;
-  }
 
   if (format === 'js') {
     return `// @ts-check

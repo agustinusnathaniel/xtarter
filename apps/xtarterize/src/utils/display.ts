@@ -25,6 +25,15 @@ export function taskStatusIcon(status: TaskStatus, colored = false): string {
   return colored ? pc.red('✗') : '✗';
 }
 
+/** Task IDs selected by default: new files and files that need an update. */
+export function defaultSelectedIds(
+  entries: Array<{ status?: TaskStatus; task: { id: string } }>
+): Array<string> {
+  return entries
+    .filter((entry) => entry.status === 'new' || entry.status === 'patch')
+    .map((entry) => entry.task.id);
+}
+
 export function statusHint(status?: TaskStatus): string {
   switch (status) {
     case 'new':

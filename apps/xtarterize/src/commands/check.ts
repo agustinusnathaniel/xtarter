@@ -136,10 +136,6 @@ export const checkCommand = defineCommand({
       type: 'string',
     },
     ...commonArgs,
-    verbose: {
-      description: 'Show tool installation and conflict checks',
-      type: 'boolean',
-    },
   },
   meta: {
     description: 'Audit current conformance status',

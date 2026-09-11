@@ -19,13 +19,11 @@
   "dependencies": {
     "@xtarterize/core": "workspace:*",
     "@xtarterize/patchers": "workspace:*",
-    "effect": "catalog:",
-    "json5": "catalog:",
-    "magicast": "catalog:",
     "nypm": "catalog:",
     "pathe": "catalog:",
     "pkg-types": "catalog:",
-    "tinyexec": "catalog:"
+    "tinyexec": "catalog:",
+    "yaml": "^2.8.3"
   },
   "devDependencies": {
     "@types/node": "catalog:",

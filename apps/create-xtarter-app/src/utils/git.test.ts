@@ -18,6 +18,16 @@ describe('isGitInstalled', () => {
 });
 
 describe('initializeGit', () => {
+  test('should return false when the commit fails', async () => {
+    const dir = await createTempDir();
+    try {
+      const result = await initializeGit({ projectPath: dir });
+      expect(result).toBe(false);
+    } finally {
+      await rm(dir, { force: true, recursive: true });
+    }
+  });
+
   test('should init a git repo and create initial commit', async () => {
     const dir = await createTempDir();
     await writeFile(join(dir, 'README.md'), '# test');

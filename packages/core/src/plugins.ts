@@ -1,13 +1,8 @@
-import JSON5 from 'json5';
-
 import type { Task } from '@/_base.js';
-import { findConfigFile, readFile, readJson } from '@/utils/fs.js';
+import { findConfigFile, readJson } from '@/utils/fs.js';
 import { logWarn } from '@/utils/logger.js';
 
-/**
- * Maximum time (ms) to wait for a plugin module to load.
- * Prevents the CLI from hanging on slow or broken plugins.
- */
+/** Maximum time (ms) to wait for a plugin module to load. */
 const PLUGIN_LOAD_TIMEOUT_MS = 10_000;
 
 /**
@@ -32,54 +27,45 @@ const CONFIG_BASENAMES = [
  * via dynamic import of attacker-controlled paths.
  */
 export interface PluginConfig {
-  /** When non-empty: restrict runs to these task IDs */
-  only?: Array<string>;
   /** npm package names exporting tasks */
   plugins?: Array<string>;
-  /** Task IDs to always exclude from runs */
-  skip?: Array<string>;
-}
-
-export interface Plugin {
-  name: string;
-  tasks: Array<Task>;
 }
 
 /**
- * Module-private sentinel thrown by `readRawXtarterizeConfig` when a config
- * file exists but cannot be parsed. Never escapes public APIs: each caller
- * maps it to its own fallback behavior.
+ * Result of reading the raw xtarterize config. Separates "no config" from
+ * "config exists but is invalid" so each caller can map it to its own
+ * fallback behavior.
  */
-const CONFIG_PARSE_ERROR = Symbol('xtarterizerc-parse-error');
+type RawConfigResult =
+  | { config: Record<string, unknown>; status: 'found' }
+  | { status: 'missing' }
+  | { status: 'parse-error' };
 
 /**
- * Load the raw xtarterize configuration object.
+ * Read the xtarterize configuration object.
  *
  * Searches for:
  *   1. `.xtarterizerc` / `.xtarterizerc.json` / `.xtarterizerc.json5`
  *   2. `"xtarterize"` key in `package.json`
  *
- * Returns the raw parsed object, or `null` when no config is found.
+ * Reports whether a config was found, missing, or present but unparsable.
  */
-async function readRawXtarterizeConfig(
-  cwd: string
-): Promise<Record<string, unknown> | null> {
+async function readRawXtarterizeConfig(cwd: string): Promise<RawConfigResult> {
   // 1. Standalone config file
   for (const basename of CONFIG_BASENAMES) {
     const path = await findConfigFile(cwd, basename, ['']);
     if (path) {
-      const content = await readFile(path);
-      let config: Record<string, unknown>;
+      let config: unknown;
       try {
-        config = JSON5.parse(content) as Record<string, unknown>;
+        config = await readJson(path);
       } catch {
         logWarn('Failed to parse .xtarterizerc');
-        throw CONFIG_PARSE_ERROR;
+        return { status: 'parse-error' };
       }
       if (config && typeof config === 'object') {
-        return config;
+        return { config: config as Record<string, unknown>, status: 'found' };
       }
-      throw CONFIG_PARSE_ERROR;
+      return { status: 'parse-error' };
     }
   }
 
@@ -88,18 +74,31 @@ async function readRawXtarterizeConfig(
     const pkg = await readJson<{ xtarterize?: Record<string, unknown> }>(
       `${cwd}/package.json`
     );
-    if (
-      pkg?.xtarterize &&
-      typeof pkg.xtarterize === 'object' &&
-      !Array.isArray(pkg.xtarterize)
-    ) {
-      return pkg.xtarterize;
+    const config = pkg?.xtarterize;
+    if (config && typeof config === 'object' && !Array.isArray(config)) {
+      return { config, status: 'found' };
     }
   } catch {
     // Not a package.json or no such key - that's fine
   }
 
-  return null;
+  return { status: 'missing' };
+}
+
+/**
+ * Per-process memo for the raw config read. Selection and plugin loading in
+ * the same session consume one parse instead of two.
+ */
+const rawConfigCache = new Map<string, Promise<RawConfigResult>>();
+
+function loadRawXtarterizeConfig(cwd: string): Promise<RawConfigResult> {
+  const cached = rawConfigCache.get(cwd);
+  if (cached) {
+    return cached;
+  }
+  const pending = readRawXtarterizeConfig(cwd);
+  rawConfigCache.set(cwd, pending);
+  return pending;
 }
 
 /**
@@ -114,22 +113,14 @@ async function readRawXtarterizeConfig(
 export async function loadPluginConfig(
   cwd: string
 ): Promise<PluginConfig | null> {
-  let raw: Record<string, unknown> | null;
-  try {
-    raw = await readRawXtarterizeConfig(cwd);
-  } catch (error) {
-    if (error === CONFIG_PARSE_ERROR) {
-      return { plugins: [] };
-    }
-    throw error;
-  }
-  if (raw === null) {
+  const result = await loadRawXtarterizeConfig(cwd);
+  if (result.status === 'missing') {
     return null;
   }
-  if (!Array.isArray(raw.plugins)) {
+  if (result.status !== 'found' || !Array.isArray(result.config.plugins)) {
     return { plugins: [] };
   }
-  return raw as PluginConfig;
+  return result.config as PluginConfig;
 }
 
 export interface TaskSelectionConfig {
@@ -161,13 +152,13 @@ export async function loadSelectionConfig(
   cwd: string
 ): Promise<TaskSelectionConfig> {
   try {
-    const raw = await readRawXtarterizeConfig(cwd);
-    if (!raw) {
+    const result = await loadRawXtarterizeConfig(cwd);
+    if (result.status !== 'found') {
       return { only: [], skip: [] };
     }
     return {
-      only: sanitizeStringArray(raw.only),
-      skip: sanitizeStringArray(raw.skip),
+      only: sanitizeStringArray(result.config.only),
+      skip: sanitizeStringArray(result.config.skip),
     };
   } catch {
     return { only: [], skip: [] };
@@ -194,7 +185,7 @@ interface TaskSelectionInput {
  *    when empty, means "no restriction").
  * 2. CLI `--skip` extends (unions with) config `skip`.
  * 3. Tasks in the effective only-set are kept first, then every task whose
- *    id is in the effective skip-set is removed — so skip wins over only.
+ *    id is in the effective skip-set is removed - so skip wins over only.
  *
  * Pure helper: no I/O, no status filtering.
  */
@@ -252,36 +243,28 @@ function validatePluginSpecifier(specifier: string): boolean {
   );
 }
 
-/**
- * Import a module with a timeout to prevent hanging on slow or broken plugins.
- *
- * A malicious or misconfigured plugin could execute infinite loops or block
- * on network I/O during module evaluation. The timeout ensures the CLI
- * remains responsive even when a plugin fails to load.
- */
+/** Import a plugin module, failing if it does not resolve within the timeout. */
 async function importWithTimeout(
   specifier: string
 ): Promise<Record<string, unknown>> {
-  const importPromise = import(/* @vite-ignore */ specifier);
-  void importPromise.catch(() => {});
-  let timeoutId: ReturnType<typeof setTimeout> | undefined;
-  const timeoutPromise = new Promise<never>((_resolve, reject) => {
-    timeoutId = setTimeout(
-      () =>
-        reject(
-          new Error(
-            `Plugin "${specifier}" failed to load within ${PLUGIN_LOAD_TIMEOUT_MS / 1000}s`
-          )
-        ),
-      PLUGIN_LOAD_TIMEOUT_MS
-    );
-  });
+  let timer: ReturnType<typeof setTimeout> | undefined;
   try {
-    return await Promise.race([importPromise, timeoutPromise]);
+    return await Promise.race([
+      import(/* @vite-ignore */ specifier),
+      new Promise<never>((_resolve, reject) => {
+        timer = setTimeout(
+          () =>
+            reject(
+              new Error(
+                `Plugin "${specifier}" failed to load within ${PLUGIN_LOAD_TIMEOUT_MS / 1000}s`
+              )
+            ),
+          PLUGIN_LOAD_TIMEOUT_MS
+        );
+      }),
+    ]);
   } finally {
-    if (timeoutId !== undefined) {
-      clearTimeout(timeoutId);
-    }
+    clearTimeout(timer);
   }
 }
 
@@ -360,8 +343,5 @@ export async function loadPluginTasks(
  */
 export async function resolveExternalTasks(cwd: string): Promise<Array<Task>> {
   const config = await loadPluginConfig(cwd);
-  if (!config) {
-    return [];
-  }
-  return loadPluginTasks(config);
+  return config ? loadPluginTasks(config) : [];
 }

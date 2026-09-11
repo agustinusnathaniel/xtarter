@@ -1,7 +1,7 @@
-import { consola } from '@xtarterize/core';
 import { exec } from 'tinyexec';
 
 import type { PackageManager } from '@/types';
+import { runStep } from '@/utils/run-step';
 
 const VALID_PACKAGE_MANAGERS: ReadonlySet<string> = new Set([
   'pnpm',
@@ -25,28 +25,27 @@ export async function installDependencies({
     );
   }
 
-  const logger = consola.withTag('install');
+  await runStep(
+    'install',
+    [
+      `Installing dependencies with ${packageManager}...`,
+      'Failed to install dependencies',
+    ],
+    async (logger) => {
+      const result = await exec(packageManager, ['install'], {
+        nodeOptions: {
+          cwd: projectPath,
+          stdio: 'inherit',
+        },
+      });
 
-  logger.start(`Installing dependencies with ${packageManager}...`);
+      if (result.exitCode !== 0) {
+        throw new Error(
+          `${packageManager} install failed with exit code ${result.exitCode}`
+        );
+      }
 
-  try {
-    const result = await exec(packageManager, ['install'], {
-      nodeOptions: {
-        cwd: projectPath,
-        stdio: 'inherit',
-      },
-    });
-
-    if (result.exitCode !== 0) {
-      throw new Error(
-        `${packageManager} install failed with exit code ${result.exitCode}`
-      );
+      logger.success('Dependencies installed successfully');
     }
-
-    logger.success('Dependencies installed successfully');
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    logger.fail(`Failed to install dependencies: ${message}`);
-    throw error;
-  }
+  );
 }

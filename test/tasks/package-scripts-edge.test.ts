@@ -227,6 +227,102 @@ describe('packageScriptsTask', () => {
       await fs.rm(tmpDir, { recursive: true });
     });
 
+    test('detects turbo in production dependencies for check:turbo', async () => {
+      const tmpDir = await fs.mkdtemp(
+        path.join(os.tmpdir(), 'xtarterize-turbo-prod-dep-')
+      );
+      try {
+        await fs.writeFile(
+          path.join(tmpDir, 'package.json'),
+          JSON.stringify({
+            dependencies: {
+              turbo: '^2.0.0',
+            },
+            devDependencies: {
+              '@biomejs/biome': '^1.0.0',
+              typescript: '^5.3.0',
+            },
+            name: 'turbo-prod-dep',
+            scripts: {},
+            type: 'module',
+          })
+        );
+
+        const profile = await detectProject(tmpDir);
+        const diffs = await packageScriptsTask.dryRun(tmpDir, profile);
+        const pkgDiff = diffs.find((d) => d.filepath === 'package.json');
+
+        expect(pkgDiff?.after).toContain('"check:turbo"');
+      } finally {
+        await fs.rm(tmpDir, { force: true, recursive: true });
+      }
+    });
+
+    test('references renamed test and typecheck scripts in check:turbo', async () => {
+      const tmpDir = await fs.mkdtemp(
+        path.join(os.tmpdir(), 'xtarterize-turbo-renamed-')
+      );
+      try {
+        await fs.writeFile(
+          path.join(tmpDir, 'package.json'),
+          JSON.stringify({
+            devDependencies: {
+              turbo: '^2.0.0',
+              typescript: '^5.3.0',
+              vitest: '^1.0.0',
+            },
+            name: 'turbo-renamed',
+            scripts: {
+              types: 'tsc --noEmit',
+              unit: 'vitest run',
+            },
+            type: 'module',
+          })
+        );
+
+        const profile = await detectProject(tmpDir);
+        const diffs = await packageScriptsTask.dryRun(tmpDir, profile);
+        const pkgDiff = diffs.find((d) => d.filepath === 'package.json');
+
+        expect(pkgDiff?.after).toContain('"check:turbo"');
+        expect(pkgDiff?.after).toContain('turbo run biome types unit');
+      } finally {
+        await fs.rm(tmpDir, { force: true, recursive: true });
+      }
+    });
+
+    test('ignores malformed non-string script values', async () => {
+      const tmpDir = await fs.mkdtemp(
+        path.join(os.tmpdir(), 'xtarterize-malformed-scripts-')
+      );
+      try {
+        await fs.writeFile(
+          path.join(tmpDir, 'package.json'),
+          JSON.stringify({
+            devDependencies: {
+              '@biomejs/biome': '^1.0.0',
+              typescript: '^5.3.0',
+            },
+            name: 'malformed-scripts',
+            scripts: {
+              build: 42,
+              test: null,
+            },
+            type: 'module',
+          })
+        );
+
+        const profile = await detectProject(tmpDir);
+        const status = await packageScriptsTask.check(tmpDir, profile);
+        const diffs = await packageScriptsTask.dryRun(tmpDir, profile);
+
+        expect(status).toBe('new');
+        expect(diffs.find((d) => d.filepath === 'package.json')).toBeDefined();
+      } finally {
+        await fs.rm(tmpDir, { force: true, recursive: true });
+      }
+    });
+
     test('adds upgrade script even with npx npm-check-updates', async () => {
       const tmpDir = await fs.mkdtemp(
         path.join(os.tmpdir(), 'xtarterize-upgrade-dup-')

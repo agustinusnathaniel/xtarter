@@ -1,5 +1,6 @@
-import { consola } from '@xtarterize/core';
 import { exec } from 'tinyexec';
+
+import { runStep } from '@/utils/run-step';
 
 export interface GitInitOptions {
   message?: string;
@@ -10,28 +11,29 @@ async function runGit(args: Array<string>, cwd: string) {
   const result = await exec('git', args, {
     nodeOptions: { cwd, stdio: 'pipe' },
   });
+  if (result.exitCode !== 0) {
+    throw new Error(result.stderr.trim() || `git ${args.join(' ')} failed`);
+  }
   return result;
 }
 
 export async function initializeGit({
   projectPath,
   message = 'Initial commit from create-xtarter-app',
-}: GitInitOptions): Promise<void> {
-  const logger = consola.withTag('git');
+}: GitInitOptions): Promise<boolean> {
+  const initialized = await runStep(
+    'git',
+    ['Initializing git repository...', 'Git initialization failed', 'warn'],
+    async (logger) => {
+      await runGit(['init'], projectPath);
+      await runGit(['add', '.'], projectPath);
+      await runGit(['commit', '-m', message], projectPath);
 
-  logger.start('Initializing git repository...');
-
-  try {
-    await runGit(['init'], projectPath);
-    await runGit(['add', '.'], projectPath);
-    await runGit(['commit', '-m', message], projectPath);
-
-    logger.success('Git repository initialized');
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
-    logger.warn(`Git initialization failed: ${message}`);
-    throw error;
-  }
+      logger.success('Git repository initialized');
+      return true;
+    }
+  );
+  return initialized ?? false;
 }
 
 export async function isGitInstalled(): Promise<boolean> {

@@ -13,6 +13,7 @@ import {
 } from './equivalence.js';
 import {
   filterMissingScripts,
+  hasInstalledDependency,
   readScriptsState,
   type ScriptEntry,
   type ScriptsMap,
@@ -52,7 +53,6 @@ export interface LintConfig {
   hasBiomeDep: boolean;
   lintTool: LintTool | null;
   oxlintPlugins: string;
-  useUltracite: boolean;
 }
 
 function resolveProjectLintConfig(
@@ -75,7 +75,7 @@ function resolveProjectLintConfig(
     useUltracite,
     vitePlus: profile.vitePlus,
   });
-  return { hasBiomeDep, lintTool, oxlintPlugins, useUltracite };
+  return { hasBiomeDep, lintTool, oxlintPlugins };
 }
 
 export function lintToolScripts(
@@ -116,12 +116,21 @@ export function lintToolScripts(
   }
 }
 
+/** Command tools that satisfy a task whose script key may differ. */
+const TOOL_TASK_NAMES: Record<string, string> = {
+  jest: 'test',
+  mocha: 'test',
+  tsc: 'typecheck',
+  vitest: 'test',
+};
+
 function firstScriptKey(
   existingScripts: Record<string, string>,
-  tool: string
+  task: string
 ): string | null {
   for (const [key, value] of Object.entries(existingScripts)) {
-    if (extractTool(value) === tool) {
+    const tool = extractTool(value);
+    if (tool !== null && (TOOL_TASK_NAMES[tool] ?? tool) === task) {
       return key;
     }
   }
@@ -223,12 +232,11 @@ function collectScriptCandidates(params: {
     pushIfMissing(scripts, existingScripts, entry);
   }
 
-  const devDeps = pkg?.devDependencies;
   const hasTurbo =
     profile.monorepoTool === 'turbo' ||
     profile.existing.turbo ||
-    !!devDeps?.turborepo ||
-    !!devDeps?.turbo;
+    hasInstalledDependency(pkg, 'turborepo') ||
+    hasInstalledDependency(pkg, 'turbo');
   if (!hasTurbo) {
     return;
   }

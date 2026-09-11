@@ -1,6 +1,6 @@
 import type { ProjectProfile } from '@xtarterize/core';
 
-export function renderVscodeExtensions(profile: ProjectProfile): string {
+export function vscodeExtensions(profile: ProjectProfile) {
   const extensions = ['biomejs.biome', 'ms-vscode.vscode-typescript-next'];
 
   if (
@@ -16,5 +16,5 @@ export function renderVscodeExtensions(profile: ProjectProfile): string {
     extensions.push('expo.vscode-expo-tools');
   }
 
-  return JSON.stringify({ recommendations: extensions }, null, 2);
+  return { recommendations: extensions };
 }
