@@ -58,10 +58,11 @@ restore `Equal.equals` (ADR 031 keeps `isDeepStrictEqual`).
   re-exports only leaf helpers whose import graph never reaches `effect`
   (`cli-args`, `invocation-guard`, `logger`, `prompts`, and `fileExists`).
   `apps/create-xtarter-app` imports that subpath exclusively.
-- The rule is upheld by review today. A dedicated
-  `scripts/check-effect-boundaries.mjs` check is planned to enforce it
-  mechanically; it is not in the repository yet. [verified: no `Effect.run*`
-  calls exist in `packages/*/src`, and the script is absent]
+- The rule is enforced by `scripts/check-effect-boundaries.mjs`, which runs in
+  `pnpm check` and `pnpm check:ci` through `verify:effect-boundaries`. The
+  script scans `packages/*/src/**/*.ts` and fails with `file:line` output on
+  `Effect.runPromise`, `runPromiseExit`, `runSync`, or `ManagedRuntime`
+  outside comments.
 
 ### Task contract and plugin compatibility
 
@@ -246,7 +247,8 @@ seam (`Effect.tryPromise` / `Effect.promise`), for example `liftLeaf` in
   work on the CLI.
 - SIGINT during a prompt now waits through a 250ms grace period instead of
   exiting immediately.
-- The boundary rule is a review convention until the check script lands.
+- The boundary rule is enforced mechanically by
+  `scripts/check-effect-boundaries.mjs` in `pnpm check` and `pnpm check:ci`.
 
 ### Related Decisions
 
