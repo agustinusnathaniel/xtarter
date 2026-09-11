@@ -1,9 +1,16 @@
-import type { Task, TaskStatus } from '@xtarterize/core';
+import type {
+  BackupError,
+  DepsInstaller,
+  ProcessRunner,
+  Task,
+  TaskError,
+  TaskStatus,
+} from '@xtarterize/core';
 import { applyTaskSelection, logInfo, logWarn } from '@xtarterize/core';
+import { Effect } from 'effect';
 
-import { runCliProgram } from '@/runtime.js';
 import { type CommandSession, openSession } from '@/session.js';
-import { getPrompter } from '@/ui/prompter.js';
+import { type PromptError, Prompter } from '@/ui/prompter.js';
 import { reportPlan } from '@/ui/reporter.js';
 import { selectTasks } from '@/ui/select-menu.js';
 import { printProjectProfile } from '@/utils/project.js';
@@ -37,6 +44,12 @@ interface ResolveActionableTasksOptions {
   only?: string;
   skip?: string;
 }
+
+/** Error channel of an init/sync/add program. */
+export type RunCommandError = TaskError | BackupError | PromptError;
+
+/** Services a run-command program (init/sync) may require. */
+export type RunCommandServices = DepsInstaller | ProcessRunner | Prompter;
 
 function resolveActionableTasks(
   tasks: Array<Task>,
@@ -74,118 +87,118 @@ function warnUnknownSelection(
   }
 }
 
-async function applyTasks(
+function applyTasks(
   session: CommandSession,
   tasks: Array<Task>,
   args: CommandArgs
-): Promise<void> {
-  const outcome = await runCliProgram(
-    session.apply(tasks, {
+): Effect.Effect<void, TaskError | BackupError, DepsInstaller | ProcessRunner> {
+  return Effect.gen(function* () {
+    const outcome = yield* session.apply(tasks, {
       includeConflicts: args.includeConflicts,
       recordTiming: args.timing,
-    })
-  );
-  if (outcome) {
+    });
     session.reportOutcome(outcome);
-  }
+  });
 }
 
-async function promptAndApply(
+function promptAndApply(
   session: CommandSession,
   tasks: Array<Task>,
   { args, confirmMessage }: { args: CommandArgs; confirmMessage: string }
-): Promise<void> {
-  const action = await getPrompter().select({
-    message: confirmMessage,
-    options: [
-      { label: 'Apply all', value: 'apply-all' },
-      { label: 'Select tasks', value: 'select' },
-      { label: 'Dry run', value: 'dry-run' },
-      { label: 'Quit', value: 'quit' },
-    ],
-  });
-  if (action === null || action === 'quit') {
-    session.reportOutcome(session.cancelled());
-    return;
-  }
-  if (action === 'dry-run') {
-    const outcome = await runCliProgram(session.dryRun(tasks));
-    if (outcome) {
-      session.reportOutcome(outcome);
+): Effect.Effect<void, RunCommandError, RunCommandServices> {
+  return Effect.gen(function* () {
+    const prompter = yield* Prompter;
+    const action = yield* prompter.select({
+      message: confirmMessage,
+      options: [
+        { label: 'Apply all', value: 'apply-all' },
+        { label: 'Select tasks', value: 'select' },
+        { label: 'Dry run', value: 'dry-run' },
+        { label: 'Quit', value: 'quit' },
+      ],
+    });
+    if (action === null || action === 'quit') {
+      session.reportOutcome(session.cancelled());
+      return;
     }
-    return;
-  }
-  if (action !== 'select') {
-    await applyTasks(session, tasks, args);
-    return;
-  }
-  const selected = await selectTasks(tasks, session.statuses, getPrompter());
-  if (selected === null) {
-    session.reportOutcome(session.cancelled());
-    return;
-  }
-  if (selected.length === 0) {
-    logInfo('No tasks selected');
-    return;
-  }
-  const selectedIds = new Set(selected);
-  await applyTasks(
-    session,
-    tasks.filter((task) => selectedIds.has(task.id)),
-    args
-  );
+    if (action === 'dry-run') {
+      const outcome = yield* session.dryRun(tasks);
+      session.reportOutcome(outcome);
+      return;
+    }
+    if (action !== 'select') {
+      yield* applyTasks(session, tasks, args);
+      return;
+    }
+    const selected = yield* selectTasks(tasks, session.statuses);
+    if (selected === null) {
+      session.reportOutcome(session.cancelled());
+      return;
+    }
+    if (selected.length === 0) {
+      logInfo('No tasks selected');
+      return;
+    }
+    const selectedIds = new Set(selected);
+    yield* applyTasks(
+      session,
+      tasks.filter((task) => selectedIds.has(task.id)),
+      args
+    );
+  });
 }
 
-async function runSession(
+function runSession(
   session: CommandSession,
   args: CommandArgs,
   options: RunCommandOptions
-): Promise<void> {
-  const { profile, runtime, selection, statuses, tasks } = session;
-  if (!runtime.quiet) {
-    printProjectProfile(profile);
-  }
-  warnUnknownSelection(selection, tasks, runtime.quiet);
-  const actionableTasks = resolveActionableTasks(tasks, statuses, {
-    actionableStatuses: options.actionableStatuses,
-    configOnly: selection.only,
-    configSkip: selection.skip,
-    only: args.only,
-    skip: args.skip,
-  });
-  if (actionableTasks.length === 0) {
-    session.reportOutcome(session.empty(options.emptyMessage));
-    return;
-  }
-  reportPlan(actionableTasks, statuses, runtime);
-  if (args.dryRun) {
-    const outcome = await runCliProgram(session.dryRun(actionableTasks));
-    if (outcome) {
-      session.reportOutcome(outcome);
+): Effect.Effect<void, RunCommandError, RunCommandServices> {
+  return Effect.gen(function* () {
+    const { profile, runtime, selection, statuses, tasks } = session;
+    if (!runtime.quiet) {
+      printProjectProfile(profile);
     }
-    return;
-  }
-  if (args.yes || runtime.quiet) {
-    await applyTasks(session, actionableTasks, args);
-    return;
-  }
-  await promptAndApply(session, actionableTasks, {
-    args,
-    confirmMessage: options.confirmMessage,
+    warnUnknownSelection(selection, tasks, runtime.quiet);
+    const actionableTasks = resolveActionableTasks(tasks, statuses, {
+      actionableStatuses: options.actionableStatuses,
+      configOnly: selection.only,
+      configSkip: selection.skip,
+      only: args.only,
+      skip: args.skip,
+    });
+    if (actionableTasks.length === 0) {
+      session.reportOutcome(session.empty(options.emptyMessage));
+      return;
+    }
+    reportPlan(actionableTasks, statuses, runtime);
+    if (args.dryRun) {
+      const outcome = yield* session.dryRun(actionableTasks);
+      session.reportOutcome(outcome);
+      return;
+    }
+    if (args.yes || runtime.quiet) {
+      yield* applyTasks(session, actionableTasks, args);
+      return;
+    }
+    yield* promptAndApply(session, actionableTasks, {
+      args,
+      confirmMessage: options.confirmMessage,
+    });
   });
 }
 
-export async function runCommand(
+/** The whole init/sync run pipeline as one program: open, select, apply. */
+export function runCommand(
   args: CommandArgs,
   options: RunCommandOptions
-): Promise<void> {
-  const session = await runCliProgram(
-    openSession(args, {
+): Effect.Effect<void, RunCommandError, RunCommandServices> {
+  return Effect.gen(function* () {
+    const session = yield* openSession(args, {
       orderTasks: options.orderTasks,
-    })
-  );
-  if (!session) {
-    return;
-  }
-  await runSession(session, args, options);
+    });
+    if (!session) {
+      return;
+    }
+    yield* runSession(session, args, options);
+  });
 }

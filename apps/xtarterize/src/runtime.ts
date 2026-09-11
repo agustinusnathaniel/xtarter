@@ -1,10 +1,16 @@
 import { DepsInstaller, logError, ProcessRunner } from '@xtarterize/core';
 import { Cause, Effect, Exit, Layer, Option, Result } from 'effect';
 
+import { Prompter } from '@/ui/prompter.js';
+
 /** Services every CLI command program may require. */
-export const AppLayer = Layer.mergeAll(
+export type AppServices = DepsInstaller | ProcessRunner | Prompter;
+
+/** The production wiring for every CLI command program. */
+export const AppLayer: Layer.Layer<AppServices> = Layer.mergeAll(
   DepsInstaller.layer,
-  ProcessRunner.layer
+  ProcessRunner.layer,
+  Prompter.layer
 );
 
 const cliAbortController = new AbortController();
@@ -48,7 +54,7 @@ function renderFailure(cause: Cause.Cause<unknown>): void {
  * process exit code at 0 (Ctrl+C behavior).
  */
 export async function runCliProgram<A, E>(
-  program: Effect.Effect<A, E, DepsInstaller | ProcessRunner>,
+  program: Effect.Effect<A, E, AppServices>,
   options: RunCliProgramOptions = {}
 ): Promise<A> {
   const exit = await Effect.runPromiseExit(Effect.provide(program, AppLayer), {

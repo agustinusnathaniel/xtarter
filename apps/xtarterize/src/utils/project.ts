@@ -9,7 +9,7 @@ import {
 import { getAllTasks } from '@xtarterize/tasks';
 import { Effect } from 'effect';
 
-import type { Prompter } from '@/ui/prompter.js';
+import { type PromptError, Prompter } from '@/ui/prompter.js';
 
 /**
  * Combine built-in tasks with external plugin tasks.
@@ -29,34 +29,36 @@ export function getAllTasksWithPlugins(
 export interface DetectProjectWithAmbiguityOptions {
   baseProfile?: ProjectProfile;
   cwd: string;
-  prompter: Prompter;
   quiet: boolean;
 }
 
-export async function detectProjectWithAmbiguity(
+export function detectProjectWithAmbiguity(
   options: DetectProjectWithAmbiguityOptions
-): Promise<ProjectProfile> {
-  const { cwd, quiet, baseProfile, prompter } = options;
-  let profile = baseProfile ?? (await detectProject(cwd));
+): Effect.Effect<ProjectProfile, PromptError, Prompter> {
+  return Effect.gen(function* () {
+    const { cwd, quiet, baseProfile } = options;
+    let profile =
+      baseProfile ?? (yield* Effect.promise(() => detectProject(cwd)));
 
-  if (profile.framework === null && !quiet) {
-    const pkg = await readPackageJson(cwd);
-    const allDeps = collectDependencyVersions(pkg);
+    if (profile.framework === null && !quiet) {
+      const pkg = yield* Effect.promise(() => readPackageJson(cwd));
+      const allDeps = collectDependencyVersions(pkg);
 
-    const hasReactNative = !!(allDeps['react-native'] || allDeps.expo);
-    const hasReact = !!allDeps.react;
+      const hasReactNative = !!(allDeps['react-native'] || allDeps.expo);
+      const hasReact = !!allDeps.react;
 
-    if (hasReactNative && hasReact) {
-      const resolved = await resolveAmbiguousFramework(prompter);
-      // A cancelled prompt keeps the detected profile: framework stays null
-      // instead of exiting the process.
-      if (resolved !== null) {
-        profile = { ...profile, framework: resolved };
+      if (hasReactNative && hasReact) {
+        const resolved = yield* resolveAmbiguousFramework();
+        // A cancelled prompt keeps the detected profile: framework stays null
+        // instead of exiting the process.
+        if (resolved !== null) {
+          profile = { ...profile, framework: resolved };
+        }
       }
     }
-  }
 
-  return profile;
+    return profile;
+  });
 }
 
 export function printProjectProfile(profile: ProjectProfile): void {
@@ -67,16 +69,23 @@ export function printProjectProfile(profile: ProjectProfile): void {
   console.log('');
 }
 
-async function resolveAmbiguousFramework(
-  prompter: Prompter
-): Promise<'react' | 'react-native' | 'node' | null> {
-  return prompter.select<'react' | 'react-native' | 'node'>({
-    message:
-      'Detected both React and React Native dependencies. Which best describes this project?',
-    options: [
-      { label: 'React (web)', value: 'react' },
-      { label: 'React Native / Expo (mobile)', value: 'react-native' },
-      { label: 'Universal (web + native, treating as Node)', value: 'node' },
-    ],
-  });
+function resolveAmbiguousFramework(): Effect.Effect<
+  'react' | 'react-native' | 'node' | null,
+  PromptError,
+  Prompter
+> {
+  return Effect.flatMap(Prompter, (prompter) =>
+    prompter.select<'react' | 'react-native' | 'node'>({
+      message:
+        'Detected both React and React Native dependencies. Which best describes this project?',
+      options: [
+        { label: 'React (web)', value: 'react' },
+        { label: 'React Native / Expo (mobile)', value: 'react-native' },
+        {
+          label: 'Universal (web + native, treating as Node)',
+          value: 'node',
+        },
+      ],
+    })
+  );
 }

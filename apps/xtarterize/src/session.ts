@@ -25,7 +25,7 @@ import {
 import { Effect } from 'effect';
 
 import { mergeFileDiffs } from '@/ui/merge-file-diffs.js';
-import { getPrompter } from '@/ui/prompter.js';
+import type { PromptError, Prompter } from '@/ui/prompter.js';
 import { reportPreflightFailure, reportSessionOutcome } from '@/ui/reporter.js';
 import {
   detectProjectWithAmbiguity,
@@ -176,8 +176,8 @@ export class CommandSession {
     options: SessionOpenOptions = {}
   ): Effect.Effect<
     SessionOpenResult,
-    TaskError,
-    DepsInstaller | ProcessRunner
+    TaskError | PromptError,
+    DepsInstaller | ProcessRunner | Prompter
   > {
     return Effect.gen(function* () {
       const runtime = resolveRuntimeContext(args);
@@ -218,14 +218,11 @@ export class CommandSession {
         statuses,
         timing,
       } = yield* resolveProjectTasks(runtime.cwd, tasks);
-      const profile = yield* liftLeaf('framework-detection', () =>
-        detectProjectWithAmbiguity({
-          baseProfile,
-          cwd: runtime.cwd,
-          prompter: getPrompter(),
-          quiet: runtime.quiet,
-        })
-      );
+      const profile = yield* detectProjectWithAmbiguity({
+        baseProfile,
+        cwd: runtime.cwd,
+        quiet: runtime.quiet,
+      });
       const selection = yield* loadSelectionConfig(runtime.cwd);
 
       return {
@@ -424,8 +421,8 @@ export function openSession(
   options: SessionOpenOptions = {}
 ): Effect.Effect<
   CommandSession | null,
-  TaskError,
-  DepsInstaller | ProcessRunner
+  TaskError | PromptError,
+  DepsInstaller | ProcessRunner | Prompter
 > {
   return Effect.gen(function* () {
     const opened = yield* CommandSession.open(args, options);

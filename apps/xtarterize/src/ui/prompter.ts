@@ -6,6 +6,7 @@ import {
   type Option,
   select,
 } from '@clack/prompts';
+import { Context, Data, Effect, Layer } from 'effect';
 
 export interface ConfirmPromptOptions {
   message: string;
@@ -30,19 +31,36 @@ export interface TaskGroupSelectionOptions {
   required: boolean;
 }
 
+/** Raised when a clack prompt rejects. Cancellation resolves to `null`. */
+export class PromptError extends Data.TaggedError('PromptError')<{
+  readonly cause: unknown;
+  readonly message: string;
+}> {}
+
 /**
- * Interactive prompt seam. Production injects the clack adapter; tests inject
- * a scripted adapter. `null` means the user cancelled the prompt.
+ * Interactive prompt seam. Production provides the clack adapter; tests
+ * provide a scripted adapter. `null` means the user cancelled the prompt.
  */
-export interface Prompter {
-  confirm: (options: ConfirmPromptOptions) => Promise<boolean | null>;
+export interface PrompterShape {
+  confirm: (
+    options: ConfirmPromptOptions
+  ) => Effect.Effect<boolean | null, PromptError>;
   groupMultiselect: (
     options: TaskGroupSelectionOptions
-  ) => Promise<Array<string> | null>;
+  ) => Effect.Effect<Array<string> | null, PromptError>;
   multiselect: <Value>(
     options: MultiSelectPromptOptions<Value>
-  ) => Promise<Array<Value> | null>;
-  select: <Value>(options: SelectPromptOptions<Value>) => Promise<Value | null>;
+  ) => Effect.Effect<Array<Value> | null, PromptError>;
+  select: <Value>(
+    options: SelectPromptOptions<Value>
+  ) => Effect.Effect<Value | null, PromptError>;
+}
+
+function asPromptError(cause: unknown): PromptError {
+  return new PromptError({
+    cause,
+    message: cause instanceof Error ? cause.message : String(cause),
+  });
 }
 
 async function unwrapCancel<T>(answer: Promise<T | symbol>): Promise<T | null> {
@@ -50,16 +68,34 @@ async function unwrapCancel<T>(answer: Promise<T | symbol>): Promise<T | null> {
   return isCancel(result) ? null : result;
 }
 
-export function createClackPrompter(): Prompter {
+function toEffect<T>(
+  answer: Promise<T | symbol>
+): Effect.Effect<T | null, PromptError> {
+  return Effect.tryPromise({
+    catch: asPromptError,
+    try: () => unwrapCancel(answer),
+  });
+}
+
+function clackPrompter(): PrompterShape {
   return {
-    confirm: async ({ message }) => unwrapCancel(confirm({ message })),
-    groupMultiselect: async (options) =>
-      unwrapCancel(groupMultiselect(options)),
-    multiselect: async <Value>(options: MultiSelectPromptOptions<Value>) =>
-      unwrapCancel(multiselect<Value>(options)),
-    select: async <Value>(options: SelectPromptOptions<Value>) =>
-      unwrapCancel(select<Value>(options)),
+    confirm: ({ message }) => toEffect(confirm({ message })),
+    groupMultiselect: (options) => toEffect(groupMultiselect(options)),
+    multiselect: <Value>(options: MultiSelectPromptOptions<Value>) =>
+      toEffect(multiselect<Value>(options)),
+    select: <Value>(options: SelectPromptOptions<Value>) =>
+      toEffect(select<Value>(options)),
   };
+}
+
+/** The interactive prompt service, provided by `Prompter.layer` or a stub. */
+export class Prompter extends Context.Service<Prompter, PrompterShape>()(
+  'xtarterize/Prompter'
+) {
+  static readonly layer: Layer.Layer<Prompter> = Layer.succeed(
+    Prompter,
+    clackPrompter()
+  );
 }
 
 /** Answers consumed by `createScriptedPrompter`, one queue per prompt kind. */
@@ -81,31 +117,25 @@ function shiftOrNull<Value>(queue: Array<unknown>): Value | null {
  */
 export function createScriptedPrompter(
   answers: ScriptedPrompterAnswers = {}
-): Prompter {
+): PrompterShape {
   const confirms = [...(answers.confirms ?? [])];
   const groupMultiselects = [...(answers.groupMultiselects ?? [])];
   const multiselects = [...(answers.multiselects ?? [])];
   const selects = [...(answers.selects ?? [])];
 
   return {
-    confirm: async () => shiftOrNull<boolean>(confirms),
-    groupMultiselect: async () => shiftOrNull<Array<string>>(groupMultiselects),
-    multiselect: async <Value>() => shiftOrNull<Array<Value>>(multiselects),
-    select: async <Value>() => shiftOrNull<Value>(selects),
+    confirm: () => Effect.succeed(shiftOrNull<boolean>(confirms)),
+    groupMultiselect: () =>
+      Effect.succeed(shiftOrNull<Array<string>>(groupMultiselects)),
+    multiselect: <Value>() =>
+      Effect.succeed(shiftOrNull<Array<Value>>(multiselects)),
+    select: <Value>() => Effect.succeed(shiftOrNull<Value>(selects)),
   };
 }
 
-let activePrompter: Prompter | null = null;
-
-/**
- * Provide the process-wide prompter for tests. `null` restores the clack
- * adapter used by production runs.
- */
-export function setPrompter(prompter: Prompter | null): void {
-  activePrompter = prompter;
-}
-
-/** The prompter active for this process: injected in tests, clack otherwise. */
-export function getPrompter(): Prompter {
-  return activePrompter ?? createClackPrompter();
+/** Layer wrapper around `createScriptedPrompter` for `Layer`-based tests. */
+export function scriptedPrompterLayer(
+  answers: ScriptedPrompterAnswers = {}
+): Layer.Layer<Prompter> {
+  return Layer.succeed(Prompter, createScriptedPrompter(answers));
 }

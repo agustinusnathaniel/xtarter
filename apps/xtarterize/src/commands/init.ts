@@ -1,14 +1,33 @@
 import type { Task } from '@xtarterize/core';
 import { scoreTasks } from '@xtarterize/core';
 import { defineCommand } from 'citty';
+import type { Effect } from 'effect';
 
-import { runCommand } from '@/commands/run-command.js';
+import {
+  type RunCommandError,
+  type RunCommandServices,
+  runCommand,
+} from '@/commands/run-command.js';
+import { runCliProgram } from '@/runtime.js';
 import { sharedRunArgs } from '@/utils/args.js';
 import type { RuntimeContext } from '@/utils/runtime.js';
 
 interface ComposeArgs {
   compose?: string;
   threshold?: string;
+}
+
+export interface InitCommandArgs extends ComposeArgs {
+  cwd?: string;
+  dryRun?: boolean;
+  format?: string;
+  includeConflicts?: boolean;
+  json?: boolean;
+  only?: string;
+  quiet?: boolean;
+  skip?: string;
+  timing?: boolean;
+  yes?: boolean;
 }
 
 function composeThreshold(args: ComposeArgs): number {
@@ -58,6 +77,18 @@ function orderTasksByCompose(
   return ordered;
 }
 
+/** The `init` run pipeline as one program (open, compose, select, apply). */
+export function initProgram(
+  args: InitCommandArgs
+): Effect.Effect<void, RunCommandError, RunCommandServices> {
+  return runCommand(args, {
+    actionableStatuses: ['new', 'patch', 'conflict'],
+    confirmMessage: 'How would you like to proceed?',
+    emptyMessage: 'Project is already fully conformant!',
+    orderTasks: (tasks, runtime) => orderTasksByCompose(tasks, args, runtime),
+  });
+}
+
 export const initCommand = defineCommand({
   args: {
     ...sharedRunArgs,
@@ -76,11 +107,6 @@ export const initCommand = defineCommand({
     name: 'init',
   },
   async run({ args }) {
-    await runCommand(args, {
-      actionableStatuses: ['new', 'patch', 'conflict'],
-      confirmMessage: 'How would you like to proceed?',
-      emptyMessage: 'Project is already fully conformant!',
-      orderTasks: (tasks, runtime) => orderTasksByCompose(tasks, args, runtime),
-    });
+    await runCliProgram(initProgram(args));
   },
 });

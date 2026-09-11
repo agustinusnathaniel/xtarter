@@ -1,16 +1,18 @@
 import type { TaskStatus } from '@xtarterize/core';
 import { logWarn } from '@xtarterize/core';
+import { Effect } from 'effect';
 
-import { runCliProgram } from '@/runtime.js';
 import type { CommandSession } from '@/session.js';
 import { displayDiffs } from '@/ui/diff-display.js';
-import type { Prompter } from '@/ui/prompter.js';
+import { Prompter } from '@/ui/prompter.js';
 
 import { selectTasksGrouped } from './selection.js';
-import type { RunInteractiveOptions, TaskWithStatus } from './types.js';
-
-/** Signals that a plan failed and was already rendered by the runtime edge. */
-const ABORT = Symbol('abort');
+import type {
+  AddCommandError,
+  AddCommandServices,
+  RunInteractiveOptions,
+  TaskWithStatus,
+} from './types.js';
 
 function isActionable(status: TaskStatus, includeConflicts: boolean): boolean {
   if (status === 'new' || status === 'patch') {
@@ -45,41 +47,42 @@ function warnConflictsSkipped(options: {
   }
 }
 
-async function confirmSelected(options: {
+function confirmSelected(options: {
   includeConflicts: boolean;
   jsonMode: boolean;
-  prompter: Prompter;
   selected: Array<TaskWithStatus>;
   session: CommandSession;
-}): Promise<Array<TaskWithStatus> | null | typeof ABORT> {
-  const { includeConflicts, jsonMode, prompter, selected, session } = options;
-  const confirmed: Array<TaskWithStatus> = [];
+}): Effect.Effect<
+  Array<TaskWithStatus> | null,
+  AddCommandError,
+  AddCommandServices
+> {
+  return Effect.gen(function* () {
+    const { includeConflicts, jsonMode, selected, session } = options;
+    const prompter = yield* Prompter;
+    const confirmed: Array<TaskWithStatus> = [];
 
-  for (const entry of selected) {
-    const plan = await runCliProgram(
-      session.plan({
+    for (const entry of selected) {
+      const plan = yield* session.plan({
         includeConflicts,
         tasks: [entry.task],
-      })
-    );
-    if (!plan) {
-      return ABORT;
+      });
+      if (!jsonMode) {
+        displayDiffs(plan.entries[0]?.diffs ?? [], session.runtime.format);
+      }
+      const proceed = yield* prompter.confirm({
+        message: `Apply ${entry.task.label}?`,
+      });
+      if (proceed === null) {
+        return null;
+      }
+      if (proceed) {
+        confirmed.push(entry);
+      }
     }
-    if (!jsonMode) {
-      displayDiffs(plan.entries[0]?.diffs ?? [], session.runtime.format);
-    }
-    const proceed = await prompter.confirm({
-      message: `Apply ${entry.task.label}?`,
-    });
-    if (proceed === null) {
-      return null;
-    }
-    if (proceed) {
-      confirmed.push(entry);
-    }
-  }
 
-  return confirmed;
+    return confirmed;
+  });
 }
 
 function requiresTerminal(options: {
@@ -98,46 +101,56 @@ function requiresTerminal(options: {
   return false;
 }
 
-async function resolveConfirmed(options: {
+function resolveConfirmed(options: {
   allFlag: boolean | undefined;
   includeConflicts: boolean;
   jsonMode: boolean;
-  prompter: Prompter;
   selected: Array<TaskWithStatus>;
   session: CommandSession;
-}): Promise<Array<TaskWithStatus> | null | typeof ABORT> {
-  const { allFlag, includeConflicts, jsonMode, prompter, selected, session } =
-    options;
+}): Effect.Effect<
+  Array<TaskWithStatus> | null,
+  AddCommandError,
+  AddCommandServices
+> {
+  const { allFlag, includeConflicts, jsonMode, selected, session } = options;
   if (allFlag) {
-    return selected;
+    return Effect.succeed(selected);
   }
   return confirmSelected({
     includeConflicts,
     jsonMode,
-    prompter,
     selected,
     session,
   });
 }
 
-async function resolveSelection(options: {
+function resolveSelection(options: {
   allFlag: boolean | undefined;
   includeConflicts: boolean;
-  prompter: Prompter;
   tasksWithStatus: Array<TaskWithStatus>;
-}): Promise<Array<TaskWithStatus> | null> {
-  const { allFlag, includeConflicts, prompter, tasksWithStatus } = options;
+}): Effect.Effect<
+  Array<TaskWithStatus> | null,
+  AddCommandError,
+  AddCommandServices
+> {
+  const { allFlag, includeConflicts, tasksWithStatus } = options;
   if (allFlag) {
-    return tasksWithStatus.filter((entry) =>
-      isActionable(entry.status, includeConflicts)
+    return Effect.succeed(
+      tasksWithStatus.filter((entry) =>
+        isActionable(entry.status, includeConflicts)
+      )
     );
   }
 
-  const selectedIds = await selectTasksGrouped(tasksWithStatus, prompter);
-  if (selectedIds === null) {
-    return null;
-  }
-  return tasksWithStatus.filter((entry) => selectedIds.includes(entry.task.id));
+  return Effect.gen(function* () {
+    const selectedIds = yield* selectTasksGrouped(tasksWithStatus);
+    if (selectedIds === null) {
+      return null;
+    }
+    return tasksWithStatus.filter((entry) =>
+      selectedIds.includes(entry.task.id)
+    );
+  });
 }
 
 function reportEmptyOutcome(session: CommandSession, message: string): void {
@@ -149,106 +162,95 @@ function reportEmptyOutcome(session: CommandSession, message: string): void {
   );
 }
 
-async function executeConfirmed(options: {
+function executeConfirmed(options: {
   confirmed: Array<TaskWithStatus>;
   includeConflicts: boolean;
   recordTiming: boolean;
   selected: Array<TaskWithStatus>;
   session: CommandSession;
-}): Promise<void> {
-  const { confirmed, includeConflicts, recordTiming, selected, session } =
-    options;
-  // One apply for the whole confirmed selection: one backup set and one run
-  // manifest, so `undo` restores the entire `add`.
-  const outcome = await runCliProgram(
-    session.apply(
+}): Effect.Effect<void, AddCommandError, AddCommandServices> {
+  return Effect.gen(function* () {
+    const { confirmed, includeConflicts, recordTiming, selected, session } =
+      options;
+    // One apply for the whole confirmed selection: one backup set and one run
+    // manifest, so `undo` restores the entire `add`.
+    const outcome = yield* session.apply(
       confirmed.map((entry) => entry.task),
       {
         includeCheckErrors: true,
         includeConflicts,
         recordTiming,
       }
-    )
-  );
-  if (!outcome) {
-    return;
-  }
-  // Declined tasks count as skipped, alongside apply-time skips.
-  session.reportOutcome({
-    ...outcome,
-    skipped: selected.length - outcome.applied,
+    );
+    // Declined tasks count as skipped, alongside apply-time skips.
+    session.reportOutcome({
+      ...outcome,
+      skipped: selected.length - outcome.applied,
+    });
   });
 }
 
-export async function runInteractive(
+/** The interactive `add` flow as one program: select, confirm, apply. */
+export function runInteractive(
   options: RunInteractiveOptions
-): Promise<void> {
-  const {
-    all: allFlag,
-    includeConflicts,
-    prompter,
-    recordTiming,
-    session,
-  } = options;
-  const { runtime, tasks } = session;
-  const jsonMode = runtime.format === 'json';
+): Effect.Effect<void, AddCommandError, AddCommandServices> {
+  return Effect.gen(function* () {
+    const { all: allFlag, includeConflicts, recordTiming, session } = options;
+    const { runtime, tasks } = session;
+    const jsonMode = runtime.format === 'json';
 
-  if (tasks.length === 0) {
-    session.reportOutcome(
-      session.empty('No tasks applicable for this project')
-    );
-    return;
-  }
+    if (tasks.length === 0) {
+      session.reportOutcome(
+        session.empty('No tasks applicable for this project')
+      );
+      return;
+    }
 
-  const tasksWithStatus = buildTasksWithStatus(session);
+    const tasksWithStatus = buildTasksWithStatus(session);
 
-  if (requiresTerminal({ allFlag, quiet: runtime.quiet, session })) {
-    return;
-  }
+    if (requiresTerminal({ allFlag, quiet: runtime.quiet, session })) {
+      return;
+    }
 
-  const selected = await resolveSelection({
-    allFlag,
-    includeConflicts,
-    prompter,
-    tasksWithStatus,
-  });
-  if (selected === null) {
-    session.reportOutcome(session.cancelled());
-    return;
-  }
-  if (selected.length === 0) {
-    reportEmptyOutcome(session, 'No tasks to apply');
-    return;
-  }
+    const selected = yield* resolveSelection({
+      allFlag,
+      includeConflicts,
+      tasksWithStatus,
+    });
+    if (selected === null) {
+      session.reportOutcome(session.cancelled());
+      return;
+    }
+    if (selected.length === 0) {
+      reportEmptyOutcome(session, 'No tasks to apply');
+      return;
+    }
 
-  warnConflictsSkipped({
-    allFlag,
-    includeConflicts,
-    jsonMode,
-    tasksWithStatus,
-  });
+    warnConflictsSkipped({
+      allFlag,
+      includeConflicts,
+      jsonMode,
+      tasksWithStatus,
+    });
 
-  const confirmed = await resolveConfirmed({
-    allFlag,
-    includeConflicts,
-    jsonMode,
-    prompter,
-    selected,
-    session,
-  });
-  if (confirmed === ABORT) {
-    return;
-  }
-  if (confirmed === null) {
-    session.reportOutcome(session.cancelled());
-    return;
-  }
+    const confirmed = yield* resolveConfirmed({
+      allFlag,
+      includeConflicts,
+      jsonMode,
+      selected,
+      session,
+    });
+    if (confirmed === null) {
+      session.reportOutcome(session.cancelled());
+      return;
+    }
 
-  await executeConfirmed({
-    confirmed,
-    includeConflicts,
-    recordTiming,
-    selected,
-    session,
+    yield* executeConfirmed({
+      confirmed,
+      includeConflicts,
+      recordTiming,
+      selected,
+      session,
+    });
   });
 }

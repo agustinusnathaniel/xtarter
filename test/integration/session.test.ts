@@ -1,13 +1,10 @@
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { addCommand } from '@xtarterize/app/commands/add/index.js';
+import { addProgram } from '@xtarterize/app/commands/add/index.js';
 import { listCommand } from '@xtarterize/app/commands/list.js';
 import { openSession } from '@xtarterize/app/session.js';
-import {
-  createScriptedPrompter,
-  setPrompter,
-} from '@xtarterize/app/ui/prompter.js';
+import { createScriptedPrompter } from '@xtarterize/app/ui/prompter.js';
 import { reportSessionOutcome } from '@xtarterize/app/ui/reporter.js';
 import { readRunManifest } from '@xtarterize/core';
 import {
@@ -19,7 +16,7 @@ import {
   vi,
 } from 'vite-plus/test';
 
-import { run } from '../helpers/run.js';
+import { run, runCli } from '../helpers/run.js';
 
 const coreMocks = vi.hoisted(() => ({
   ensureXtarterizeGitignore: vi.fn(),
@@ -96,7 +93,6 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  setPrompter(null);
   vi.clearAllMocks();
   process.exitCode = 0;
 });
@@ -167,9 +163,9 @@ describe('command session', () => {
     const cwd = await createMinimalProject();
     const previousCi = process.env.CI;
     setCi('false');
-    setPrompter(createScriptedPrompter({ groupMultiselects: [null] }));
+    const prompter = createScriptedPrompter({ groupMultiselects: [null] });
     try {
-      await addCommand.run?.({ args: { cwd } } as never);
+      await runCli(addProgram({ cwd }), prompter);
 
       const outcomes = recordedOutcomes();
       expect(outcomes).toHaveLength(1);
@@ -191,14 +187,12 @@ describe('command session', () => {
     const cwd = await createMinimalProject();
     const previousCi = process.env.CI;
     setCi('false');
-    setPrompter(
-      createScriptedPrompter({
-        confirms: [true],
-        groupMultiselects: [[PANEL]],
-      })
-    );
+    const prompter = createScriptedPrompter({
+      confirms: [true],
+      groupMultiselects: [[PANEL]],
+    });
     try {
-      await addCommand.run?.({ args: { cwd } } as never);
+      await runCli(addProgram({ cwd }), prompter);
 
       expect(coreMocks.executePlan).toHaveBeenCalledTimes(1);
 

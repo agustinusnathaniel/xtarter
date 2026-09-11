@@ -1,3 +1,5 @@
+import { runCliProgram } from '@xtarterize/app/runtime.js';
+import { Prompter, type PrompterShape } from '@xtarterize/app/ui/prompter.js';
 import type {
   CommandResult,
   ProcessError,
@@ -6,15 +8,19 @@ import type {
 import { DepsInstaller, ProcessRunner } from '@xtarterize/core';
 import { Effect, Layer } from 'effect';
 
+/** Services every app program may require at the CLI edge. */
+export type TestServices = DepsInstaller | ProcessRunner | Prompter;
+
 /** Real services wired the way the app runtime provides them. */
 export const TestLayer = Layer.mergeAll(
   DepsInstaller.layer,
-  ProcessRunner.layer
+  ProcessRunner.layer,
+  Prompter.layer
 );
 
 /** Run a program with the shared test layer. */
 export function run<A, E>(
-  effect: Effect.Effect<A, E, DepsInstaller | ProcessRunner>
+  effect: Effect.Effect<A, E, TestServices>
 ): Promise<A> {
   return Effect.runPromise(Effect.provide(effect, TestLayer));
 }
@@ -25,6 +31,21 @@ export function runWith<A, E, R>(
   effect: Effect.Effect<A, E, R>
 ): Promise<A> {
   return Effect.runPromise(Effect.provide(effect, layer));
+}
+
+/**
+ * Run an app command program through the real CLI edge (failure rendering and
+ * `process.exitCode` semantics included) with an optional scripted prompter.
+ */
+export function runCli<A, E>(
+  program: Effect.Effect<A, E, TestServices>,
+  prompter?: PrompterShape
+): Promise<A> {
+  const withPrompter =
+    prompter === undefined
+      ? program
+      : Effect.provideService(program, Prompter, prompter);
+  return runCliProgram(withPrompter);
 }
 
 /** A stub `ProcessRunner.run` implementation for verification seams. */
@@ -42,8 +63,6 @@ export function processRunnerLayer(
 }
 
 /** Run a program and capture its exit for failure assertions. */
-export function runExit<A, E>(
-  effect: Effect.Effect<A, E, DepsInstaller | ProcessRunner>
-) {
+export function runExit<A, E>(effect: Effect.Effect<A, E, TestServices>) {
   return Effect.runPromiseExit(Effect.provide(effect, TestLayer));
 }

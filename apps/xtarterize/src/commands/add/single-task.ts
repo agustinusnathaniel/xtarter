@@ -1,12 +1,16 @@
 import type { Task, TaskStatus } from '@xtarterize/core';
 import { logInfo, statusTag } from '@xtarterize/core';
+import { Effect } from 'effect';
 
-import { runCliProgram } from '@/runtime.js';
 import type { CommandSession, SessionTaskOutcome } from '@/session.js';
 import { displayDiffs } from '@/ui/diff-display.js';
-import type { Prompter } from '@/ui/prompter.js';
+import { type PromptError, Prompter } from '@/ui/prompter.js';
 
-import type { RunSingleTaskOptions } from './types.js';
+import type {
+  AddCommandError,
+  AddCommandServices,
+  RunSingleTaskOptions,
+} from './types.js';
 
 function reportMissingTask(options: {
   allTasks: Array<Task>;
@@ -70,102 +74,98 @@ function reportConflict(session: CommandSession, taskId: string): void {
   );
 }
 
-async function confirmApply(prompter: Prompter): Promise<boolean | null> {
-  return prompter.confirm({ message: 'Apply this change?' });
+function confirmApply(): Effect.Effect<boolean | null, PromptError, Prompter> {
+  return Effect.flatMap(Prompter, (prompter) =>
+    prompter.confirm({ message: 'Apply this change?' })
+  );
 }
 
-async function executeTask(options: {
+function executeTask(options: {
   includeConflicts: boolean;
-  prompter: Prompter;
   recordTiming: boolean;
   session: CommandSession;
   status: TaskStatus;
   task: Task;
-}): Promise<void> {
-  const { includeConflicts, prompter, recordTiming, session, status, task } =
-    options;
-  const { runtime } = session;
-  const jsonMode = runtime.format === 'json';
+}): Effect.Effect<void, AddCommandError, AddCommandServices> {
+  return Effect.gen(function* () {
+    const { includeConflicts, recordTiming, session, status, task } = options;
+    const { runtime } = session;
+    const jsonMode = runtime.format === 'json';
 
-  const plan = await runCliProgram(
-    session.plan({ includeConflicts, tasks: [task] })
-  );
-  if (!plan) {
-    return;
-  }
-  if (!(runtime.quiet || jsonMode)) {
-    displayDiffs(plan.entries[0]?.diffs ?? [], runtime.format);
-    const proceed = await confirmApply(prompter);
-    if (proceed === null) {
-      session.reportOutcome(session.cancelled());
-      return;
+    const plan = yield* session.plan({ includeConflicts, tasks: [task] });
+    if (!(runtime.quiet || jsonMode)) {
+      displayDiffs(plan.entries[0]?.diffs ?? [], runtime.format);
+      const proceed = yield* confirmApply();
+      if (proceed === null) {
+        session.reportOutcome(session.cancelled());
+        return;
+      }
+      if (!proceed) {
+        return;
+      }
     }
-    if (!proceed) {
-      return;
-    }
-  }
 
-  const result = await runCliProgram(session.execute(plan));
-  if (!result) {
-    return;
-  }
-  // Only this task's own failure may fail the run. Session-wide check errors
-  // belong to unrelated tasks; the requested task's own check error is already
-  // reported before execution by `runSingleTask`.
-  session.reportOutcome(
-    session.outcomeFor(result, {
-      includeCheckErrors: false,
-      recordTiming,
-      taskId: task.id,
-      taskStatus: status,
-    })
-  );
+    const result = yield* session.execute(plan);
+    // Only this task's own failure may fail the run. Session-wide check errors
+    // belong to unrelated tasks; the requested task's own check error is already
+    // reported before execution by `runSingleTask`.
+    session.reportOutcome(
+      session.outcomeFor(result, {
+        includeCheckErrors: false,
+        recordTiming,
+        taskId: task.id,
+        taskStatus: status,
+      })
+    );
+  });
 }
 
-export async function runSingleTask(
+/** Add one named task as one program: plan, confirm, execute. */
+export function runSingleTask(
   options: RunSingleTaskOptions
-): Promise<void> {
-  const { includeConflicts, prompter, recordTiming, session, taskId } = options;
-  const { allTasks, runtime, statuses } = session;
-  const jsonMode = runtime.format === 'json';
+): Effect.Effect<void, AddCommandError, AddCommandServices> {
+  return Effect.gen(function* () {
+    const { includeConflicts, recordTiming, session, taskId } = options;
+    const { allTasks, runtime, statuses } = session;
+    const jsonMode = runtime.format === 'json';
 
-  const task = allTasks.find((entry) => entry.id === taskId);
-  if (!task) {
-    reportMissingTask({ allTasks, jsonMode, session, taskId });
-    return;
-  }
+    const task = allTasks.find((entry) => entry.id === taskId);
+    if (!task) {
+      reportMissingTask({ allTasks, jsonMode, session, taskId });
+      return;
+    }
 
-  if (!task.applicable(session.profile)) {
-    reportNotApplicable(session, taskId);
-    return;
-  }
+    if (!task.applicable(session.profile)) {
+      reportNotApplicable(session, taskId);
+      return;
+    }
 
-  const checkError = session.checkErrors.get(task.id);
-  if (checkError) {
-    reportCheckError(session, task.id, checkError);
-    return;
-  }
+    const checkError = session.checkErrors.get(task.id);
+    if (checkError) {
+      reportCheckError(session, task.id, checkError);
+      return;
+    }
 
-  const status = statuses.get(task.id) ?? 'new';
-  if (!runtime.quiet) {
-    console.log(`${statusTag(status)} ${task.id}`);
-  }
+    const status = statuses.get(task.id) ?? 'new';
+    if (!runtime.quiet) {
+      console.log(`${statusTag(status)} ${task.id}`);
+    }
 
-  if (status === 'skip') {
-    reportSkip(session, taskId, status);
-    return;
-  }
-  if (status === 'conflict' && !includeConflicts) {
-    reportConflict(session, taskId);
-    return;
-  }
+    if (status === 'skip') {
+      reportSkip(session, taskId, status);
+      return;
+    }
+    if (status === 'conflict' && !includeConflicts) {
+      reportConflict(session, taskId);
+      return;
+    }
 
-  await executeTask({
-    includeConflicts,
-    prompter,
-    recordTiming,
-    session,
-    status,
-    task,
+    yield* executeTask({
+      includeConflicts,
+      recordTiming,
+      session,
+      status,
+      task,
+    });
   });
 }
