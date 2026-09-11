@@ -98,6 +98,7 @@ export {
   computeUnifiedHunks,
   enhanceDiff,
   formatDiffHeader,
+  isJsonFile,
 } from '@/utils/diff.js';
 // Re-export utilities needed by tasks
 export {

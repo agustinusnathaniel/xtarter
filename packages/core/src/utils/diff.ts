@@ -9,34 +9,35 @@ import type {
 
 export type { ChangeStats, DiffHunk, FileDiff, SemanticEntry };
 
-export function computeChangeStats(
-  before: string | null,
-  after: string
-): ChangeStats {
-  const changes = diffLines(before ?? '', after);
-  let added = 0;
-  let removed = 0;
-  for (const change of changes) {
-    if (change.added) {
-      added += change.count ?? 0;
-    }
-    if (change.removed) {
-      removed += change.count ?? 0;
-    }
-  }
-  return { added, removed };
+export function isJsonFile(filepath: string): boolean {
+  return (
+    filepath.endsWith('.json') ||
+    filepath.endsWith('.jsonc') ||
+    filepath.endsWith('.json5')
+  );
 }
 
-export function computeUnifiedHunks(
-  before: string | null,
-  after: string
-): Array<DiffHunk> {
+interface DiffParts {
+  hunks: Array<DiffHunk>;
+  stats: ChangeStats;
+}
+
+function computeDiffParts(before: string | null, after: string): DiffParts {
   const changes = diffLines(before ?? '', after);
   const lines: Array<string> = [];
-  let added = 0;
-  let removed = 0;
+  let statsAdded = 0;
+  let statsRemoved = 0;
+  let hunkAdded = 0;
+  let hunkRemoved = 0;
 
   for (const change of changes) {
+    if (change.added) {
+      statsAdded += change.count ?? 0;
+    }
+    if (change.removed) {
+      statsRemoved += change.count ?? 0;
+    }
+
     const rawLines = change.value.split('\n');
     if (rawLines.at(-1) === '') {
       rawLines.pop();
@@ -49,12 +50,12 @@ export function computeUnifiedHunks(
       for (const line of rawLines) {
         lines.push(`+ ${line}`);
       }
-      added += rawLines.length;
+      hunkAdded += rawLines.length;
     } else if (change.removed) {
       for (const line of rawLines) {
         lines.push(`- ${line}`);
       }
-      removed += rawLines.length;
+      hunkRemoved += rawLines.length;
     } else {
       for (const line of rawLines) {
         lines.push(`  ${line}`);
@@ -64,9 +65,26 @@ export function computeUnifiedHunks(
 
   const beforeLineCount = before ? before.split('\n').length : 0;
   const afterLineCount = after.split('\n').length;
-  const header = `@@ -${beforeLineCount},${removed} +${afterLineCount},${added} @@`;
+  const header = `@@ -${beforeLineCount},${hunkRemoved} +${afterLineCount},${hunkAdded} @@`;
 
-  return [{ added, header, lines, removed }];
+  return {
+    hunks: [{ added: hunkAdded, header, lines, removed: hunkRemoved }],
+    stats: { added: statsAdded, removed: statsRemoved },
+  };
+}
+
+export function computeChangeStats(
+  before: string | null,
+  after: string
+): ChangeStats {
+  return computeDiffParts(before, after).stats;
+}
+
+export function computeUnifiedHunks(
+  before: string | null,
+  after: string
+): Array<DiffHunk> {
+  return computeDiffParts(before, after).hunks;
 }
 
 export function computeSemanticJsonDiff(
@@ -102,13 +120,8 @@ export function computeSemanticJsonDiff(
 }
 
 export function enhanceDiff(diff: FileDiff): FileDiff {
-  const stats = computeChangeStats(diff.before, diff.after);
-  const hunks = computeUnifiedHunks(diff.before, diff.after);
-  const isJson =
-    diff.filepath.endsWith('.json') ||
-    diff.filepath.endsWith('.jsonc') ||
-    diff.filepath.endsWith('.json5');
-  const semantic = isJson
+  const { hunks, stats } = computeDiffParts(diff.before, diff.after);
+  const semantic = isJsonFile(diff.filepath)
     ? computeSemanticJsonDiff(diff.before, diff.after)
     : undefined;
 
