@@ -1,25 +1,5 @@
 import type { FileDiff } from '@xtarterize/core';
-import {
-  ensureDir,
-  readPackageJson,
-  resolvePath,
-  TaskError,
-  writeFile,
-} from '@xtarterize/core';
-
-export function wrapTask<A>(
-  taskId: string,
-  method: string,
-  fn: () => Promise<A>
-): Promise<A> {
-  return fn().catch((cause) => {
-    throw new TaskError({
-      cause,
-      message: `${method} failed: ${String(cause)}`,
-      taskId,
-    });
-  });
-}
+import { readPackageJson, resolvePath, writeFile } from '@xtarterize/core';
 
 /**
  * Check if required dependencies are missing from package.json.
@@ -51,7 +31,6 @@ export async function writeTaskDiffs(
 ): Promise<void> {
   for (const diff of diffs) {
     const fullPath = resolvePath(cwd, diff.filepath);
-    await ensureDir(resolvePath(fullPath, '..'));
     await writeFile(
       fullPath,
       diff.after,

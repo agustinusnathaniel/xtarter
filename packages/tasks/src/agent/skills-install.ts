@@ -1,24 +1,56 @@
 import { readdir } from 'node:fs/promises';
-import type { ProjectProfile } from '@xtarterize/core';
+import type { PackageManager, ProjectProfile } from '@xtarterize/core';
 import {
   collectDependencyVersions,
   fileExists,
+  ProcessRunner,
   readPackageJson,
   resolvePath,
   TaskError,
+  toTaskEffect,
 } from '@xtarterize/core';
-import { x } from 'tinyexec';
+import { Duration, Effect } from 'effect';
 
 import { getSkillsToInstall, type SkillEntry } from '@/agent/catalog.js';
 import { defineTask } from '@/factory/define-task.js';
 
-async function isDirNonEmpty(dirPath: string): Promise<boolean> {
-  try {
-    const entries = await readdir(dirPath);
-    return entries.length > 0;
-  } catch {
-    return false;
+const SKILLS_PACKAGE = 'skills@latest';
+
+/** The executor prefix a package manager accepts for a dlx-style run. */
+export interface SkillsExecutor {
+  command: string;
+  prefixArgs: ReadonlyArray<string>;
+}
+
+/**
+ * npm 11 rejects `npx` when `devEngines.packageManager` names another package
+ * manager (EBADDEVENGINES), and `quality/package-engines` writes that field
+ * during `init`. Projects on another package manager therefore go through their
+ * own dlx equivalent. Yarn classic has no `dlx` command, so it keeps the `npx`
+ * fallback: that stays the best available behavior, but npm 11 will still
+ * refuse it when the project's devEngines name is not npm.
+ */
+export function resolveSkillsExecutor(
+  packageManager: PackageManager,
+  options: { yarnBerry: boolean }
+): SkillsExecutor {
+  switch (packageManager) {
+    case 'pnpm':
+      return { command: 'pnpm', prefixArgs: ['dlx', SKILLS_PACKAGE] };
+    case 'yarn':
+      return options.yarnBerry
+        ? { command: 'yarn', prefixArgs: ['dlx', SKILLS_PACKAGE] }
+        : { command: 'npx', prefixArgs: ['--yes', SKILLS_PACKAGE] };
+    case 'bun':
+      return { command: 'bunx', prefixArgs: [SKILLS_PACKAGE] };
+    default:
+      return { command: 'npx', prefixArgs: ['--yes', SKILLS_PACKAGE] };
   }
+}
+
+/** Yarn Berry projects carry `.yarnrc.yml`; Yarn classic does not. */
+async function isYarnBerry(cwd: string): Promise<boolean> {
+  return fileExists(resolvePath(cwd, '.yarnrc.yml'));
 }
 
 async function readSkillsFromDir(skillsDir: string): Promise<Set<string>> {
@@ -32,8 +64,8 @@ async function readSkillsFromDir(skillsDir: string): Promise<Set<string>> {
     for (const entry of entries) {
       if (entry.isDirectory()) {
         const skillPath = resolvePath(skillsDir, entry.name);
-        const hasContent = await isDirNonEmpty(skillPath);
-        if (hasContent) {
+        const subEntries = await readdir(skillPath).catch(() => []);
+        if (subEntries.length > 0) {
           installed.add(entry.name);
         }
       }
@@ -82,18 +114,15 @@ async function resolveMissingSkills(
 }
 
 function groupBySource(skills: Array<SkillEntry>): Map<string, Array<string>> {
-  const grouped = new Map<string, Set<string>>();
+  const grouped = new Map<string, Array<string>>();
   for (const { source, skill } of skills) {
-    const existing = grouped.get(source) ?? new Set<string>();
-    existing.add(skill);
-    grouped.set(source, existing);
+    const skillNames = grouped.get(source) ?? [];
+    if (!skillNames.includes(skill)) {
+      skillNames.push(skill);
+    }
+    grouped.set(source, skillNames);
   }
-
-  const normalized = new Map<string, Array<string>>();
-  for (const [source, skillSet] of grouped) {
-    normalized.set(source, [...skillSet]);
-  }
-  return normalized;
+  return grouped;
 }
 
 export const skillsInstallTask = defineTask({
@@ -106,48 +135,66 @@ export const skillsInstallTask = defineTask({
         }
         return missing.length === total ? 'new' : 'patch';
       },
-      kind: 'action',
-      async run(cwd, profile) {
-        const { missing } = await resolveMissingSkills(cwd, profile);
-        const grouped = groupBySource(missing);
-        for (const [source, skillNames] of grouped) {
-          const args = [
-            '--yes',
-            'skills@latest',
-            'add',
-            source,
-            ...skillNames.flatMap((s) => ['--skill', s]),
-            '-y',
-          ];
-          const result = await x('npx', args, {
-            nodeOptions: { cwd, stdio: 'inherit' },
-            timeout: 60_000,
+      run: (cwd, profile) =>
+        Effect.gen(function* () {
+          const { missing } = yield* toTaskEffect('skillsInstallTask.run', () =>
+            resolveMissingSkills(cwd, profile)
+          );
+          const runner = yield* ProcessRunner;
+          const yarnBerry =
+            profile.packageManager === 'yarn' &&
+            (yield* toTaskEffect('skillsInstallTask.run', () =>
+              isYarnBerry(cwd)
+            ));
+          const executor = resolveSkillsExecutor(profile.packageManager, {
+            yarnBerry,
           });
-          if (result.exitCode !== 0) {
-            throw new TaskError({
-              message: `Failed to install skills from ${source}: ${skillNames.join(', ')}`,
-              taskId: 'skillsInstallTask.run',
-            });
+          const grouped = groupBySource(missing);
+          for (const [source, skillNames] of grouped) {
+            const args = [
+              ...executor.prefixArgs,
+              'add',
+              source,
+              ...skillNames.flatMap((s) => ['--skill', s]),
+              '-y',
+            ];
+            const result = yield* Effect.mapError(
+              runner.run(executor.command, args, {
+                cwd,
+                stdio: 'inherit',
+                timeout: Duration.millis(60_000),
+              }),
+              (cause) =>
+                new TaskError({
+                  cause: cause.cause ?? cause,
+                  message: cause.message,
+                  taskId: 'skillsInstallTask.run',
+                })
+            );
+            if (result.exitCode !== 0) {
+              return yield* Effect.fail(
+                new TaskError({
+                  message: `Failed to install skills from ${source}: ${skillNames.join(', ')}`,
+                  taskId: 'skillsInstallTask.run',
+                })
+              );
+            }
           }
-        }
-      },
+        }),
     },
   ],
   applicable: (profile) => profile.typescript,
+  configTargets: [],
   group: 'Agent',
   id: 'agent/skills-install',
+  keywords: [
+    'skills',
+    'agent skills',
+    'ai tools',
+    'opencode skills',
+    'install',
+  ],
   label: 'Install agent skills',
   scope: 'both',
-
-  searchMeta: {
-    configTargets: [],
-    keywords: [
-      'skills',
-      'agent skills',
-      'ai tools',
-      'opencode skills',
-      'install',
-    ],
-    tags: ['ai', 'agent', 'skills', 'setup', 'tools'],
-  },
+  tags: ['ai', 'agent', 'skills', 'setup', 'tools'],
 });

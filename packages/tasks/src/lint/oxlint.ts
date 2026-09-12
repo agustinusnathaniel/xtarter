@@ -36,11 +36,9 @@ export const oxlintTask = defineTask({
   ],
   group: 'Linting & Formatting',
   id: 'lint/oxlint',
+  keywords: ['oxlint', 'linter', 'rust', 'static analysis', 'fast'],
   label: 'Oxlint config',
-  searchMeta: {
-    keywords: ['oxlint', 'linter', 'rust', 'static analysis', 'fast'],
-    tags: ['linting', 'rust', 'performance', 'quality'],
-  },
+  tags: ['linting', 'rust', 'performance', 'quality'],
   targets: [
     {
       extensions: ['.ts', '.js', '.mjs', '.json'],
@@ -76,11 +74,9 @@ export const oxfmtTask = defineTask({
   ],
   group: 'Linting & Formatting',
   id: 'lint/oxfmt',
+  keywords: ['oxfmt', 'formatter', 'rust', 'format', 'style'],
   label: 'Oxfmt config',
-  searchMeta: {
-    keywords: ['oxfmt', 'formatter', 'rust', 'format', 'style'],
-    tags: ['formatting', 'rust', 'style'],
-  },
+  tags: ['formatting', 'rust', 'style'],
   targets: [
     {
       extensions: ['.ts', '.js', '.mjs', '.json'],

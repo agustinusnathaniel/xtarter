@@ -1,59 +1,51 @@
-import type { ProjectProfile, Task } from '@xtarterize/core';
+import type { ProjectProfile, TaskServices } from '@xtarterize/core';
 import {
   collectDependencyVersions,
   detectProject,
   pc,
   readPackageJson,
-  resolveExternalTasks,
+  type TaskError,
+  toTaskEffect,
 } from '@xtarterize/core';
-import { getAllTasks } from '@xtarterize/tasks';
+import { Effect } from 'effect';
 
-import type { Prompter } from '@/ui/prompter.js';
+import { type PromptError, Prompter } from '@/ui/prompter.js';
 
-/**
- * Combine built-in tasks with external plugin tasks.
- * External tasks are loaded from the project's plugin config
- * (`.xtarterizerc` or `"xtarterize"` key in `package.json`).
- */
-export async function getAllTasksWithPlugins(
-  cwd: string
-): Promise<Array<Task>> {
-  const internal = getAllTasks();
-  const external = await resolveExternalTasks(cwd);
-  return external.length > 0 ? [...internal, ...external] : internal;
-}
-
-export interface DetectProjectWithAmbiguityOptions {
+export function detectProjectWithAmbiguity(options: {
   baseProfile?: ProjectProfile;
   cwd: string;
-  prompter: Prompter;
   quiet: boolean;
-}
+}): Effect.Effect<
+  ProjectProfile,
+  PromptError | TaskError,
+  Prompter | TaskServices
+> {
+  return Effect.gen(function* () {
+    const { cwd, quiet, baseProfile } = options;
+    let profile =
+      baseProfile ??
+      (yield* toTaskEffect('detect-project', () => detectProject(cwd)));
 
-export async function detectProjectWithAmbiguity(
-  options: DetectProjectWithAmbiguityOptions
-): Promise<ProjectProfile> {
-  const { cwd, quiet, baseProfile, prompter } = options;
-  let profile = baseProfile ?? (await detectProject(cwd));
+    if (profile.framework === null && !quiet) {
+      const pkg = yield* toTaskEffect('read-package-json', () =>
+        readPackageJson(cwd)
+      );
+      const allDeps = collectDependencyVersions(pkg);
+      const hasReactNative = !!(allDeps['react-native'] || allDeps.expo);
+      const hasReact = !!allDeps.react;
 
-  if (profile.framework === null && !quiet) {
-    const pkg = await readPackageJson(cwd);
-    const allDeps = collectDependencyVersions(pkg);
-
-    const hasReactNative = !!(allDeps['react-native'] || allDeps.expo);
-    const hasReact = !!allDeps.react;
-
-    if (hasReactNative && hasReact) {
-      const resolved = await resolveAmbiguousFramework(prompter);
-      // A cancelled prompt keeps the detected profile: framework stays null
-      // instead of exiting the process.
-      if (resolved !== null) {
-        profile = { ...profile, framework: resolved };
+      if (hasReactNative && hasReact) {
+        const resolved = yield* resolveAmbiguousFramework();
+        // A cancelled prompt keeps the detected profile: framework stays null
+        // instead of exiting the process.
+        if (resolved !== null) {
+          profile = { ...profile, framework: resolved };
+        }
       }
     }
-  }
 
-  return profile;
+    return profile;
+  });
 }
 
 export function printProjectProfile(profile: ProjectProfile): void {
@@ -64,16 +56,23 @@ export function printProjectProfile(profile: ProjectProfile): void {
   console.log('');
 }
 
-async function resolveAmbiguousFramework(
-  prompter: Prompter
-): Promise<'react' | 'react-native' | 'node' | null> {
-  return prompter.select<'react' | 'react-native' | 'node'>({
-    message:
-      'Detected both React and React Native dependencies. Which best describes this project?',
-    options: [
-      { label: 'React (web)', value: 'react' },
-      { label: 'React Native / Expo (mobile)', value: 'react-native' },
-      { label: 'Universal (web + native, treating as Node)', value: 'node' },
-    ],
-  });
+function resolveAmbiguousFramework(): Effect.Effect<
+  'react' | 'react-native' | 'node' | null,
+  PromptError,
+  Prompter
+> {
+  return Effect.flatMap(Prompter, (prompter) =>
+    prompter.select<'react' | 'react-native' | 'node'>({
+      message:
+        'Detected both React and React Native dependencies. Which best describes this project?',
+      options: [
+        { label: 'React (web)', value: 'react' },
+        { label: 'React Native / Expo (mobile)', value: 'react-native' },
+        {
+          label: 'Universal (web + native, treating as Node)',
+          value: 'node',
+        },
+      ],
+    })
+  );
 }

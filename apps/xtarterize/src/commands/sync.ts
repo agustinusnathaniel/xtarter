@@ -1,7 +1,25 @@
 import { defineCommand } from 'citty';
+import type { Effect } from 'effect';
 
-import { runCommand } from '@/commands/run-command.js';
+import {
+  type RunCommandArgs,
+  type RunCommandError,
+  type RunCommandServices,
+  runCommand,
+} from '@/commands/run-command.js';
+import { runCliProgram } from '@/runtime.js';
 import { sharedRunArgs } from '@/utils/args.js';
+
+/** The `sync` run pipeline as one program (open, select, apply). */
+export function syncProgram(
+  args: RunCommandArgs
+): Effect.Effect<void, RunCommandError, RunCommandServices> {
+  return runCommand(args, {
+    actionableStatuses: ['patch', 'conflict'],
+    confirmMessage: 'How would you like to proceed?',
+    emptyMessage: 'No updates available',
+  });
+}
 
 export const syncCommand = defineCommand({
   args: sharedRunArgs,
@@ -10,10 +28,6 @@ export const syncCommand = defineCommand({
     name: 'sync',
   },
   async run({ args }) {
-    await runCommand(args, {
-      actionableStatuses: ['patch', 'conflict'],
-      confirmMessage: 'How would you like to proceed?',
-      emptyMessage: 'No updates available',
-    });
+    await runCliProgram(syncProgram(args));
   },
 });

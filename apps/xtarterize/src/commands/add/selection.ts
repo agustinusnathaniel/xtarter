@@ -1,4 +1,6 @@
-import type { Prompter } from '@/ui/prompter.js';
+import { Effect } from 'effect';
+
+import { type PromptError, Prompter } from '@/ui/prompter.js';
 import { defaultSelectedIds, statusHint } from '@/utils/display.js';
 
 import type { TaskWithStatus } from './types.js';
@@ -24,14 +26,15 @@ function buildGroupedOptions(
 }
 
 /** Resolve the selected task IDs, or `null` when the user cancels. */
-export async function selectTasksGrouped(
-  tasksWithStatus: Array<TaskWithStatus>,
-  prompter: Prompter
-): Promise<Array<string> | null> {
-  return prompter.groupMultiselect({
-    initialValues: defaultSelectedIds(tasksWithStatus),
-    message: 'Select tasks to add:',
-    options: buildGroupedOptions(tasksWithStatus),
-    required: true,
-  });
+export function selectTasksGrouped(
+  tasksWithStatus: Array<TaskWithStatus>
+): Effect.Effect<Array<string> | null, PromptError, Prompter> {
+  return Effect.flatMap(Prompter, (prompter) =>
+    prompter.groupMultiselect({
+      initialValues: defaultSelectedIds(tasksWithStatus),
+      message: 'Select tasks to add:',
+      options: buildGroupedOptions(tasksWithStatus),
+      required: true,
+    })
+  );
 }

@@ -2,8 +2,10 @@ export type {
   DiffHunk,
   FileDiff,
   Task,
+  TaskDep,
   TaskScope,
   TaskSearchMeta,
+  TaskServices,
   TaskStatus,
 } from '@/_base.js';
 export type { ApplyResult } from '@/apply/execute.js';
@@ -39,32 +41,38 @@ export type {
 export { runDiagnostics } from '@/diagnostics.js';
 // Gitignore management
 export { ensureXtarterizeGitignore } from '@/ensure-gitignore.js';
-export { BackupError, TaskError } from '@/errors.js';
-// Task inquiry/query engine
 export {
-  expandQuery,
-  scoreTasks,
-  similarity,
-  tokenize,
-} from '@/inquiry/index.js';
+  BackupError,
+  DepsInstallError,
+  ProcessError,
+  TaskError,
+} from '@/errors.js';
+// Task inquiry/query engine
+export { scoreTasks, similarity, tokenize } from '@/inquiry/index.js';
 export type { InquiryResult } from '@/inquiry/types.js';
 export { createInvocationGuard } from '@/invocation-guard.js';
-// Plugin/extension system - @internal: stable but untested in production
-export type { TaskSelectionConfig } from '@/plugins.js';
-export {
-  applyTaskSelection,
-  loadPluginConfig,
-  loadPluginTasks,
-  loadSelectionConfig,
-  resolveExternalTasks,
-} from '@/plugins.js';
 export type { PreflightError } from '@/preflight.js';
 export { runPreflight } from '@/preflight.js';
 export {
+  failureDetail,
   resolveProjectTasks,
   resolveTaskStatuses,
   resolveTasks,
 } from '@/resolve.js';
+// Persisted task selection from `.xtarterizerc` / the package.json key
+export type { TaskSelectionConfig } from '@/selection.js';
+export {
+  applyTaskSelection,
+  loadSelectionConfig,
+} from '@/selection.js';
+// Task services: the runtime dependencies Effect tasks may require
+export { DepsInstaller } from '@/services/deps-installer.js';
+export type {
+  CommandResult,
+  ProcessRunOptions,
+} from '@/services/process-runner.js';
+export { ProcessRunner } from '@/services/process-runner.js';
+export { toTaskEffect } from '@/task-effect.js';
 export type { ApplyTiming, ResolveTiming } from '@/timing.js';
 export {
   computeSemanticJsonDiff,
@@ -73,6 +81,7 @@ export {
   isJsonFile,
 } from '@/utils/diff.js';
 // Re-export utilities needed by tasks
+export { describeCause } from '@/utils/errors.js';
 export {
   assertPathWithin,
   ensureDir,

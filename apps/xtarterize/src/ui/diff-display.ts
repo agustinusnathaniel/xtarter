@@ -1,8 +1,7 @@
 import type { DiffHunk, FileDiff } from '@xtarterize/core';
 import { actionTag, formatDiffHeader, pc } from '@xtarterize/core';
-import Table from 'cli-table3';
 
-import { CLI_TABLE_CHARS } from './table-chars.js';
+import { createCliTable } from './table-chars.js';
 
 export type DisplayFormat = 'terminal' | 'json';
 
@@ -29,11 +28,7 @@ export function displayDiffs(
 function displayTerminalDiffs(diffs: Array<FileDiff>): void {
   const totalStats = computeTotalStats(diffs);
 
-  const table = new Table({
-    chars: CLI_TABLE_CHARS,
-    head: [pc.bold('Action'), pc.bold('File'), pc.bold('Changes')],
-    style: { border: [], head: [] },
-  });
+  const table = createCliTable('Action', 'File', 'Changes');
 
   for (const diff of diffs) {
     const isNew = diff.before === null;

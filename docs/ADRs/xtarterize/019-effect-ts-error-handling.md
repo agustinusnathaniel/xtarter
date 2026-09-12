@@ -4,7 +4,7 @@
 
 Superseded
 
-Superseded by [ADR 035](035-effect-removal-async-await.md).
+Superseded by [ADR 035](035-effect-removal-async-await.md), which [ADR 036](036-effect-orchestration-layer.md) in turn supersedes. ADR 036 re-adopts Effect as the CLI orchestration layer without restoring this ADR's Promise boundary or `Equal.equals`.
 
 ## Date
 

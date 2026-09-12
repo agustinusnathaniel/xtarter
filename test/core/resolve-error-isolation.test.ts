@@ -1,16 +1,16 @@
-import type { ProjectProfile, Task } from '@xtarterize/core';
+import type { ProjectProfile, Task, TaskStatus } from '@xtarterize/core';
 import { resolveProjectTasks, resolveTaskStatuses } from '@xtarterize/core';
+import { Effect } from 'effect';
 import { describe, expect } from 'vite-plus/test';
 
-function makeTask(
-  id: string,
-  check: () => Promise<'new' | 'patch' | 'skip' | 'conflict'>
-): Task {
+import { run } from '../helpers/run.js';
+
+function makeTask(id: string, check: () => Effect.Effect<TaskStatus>): Task {
   return {
     applicable: () => true,
-    apply: async () => {},
+    apply: () => Effect.void,
     check,
-    dryRun: async () => [],
+    dryRun: () => Effect.succeed([]),
     group: 'test',
     id,
     label: id,
@@ -30,14 +30,14 @@ const profile: ProjectProfile = {
 describe('resolveTaskStatuses error isolation', () => {
   test('resolves all statuses when one check throws', async () => {
     const tasks = [
-      makeTask('ok-task', async () => 'skip'),
-      makeTask('boom-task', async () => {
-        throw new Error('simulated check failure');
-      }),
-      makeTask('ok-task-2', async () => 'patch'),
+      makeTask('ok-task', () => Effect.succeed('skip')),
+      makeTask('boom-task', () =>
+        Effect.die(new Error('simulated check failure'))
+      ),
+      makeTask('ok-task-2', () => Effect.succeed('patch')),
     ];
 
-    const statuses = await resolveTaskStatuses(tasks, '/tmp', profile);
+    const statuses = await run(resolveTaskStatuses(tasks, '/tmp', profile));
     expect(statuses.get('ok-task')).toBe('skip');
     expect(statuses.get('ok-task-2')).toBe('patch');
     // A task whose check throws degrades to conflict (needs attention)
@@ -47,13 +47,13 @@ describe('resolveTaskStatuses error isolation', () => {
 
   test('resolveProjectTasks does not crash on a throwing check', async () => {
     const tasks = [
-      makeTask('boom-task', async () => {
-        throw new Error('simulated check failure');
-      }),
-      makeTask('ok-task', async () => 'skip'),
+      makeTask('boom-task', () =>
+        Effect.die(new Error('simulated check failure'))
+      ),
+      makeTask('ok-task', () => Effect.succeed('skip')),
     ];
 
-    const result = await resolveProjectTasks('/tmp', tasks);
+    const result = await run(resolveProjectTasks('/tmp', tasks));
     expect(result.tasks.length).toBe(2);
     expect(result.statuses.get('ok-task')).toBe('skip');
   });

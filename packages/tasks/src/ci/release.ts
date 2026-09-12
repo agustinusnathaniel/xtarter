@@ -32,19 +32,17 @@ export const releaseWorkflowTask = defineTask({
   applicable: (profile) => profile.hasGitHub,
   group: 'CI/CD',
   id: 'ci/release',
+  keywords: [
+    'release',
+    'publish',
+    'npm publish',
+    'github release',
+    'cd',
+    'deploy',
+  ],
   label: 'GitHub release workflow',
   scope: 'root',
-  searchMeta: {
-    keywords: [
-      'release',
-      'publish',
-      'npm publish',
-      'github release',
-      'cd',
-      'deploy',
-    ],
-    tags: ['ci', 'cd', 'release', 'github-actions'],
-  },
+  tags: ['ci', 'cd', 'release', 'github-actions'],
   targets: [
     {
       filepath: '.github/workflows/release.yml',

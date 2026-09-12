@@ -10,6 +10,8 @@ import {
 } from '@xtarterize/tasks';
 import { describe, expect } from 'vite-plus/test';
 
+import { run } from '../helpers/run.js';
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const fixtures = path.resolve(__dirname, '../fixtures');
 
@@ -17,7 +19,7 @@ describe('biome config validation', () => {
   test('rendered biome.json is valid JSON with expected structure', async () => {
     const testDir = path.join(fixtures, 'react-vite-tailwind');
     const profile = await detectProject(testDir);
-    const diffs = await biomeTask.dryRun(testDir, profile);
+    const diffs = await run(biomeTask.dryRun(testDir, profile));
     const configFile = diffs.find((d) => d.filepath === 'biome.json');
     if (!configFile) {
       throw new Error('Expected biome.json diff to exist');
@@ -32,7 +34,7 @@ describe('biome config validation', () => {
   test('includes css.tailwindDirectives for tailwind projects', async () => {
     const testDir = path.join(fixtures, 'react-vite-tailwind');
     const profile = await detectProject(testDir);
-    const diffs = await biomeTask.dryRun(testDir, profile);
+    const diffs = await run(biomeTask.dryRun(testDir, profile));
     const configFile = diffs.find((d) => d.filepath === 'biome.json');
     if (!configFile) {
       throw new Error('Expected biome.json diff to exist');
@@ -47,7 +49,7 @@ describe('renovate config validation', () => {
   test('rendered renovate.json is valid JSON', async () => {
     const testDir = path.join(fixtures, 'react-vite-tailwind');
     const profile = await detectProject(testDir);
-    const diffs = await renovateTask.dryRun(testDir, profile);
+    const diffs = await run(renovateTask.dryRun(testDir, profile));
     const configFile = diffs.find((d) => d.filepath === 'renovate.json');
 
     if (!configFile) {
@@ -63,7 +65,7 @@ describe('vscode config validation', () => {
   test('rendered .vscode/settings.json is valid JSON', async () => {
     const testDir = path.join(fixtures, 'react-vite-tailwind');
     const profile = await detectProject(testDir);
-    const diffs = await vscodeTask.dryRun(testDir, profile);
+    const diffs = await run(vscodeTask.dryRun(testDir, profile));
     const settingsFile = diffs.find((d) =>
       d.filepath.endsWith('settings.json')
     );
@@ -80,8 +82,8 @@ describe('all config templates render without runtime errors', () => {
     const testDir = path.join(fixtures, 'vite-plus-no-lint');
     const profile = await detectProject(testDir);
     const results = await Promise.allSettled([
-      oxlintTask.dryRun(testDir, profile),
-      oxfmtTask.dryRun(testDir, profile),
+      run(oxlintTask.dryRun(testDir, profile)),
+      run(oxfmtTask.dryRun(testDir, profile)),
     ]);
 
     for (const result of results) {
@@ -95,9 +97,9 @@ describe('all config templates render without runtime errors', () => {
     const testDir = path.join(fixtures, 'react-vite-tailwind');
     const profile = await detectProject(testDir);
     const results = await Promise.allSettled([
-      biomeTask.dryRun(testDir, profile),
-      renovateTask.dryRun(testDir, profile),
-      vscodeTask.dryRun(testDir, profile),
+      run(biomeTask.dryRun(testDir, profile)),
+      run(renovateTask.dryRun(testDir, profile)),
+      run(vscodeTask.dryRun(testDir, profile)),
     ]);
 
     for (const result of results) {

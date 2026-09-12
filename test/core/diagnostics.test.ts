@@ -1,15 +1,45 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { runDiagnostics } from '@xtarterize/core';
+import { ProcessError, runDiagnostics } from '@xtarterize/core';
+import { Effect } from 'effect';
 import { describe, expect } from 'vite-plus/test';
+
+import { processRunnerLayer, runWith } from '../helpers/run.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const fixtures = path.resolve(__dirname, '../fixtures');
 
 type DiagnosticGroupId = 'configuration' | 'environment' | 'project' | 'tools';
 
+/**
+ * Stub ProcessRunner: known tools report an installed version, so diagnostics
+ * do not depend on host binaries. Unknown commands act like a missing binary.
+ */
+const processRunner = processRunnerLayer((command) => {
+  if (command === 'git') {
+    return Effect.succeed({
+      exitCode: 0,
+      stderr: '',
+      stdout: 'git version 2.43.0',
+    });
+  }
+  if (command === 'tsc') {
+    return Effect.succeed({
+      exitCode: 0,
+      stderr: '',
+      stdout: 'Version 5.3.0',
+    });
+  }
+  return Effect.fail(
+    new ProcessError({ message: `Command "${command}" not found` })
+  );
+});
+
 async function checksFor(cwd: string, group: DiagnosticGroupId) {
-  const { groups } = await runDiagnostics(cwd, { groups: [group] });
+  const { groups } = await runWith(
+    processRunner,
+    runDiagnostics(cwd, { groups: [group] })
+  );
   return groups.flatMap((entry) => entry.checks);
 }
 
@@ -74,8 +104,9 @@ describe('runDiagnostics tools group', () => {
 
 describe('runDiagnostics', () => {
   test('returns every group in canonical order with a matching summary', async () => {
-    const { groups, summary } = await runDiagnostics(
-      path.join(fixtures, 'react-vite-tailwind')
+    const { groups, summary } = await runWith(
+      processRunner,
+      runDiagnostics(path.join(fixtures, 'react-vite-tailwind'))
     );
 
     expect(groups.map((group) => group.title)).toEqual([

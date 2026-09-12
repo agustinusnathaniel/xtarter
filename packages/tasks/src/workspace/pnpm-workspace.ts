@@ -170,7 +170,7 @@ function pnpmWorkspaceContent(
  * inserted entries, `skip` when the globs are present (or the project is not
  * a monorepo), and `conflict` when the shape cannot be edited safely.
  */
-const pnpmWorkspacePolicy: TargetPolicy = ({ after, before }, { profile }) => {
+const pnpmWorkspacePolicy: TargetPolicy = ({ after, before }, profile) => {
   if (before === null) {
     return;
   }
@@ -187,19 +187,17 @@ export const pnpmWorkspaceTask = defineSingleTargetTask({
   applicable: (profile) => profile.packageManager === 'pnpm',
   group: 'Workspace',
   id: 'workspace/pnpm-workspace',
+  keywords: [
+    'pnpm',
+    'workspace',
+    'monorepo',
+    'single-package',
+    'pnpm-workspace',
+    'package manager',
+  ],
   label: 'pnpm-workspace.yaml - pnpm workspace config',
   scope: 'root',
-  searchMeta: {
-    keywords: [
-      'pnpm',
-      'workspace',
-      'monorepo',
-      'single-package',
-      'pnpm-workspace',
-      'package manager',
-    ],
-    tags: ['workspace', 'pnpm', 'package-manager'],
-  },
+  tags: ['workspace', 'pnpm', 'package-manager'],
   target: {
     filepath: 'pnpm-workspace.yaml',
     kind: 'text',

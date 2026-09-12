@@ -2,10 +2,33 @@
 import { createInvocationGuard } from '@xtarterize/core';
 import { defineCommand, runMain } from 'citty';
 
+import { abortCliProgram } from '@/runtime.js';
+
 import { version } from '^/package.json';
 
-process.on('SIGINT', () => process.exit(0));
-process.on('SIGTERM', () => process.exit(0));
+/**
+ * Grace period after the first SIGINT before forcing exit 0. Clack prompts are
+ * promise-based and never observe the abort signal, so without a deadline an
+ * in-flight prompt would swallow Ctrl+C until a second signal. The unref'd
+ * timer only fires while some handle (e.g. a pending prompt) keeps the event
+ * loop alive, so Effect finalizers still run and healthy processes exit as
+ * soon as they finish.
+ */
+const SIGNAL_EXIT_GRACE_MS = 250;
+
+let interrupted = false;
+
+function handleSignal(): void {
+  if (interrupted) {
+    process.exit(0);
+  }
+  interrupted = true;
+  abortCliProgram();
+  setTimeout(() => process.exit(0), SIGNAL_EXIT_GRACE_MS).unref();
+}
+
+process.on('SIGINT', handleSignal);
+process.on('SIGTERM', handleSignal);
 
 const subcommandLoaders = {
   add: () => import('@/commands/add/index.js').then((m) => m.addCommand),

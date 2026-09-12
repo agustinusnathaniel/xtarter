@@ -1,0 +1,36 @@
+import { Context, Effect, Layer } from 'effect';
+
+import type { TaskDep } from '@/_base.js';
+import { DepsInstallError } from '@/errors.js';
+import { describeCause } from '@/utils/errors.js';
+import { installDependenciesBatch } from '@/utils/pkg.js';
+
+/** Installs task dependencies in batched dev/prod groups. */
+export class DepsInstaller extends Context.Service<
+  DepsInstaller,
+  {
+    install: (
+      cwd: string,
+      deps: ReadonlyArray<TaskDep>,
+      options?: { silent?: boolean }
+    ) => Effect.Effect<void, DepsInstallError>;
+  }
+>()('xtarterize/DepsInstaller') {
+  static readonly layer: Layer.Layer<DepsInstaller> = Layer.succeed(
+    DepsInstaller,
+    {
+      install: (cwd, deps, options) =>
+        Effect.tryPromise({
+          catch: (cause) =>
+            new DepsInstallError({
+              cause,
+              message: describeCause(cause),
+            }),
+          try: () =>
+            installDependenciesBatch(cwd, [...deps], {
+              silent: options?.silent,
+            }),
+        }),
+    }
+  );
+}

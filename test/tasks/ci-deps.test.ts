@@ -9,6 +9,8 @@ import {
 } from '@xtarterize/tasks';
 import { describe, expect } from 'vite-plus/test';
 
+import { run } from '../helpers/run.js';
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const fixtures = path.resolve(__dirname, '../fixtures');
 
@@ -17,9 +19,8 @@ describe('ciWorkflowTask', () => {
     const profile = await detectProject(
       path.join(fixtures, 'react-vite-tailwind')
     );
-    const [diff] = await ciWorkflowTask.dryRun(
-      path.join(fixtures, 'react-vite-tailwind'),
-      profile
+    const [diff] = await run(
+      ciWorkflowTask.dryRun(path.join(fixtures, 'react-vite-tailwind'), profile)
     );
 
     expect(diff.after).toContain('cache: true');
@@ -35,9 +36,11 @@ describe('autoUpdateWorkflowTask', () => {
     const profile = await detectProject(
       path.join(fixtures, 'react-vite-tailwind')
     );
-    const [diff] = await autoUpdateWorkflowTask.dryRun(
-      path.join(fixtures, 'react-vite-tailwind'),
-      profile
+    const [diff] = await run(
+      autoUpdateWorkflowTask.dryRun(
+        path.join(fixtures, 'react-vite-tailwind'),
+        profile
+      )
     );
 
     expect(diff.after).toContain('pnpm update');
@@ -53,9 +56,11 @@ describe('releaseWorkflowTask', () => {
     const profile = await detectProject(
       path.join(fixtures, 'react-vite-tailwind')
     );
-    const [diff] = await releaseWorkflowTask.dryRun(
-      path.join(fixtures, 'react-vite-tailwind'),
-      profile
+    const [diff] = await run(
+      releaseWorkflowTask.dryRun(
+        path.join(fixtures, 'react-vite-tailwind'),
+        profile
+      )
     );
 
     expect(diff.after).toContain('pnpm run lint');
@@ -70,9 +75,8 @@ describe('renovateTask', () => {
     const profile = await detectProject(
       path.join(fixtures, 'react-vite-tailwind')
     );
-    const [diff] = await renovateTask.dryRun(
-      path.join(fixtures, 'react-vite-tailwind'),
-      profile
+    const [diff] = await run(
+      renovateTask.dryRun(path.join(fixtures, 'react-vite-tailwind'), profile)
     );
     const config = JSON.parse(diff.after);
 

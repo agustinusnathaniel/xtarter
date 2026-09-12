@@ -1,7 +1,9 @@
 import os from 'node:os';
-import { x } from 'tinyexec';
+import { Cause, Effect, Exit } from 'effect';
+import { basename } from 'pathe';
 
-import { fileExists, resolvePath } from '@/utils/fs.js';
+import { ProcessRunner } from '@/services/process-runner.js';
+import { fileExists, findConfigFile, resolvePath } from '@/utils/fs.js';
 import {
   collectDependencyVersions,
   readPackageJsonOrNull,
@@ -48,119 +50,136 @@ function makeCheck(
   return { message, name, status };
 }
 
-async function runTool(tool: string, cwd: string): Promise<string | null> {
-  try {
-    const result = await x(tool, ['--version'], { nodeOptions: { cwd } });
-    if (result.exitCode === 0) {
-      return result.stdout.trim().split('\n')[0] || null;
-    }
-    return null;
-  } catch {
-    return null;
-  }
-}
+/** Lift the never-failing package.json read into an Effect. */
+const readPackage = (cwd: string) =>
+  Effect.promise(() => readPackageJsonOrNull(cwd));
 
-async function runEnvironmentChecks(
+function runTool(
+  tool: string,
   cwd: string
-): Promise<Array<DiagnosticCheck>> {
-  const pkg = await readPackageJsonOrNull(cwd);
-
-  const nodeVersion = process.version;
-  const engineNode = pkg?.engines?.node;
-  let nodeSatisfies = true;
-
-  if (engineNode) {
-    const nodeMajor = Number.parseInt(nodeVersion.slice(1).split('.')[0], 10);
-    const majorMatch = engineNode.match(/(\d+)/);
-    const engineMajor = majorMatch
-      ? Number.parseInt(majorMatch[1], 10)
-      : Number.NaN;
-    if (!Number.isNaN(engineMajor)) {
-      nodeSatisfies = nodeMajor >= engineMajor;
+): Effect.Effect<string | null, never, ProcessRunner> {
+  return Effect.gen(function* () {
+    const runner = yield* ProcessRunner;
+    const exit = yield* Effect.exit(runner.run(tool, ['--version'], { cwd }));
+    if (Exit.isFailure(exit)) {
+      if (Cause.hasInterruptsOnly(exit.cause)) {
+        return yield* Effect.interrupt;
+      }
+      return null;
     }
-  }
-
-  const gitVersion = await runTool('git', cwd);
-
-  return [
-    makeCheck(
-      'Node.js',
-      nodeSatisfies ? 'pass' : 'warn',
-      engineNode
-        ? `Node.js ${nodeVersion} (required: ${engineNode})`
-        : `Node.js ${nodeVersion}`
-    ),
-    makeCheck(
-      'Git',
-      gitVersion ? 'pass' : 'fail',
-      gitVersion
-        ? `Git ${gitVersion}`
-        : 'Git is not installed (required by xtarterize)'
-    ),
-  ];
+    if (exit.value.exitCode !== 0) {
+      return null;
+    }
+    return exit.value.stdout.trim().split('\n')[0] || null;
+  });
 }
 
-async function checkLockfile(cwd: string): Promise<DiagnosticCheck> {
-  const results = await Promise.all(
-    lockfileInputs().map((input) => fileExists(resolvePath(cwd, input.name)))
-  );
-  const detected = results.some(Boolean);
-  return makeCheck(
-    'Lockfile',
-    detected ? 'pass' : 'warn',
-    detected
-      ? 'Lockfile found - dependencies are locked'
-      : 'No lockfile found - dependencies may not be reproducible'
-  );
-}
-
-async function checkTsconfig(cwd: string): Promise<DiagnosticCheck> {
-  const hasTsconfig = await fileExists(resolvePath(cwd, 'tsconfig.json'));
-  return makeCheck(
-    'TypeScript config',
-    hasTsconfig ? 'pass' : 'warn',
-    hasTsconfig
-      ? 'TypeScript config found (tsconfig.json)'
-      : 'TypeScript is a dependency but tsconfig.json is missing'
-  );
-}
-
-async function checkReadme(cwd: string): Promise<DiagnosticCheck> {
-  const hasReadme = await fileExists(resolvePath(cwd, 'README.md'));
-  return makeCheck(
-    'README',
-    hasReadme ? 'pass' : 'warn',
-    hasReadme ? 'README.md found' : 'No README.md - consider adding one'
-  );
-}
-
-async function checkGitignore(cwd: string): Promise<DiagnosticCheck> {
-  const hasGitignore = await fileExists(resolvePath(cwd, '.gitignore'));
-  return makeCheck(
-    '.gitignore',
-    hasGitignore ? 'pass' : 'warn',
-    hasGitignore
-      ? '.gitignore found'
-      : 'No .gitignore - generated files may be tracked'
-  );
-}
-
-async function runProjectHealthChecks(
+function runEnvironmentChecks(
   cwd: string
-): Promise<Array<DiagnosticCheck>> {
-  const pkg = await readPackageJsonOrNull(cwd);
-  if (!pkg) {
-    return [] as Array<DiagnosticCheck>;
-  }
-  const deps = collectDependencyVersions(pkg);
-  const checks: Array<DiagnosticCheck> = [];
-  checks.push(await checkLockfile(cwd));
-  if (deps.typescript) {
-    checks.push(await checkTsconfig(cwd));
-  }
-  checks.push(await checkReadme(cwd));
-  checks.push(await checkGitignore(cwd));
-  return checks;
+): Effect.Effect<Array<DiagnosticCheck>, never, ProcessRunner> {
+  return Effect.gen(function* () {
+    const pkg = yield* readPackage(cwd);
+
+    const nodeVersion = process.version;
+    const engineNode = pkg?.engines?.node;
+    let nodeSatisfies = true;
+
+    if (engineNode) {
+      const nodeMajor = Number.parseInt(nodeVersion.slice(1).split('.')[0], 10);
+      const majorMatch = engineNode.match(/(\d+)/);
+      const engineMajor = majorMatch
+        ? Number.parseInt(majorMatch[1], 10)
+        : Number.NaN;
+      if (!Number.isNaN(engineMajor)) {
+        nodeSatisfies = nodeMajor >= engineMajor;
+      }
+    }
+
+    const gitVersion = yield* runTool('git', cwd);
+
+    return [
+      makeCheck(
+        'Node.js',
+        nodeSatisfies ? 'pass' : 'warn',
+        engineNode
+          ? `Node.js ${nodeVersion} (required: ${engineNode})`
+          : `Node.js ${nodeVersion}`
+      ),
+      makeCheck(
+        'Git',
+        gitVersion ? 'pass' : 'fail',
+        gitVersion
+          ? `Git ${gitVersion}`
+          : 'Git is not installed (required by xtarterize)'
+      ),
+    ];
+  });
+}
+
+function checkLockfile(cwd: string): Effect.Effect<DiagnosticCheck> {
+  return Effect.gen(function* () {
+    const results = yield* Effect.forEach(
+      lockfileInputs(),
+      (input) => Effect.promise(() => fileExists(resolvePath(cwd, input.name))),
+      { concurrency: 'unbounded' }
+    );
+    const detected = results.some(Boolean);
+    return makeCheck(
+      'Lockfile',
+      detected ? 'pass' : 'warn',
+      detected
+        ? 'Lockfile found - dependencies are locked'
+        : 'No lockfile found - dependencies may not be reproducible'
+    );
+  });
+}
+
+const fileCheck =
+  (
+    filename: string,
+    name: string,
+    [pass, warn]: readonly [pass: string, warn: string]
+  ) =>
+  (cwd: string): Effect.Effect<DiagnosticCheck> =>
+    Effect.map(
+      Effect.promise(() => fileExists(resolvePath(cwd, filename))),
+      (exists) =>
+        makeCheck(name, exists ? 'pass' : 'warn', exists ? pass : warn)
+    );
+
+const checkTsconfig = fileCheck('tsconfig.json', 'TypeScript config', [
+  'TypeScript config found (tsconfig.json)',
+  'TypeScript is a dependency but tsconfig.json is missing',
+]);
+
+const checkReadme = fileCheck('README.md', 'README', [
+  'README.md found',
+  'No README.md - consider adding one',
+]);
+
+const checkGitignore = fileCheck('.gitignore', '.gitignore', [
+  '.gitignore found',
+  'No .gitignore - generated files may be tracked',
+]);
+
+function runProjectHealthChecks(
+  cwd: string
+): Effect.Effect<Array<DiagnosticCheck>> {
+  return Effect.gen(function* () {
+    const pkg = yield* readPackage(cwd);
+    if (!pkg) {
+      return [] as Array<DiagnosticCheck>;
+    }
+    const deps = collectDependencyVersions(pkg);
+    const checks: Array<DiagnosticCheck> = [];
+    checks.push(yield* checkLockfile(cwd));
+    if (deps.typescript) {
+      checks.push(yield* checkTsconfig(cwd));
+    }
+    checks.push(yield* checkReadme(cwd));
+    checks.push(yield* checkGitignore(cwd));
+    return checks;
+  });
 }
 
 const TOOL_CONFLICTS = [
@@ -184,136 +203,128 @@ function collectConflictingToolChecks(
   ).map(([, , message]) => makeCheck('Conflicting tools', 'warn', message));
 }
 
-async function checkLegacyEslintConfig(
+function checkLegacyEslintConfig(
   cwd: string
-): Promise<DiagnosticCheck | null> {
-  const legacyConfigs = [
-    '.eslintrc',
-    '.eslintrc.js',
-    '.eslintrc.cjs',
-    '.eslintrc.mjs',
-    '.eslintrc.json',
-    '.eslintrc.yaml',
-    '.eslintrc.yml',
-  ];
-  for (const config of legacyConfigs) {
-    if (await fileExists(resolvePath(cwd, config))) {
-      return makeCheck(
-        'Legacy config',
-        'warn',
-        `Legacy ESLint config found (${config}). Consider migrating to flat config (eslint.config.js).`
-      );
-    }
-  }
-  return null;
-}
-
-async function runConflictChecks(cwd: string): Promise<Array<DiagnosticCheck>> {
-  const pkg = await readPackageJsonOrNull(cwd);
-  if (!pkg) {
-    return [] as Array<DiagnosticCheck>;
-  }
-  const deps = collectDependencyVersions(pkg);
-  const checks: Array<DiagnosticCheck> = [
-    ...collectConflictingToolChecks(deps),
-  ];
-  const legacyCheck = await checkLegacyEslintConfig(cwd);
-  if (legacyCheck) {
-    checks.push(legacyCheck);
-  }
-  if (checks.length === 0) {
-    checks.push(
-      makeCheck(
-        'Conflicting tools',
-        'pass',
-        'No conflicting formatting/linting tools detected.'
-      )
+): Effect.Effect<DiagnosticCheck | null> {
+  return Effect.gen(function* () {
+    const found = yield* Effect.promise(() =>
+      findConfigFile(cwd, '.eslintrc', [
+        '',
+        '.js',
+        '.cjs',
+        '.mjs',
+        '.json',
+        '.yaml',
+        '.yml',
+      ])
     );
-  }
-  return checks;
+    if (!found) {
+      return null;
+    }
+    return makeCheck(
+      'Legacy config',
+      'warn',
+      `Legacy ESLint config found (${basename(found)}). Consider migrating to flat config (eslint.config.js).`
+    );
+  });
 }
 
-async function runToolInstallationChecks(
-  cwd: string
-): Promise<Array<DiagnosticCheck>> {
-  const pkg = await readPackageJsonOrNull(cwd);
-  if (!pkg) {
-    return [] as Array<DiagnosticCheck>;
-  }
-
-  const deps = collectDependencyVersions(pkg);
-  const checks: Array<DiagnosticCheck> = [];
-
-  const toolsToCheck: Array<{ name: string; dep: string; cmd: string }> = [
-    { cmd: 'biome', dep: '@biomejs/biome', name: 'Biome' },
-    { cmd: 'eslint', dep: 'eslint', name: 'ESLint' },
-    { cmd: 'tsc', dep: 'typescript', name: 'TypeScript' },
-    { cmd: 'commitlint', dep: '@commitlint/cli', name: 'Commitlint' },
-    { cmd: 'knip', dep: 'knip', name: 'Knip' },
-  ];
-
-  for (const tool of toolsToCheck) {
-    if (deps[tool.dep]) {
-      const version = await runTool(tool.cmd, cwd);
+function runConflictChecks(cwd: string): Effect.Effect<Array<DiagnosticCheck>> {
+  return Effect.gen(function* () {
+    const pkg = yield* readPackage(cwd);
+    if (!pkg) {
+      return [] as Array<DiagnosticCheck>;
+    }
+    const deps = collectDependencyVersions(pkg);
+    const checks: Array<DiagnosticCheck> = [
+      ...collectConflictingToolChecks(deps),
+    ];
+    const legacyCheck = yield* checkLegacyEslintConfig(cwd);
+    if (legacyCheck) {
+      checks.push(legacyCheck);
+    }
+    if (checks.length === 0) {
       checks.push(
         makeCheck(
-          `${tool.name} installation`,
-          version ? 'pass' : 'warn',
-          version
-            ? `${tool.name} ${version} is installed`
-            : `${tool.name} is in package.json but not installed (run \`pnpm install\`)`
+          'Conflicting tools',
+          'pass',
+          'No conflicting formatting/linting tools detected.'
         )
       );
     }
-  }
+    return checks;
+  });
+}
 
-  return checks;
+function runToolInstallationChecks(
+  cwd: string
+): Effect.Effect<Array<DiagnosticCheck>, never, ProcessRunner> {
+  return Effect.gen(function* () {
+    const pkg = yield* readPackage(cwd);
+    if (!pkg) {
+      return [] as Array<DiagnosticCheck>;
+    }
+
+    const deps = collectDependencyVersions(pkg);
+    const checks: Array<DiagnosticCheck> = [];
+
+    const toolsToCheck: Array<{ name: string; dep: string; cmd: string }> = [
+      { cmd: 'biome', dep: '@biomejs/biome', name: 'Biome' },
+      { cmd: 'eslint', dep: 'eslint', name: 'ESLint' },
+      { cmd: 'tsc', dep: 'typescript', name: 'TypeScript' },
+      { cmd: 'commitlint', dep: '@commitlint/cli', name: 'Commitlint' },
+      { cmd: 'knip', dep: 'knip', name: 'Knip' },
+    ];
+
+    for (const tool of toolsToCheck) {
+      if (deps[tool.dep]) {
+        const version = yield* runTool(tool.cmd, cwd);
+        checks.push(
+          makeCheck(
+            `${tool.name} installation`,
+            version ? 'pass' : 'warn',
+            version
+              ? `${tool.name} ${version} is installed`
+              : `${tool.name} is in package.json but not installed (run \`pnpm install\`)`
+          )
+        );
+      }
+    }
+
+    return checks;
+  });
 }
 
 interface DiagnosticGroupDefinition {
-  fallback: DiagnosticCheck;
+  failureMessage: string;
   id: DiagnosticGroupId;
-  run: (cwd: string) => Promise<Array<DiagnosticCheck>>;
+  run: (
+    cwd: string
+  ) => Effect.Effect<Array<DiagnosticCheck>, never, ProcessRunner>;
   title: string;
 }
 
 const DIAGNOSTIC_GROUPS: ReadonlyArray<DiagnosticGroupDefinition> = [
   {
-    fallback: {
-      message: 'Failed to run environment checks',
-      name: 'Environment',
-      status: 'fail',
-    },
+    failureMessage: 'Failed to run environment checks',
     id: 'environment',
     run: runEnvironmentChecks,
     title: 'Environment',
   },
   {
-    fallback: {
-      message: 'Failed to run tool checks',
-      name: 'Tools',
-      status: 'fail',
-    },
+    failureMessage: 'Failed to run tool checks',
     id: 'tools',
     run: runToolInstallationChecks,
     title: 'Tools',
   },
   {
-    fallback: {
-      message: 'Failed to run project health checks',
-      name: 'Project',
-      status: 'fail',
-    },
+    failureMessage: 'Failed to run project health checks',
     id: 'project',
     run: runProjectHealthChecks,
     title: 'Project',
   },
   {
-    fallback: {
-      message: 'Failed to run conflict checks',
-      name: 'Configuration',
-      status: 'fail',
-    },
+    failureMessage: 'Failed to run conflict checks',
     id: 'configuration',
     run: runConflictChecks,
     title: 'Configuration',
@@ -345,28 +356,44 @@ function summarize(groups: Array<DiagnosticGroup>): DiagnosticsSummary {
 }
 
 /**
- * Run the requested diagnostic groups, replacing a group that rejects with a
+ * Run the requested diagnostic groups, replacing a group that fails with a
  * single failure check so one broken check never hides the others.
  */
-export async function runDiagnostics(
+export function runDiagnostics(
   cwd: string,
   options: DiagnosticsOptions = {}
-): Promise<{ groups: Array<DiagnosticGroup>; summary: DiagnosticsSummary }> {
-  const definitions = options.groups
-    ? DIAGNOSTIC_GROUPS.filter((group) => options.groups?.includes(group.id))
-    : DIAGNOSTIC_GROUPS;
-  const results = await Promise.allSettled(
-    definitions.map((definition) => definition.run(cwd))
-  );
-  const groups = definitions.map((definition, index) => ({
-    checks:
-      results[index]?.status === 'fulfilled'
-        ? results[index].value
-        : [definition.fallback],
-    title: definition.title,
-  }));
-  if (options.verbose) {
-    groups.unshift(systemGroup());
-  }
-  return { groups, summary: summarize(groups) };
+): Effect.Effect<
+  { groups: Array<DiagnosticGroup>; summary: DiagnosticsSummary },
+  never,
+  ProcessRunner
+> {
+  return Effect.gen(function* () {
+    const definitions = options.groups
+      ? DIAGNOSTIC_GROUPS.filter((group) => options.groups?.includes(group.id))
+      : DIAGNOSTIC_GROUPS;
+    const results = yield* Effect.forEach(
+      definitions,
+      (definition) => Effect.exit(definition.run(cwd)),
+      { concurrency: 'unbounded' }
+    );
+    for (const result of results) {
+      if (Exit.isFailure(result) && Cause.hasInterruptsOnly(result.cause)) {
+        return yield* Effect.interrupt;
+      }
+    }
+    const groups = definitions.map((definition, index) => {
+      const result = results[index];
+      return {
+        checks:
+          result && Exit.isSuccess(result)
+            ? result.value
+            : [makeCheck(definition.title, 'fail', definition.failureMessage)],
+        title: definition.title,
+      };
+    });
+    if (options.verbose) {
+      groups.unshift(systemGroup());
+    }
+    return { groups, summary: summarize(groups) };
+  });
 }

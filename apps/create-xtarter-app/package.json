@@ -64,8 +64,6 @@
   },
   "inlinedDependencies": {
     "consola": "3.4.2",
-    "diff": "9.0.0",
-    "json5": "2.2.3",
     "picocolors": "1.1.1"
   }
 }

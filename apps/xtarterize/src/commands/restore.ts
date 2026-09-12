@@ -1,4 +1,9 @@
-import type { Backup } from '@xtarterize/core';
+import type {
+  Backup,
+  DepsInstaller,
+  ProcessRunner,
+  TaskError,
+} from '@xtarterize/core';
 import {
   createSpinner,
   listBackups,
@@ -7,21 +12,31 @@ import {
   restoreBackup,
 } from '@xtarterize/core';
 import { defineCommand } from 'citty';
+import { Effect } from 'effect';
 
+import { runCliProgram } from '@/runtime.js';
 import { openSession } from '@/session.js';
-import { getPrompter, type Prompter } from '@/ui/prompter.js';
+import { type PromptError, Prompter } from '@/ui/prompter.js';
+import { reportCommandFailure } from '@/ui/reporter.js';
 import { commonArgs, formatArgs, yesArg } from '@/utils/args.js';
+import type { RuntimeArgs } from '@/utils/runtime.js';
+
+export interface RestoreCommandArgs extends RuntimeArgs {
+  filepath?: string;
+  yes?: boolean;
+}
+
+type RestoreError = TaskError | PromptError;
+
+type RestoreServices = DepsInstaller | ProcessRunner | Prompter;
 
 function validateRestoreArgs(filepath: unknown, jsonMode: boolean): boolean {
   if (filepath) {
     return true;
   }
-  if (jsonMode) {
-    console.log(JSON.stringify({ error: 'File path required', ok: false }));
-  } else {
-    logError('File path required. Usage: xtarterize restore <filepath>');
-  }
-  process.exitCode = 1;
+  reportCommandFailure(jsonMode, { error: 'File path required' }, () =>
+    logError('File path required. Usage: xtarterize restore <filepath>')
+  );
   return false;
 }
 
@@ -39,32 +54,28 @@ async function loadAndValidateBackups(options: {
   if (backups.length > 0) {
     return backups;
   }
-  if (jsonMode) {
-    console.log(
-      JSON.stringify({ error: 'No backups found', filepath, ok: false })
-    );
-  } else {
-    logError(`No backups found for ${filepath}`);
-  }
-  process.exitCode = 1;
+  reportCommandFailure(jsonMode, { error: 'No backups found', filepath }, () =>
+    logError(`No backups found for ${filepath}`)
+  );
   return null;
 }
 
-async function promptRestoreConfirm(
+function promptRestoreConfirm(
   backups: Array<Backup>,
-  yes: boolean,
-  prompter: Prompter
-): Promise<Backup | null> {
+  yes: boolean
+): Effect.Effect<Backup | null, PromptError, Prompter> {
   if (backups.length === 1 || yes) {
-    return backups[0];
+    return Effect.succeed(backups[0]);
   }
-  return prompter.select<Backup>({
-    message: 'Select backup to restore:',
-    options: backups.map((b) => ({
-      label: `${b.timestamp} - ${b.backupPath}`,
-      value: b,
-    })),
-  });
+  return Effect.flatMap(Prompter, (prompter) =>
+    prompter.select<Backup>({
+      message: 'Select backup to restore:',
+      options: backups.map((b) => ({
+        label: `${b.timestamp} - ${b.backupPath}`,
+        value: b,
+      })),
+    })
+  );
 }
 
 async function executeRestore(options: {
@@ -90,14 +101,55 @@ async function executeRestore(options: {
     logSuccess(`Restored ${filepath} from backup`);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    if (jsonMode) {
-      console.log(JSON.stringify({ error: message, filepath, ok: false }));
-      process.exitCode = 1;
+    reportCommandFailure(jsonMode, { error: message, filepath }, () =>
+      logError(`Failed to restore: ${message}`)
+    );
+  }
+}
+
+/** The `restore` command as one program: open once, prompt, restore. */
+export function restoreProgram(
+  args: RestoreCommandArgs
+): Effect.Effect<void, RestoreError, RestoreServices> {
+  return Effect.gen(function* () {
+    const session = yield* openSession(args, { resolveTasks: false });
+    if (!session) {
       return;
     }
-    logError(`Failed to restore: ${message}`);
-    process.exitCode = 1;
-  }
+    const { runtime } = session;
+    const cwd = runtime.cwd;
+    const filepath = args.filepath;
+    const jsonMode = runtime.format === 'json';
+    const quiet = jsonMode || runtime.quiet;
+    const yes = args.yes === true || jsonMode;
+    if (!validateRestoreArgs(filepath, jsonMode)) {
+      return;
+    }
+    const backups = yield* Effect.promise(() =>
+      loadAndValidateBackups({
+        cwd,
+        filepath: filepath as string,
+        jsonMode,
+        quiet,
+      })
+    );
+    if (!backups) {
+      return;
+    }
+    const selected = yield* promptRestoreConfirm(backups, yes);
+    if (selected === null) {
+      session.reportOutcome(session.cancelled());
+      return;
+    }
+    yield* Effect.promise(() =>
+      executeRestore({
+        cwd,
+        filepath: filepath as string,
+        jsonMode,
+        selected,
+      })
+    );
+  });
 }
 
 export const restoreCommand = defineCommand({
@@ -115,38 +167,6 @@ export const restoreCommand = defineCommand({
     name: 'restore',
   },
   async run({ args }) {
-    const session = await openSession(args, { resolveTasks: false });
-    if (!session) {
-      return;
-    }
-    const { runtime } = session;
-    const cwd = runtime.cwd;
-    const filepath = args.filepath as string | undefined;
-    const jsonMode = runtime.format === 'json';
-    const quiet = jsonMode || runtime.quiet;
-    const yes = args.yes === true || jsonMode;
-    if (!validateRestoreArgs(filepath, jsonMode)) {
-      return;
-    }
-    const backups = await loadAndValidateBackups({
-      cwd,
-      filepath: filepath as string,
-      jsonMode,
-      quiet,
-    });
-    if (!backups) {
-      return;
-    }
-    const selected = await promptRestoreConfirm(backups, yes, getPrompter());
-    if (selected === null) {
-      session.reportOutcome(session.cancelled());
-      return;
-    }
-    await executeRestore({
-      cwd,
-      filepath: filepath as string,
-      jsonMode,
-      selected,
-    });
+    await runCliProgram(restoreProgram(args));
   },
 });

@@ -1,7 +1,9 @@
 import type { DiagnosticCheck, DiagnosticGroup } from '@xtarterize/core';
 import { createSpinner, pc, runDiagnostics } from '@xtarterize/core';
 import { defineCommand } from 'citty';
+import { Effect } from 'effect';
 
+import { runCliProgram } from '@/runtime.js';
 import { openSession } from '@/session.js';
 import { formatDoctorResult } from '@/ui/json-formatter.js';
 import { commonArgs } from '@/utils/args.js';
@@ -23,10 +25,12 @@ export const doctorCommand = defineCommand({
   async run({ args }) {
     // Doctor opts out of fail-fast: an invalid project still gets diagnosed
     // instead of exiting before the checks run.
-    const session = await openSession(args, {
-      allowInvalidProject: true,
-      resolveTasks: false,
-    });
+    const session = await runCliProgram(
+      openSession(args, {
+        allowInvalidProject: true,
+        resolveTasks: false,
+      })
+    );
     if (!session) {
       return;
     }
@@ -35,8 +39,16 @@ export const doctorCommand = defineCommand({
     const s = createSpinner(quiet);
     s.start('Running diagnostics...');
     const diagStart = performance.now();
-    const { groups, summary } = await runDiagnostics(cwd, { verbose });
-    s.stop('Diagnostics complete');
+    const diagnostics = await runCliProgram(
+      Effect.ensuring(
+        runDiagnostics(cwd, { verbose }),
+        Effect.sync(() => s.stop('Diagnostics complete'))
+      )
+    );
+    if (!diagnostics) {
+      return;
+    }
+    const { groups, summary } = diagnostics;
     const allDiagnostics = groups.flatMap((group) => group.checks);
     if (summary.fail > 0) {
       process.exitCode = 1;

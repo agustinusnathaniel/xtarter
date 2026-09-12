@@ -3,10 +3,13 @@ import os from 'node:os';
 import path from 'node:path';
 import { checkCommand } from '@xtarterize/app/commands/check.js';
 import { diffCommand } from '@xtarterize/app/commands/diff.js';
-import { initCommand } from '@xtarterize/app/commands/init.js';
+import { initProgram } from '@xtarterize/app/commands/init.js';
 import { listCommand } from '@xtarterize/app/commands/list.js';
-import { type Prompter, setPrompter } from '@xtarterize/app/ui/prompter.js';
+import type { PrompterShape } from '@xtarterize/app/ui/prompter.js';
+import { Effect } from 'effect';
 import { describe, expect, it, vi } from 'vite-plus/test';
+
+import { runCli } from '../../helpers/run.js';
 
 const CONFORMANCE_SUMMARY_REGEX = /conformant|Conformance audit/;
 
@@ -193,31 +196,31 @@ describe('cli json output', () => {
     const previousCi = process.env.CI;
     process.env.CI = 'false';
     const prompt = vi.fn();
-    const prompter: Prompter = {
-      confirm: async () => {
+    const prompter: PrompterShape = {
+      confirm: () => {
         prompt();
-        return null;
+        return Effect.succeed(null);
       },
-      groupMultiselect: async () => {
+      groupMultiselect: () => {
         prompt();
-        return null;
+        return Effect.succeed(null);
       },
-      multiselect: async () => {
+      multiselect: () => {
         prompt();
-        return null;
+        return Effect.succeed(null);
       },
-      select: async () => {
+      select: () => {
         prompt();
-        return null;
+        return Effect.succeed(null);
       },
     };
-    setPrompter(prompter);
 
     try {
       const output = (await captureJsonOutput(async () => {
-        await initCommand.run?.({
-          args: { cwd, dryRun: true, format: 'json' },
-        } as never);
+        await runCli(
+          initProgram({ cwd, dryRun: true, format: 'json' }),
+          prompter
+        );
       })) as {
         files: Array<unknown>;
         ok: boolean;
@@ -236,7 +239,6 @@ describe('cli json output', () => {
       } else {
         process.env.CI = previousCi;
       }
-      setPrompter(null);
       process.exitCode = 0;
       await fs.rm(cwd, { force: true, recursive: true });
     }

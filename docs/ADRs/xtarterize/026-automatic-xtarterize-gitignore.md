@@ -134,8 +134,12 @@ This means the gitignore mechanism is always optional - a failure has zero
 impact on the rest of the command execution.
 
 Update (2026-09-11): the Effect boundary pattern was replaced by plain
-`try/catch` (ADR 035). The best-effort behavior is unchanged:
-`ensureXtarterizeGitignore()` still returns `{ action: 'noop' }` on any error.
+`try/catch` (ADR 035).
+
+Update (2026-09-12): Effect returned for command orchestration (ADR 036), but
+`ensureXtarterizeGitignore()` stays a plain Promise-returning leaf, lifted at
+the session seam. The best-effort behavior is unchanged: it still returns
+`{ action: 'noop' }` on any error.
 
 ### Export location
 
@@ -264,6 +268,8 @@ Rejected because `undo` and `restore` read `.xtarterize/` via
 - ADR 022: Run Manifest for Undo - added more `.xtarterize/backups/` artifacts
 - ADR 019: Effect TS Error Handling - established the boundary pattern for
   best-effort I/O
+- ADR 036: Effect orchestration layer - Effect returned for command
+  orchestration; this leaf stays Promise-based
 
 ## Unresolved Questions
 

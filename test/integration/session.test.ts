@@ -1,13 +1,9 @@
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { addCommand } from '@xtarterize/app/commands/add/index.js';
+import { addProgram } from '@xtarterize/app/commands/add/index.js';
 import { listCommand } from '@xtarterize/app/commands/list.js';
 import { openSession } from '@xtarterize/app/session.js';
-import {
-  createScriptedPrompter,
-  setPrompter,
-} from '@xtarterize/app/ui/prompter.js';
 import { reportSessionOutcome } from '@xtarterize/app/ui/reporter.js';
 import { readRunManifest } from '@xtarterize/core';
 import {
@@ -18,6 +14,9 @@ import {
   test,
   vi,
 } from 'vite-plus/test';
+
+import { createScriptedPrompter } from '../helpers/prompter.js';
+import { run, runCli } from '../helpers/run.js';
 
 const coreMocks = vi.hoisted(() => ({
   ensureXtarterizeGitignore: vi.fn(),
@@ -94,7 +93,6 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  setPrompter(null);
   vi.clearAllMocks();
   process.exitCode = 0;
 });
@@ -103,7 +101,7 @@ describe('command session', () => {
   test('runs open, plan, execute, and report in lifecycle order', async () => {
     const cwd = await createMinimalProject();
     try {
-      const session = await openSession({ cwd, quiet: true });
+      const session = await run(openSession({ cwd, quiet: true }));
       expect(session).not.toBeNull();
       if (!session) {
         return;
@@ -115,7 +113,7 @@ describe('command session', () => {
         return;
       }
 
-      const outcome = await session.apply([task]);
+      const outcome = await run(session.apply([task]));
       session.reportOutcome(outcome);
 
       expect(coreMocks.planTasks).toHaveBeenCalledTimes(1);
@@ -138,7 +136,7 @@ describe('command session', () => {
   test('runs one gitignore and one preflight pass per open', async () => {
     const cwd = await createMinimalProject();
     try {
-      const session = await openSession({ cwd, quiet: true });
+      const session = await run(openSession({ cwd, quiet: true }));
       expect(session).not.toBeNull();
       expect(coreMocks.ensureXtarterizeGitignore).toHaveBeenCalledTimes(1);
       expect(coreMocks.runPreflight).toHaveBeenCalledTimes(1);
@@ -146,14 +144,14 @@ describe('command session', () => {
       if (session) {
         const task = session.tasks.find((entry) => entry.id === PANEL);
         if (task) {
-          await session.apply([task]);
+          await run(session.apply([task]));
         }
       }
       // Plan and execute must not repeat open's side effects.
       expect(coreMocks.ensureXtarterizeGitignore).toHaveBeenCalledTimes(1);
       expect(coreMocks.runPreflight).toHaveBeenCalledTimes(1);
 
-      await openSession({ cwd, quiet: true });
+      await run(openSession({ cwd, quiet: true }));
       expect(coreMocks.ensureXtarterizeGitignore).toHaveBeenCalledTimes(2);
       expect(coreMocks.runPreflight).toHaveBeenCalledTimes(2);
     } finally {
@@ -165,9 +163,9 @@ describe('command session', () => {
     const cwd = await createMinimalProject();
     const previousCi = process.env.CI;
     setCi('false');
-    setPrompter(createScriptedPrompter({ groupMultiselects: [null] }));
+    const prompter = createScriptedPrompter({ groupMultiselects: [null] });
     try {
-      await addCommand.run?.({ args: { cwd } } as never);
+      await runCli(addProgram({ cwd }), prompter);
 
       const outcomes = recordedOutcomes();
       expect(outcomes).toHaveLength(1);
@@ -189,14 +187,12 @@ describe('command session', () => {
     const cwd = await createMinimalProject();
     const previousCi = process.env.CI;
     setCi('false');
-    setPrompter(
-      createScriptedPrompter({
-        confirms: [true],
-        groupMultiselects: [[PANEL]],
-      })
-    );
+    const prompter = createScriptedPrompter({
+      confirms: [true],
+      groupMultiselects: [[PANEL]],
+    });
     try {
-      await addCommand.run?.({ args: { cwd } } as never);
+      await runCli(addProgram({ cwd }), prompter);
 
       expect(coreMocks.executePlan).toHaveBeenCalledTimes(1);
 

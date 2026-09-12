@@ -1,8 +1,10 @@
 import { logWarn } from '@xtarterize/core';
 import { defineCommand } from 'citty';
+import { Effect } from 'effect';
 
+import type { RunCommandArgs } from '@/commands/run-command.js';
+import { runCliProgram } from '@/runtime.js';
 import { openSession } from '@/session.js';
-import { getPrompter } from '@/ui/prompter.js';
 import {
   commonArgs,
   formatArgs,
@@ -12,6 +14,7 @@ import {
 
 import { runInteractive } from './interactive.js';
 import { runSingleTask } from './single-task.js';
+import type { AddCommandError, AddCommandServices } from './types.js';
 
 export const addCommand = defineCommand({
   args: {
@@ -35,63 +38,58 @@ export const addCommand = defineCommand({
     name: 'add',
   },
   async run({ args }) {
-    await handleAddCommand(args);
+    await runCliProgram(addProgram(args));
   },
 });
 
-interface AddCommandArgs {
+export type AddCommandArgs = RunCommandArgs & {
   all?: boolean;
-  cwd?: string;
-  format?: string;
-  includeConflicts?: boolean;
-  json?: boolean;
-  quiet?: boolean;
   taskId?: string;
-  timing?: boolean;
-}
+};
 
-async function handleAddCommand(args: AddCommandArgs): Promise<void> {
-  const session = await openSession(args);
-  if (!session) {
-    return;
-  }
+/** The `add` command as one program: open once, then pick or apply tasks. */
+export function addProgram(
+  args: AddCommandArgs
+): Effect.Effect<void, AddCommandError, AddCommandServices> {
+  return Effect.gen(function* () {
+    const session = yield* openSession(args);
+    if (!session) {
+      return;
+    }
 
-  const prompter = getPrompter();
-  const includeConflicts = args.includeConflicts === true;
-  const recordTiming = args.timing === true;
+    const includeConflicts = args.includeConflicts === true;
+    const recordTiming = args.timing === true;
 
-  if (args.all && args.taskId) {
-    logWarn(
-      'Both --all and a task ID were specified. The task ID will be ignored.'
-    );
-  }
+    if (args.all && args.taskId) {
+      logWarn(
+        'Both --all and a task ID were specified. The task ID will be ignored.'
+      );
+    }
 
-  if (args.all) {
-    await runInteractive({
-      all: true,
+    if (args.all) {
+      yield* runInteractive({
+        all: true,
+        includeConflicts,
+        recordTiming,
+        session,
+      });
+      return;
+    }
+
+    if (args.taskId) {
+      yield* runSingleTask({
+        includeConflicts,
+        recordTiming,
+        session,
+        taskId: args.taskId,
+      });
+      return;
+    }
+
+    yield* runInteractive({
       includeConflicts,
-      prompter,
       recordTiming,
       session,
     });
-    return;
-  }
-
-  if (args.taskId) {
-    await runSingleTask({
-      includeConflicts,
-      prompter,
-      recordTiming,
-      session,
-      taskId: args.taskId,
-    });
-    return;
-  }
-
-  await runInteractive({
-    includeConflicts,
-    prompter,
-    recordTiming,
-    session,
   });
 }

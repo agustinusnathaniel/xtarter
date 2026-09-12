@@ -41,6 +41,10 @@ the lifecycle:
 `add --all` and interactive `add` plan and execute once, so one run manifest
 covers the whole operation.
 
+Update (2026-09-12): the session now returns Effects and prompts are provided
+by the app-level `Prompter` service (ADR 036). The lifecycle and outcome
+contracts described above are unchanged.
+
 ## Rationale
 
 - One lifecycle removes four apply and report paths and two flag resolvers.
@@ -78,4 +82,6 @@ covers the whole operation.
 
 ### Related Decisions
 
-- ADR 019 (Effect), ADR 022 (manifest), ADR 026 (gitignore), Plan 043 Phase 4.
+- ADR 019 (Effect), superseded for this session by ADR 036 (Effect
+  orchestration layer), ADR 022 (manifest), ADR 026 (gitignore), Plan 043
+  Phase 4.

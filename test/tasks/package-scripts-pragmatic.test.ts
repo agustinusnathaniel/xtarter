@@ -5,6 +5,8 @@ import { detectProject } from '@xtarterize/core';
 import { packageScriptsTask } from '@xtarterize/tasks';
 import { describe, expect } from 'vite-plus/test';
 
+import { run } from '../helpers/run.js';
+
 describe('packageScriptsTask', () => {
   describe('edge cases', () => {
     describe('all managed scripts use pragmatic approach', () => {
@@ -31,8 +33,8 @@ describe('packageScriptsTask', () => {
         );
 
         const profile = await detectProject(tmpDir);
-        const status = await packageScriptsTask.check(tmpDir, profile);
-        const diffs = await packageScriptsTask.dryRun(tmpDir, profile);
+        const status = await run(packageScriptsTask.check(tmpDir, profile));
+        const diffs = await run(packageScriptsTask.dryRun(tmpDir, profile));
         const pkgDiff = diffs.find((d) => d.filepath === 'package.json');
 
         expect(status).toBe('patch');
@@ -66,8 +68,8 @@ describe('packageScriptsTask', () => {
         );
 
         const profile = await detectProject(tmpDir);
-        const status = await packageScriptsTask.check(tmpDir, profile);
-        const diffs = await packageScriptsTask.dryRun(tmpDir, profile);
+        const status = await run(packageScriptsTask.check(tmpDir, profile));
+        const diffs = await run(packageScriptsTask.dryRun(tmpDir, profile));
         const pkgDiff = diffs.find((d) => d.filepath === 'package.json');
 
         expect(status).toBe('patch');
@@ -103,8 +105,8 @@ describe('packageScriptsTask', () => {
         );
 
         const profile = await detectProject(tmpDir);
-        const status = await packageScriptsTask.check(tmpDir, profile);
-        const diffs = await packageScriptsTask.dryRun(tmpDir, profile);
+        const status = await run(packageScriptsTask.check(tmpDir, profile));
+        const diffs = await run(packageScriptsTask.dryRun(tmpDir, profile));
         const pkgDiff = diffs.find((d) => d.filepath === 'package.json');
 
         expect(status).toBe('patch');
@@ -139,8 +141,8 @@ describe('packageScriptsTask', () => {
         );
 
         const profile = await detectProject(tmpDir);
-        const status = await packageScriptsTask.check(tmpDir, profile);
-        const diffs = await packageScriptsTask.dryRun(tmpDir, profile);
+        const status = await run(packageScriptsTask.check(tmpDir, profile));
+        const diffs = await run(packageScriptsTask.dryRun(tmpDir, profile));
         const pkgDiff = diffs.find((d) => d.filepath === 'package.json');
 
         expect(status).toBe('patch');
@@ -175,8 +177,8 @@ describe('packageScriptsTask', () => {
         );
 
         const profile = await detectProject(tmpDir);
-        const status = await packageScriptsTask.check(tmpDir, profile);
-        const diffs = await packageScriptsTask.dryRun(tmpDir, profile);
+        const status = await run(packageScriptsTask.check(tmpDir, profile));
+        const diffs = await run(packageScriptsTask.dryRun(tmpDir, profile));
         const pkgDiff = diffs.find((d) => d.filepath === 'package.json');
 
         expect(status).toBe('patch');
@@ -210,8 +212,8 @@ describe('packageScriptsTask', () => {
         );
 
         const profile = await detectProject(tmpDir);
-        const status = await packageScriptsTask.check(tmpDir, profile);
-        const diffs = await packageScriptsTask.dryRun(tmpDir, profile);
+        const status = await run(packageScriptsTask.check(tmpDir, profile));
+        const diffs = await run(packageScriptsTask.dryRun(tmpDir, profile));
         const pkgDiff = diffs.find((d) => d.filepath === 'package.json');
 
         expect(status).toBe('patch');
@@ -245,8 +247,8 @@ describe('packageScriptsTask', () => {
         );
 
         const profile = await detectProject(tmpDir);
-        const status = await packageScriptsTask.check(tmpDir, profile);
-        const diffs = await packageScriptsTask.dryRun(tmpDir, profile);
+        const status = await run(packageScriptsTask.check(tmpDir, profile));
+        const diffs = await run(packageScriptsTask.dryRun(tmpDir, profile));
         const pkgDiff = diffs.find((d) => d.filepath === 'package.json');
 
         expect(status).toBe('patch');
@@ -279,7 +281,7 @@ describe('packageScriptsTask', () => {
         );
 
         const profile = await detectProject(tmpDir);
-        const diffs = await packageScriptsTask.dryRun(tmpDir, profile);
+        const diffs = await run(packageScriptsTask.dryRun(tmpDir, profile));
         const pkgDiff = diffs.find((d) => d.filepath === 'package.json');
 
         expect(pkgDiff?.after).toContain('"biome"');

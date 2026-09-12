@@ -6,6 +6,8 @@ import { detectProject } from '@xtarterize/core';
 import { packageEnginesTask } from '@xtarterize/tasks';
 import { describe, expect } from 'vite-plus/test';
 
+import { run } from '../helpers/run.js';
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const fixtures = path.resolve(__dirname, '../fixtures');
 
@@ -31,9 +33,11 @@ describe('packageEnginesTask', () => {
     const profile = await detectProject(
       path.join(fixtures, 'react-vite-tailwind')
     );
-    const status = await packageEnginesTask.check(
-      path.join(fixtures, 'react-vite-tailwind'),
-      profile
+    const status = await run(
+      packageEnginesTask.check(
+        path.join(fixtures, 'react-vite-tailwind'),
+        profile
+      )
     );
     expect(status).toBe('patch');
   });
@@ -42,9 +46,11 @@ describe('packageEnginesTask', () => {
     const profile = await detectProject(
       path.join(fixtures, 'react-vite-tailwind')
     );
-    const diffs = await packageEnginesTask.dryRun(
-      path.join(fixtures, 'react-vite-tailwind'),
-      profile
+    const diffs = await run(
+      packageEnginesTask.dryRun(
+        path.join(fixtures, 'react-vite-tailwind'),
+        profile
+      )
     );
     expect(diffs.length).toBe(1);
     expect(diffs[0].filepath).toBe('package.json');
@@ -65,7 +71,7 @@ describe('packageEnginesTask', () => {
     await fs.writeFile(path.join(tmpDir, '.nvmrc'), '18\n');
 
     const profile = await detectProject(tmpDir);
-    const status = await packageEnginesTask.check(tmpDir, profile);
+    const status = await run(packageEnginesTask.check(tmpDir, profile));
     expect(status).toBe('skip');
 
     await fs.rm(tmpDir, { recursive: true });
@@ -87,7 +93,7 @@ describe('packageEnginesTask', () => {
     );
 
     const profile = await detectProject(tmpDir);
-    const status = await packageEnginesTask.check(tmpDir, profile);
+    const status = await run(packageEnginesTask.check(tmpDir, profile));
     expect(status).toBe('skip');
 
     await fs.rm(tmpDir, { recursive: true });
@@ -104,7 +110,7 @@ describe('packageEnginesTask', () => {
     await fs.writeFile(path.join(tmpDir, '.nvmrc'), '20.11.1\n');
 
     const profile = await detectProject(tmpDir);
-    const diffs = await packageEnginesTask.dryRun(tmpDir, profile);
+    const diffs = await run(packageEnginesTask.dryRun(tmpDir, profile));
     expect(diffs.length).toBe(1);
     expect(JSON.parse(diffs[0].after).devEngines).toEqual({
       packageManager: { name: 'pnpm', version: '>=9' },
@@ -127,7 +133,7 @@ describe('packageEnginesTask', () => {
     );
 
     const profile = await detectProject(tmpDir);
-    const diffs = await packageEnginesTask.dryRun(tmpDir, profile);
+    const diffs = await run(packageEnginesTask.dryRun(tmpDir, profile));
     expect(diffs.length).toBe(1);
     expect(JSON.parse(diffs[0].after).devEngines).toEqual({
       packageManager: { name: 'pnpm', version: '>=9' },
@@ -150,7 +156,7 @@ describe('packageEnginesTask', () => {
     );
 
     const profile = await detectProject(tmpDir);
-    const diffs = await packageEnginesTask.dryRun(tmpDir, profile);
+    const diffs = await run(packageEnginesTask.dryRun(tmpDir, profile));
     expect(diffs.length).toBe(1);
     const devEngines = JSON.parse(diffs[0].after).devEngines;
     expect(devEngines.packageManager.version).toBe('>=11.8.0');
@@ -172,7 +178,7 @@ describe('packageEnginesTask', () => {
     await fs.writeFile(path.join(tmpDir, '.nvmrc'), '18\n');
 
     const profile = await detectProject(tmpDir);
-    await packageEnginesTask.apply(tmpDir, profile);
+    await run(packageEnginesTask.apply(tmpDir, profile));
     const content = JSON.parse(
       await fs.readFile(path.join(tmpDir, 'package.json'), 'utf-8')
     );

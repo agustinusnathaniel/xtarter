@@ -34,6 +34,7 @@
     "@changesets/cli": "^3.0.1",
     "@types/node": "catalog:",
     "all-contributors-cli": "^6.26.1",
+    "effect": "catalog:",
     "turbo": "^2.10.11",
     "ultracite": "7.10.7",
     "vite": "catalog:",

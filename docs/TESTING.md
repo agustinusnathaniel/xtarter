@@ -30,7 +30,7 @@ Mock only genuine external seams such as the network, clock, randomness, or a pa
 
 ## Repository layout
 
-- `test/core/` covers the detection, resolution, apply, backup, diagnostics, plugin, and inquiry behavior.
+- `test/core/` covers the detection, resolution, apply, backup, diagnostics, selection, and inquiry behavior.
 - `test/patchers/` covers JSON, YAML, and AST patching.
 - `test/tasks/` covers task applicability, status, dry-run output, and selected apply behavior.
 - `test/integration/` covers command execution, filesystem effects, exit codes, and machine-readable output.

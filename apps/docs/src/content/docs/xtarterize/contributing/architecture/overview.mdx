@@ -17,7 +17,7 @@ xtarterize is organized as a monorepo using [Turborepo](https://turbo.build/repo
 
 <FileTree>
 - packages/
-  - core/ - [`@xtarterize/core`](https://github.com/agustinusnathaniel/xtarterize/tree/main/packages/core) - [`detect.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/detect.ts) + [`detect/`](https://github.com/agustinusnathaniel/xtarterize/tree/main/packages/core/src/detect), [`resolve.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/resolve.ts), [`apply/`](https://github.com/agustinusnathaniel/xtarterize/tree/main/packages/core/src/apply), [`backup.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/backup.ts), [`preflight.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/preflight.ts)
+  - core/ - [`@xtarterize/core`](https://github.com/agustinusnathaniel/xtarterize/tree/main/packages/core) - [`detect.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/detect.ts) + [`detect/`](https://github.com/agustinusnathaniel/xtarterize/tree/main/packages/core/src/detect), [`resolve.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/resolve.ts), [`apply/`](https://github.com/agustinusnathaniel/xtarterize/tree/main/packages/core/src/apply), [`services/`](https://github.com/agustinusnathaniel/xtarterize/tree/main/packages/core/src/services), [`backup.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/backup.ts), [`preflight.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/preflight.ts)
   - patchers/ - [`@xtarterize/patchers`](https://github.com/agustinusnathaniel/xtarterize/tree/main/packages/patchers) - [`json-merge.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/patchers/src/json-merge.ts), [`ast-patch.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/patchers/src/ast-patch.ts)
   - tasks/ - [`@xtarterize/tasks`](https://github.com/agustinusnathaniel/xtarterize/tree/main/packages/tasks) - [`factory/define-task.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/tasks/src/factory/define-task.ts), [`factory/package-json.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/tasks/src/factory/package-json.ts), all task implementations
 - apps/
@@ -55,31 +55,34 @@ flowchart TD
 sequenceDiagram
     participant User
     participant CLI as CLI (citty)
+    participant Runtime as runtime.ts (runCliProgram)
     participant Session as CommandSession
     participant Core as @xtarterize/core
     participant Tasks as @xtarterize/tasks
     participant Patchers as @xtarterize/patchers
 
     User->>CLI: xtarterize init
-    CLI->>Session: open(args)
-    Session->>Core: ensureXtarterizeGitignore(cwd)
-    Session->>Core: runPreflight(cwd)
-    Core-->>Session: PreflightResult
-    Session->>Core: detectProject(cwd) + resolveProjectTasks(tasks)
+    CLI->>Runtime: runCliProgram(initProgram)
+    Runtime->>Runtime: provide AppLayer (DepsInstaller + ProcessRunner + Prompter)
+    Runtime->>Session: CommandSession.open(args)
+    Session->>Core: ensureXtarterizeGitignore(cwd) [plain leaf, lifted]
+    Session->>Core: runPreflight(cwd) [plain leaf, lifted]
+    Session->>Core: detectProject + resolveProjectTasks (Effect)
     Core-->>Session: ProjectProfile + statuses + timing
-    Session->>Core: planTasks(tasks, statuses)
+    Session->>Core: planTasks (Effect)
     Core-->>Session: ApplyPlan (diffs, dependencies, files)
-    Session->>User: reportPlan / confirm (injected prompter)
+    Session->>User: reportPlan / confirm via Prompter service
     User->>Session: Confirm
-    Session->>Core: executePlan(plan)
-    Core->>Core: backupFile(cwd, filepath) + writeRunManifest
-    Core->>Core: installDependenciesBatch(dependencies)
-    Core->>Tasks: task.apply(cwd, profile)
+    Session->>Core: executePlan (Effect)
+    Core->>Core: backupFile + writeRunManifest [plain leaves, lifted]
+    Core->>Core: DepsInstaller.install(dependencies)
+    Core->>Tasks: task.check/dryRun/apply (Effect or Promise, normalized)
     Tasks->>Patchers: mergeJson / patchJson / injectVitePluginIntoCode
     Patchers-->>Tasks: Modified content
-    Tasks-->>Core: Applied
+    Tasks-->>Core: Result or TaskError
     Core-->>Session: ApplyResult
     Session->>User: report outcome (terminal or JSON)
+    Runtime->>Runtime: Exit/Cause -> exit code (interrupt-only = 0)
 ```
 
 ## Key Design Decisions
@@ -91,8 +94,10 @@ sequenceDiagram
 - **Dry-run is exact** - The plan's diffs are the content `executePlan()` writes
 - **Idempotency is non-negotiable** - Running twice produces no changes on second run
 - **Templates are parameterized** - All templates receive `ProjectProfile` and adapt accordingly
-- **One command session** - `CommandSession` owns open, plan, execute, and report; commands declare selection policy and output shape, and prompts are injected (clack in production, scripted in tests)
+- **One command session** - `CommandSession` owns open, plan, execute, and report; commands declare selection policy and output shape, and prompts are injected through the `Prompter` service (clack in production, scripted in tests)
 - **Batch install failures surface** - A failed dependency install is reported in the apply result and exit code instead of being logged and ignored
+- **Packages return Effects, apps run them** - `packages/core` and `packages/tasks` construct `Effect` values; `apps/xtarterize/src/runtime.ts` is the single runtime edge (`runCliProgram` with `AppLayer`). Pure and Promise leaves (detection, filesystem, backup, preflight) stay plain and are lifted at the nearest seam (ADR 036)
+- **Effect services own the effectful edges** - `ProcessRunner` (tinyexec with interruption and timeout), `DepsInstaller` (batched installs), and `Prompter` (interactive prompts) are Effect services provided at the runtime edge
 
 ## Development Workflow
 

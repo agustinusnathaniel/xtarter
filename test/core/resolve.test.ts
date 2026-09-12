@@ -3,7 +3,10 @@ import { fileURLToPath } from 'node:url';
 import type { ProjectProfile, Task, TaskScope } from '@xtarterize/core';
 import { resolveTaskStatuses, resolveTasks } from '@xtarterize/core';
 import { getAllTasks } from '@xtarterize/tasks';
+import { Effect } from 'effect';
 import { describe, expect } from 'vite-plus/test';
+
+import { run } from '../helpers/run.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const fixtures = path.resolve(__dirname, '../fixtures');
@@ -39,10 +42,12 @@ describe('resolveTaskStatuses', () => {
     );
     const allTasks = getAllTasks();
     const tasks = resolveTasks(profile, allTasks);
-    const statuses = await resolveTaskStatuses(
-      tasks,
-      path.join(fixtures, 'react-vite-tailwind'),
-      profile
+    const statuses = await run(
+      resolveTaskStatuses(
+        tasks,
+        path.join(fixtures, 'react-vite-tailwind'),
+        profile
+      )
     );
 
     for (const task of tasks) {
@@ -57,9 +62,9 @@ describe('resolveTasks - scope filtering', () => {
   function mockTask(id: string, scope: TaskScope | undefined): Task {
     return {
       applicable: () => true,
-      apply: async () => {},
-      check: async () => 'skip' as const,
-      dryRun: async () => [],
+      apply: () => Effect.void,
+      check: () => Effect.succeed('skip' as const),
+      dryRun: () => Effect.succeed([]),
       group: 'test',
       id,
       label: id,

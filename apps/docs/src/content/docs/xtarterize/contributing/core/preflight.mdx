@@ -82,6 +82,8 @@ Diagnostics
 
 ### `runPreflight(cwd)`
 
+`runPreflight()` stays a Promise-returning leaf and calls no Effect runtime. The command session lifts it with `Effect.tryPromise` at the session seam (ADR 036).
+
 ```typescript
 import { runPreflight } from '@xtarterize/core'
 
@@ -98,12 +100,17 @@ if (!result.valid) {
 
 ### `runDiagnostics(cwd, options)`
 
-```typescript
-import { runDiagnostics } from '@xtarterize/core'
+`runDiagnostics()` returns an Effect requiring `ProcessRunner`, because tool checks shell out.
 
-const { groups, summary } = await runDiagnostics('/path/to/project', {
-  groups: ['tools', 'configuration'],
-})
+```typescript
+import { Effect } from 'effect'
+import { ProcessRunner, runDiagnostics } from '@xtarterize/core'
+
+const { groups, summary } = await Effect.runPromise(
+  runDiagnostics('/path/to/project', {
+    groups: ['tools', 'configuration'],
+  }).pipe(Effect.provide(ProcessRunner.layer))
+)
 
 for (const group of groups) {
   console.log(group.title) // 'Tools'

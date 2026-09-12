@@ -1,13 +1,20 @@
-import type {
-  FileDiff,
-  ProjectProfile,
-  Task,
-  TaskScope,
-  TaskSearchMeta,
-  TaskStatus,
+import {
+  type FileDiff,
+  type ProjectProfile,
+  type Task,
+  type TaskDep,
+  TaskError,
+  type TaskScope,
+  type TaskSearchMeta,
+  type TaskServices,
+  type TaskStatus,
+  toTaskEffect,
 } from '@xtarterize/core';
+import { Effect } from 'effect';
 
-import { checkMissingDeps, wrapTask, writeTaskDiffs } from './ops.js';
+export type { TaskDep } from '@xtarterize/core';
+
+import { checkMissingDeps, writeTaskDiffs } from './ops.js';
 import { applyPackageJsonChange } from './package-json.js';
 import {
   deriveConfigTargets,
@@ -15,7 +22,6 @@ import {
   type ResolvedTarget,
   resolveTarget,
   type TargetDraft,
-  type TargetResolver,
   type TaskTarget,
 } from './targets.js';
 
@@ -26,16 +32,24 @@ export type {
   TransformTarget,
 } from './targets.js';
 
-/** A dependency the apply plan installs before tasks run. */
-export interface TaskDep {
-  depName: string;
-  dev: boolean;
-}
+/**
+ * A spec surface may stay synchronous, return a Promise, or return an Effect
+ * that requires the task services. The factory lifts all three shapes into one
+ * Effect so callers see a single contract.
+ */
+export type SpecResult<A> =
+  | A
+  | Promise<A>
+  | Effect.Effect<A, TaskError, TaskServices>;
+
+/** A `Task` from `defineTask`, which always implements `getDeps`. */
+export type DefinedTask = Task & {
+  getDeps: NonNullable<Task['getDeps']>;
+};
 
 export interface TaskAction {
-  check: (cwd: string, profile: ProjectProfile) => Promise<TaskStatus>;
-  kind: 'action';
-  run: (cwd: string, profile: ProjectProfile) => Promise<void>;
+  check: (cwd: string, profile: ProjectProfile) => SpecResult<TaskStatus>;
+  run: (cwd: string, profile: ProjectProfile) => SpecResult<void>;
 }
 
 export interface TaskResolution {
@@ -57,9 +71,15 @@ export interface DepResolverContext {
 export type DepResolver = (
   resolution: SpecResolution,
   context: DepResolverContext
-) => Array<TaskDep> | Promise<Array<TaskDep>>;
+) => SpecResult<Array<TaskDep>>;
 
 export type DepsDeclaration = Array<TaskDep> | DepResolver;
+
+/** Targets may depend on project state and profile, so they resolve lazily. */
+export type SpecTargetResolver = (
+  cwd: string,
+  profile: ProjectProfile
+) => SpecResult<Array<TaskTarget>>;
 
 /**
  * Metadata whose `configTargets` is derived from the declared targets when the
@@ -73,13 +93,19 @@ export type SpecSearchMeta = Omit<TaskSearchMeta, 'configTargets'> & {
 export interface TaskSpec {
   actions?: Array<TaskAction>;
   applicable: (profile: ProjectProfile) => boolean;
+  /** Search config files; derived from `targets` when omitted. */
+  configTargets?: Array<string>;
   deps?: DepsDeclaration;
   group: string;
   id: string;
+  /** Extra search keywords, assembled into `searchMeta`. */
+  keywords?: Array<string>;
   label: string;
   scope?: TaskScope;
   searchMeta?: SpecSearchMeta;
-  targets?: Array<TaskTarget> | TargetResolver;
+  /** Descriptive search tags, assembled into `searchMeta`. */
+  tags?: Array<string>;
+  targets?: Array<TaskTarget> | SpecTargetResolver;
 }
 
 /** conflict wins over patch, then new, then skip. */
@@ -106,11 +132,11 @@ function collectDiffs(targets: Array<ResolvedTarget>): Array<FileDiff> {
   return diffs;
 }
 
-async function resolveDeps(
+function resolveDeps(
   declaration: DepsDeclaration | undefined,
   resolution: SpecResolution,
   context: ResolveContext
-): Promise<Array<TaskDep>> {
+): SpecResult<Array<TaskDep>> {
   if (declaration === undefined) {
     return [];
   }
@@ -156,112 +182,174 @@ async function applyDependencyStatus(
   );
 }
 
-async function resolveSpec(
+function resolveSpec(
   spec: TaskSpec,
   context: ResolveContext
-): Promise<TaskResolution> {
-  const declaredTargets =
-    typeof spec.targets === 'function'
-      ? await spec.targets(context.cwd, context.profile)
-      : (spec.targets ?? []);
-  const drafts: Array<TargetDraft> = [];
-  for (const target of declaredTargets) {
-    drafts.push(await resolveTarget(target, context));
-  }
-  const actionStatuses: Array<TaskStatus> = [];
-  for (const action of spec.actions ?? []) {
-    actionStatuses.push(await action.check(context.cwd, context.profile));
-  }
-  const provisionalTargets = drafts.map((draft) => draft.target);
-  const provisional: SpecResolution = {
-    diffs: collectDiffs(provisionalTargets),
-    status: combineStatuses([
-      ...provisionalTargets.map((target) => target.status),
-      ...actionStatuses,
-    ]),
-    targets: provisionalTargets,
-  };
-  const deps = await resolveDeps(spec.deps, provisional, context);
-  const targets = await applyDependencyStatus(drafts, deps, context.cwd);
-  return {
-    deps,
-    diffs: collectDiffs(targets),
-    status: combineStatuses([
-      ...targets.map((target) => target.status),
-      ...actionStatuses,
-    ]),
-    targets,
-  };
+): Effect.Effect<TaskResolution, TaskError, TaskServices> {
+  return Effect.gen(function* () {
+    const declared = spec.targets;
+    const declaredTargets =
+      typeof declared === 'function'
+        ? yield* toTaskEffect(spec.id, () =>
+            declared(context.cwd, context.profile)
+          )
+        : (declared ?? []);
+    const drafts: Array<TargetDraft> = [];
+    for (const target of declaredTargets) {
+      const draft = yield* toTaskEffect(spec.id, () =>
+        resolveTarget(target, context)
+      );
+      drafts.push(draft);
+    }
+    const actionStatuses: Array<TaskStatus> = [];
+    for (const action of spec.actions ?? []) {
+      const status = yield* toTaskEffect(spec.id, () =>
+        action.check(context.cwd, context.profile)
+      );
+      actionStatuses.push(status);
+    }
+    const provisionalTargets = drafts.map((draft) => draft.target);
+    const provisional: SpecResolution = {
+      diffs: collectDiffs(provisionalTargets),
+      status: combineStatuses([
+        ...provisionalTargets.map((target) => target.status),
+        ...actionStatuses,
+      ]),
+      targets: provisionalTargets,
+    };
+    const deps = yield* toTaskEffect(spec.id, () =>
+      resolveDeps(spec.deps, provisional, context)
+    );
+    const targets = yield* toTaskEffect(spec.id, () =>
+      applyDependencyStatus(drafts, deps, context.cwd)
+    );
+    return {
+      deps,
+      diffs: collectDiffs(targets),
+      status: combineStatuses([
+        ...targets.map((target) => target.status),
+        ...actionStatuses,
+      ]),
+      targets,
+    };
+  });
 }
 
-async function applySpec(
+function applySpec(
   spec: TaskSpec,
   context: ResolveContext
-): Promise<void> {
-  const { cwd, profile } = context;
-  const { targets } = await resolveSpec(spec, context);
-  const diffs: Array<FileDiff> = [];
-  for (const target of targets) {
-    if (target.kind === 'packageJson') {
-      await applyPackageJsonChange(cwd, target.patch);
-      continue;
+): Effect.Effect<void, TaskError, TaskServices> {
+  return Effect.gen(function* () {
+    const { cwd, profile } = context;
+    const { targets } = yield* resolveSpec(spec, context);
+    const diffs: Array<FileDiff> = [];
+    for (const target of targets) {
+      if (target.kind === 'packageJson') {
+        yield* toTaskEffect(spec.id, () =>
+          applyPackageJsonChange(cwd, target.patch)
+        );
+        continue;
+      }
+      if (target.diff) {
+        diffs.push(target.diff);
+      }
     }
-    if (target.diff) {
-      diffs.push(target.diff);
+    yield* toTaskEffect(spec.id, () => writeTaskDiffs(cwd, diffs));
+    for (const action of spec.actions ?? []) {
+      yield* toTaskEffect(spec.id, () => action.run(cwd, profile));
     }
-  }
-  await writeTaskDiffs(cwd, diffs);
-  for (const action of spec.actions ?? []) {
-    await action.run(cwd, profile);
-  }
+  });
 }
 
 /**
- * Merge authored metadata with derived `configTargets`. Keywords and tags stay
- * authored; only targets the spec declares statically can be derived.
+ * Label a method failure the way the removed `wrapTask` did:
+ * `<method> failed: <String(cause)>`, with the raw cause preserved. Internal
+ * lifts carry their raw cause (even `undefined`) as an own `cause` property;
+ * an Effect the spec authored passes its own failure through unchanged.
+ */
+function labelFailure<A>(
+  specId: string,
+  method: string,
+  effect: Effect.Effect<A, TaskError, TaskServices>
+): Effect.Effect<A, TaskError, TaskServices> {
+  return Effect.mapError(effect, (failure) => {
+    const cause = Object.hasOwn(failure, 'cause') ? failure.cause : failure;
+    return new TaskError({
+      cause,
+      message: `${method} failed: ${String(cause)}`,
+      taskId: specId,
+    });
+  });
+}
+
+/**
+ * Assemble search metadata from the top-level fields or the nested `searchMeta`
+ * form. Keywords and tags stay authored; only targets the spec declares
+ * statically can be derived. Authored `configTargets` keeps its leading key
+ * position, a derived one is appended last, matching the historical shape.
  */
 function resolveSearchMeta(spec: TaskSpec): TaskSearchMeta | undefined {
-  if (spec.searchMeta === undefined) {
+  const { configTargets, keywords, searchMeta, tags } = spec;
+  if (
+    configTargets === undefined &&
+    keywords === undefined &&
+    searchMeta === undefined &&
+    tags === undefined
+  ) {
     return undefined;
   }
-  return {
-    ...spec.searchMeta,
-    configTargets:
-      spec.searchMeta.configTargets ?? deriveConfigTargets(spec.targets),
+  const authoredConfigTargets = configTargets ?? searchMeta?.configTargets;
+  const authored = {
+    keywords: keywords ?? searchMeta?.keywords ?? [],
+    tags: tags ?? searchMeta?.tags ?? [],
   };
+  if (authoredConfigTargets !== undefined) {
+    return { configTargets: authoredConfigTargets, ...authored };
+  }
+  return {
+    ...authored,
+    configTargets: deriveConfigTargets(
+      Array.isArray(spec.targets) ? spec.targets : undefined
+    ),
+  };
+}
+
+/**
+ * Build one `defineTask` entry method: resolve the spec once, project the
+ * resolution, and label failures at the boundary.
+ */
+function defineMethod<A>(
+  spec: TaskSpec,
+  method: string,
+  project: (resolution: TaskResolution) => A
+) {
+  return (cwd: string, profile: ProjectProfile) =>
+    labelFailure(
+      spec.id,
+      method,
+      Effect.map(resolveSpec(spec, { cwd, profile }), project)
+    );
 }
 
 /**
  * Build a Task from a declarative spec. One resolution produces the status, the
  * diffs, and the dependency list, so check, dryRun, apply, and the apply plan
- * cannot disagree about the same project.
+ * cannot disagree about the same project. The spec resolves lazily on each
+ * invocation, and spec functions may be synchronous, async, or Effect-based.
  */
-export function defineTask(spec: TaskSpec): Task {
+export function defineTask(spec: TaskSpec): DefinedTask {
   return {
     applicable: spec.applicable,
-    async apply(cwd, profile): Promise<void> {
-      return wrapTask(spec.id, 'defineTask.apply', () =>
+    apply(cwd, profile) {
+      return labelFailure(
+        spec.id,
+        'defineTask.apply',
         applySpec(spec, { cwd, profile })
       );
     },
-    async check(cwd, profile): Promise<TaskStatus> {
-      return wrapTask(spec.id, 'defineTask.check', async () => {
-        const resolution = await resolveSpec(spec, { cwd, profile });
-        return resolution.status;
-      });
-    },
-    async dryRun(cwd, profile): Promise<Array<FileDiff>> {
-      return wrapTask(spec.id, 'defineTask.dryRun', async () => {
-        const resolution = await resolveSpec(spec, { cwd, profile });
-        return resolution.diffs;
-      });
-    },
-    async getDeps(cwd, profile) {
-      return wrapTask(spec.id, 'defineTask.getDeps', async () => {
-        const resolution = await resolveSpec(spec, { cwd, profile });
-        return resolution.deps;
-      });
-    },
+    check: defineMethod(spec, 'defineTask.check', (r) => r.status),
+    dryRun: defineMethod(spec, 'defineTask.dryRun', (r) => r.diffs),
+    getDeps: defineMethod(spec, 'defineTask.getDeps', (r) => r.deps),
     group: spec.group,
     id: spec.id,
     label: spec.label,
@@ -273,6 +361,6 @@ export function defineTask(spec: TaskSpec): Task {
 /** defineTask sugar for the common case of exactly one static target. */
 export function defineSingleTargetTask(
   spec: Omit<TaskSpec, 'targets'> & { target: TaskTarget }
-): Task {
+): DefinedTask {
   return defineTask({ ...spec, targets: [spec.target] });
 }

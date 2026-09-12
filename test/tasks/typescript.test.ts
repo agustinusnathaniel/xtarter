@@ -11,6 +11,8 @@ import {
 } from '@xtarterize/tasks';
 import { describe, expect } from 'vite-plus/test';
 
+import { run } from '../helpers/run.js';
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const fixtures = path.resolve(__dirname, '../fixtures');
 
@@ -31,9 +33,11 @@ describe('gitignoreTsbuildinfoTask', () => {
     const profile = await detectProject(
       path.join(fixtures, 'react-vite-tailwind')
     );
-    const status = await gitignoreTsbuildinfoTask.check(
-      path.join(fixtures, 'react-vite-tailwind'),
-      profile
+    const status = await run(
+      gitignoreTsbuildinfoTask.check(
+        path.join(fixtures, 'react-vite-tailwind'),
+        profile
+      )
     );
     expect(status).toBe('new');
   });
@@ -42,9 +46,11 @@ describe('gitignoreTsbuildinfoTask', () => {
     const profile = await detectProject(
       path.join(fixtures, 'react-vite-tailwind')
     );
-    const diffs = await gitignoreTsbuildinfoTask.dryRun(
-      path.join(fixtures, 'react-vite-tailwind'),
-      profile
+    const diffs = await run(
+      gitignoreTsbuildinfoTask.dryRun(
+        path.join(fixtures, 'react-vite-tailwind'),
+        profile
+      )
     );
     expect(diffs.length).toBe(1);
     expect(diffs[0].filepath).toBe('.gitignore');
@@ -65,9 +71,8 @@ describe('incrementalTask', () => {
     const profile = await detectProject(
       path.join(fixtures, 'react-vite-tailwind')
     );
-    const status = await incrementalTask.check(
-      path.join(fixtures, 'react-vite-tailwind'),
-      profile
+    const status = await run(
+      incrementalTask.check(path.join(fixtures, 'react-vite-tailwind'), profile)
     );
     expect(status).toBe('patch');
   });
@@ -76,9 +81,11 @@ describe('incrementalTask', () => {
     const profile = await detectProject(
       path.join(fixtures, 'react-vite-tailwind')
     );
-    const diffs = await incrementalTask.dryRun(
-      path.join(fixtures, 'react-vite-tailwind'),
-      profile
+    const diffs = await run(
+      incrementalTask.dryRun(
+        path.join(fixtures, 'react-vite-tailwind'),
+        profile
+      )
     );
     expect(diffs.length).toBe(1);
     expect(diffs[0].after).toContain('incremental');
@@ -102,9 +109,8 @@ describe('strictTask', () => {
     const profile = await detectProject(
       path.join(fixtures, 'react-vite-tailwind')
     );
-    const status = await strictTask.check(
-      path.join(fixtures, 'react-vite-tailwind'),
-      profile
+    const status = await run(
+      strictTask.check(path.join(fixtures, 'react-vite-tailwind'), profile)
     );
     expect(status).toBe('skip');
   });
@@ -128,7 +134,7 @@ describe('strictTask', () => {
     );
 
     const profile = await detectProject(tmpDir);
-    const status = await strictTask.check(tmpDir, profile);
+    const status = await run(strictTask.check(tmpDir, profile));
     expect(status).toBe('conflict');
 
     await fs.rm(tmpDir, { recursive: true });
@@ -153,7 +159,7 @@ describe('strictTask', () => {
     );
 
     const profile = await detectProject(tmpDir);
-    const status = await strictTask.check(tmpDir, profile);
+    const status = await run(strictTask.check(tmpDir, profile));
     expect(status).toBe('patch');
 
     await fs.rm(tmpDir, { recursive: true });
@@ -175,7 +181,7 @@ describe('strictTask', () => {
       JSON.stringify({ compilerOptions: { target: 'ES2020' } })
     );
     const profile = await detectProject(tmpDir);
-    await strictTask.apply(tmpDir, profile);
+    await run(strictTask.apply(tmpDir, profile));
     const content = JSON.parse(
       await fs.readFile(path.join(tmpDir, 'tsconfig.json'), 'utf-8')
     );
@@ -204,22 +210,19 @@ describe('pathsTask', () => {
     const profile = await detectProject(
       path.join(fixtures, 'react-vite-tailwind')
     );
-    const status = await pathsTask.check(
-      path.join(fixtures, 'react-vite-tailwind'),
-      profile
+    const status = await run(
+      pathsTask.check(path.join(fixtures, 'react-vite-tailwind'), profile)
     );
     expect(status).toBe('skip');
   });
 
   test('skips Next path aliases when already configured', async () => {
     const profile = await detectProject(path.join(fixtures, 'nextjs'));
-    const status = await pathsTask.check(
-      path.join(fixtures, 'nextjs'),
-      profile
+    const status = await run(
+      pathsTask.check(path.join(fixtures, 'nextjs'), profile)
     );
-    const diffs = await pathsTask.dryRun(
-      path.join(fixtures, 'nextjs'),
-      profile
+    const diffs = await run(
+      pathsTask.dryRun(path.join(fixtures, 'nextjs'), profile)
     );
 
     expect(status).toBe('skip');
@@ -228,13 +231,11 @@ describe('pathsTask', () => {
 
   test('adds src path aliases for non-Next TypeScript projects', async () => {
     const profile = await detectProject(path.join(fixtures, 'node-only'));
-    const status = await pathsTask.check(
-      path.join(fixtures, 'node-only'),
-      profile
+    const status = await run(
+      pathsTask.check(path.join(fixtures, 'node-only'), profile)
     );
-    const diffs = await pathsTask.dryRun(
-      path.join(fixtures, 'node-only'),
-      profile
+    const diffs = await run(
+      pathsTask.dryRun(path.join(fixtures, 'node-only'), profile)
     );
 
     expect(status).toBe('patch');

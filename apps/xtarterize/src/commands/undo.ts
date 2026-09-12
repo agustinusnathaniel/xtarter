@@ -1,4 +1,5 @@
 import fs from 'node:fs/promises';
+import type { DepsInstaller, ProcessRunner, TaskError } from '@xtarterize/core';
 import {
   assertPathWithin,
   createSpinner,
@@ -10,47 +11,18 @@ import {
   restoreBackup,
 } from '@xtarterize/core';
 import { defineCommand } from 'citty';
+import { Effect } from 'effect';
 
+import { runCliProgram } from '@/runtime.js';
 import { openSession } from '@/session.js';
-import { getPrompter, type Prompter } from '@/ui/prompter.js';
+import { type PromptError, Prompter } from '@/ui/prompter.js';
+import { reportCommandFailure } from '@/ui/reporter.js';
 import { commonArgs, formatArgs } from '@/utils/args.js';
+import type { RuntimeArgs } from '@/utils/runtime.js';
 
-export const undoCommand = defineCommand({
-  args: {
-    ...commonArgs,
-    ...formatArgs,
-  },
-  meta: {
-    description: 'Undo the last xtarterize run by restoring backed-up files',
-    name: 'undo',
-  },
-  async run({ args }) {
-    const session = await openSession(args, { resolveTasks: false });
-    if (!session) {
-      return;
-    }
-    const { runtime } = session;
-    const cwd = runtime.cwd;
-    const jsonMode = runtime.format === 'json';
-    const quiet = jsonMode || runtime.quiet;
-    const manifest = await loadAndValidateManifest(cwd, jsonMode, quiet);
-    if (!manifest) {
-      return;
-    }
-    displayManifestPreview(manifest, jsonMode);
-    const proceed = await promptRestoreConfirm(manifest, quiet, getPrompter());
-    if (!proceed) {
-      session.reportOutcome(session.cancelled());
-      return;
-    }
-    const { restored, removedCount, errors } = await restoreManifestFiles(
-      cwd,
-      manifest,
-      quiet
-    );
-    reportUndoResult({ errors, jsonMode, manifest, removedCount, restored });
-  },
-});
+type UndoError = TaskError | PromptError;
+
+type UndoServices = DepsInstaller | ProcessRunner | Prompter;
 
 async function loadAndValidateManifest(
   cwd: string,
@@ -64,13 +36,10 @@ async function loadAndValidateManifest(
   if (manifest && manifest.files.length > 0) {
     return manifest;
   }
-  if (jsonMode) {
-    console.log(JSON.stringify({ error: 'No previous run found', ok: false }));
-  } else {
+  reportCommandFailure(jsonMode, { error: 'No previous run found' }, () => {
     logError('No previous run found. Nothing to undo.');
     logInfo('Run `xtarterize init` or `xtarterize add` first.');
-  }
-  process.exitCode = 1;
+  });
   return null;
 }
 
@@ -91,17 +60,18 @@ function displayManifestPreview(
   console.log('');
 }
 
-async function promptRestoreConfirm(
+function promptRestoreConfirm(
   manifest: { files: Array<string> },
-  quiet: boolean,
-  prompter: Prompter
-): Promise<boolean | null> {
+  quiet: boolean
+): Effect.Effect<boolean | null, PromptError, Prompter> {
   if (quiet) {
-    return true;
+    return Effect.succeed(true);
   }
-  return prompter.confirm({
-    message: `Restore ${manifest.files.length} file(s) to their previous state?`,
-  });
+  return Effect.flatMap(Prompter, (prompter) =>
+    prompter.confirm({
+      message: `Restore ${manifest.files.length} file(s) to their previous state?`,
+    })
+  );
 }
 
 async function restoreManifestFiles(
@@ -178,3 +148,49 @@ function reportUndoResult(options: {
 async function removeCreatedFile(cwd: string, filepath: string): Promise<void> {
   await fs.rm(assertPathWithin(cwd, filepath), { force: true });
 }
+
+/** The `undo` command as one program: open once, preview, confirm, restore. */
+export function undoProgram(
+  args: RuntimeArgs
+): Effect.Effect<void, UndoError, UndoServices> {
+  return Effect.gen(function* () {
+    const session = yield* openSession(args, { resolveTasks: false });
+    if (!session) {
+      return;
+    }
+    const { runtime } = session;
+    const cwd = runtime.cwd;
+    const jsonMode = runtime.format === 'json';
+    const quiet = jsonMode || runtime.quiet;
+    const manifest = yield* Effect.promise(() =>
+      loadAndValidateManifest(cwd, jsonMode, quiet)
+    );
+    if (!manifest) {
+      return;
+    }
+    displayManifestPreview(manifest, jsonMode);
+    const proceed = yield* promptRestoreConfirm(manifest, quiet);
+    if (!proceed) {
+      session.reportOutcome(session.cancelled());
+      return;
+    }
+    const { restored, removedCount, errors } = yield* Effect.promise(() =>
+      restoreManifestFiles(cwd, manifest, quiet)
+    );
+    reportUndoResult({ errors, jsonMode, manifest, removedCount, restored });
+  });
+}
+
+export const undoCommand = defineCommand({
+  args: {
+    ...commonArgs,
+    ...formatArgs,
+  },
+  meta: {
+    description: 'Undo the last xtarterize run by restoring backed-up files',
+    name: 'undo',
+  },
+  async run({ args }) {
+    await runCliProgram(undoProgram(args));
+  },
+});

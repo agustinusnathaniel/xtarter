@@ -1,4 +1,5 @@
 import type { DiagnosticCheck, Task, TaskStatus } from '@xtarterize/core';
+import { Effect } from 'effect';
 import { describe, expect } from 'vite-plus/test';
 
 import { formatCheckAnnotations } from '../../apps/xtarterize/src/ui/annotations.js';
@@ -10,9 +11,9 @@ function makeTask(
 ): Task {
   return {
     applicable: () => true,
-    apply: async () => {},
-    check: async () => 'skip' as const,
-    dryRun: async () => [],
+    apply: () => Effect.void,
+    check: () => Effect.succeed('skip' as const),
+    dryRun: () => Effect.succeed([]),
     group: 'test',
     id,
     label,

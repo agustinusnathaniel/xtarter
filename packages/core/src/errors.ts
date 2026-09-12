@@ -1,43 +1,29 @@
-export class FileSystemError extends Error {
+import { Data } from 'effect';
+
+export class FileSystemError extends Data.TaggedError('FileSystemError')<{
   readonly path: string;
   readonly cause: unknown;
+}> {}
 
-  constructor({ path, cause }: { path: string; cause: unknown }) {
-    super();
-    this.name = 'FileSystemError';
-    this.path = path;
-    this.cause = cause;
-  }
-}
-
-export class BackupError extends Error {
+export class BackupError extends Data.TaggedError('BackupError')<{
   readonly path: string;
   readonly cause: unknown;
+  /** Rendered text for the failure; omitted callers keep the tag-only default. */
+  readonly message?: string;
+}> {}
 
-  constructor({ path, cause }: { path: string; cause: unknown }) {
-    super();
-    this.name = 'BackupError';
-    this.path = path;
-    this.cause = cause;
-  }
-}
-
-export class TaskError extends Error {
+export class TaskError extends Data.TaggedError('TaskError')<{
   readonly taskId: string;
+  readonly message: string;
   readonly cause?: unknown;
+}> {}
 
-  constructor({
-    taskId,
-    message,
-    cause,
-  }: {
-    taskId: string;
-    message: string;
-    cause?: unknown;
-  }) {
-    super(message);
-    this.name = 'TaskError';
-    this.taskId = taskId;
-    this.cause = cause;
-  }
-}
+export class DepsInstallError extends Data.TaggedError('DepsInstallError')<{
+  readonly message: string;
+  readonly cause?: unknown;
+}> {}
+
+export class ProcessError extends Data.TaggedError('ProcessError')<{
+  readonly message: string;
+  readonly cause?: unknown;
+}> {}

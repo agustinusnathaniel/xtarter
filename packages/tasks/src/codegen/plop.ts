@@ -8,15 +8,13 @@ import {
 
 export const plopTask = defineTask({
   applicable: (profile) => profile.framework !== null,
+  configTargets: ['plopfile.ts'],
   deps: [{ depName: 'plop', dev: true }],
   group: 'Codegen',
   id: 'codegen/plop',
+  keywords: ['plop', 'code generator', 'scaffold', 'templates', 'codegen'],
   label: 'Plop (code generator)',
-  searchMeta: {
-    configTargets: ['plopfile.ts'],
-    keywords: ['plop', 'code generator', 'scaffold', 'templates', 'codegen'],
-    tags: ['codegen', 'scaffold', 'generator', 'templates'],
-  },
+  tags: ['codegen', 'scaffold', 'generator', 'templates'],
   targets: (_cwd, profile): Array<TaskTarget> => [
     {
       filepath: 'plopfile.ts',

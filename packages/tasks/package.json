@@ -19,10 +19,10 @@
   "dependencies": {
     "@xtarterize/core": "workspace:*",
     "@xtarterize/patchers": "workspace:*",
+    "effect": "catalog:",
     "nypm": "catalog:",
     "pathe": "catalog:",
     "pkg-types": "catalog:",
-    "tinyexec": "catalog:",
     "yaml": "^2.8.3"
   },
   "devDependencies": {

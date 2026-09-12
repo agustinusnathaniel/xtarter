@@ -9,25 +9,39 @@ xtarterize applies conformance configuration through discrete, independently app
 
 ## Task Interface
 
-All tasks implement the [`Task`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/_base.ts) interface from `@xtarterize/core`:
+All tasks implement the [`Task`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/_base.ts) contract from `@xtarterize/core`. Task methods return Effects that require `TaskServices`:
 
 ```typescript
-interface Task {
+interface TaskBase {
   id: string
   label: string
   group: string
   scope?: TaskScope           // 'root' | 'package' | 'both'
   applicable: (profile: ProjectProfile) => boolean
-  check: (cwd: string, profile: ProjectProfile) => Promise<TaskStatus>
-  dryRun: (cwd: string, profile: ProjectProfile) => Promise<FileDiff[]>
-  apply: (cwd: string, profile: ProjectProfile) => Promise<void>
+}
+
+export interface Task extends TaskBase {
+  check: (
+    cwd: string,
+    profile: ProjectProfile
+  ) => Effect.Effect<TaskStatus, TaskError, TaskServices>
+  dryRun: (
+    cwd: string,
+    profile: ProjectProfile
+  ) => Effect.Effect<Array<FileDiff>, TaskError, TaskServices>
+  apply: (
+    cwd: string,
+    profile: ProjectProfile
+  ) => Effect.Effect<void, TaskError, TaskServices>
   getDeps?: (
     cwd: string,
     profile: ProjectProfile
-  ) => Promise<Array<{ depName: string; dev: boolean }>>
+  ) => Effect.Effect<Array<TaskDep>, TaskError, TaskServices>
 }
 ```
 
+- **One Effect contract** - Every task is a `Task` whose methods return Effects. `defineTask()` produces those from a spec, and `toTaskEffect()` in [`task-effect.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/task-effect.ts) normalizes synchronous or Promise-returning spec functions into one Effect before the engine calls them.
+- **`TaskServices`** - The runtime dependencies a task may require. Today that is `ProcessRunner`, which runs external processes through a tinyexec wrapper with interruption and timeout support.
 - **`scope`** - Controls where the task is offered in monorepos:
   `'root'` (monorepo root only), `'package'` (workspace packages
   only), or `'both'` (everywhere). Defaults to `'both'` when
@@ -44,11 +58,12 @@ classDiagram
         +string id
         +string label
         +string group
+        +TaskScope scope
         +applicable(profile) boolean
-        +check(cwd, profile) TaskStatus
-        +dryRun(cwd, profile) FileDiff[]
-        +apply(cwd, profile) void
-        +getDeps(cwd, profile) TaskDep[]
+        +check(cwd, profile) Effect~TaskStatus~
+        +dryRun(cwd, profile) Effect~FileDiff[]~
+        +apply(cwd, profile) Effect~void~
+        +getDeps(cwd, profile) Effect~TaskDep[]~
     }
     class TaskStatus {
         <<enumeration>>
@@ -94,6 +109,8 @@ export interface TaskSpec {
 ```
 
 `defineTask()` resolves the spec once per call, so `check`, `dryRun`, `apply`, and `getDeps` all project from the same resolution. Status is a projection of the resolution, not a separate `check` implementation, which is why a task can no longer report `skip` while its diffs would change.
+
+`defineTask()` returns a `DefinedTask`, a `Task` that always implements `getDeps`. Spec callbacks (targets, actions, deps, and their resolvers) accept `SpecResult<A>`, which is `A | Promise<A> | Effect.Effect<A, TaskError, TaskServices>`, so a spec can stay synchronous, return a Promise, or use services through an Effect. Failures are labeled once at the `defineTask` boundary as `<method> failed: <cause>`, matching the historical task error text.
 
 ### Target kinds
 

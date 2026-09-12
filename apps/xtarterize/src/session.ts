@@ -2,8 +2,11 @@ import type {
   ApplyPlan,
   ApplyResult,
   ApplyTiming,
+  BackupError,
+  DepsInstaller,
   FileDiff,
   PreflightError,
+  ProcessRunner,
   ProjectProfile,
   ResolveTiming,
   Task,
@@ -17,15 +20,16 @@ import {
   planTasks,
   resolveProjectTasks,
   runPreflight,
+  type TaskError,
+  toTaskEffect,
 } from '@xtarterize/core';
+import { getAllTasks } from '@xtarterize/tasks';
+import { Effect } from 'effect';
 
 import { mergeFileDiffs } from '@/ui/merge-file-diffs.js';
-import { getPrompter } from '@/ui/prompter.js';
+import type { PromptError, Prompter } from '@/ui/prompter.js';
 import { reportPreflightFailure, reportSessionOutcome } from '@/ui/reporter.js';
-import {
-  detectProjectWithAmbiguity,
-  getAllTasksWithPlugins,
-} from '@/utils/project.js';
+import { detectProjectWithAmbiguity } from '@/utils/project.js';
 import {
   type RuntimeArgs,
   type RuntimeContext,
@@ -117,7 +121,7 @@ interface SessionContext {
 
 function buildDryRunOutcome(
   plan: ApplyPlan,
-  context: SessionContext
+  timing: ResolveTiming
 ): SessionOutcome {
   const failures = plan.entries.filter(
     (entry) => entry.dryRunError !== undefined
@@ -134,7 +138,7 @@ function buildDryRunOutcome(
     kind: 'dry-run',
     ok: diffs.length === 0 && failures === 0,
     skipped: 0,
-    timing: context.timing,
+    timing,
   };
 }
 
@@ -145,133 +149,132 @@ function buildDryRunOutcome(
  * process when the outcome reports errors.
  */
 export class CommandSession {
-  private readonly context: SessionContext;
+  readonly allTasks: Array<Task>;
+  /** Per-task check failures collected during status resolution. */
+  readonly checkErrors: Map<string, string>;
+  readonly runtime: RuntimeContext;
+  readonly selection: TaskSelectionConfig;
+  readonly statuses: Map<string, TaskStatus>;
+  readonly tasks: Array<Task>;
+  readonly timing: ResolveTiming;
+  private readonly profileValue: ProjectProfile | null;
 
   private constructor(context: SessionContext) {
-    this.context = context;
+    this.allTasks = context.allTasks;
+    this.checkErrors = context.checkErrors;
+    this.profileValue = context.profile;
+    this.runtime = context.runtime;
+    this.selection = context.selection;
+    this.statuses = context.statuses;
+    this.tasks = context.tasks;
+    this.timing = context.timing;
   }
 
-  static async open(
+  static open(
     args: RuntimeArgs,
     options: SessionOpenOptions = {}
-  ): Promise<SessionOpenResult> {
-    const runtime = resolveRuntimeContext(args);
-    await ensureXtarterizeGitignore(runtime.cwd);
-    const preflight = await runPreflight(runtime.cwd);
-    if (!(preflight.valid || options.allowInvalidProject)) {
-      return { errors: preflight.errors, ok: false, runtime };
-    }
+  ): Effect.Effect<
+    SessionOpenResult,
+    TaskError | PromptError,
+    DepsInstaller | ProcessRunner | Prompter
+  > {
+    return Effect.gen(function* () {
+      const runtime = resolveRuntimeContext(args);
+      yield* toTaskEffect('ensure-gitignore', () =>
+        ensureXtarterizeGitignore(runtime.cwd)
+      );
+      const preflight = yield* toTaskEffect('preflight', () =>
+        runPreflight(runtime.cwd)
+      );
+      if (!(preflight.valid || options.allowInvalidProject)) {
+        return { errors: preflight.errors, ok: false as const, runtime };
+      }
 
-    if (options.resolveTasks === false) {
+      if (options.resolveTasks === false) {
+        return {
+          ok: true as const,
+          session: new CommandSession({
+            allTasks: [],
+            checkErrors: new Map(),
+            profile: null,
+            runtime,
+            selection: { only: [], skip: [] },
+            statuses: new Map(),
+            tasks: [],
+            timing: { detectionMs: 0, resolutionMs: 0, resolutionSumMs: 0 },
+          }),
+        };
+      }
+
+      const discovered = getAllTasks();
+      const tasks = options.orderTasks
+        ? options.orderTasks(discovered, runtime)
+        : discovered;
+      const {
+        checkErrors,
+        profile: baseProfile,
+        tasks: resolvedTasks,
+        statuses,
+        timing,
+      } = yield* resolveProjectTasks(runtime.cwd, tasks);
+      const profile = yield* detectProjectWithAmbiguity({
+        baseProfile,
+        cwd: runtime.cwd,
+        quiet: runtime.quiet,
+      });
+      const selection = yield* loadSelectionConfig(runtime.cwd);
+
       return {
-        ok: true,
+        ok: true as const,
         session: new CommandSession({
-          allTasks: [],
-          checkErrors: new Map(),
-          profile: null,
+          allTasks: tasks,
+          checkErrors,
+          profile,
           runtime,
-          selection: { only: [], skip: [] },
-          statuses: new Map(),
-          tasks: [],
-          timing: { detectionMs: 0, resolutionMs: 0, resolutionSumMs: 0 },
+          selection,
+          statuses,
+          tasks: resolvedTasks,
+          timing,
         }),
       };
-    }
-
-    const discovered = await getAllTasksWithPlugins(runtime.cwd);
-    const tasks = options.orderTasks
-      ? options.orderTasks(discovered, runtime)
-      : discovered;
-    const {
-      checkErrors,
-      profile: baseProfile,
-      tasks: resolvedTasks,
-      statuses,
-      timing,
-    } = await resolveProjectTasks(runtime.cwd, tasks);
-    const profile = await detectProjectWithAmbiguity({
-      baseProfile,
-      cwd: runtime.cwd,
-      prompter: getPrompter(),
-      quiet: runtime.quiet,
     });
-    const selection = await loadSelectionConfig(runtime.cwd);
-
-    return {
-      ok: true,
-      session: new CommandSession({
-        allTasks: tasks,
-        checkErrors,
-        profile,
-        runtime,
-        selection,
-        statuses,
-        tasks: resolvedTasks,
-        timing,
-      }),
-    };
-  }
-
-  get allTasks(): Array<Task> {
-    return this.context.allTasks;
-  }
-
-  /** Per-task check failures collected during status resolution. */
-  get checkErrors(): Map<string, string> {
-    return this.context.checkErrors;
   }
 
   /** Per-task check failures formatted like `ApplyResult.errors` entries. */
   get checkErrorMessages(): Array<string> {
-    return [...this.context.checkErrors].map(
+    return [...this.checkErrors].map(
       ([taskId, detail]) => `Failed to check ${taskId}: ${detail}`
     );
   }
 
   get profile(): ProjectProfile {
-    if (!this.context.profile) {
+    if (!this.profileValue) {
       throw new Error('Session was opened without task resolution');
     }
-    return this.context.profile;
+    return this.profileValue;
   }
 
-  get runtime(): RuntimeContext {
-    return this.context.runtime;
-  }
-
-  get selection(): TaskSelectionConfig {
-    return this.context.selection;
-  }
-
-  get statuses(): Map<string, TaskStatus> {
-    return this.context.statuses;
-  }
-
-  get tasks(): Array<Task> {
-    return this.context.tasks;
-  }
-
-  get timing(): ResolveTiming {
-    return this.context.timing;
-  }
-
-  plan(options: SessionPlanOptions): Promise<ApplyPlan> {
+  plan(
+    options: SessionPlanOptions
+  ): Effect.Effect<ApplyPlan, TaskError, DepsInstaller | ProcessRunner> {
     return planTasks({
-      cwd: this.context.runtime.cwd,
+      cwd: this.runtime.cwd,
       includeConflicts: options.includeConflicts ?? false,
       profile: this.profile,
-      quiet: this.context.runtime.quiet,
-      statuses: this.context.statuses,
+      quiet: this.runtime.quiet,
+      statuses: this.statuses,
       tasks: options.tasks,
     });
   }
 
-  execute(plan: ApplyPlan): Promise<ApplyResult> {
+  execute(
+    plan: ApplyPlan
+  ): Effect.Effect<ApplyResult, BackupError, DepsInstaller | ProcessRunner> {
     return executePlan({
-      cwd: this.context.runtime.cwd,
+      cwd: this.runtime.cwd,
       plan,
       profile: this.profile,
-      quiet: this.context.runtime.quiet,
+      quiet: this.runtime.quiet,
     });
   }
 
@@ -295,25 +298,40 @@ export class CommandSession {
       skipped: options.skipped ?? result.skipped,
       taskId: options.taskId,
       taskStatus: options.taskStatus,
-      timing: this.context.timing,
+      timing: this.timing,
     };
   }
 
-  async dryRun(tasks: Array<Task>): Promise<SessionOutcome> {
-    const plan = await this.plan({ includeConflicts: true, tasks });
-    return buildDryRunOutcome(plan, this.context);
+  dryRun(
+    tasks: Array<Task>
+  ): Effect.Effect<
+    SessionOutcome,
+    TaskError | BackupError,
+    DepsInstaller | ProcessRunner
+  > {
+    return Effect.map(this.plan({ includeConflicts: true, tasks }), (plan) =>
+      buildDryRunOutcome(plan, this.timing)
+    );
   }
 
-  async apply(
+  apply(
     tasks: Array<Task>,
     options: SessionApplyOptions = {}
-  ): Promise<SessionOutcome> {
-    const plan = await this.plan({
-      includeConflicts: options.includeConflicts,
-      tasks,
-    });
-    const result = await this.execute(plan);
-    return this.outcomeFor(result, options);
+  ): Effect.Effect<
+    SessionOutcome,
+    TaskError | BackupError,
+    DepsInstaller | ProcessRunner
+  > {
+    return Effect.flatMap(
+      this.plan({
+        includeConflicts: options.includeConflicts,
+        tasks,
+      }),
+      (plan) =>
+        Effect.map(this.execute(plan), (result) =>
+          this.outcomeFor(result, options)
+        )
+    );
   }
 
   /** Informational outcome with no writes (skip, not-applicable, no-op). */
@@ -330,13 +348,9 @@ export class CommandSession {
     return this.buildIdleOutcome('cancelled', 'Cancelled');
   }
 
-  private report(outcome: SessionOutcome): void {
-    reportSessionOutcome(outcome, this.context.runtime);
-  }
-
   /** Report an outcome and fail the process when it reports errors. */
   reportOutcome(outcome: SessionOutcome): void {
-    this.report(outcome);
+    reportSessionOutcome(outcome, this.runtime);
     if (!outcome.ok) {
       process.exitCode = 1;
     }
@@ -359,7 +373,7 @@ export class CommandSession {
       skipped: 0,
       taskId: details.taskId,
       taskStatus: details.taskStatus,
-      timing: this.context.timing,
+      timing: this.timing,
     };
   }
 }
@@ -368,16 +382,24 @@ export class CommandSession {
  * Open a session for a command, rendering a structured preflight failure as
  * terminal or JSON text and marking the process as failed when it is invalid.
  */
-export async function openSession(
+export function openSession(
   args: RuntimeArgs,
   options: SessionOpenOptions = {}
-): Promise<CommandSession | null> {
-  const opened = await CommandSession.open(args, options);
-  if (opened.ok) {
-    return opened.session;
-  }
+): Effect.Effect<
+  CommandSession | null,
+  TaskError | PromptError,
+  DepsInstaller | ProcessRunner | Prompter
+> {
+  return Effect.gen(function* () {
+    const opened = yield* CommandSession.open(args, options);
+    if (opened.ok) {
+      return opened.session;
+    }
 
-  reportPreflightFailure(opened.errors, opened.runtime.format);
-  process.exitCode = 1;
-  return null;
+    yield* Effect.sync(() => {
+      reportPreflightFailure(opened.errors, opened.runtime.format);
+      process.exitCode = 1;
+    });
+    return null;
+  });
 }

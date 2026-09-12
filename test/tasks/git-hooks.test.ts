@@ -6,6 +6,8 @@ import { detectProject } from '@xtarterize/core';
 import { gitHooksTask } from '@xtarterize/tasks';
 import { describe, expect } from 'vite-plus/test';
 
+import { run } from '../helpers/run.js';
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const fixtures = path.resolve(__dirname, '../fixtures');
 
@@ -18,9 +20,8 @@ describe('gitHooksTask', () => {
     const profile = await detectProject(
       path.join(fixtures, 'react-vite-tailwind')
     );
-    const status = await gitHooksTask.check(
-      path.join(fixtures, 'react-vite-tailwind'),
-      profile
+    const status = await run(
+      gitHooksTask.check(path.join(fixtures, 'react-vite-tailwind'), profile)
     );
     expect(status).toBe('new');
   });
@@ -33,7 +34,7 @@ describe('gitHooksTask', () => {
         JSON.stringify({ name: 'hooks-test', scripts: {} })
       );
       const profile = await detectProject(tmpDir);
-      const diffs = await gitHooksTask.dryRun(tmpDir, profile);
+      const diffs = await run(gitHooksTask.dryRun(tmpDir, profile));
       const filepaths = diffs.map((d) => d.filepath);
       expect(filepaths).toContain('.husky/commit-msg');
       expect(filepaths).toContain('.husky/prepare-commit-msg');
@@ -46,9 +47,8 @@ describe('gitHooksTask', () => {
 
   test('uses turbo pre-push for turbo monorepos', async () => {
     const profile = await detectProject(path.join(fixtures, 'monorepo-turbo'));
-    const diffs = await gitHooksTask.dryRun(
-      path.join(fixtures, 'monorepo-turbo'),
-      profile
+    const diffs = await run(
+      gitHooksTask.dryRun(path.join(fixtures, 'monorepo-turbo'), profile)
     );
     const prePush = diffs.find((d) => d.filepath.includes('pre-push'));
     expect(prePush?.after).toContain('pnpm run check:turbo');
@@ -74,7 +74,7 @@ describe('gitHooksTask', () => {
       await fs.writeFile(path.join(tmpDir, '.husky/pre-commit'), 'content');
       await fs.writeFile(path.join(tmpDir, '.husky/pre-push'), 'content');
       const profile = await detectProject(tmpDir);
-      const status = await gitHooksTask.check(tmpDir, profile);
+      const status = await run(gitHooksTask.check(tmpDir, profile));
       expect(status).toBe('patch');
     } finally {
       await fs.rm(tmpDir, { force: true, recursive: true });
@@ -97,7 +97,7 @@ describe('gitHooksTask', () => {
       await fs.writeFile(path.join(tmpDir, '.husky/pre-commit'), 'content');
       await fs.writeFile(path.join(tmpDir, '.husky/pre-push'), 'content');
       const profile = await detectProject(tmpDir);
-      const status = await gitHooksTask.check(tmpDir, profile);
+      const status = await run(gitHooksTask.check(tmpDir, profile));
       expect(status).toBe('patch');
     } finally {
       await fs.rm(tmpDir, { force: true, recursive: true });
@@ -112,7 +112,7 @@ describe('gitHooksTask', () => {
         JSON.stringify({ name: 'hooks-test', scripts: {} })
       );
       const profile = await detectProject(tmpDir);
-      const diffs = await gitHooksTask.dryRun(tmpDir, profile);
+      const diffs = await run(gitHooksTask.dryRun(tmpDir, profile));
       const prepareCommitMsg = diffs.find((d) =>
         d.filepath.includes('prepare-commit-msg')
       );
@@ -135,7 +135,7 @@ describe('gitHooksTask', () => {
         })
       );
       const profile = await detectProject(tmpDir);
-      const diffs = await gitHooksTask.dryRun(tmpDir, profile);
+      const diffs = await run(gitHooksTask.dryRun(tmpDir, profile));
       const prepareCommitMsg = diffs.find((d) =>
         d.filepath.includes('prepare-commit-msg')
       );
@@ -159,7 +159,7 @@ describe('gitHooksTask', () => {
         })
       );
       const profile = await detectProject(tmpDir);
-      const diffs = await gitHooksTask.dryRun(tmpDir, profile);
+      const diffs = await run(gitHooksTask.dryRun(tmpDir, profile));
       const prepareCommitMsg = diffs.find((d) =>
         d.filepath.includes('prepare-commit-msg')
       );

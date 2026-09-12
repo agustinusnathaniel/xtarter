@@ -4,19 +4,17 @@ export const versionrcTask = defineSingleTargetTask({
   applicable: () => true,
   group: 'Release',
   id: 'release/versionrc',
+  keywords: [
+    'versionrc',
+    'changelog',
+    'release',
+    'conventional commits',
+    'standard-version',
+    'commit-and-tag-version',
+  ],
   label: '.versionrc.json - changelog configuration',
   scope: 'root',
-  searchMeta: {
-    keywords: [
-      'versionrc',
-      'changelog',
-      'release',
-      'conventional commits',
-      'standard-version',
-      'commit-and-tag-version',
-    ],
-    tags: ['release', 'version', 'changelog', 'semver', 'conventional-commits'],
-  },
+  tags: ['release', 'version', 'changelog', 'semver', 'conventional-commits'],
   target: {
     filepath: '.versionrc.json',
     incoming: () => ({

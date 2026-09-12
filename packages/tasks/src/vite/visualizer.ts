@@ -7,18 +7,10 @@ export const viteVisualizerTask = defineTask({
   deps: [{ depName: 'rollup-plugin-visualizer', dev: true }],
   group: 'Vite Plugins',
   id: 'vite/visualizer',
+  keywords: ['visualizer', 'bundle analysis', 'vite plugin', 'rollup', 'size'],
   label: 'rollup-plugin-visualizer',
   scope: 'package',
-  searchMeta: {
-    keywords: [
-      'visualizer',
-      'bundle analysis',
-      'vite plugin',
-      'rollup',
-      'size',
-    ],
-    tags: ['vite', 'plugin', 'bundle', 'analysis'],
-  },
+  tags: ['vite', 'plugin', 'bundle', 'analysis'],
   targets: [
     createVitePluginTarget({
       depName: 'rollup-plugin-visualizer',
