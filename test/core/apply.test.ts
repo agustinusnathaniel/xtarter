@@ -1,10 +1,10 @@
 import fs from 'node:fs/promises';
-import os from 'node:os';
 import path from 'node:path';
 import type {
   ApplyPlan,
   ApplyResult,
   ProjectProfile,
+  PromiseTask,
   Task,
   TaskDep,
   TaskStatus,
@@ -21,6 +21,7 @@ import { Effect, Layer } from 'effect';
 import { describe, expect, vi } from 'vite-plus/test';
 
 import { runWith } from '../helpers/run.js';
+import { withTempDir } from '../helpers/temp.js';
 
 const mockInstall = vi.fn<
   (
@@ -35,6 +36,32 @@ const TestApplyLayer = Layer.mergeAll(
   ProcessRunner.layer,
   Layer.succeed(DepsInstaller, { install: mockInstall })
 );
+
+interface MockTaskOptions {
+  apply?: PromiseTask['apply'];
+  check?: TaskStatus;
+  dryRun?: PromiseTask['dryRun'];
+  getDeps?: PromiseTask['getDeps'];
+  id?: string;
+  label?: string;
+}
+
+/** Build a promise task whose identity and hooks default to a no-op. */
+function makeTask(options: MockTaskOptions = {}): PromiseTask {
+  const task: PromiseTask = {
+    applicable: () => true,
+    apply: options.apply ?? (async () => {}),
+    check: async () => options.check ?? 'new',
+    dryRun: options.dryRun ?? (async () => []),
+    group: 'Test',
+    id: options.id ?? 'mock/task',
+    label: options.label ?? 'Mock Task',
+  };
+  if (options.getDeps) {
+    task.getDeps = options.getDeps;
+  }
+  return task;
+}
 
 function runPlan(
   cwd: string,
@@ -89,231 +116,199 @@ async function applyTasks(options: {
   );
 }
 
-/** Create a temp project with a package.json and the given dir prefix. */
-async function setupProject(prefix: string): Promise<string> {
-  const dir = await fs.mkdtemp(path.join(os.tmpdir(), prefix));
-  await fs.writeFile(
-    path.join(dir, 'package.json'),
-    JSON.stringify({ name: 'test', version: '1.0.0' })
-  );
-  return dir;
+/** Run `fn` against a temp project containing only a package.json. */
+function withProject<Result>(
+  prefix: string,
+  fn: (dir: string) => Promise<Result>
+): Promise<Result> {
+  return withTempDir(prefix, async (dir) => {
+    await fs.writeFile(
+      path.join(dir, 'package.json'),
+      JSON.stringify({ name: 'test', version: '1.0.0' })
+    );
+    return fn(dir);
+  });
 }
 
 describe('applyTasks', () => {
   test('applies a single task successfully', async () => {
-    const tmpDir = await setupProject('xtarterize-apply-');
+    await withProject('xtarterize-apply-', async (tmpDir) => {
+      const profile = await detectProject(tmpDir);
+      const mockTask = makeTask({
+        apply: async () => {
+          await fs.writeFile(path.join(tmpDir, 'test.txt'), 'hello');
+        },
+        dryRun: async () => [
+          { after: 'hello', before: null, filepath: 'test.txt' },
+        ],
+      });
 
-    const profile = await detectProject(tmpDir);
-    const mockTask = {
-      applicable: () => true,
-      apply: async () => {
-        await fs.writeFile(path.join(tmpDir, 'test.txt'), 'hello');
-      },
-      check: async () => 'new' as const,
-      dryRun: async () => [
-        { after: 'hello', before: null, filepath: 'test.txt' },
-      ],
-      group: 'Test',
-      id: 'mock/task',
-      label: 'Mock Task',
-    };
-
-    const result = await applyTasks({
-      cwd: tmpDir,
-      profile,
-      tasks: [mockTask],
+      const result = await applyTasks({
+        cwd: tmpDir,
+        profile,
+        tasks: [mockTask],
+      });
+      expect(result.errors).toHaveLength(0);
+      expect(result.applied).toBe(1);
     });
-    expect(result.errors).toHaveLength(0);
-    expect(result.applied).toBe(1);
-
-    await fs.rm(tmpDir, { recursive: true });
   });
 
   test('skips tasks that are already applied', async () => {
-    const tmpDir = await setupProject('xtarterize-skip-');
-    await fs.writeFile(path.join(tmpDir, 'test.txt'), 'hello');
+    await withProject('xtarterize-skip-', async (tmpDir) => {
+      await fs.writeFile(path.join(tmpDir, 'test.txt'), 'hello');
 
-    const profile = await detectProject(tmpDir);
-    const mockTask = {
-      applicable: () => true,
-      apply: async () => {},
-      check: async () => 'skip' as const,
-      dryRun: async () => [
-        { after: 'hello', before: 'hello', filepath: 'test.txt' },
-      ],
-      group: 'Test',
-      id: 'mock/task',
-      label: 'Mock Task',
-    };
+      const profile = await detectProject(tmpDir);
+      const mockTask = makeTask({
+        check: 'skip',
+        dryRun: async () => [
+          { after: 'hello', before: 'hello', filepath: 'test.txt' },
+        ],
+      });
 
-    const result = await applyTasks({
-      cwd: tmpDir,
-      profile,
-      tasks: [mockTask],
+      const result = await applyTasks({
+        cwd: tmpDir,
+        profile,
+        tasks: [mockTask],
+      });
+      expect(result.skipped).toBe(1);
+      expect(result.applied).toBe(0);
     });
-    expect(result.skipped).toBe(1);
-    expect(result.applied).toBe(0);
-
-    await fs.rm(tmpDir, { recursive: true });
   });
 
   test('backs up existing files before applying selected tasks', async () => {
-    const tmpDir = await setupProject('xtarterize-backup-');
-    await fs.writeFile(path.join(tmpDir, 'test.txt'), 'before');
+    await withProject('xtarterize-backup-', async (tmpDir) => {
+      await fs.writeFile(path.join(tmpDir, 'test.txt'), 'before');
 
-    const profile = await detectProject(tmpDir);
-    const mockTask = {
-      applicable: () => true,
-      apply: async () => {
-        await fs.writeFile(path.join(tmpDir, 'test.txt'), 'after');
-      },
-      check: async () => 'patch' as const,
-      dryRun: async () => [
-        { after: 'after', before: 'before', filepath: 'test.txt' },
-      ],
-      group: 'Test',
-      id: 'mock/task',
-      label: 'Mock Task',
-    };
+      const profile = await detectProject(tmpDir);
+      const mockTask = makeTask({
+        apply: async () => {
+          await fs.writeFile(path.join(tmpDir, 'test.txt'), 'after');
+        },
+        check: 'patch',
+        dryRun: async () => [
+          { after: 'after', before: 'before', filepath: 'test.txt' },
+        ],
+      });
 
-    const result = await applyTasks({
-      cwd: tmpDir,
-      profile,
-      selectedIds: [mockTask.id],
-      tasks: [mockTask],
+      const result = await applyTasks({
+        cwd: tmpDir,
+        profile,
+        selectedIds: [mockTask.id],
+        tasks: [mockTask],
+      });
+      expect(result.errors).toHaveLength(0);
+      expect(result.applied).toBe(1);
+
+      const backupIndex = JSON.parse(
+        await fs.readFile(
+          path.join(tmpDir, '.xtarterize/backups/.index.json'),
+          'utf-8'
+        )
+      );
+      expect(backupIndex['test.txt']).toHaveLength(1);
+      const backupPath = backupIndex['test.txt'][0].backupPath;
+      await expect(fs.readFile(backupPath, 'utf-8')).resolves.toBe('before');
+      await expect(
+        fs.readFile(path.join(tmpDir, 'test.txt'), 'utf-8')
+      ).resolves.toBe('after');
     });
-    expect(result.errors).toHaveLength(0);
-    expect(result.applied).toBe(1);
-
-    const backupIndex = JSON.parse(
-      await fs.readFile(
-        path.join(tmpDir, '.xtarterize/backups/.index.json'),
-        'utf-8'
-      )
-    );
-    expect(backupIndex['test.txt']).toHaveLength(1);
-    const backupPath = backupIndex['test.txt'][0].backupPath;
-    await expect(fs.readFile(backupPath, 'utf-8')).resolves.toBe('before');
-    await expect(
-      fs.readFile(path.join(tmpDir, 'test.txt'), 'utf-8')
-    ).resolves.toBe('after');
-
-    await fs.rm(tmpDir, { recursive: true });
   });
 
   test('skips conflict tasks unless includeConflicts is set', async () => {
-    const tmpDir = await setupProject('xtarterize-conflict-');
+    await withProject('xtarterize-conflict-', async (tmpDir) => {
+      const profile = await detectProject(tmpDir);
+      let applied = false;
+      const mockTask = makeTask({
+        apply: async () => {
+          applied = true;
+        },
+        check: 'conflict',
+        dryRun: async () => [
+          { after: 'after', before: 'before', filepath: 'test.txt' },
+        ],
+        id: 'mock/conflict',
+        label: 'Mock Conflict',
+      });
 
-    const profile = await detectProject(tmpDir);
-    let applied = false;
-    const mockTask = {
-      applicable: () => true,
-      apply: async () => {
-        applied = true;
-      },
-      check: async () => 'conflict' as const,
-      dryRun: async () => [
-        { after: 'after', before: 'before', filepath: 'test.txt' },
-      ],
-      group: 'Test',
-      id: 'mock/conflict',
-      label: 'Mock Conflict',
-    };
+      const skipped = await applyTasks({
+        cwd: tmpDir,
+        profile,
+        tasks: [mockTask],
+      });
+      expect(skipped.skipped).toBe(1);
+      expect(skipped.applied).toBe(0);
+      expect(applied).toBe(false);
 
-    const skipped = await applyTasks({
-      cwd: tmpDir,
-      profile,
-      tasks: [mockTask],
+      const withSelectedIds = await applyTasks({
+        cwd: tmpDir,
+        profile,
+        selectedIds: [mockTask.id],
+        tasks: [mockTask],
+      });
+      expect(withSelectedIds.skipped).toBe(1);
+      expect(withSelectedIds.applied).toBe(0);
+      expect(applied).toBe(false);
+
+      const withIncludeConflicts = await applyTasks({
+        cwd: tmpDir,
+        includeConflicts: true,
+        profile,
+        selectedIds: [mockTask.id],
+        tasks: [mockTask],
+      });
+      expect(withIncludeConflicts.skipped).toBe(0);
+      expect(withIncludeConflicts.applied).toBe(1);
+      expect(applied).toBe(true);
     });
-    expect(skipped.skipped).toBe(1);
-    expect(skipped.applied).toBe(0);
-    expect(applied).toBe(false);
-
-    const withSelectedIds = await applyTasks({
-      cwd: tmpDir,
-      profile,
-      selectedIds: [mockTask.id],
-      tasks: [mockTask],
-    });
-    expect(withSelectedIds.skipped).toBe(1);
-    expect(withSelectedIds.applied).toBe(0);
-    expect(applied).toBe(false);
-
-    const withIncludeConflicts = await applyTasks({
-      cwd: tmpDir,
-      includeConflicts: true,
-      profile,
-      selectedIds: [mockTask.id],
-      tasks: [mockTask],
-    });
-    expect(withIncludeConflicts.skipped).toBe(0);
-    expect(withIncludeConflicts.applied).toBe(1);
-    expect(applied).toBe(true);
-
-    await fs.rm(tmpDir, { recursive: true });
   });
 
   test('continues applying remaining tasks after one fails', async () => {
-    const tmpDir = await setupProject('xtarterize-partial-');
+    await withProject('xtarterize-partial-', async (tmpDir) => {
+      const profile = await detectProject(tmpDir);
+      const failingTask = makeTask({
+        apply: async () => {
+          throw new Error('intentional failure');
+        },
+        id: 'mock/fail',
+        label: 'Failing Task',
+      });
+      let goodApplied = false;
+      const goodTask = makeTask({
+        apply: async () => {
+          goodApplied = true;
+        },
+        id: 'mock/good',
+        label: 'Good Task',
+      });
 
-    const profile = await detectProject(tmpDir);
-    const failingTask = {
-      applicable: () => true,
-      apply: async () => {
-        throw new Error('intentional failure');
-      },
-      check: async () => 'new' as const,
-      dryRun: async () => [],
-      group: 'Test',
-      id: 'mock/fail',
-      label: 'Failing Task',
-    };
-    let goodApplied = false;
-    const goodTask = {
-      applicable: () => true,
-      apply: async () => {
-        goodApplied = true;
-      },
-      check: async () => 'new' as const,
-      dryRun: async () => [],
-      group: 'Test',
-      id: 'mock/good',
-      label: 'Good Task',
-    };
-
-    const result = await applyTasks({
-      cwd: tmpDir,
-      profile,
-      tasks: [failingTask, goodTask],
+      const result = await applyTasks({
+        cwd: tmpDir,
+        profile,
+        tasks: [failingTask, goodTask],
+      });
+      expect(result.applied).toBe(1);
+      expect(result.errors).toHaveLength(1);
+      expect(result.errors[0]).toContain('intentional failure');
+      expect(goodApplied).toBe(true);
     });
-    expect(result.applied).toBe(1);
-    expect(result.errors).toHaveLength(1);
-    expect(result.errors[0]).toContain('intentional failure');
-    expect(goodApplied).toBe(true);
-
-    await fs.rm(tmpDir, { recursive: true });
   });
 });
 
 describe('planTasks', () => {
   test('plans diffs without writing, backing up, or installing', async () => {
-    const tmpDir = await setupProject('xtarterize-plan-');
-    try {
+    await withProject('xtarterize-plan-', async (tmpDir) => {
       const profile = await detectProject(tmpDir);
-      const mockTask = {
-        applicable: () => true,
+      const mockTask = makeTask({
         apply: async () => {
           await fs.writeFile(path.join(tmpDir, 'test.txt'), 'hello');
         },
-        check: async () => 'new' as const,
         dryRun: async () => [
           { after: 'hello', before: null, filepath: 'test.txt' },
         ],
         getDeps: async () => [{ depName: 'plan-dep', dev: true }],
-        group: 'Test',
         id: 'mock/plan',
         label: 'Mock Plan',
-      };
+      });
 
       mockInstall.mockClear();
       const plan = await runPlan(tmpDir, profile, [mockTask]);
@@ -334,27 +329,21 @@ describe('planTasks', () => {
         fs.access(path.join(tmpDir, '.xtarterize', 'backups'))
       ).rejects.toThrow();
       expect(mockInstall).not.toHaveBeenCalled();
-    } finally {
-      await fs.rm(tmpDir, { force: true, recursive: true });
-    }
+    });
   });
 
   test('keeps skipped tasks in the plan without diffs or dependency installs', async () => {
-    const tmpDir = await setupProject('xtarterize-plan-skip-');
-    try {
+    await withProject('xtarterize-plan-skip-', async (tmpDir) => {
       const profile = await detectProject(tmpDir);
-      const mockTask = {
-        applicable: () => true,
-        apply: async () => {},
-        check: async () => 'skip' as const,
+      const mockTask = makeTask({
+        check: 'skip',
         dryRun: async () => [
           { after: 'ignored', before: null, filepath: 'ignored.txt' },
         ],
         getDeps: async () => [{ depName: 'skipped-dep', dev: true }],
-        group: 'Test',
         id: 'mock/plan-skip',
         label: 'Mock Plan Skip',
-      };
+      });
 
       const plan = await runPlan(tmpDir, profile, [mockTask]);
 
@@ -362,32 +351,27 @@ describe('planTasks', () => {
       expect(plan.entries[0]?.diffs).toEqual([]);
       expect(plan.files).toEqual([]);
       expect(plan.dependencies).toEqual([]);
-    } finally {
-      await fs.rm(tmpDir, { force: true, recursive: true });
-    }
+    });
   });
 });
 
 describe('executePlan', () => {
   test('backs up and manifests exactly the plan files', async () => {
-    const tmpDir = await setupProject('xtarterize-exec-plan-');
-    try {
+    await withProject('xtarterize-exec-plan-', async (tmpDir) => {
       await fs.writeFile(path.join(tmpDir, 'test.txt'), 'before');
 
       const profile = await detectProject(tmpDir);
-      const mockTask = {
-        applicable: () => true,
+      const mockTask = makeTask({
         apply: async () => {
           await fs.writeFile(path.join(tmpDir, 'test.txt'), 'after');
         },
-        check: async () => 'patch' as const,
+        check: 'patch',
         dryRun: async () => [
           { after: 'after', before: 'before', filepath: 'test.txt' },
         ],
-        group: 'Test',
         id: 'mock/plan-exec',
         label: 'Mock Plan Exec',
-      };
+      });
 
       const plan = await runPlan(tmpDir, profile, [mockTask]);
       expect(plan.files).toEqual(['test.txt']);
@@ -416,38 +400,27 @@ describe('executePlan', () => {
       await expect(
         fs.readFile(path.join(tmpDir, 'test.txt'), 'utf-8')
       ).resolves.toBe('after');
-    } finally {
-      await fs.rm(tmpDir, { force: true, recursive: true });
-    }
+    });
   });
 
   test('reports per-entry apply errors and continues with remaining entries', async () => {
-    const tmpDir = await setupProject('xtarterize-exec-errors-');
-    try {
+    await withProject('xtarterize-exec-errors-', async (tmpDir) => {
       const profile = await detectProject(tmpDir);
-      const failingTask = {
-        applicable: () => true,
+      const failingTask = makeTask({
         apply: async () => {
           throw new Error('entry failure');
         },
-        check: async () => 'new' as const,
-        dryRun: async () => [],
-        group: 'Test',
         id: 'mock/plan-fail',
         label: 'Plan Fail',
-      };
+      });
       let goodApplied = false;
-      const goodTask = {
-        applicable: () => true,
+      const goodTask = makeTask({
         apply: async () => {
           goodApplied = true;
         },
-        check: async () => 'new' as const,
-        dryRun: async () => [],
-        group: 'Test',
         id: 'mock/plan-good',
         label: 'Plan Good',
-      };
+      });
 
       const plan = await runPlan(tmpDir, profile, [failingTask, goodTask]);
       const result = await runExecute(tmpDir, plan, profile);
@@ -466,27 +439,20 @@ describe('executePlan', () => {
       );
       expect(failedEntry?.applyError).toContain('entry failure');
       expect(goodEntry?.applyError).toBeUndefined();
-    } finally {
-      await fs.rm(tmpDir, { force: true, recursive: true });
-    }
+    });
   });
 
   test('reports per-entry dry-run errors and excludes the entry from the plan', async () => {
-    const tmpDir = await setupProject('xtarterize-dryrun-');
-    try {
+    await withProject('xtarterize-dryrun-', async (tmpDir) => {
       const profile = await detectProject(tmpDir);
-      const failingTask = {
-        applicable: () => true,
-        apply: async () => {},
-        check: async () => 'new' as const,
+      const failingTask = makeTask({
         dryRun: async () => {
           throw new Error('dryRun boom');
         },
         getDeps: async () => [{ depName: 'failed-dep', dev: true }],
-        group: 'Test',
         id: 'mock/plan-dryrun-fail',
         label: 'Plan Dry Run Fail',
-      };
+      });
 
       const plan = await runPlan(tmpDir, profile, [failingTask]);
 
@@ -496,28 +462,21 @@ describe('executePlan', () => {
 
       const result = await runExecute(tmpDir, plan, profile);
       expect(result.errors).toContain('mock/plan-dryrun-fail: dryRun boom');
-    } finally {
-      await fs.rm(tmpDir, { force: true, recursive: true });
-    }
+    });
   });
 
   test('surfaces batch install failure in ApplyResult.errors', async () => {
-    const tmpDir = await setupProject('xtarterize-install-fail-');
-    try {
+    await withProject('xtarterize-install-fail-', async (tmpDir) => {
       const profile = await detectProject(tmpDir);
       let applied = false;
-      const mockTask = {
-        applicable: () => true,
+      const mockTask = makeTask({
         apply: async () => {
           applied = true;
         },
-        check: async () => 'new' as const,
-        dryRun: async () => [],
         getDeps: async () => [{ depName: 'broken-dep', dev: true }],
-        group: 'Test',
         id: 'mock/install-fail',
         label: 'Mock Install Fail',
-      };
+      });
 
       const plan = await runPlan(tmpDir, profile, [mockTask]);
       mockInstall.mockReturnValueOnce(
@@ -535,8 +494,6 @@ describe('executePlan', () => {
       ).toBe(true);
       // The install failure must not stop the task from applying.
       expect(applied).toBe(true);
-    } finally {
-      await fs.rm(tmpDir, { force: true, recursive: true });
-    }
+    });
   });
 });
