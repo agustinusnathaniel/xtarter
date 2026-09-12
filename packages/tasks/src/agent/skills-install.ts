@@ -197,20 +197,17 @@ export const skillsInstallTask = defineTask({
     },
   ],
   applicable: (profile) => profile.typescript,
+  configTargets: [],
   group: 'Agent',
   id: 'agent/skills-install',
+  keywords: [
+    'skills',
+    'agent skills',
+    'ai tools',
+    'opencode skills',
+    'install',
+  ],
   label: 'Install agent skills',
   scope: 'both',
-
-  searchMeta: {
-    configTargets: [],
-    keywords: [
-      'skills',
-      'agent skills',
-      'ai tools',
-      'opencode skills',
-      'install',
-    ],
-    tags: ['ai', 'agent', 'skills', 'setup', 'tools'],
-  },
+  tags: ['ai', 'agent', 'skills', 'setup', 'tools'],
 });

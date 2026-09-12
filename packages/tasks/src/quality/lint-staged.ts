@@ -23,21 +23,19 @@ function renderLintStagedConfig(cmd: string): string {
 
 export const lintStagedTask = defineTask({
   applicable: (profile) => !profile.vitePlus,
+  configTargets: ['.lintstagedrc.json'],
   deps: [{ depName: 'lint-staged', dev: true }],
   group: 'Quality',
   id: 'quality/lint-staged',
+  keywords: [
+    'lint-staged',
+    'staged files',
+    'pre-commit',
+    'git hook',
+    'quality gate',
+  ],
   label: 'lint-staged config',
-  searchMeta: {
-    configTargets: ['.lintstagedrc.json'],
-    keywords: [
-      'lint-staged',
-      'staged files',
-      'pre-commit',
-      'git hook',
-      'quality gate',
-    ],
-    tags: ['git-hooks', 'pre-commit', 'linting', 'quality'],
-  },
+  tags: ['git-hooks', 'pre-commit', 'linting', 'quality'],
   targets: async (cwd) => {
     const content = renderLintStagedConfig(await lintCmd(cwd));
     return [

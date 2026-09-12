@@ -94,12 +94,18 @@ export type SpecSearchMeta = Omit<TaskSearchMeta, 'configTargets'> & {
 export interface TaskSpec {
   actions?: Array<TaskAction>;
   applicable: (profile: ProjectProfile) => boolean;
+  /** Search config files; derived from `targets` when omitted. */
+  configTargets?: Array<string>;
   deps?: DepsDeclaration;
   group: string;
   id: string;
+  /** Extra search keywords, assembled into `searchMeta`. */
+  keywords?: Array<string>;
   label: string;
   scope?: TaskScope;
   searchMeta?: SpecSearchMeta;
+  /** Descriptive search tags, assembled into `searchMeta`. */
+  tags?: Array<string>;
   targets?: Array<TaskTarget> | SpecTargetResolver;
 }
 
@@ -286,20 +292,34 @@ function labelFailure<A>(
 }
 
 /**
- * Merge authored metadata with derived `configTargets`. Keywords and tags stay
- * authored; only targets the spec declares statically can be derived.
+ * Assemble search metadata from the top-level fields or the nested `searchMeta`
+ * form. Keywords and tags stay authored; only targets the spec declares
+ * statically can be derived. Authored `configTargets` keeps its leading key
+ * position, a derived one is appended last, matching the historical shape.
  */
 function resolveSearchMeta(spec: TaskSpec): TaskSearchMeta | undefined {
-  if (spec.searchMeta === undefined) {
+  const { configTargets, keywords, searchMeta, tags } = spec;
+  if (
+    configTargets === undefined &&
+    keywords === undefined &&
+    searchMeta === undefined &&
+    tags === undefined
+  ) {
     return undefined;
   }
+  const authoredConfigTargets = configTargets ?? searchMeta?.configTargets;
+  const authored = {
+    keywords: keywords ?? searchMeta?.keywords ?? [],
+    tags: tags ?? searchMeta?.tags ?? [],
+  };
+  if (authoredConfigTargets !== undefined) {
+    return { configTargets: authoredConfigTargets, ...authored };
+  }
   return {
-    ...spec.searchMeta,
-    configTargets:
-      spec.searchMeta.configTargets ??
-      deriveConfigTargets(
-        Array.isArray(spec.targets) ? spec.targets : undefined
-      ),
+    ...authored,
+    configTargets: deriveConfigTargets(
+      Array.isArray(spec.targets) ? spec.targets : undefined
+    ),
   };
 }
 

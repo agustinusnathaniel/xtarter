@@ -187,19 +187,17 @@ export const pnpmWorkspaceTask = defineSingleTargetTask({
   applicable: (profile) => profile.packageManager === 'pnpm',
   group: 'Workspace',
   id: 'workspace/pnpm-workspace',
+  keywords: [
+    'pnpm',
+    'workspace',
+    'monorepo',
+    'single-package',
+    'pnpm-workspace',
+    'package manager',
+  ],
   label: 'pnpm-workspace.yaml - pnpm workspace config',
   scope: 'root',
-  searchMeta: {
-    keywords: [
-      'pnpm',
-      'workspace',
-      'monorepo',
-      'single-package',
-      'pnpm-workspace',
-      'package manager',
-    ],
-    tags: ['workspace', 'pnpm', 'package-manager'],
-  },
+  tags: ['workspace', 'pnpm', 'package-manager'],
   target: {
     filepath: 'pnpm-workspace.yaml',
     kind: 'text',

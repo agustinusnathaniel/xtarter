@@ -17,17 +17,15 @@ export const gitignoreTsbuildinfoTask = defineSingleTargetTask({
   applicable: (profile) => profile.typescript,
   group: 'TypeScript',
   id: 'gitignore/tsbuildinfo',
+  keywords: [
+    'tsbuildinfo',
+    'gitignore',
+    'typescript build',
+    'declaration files',
+  ],
   label: '.gitignore - tsbuildinfo',
   scope: 'root',
-  searchMeta: {
-    keywords: [
-      'tsbuildinfo',
-      'gitignore',
-      'typescript build',
-      'declaration files',
-    ],
-    tags: ['typescript', 'gitignore', 'build-output'],
-  },
+  tags: ['typescript', 'gitignore', 'build-output'],
   target: {
     filepath: '.gitignore',
     kind: 'text',

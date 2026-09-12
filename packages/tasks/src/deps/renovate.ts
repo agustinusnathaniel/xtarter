@@ -26,18 +26,16 @@ export const renovateTask = defineSingleTargetTask({
   applicable: (profile) => profile.hasGitHub,
   group: 'Dependencies',
   id: 'deps/renovate',
+  keywords: [
+    'renovate',
+    'dependencies',
+    'dependency updates',
+    'dependabot',
+    'auto',
+  ],
   label: 'Renovate config',
   scope: 'root',
-  searchMeta: {
-    keywords: [
-      'renovate',
-      'dependencies',
-      'dependency updates',
-      'dependabot',
-      'auto',
-    ],
-    tags: ['dependencies', 'updates', 'maintenance', 'automation'],
-  },
+  tags: ['dependencies', 'updates', 'maintenance', 'automation'],
   target: {
     extensions: ['.json', '.json5'],
     filepath: 'renovate.json',

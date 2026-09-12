@@ -15,11 +15,9 @@ export const biomeTask = defineSingleTargetTask({
   ],
   group: 'Linting & Formatting',
   id: 'lint/biome',
+  keywords: ['biome', 'linter', 'formatter', 'lint', 'format', 'all-in-one'],
   label: 'Biome (lint + format)',
-  searchMeta: {
-    keywords: ['biome', 'linter', 'formatter', 'lint', 'format', 'all-in-one'],
-    tags: ['linting', 'formatting', 'all-in-one', 'quality'],
-  },
+  tags: ['linting', 'formatting', 'all-in-one', 'quality'],
   target: {
     extensions: ['.json', '.jsonc'],
     filepath: 'biome.json',

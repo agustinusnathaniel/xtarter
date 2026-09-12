@@ -59,18 +59,16 @@ export const pathsTask = defineTask({
   applicable: (profile) => profile.typescript,
   group: 'TypeScript',
   id: 'ts/paths',
+  keywords: [
+    'path aliases',
+    'import paths',
+    '@ alias',
+    'module resolution',
+    'tsconfig',
+  ],
   label: 'tsconfig - path aliases',
   scope: 'package',
-  searchMeta: {
-    keywords: [
-      'path aliases',
-      'import paths',
-      '@ alias',
-      'module resolution',
-      'tsconfig',
-    ],
-    tags: ['typescript', 'paths', 'aliases', 'imports'],
-  },
+  tags: ['typescript', 'paths', 'aliases', 'imports'],
   targets: [
     {
       filepath: 'tsconfig.json',
