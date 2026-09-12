@@ -52,7 +52,7 @@ function resolveQueryLimits(args: {
 async function resolveMatchedStatuses(options: {
   matchedTasks: Array<Task>;
   session: CommandSession;
-}): Promise<Map<string, TaskStatus>> {
+}): Promise<Map<string, TaskStatus> | undefined> {
   const { matchedTasks, session } = options;
   const applicableIds = new Set(session.tasks.map((task) => task.id));
   const statuses = new Map(session.statuses);
@@ -64,6 +64,9 @@ async function resolveMatchedStatuses(options: {
   const extraStatuses = await runCliProgram(
     resolveTaskStatuses(unresolved, session.runtime.cwd, session.profile)
   );
+  if (!extraStatuses) {
+    return undefined;
+  }
   for (const [taskId, status] of extraStatuses) {
     statuses.set(taskId, status);
   }
@@ -116,6 +119,9 @@ export const queryCommand = defineCommand({
       matchedTasks,
       session,
     });
+    if (!statuses) {
+      return;
+    }
 
     if (ctx.json) {
       console.log(formatQueryResult({ query: queryStr, results, statuses }));

@@ -40,7 +40,7 @@ export function runWith<A, E, R>(
 export function runCli<A, E>(
   program: Effect.Effect<A, E, TestServices>,
   prompter?: PrompterShape
-): Promise<A> {
+): Promise<A | undefined> {
   const withPrompter =
     prompter === undefined
       ? program

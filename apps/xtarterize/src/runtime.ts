@@ -2,6 +2,7 @@ import { DepsInstaller, logError, ProcessRunner } from '@xtarterize/core';
 import { Cause, Effect, Exit, Layer, Option, Result } from 'effect';
 
 import { Prompter } from '@/ui/prompter.js';
+import { formatFailureText } from '@/utils/failure-text.js';
 
 /** Services every CLI command program may require. */
 export type AppServices = DepsInstaller | ProcessRunner | Prompter;
@@ -24,22 +25,15 @@ export interface RunCliProgramOptions {
   signal?: AbortSignal;
 }
 
-function formatFailureValue(value: unknown): string {
-  if (value instanceof Error) {
-    return value.message || value.name;
-  }
-  return String(value);
-}
-
 function renderFailure(cause: Cause.Cause<unknown>): void {
   const error = Cause.findErrorOption(cause);
   if (Option.isSome(error)) {
-    logError(formatFailureValue(error.value));
+    logError(formatFailureText(error.value));
     return;
   }
   const defect = Cause.findDefect(cause);
   if (Result.isSuccess(defect)) {
-    logError(formatFailureValue(defect.success));
+    logError(formatFailureText(defect.success));
     return;
   }
   logError(Cause.pretty(cause));
@@ -56,7 +50,7 @@ function renderFailure(cause: Cause.Cause<unknown>): void {
 export async function runCliProgram<A, E>(
   program: Effect.Effect<A, E, AppServices>,
   options: RunCliProgramOptions = {}
-): Promise<A> {
+): Promise<A | undefined> {
   const exit = await Effect.runPromiseExit(Effect.provide(program, AppLayer), {
     signal: options.signal ?? cliAbortController.signal,
   });
@@ -65,9 +59,9 @@ export async function runCliProgram<A, E>(
   }
   if (Cause.hasInterruptsOnly(exit.cause)) {
     process.exitCode = 0;
-    return undefined as A;
+    return undefined;
   }
   renderFailure(exit.cause);
   process.exitCode = 1;
-  return undefined as A;
+  return undefined;
 }
