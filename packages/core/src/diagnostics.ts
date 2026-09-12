@@ -296,7 +296,7 @@ function runToolInstallationChecks(
 }
 
 interface DiagnosticGroupDefinition {
-  fallback: DiagnosticCheck;
+  failureMessage: string;
   id: DiagnosticGroupId;
   run: (
     cwd: string
@@ -306,41 +306,25 @@ interface DiagnosticGroupDefinition {
 
 const DIAGNOSTIC_GROUPS: ReadonlyArray<DiagnosticGroupDefinition> = [
   {
-    fallback: {
-      message: 'Failed to run environment checks',
-      name: 'Environment',
-      status: 'fail',
-    },
+    failureMessage: 'Failed to run environment checks',
     id: 'environment',
     run: runEnvironmentChecks,
     title: 'Environment',
   },
   {
-    fallback: {
-      message: 'Failed to run tool checks',
-      name: 'Tools',
-      status: 'fail',
-    },
+    failureMessage: 'Failed to run tool checks',
     id: 'tools',
     run: runToolInstallationChecks,
     title: 'Tools',
   },
   {
-    fallback: {
-      message: 'Failed to run project health checks',
-      name: 'Project',
-      status: 'fail',
-    },
+    failureMessage: 'Failed to run project health checks',
     id: 'project',
     run: runProjectHealthChecks,
     title: 'Project',
   },
   {
-    fallback: {
-      message: 'Failed to run conflict checks',
-      name: 'Configuration',
-      status: 'fail',
-    },
+    failureMessage: 'Failed to run conflict checks',
     id: 'configuration',
     run: runConflictChecks,
     title: 'Configuration',
@@ -403,7 +387,7 @@ export function runDiagnostics(
         checks:
           result && Exit.isSuccess(result)
             ? result.value
-            : [definition.fallback],
+            : [makeCheck(definition.title, 'fail', definition.failureMessage)],
         title: definition.title,
       };
     });
