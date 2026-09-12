@@ -82,33 +82,16 @@ function matchTaskToToken(token: string, task: Task) {
   };
 }
 
-function getBestScores(task: Task, allTerms: Array<string>) {
-  let bestLabel = 0;
-  let bestId = 0;
-  let bestGroup = 0;
-  let bestKw = 0;
-  let bestConfig = 0;
+type TokenMatch = ReturnType<typeof matchTaskToToken>;
 
-  for (const term of allTerms) {
-    const match = matchTaskToToken(term, task);
-    if (match.label > bestLabel) {
-      bestLabel = match.label;
-    }
-    if (match.id > bestId) {
-      bestId = match.id;
-    }
-    if (match.group > bestGroup) {
-      bestGroup = match.group;
-    }
-    if (match.keywords > bestKw) {
-      bestKw = match.keywords;
-    }
-    if (match.config > bestConfig) {
-      bestConfig = match.config;
-    }
-  }
-
-  return { bestConfig, bestGroup, bestId, bestKw, bestLabel };
+function maxSignal(match: TokenMatch): number {
+  return Math.max(
+    match.label,
+    match.id,
+    match.group,
+    match.keywords,
+    match.config
+  );
 }
 
 function scoreTaskForQuery(
@@ -120,33 +103,43 @@ function scoreTaskForQuery(
   }
 ): { signals: Array<RelevanceSignal>; score: number } {
   const { tokens, expanded, weights } = queryTerms;
-  const allTerms = [...new Set([...tokens, ...expanded])];
+  const matches = new Map<string, TokenMatch>();
+  for (const term of new Set([...tokens, ...expanded])) {
+    matches.set(term, matchTaskToToken(term, task));
+  }
 
   // Best match per signal across all terms (original + synonyms).
-  const best = getBestScores(task, allTerms);
+  const best = { config: 0, group: 0, id: 0, keywords: 0, label: 0 };
+  for (const match of matches.values()) {
+    best.label = Math.max(best.label, match.label);
+    best.id = Math.max(best.id, match.id);
+    best.group = Math.max(best.group, match.group);
+    best.keywords = Math.max(best.keywords, match.keywords);
+    best.config = Math.max(best.config, match.config);
+  }
 
   // Coverage bonus: proportion of original tokens that matched >= 0.55 on any signal
   const matchedTokenCount = tokens.filter((t) => {
-    const m = matchTaskToToken(t, task);
-    return Math.max(m.label, m.id, m.group, m.keywords, m.config) >= 0.55;
+    const match = matches.get(t);
+    return match !== undefined && maxSignal(match) >= 0.55;
   }).length;
   const coverageBonus =
     tokens.length > 0 ? (matchedTokenCount / tokens.length) * 0.1 : 0;
 
   const signals: Array<RelevanceSignal> = [
-    { name: 'label', score: best.bestLabel },
-    { name: 'id', score: best.bestId },
-    { name: 'group', score: best.bestGroup },
-    { name: 'keywords', score: best.bestKw },
-    { name: 'config', score: best.bestConfig },
+    { name: 'label', score: best.label },
+    { name: 'id', score: best.id },
+    { name: 'group', score: best.group },
+    { name: 'keywords', score: best.keywords },
+    { name: 'config', score: best.config },
   ];
 
   const weightedScore =
-    best.bestLabel * weights.label +
-    best.bestId * weights.id +
-    best.bestGroup * weights.group +
-    best.bestKw * weights.keywords +
-    best.bestConfig * weights.config +
+    best.label * weights.label +
+    best.id * weights.id +
+    best.group * weights.group +
+    best.keywords * weights.keywords +
+    best.config * weights.config +
     coverageBonus;
 
   return { score: Math.min(1.0, Math.max(0, weightedScore)), signals };

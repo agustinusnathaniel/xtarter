@@ -87,9 +87,6 @@ function detectRuntime(
   if (framework === 'node') {
     return 'node';
   }
-  if (bundler === 'vite' || bundler === 'webpack' || bundler === 'rspack') {
-    return 'browser';
-  }
   return 'browser';
 }
 
