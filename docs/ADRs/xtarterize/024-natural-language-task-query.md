@@ -6,6 +6,8 @@ Accepted
 
 Update (2026-09-13): ADR 037 removed external task plugins. Built-in tasks still participate in scoring through the `Task` interface; plugin-task references below describe the state at the time of this decision.
 
+Update (2026-09-13): ADR 038 removed synonym expansion from the scoring engine; stemming and fuzzy matching were retained. The synonym-map references below describe the state at the time of this decision.
+
 ## Date
 
 2026-06-29

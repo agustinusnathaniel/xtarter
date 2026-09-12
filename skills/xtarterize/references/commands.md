@@ -206,7 +206,7 @@ Without `--json`, groups tasks by category (Agent, CI, Lint, TypeScript, etc.) w
 
 ## `query <query>` - Search tasks by natural language
 
-A pure-algorithmic scoring engine (no AI) that ranks xtarterize tasks by relevance to a natural language query. Uses tokenization, stemming, fuzzy matching, and synonym expansion to match against task labels, IDs, groups, keywords, and config targets.
+A pure-algorithmic scoring engine (no AI) that ranks xtarterize tasks by relevance to a natural language query. Uses tokenization, stemming, and fuzzy matching to match against task labels, IDs, groups, keywords, and config targets.
 
 ```bash
 npx xtarterize query "strict typescript" --json

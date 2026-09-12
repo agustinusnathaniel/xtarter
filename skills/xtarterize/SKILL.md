@@ -93,7 +93,7 @@ out=$(npx xtarterize doctor --json --cwd "$dir")
 | `doctor` shows tool not installed | Missing dep | xtarterize only writes configs; user may need to install separately |
 | Task shows `"conflict"` | Config differs | **Never auto-apply** - present to user, only with `--include-conflicts` |
 | `--cwd` fails preflight | No `package.json` | Verify path exists and is a JS/TS project |
-| `query` returns empty results | Query too narrow or no matching tasks | Broaden query, try synonyms, or lower `--threshold` |
+| `query` returns empty results | Query too narrow or no matching tasks | Broaden the query or lower `--threshold` |
 
 ## Anti-patterns
 
