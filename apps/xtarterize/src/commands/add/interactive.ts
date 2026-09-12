@@ -21,32 +21,6 @@ function isActionable(status: TaskStatus, includeConflicts: boolean): boolean {
   return includeConflicts && status === 'conflict';
 }
 
-function buildTasksWithStatus(session: CommandSession): Array<TaskWithStatus> {
-  return session.tasks.map((task) => ({
-    status: session.statuses.get(task.id) ?? 'new',
-    task,
-  }));
-}
-
-function warnConflictsSkipped(options: {
-  allFlag: boolean | undefined;
-  includeConflicts: boolean;
-  jsonMode: boolean;
-  tasksWithStatus: Array<TaskWithStatus>;
-}): void {
-  const { allFlag, includeConflicts, jsonMode, tasksWithStatus } = options;
-  if (
-    allFlag &&
-    !jsonMode &&
-    !includeConflicts &&
-    tasksWithStatus.some((entry) => entry.status === 'conflict')
-  ) {
-    logWarn(
-      'Conflicting tasks skipped. Pass --include-conflicts to apply them anyway.'
-    );
-  }
-}
-
 function confirmSelected(options: {
   includeConflicts: boolean;
   jsonMode: boolean;
@@ -82,74 +56,6 @@ function confirmSelected(options: {
     }
 
     return confirmed;
-  });
-}
-
-function requiresTerminal(options: {
-  allFlag: boolean | undefined;
-  quiet: boolean;
-  session: CommandSession;
-}): boolean {
-  const { allFlag, quiet, session } = options;
-  if (quiet && !allFlag) {
-    reportEmptyOutcome(
-      session,
-      'Interactive mode requires a terminal. Use a task ID instead.'
-    );
-    return true;
-  }
-  return false;
-}
-
-function resolveConfirmed(options: {
-  allFlag: boolean | undefined;
-  includeConflicts: boolean;
-  jsonMode: boolean;
-  selected: Array<TaskWithStatus>;
-  session: CommandSession;
-}): Effect.Effect<
-  Array<TaskWithStatus> | null,
-  AddCommandError,
-  AddCommandServices
-> {
-  const { allFlag, includeConflicts, jsonMode, selected, session } = options;
-  if (allFlag) {
-    return Effect.succeed(selected);
-  }
-  return confirmSelected({
-    includeConflicts,
-    jsonMode,
-    selected,
-    session,
-  });
-}
-
-function resolveSelection(options: {
-  allFlag: boolean | undefined;
-  includeConflicts: boolean;
-  tasksWithStatus: Array<TaskWithStatus>;
-}): Effect.Effect<
-  Array<TaskWithStatus> | null,
-  AddCommandError,
-  AddCommandServices
-> {
-  const { allFlag, includeConflicts, tasksWithStatus } = options;
-  if (allFlag) {
-    return Effect.succeed(
-      tasksWithStatus.filter((entry) =>
-        isActionable(entry.status, includeConflicts)
-      )
-    );
-  }
-
-  return Effect.gen(function* () {
-    const selectedIds = yield* selectTasksGrouped(tasksWithStatus);
-    if (selectedIds === null) {
-      return null;
-    }
-    return tasksWithStatus.filter((entry) =>
-      selectedIds.includes(entry.task.id)
-    );
   });
 }
 
@@ -190,6 +96,73 @@ function executeConfirmed(options: {
   });
 }
 
+/** Build task statuses, gate on a terminal, and resolve the selection. */
+function selectTasksToApply(options: {
+  allFlag: boolean | undefined;
+  includeConflicts: boolean;
+  jsonMode: boolean;
+  session: CommandSession;
+}): Effect.Effect<
+  Array<TaskWithStatus> | null,
+  AddCommandError,
+  AddCommandServices
+> {
+  return Effect.gen(function* () {
+    const { allFlag, includeConflicts, jsonMode, session } = options;
+    const { runtime } = session;
+    const tasksWithStatus: Array<TaskWithStatus> = session.tasks.map(
+      (task) => ({
+        status: session.statuses.get(task.id) ?? 'new',
+        task,
+      })
+    );
+
+    if (runtime.quiet && !allFlag) {
+      reportEmptyOutcome(
+        session,
+        'Interactive mode requires a terminal. Use a task ID instead.'
+      );
+      return null;
+    }
+
+    let selected: Array<TaskWithStatus> | null;
+    if (allFlag) {
+      selected = tasksWithStatus.filter((entry) =>
+        isActionable(entry.status, includeConflicts)
+      );
+    } else {
+      const selectedIds = yield* selectTasksGrouped(tasksWithStatus);
+      selected =
+        selectedIds === null
+          ? null
+          : tasksWithStatus.filter((entry) =>
+              selectedIds.includes(entry.task.id)
+            );
+    }
+    if (selected === null) {
+      session.reportOutcome(session.cancelled());
+      return null;
+    }
+    if (selected.length === 0) {
+      reportEmptyOutcome(session, 'No tasks to apply');
+      return null;
+    }
+
+    if (
+      allFlag &&
+      !jsonMode &&
+      !includeConflicts &&
+      tasksWithStatus.some((entry) => entry.status === 'conflict')
+    ) {
+      logWarn(
+        'Conflicting tasks skipped. Pass --include-conflicts to apply them anyway.'
+      );
+    }
+
+    return selected;
+  });
+}
+
 /** The interactive `add` flow as one program: select, confirm, apply. */
 export function runInteractive(
   options: RunInteractiveOptions
@@ -206,40 +179,25 @@ export function runInteractive(
       return;
     }
 
-    const tasksWithStatus = buildTasksWithStatus(session);
-
-    if (requiresTerminal({ allFlag, quiet: runtime.quiet, session })) {
-      return;
-    }
-
-    const selected = yield* resolveSelection({
-      allFlag,
-      includeConflicts,
-      tasksWithStatus,
-    });
-    if (selected === null) {
-      session.reportOutcome(session.cancelled());
-      return;
-    }
-    if (selected.length === 0) {
-      reportEmptyOutcome(session, 'No tasks to apply');
-      return;
-    }
-
-    warnConflictsSkipped({
+    const selected = yield* selectTasksToApply({
       allFlag,
       includeConflicts,
       jsonMode,
-      tasksWithStatus,
-    });
-
-    const confirmed = yield* resolveConfirmed({
-      allFlag,
-      includeConflicts,
-      jsonMode,
-      selected,
       session,
     });
+    if (selected === null) {
+      return;
+    }
+
+    let confirmed: Array<TaskWithStatus> | null = selected;
+    if (!allFlag) {
+      confirmed = yield* confirmSelected({
+        includeConflicts,
+        jsonMode,
+        selected,
+        session,
+      });
+    }
     if (confirmed === null) {
       session.reportOutcome(session.cancelled());
       return;
