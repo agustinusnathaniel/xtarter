@@ -143,7 +143,7 @@ describe('scoreTasks', () => {
     expect(results[0].taskId).toBe('ci/ci');
   });
 
-  test('returns "dependency updates" with deps/renovate as top result via synonym expansion', () => {
+  test('returns "dependency updates" with deps/renovate as top result', () => {
     const results = scoreTasks(mockTasks, 'dependency updates');
     expect(results.length).toBeGreaterThan(0);
     expect(results[0].taskId).toBe('deps/renovate');

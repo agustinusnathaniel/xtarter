@@ -2,7 +2,6 @@ import type { Task } from '@/_base.js';
 
 import { similarity } from './fuzzy.js';
 import { stem } from './stemmer.js';
-import { expandQuery } from './synonyms.js';
 import { tokenize } from './tokenizer.js';
 import type {
   InquiryOptions,
@@ -98,17 +97,16 @@ function scoreTaskForQuery(
   task: Task,
   queryTerms: {
     tokens: Array<string>;
-    expanded: Array<string>;
     weights: WeightConfig;
   }
 ): { signals: Array<RelevanceSignal>; score: number } {
-  const { tokens, expanded, weights } = queryTerms;
+  const { tokens, weights } = queryTerms;
   const matches = new Map<string, TokenMatch>();
-  for (const term of new Set([...tokens, ...expanded])) {
+  for (const term of new Set(tokens)) {
     matches.set(term, matchTaskToToken(term, task));
   }
 
-  // Best match per signal across all terms (original + synonyms).
+  // Best match per signal across all query tokens.
   const best = { config: 0, group: 0, id: 0, keywords: 0, label: 0 };
   for (const match of matches.values()) {
     best.label = Math.max(best.label, match.label);
@@ -166,12 +164,10 @@ export function scoreTasks(
     return [];
   }
 
-  const expanded = expandQuery(tokens);
   const results: Array<InquiryResult> = [];
 
   for (const task of tasks) {
     const { signals, score } = scoreTaskForQuery(task, {
-      expanded,
       tokens,
       weights,
     });

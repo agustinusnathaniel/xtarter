@@ -48,12 +48,7 @@ export {
   TaskError,
 } from '@/errors.js';
 // Task inquiry/query engine
-export {
-  expandQuery,
-  scoreTasks,
-  similarity,
-  tokenize,
-} from '@/inquiry/index.js';
+export { scoreTasks, similarity, tokenize } from '@/inquiry/index.js';
 export type { InquiryResult } from '@/inquiry/types.js';
 export { createInvocationGuard } from '@/invocation-guard.js';
 export type { PreflightError } from '@/preflight.js';
