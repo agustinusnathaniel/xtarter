@@ -8,11 +8,8 @@ import { Cause, Effect, Exit, Layer } from 'effect';
 
 import { Prompter } from '@/ui/prompter.js';
 
-/** Services every CLI command program may require. */
-export type AppServices = DepsInstaller | ProcessRunner | Prompter;
-
 /** The production wiring for every CLI command program. */
-export const AppLayer: Layer.Layer<AppServices> = Layer.mergeAll(
+export const AppLayer = Layer.mergeAll(
   DepsInstaller.layer,
   ProcessRunner.layer,
   Prompter.layer
@@ -25,10 +22,6 @@ export function abortCliProgram(): void {
   cliAbortController.abort();
 }
 
-export interface RunCliProgramOptions {
-  signal?: AbortSignal;
-}
-
 /**
  * The single runtime edge: run one command program with the app layer and
  * render any non-interrupt failure exactly once.
@@ -38,8 +31,8 @@ export interface RunCliProgramOptions {
  * process exit code at 0 (Ctrl+C behavior).
  */
 export async function runCliProgram<A, E>(
-  program: Effect.Effect<A, E, AppServices>,
-  options: RunCliProgramOptions = {}
+  program: Effect.Effect<A, E, DepsInstaller | ProcessRunner | Prompter>,
+  options: { signal?: AbortSignal } = {}
 ): Promise<A | undefined> {
   const exit = await Effect.runPromiseExit(Effect.provide(program, AppLayer), {
     signal: options.signal ?? cliAbortController.signal,

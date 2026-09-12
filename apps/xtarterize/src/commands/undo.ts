@@ -16,6 +16,7 @@ import { Effect } from 'effect';
 import { runCliProgram } from '@/runtime.js';
 import { openSession } from '@/session.js';
 import { type PromptError, Prompter } from '@/ui/prompter.js';
+import { reportCommandFailure } from '@/ui/reporter.js';
 import { commonArgs, formatArgs } from '@/utils/args.js';
 import type { RuntimeArgs } from '@/utils/runtime.js';
 
@@ -35,13 +36,10 @@ async function loadAndValidateManifest(
   if (manifest && manifest.files.length > 0) {
     return manifest;
   }
-  if (jsonMode) {
-    console.log(JSON.stringify({ error: 'No previous run found', ok: false }));
-  } else {
+  reportCommandFailure(jsonMode, { error: 'No previous run found' }, () => {
     logError('No previous run found. Nothing to undo.');
     logInfo('Run `xtarterize init` or `xtarterize add` first.');
-  }
-  process.exitCode = 1;
+  });
   return null;
 }
 

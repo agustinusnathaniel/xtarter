@@ -125,3 +125,17 @@ export function reportPreflightFailure(
   }
   console.log('');
 }
+
+/** Emit a command failure as JSON or terminal text and fail the process. */
+export function reportCommandFailure(
+  jsonMode: boolean,
+  payload: Record<string, unknown>,
+  logTerminal: () => void
+): void {
+  if (jsonMode) {
+    console.log(JSON.stringify({ ...payload, ok: false }));
+  } else {
+    logTerminal();
+  }
+  process.exitCode = 1;
+}

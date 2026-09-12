@@ -17,6 +17,7 @@ import { Effect } from 'effect';
 import { runCliProgram } from '@/runtime.js';
 import { openSession } from '@/session.js';
 import { type PromptError, Prompter } from '@/ui/prompter.js';
+import { reportCommandFailure } from '@/ui/reporter.js';
 import { commonArgs, formatArgs, yesArg } from '@/utils/args.js';
 import type { RuntimeArgs } from '@/utils/runtime.js';
 
@@ -33,12 +34,9 @@ function validateRestoreArgs(filepath: unknown, jsonMode: boolean): boolean {
   if (filepath) {
     return true;
   }
-  if (jsonMode) {
-    console.log(JSON.stringify({ error: 'File path required', ok: false }));
-  } else {
-    logError('File path required. Usage: xtarterize restore <filepath>');
-  }
-  process.exitCode = 1;
+  reportCommandFailure(jsonMode, { error: 'File path required' }, () =>
+    logError('File path required. Usage: xtarterize restore <filepath>')
+  );
   return false;
 }
 
@@ -56,14 +54,9 @@ async function loadAndValidateBackups(options: {
   if (backups.length > 0) {
     return backups;
   }
-  if (jsonMode) {
-    console.log(
-      JSON.stringify({ error: 'No backups found', filepath, ok: false })
-    );
-  } else {
-    logError(`No backups found for ${filepath}`);
-  }
-  process.exitCode = 1;
+  reportCommandFailure(jsonMode, { error: 'No backups found', filepath }, () =>
+    logError(`No backups found for ${filepath}`)
+  );
   return null;
 }
 
@@ -108,13 +101,9 @@ async function executeRestore(options: {
     logSuccess(`Restored ${filepath} from backup`);
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
-    if (jsonMode) {
-      console.log(JSON.stringify({ error: message, filepath, ok: false }));
-      process.exitCode = 1;
-      return;
-    }
-    logError(`Failed to restore: ${message}`);
-    process.exitCode = 1;
+    reportCommandFailure(jsonMode, { error: message, filepath }, () =>
+      logError(`Failed to restore: ${message}`)
+    );
   }
 }
 

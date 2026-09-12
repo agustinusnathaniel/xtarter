@@ -350,13 +350,9 @@ export class CommandSession {
     return this.buildIdleOutcome('cancelled', 'Cancelled');
   }
 
-  private report(outcome: SessionOutcome): void {
-    reportSessionOutcome(outcome, this.runtime);
-  }
-
   /** Report an outcome and fail the process when it reports errors. */
   reportOutcome(outcome: SessionOutcome): void {
-    this.report(outcome);
+    reportSessionOutcome(outcome, this.runtime);
     if (!outcome.ok) {
       process.exitCode = 1;
     }
