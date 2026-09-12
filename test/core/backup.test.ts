@@ -112,6 +112,37 @@ describe('run manifest', () => {
 
     await fs.rm(tmpDir, { force: true, recursive: true });
   });
+
+  test('wraps raw write failures in BackupError with the original message', async () => {
+    const tmpDir = await fs.mkdtemp(
+      path.join(os.tmpdir(), 'xtarterize-manifest-failure-')
+    );
+
+    // A file where the backup directory should be makes mkdir reject.
+    await fs.writeFile(path.join(tmpDir, '.xtarterize'), 'blocked', 'utf-8');
+
+    let failure: unknown;
+    try {
+      await writeRunManifest(tmpDir, ['tsconfig.json']);
+    } catch (cause) {
+      failure = cause;
+    }
+
+    expect(failure).toBeInstanceOf(BackupError);
+    if (!(failure instanceof BackupError)) {
+      throw new Error('writeRunManifest did not reject with BackupError');
+    }
+    expect(failure.path).toBe(
+      path.join(tmpDir, '.xtarterize', 'backups', 'last-run.json')
+    );
+    const cause = failure.cause;
+    expect(failure.message).toBe(
+      cause instanceof Error ? cause.message : String(cause)
+    );
+    expect(failure.message.length).toBeGreaterThan(0);
+
+    await fs.rm(tmpDir, { force: true, recursive: true });
+  });
 });
 
 describe('restoreBackup security', () => {

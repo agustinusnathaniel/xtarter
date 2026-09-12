@@ -32,6 +32,22 @@ async function readJsonOrNull<T>(path: string): Promise<T | null> {
   }
 }
 
+/**
+ * Normalize a rejected promise into `BackupError` without dropping the text
+ * the CLI rendered before the error was typed. An existing `BackupError`
+ * passes through untouched.
+ */
+export function toBackupError(cause: unknown, path: string): BackupError {
+  if (cause instanceof BackupError) {
+    return cause;
+  }
+  return new BackupError({
+    cause,
+    message: cause instanceof Error ? cause.message : String(cause),
+    path,
+  });
+}
+
 export async function backupFile(cwd: string, filepath: string): Promise<void> {
   const sourcePath = resolvePath(cwd, filepath);
   const exists = await fs
@@ -152,8 +168,12 @@ export async function writeRunManifest(
     files,
     timestamp: new Date().toISOString(),
   };
-  await fs.mkdir(resolvePath(cwd, BACKUP_DIR), { recursive: true });
-  await writeJsonAtomically(manifestPath, manifest);
+  try {
+    await fs.mkdir(resolvePath(cwd, BACKUP_DIR), { recursive: true });
+    await writeJsonAtomically(manifestPath, manifest);
+  } catch (cause) {
+    throw toBackupError(cause, manifestPath);
+  }
 }
 
 export async function readRunManifest(

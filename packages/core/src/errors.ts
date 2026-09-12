@@ -8,6 +8,8 @@ export class FileSystemError extends Data.TaggedError('FileSystemError')<{
 export class BackupError extends Data.TaggedError('BackupError')<{
   readonly path: string;
   readonly cause: unknown;
+  /** Rendered text for the failure; omitted callers keep the tag-only default. */
+  readonly message?: string;
 }> {}
 
 export class TaskError extends Data.TaggedError('TaskError')<{

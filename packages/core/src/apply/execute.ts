@@ -2,7 +2,7 @@ import { spinner } from '@clack/prompts';
 import { Cause, Effect, Exit } from 'effect';
 
 import type { TaskServices } from '@/_base.js';
-import { backupFile, writeRunManifest } from '@/backup.js';
+import { backupFile, toBackupError, writeRunManifest } from '@/backup.js';
 import type { ProjectProfile } from '@/detect.js';
 import type { BackupError } from '@/errors.js';
 import { failureDetail } from '@/resolve.js';
@@ -73,9 +73,12 @@ function buildTiming(plan: ApplyPlan): {
   return { perTask, tasksToRun };
 }
 
-function liftBackup<A>(run: () => Promise<A>): Effect.Effect<A, BackupError> {
+function liftBackup<A>(
+  path: string,
+  run: () => Promise<A>
+): Effect.Effect<A, BackupError> {
   return Effect.tryPromise({
-    catch: (cause) => cause as BackupError,
+    catch: (cause) => toBackupError(cause, path),
     try: run,
   });
 }
@@ -87,13 +90,13 @@ function backupPlanFiles(
   return Effect.gen(function* () {
     yield* Effect.forEach(
       files,
-      (filepath) => liftBackup(() => backupFile(cwd, filepath)),
+      (filepath) => liftBackup(filepath, () => backupFile(cwd, filepath)),
       {
         discard: true,
       }
     );
     if (files.length > 0) {
-      yield* liftBackup(() => writeRunManifest(cwd, files));
+      yield* liftBackup('run-manifest', () => writeRunManifest(cwd, files));
     }
   });
 }
