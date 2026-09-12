@@ -1,7 +1,7 @@
 import {
-  type EffectTask,
   type FileDiff,
   type ProjectProfile,
+  type Task,
   type TaskDep,
   TaskError,
   type TaskScope,
@@ -42,9 +42,9 @@ export type SpecResult<A> =
   | Promise<A>
   | Effect.Effect<A, TaskError, TaskServices>;
 
-/** An `EffectTask` from `defineTask`, which always implements `getDeps`. */
-export type DefinedTask = EffectTask & {
-  getDeps: NonNullable<EffectTask['getDeps']>;
+/** A `Task` from `defineTask`, which always implements `getDeps`. */
+export type DefinedTask = Task & {
+  getDeps: NonNullable<Task['getDeps']>;
 };
 
 export interface TaskAction {

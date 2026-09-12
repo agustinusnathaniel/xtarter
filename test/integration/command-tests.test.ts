@@ -18,15 +18,14 @@ const { mockGetAllTasks } = vi.hoisted(() => ({
   mockGetAllTasks: vi.fn(),
 }));
 
-// Module-global mock: spread the original module so every other export
-// (scanProject, getAllTasksWithPlugins, ...) keeps its real implementation, and
-// default getAllTasksWithPlugins to the real one so un-mocked tests are
-// unaffected. Individual tests override with mockImplementationOnce.
-vi.mock('@xtarterize/app/utils/project.js', async (importOriginal) => {
-  const actual =
-    await importOriginal<typeof import('@xtarterize/app/utils/project.js')>();
-  mockGetAllTasks.mockImplementation(actual.getAllTasksWithPlugins);
-  return { ...actual, getAllTasksWithPlugins: mockGetAllTasks };
+// Module-global mock: spread the original tasks module so every other export
+// keeps its real implementation, and default getAllTasks to the real one so
+// un-mocked tests are unaffected. Individual tests override with
+// mockImplementationOnce.
+vi.mock('@xtarterize/tasks', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@xtarterize/tasks')>();
+  mockGetAllTasks.mockImplementation(actual.getAllTasks);
+  return { ...actual, getAllTasks: mockGetAllTasks };
 });
 
 async function createMinimalProject(): Promise<string> {
@@ -467,17 +466,15 @@ describe('add command', () => {
       jsonLines.push(String(logArgs[0]));
     };
     try {
-      // A misbehaving plugin task whose check() rejects must surface as
-      // ok:false in the emitted JSON, agreeing with the exit code.
+      // A misbehaving task whose check() dies must surface as ok:false in the
+      // emitted JSON, agreeing with the exit code.
       mockGetAllTasks.mockImplementationOnce(() =>
         Effect.succeed([
           {
             applicable: () => true,
-            apply: async () => {},
-            check: async () => {
-              throw new Error('kaboom');
-            },
-            dryRun: async () => [],
+            apply: () => Effect.void,
+            check: () => Effect.die(new Error('kaboom')),
+            dryRun: () => Effect.succeed([]),
             group: 'test',
             id: 'boom/failing',
             label: 'Boom failing',

@@ -3,6 +3,7 @@ import { fileURLToPath } from 'node:url';
 import type { ProjectProfile, Task, TaskScope } from '@xtarterize/core';
 import { resolveTaskStatuses, resolveTasks } from '@xtarterize/core';
 import { getAllTasks } from '@xtarterize/tasks';
+import { Effect } from 'effect';
 import { describe, expect } from 'vite-plus/test';
 
 import { run } from '../helpers/run.js';
@@ -61,9 +62,9 @@ describe('resolveTasks - scope filtering', () => {
   function mockTask(id: string, scope: TaskScope | undefined): Task {
     return {
       applicable: () => true,
-      apply: async () => {},
-      check: async () => 'skip' as const,
-      dryRun: async () => [],
+      apply: () => Effect.void,
+      check: () => Effect.succeed('skip' as const),
+      dryRun: () => Effect.succeed([]),
       group: 'test',
       id,
       label: id,

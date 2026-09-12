@@ -50,7 +50,7 @@ export interface TaskDep {
   dev: boolean;
 }
 
-/** Services an Effect task may require while running. */
+/** Services a task may require while running. */
 export type TaskServices = ProcessRunner;
 
 interface TaskBase {
@@ -62,19 +62,8 @@ interface TaskBase {
   searchMeta?: TaskSearchMeta;
 }
 
-/** A task whose methods are plain promises (the original contract). */
-export interface PromiseTask extends TaskBase {
-  apply: (cwd: string, profile: ProjectProfile) => Promise<void>;
-  check: (cwd: string, profile: ProjectProfile) => Promise<TaskStatus>;
-  dryRun: (cwd: string, profile: ProjectProfile) => Promise<Array<FileDiff>>;
-  /** Optional: declare dependencies needed by this task.
-   * When implemented, the `planTasks`/`executePlan` pipeline batches these
-   * across all tasks into a single install call before running any apply(). */
-  getDeps?: (cwd: string, profile: ProjectProfile) => Promise<Array<TaskDep>>;
-}
-
 /** A task whose methods return effects requiring `TaskServices`. */
-export interface EffectTask extends TaskBase {
+export interface Task extends TaskBase {
   apply: (
     cwd: string,
     profile: ProjectProfile
@@ -95,5 +84,3 @@ export interface EffectTask extends TaskBase {
     profile: ProjectProfile
   ) => Effect.Effect<Array<TaskDep>, TaskError, TaskServices>;
 }
-
-export type Task = PromiseTask | EffectTask;

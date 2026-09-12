@@ -1,32 +1,15 @@
-import type { ProjectProfile, Task, TaskServices } from '@xtarterize/core';
+import type { ProjectProfile, TaskServices } from '@xtarterize/core';
 import {
   collectDependencyVersions,
   detectProject,
   pc,
   readPackageJson,
-  resolveExternalTasks,
   type TaskError,
   toTaskEffect,
 } from '@xtarterize/core';
-import { getAllTasks } from '@xtarterize/tasks';
 import { Effect } from 'effect';
 
 import { type PromptError, Prompter } from '@/ui/prompter.js';
-
-/**
- * Combine built-in tasks with external plugin tasks.
- * External tasks are loaded from the project's plugin config
- * (`.xtarterizerc` or `"xtarterize"` key in `package.json`).
- */
-export function getAllTasksWithPlugins(
-  cwd: string
-): Effect.Effect<Array<Task>> {
-  return Effect.gen(function* () {
-    const internal = getAllTasks();
-    const external = yield* resolveExternalTasks(cwd);
-    return external.length > 0 ? [...internal, ...external] : internal;
-  });
-}
 
 export function detectProjectWithAmbiguity(options: {
   baseProfile?: ProjectProfile;

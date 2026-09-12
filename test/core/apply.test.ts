@@ -3,8 +3,8 @@ import path from 'node:path';
 import type {
   ApplyPlan,
   ApplyResult,
+  FileDiff,
   ProjectProfile,
-  PromiseTask,
   Task,
   TaskDep,
   TaskStatus,
@@ -38,21 +38,21 @@ const TestApplyLayer = Layer.mergeAll(
 );
 
 interface MockTaskOptions {
-  apply?: PromiseTask['apply'];
+  apply?: Task['apply'];
   check?: TaskStatus;
-  dryRun?: PromiseTask['dryRun'];
-  getDeps?: PromiseTask['getDeps'];
+  dryRun?: Task['dryRun'];
+  getDeps?: Task['getDeps'];
   id?: string;
   label?: string;
 }
 
-/** Build a promise task whose identity and hooks default to a no-op. */
-function makeTask(options: MockTaskOptions = {}): PromiseTask {
-  const task: PromiseTask = {
+/** Build an Effect task whose identity and hooks default to a no-op. */
+function makeTask(options: MockTaskOptions = {}): Task {
+  const task: Task = {
     applicable: () => true,
-    apply: options.apply ?? (async () => {}),
-    check: async () => options.check ?? 'new',
-    dryRun: options.dryRun ?? (async () => []),
+    apply: options.apply ?? (() => Effect.void),
+    check: () => Effect.succeed(options.check ?? 'new'),
+    dryRun: options.dryRun ?? (() => Effect.succeed([] as Array<FileDiff>)),
     group: 'Test',
     id: options.id ?? 'mock/task',
     label: options.label ?? 'Mock Task',
@@ -135,12 +135,14 @@ describe('applyTasks', () => {
     await withProject('xtarterize-apply-', async (tmpDir) => {
       const profile = await detectProject(tmpDir);
       const mockTask = makeTask({
-        apply: async () => {
-          await fs.writeFile(path.join(tmpDir, 'test.txt'), 'hello');
-        },
-        dryRun: async () => [
-          { after: 'hello', before: null, filepath: 'test.txt' },
-        ],
+        apply: () =>
+          Effect.promise(() =>
+            fs.writeFile(path.join(tmpDir, 'test.txt'), 'hello')
+          ),
+        dryRun: () =>
+          Effect.succeed([
+            { after: 'hello', before: null, filepath: 'test.txt' },
+          ]),
       });
 
       const result = await applyTasks({
@@ -160,9 +162,10 @@ describe('applyTasks', () => {
       const profile = await detectProject(tmpDir);
       const mockTask = makeTask({
         check: 'skip',
-        dryRun: async () => [
-          { after: 'hello', before: 'hello', filepath: 'test.txt' },
-        ],
+        dryRun: () =>
+          Effect.succeed([
+            { after: 'hello', before: 'hello', filepath: 'test.txt' },
+          ]),
       });
 
       const result = await applyTasks({
@@ -181,13 +184,15 @@ describe('applyTasks', () => {
 
       const profile = await detectProject(tmpDir);
       const mockTask = makeTask({
-        apply: async () => {
-          await fs.writeFile(path.join(tmpDir, 'test.txt'), 'after');
-        },
+        apply: () =>
+          Effect.promise(() =>
+            fs.writeFile(path.join(tmpDir, 'test.txt'), 'after')
+          ),
         check: 'patch',
-        dryRun: async () => [
-          { after: 'after', before: 'before', filepath: 'test.txt' },
-        ],
+        dryRun: () =>
+          Effect.succeed([
+            { after: 'after', before: 'before', filepath: 'test.txt' },
+          ]),
       });
 
       const result = await applyTasks({
@@ -219,13 +224,15 @@ describe('applyTasks', () => {
       const profile = await detectProject(tmpDir);
       let applied = false;
       const mockTask = makeTask({
-        apply: async () => {
-          applied = true;
-        },
+        apply: () =>
+          Effect.sync(() => {
+            applied = true;
+          }),
         check: 'conflict',
-        dryRun: async () => [
-          { after: 'after', before: 'before', filepath: 'test.txt' },
-        ],
+        dryRun: () =>
+          Effect.succeed([
+            { after: 'after', before: 'before', filepath: 'test.txt' },
+          ]),
         id: 'mock/conflict',
         label: 'Mock Conflict',
       });
@@ -266,17 +273,16 @@ describe('applyTasks', () => {
     await withProject('xtarterize-partial-', async (tmpDir) => {
       const profile = await detectProject(tmpDir);
       const failingTask = makeTask({
-        apply: async () => {
-          throw new Error('intentional failure');
-        },
+        apply: () => Effect.die(new Error('intentional failure')),
         id: 'mock/fail',
         label: 'Failing Task',
       });
       let goodApplied = false;
       const goodTask = makeTask({
-        apply: async () => {
-          goodApplied = true;
-        },
+        apply: () =>
+          Effect.sync(() => {
+            goodApplied = true;
+          }),
         id: 'mock/good',
         label: 'Good Task',
       });
@@ -299,13 +305,15 @@ describe('planTasks', () => {
     await withProject('xtarterize-plan-', async (tmpDir) => {
       const profile = await detectProject(tmpDir);
       const mockTask = makeTask({
-        apply: async () => {
-          await fs.writeFile(path.join(tmpDir, 'test.txt'), 'hello');
-        },
-        dryRun: async () => [
-          { after: 'hello', before: null, filepath: 'test.txt' },
-        ],
-        getDeps: async () => [{ depName: 'plan-dep', dev: true }],
+        apply: () =>
+          Effect.promise(() =>
+            fs.writeFile(path.join(tmpDir, 'test.txt'), 'hello')
+          ),
+        dryRun: () =>
+          Effect.succeed([
+            { after: 'hello', before: null, filepath: 'test.txt' },
+          ]),
+        getDeps: () => Effect.succeed([{ depName: 'plan-dep', dev: true }]),
         id: 'mock/plan',
         label: 'Mock Plan',
       });
@@ -337,10 +345,11 @@ describe('planTasks', () => {
       const profile = await detectProject(tmpDir);
       const mockTask = makeTask({
         check: 'skip',
-        dryRun: async () => [
-          { after: 'ignored', before: null, filepath: 'ignored.txt' },
-        ],
-        getDeps: async () => [{ depName: 'skipped-dep', dev: true }],
+        dryRun: () =>
+          Effect.succeed([
+            { after: 'ignored', before: null, filepath: 'ignored.txt' },
+          ]),
+        getDeps: () => Effect.succeed([{ depName: 'skipped-dep', dev: true }]),
         id: 'mock/plan-skip',
         label: 'Mock Plan Skip',
       });
@@ -362,13 +371,15 @@ describe('executePlan', () => {
 
       const profile = await detectProject(tmpDir);
       const mockTask = makeTask({
-        apply: async () => {
-          await fs.writeFile(path.join(tmpDir, 'test.txt'), 'after');
-        },
+        apply: () =>
+          Effect.promise(() =>
+            fs.writeFile(path.join(tmpDir, 'test.txt'), 'after')
+          ),
         check: 'patch',
-        dryRun: async () => [
-          { after: 'after', before: 'before', filepath: 'test.txt' },
-        ],
+        dryRun: () =>
+          Effect.succeed([
+            { after: 'after', before: 'before', filepath: 'test.txt' },
+          ]),
         id: 'mock/plan-exec',
         label: 'Mock Plan Exec',
       });
@@ -407,17 +418,16 @@ describe('executePlan', () => {
     await withProject('xtarterize-exec-errors-', async (tmpDir) => {
       const profile = await detectProject(tmpDir);
       const failingTask = makeTask({
-        apply: async () => {
-          throw new Error('entry failure');
-        },
+        apply: () => Effect.die(new Error('entry failure')),
         id: 'mock/plan-fail',
         label: 'Plan Fail',
       });
       let goodApplied = false;
       const goodTask = makeTask({
-        apply: async () => {
-          goodApplied = true;
-        },
+        apply: () =>
+          Effect.sync(() => {
+            goodApplied = true;
+          }),
         id: 'mock/plan-good',
         label: 'Plan Good',
       });
@@ -446,10 +456,8 @@ describe('executePlan', () => {
     await withProject('xtarterize-dryrun-', async (tmpDir) => {
       const profile = await detectProject(tmpDir);
       const failingTask = makeTask({
-        dryRun: async () => {
-          throw new Error('dryRun boom');
-        },
-        getDeps: async () => [{ depName: 'failed-dep', dev: true }],
+        dryRun: () => Effect.die(new Error('dryRun boom')),
+        getDeps: () => Effect.succeed([{ depName: 'failed-dep', dev: true }]),
         id: 'mock/plan-dryrun-fail',
         label: 'Plan Dry Run Fail',
       });
@@ -470,10 +478,11 @@ describe('executePlan', () => {
       const profile = await detectProject(tmpDir);
       let applied = false;
       const mockTask = makeTask({
-        apply: async () => {
-          applied = true;
-        },
-        getDeps: async () => [{ depName: 'broken-dep', dev: true }],
+        apply: () =>
+          Effect.sync(() => {
+            applied = true;
+          }),
+        getDeps: () => Effect.succeed([{ depName: 'broken-dep', dev: true }]),
         id: 'mock/install-fail',
         label: 'Mock Install Fail',
       });

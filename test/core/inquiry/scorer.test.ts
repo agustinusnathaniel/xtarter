@@ -1,13 +1,14 @@
 import type { Task } from '@xtarterize/core';
 import { scoreTasks } from '@xtarterize/core';
+import { Effect } from 'effect';
 import { describe, expect } from 'vite-plus/test';
 
 const mockTasks: Array<Task> = [
   {
     applicable: () => true,
-    apply: async () => {},
-    check: async () => 'new' as const,
-    dryRun: async () => [],
+    apply: () => Effect.void,
+    check: () => Effect.succeed('new' as const),
+    dryRun: () => Effect.succeed([]),
     group: 'Linting & Formatting',
     id: 'lint/biome',
     label: 'Biome (lint + format)',
@@ -26,9 +27,9 @@ const mockTasks: Array<Task> = [
   },
   {
     applicable: () => true,
-    apply: async () => {},
-    check: async () => 'new' as const,
-    dryRun: async () => [],
+    apply: () => Effect.void,
+    check: () => Effect.succeed('new' as const),
+    dryRun: () => Effect.succeed([]),
     group: 'TypeScript',
     id: 'ts/strict',
     label: 'tsconfig - strict: true',
@@ -46,9 +47,9 @@ const mockTasks: Array<Task> = [
   },
   {
     applicable: () => true,
-    apply: async () => {},
-    check: async () => 'new' as const,
-    dryRun: async () => [],
+    apply: () => Effect.void,
+    check: () => Effect.succeed('new' as const),
+    dryRun: () => Effect.succeed([]),
     group: 'CI/CD',
     id: 'ci/ci',
     label: 'GitHub CI workflow',
@@ -67,9 +68,9 @@ const mockTasks: Array<Task> = [
   },
   {
     applicable: () => true,
-    apply: async () => {},
-    check: async () => 'new' as const,
-    dryRun: async () => [],
+    apply: () => Effect.void,
+    check: () => Effect.succeed('new' as const),
+    dryRun: () => Effect.succeed([]),
     group: 'Editor',
     id: 'editor/vscode',
     label: 'VSCode settings + extensions',
@@ -87,9 +88,9 @@ const mockTasks: Array<Task> = [
   },
   {
     applicable: () => true,
-    apply: async () => {},
-    check: async () => 'new' as const,
-    dryRun: async () => [],
+    apply: () => Effect.void,
+    check: () => Effect.succeed('new' as const),
+    dryRun: () => Effect.succeed([]),
     group: 'Dependencies',
     id: 'deps/renovate',
     label: 'Renovate config',
@@ -109,9 +110,9 @@ const mockTasks: Array<Task> = [
 
 const taskNoMeta: Task = {
   applicable: () => true,
-  apply: async () => {},
-  check: async () => 'new' as const,
-  dryRun: async () => [],
+  apply: () => Effect.void,
+  check: () => Effect.succeed('new' as const),
+  dryRun: () => Effect.succeed([]),
   group: 'Example',
   id: 'example/no-meta',
   label: 'Example task without metadata',

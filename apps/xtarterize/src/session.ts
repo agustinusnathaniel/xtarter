@@ -23,15 +23,13 @@ import {
   type TaskError,
   toTaskEffect,
 } from '@xtarterize/core';
+import { getAllTasks } from '@xtarterize/tasks';
 import { Effect } from 'effect';
 
 import { mergeFileDiffs } from '@/ui/merge-file-diffs.js';
 import type { PromptError, Prompter } from '@/ui/prompter.js';
 import { reportPreflightFailure, reportSessionOutcome } from '@/ui/reporter.js';
-import {
-  detectProjectWithAmbiguity,
-  getAllTasksWithPlugins,
-} from '@/utils/project.js';
+import { detectProjectWithAmbiguity } from '@/utils/project.js';
 import {
   type RuntimeArgs,
   type RuntimeContext,
@@ -208,7 +206,7 @@ export class CommandSession {
         };
       }
 
-      const discovered = yield* getAllTasksWithPlugins(runtime.cwd);
+      const discovered = getAllTasks();
       const tasks = options.orderTasks
         ? options.orderTasks(discovered, runtime)
         : discovered;

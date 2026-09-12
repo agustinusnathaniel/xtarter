@@ -1,8 +1,6 @@
 export type {
   DiffHunk,
-  EffectTask,
   FileDiff,
-  PromiseTask,
   Task,
   TaskDep,
   TaskScope,
@@ -58,15 +56,6 @@ export {
 } from '@/inquiry/index.js';
 export type { InquiryResult } from '@/inquiry/types.js';
 export { createInvocationGuard } from '@/invocation-guard.js';
-// Plugin/extension system - @internal: stable but untested in production
-export type { TaskSelectionConfig } from '@/plugins.js';
-export {
-  applyTaskSelection,
-  loadPluginConfig,
-  loadPluginTasks,
-  loadSelectionConfig,
-  resolveExternalTasks,
-} from '@/plugins.js';
 export type { PreflightError } from '@/preflight.js';
 export { runPreflight } from '@/preflight.js';
 export {
@@ -75,6 +64,12 @@ export {
   resolveTaskStatuses,
   resolveTasks,
 } from '@/resolve.js';
+// Persisted task selection from `.xtarterizerc` / the package.json key
+export type { TaskSelectionConfig } from '@/selection.js';
+export {
+  applyTaskSelection,
+  loadSelectionConfig,
+} from '@/selection.js';
 // Task services: the runtime dependencies Effect tasks may require
 export { DepsInstaller } from '@/services/deps-installer.js';
 export type {
