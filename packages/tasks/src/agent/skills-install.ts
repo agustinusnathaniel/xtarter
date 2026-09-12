@@ -53,15 +53,6 @@ async function isYarnBerry(cwd: string): Promise<boolean> {
   return fileExists(resolvePath(cwd, '.yarnrc.yml'));
 }
 
-async function isDirNonEmpty(dirPath: string): Promise<boolean> {
-  try {
-    const entries = await readdir(dirPath);
-    return entries.length > 0;
-  } catch {
-    return false;
-  }
-}
-
 async function readSkillsFromDir(skillsDir: string): Promise<Set<string>> {
   const installed = new Set<string>();
   if (!(await fileExists(skillsDir))) {
@@ -73,8 +64,8 @@ async function readSkillsFromDir(skillsDir: string): Promise<Set<string>> {
     for (const entry of entries) {
       if (entry.isDirectory()) {
         const skillPath = resolvePath(skillsDir, entry.name);
-        const hasContent = await isDirNonEmpty(skillPath);
-        if (hasContent) {
+        const subEntries = await readdir(skillPath).catch(() => []);
+        if (subEntries.length > 0) {
           installed.add(entry.name);
         }
       }
@@ -123,18 +114,15 @@ async function resolveMissingSkills(
 }
 
 function groupBySource(skills: Array<SkillEntry>): Map<string, Array<string>> {
-  const grouped = new Map<string, Set<string>>();
+  const grouped = new Map<string, Array<string>>();
   for (const { source, skill } of skills) {
-    const existing = grouped.get(source) ?? new Set<string>();
-    existing.add(skill);
-    grouped.set(source, existing);
+    const skillNames = grouped.get(source) ?? [];
+    if (!skillNames.includes(skill)) {
+      skillNames.push(skill);
+    }
+    grouped.set(source, skillNames);
   }
-
-  const normalized = new Map<string, Array<string>>();
-  for (const [source, skillSet] of grouped) {
-    normalized.set(source, [...skillSet]);
-  }
-  return normalized;
+  return grouped;
 }
 
 export const skillsInstallTask = defineTask({
