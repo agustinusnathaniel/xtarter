@@ -18,12 +18,13 @@
  */
 import { type ChildProcess, execFile, spawn } from 'node:child_process';
 import fs from 'node:fs/promises';
-import os from 'node:os';
 import path from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 import { describe, expect, test } from 'vite-plus/test';
+
+import { withTempDir } from '../helpers/temp.js';
 
 const execFileAsync = promisify(execFile);
 
@@ -40,27 +41,18 @@ const EXIT_AFTER_SIGINT_BOUND_MS = 2500;
 const TEST_TIMEOUT_MS = 30_000;
 const KILL_WAIT_TIMEOUT_MS = 2000;
 
-async function createMinimalProject(): Promise<string> {
-  const projectDir = await fs.mkdtemp(
-    path.join(os.tmpdir(), 'xtarterize-sigint-')
+async function setupMinimalProject(projectDir: string): Promise<void> {
+  await fs.writeFile(
+    path.join(projectDir, 'package.json'),
+    JSON.stringify({
+      dependencies: { react: '^18.2.0' },
+      devDependencies: { typescript: '^5.0.0', vite: '^5.0.0' },
+      name: 'sigint-test-fixture',
+      type: 'module',
+      version: '1.0.0',
+    })
   );
-  try {
-    await fs.writeFile(
-      path.join(projectDir, 'package.json'),
-      JSON.stringify({
-        dependencies: { react: '^18.2.0' },
-        devDependencies: { typescript: '^5.0.0', vite: '^5.0.0' },
-        name: 'sigint-test-fixture',
-        type: 'module',
-        version: '1.0.0',
-      })
-    );
-    await execFileAsync('git', ['init', '-q'], { cwd: projectDir });
-    return projectDir;
-  } catch (error) {
-    await fs.rm(projectDir, { force: true, recursive: true });
-    throw error;
-  }
+  await execFileAsync('git', ['init', '-q'], { cwd: projectDir });
 }
 
 function spawnInit(cwd: string) {
@@ -164,10 +156,9 @@ function waitForExit(child: ChildProcess): Promise<{
   });
 }
 
-/** Never leave a hung process or a temp directory behind. */
-async function stopAndRemove(
-  spawned: SpawnedInit | undefined,
-  projectDir: string
+/** Never leave a hung process behind. */
+async function stopChildProcess(
+  spawned: SpawnedInit | undefined
 ): Promise<void> {
   if (
     spawned &&
@@ -180,39 +171,42 @@ async function stopAndRemove(
       delay(KILL_WAIT_TIMEOUT_MS),
     ]);
   }
-  await fs.rm(projectDir, { force: true, recursive: true });
 }
 
 describe('cli SIGINT contract', () => {
   test(
     'exits 0 shortly after SIGINT interrupts an interactive prompt',
     async () => {
-      const projectDir = await createMinimalProject();
-      const spawned = spawnInit(projectDir);
-      try {
-        await waitForPrompt(spawned, PROMPT_WAIT_TIMEOUT_MS);
+      await withTempDir('xtarterize-sigint-', async (projectDir) => {
+        await setupMinimalProject(projectDir);
+        const spawned = spawnInit(projectDir);
+        try {
+          await waitForPrompt(spawned, PROMPT_WAIT_TIMEOUT_MS);
 
-        const signalSentAt = Date.now();
-        const delivered = spawned.child.kill('SIGINT');
-        expect(
-          delivered,
-          'CLI process must still be alive to receive SIGINT'
-        ).toBe(true);
+          const signalSentAt = Date.now();
+          const delivered = spawned.child.kill('SIGINT');
+          expect(
+            delivered,
+            'CLI process must still be alive to receive SIGINT'
+          ).toBe(true);
 
-        const { code, signal } = await waitForExit(spawned.child);
-        const elapsed = Date.now() - signalSentAt;
-        expect(
-          signal,
-          `CLI must exit normally instead of dying from the signal\nstdout:\n${spawned.outputText()}\nstderr:\n${spawned.errorsText()}`
-        ).toBeNull();
-        expect(code, `Expected exit code 0, received ${String(code)}`).toBe(0);
-        expect(
-          elapsed,
-          `CLI took ${elapsed}ms to exit after SIGINT (bound ${EXIT_AFTER_SIGINT_BOUND_MS}ms)`
-        ).toBeLessThanOrEqual(EXIT_AFTER_SIGINT_BOUND_MS);
-      } finally {
-        await stopAndRemove(spawned, projectDir);
-      }
+          const { code, signal } = await waitForExit(spawned.child);
+          const elapsed = Date.now() - signalSentAt;
+          expect(
+            signal,
+            `CLI must exit normally instead of dying from the signal\nstdout:\n${spawned.outputText()}\nstderr:\n${spawned.errorsText()}`
+          ).toBeNull();
+          expect(code, `Expected exit code 0, received ${String(code)}`).toBe(
+            0
+          );
+          expect(
+            elapsed,
+            `CLI took ${elapsed}ms to exit after SIGINT (bound ${EXIT_AFTER_SIGINT_BOUND_MS}ms)`
+          ).toBeLessThanOrEqual(EXIT_AFTER_SIGINT_BOUND_MS);
+        } finally {
+          await stopChildProcess(spawned);
+        }
+      });
     },
     TEST_TIMEOUT_MS
   );

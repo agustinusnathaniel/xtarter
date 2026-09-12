@@ -1,5 +1,4 @@
 import fs from 'node:fs/promises';
-import os from 'node:os';
 import path from 'node:path';
 import { queryCommand } from '@xtarterize/app/commands/query.js';
 import { abortCliProgram, runCliProgram } from '@xtarterize/app/runtime.js';
@@ -12,6 +11,8 @@ import {
   test,
   vi,
 } from 'vite-plus/test';
+
+import { withTempDir } from '../helpers/temp.js';
 
 const coreMocks = vi.hoisted(() => ({
   logError: vi.fn(),
@@ -30,13 +31,10 @@ vi.mock('/packages/core/dist/index.mjs', async (importOriginal) => {
   };
 });
 
-async function createMinimalProject(): Promise<string> {
-  const tmpDir = await fs.mkdtemp(
-    path.join(os.tmpdir(), 'xtarterize-runtime-')
-  );
-  await fs.mkdir(path.join(tmpDir, '.git'), { recursive: true });
+async function setupMinimalProject(dir: string): Promise<void> {
+  await fs.mkdir(path.join(dir, '.git'), { recursive: true });
   await fs.writeFile(
-    path.join(tmpDir, 'package.json'),
+    path.join(dir, 'package.json'),
     JSON.stringify({
       dependencies: { react: '^18.2.0' },
       devDependencies: { typescript: '^5.0.0', vite: '^5.0.0' },
@@ -45,7 +43,6 @@ async function createMinimalProject(): Promise<string> {
       version: '1.0.0',
     })
   );
-  return tmpDir;
 }
 
 let savedExitCode: typeof process.exitCode;
@@ -97,8 +94,8 @@ describe('runCliProgram contract', () => {
 // controller, so any test that relies on the default signal must run before.
 describe('query interruption', () => {
   test('interrupting extra status resolution returns instead of crashing', async () => {
-    const cwd = await createMinimalProject();
-    try {
+    await withTempDir('xtarterize-runtime-', async (cwd) => {
+      await setupMinimalProject(cwd);
       coreMocks.resolveTaskStatuses.mockReturnValue(Effect.never);
       const running = queryCommand.run?.({
         args: { cwd, json: true, query: 'oxlint' },
@@ -115,8 +112,6 @@ describe('query interruption', () => {
       await expect(running).resolves.toBeUndefined();
       expect(process.exitCode).toBe(0);
       expect(coreMocks.logError).not.toHaveBeenCalled();
-    } finally {
-      await fs.rm(cwd, { force: true, recursive: true });
-    }
+    });
   }, 30_000);
 });
