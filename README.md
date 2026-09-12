@@ -114,7 +114,7 @@ xtarterize/
 
 ## Contributing a New Task
 
-1. Declare the task with `defineTask()` from [`packages/tasks/src/factory/define-task.ts`](packages/tasks/src/factory/define-task.ts); the [`Task`](packages/core/src/_base.ts) contract is a `PromiseTask | EffectTask` union
+1. Declare the task with `defineTask()` from [`packages/tasks/src/factory/define-task.ts`](packages/tasks/src/factory/define-task.ts); the [`Task`](packages/core/src/_base.ts) contract is a single interface whose methods return Effects requiring `TaskServices`
 2. Create your task file in `packages/tasks/src/<category>/<task>.ts`
 3. Export it from [`packages/tasks/src/index.ts`](packages/tasks/src/index.ts)
 4. Add or update tests only when they provide meaningful regression protection. Extend the nearest existing suite when possible; see [`docs/TESTING.md`](docs/TESTING.md)
@@ -126,7 +126,7 @@ Each task must implement:
 - `dryRun(cwd, profile)` - What would change?
 - `apply(cwd, profile)` - Make the changes
 
-`defineTask()` returns an `EffectTask` whose spec functions may be synchronous, return a Promise, or return an Effect. External plugins may keep the original Promise-based contract; `toTaskEffect()` normalizes both shapes.
+`defineTask()` returns a `DefinedTask`, a `Task` whose spec functions may be synchronous, return a Promise, or return an Effect; `toTaskEffect()` normalizes those spec results into one Effect at the factory seam.
 
 ## Development
 

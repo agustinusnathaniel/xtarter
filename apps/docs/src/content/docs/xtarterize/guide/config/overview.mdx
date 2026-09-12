@@ -129,17 +129,14 @@ Restore with:
 
 ## Task selection
 
-`.xtarterizerc` accepts `skip` and `only` arrays alongside `plugins` so repeat runs apply the same filter without CLI flags. The same fields work in the `"xtarterize"` key of `package.json`.
+`.xtarterizerc` accepts `skip` and `only` arrays so repeat runs apply the same filter without CLI flags. The same fields work in the `"xtarterize"` key of `package.json`.
 
 ```json
 {
-  "plugins": ["@acme/xtarterize-tasks"],
   "skip": ["agent/skills-install"],
   "only": ["ts/strict", "lint/biome"]
 }
 ```
-
-Plugin tasks may implement the original Promise-based `Task` contract or return Effects. Both shapes are normalized by `toTaskEffect()`, so existing plugins keep working and new plugins can use Effect services like `ProcessRunner` (ADR 036).
 
 Precedence rules:
 

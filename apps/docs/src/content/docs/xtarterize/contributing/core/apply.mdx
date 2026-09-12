@@ -114,7 +114,7 @@ Errors are collected and reported without aborting the entire run:
 - **Batch install failures** - Recorded in `ApplyResult.errors`. Tasks whose `apply()` needs the missing packages fail individually, while file-only tasks still run
 - **Apply failures** - Logged with the task ID and error message; subsequent tasks continue
 
-Check, dry-run, install, and task-apply failures are collected in the result. Backup or manifest failures fail the Effect before task execution begins. Task methods are normalized with `toTaskEffect()`, so Promise plugins and Effect tasks follow the same failure rules.
+Check, dry-run, install, and task-apply failures are collected in the result. Backup or manifest failures fail the Effect before task execution begins. Task methods return Effects; `toTaskEffect()` normalizes synchronous and Promise-returning spec functions at the `defineTask()` factory seam, so all tasks follow the same failure rules.
 
 ## References
 

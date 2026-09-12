@@ -4,6 +4,8 @@
 
 Accepted
 
+Update (2026-09-13): ADR 037 removed external task plugin loading and the Promise task contract; the plugin-compatibility clauses below are superseded.
+
 ## Date
 
 2026-09-12

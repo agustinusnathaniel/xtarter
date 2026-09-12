@@ -15,7 +15,8 @@ each command program through a single Effect runtime edge.
   as before.
 - Effectful edges are services: `ProcessRunner`, `DepsInstaller`, and the
   app-level `Prompter`.
-- Promise-based external task plugins keep working unchanged.
+- The task contract is Effect-only; synchronous and Promise-returning spec
+  functions are normalized at the `defineTask` seam.
 - `effect` is pinned to `4.0.0-rc.113` and bundled into the CLI, so published
   `dependencies` no longer include it.
 - Observable CLI behavior and generated files are unchanged.
