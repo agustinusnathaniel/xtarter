@@ -1,8 +1,8 @@
-import { Cause, Effect, Exit, Option } from 'effect';
+import { Cause, Effect, Exit } from 'effect';
 
 import type { Task } from '@/_base.js';
 import { isRecord } from '@/detect/package-manager.js';
-import { describeCause } from '@/utils/errors.js';
+import { failureDetail } from '@/resolve.js';
 import { findConfigFile, readJson } from '@/utils/fs.js';
 import { logWarn } from '@/utils/logger.js';
 
@@ -64,44 +64,34 @@ function readRawXtarterizeConfig(cwd: string): Effect.Effect<RawConfigResult> {
       if (!path) {
         continue;
       }
-      const readExit = yield* Effect.exit(
-        Effect.tryPromise({
-          catch: (cause) => cause,
-          try: () => readJson(path),
-        })
+      return yield* Effect.promise(() =>
+        readJson(path).then(
+          (parsed): RawConfigResult =>
+            parsed && typeof parsed === 'object'
+              ? { config: parsed, status: 'found' }
+              : { status: 'parse-error' },
+          (): RawConfigResult => {
+            logWarn('Failed to parse .xtarterizerc');
+            return { status: 'parse-error' };
+          }
+        )
       );
-      if (Exit.isFailure(readExit)) {
-        logWarn('Failed to parse .xtarterizerc');
-        return { status: 'parse-error' } as RawConfigResult;
-      }
-      const config = readExit.value;
-      if (config && typeof config === 'object') {
-        return {
-          config: config as Record<string, unknown>,
-          status: 'found',
-        } as RawConfigResult;
-      }
-      return { status: 'parse-error' } as RawConfigResult;
     }
 
     // 2. package.json under "xtarterize" key
-    const pkgExit = yield* Effect.exit(
-      Effect.tryPromise({
-        catch: (cause) => cause,
-        try: () =>
-          readJson<{ xtarterize?: Record<string, unknown> }>(
-            `${cwd}/package.json`
-          ),
-      })
+    const config = yield* Effect.promise(() =>
+      readJson<{ xtarterize?: Record<string, unknown> }>(
+        `${cwd}/package.json`
+      ).then(
+        (pkg) => pkg?.xtarterize,
+        () => undefined
+      )
     );
-    if (Exit.isSuccess(pkgExit)) {
-      const config = pkgExit.value?.xtarterize;
-      if (isRecord(config)) {
-        return { config, status: 'found' } as RawConfigResult;
-      }
+    if (isRecord(config)) {
+      return { config, status: 'found' };
     }
 
-    return { status: 'missing' } as RawConfigResult;
+    return { status: 'missing' };
   });
 }
 
@@ -335,10 +325,7 @@ export function loadPluginTasks(
         if (Cause.hasInterruptsOnly(loadExit.cause)) {
           return yield* Effect.interrupt;
         }
-        const error = Cause.findErrorOption(loadExit.cause);
-        const detail = Option.isSome(error)
-          ? describeCause(error.value)
-          : Cause.pretty(loadExit.cause);
+        const detail = failureDetail(loadExit.cause);
         logWarn(`Failed to load xtarterize plugin "${specifier}": ${detail}`);
         continue;
       }
