@@ -123,7 +123,7 @@ interface SessionContext {
 
 function buildDryRunOutcome(
   plan: ApplyPlan,
-  context: SessionContext
+  timing: ResolveTiming
 ): SessionOutcome {
   const failures = plan.entries.filter(
     (entry) => entry.dryRunError !== undefined
@@ -140,7 +140,7 @@ function buildDryRunOutcome(
     kind: 'dry-run',
     ok: diffs.length === 0 && failures === 0,
     skipped: 0,
-    timing: context.timing,
+    timing,
   };
 }
 
@@ -151,10 +151,25 @@ function buildDryRunOutcome(
  * process when the outcome reports errors.
  */
 export class CommandSession {
-  private readonly context: SessionContext;
+  readonly allTasks: Array<Task>;
+  /** Per-task check failures collected during status resolution. */
+  readonly checkErrors: Map<string, string>;
+  readonly runtime: RuntimeContext;
+  readonly selection: TaskSelectionConfig;
+  readonly statuses: Map<string, TaskStatus>;
+  readonly tasks: Array<Task>;
+  readonly timing: ResolveTiming;
+  private readonly profileValue: ProjectProfile | null;
 
   private constructor(context: SessionContext) {
-    this.context = context;
+    this.allTasks = context.allTasks;
+    this.checkErrors = context.checkErrors;
+    this.profileValue = context.profile;
+    this.runtime = context.runtime;
+    this.selection = context.selection;
+    this.statuses = context.statuses;
+    this.tasks = context.tasks;
+    this.timing = context.timing;
   }
 
   static open(
@@ -227,58 +242,29 @@ export class CommandSession {
     });
   }
 
-  get allTasks(): Array<Task> {
-    return this.context.allTasks;
-  }
-
-  /** Per-task check failures collected during status resolution. */
-  get checkErrors(): Map<string, string> {
-    return this.context.checkErrors;
-  }
-
   /** Per-task check failures formatted like `ApplyResult.errors` entries. */
   get checkErrorMessages(): Array<string> {
-    return [...this.context.checkErrors].map(
+    return [...this.checkErrors].map(
       ([taskId, detail]) => `Failed to check ${taskId}: ${detail}`
     );
   }
 
   get profile(): ProjectProfile {
-    if (!this.context.profile) {
+    if (!this.profileValue) {
       throw new Error('Session was opened without task resolution');
     }
-    return this.context.profile;
-  }
-
-  get runtime(): RuntimeContext {
-    return this.context.runtime;
-  }
-
-  get selection(): TaskSelectionConfig {
-    return this.context.selection;
-  }
-
-  get statuses(): Map<string, TaskStatus> {
-    return this.context.statuses;
-  }
-
-  get tasks(): Array<Task> {
-    return this.context.tasks;
-  }
-
-  get timing(): ResolveTiming {
-    return this.context.timing;
+    return this.profileValue;
   }
 
   plan(
     options: SessionPlanOptions
   ): Effect.Effect<ApplyPlan, TaskError, DepsInstaller | ProcessRunner> {
     return planTasks({
-      cwd: this.context.runtime.cwd,
+      cwd: this.runtime.cwd,
       includeConflicts: options.includeConflicts ?? false,
       profile: this.profile,
-      quiet: this.context.runtime.quiet,
-      statuses: this.context.statuses,
+      quiet: this.runtime.quiet,
+      statuses: this.statuses,
       tasks: options.tasks,
     });
   }
@@ -287,10 +273,10 @@ export class CommandSession {
     plan: ApplyPlan
   ): Effect.Effect<ApplyResult, BackupError, DepsInstaller | ProcessRunner> {
     return executePlan({
-      cwd: this.context.runtime.cwd,
+      cwd: this.runtime.cwd,
       plan,
       profile: this.profile,
-      quiet: this.context.runtime.quiet,
+      quiet: this.runtime.quiet,
     });
   }
 
@@ -314,7 +300,7 @@ export class CommandSession {
       skipped: options.skipped ?? result.skipped,
       taskId: options.taskId,
       taskStatus: options.taskStatus,
-      timing: this.context.timing,
+      timing: this.timing,
     };
   }
 
@@ -326,7 +312,7 @@ export class CommandSession {
     DepsInstaller | ProcessRunner
   > {
     return Effect.map(this.plan({ includeConflicts: true, tasks }), (plan) =>
-      buildDryRunOutcome(plan, this.context)
+      buildDryRunOutcome(plan, this.timing)
     );
   }
 
@@ -365,7 +351,7 @@ export class CommandSession {
   }
 
   private report(outcome: SessionOutcome): void {
-    reportSessionOutcome(outcome, this.context.runtime);
+    reportSessionOutcome(outcome, this.runtime);
   }
 
   /** Report an outcome and fail the process when it reports errors. */
@@ -393,7 +379,7 @@ export class CommandSession {
       skipped: 0,
       taskId: details.taskId,
       taskStatus: details.taskStatus,
-      timing: this.context.timing,
+      timing: this.timing,
     };
   }
 }
