@@ -61,8 +61,3 @@ export function processRunnerLayer(
 ): Layer.Layer<ProcessRunner> {
   return Layer.succeed(ProcessRunner, { run: stub });
 }
-
-/** Run a program and capture its exit for failure assertions. */
-export function runExit<A, E>(effect: Effect.Effect<A, E, TestServices>) {
-  return Effect.runPromiseExit(Effect.provide(effect, TestLayer));
-}
