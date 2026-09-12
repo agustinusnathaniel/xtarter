@@ -21,16 +21,13 @@ export interface TaskWithStatus {
   task: Task;
 }
 
-export interface RunSingleTaskOptions {
-  includeConflicts: boolean;
-  recordTiming: boolean;
-  session: CommandSession;
-  taskId: string;
-}
-
 export interface RunInteractiveOptions {
   all?: boolean;
   includeConflicts: boolean;
   recordTiming: boolean;
   session: CommandSession;
 }
+
+export type RunSingleTaskOptions = Omit<RunInteractiveOptions, 'all'> & {
+  taskId: string;
+};

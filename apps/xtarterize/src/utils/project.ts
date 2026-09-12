@@ -28,15 +28,11 @@ export function getAllTasksWithPlugins(
   });
 }
 
-export interface DetectProjectWithAmbiguityOptions {
+export function detectProjectWithAmbiguity(options: {
   baseProfile?: ProjectProfile;
   cwd: string;
   quiet: boolean;
-}
-
-export function detectProjectWithAmbiguity(
-  options: DetectProjectWithAmbiguityOptions
-): Effect.Effect<
+}): Effect.Effect<
   ProjectProfile,
   PromptError | TaskError,
   Prompter | TaskServices

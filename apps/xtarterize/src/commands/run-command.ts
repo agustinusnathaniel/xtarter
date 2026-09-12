@@ -16,7 +16,7 @@ import { selectTasks } from '@/ui/select-menu.js';
 import { printProjectProfile } from '@/utils/project.js';
 import type { RuntimeContext } from '@/utils/runtime.js';
 
-interface CommandArgs {
+export interface RunCommandArgs {
   dryRun?: boolean;
   format?: string;
   includeConflicts?: boolean;
@@ -90,7 +90,7 @@ function warnUnknownSelection(
 function applyTasks(
   session: CommandSession,
   tasks: Array<Task>,
-  args: CommandArgs
+  args: RunCommandArgs
 ): Effect.Effect<void, TaskError | BackupError, DepsInstaller | ProcessRunner> {
   return Effect.gen(function* () {
     const outcome = yield* session.apply(tasks, {
@@ -104,7 +104,7 @@ function applyTasks(
 function promptAndApply(
   session: CommandSession,
   tasks: Array<Task>,
-  { args, confirmMessage }: { args: CommandArgs; confirmMessage: string }
+  { args, confirmMessage }: { args: RunCommandArgs; confirmMessage: string }
 ): Effect.Effect<void, RunCommandError, RunCommandServices> {
   return Effect.gen(function* () {
     const prompter = yield* Prompter;
@@ -150,7 +150,7 @@ function promptAndApply(
 
 function runSession(
   session: CommandSession,
-  args: CommandArgs,
+  args: RunCommandArgs,
   options: RunCommandOptions
 ): Effect.Effect<void, RunCommandError, RunCommandServices> {
   return Effect.gen(function* () {
@@ -189,7 +189,7 @@ function runSession(
 
 /** The whole init/sync run pipeline as one program: open, select, apply. */
 export function runCommand(
-  args: CommandArgs,
+  args: RunCommandArgs,
   options: RunCommandOptions
 ): Effect.Effect<void, RunCommandError, RunCommandServices> {
   return Effect.gen(function* () {

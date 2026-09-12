@@ -4,6 +4,7 @@ import { defineCommand } from 'citty';
 import type { Effect } from 'effect';
 
 import {
+  type RunCommandArgs,
   type RunCommandError,
   type RunCommandServices,
   runCommand,
@@ -17,18 +18,7 @@ interface ComposeArgs {
   threshold?: string;
 }
 
-export interface InitCommandArgs extends ComposeArgs {
-  cwd?: string;
-  dryRun?: boolean;
-  format?: string;
-  includeConflicts?: boolean;
-  json?: boolean;
-  only?: string;
-  quiet?: boolean;
-  skip?: string;
-  timing?: boolean;
-  yes?: boolean;
-}
+export type InitCommandArgs = ComposeArgs & RunCommandArgs;
 
 function composeThreshold(args: ComposeArgs): number {
   if (!args.threshold) {

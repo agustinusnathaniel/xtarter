@@ -2,6 +2,7 @@ import { logWarn } from '@xtarterize/core';
 import { defineCommand } from 'citty';
 import { Effect } from 'effect';
 
+import type { RunCommandArgs } from '@/commands/run-command.js';
 import { runCliProgram } from '@/runtime.js';
 import { openSession } from '@/session.js';
 import {
@@ -41,16 +42,10 @@ export const addCommand = defineCommand({
   },
 });
 
-export interface AddCommandArgs {
+export type AddCommandArgs = RunCommandArgs & {
   all?: boolean;
-  cwd?: string;
-  format?: string;
-  includeConflicts?: boolean;
-  json?: boolean;
-  quiet?: boolean;
   taskId?: string;
-  timing?: boolean;
-}
+};
 
 /** The `add` command as one program: open once, then pick or apply tasks. */
 export function addProgram(
