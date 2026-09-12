@@ -61,3 +61,45 @@ export function processRunnerLayer(
 ): Layer.Layer<ProcessRunner> {
   return Layer.succeed(ProcessRunner, { run: stub });
 }
+
+/** One recorded `ProcessRunner.run` invocation. */
+export type ProcessRunnerCall = [
+  command: string,
+  args: ReadonlyArray<string>,
+  options: ProcessRunOptions | undefined,
+];
+
+/** A recording `ProcessRunner` stub whose result is scriptable per test. */
+export interface RecordingProcessRunner {
+  /** Recorded invocations, in call order. */
+  readonly calls: ReadonlyArray<ProcessRunnerCall>;
+  /** Layer that replaces `ProcessRunner` with this stub. */
+  readonly layer: Layer.Layer<ProcessRunner>;
+  /** Clear recorded invocations and restore the success result. */
+  reset: () => void;
+  /** Set the result returned by subsequent runs. */
+  setResult: (result: CommandResult) => void;
+}
+
+/** Create a recording `ProcessRunner` stub that succeeds until scripted. */
+export function recordingProcessRunner(): RecordingProcessRunner {
+  const calls: Array<ProcessRunnerCall> = [];
+  let result: CommandResult = { exitCode: 0, stderr: '', stdout: '' };
+
+  return {
+    calls,
+    layer: processRunnerLayer((command, args, options) =>
+      Effect.sync(() => {
+        calls.push([command, args, options]);
+        return result;
+      })
+    ),
+    reset() {
+      calls.length = 0;
+      result = { exitCode: 0, stderr: '', stdout: '' };
+    },
+    setResult(next) {
+      result = next;
+    },
+  };
+}

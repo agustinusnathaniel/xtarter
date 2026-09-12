@@ -1,36 +1,21 @@
-import fs from 'node:fs/promises';
-import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
-  type CommandResult,
   detectProject,
-  ProcessRunner,
   type ProjectProfile,
   planTasks,
 } from '@xtarterize/core';
 import { skillsInstallTask } from '@xtarterize/tasks';
-import { Duration, Effect, Layer } from 'effect';
-import { beforeEach, describe, expect, vi } from 'vite-plus/test';
+import { Duration } from 'effect';
+import { beforeEach, describe, expect } from 'vite-plus/test';
 
 import { SKILL_CATALOG } from '../../packages/tasks/src/agent/catalog.js';
-import { run, runWith } from '../helpers/run.js';
-
-const { mockRun } = vi.hoisted(() => ({
-  mockRun: vi.fn(),
-}));
+import { recordingProcessRunner, run, runWith } from '../helpers/run.js';
+import { withSkillsProject } from '../helpers/skills-project.js';
 
 // The task talks to the ProcessRunner service, so the test swaps in a stub
 // layer that records commands and scripts the exit code per test.
-let runnerResult: CommandResult = { exitCode: 0, stderr: '', stdout: '' };
-
-const runnerLayer = Layer.succeed(ProcessRunner, {
-  run: (command, args, options) =>
-    Effect.sync(() => {
-      mockRun(command, args, options);
-      return runnerResult;
-    }),
-});
+const runner = recordingProcessRunner();
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const fixtures = path.resolve(__dirname, '../fixtures');
@@ -41,10 +26,9 @@ const installOutput = async (
   cwd: string,
   profile: ProjectProfile
 ): Promise<string> => {
-  mockRun.mockClear();
-  runnerResult = { exitCode: 0, stderr: '', stdout: '' };
-  await runWith(runnerLayer, skillsInstallTask.apply(cwd, profile));
-  return mockRun.mock.calls
+  runner.reset();
+  await runWith(runner.layer, skillsInstallTask.apply(cwd, profile));
+  return runner.calls
     .map(([command, args]) => [command, ...(args ?? [])].join(' '))
     .join('\n');
 };
@@ -52,8 +36,7 @@ const installOutput = async (
 // Reset the stub installer between tests so a failure-path result set by one
 // test cannot leak into a later test that applies directly.
 beforeEach(() => {
-  mockRun.mockReset();
-  runnerResult = { exitCode: 0, stderr: '', stdout: '' };
+  runner.reset();
 });
 
 describe('skillsInstallTask', () => {
@@ -234,47 +217,12 @@ describe('skillsInstallTask', () => {
   });
 
   test('returns patch when some skills are already installed', async () => {
-    const tmpDir = await fs.mkdtemp(
-      path.join(os.tmpdir(), 'xtarterize-skills-partial-')
-    );
+    await withSkillsProject({ skillDirs: ['react-dev'] }, async (tmpDir) => {
+      const profile = await detectProject(tmpDir);
+      const status = await run(skillsInstallTask.check(tmpDir, profile));
 
-    await fs.writeFile(
-      path.join(tmpDir, 'package.json'),
-      JSON.stringify(
-        {
-          dependencies: {
-            react: '^19.0.0',
-          },
-          devDependencies: {
-            typescript: '^5.8.0',
-            vite: '^7.0.0',
-          },
-          name: 'skills-partial-install-fixture',
-          private: true,
-          type: 'module',
-        },
-        null,
-        2
-      )
-    );
-
-    await fs.writeFile(
-      path.join(tmpDir, 'tsconfig.json'),
-      JSON.stringify({ compilerOptions: { target: 'ES2022' } }, null, 2)
-    );
-
-    await fs.mkdir(path.join(tmpDir, '.agents', 'skills', 'react-dev'), {
-      recursive: true,
+      expect(status).toBe('patch');
     });
-    await fs.writeFile(
-      path.join(tmpDir, '.agents', 'skills', 'react-dev', 'SKILL.md'),
-      '# React Dev\n'
-    );
-
-    const profile = await detectProject(tmpDir);
-    const status = await run(skillsInstallTask.check(tmpDir, profile));
-
-    expect(status).toBe('patch');
   });
 
   test('batches skills from the same source into a single command', async () => {
@@ -303,188 +251,68 @@ describe('skillsInstallTask', () => {
   });
 
   test('does not treat an empty skill directory as installed', async () => {
-    const tmpDir = await fs.mkdtemp(
-      path.join(os.tmpdir(), 'xtarterize-skills-empty-dir-')
+    await withSkillsProject(
+      { emptySkillDirs: ['react-dev'] },
+      async (tmpDir) => {
+        const profile = await detectProject(tmpDir);
+        const commands = await installOutput(tmpDir, profile);
+
+        expect(commands).toContain('--skill react-dev');
+      }
     );
-
-    await fs.writeFile(
-      path.join(tmpDir, 'package.json'),
-      JSON.stringify(
-        {
-          dependencies: {
-            react: '^19.0.0',
-          },
-          devDependencies: {
-            typescript: '^5.8.0',
-            vite: '^7.0.0',
-          },
-          name: 'skills-empty-folder-fixture',
-          private: true,
-          type: 'module',
-        },
-        null,
-        2
-      )
-    );
-
-    await fs.writeFile(
-      path.join(tmpDir, 'tsconfig.json'),
-      JSON.stringify({ compilerOptions: { target: 'ES2022' } }, null, 2)
-    );
-
-    await fs.mkdir(path.join(tmpDir, '.agents', 'skills', 'react-dev'), {
-      recursive: true,
-    });
-
-    const profile = await detectProject(tmpDir);
-    const commands = await installOutput(tmpDir, profile);
-
-    expect(commands).toContain('--skill react-dev');
   });
 });
 
 describe('skillsInstallTask apply', () => {
   test('constructs the correct npx command for a react project', async () => {
-    const tmpDir = await fs.mkdtemp(
-      path.join(os.tmpdir(), 'xtarterize-skills-apply-')
+    // Pin the package manager: without a lockfile nypm falls back to the
+    // invoking process, which under the test runner resolves to pnpm.
+    await withSkillsProject(
+      { lockfile: 'package-lock.json' },
+      async (tmpDir) => {
+        const profile = await detectProject(tmpDir);
+        await runWith(runner.layer, skillsInstallTask.apply(tmpDir, profile));
+
+        expect(runner.calls.length).toBeGreaterThan(0);
+        const callArgs = runner.calls[0];
+        expect(callArgs[0]).toBe('npx');
+        expect(callArgs[1]).toEqual(
+          expect.arrayContaining(['--yes', 'skills@latest', 'add'])
+        );
+        expect(callArgs[1]).toEqual(
+          expect.arrayContaining(['--skill', 'opensrc'])
+        );
+        expect(callArgs[2]).toMatchObject({
+          cwd: tmpDir,
+          stdio: 'inherit',
+          timeout: Duration.millis(60_000),
+        });
+      }
     );
-
-    try {
-      await fs.writeFile(
-        path.join(tmpDir, 'package.json'),
-        JSON.stringify(
-          {
-            dependencies: { react: '^19.0.0' },
-            devDependencies: {
-              typescript: '^5.8.0',
-              vite: '^7.0.0',
-            },
-            name: 'skills-apply-fixture',
-            private: true,
-            type: 'module',
-          },
-          null,
-          2
-        )
-      );
-      await fs.writeFile(
-        path.join(tmpDir, 'tsconfig.json'),
-        JSON.stringify({ compilerOptions: { target: 'ES2022' } }, null, 2)
-      );
-      // Pin the package manager: without a lockfile nypm falls back to the
-      // invoking process, which under the test runner resolves to pnpm.
-      await fs.writeFile(path.join(tmpDir, 'package-lock.json'), '');
-
-      const profile = await detectProject(tmpDir);
-      await runWith(runnerLayer, skillsInstallTask.apply(tmpDir, profile));
-
-      expect(mockRun).toHaveBeenCalled();
-      const callArgs = mockRun.mock.calls[0];
-      expect(callArgs[0]).toBe('npx');
-      expect(callArgs[1]).toEqual(
-        expect.arrayContaining(['--yes', 'skills@latest', 'add'])
-      );
-      expect(callArgs[1]).toEqual(
-        expect.arrayContaining(['--skill', 'opensrc'])
-      );
-      expect(callArgs[2]).toMatchObject({
-        cwd: tmpDir,
-        stdio: 'inherit',
-        timeout: Duration.millis(60_000),
-      });
-    } finally {
-      await fs.rm(tmpDir, { force: true, recursive: true });
-    }
   });
 
   test('throws TaskError when the npx command fails', async () => {
-    runnerResult = { exitCode: 1, stderr: '', stdout: '' };
+    runner.setResult({ exitCode: 1, stderr: '', stdout: '' });
 
-    const tmpDir = await fs.mkdtemp(
-      path.join(os.tmpdir(), 'xtarterize-skills-apply-fail-')
+    await withSkillsProject(
+      { lockfile: 'package-lock.json' },
+      async (tmpDir) => {
+        const profile = await detectProject(tmpDir);
+        await expect(
+          runWith(runner.layer, skillsInstallTask.apply(tmpDir, profile))
+        ).rejects.toThrow(/Failed to install skills from/);
+      }
     );
-
-    try {
-      await fs.writeFile(
-        path.join(tmpDir, 'package.json'),
-        JSON.stringify(
-          {
-            dependencies: { react: '^19.0.0' },
-            devDependencies: {
-              typescript: '^5.8.0',
-              vite: '^7.0.0',
-            },
-            name: 'skills-apply-fail-fixture',
-            private: true,
-            type: 'module',
-          },
-          null,
-          2
-        )
-      );
-      await fs.writeFile(
-        path.join(tmpDir, 'tsconfig.json'),
-        JSON.stringify({ compilerOptions: { target: 'ES2022' } }, null, 2)
-      );
-      await fs.writeFile(path.join(tmpDir, 'package-lock.json'), '');
-
-      const profile = await detectProject(tmpDir);
-      await expect(
-        runWith(runnerLayer, skillsInstallTask.apply(tmpDir, profile))
-      ).rejects.toThrow(/Failed to install skills from/);
-    } finally {
-      await fs.rm(tmpDir, { force: true, recursive: true });
-    }
   });
 
   test('only installs missing skills when some are already installed', async () => {
-    mockRun.mockClear();
-    runnerResult = { exitCode: 0, stderr: '', stdout: '' };
-
-    const tmpDir = await fs.mkdtemp(
-      path.join(os.tmpdir(), 'xtarterize-skills-partial-apply-')
-    );
-
-    try {
-      await fs.writeFile(
-        path.join(tmpDir, 'package.json'),
-        JSON.stringify(
-          {
-            dependencies: { react: '^19.0.0' },
-            devDependencies: {
-              typescript: '^5.8.0',
-              vite: '^7.0.0',
-            },
-            name: 'skills-partial-fixture',
-            private: true,
-            type: 'module',
-          },
-          null,
-          2
-        )
-      );
-      await fs.writeFile(
-        path.join(tmpDir, 'tsconfig.json'),
-        JSON.stringify({ compilerOptions: { target: 'ES2022' } }, null, 2)
-      );
-
-      // Simulate one skill already installed
-      await fs.mkdir(path.join(tmpDir, '.agents', 'skills', 'opensrc'), {
-        recursive: true,
-      });
-      await fs.writeFile(
-        path.join(tmpDir, '.agents', 'skills', 'opensrc', 'SKILL.md'),
-        '# Opensrc\n'
-      );
-
+    await withSkillsProject({ skillDirs: ['opensrc'] }, async (tmpDir) => {
       const profile = await detectProject(tmpDir);
-      await runWith(runnerLayer, skillsInstallTask.apply(tmpDir, profile));
+      await runWith(runner.layer, skillsInstallTask.apply(tmpDir, profile));
 
       // Should still call the runner for remaining skills
-      expect(mockRun).toHaveBeenCalled();
-    } finally {
-      await fs.rm(tmpDir, { force: true, recursive: true });
-    }
+      expect(runner.calls.length).toBeGreaterThan(0);
+    });
   });
 });
 
