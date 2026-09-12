@@ -58,12 +58,22 @@ restore `Equal.equals` (ADR 031 keeps `isDeepStrictEqual`).
   re-exports only leaf helpers whose import graph never reaches `effect`
   (`cli-args`, `invocation-guard`, `logger`, `prompts`, and `fileExists`).
   `apps/create-xtarter-app` imports that subpath exclusively.
-- The rule is enforced by `scripts/check-effect-boundaries.mjs`, which runs in
-  `pnpm check` and `pnpm check:ci` through `verify:effect-boundaries`. The
-  script scans `packages/*/src/**/*.ts` and fails with `file:line` output on
-  `runPromise`, `runPromiseExit`, `runSync`, or `ManagedRuntime` outside
-  comments, including destructured forms such as
-  `const { runPromise } = Effect`; renamed bindings are not detected.
+- The rule is enforced by the Biome GritQL plugin
+  [`scripts/effect-boundaries.grit`](../../../scripts/effect-boundaries.grit),
+  registered in [`biome.json`](../../../biome.json) and reported by
+  `pnpm ultracite:check` in `pnpm check` and `pnpm check:ci`. The plugin entry
+  scopes it with `includes` to `**/packages/*/src/**/*.{ts,mts,cts}`. It flags
+  member calls (including optional and parenthesized callees), bare calls,
+  destructuring of `runPromise`, `runPromiseExit`, or `runSync` (renamed
+  bindings included, for example `const { runPromise: rp } = Effect`),
+  `new ManagedRuntime(...)`, and `ManagedRuntime.make(...)`. Because matching
+  is AST-based, comments and string literals never trigger. Limits: plugin
+  diagnostics are ordinary Biome lint diagnostics, so
+  `// biome-ignore lint/plugin: reason` (or
+  `// biome-ignore lint/plugin/effect-boundaries: reason`) suppresses them;
+  GritQL plugin support is newer and less battle-tested than Biome's built-in
+  rules; and on Biome 2.5.9 the plugin `includes` glob needs a `**/` prefix to
+  match nested paths.
 
 ### Task contract and plugin compatibility
 
@@ -187,6 +197,15 @@ seam (`Effect.tryPromise` / `Effect.promise`), for example `liftLeaf` in
   the app's dist total is 99.36 kB and its scaffold chunk is 46.42 kB (gzip
   15.22 kB), with no `effect` in the output or in `inlinedDependencies`
   `[verified]`.
+- The boundary guard moved from the custom script to the Biome plugin
+  `[verified]`: `pnpm ultracite:check` exits 0 on the clean tree and exits 1
+  with a `plugin` diagnostic for probes under `packages/core/src` covering
+  member calls, bare calls, renamed destructuring
+  (`const { runPromise: rp } = Effect`), and `new ManagedRuntime(...)`. The
+  legitimate `Effect.runPromiseExit` edge in
+  `apps/xtarterize/src/runtime.ts` is not flagged, and `pnpm check:ci` stays
+  green with 715 passed and 6 skipped tests across 65 test files (64 passed,
+  1 skipped).
 
 ## Rationale
 
@@ -248,8 +267,10 @@ seam (`Effect.tryPromise` / `Effect.promise`), for example `liftLeaf` in
   work on the CLI.
 - SIGINT during a prompt now waits through a 250ms grace period instead of
   exiting immediately.
-- The boundary rule is enforced mechanically by
-  `scripts/check-effect-boundaries.mjs` in `pnpm check` and `pnpm check:ci`.
+- The boundary rule is enforced mechanically by the
+  `scripts/effect-boundaries.grit` Biome plugin through `pnpm ultracite:check`
+  in `pnpm check` and `pnpm check:ci`; an explicit
+  `// biome-ignore lint/plugin` comment can suppress a diagnostic.
 
 ### Related Decisions
 

@@ -1,0 +1,53 @@
+or {
+  `$receiver.$method($...)` as $call where {
+    $method <: or {
+      `runPromise`,
+      `runPromiseExit`,
+      `runSync`
+    },
+    register_diagnostic(span=$call, message="Packages must return Effects, never run them. Only apps/xtarterize/src/runtime.ts may call a runtime (ADR 036).")
+  },
+  `($receiver.$method)($...)` as $call where {
+    $method <: or {
+      `runPromise`,
+      `runPromiseExit`,
+      `runSync`
+    },
+    register_diagnostic(span=$call, message="Packages must return Effects, never run them. Only apps/xtarterize/src/runtime.ts may call a runtime (ADR 036).")
+  },
+  `$receiver?.runPromise($...)` as $call where {
+    register_diagnostic(span=$call, message="Packages must return Effects, never run them. Only apps/xtarterize/src/runtime.ts may call a runtime (ADR 036).")
+  },
+  `$receiver?.runPromiseExit($...)` as $call where {
+    register_diagnostic(span=$call, message="Packages must return Effects, never run them. Only apps/xtarterize/src/runtime.ts may call a runtime (ADR 036).")
+  },
+  `$receiver?.runSync($...)` as $call where {
+    register_diagnostic(span=$call, message="Packages must return Effects, never run them. Only apps/xtarterize/src/runtime.ts may call a runtime (ADR 036).")
+  },
+  `$fn($...)` as $call where {
+    $fn <: or {
+      `runPromise`,
+      `runPromiseExit`,
+      `runSync`
+    },
+    register_diagnostic(span=$call, message="Packages must return Effects, never run them. Only apps/xtarterize/src/runtime.ts may call a runtime (ADR 036).")
+  },
+  `($fn)($...)` as $call where {
+    $fn <: or {
+      `runPromise`,
+      `runPromiseExit`,
+      `runSync`
+    },
+    register_diagnostic(span=$call, message="Packages must return Effects, never run them. Only apps/xtarterize/src/runtime.ts may call a runtime (ADR 036).")
+  },
+  `new ManagedRuntime($...)` as $call where {
+    register_diagnostic(span=$call, message="Packages must return Effects, never build a runtime. Only apps/xtarterize/src/runtime.ts owns the Effect runtime (ADR 036).")
+  },
+  `ManagedRuntime.make($...)` as $call where {
+    register_diagnostic(span=$call, message="Packages must return Effects, never build a runtime. Only apps/xtarterize/src/runtime.ts owns the Effect runtime (ADR 036).")
+  },
+  JsObjectBindingPattern() as $pattern where {
+    $pattern <: contains r"^run(?:Promise|PromiseExit|Sync)$",
+    register_diagnostic(span=$pattern, message="Do not destructure a runtime entry point. Packages must return Effects; only apps/xtarterize/src/runtime.ts may run them (ADR 036).")
+  }
+}

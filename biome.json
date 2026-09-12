@@ -6,6 +6,12 @@
     "useIgnoreFile": true
   },
   "extends": ["ultracite/biome/core"],
+  "plugins": [
+    {
+      "path": "./scripts/effect-boundaries.grit",
+      "includes": ["**/packages/*/src/**/*.{ts,mts,cts}"]
+    }
+  ],
   "files": {
     "ignoreUnknown": false,
     "includes": [

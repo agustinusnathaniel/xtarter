@@ -8,8 +8,8 @@
     "build:ci": "turbo run build --filter=!@xtarter/docs",
     "postbuild:ci": "pnpm verify:shebangs",
     "changeset": "changeset",
-    "check": "turbo run typecheck build ultracite:check test verify:shebangs && pnpm verify:effect-boundaries",
-    "check:ci": "turbo run typecheck build ultracite:check test verify:shebangs --filter=!@xtarter/docs && pnpm verify:effect-boundaries",
+    "check": "turbo run typecheck build ultracite:check test verify:shebangs",
+    "check:ci": "turbo run typecheck build ultracite:check test verify:shebangs --filter=!@xtarter/docs",
     "contributors:add": "all-contributors add",
     "contributors:check": "all-contributors check",
     "contributors:generate": "all-contributors generate",
@@ -25,7 +25,6 @@
     "ultracite:fix": "ultracite fix",
     "up-interactive": "pnpm up -i -r",
     "up-latest": "pnpm up-interactive -L",
-    "verify:effect-boundaries": "node scripts/check-effect-boundaries.mjs",
     "verify:shebangs": "node scripts/verify-shebangs.mjs",
     "version-packages": "changeset version"
   },
