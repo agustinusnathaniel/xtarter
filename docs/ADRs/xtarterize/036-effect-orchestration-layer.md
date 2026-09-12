@@ -110,10 +110,10 @@ restore `Equal.equals` (ADR 031 keeps `isDeepStrictEqual`).
   one batched dev/prod install, failing with `DepsInstallError`.
 - `Prompter` ([`apps/xtarterize/src/ui/prompter.ts`](../../../apps/xtarterize/src/ui/prompter.ts)):
   the app-level prompt seam. Production provides the clack adapter through
-  `Prompter.layer`; tests provide `createScriptedPrompter` or
-  `scriptedPrompterLayer`. A cancelled prompt resolves to `null`, and a
-  rejected prompt fails with `PromptError`. This replaces the process-global
-  prompter singleton.
+  `Prompter.layer`; tests provide `createScriptedPrompter` from
+  [`test/helpers/prompter.ts`](../../../test/helpers/prompter.ts). A cancelled
+  prompt resolves to `null`, and a rejected prompt fails with `PromptError`.
+  This replaces the process-global prompter singleton.
 - `AppLayer` merges the three. `executePlan` requires
   `DepsInstaller | TaskServices`; `CommandSession.open` requires
   `DepsInstaller | ProcessRunner | Prompter`.
@@ -163,8 +163,8 @@ restore `Equal.equals` (ADR 031 keeps `isDeepStrictEqual`).
 templates, and UI renderers stay plain TypeScript. They keep Promise or
 plain-value contracts and do not compose Effects or run a runtime. Some throw
 tagged errors (`FileSystemError`), and they are lifted at the nearest Effect
-seam (`Effect.tryPromise` / `Effect.promise`), for example `liftLeaf` in
-`apps/xtarterize/src/session.ts`.
+seam (`Effect.tryPromise` / `Effect.promise`), for example the `toTaskEffect`
+lifts in `apps/xtarterize/src/session.ts`.
 
 ### Out of scope
 
