@@ -88,10 +88,11 @@ from scoring. `scoreTasks` now scores only the tokenized query.
 
 ### Negative
 
-- Non-literal recall drops. `types` and `typing` no longer reach the TypeScript
-  task terms, `updates` no longer reaches the dependency task terms, and `code`
-  no longer reaches the editor task terms. Users must name the domain or task
-  terms more directly, or lower `--threshold`.
+- Non-literal recall drops. Queries that matched through the map still match
+  their tasks but score much lower: `types` still ranks `ts/strict` first at
+  0.325, `updates` still ranks `deps/renovate` first at 0.210, and `code` still
+  ranks `editor/vscode` second at 0.665; `typing` now returns no results
+  `[verified]`. Broaden the query or lower `--threshold` for those matches.
 - `expandQuery` is no longer exported from `@xtarterize/core`. The package is
   private and bundled into the CLI, so the removal is an internal API break
   only.
