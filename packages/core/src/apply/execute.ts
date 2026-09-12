@@ -45,31 +45,24 @@ function buildTiming(plan: ApplyPlan): {
   perTask: ApplyTiming['tasks'];
   tasksToRun: Array<ApplyPlanEntry>;
 } {
-  const perTask: ApplyTiming['tasks'] = [];
-  for (const entry of plan.entries) {
-    if (entry.skipped) {
-      perTask.push({
+  const tasksToRun = plan.entries.filter(
+    (entry) => !(entry.skipped || entry.dryRunError)
+  );
+  const perTask: ApplyTiming['tasks'] = [
+    ...plan.entries
+      .filter((entry) => entry.skipped)
+      .map((entry) => ({
         checkMs: entry.checkMs,
         id: entry.task.id,
         label: entry.task.label,
-      });
-    }
-  }
-
-  const tasksToRun: Array<ApplyPlanEntry> = [];
-  for (const entry of plan.entries) {
-    if (entry.skipped || entry.dryRunError) {
-      continue;
-    }
-    perTask.push({
+      })),
+    ...tasksToRun.map((entry) => ({
       checkMs: entry.checkMs,
       dryRunMs: entry.dryRunMs,
       id: entry.task.id,
       label: entry.task.label,
-    });
-    tasksToRun.push(entry);
-  }
-
+    })),
+  ];
   return { perTask, tasksToRun };
 }
 
