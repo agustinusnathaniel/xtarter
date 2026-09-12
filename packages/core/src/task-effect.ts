@@ -2,10 +2,7 @@ import { Effect } from 'effect';
 
 import type { TaskServices } from '@/_base.js';
 import { TaskError } from '@/errors.js';
-
-export function describeCause(cause: unknown): string {
-  return cause instanceof Error ? cause.message : String(cause);
-}
+import { describeCause } from '@/utils/errors.js';
 
 /**
  * Normalize a Promise- or Effect-based task method into a single Effect.

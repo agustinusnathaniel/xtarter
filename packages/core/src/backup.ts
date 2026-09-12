@@ -2,7 +2,8 @@ import fs from 'node:fs/promises';
 import { join, normalize } from 'pathe';
 
 import { BackupError } from '@/errors.js';
-import { assertPathWithin, resolvePath } from '@/utils/fs.js';
+import { describeCause } from '@/utils/errors.js';
+import { assertPathWithin, fileExists, resolvePath } from '@/utils/fs.js';
 
 const BACKUP_DIR = '.xtarterize/backups';
 
@@ -43,18 +44,14 @@ export function toBackupError(cause: unknown, path: string): BackupError {
   }
   return new BackupError({
     cause,
-    message: cause instanceof Error ? cause.message : String(cause),
+    message: describeCause(cause),
     path,
   });
 }
 
 export async function backupFile(cwd: string, filepath: string): Promise<void> {
   const sourcePath = resolvePath(cwd, filepath);
-  const exists = await fs
-    .access(sourcePath)
-    .then(() => true)
-    .catch(() => false);
-  if (!exists) {
+  if (!(await fileExists(sourcePath))) {
     return;
   }
 

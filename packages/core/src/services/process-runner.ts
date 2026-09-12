@@ -2,6 +2,7 @@ import { Context, Duration, Effect, Layer } from 'effect';
 import { x } from 'tinyexec';
 
 import { ProcessError } from '@/errors.js';
+import { describeCause } from '@/utils/errors.js';
 
 export interface CommandResult {
   exitCode: number;
@@ -24,7 +25,7 @@ function runCommand(
     catch: (cause) =>
       new ProcessError({
         cause,
-        message: cause instanceof Error ? cause.message : String(cause),
+        message: describeCause(cause),
       }),
     try: (signal) =>
       x(command, [...args], {

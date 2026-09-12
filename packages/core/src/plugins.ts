@@ -1,7 +1,8 @@
 import { Cause, Effect, Exit, Option } from 'effect';
 
 import type { Task } from '@/_base.js';
-import { describeCause } from '@/task-effect.js';
+import { isRecord } from '@/detect/package-manager.js';
+import { describeCause } from '@/utils/errors.js';
 import { findConfigFile, readJson } from '@/utils/fs.js';
 import { logWarn } from '@/utils/logger.js';
 
@@ -95,7 +96,7 @@ function readRawXtarterizeConfig(cwd: string): Effect.Effect<RawConfigResult> {
     );
     if (Exit.isSuccess(pkgExit)) {
       const config = pkgExit.value?.xtarterize;
-      if (config && typeof config === 'object' && !Array.isArray(config)) {
+      if (isRecord(config)) {
         return { config, status: 'found' } as RawConfigResult;
       }
     }

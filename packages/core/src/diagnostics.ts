@@ -1,8 +1,9 @@
 import os from 'node:os';
 import { Cause, Effect, Exit } from 'effect';
+import { basename } from 'pathe';
 
 import { ProcessRunner } from '@/services/process-runner.js';
-import { fileExists, resolvePath } from '@/utils/fs.js';
+import { fileExists, findConfigFile, resolvePath } from '@/utils/fs.js';
 import {
   collectDependencyVersions,
   readPackageJsonOrNull,
@@ -49,6 +50,10 @@ function makeCheck(
   return { message, name, status };
 }
 
+/** Lift the never-failing package.json read into an Effect. */
+const readPackage = (cwd: string) =>
+  Effect.promise(() => readPackageJsonOrNull(cwd));
+
 function runTool(
   tool: string,
   cwd: string
@@ -73,7 +78,7 @@ function runEnvironmentChecks(
   cwd: string
 ): Effect.Effect<Array<DiagnosticCheck>, never, ProcessRunner> {
   return Effect.gen(function* () {
-    const pkg = yield* Effect.promise(() => readPackageJsonOrNull(cwd));
+    const pkg = yield* readPackage(cwd);
 
     const nodeVersion = process.version;
     const engineNode = pkg?.engines?.node;
@@ -129,54 +134,39 @@ function checkLockfile(cwd: string): Effect.Effect<DiagnosticCheck> {
   });
 }
 
-function checkTsconfig(cwd: string): Effect.Effect<DiagnosticCheck> {
-  return Effect.gen(function* () {
-    const hasTsconfig = yield* Effect.promise(() =>
-      fileExists(resolvePath(cwd, 'tsconfig.json'))
+const fileCheck =
+  (
+    filename: string,
+    name: string,
+    [pass, warn]: readonly [pass: string, warn: string]
+  ) =>
+  (cwd: string): Effect.Effect<DiagnosticCheck> =>
+    Effect.map(
+      Effect.promise(() => fileExists(resolvePath(cwd, filename))),
+      (exists) =>
+        makeCheck(name, exists ? 'pass' : 'warn', exists ? pass : warn)
     );
-    return makeCheck(
-      'TypeScript config',
-      hasTsconfig ? 'pass' : 'warn',
-      hasTsconfig
-        ? 'TypeScript config found (tsconfig.json)'
-        : 'TypeScript is a dependency but tsconfig.json is missing'
-    );
-  });
-}
 
-function checkReadme(cwd: string): Effect.Effect<DiagnosticCheck> {
-  return Effect.gen(function* () {
-    const hasReadme = yield* Effect.promise(() =>
-      fileExists(resolvePath(cwd, 'README.md'))
-    );
-    return makeCheck(
-      'README',
-      hasReadme ? 'pass' : 'warn',
-      hasReadme ? 'README.md found' : 'No README.md - consider adding one'
-    );
-  });
-}
+const checkTsconfig = fileCheck('tsconfig.json', 'TypeScript config', [
+  'TypeScript config found (tsconfig.json)',
+  'TypeScript is a dependency but tsconfig.json is missing',
+]);
 
-function checkGitignore(cwd: string): Effect.Effect<DiagnosticCheck> {
-  return Effect.gen(function* () {
-    const hasGitignore = yield* Effect.promise(() =>
-      fileExists(resolvePath(cwd, '.gitignore'))
-    );
-    return makeCheck(
-      '.gitignore',
-      hasGitignore ? 'pass' : 'warn',
-      hasGitignore
-        ? '.gitignore found'
-        : 'No .gitignore - generated files may be tracked'
-    );
-  });
-}
+const checkReadme = fileCheck('README.md', 'README', [
+  'README.md found',
+  'No README.md - consider adding one',
+]);
+
+const checkGitignore = fileCheck('.gitignore', '.gitignore', [
+  '.gitignore found',
+  'No .gitignore - generated files may be tracked',
+]);
 
 function runProjectHealthChecks(
   cwd: string
 ): Effect.Effect<Array<DiagnosticCheck>> {
   return Effect.gen(function* () {
-    const pkg = yield* Effect.promise(() => readPackageJsonOrNull(cwd));
+    const pkg = yield* readPackage(cwd);
     if (!pkg) {
       return [] as Array<DiagnosticCheck>;
     }
@@ -217,34 +207,31 @@ function checkLegacyEslintConfig(
   cwd: string
 ): Effect.Effect<DiagnosticCheck | null> {
   return Effect.gen(function* () {
-    const legacyConfigs = [
-      '.eslintrc',
-      '.eslintrc.js',
-      '.eslintrc.cjs',
-      '.eslintrc.mjs',
-      '.eslintrc.json',
-      '.eslintrc.yaml',
-      '.eslintrc.yml',
-    ];
-    for (const config of legacyConfigs) {
-      const exists = yield* Effect.promise(() =>
-        fileExists(resolvePath(cwd, config))
-      );
-      if (exists) {
-        return makeCheck(
-          'Legacy config',
-          'warn',
-          `Legacy ESLint config found (${config}). Consider migrating to flat config (eslint.config.js).`
-        );
-      }
+    const found = yield* Effect.promise(() =>
+      findConfigFile(cwd, '.eslintrc', [
+        '',
+        '.js',
+        '.cjs',
+        '.mjs',
+        '.json',
+        '.yaml',
+        '.yml',
+      ])
+    );
+    if (!found) {
+      return null;
     }
-    return null;
+    return makeCheck(
+      'Legacy config',
+      'warn',
+      `Legacy ESLint config found (${basename(found)}). Consider migrating to flat config (eslint.config.js).`
+    );
   });
 }
 
 function runConflictChecks(cwd: string): Effect.Effect<Array<DiagnosticCheck>> {
   return Effect.gen(function* () {
-    const pkg = yield* Effect.promise(() => readPackageJsonOrNull(cwd));
+    const pkg = yield* readPackage(cwd);
     if (!pkg) {
       return [] as Array<DiagnosticCheck>;
     }
@@ -273,7 +260,7 @@ function runToolInstallationChecks(
   cwd: string
 ): Effect.Effect<Array<DiagnosticCheck>, never, ProcessRunner> {
   return Effect.gen(function* () {
-    const pkg = yield* Effect.promise(() => readPackageJsonOrNull(cwd));
+    const pkg = yield* readPackage(cwd);
     if (!pkg) {
       return [] as Array<DiagnosticCheck>;
     }

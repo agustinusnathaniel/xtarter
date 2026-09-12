@@ -70,6 +70,7 @@ export {
 export type { PreflightError } from '@/preflight.js';
 export { runPreflight } from '@/preflight.js';
 export {
+  failureDetail,
   resolveProjectTasks,
   resolveTaskStatuses,
   resolveTasks,
@@ -90,6 +91,7 @@ export {
   isJsonFile,
 } from '@/utils/diff.js';
 // Re-export utilities needed by tasks
+export { describeCause } from '@/utils/errors.js';
 export {
   assertPathWithin,
   ensureDir,

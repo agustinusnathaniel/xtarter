@@ -8,6 +8,7 @@
  */
 export { findFirstPositionalIndex } from '@/cli-args.js';
 export { createInvocationGuard } from '@/invocation-guard.js';
+export { describeCause } from '@/utils/errors.js';
 export { fileExists } from '@/utils/file-exists.js';
 export { consola, logWarn, pc } from '@/utils/logger.js';
 export { abortIfCancelled } from '@/utils/prompts.js';

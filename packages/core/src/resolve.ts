@@ -4,8 +4,9 @@ import type { Task, TaskServices, TaskStatus } from '@/_base.js';
 import type { ProjectProfile } from '@/detect.js';
 import { detectProject } from '@/detect.js';
 import { TaskError } from '@/errors.js';
-import { describeCause, toTaskEffect } from '@/task-effect.js';
+import { toTaskEffect } from '@/task-effect.js';
 import type { ResolveTiming } from '@/timing.js';
+import { describeCause } from '@/utils/errors.js';
 import { logWarn } from '@/utils/logger.js';
 
 const TASK_CONCURRENCY = 8;
