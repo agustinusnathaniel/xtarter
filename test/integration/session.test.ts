@@ -4,7 +4,6 @@ import path from 'node:path';
 import { addProgram } from '@xtarterize/app/commands/add/index.js';
 import { listCommand } from '@xtarterize/app/commands/list.js';
 import { openSession } from '@xtarterize/app/session.js';
-import { createScriptedPrompter } from '@xtarterize/app/ui/prompter.js';
 import { reportSessionOutcome } from '@xtarterize/app/ui/reporter.js';
 import { readRunManifest } from '@xtarterize/core';
 import {
@@ -16,6 +15,7 @@ import {
   vi,
 } from 'vite-plus/test';
 
+import { createScriptedPrompter } from '../helpers/prompter.js';
 import { run, runCli } from '../helpers/run.js';
 
 const coreMocks = vi.hoisted(() => ({
