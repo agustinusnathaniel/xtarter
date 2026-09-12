@@ -1,17 +1,17 @@
-import type { ProjectProfile, Task } from '@xtarterize/core';
+import type { ProjectProfile, Task, TaskServices } from '@xtarterize/core';
 import {
   collectDependencyVersions,
   detectProject,
   pc,
   readPackageJson,
   resolveExternalTasks,
-  TaskError,
+  type TaskError,
+  toTaskEffect,
 } from '@xtarterize/core';
 import { getAllTasks } from '@xtarterize/tasks';
 import { Effect } from 'effect';
 
 import { type PromptError, Prompter } from '@/ui/prompter.js';
-import { formatFailureText } from '@/utils/failure-text.js';
 
 /**
  * Combine built-in tasks with external plugin tasks.
@@ -34,36 +34,24 @@ export interface DetectProjectWithAmbiguityOptions {
   quiet: boolean;
 }
 
-function liftProjectLeaf<A>(
-  taskId: string,
-  run: () => Promise<A>
-): Effect.Effect<A, TaskError> {
-  return Effect.tryPromise({
-    catch: (cause) =>
-      new TaskError({
-        cause,
-        message: formatFailureText(cause),
-        taskId,
-      }),
-    try: run,
-  });
-}
-
 export function detectProjectWithAmbiguity(
   options: DetectProjectWithAmbiguityOptions
-): Effect.Effect<ProjectProfile, PromptError | TaskError, Prompter> {
+): Effect.Effect<
+  ProjectProfile,
+  PromptError | TaskError,
+  Prompter | TaskServices
+> {
   return Effect.gen(function* () {
     const { cwd, quiet, baseProfile } = options;
     let profile =
       baseProfile ??
-      (yield* liftProjectLeaf('detect-project', () => detectProject(cwd)));
+      (yield* toTaskEffect('detect-project', () => detectProject(cwd)));
 
     if (profile.framework === null && !quiet) {
-      const pkg = yield* liftProjectLeaf('read-package-json', () =>
+      const pkg = yield* toTaskEffect('read-package-json', () =>
         readPackageJson(cwd)
       );
       const allDeps = collectDependencyVersions(pkg);
-
       const hasReactNative = !!(allDeps['react-native'] || allDeps.expo);
       const hasReact = !!allDeps.react;
 

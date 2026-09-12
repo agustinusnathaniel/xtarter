@@ -1,8 +1,12 @@
-import { DepsInstaller, logError, ProcessRunner } from '@xtarterize/core';
-import { Cause, Effect, Exit, Layer, Option, Result } from 'effect';
+import {
+  DepsInstaller,
+  failureDetail,
+  logError,
+  ProcessRunner,
+} from '@xtarterize/core';
+import { Cause, Effect, Exit, Layer } from 'effect';
 
 import { Prompter } from '@/ui/prompter.js';
-import { formatFailureText } from '@/utils/failure-text.js';
 
 /** Services every CLI command program may require. */
 export type AppServices = DepsInstaller | ProcessRunner | Prompter;
@@ -23,20 +27,6 @@ export function abortCliProgram(): void {
 
 export interface RunCliProgramOptions {
   signal?: AbortSignal;
-}
-
-function renderFailure(cause: Cause.Cause<unknown>): void {
-  const error = Cause.findErrorOption(cause);
-  if (Option.isSome(error)) {
-    logError(formatFailureText(error.value));
-    return;
-  }
-  const defect = Cause.findDefect(cause);
-  if (Result.isSuccess(defect)) {
-    logError(formatFailureText(defect.success));
-    return;
-  }
-  logError(Cause.pretty(cause));
 }
 
 /**
@@ -61,7 +51,7 @@ export async function runCliProgram<A, E>(
     process.exitCode = 0;
     return undefined;
   }
-  renderFailure(exit.cause);
+  logError(failureDetail(exit.cause));
   process.exitCode = 1;
   return undefined;
 }

@@ -20,7 +20,8 @@ import {
   planTasks,
   resolveProjectTasks,
   runPreflight,
-  TaskError,
+  type TaskError,
+  toTaskEffect,
 } from '@xtarterize/core';
 import { Effect } from 'effect';
 
@@ -36,21 +37,6 @@ import {
   type RuntimeContext,
   resolveRuntimeContext,
 } from '@/utils/runtime.js';
-
-function liftLeaf<A>(
-  label: string,
-  run: () => Promise<A>
-): Effect.Effect<A, TaskError> {
-  return Effect.tryPromise({
-    catch: (cause) =>
-      new TaskError({
-        cause,
-        message: cause instanceof Error ? cause.message : String(cause),
-        taskId: label,
-      }),
-    try: run,
-  });
-}
 
 export type SessionOutcomeKind =
   | 'apply'
@@ -181,10 +167,10 @@ export class CommandSession {
   > {
     return Effect.gen(function* () {
       const runtime = resolveRuntimeContext(args);
-      yield* liftLeaf('ensure-gitignore', () =>
+      yield* toTaskEffect('ensure-gitignore', () =>
         ensureXtarterizeGitignore(runtime.cwd)
       );
-      const preflight = yield* liftLeaf('preflight', () =>
+      const preflight = yield* toTaskEffect('preflight', () =>
         runPreflight(runtime.cwd)
       );
       if (!(preflight.valid || options.allowInvalidProject)) {
