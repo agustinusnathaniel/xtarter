@@ -57,16 +57,13 @@ export function computeCheckOk(
 export function formatCheckResult(options: CheckResultOptions): string {
   const { tasks, statuses, diagnostics, timing } = options;
   const summary = countCheckSummary(tasks, statuses);
-  const result: Record<string, unknown> = {
+  return JSON.stringify({
     diagnostics,
     ok: computeCheckOk(summary, diagnostics),
     summary,
     tasks: formatTaskList(tasks, statuses),
-  };
-  if (timing) {
-    result.timing = timing;
-  }
-  return JSON.stringify(result);
+    ...(timing ? { timing } : {}),
+  });
 }
 
 interface ListResultOptions {
@@ -78,7 +75,7 @@ interface ListResultOptions {
 
 export function formatListResult(options: ListResultOptions): string {
   const { profile, tasks, statuses, timing } = options;
-  const result: Record<string, unknown> = {
+  return JSON.stringify({
     ok: true,
     profile: {
       bundler: profile.bundler,
@@ -87,11 +84,8 @@ export function formatListResult(options: ListResultOptions): string {
       typescript: profile.typescript,
     },
     tasks: formatTaskList(tasks, statuses),
-  };
-  if (timing) {
-    result.timing = timing;
-  }
-  return JSON.stringify(result);
+    ...(timing ? { timing } : {}),
+  });
 }
 
 interface QueryResultOptions {
