@@ -49,7 +49,6 @@ export type DefinedTask = EffectTask & {
 
 export interface TaskAction {
   check: (cwd: string, profile: ProjectProfile) => SpecResult<TaskStatus>;
-  kind: 'action';
   run: (cwd: string, profile: ProjectProfile) => SpecResult<void>;
 }
 
@@ -183,20 +182,6 @@ async function applyDependencyStatus(
   );
 }
 
-/**
- * Lift one spec or helper call into the Effect channel with the conversion the
- * engine applies to task methods: synchronous throws and promise rejections
- * become `TaskError` failures that keep their raw cause, and an already-Effect
- * result passes through. The entry method labels the failure once, at the
- * `defineTask` boundary.
- */
-function liftSpec<A>(
-  spec: TaskSpec,
-  invoke: () => SpecResult<A>
-): Effect.Effect<A, TaskError, TaskServices> {
-  return toTaskEffect(spec.id, invoke);
-}
-
 function resolveSpec(
   spec: TaskSpec,
   context: ResolveContext
@@ -205,16 +190,20 @@ function resolveSpec(
     const declared = spec.targets;
     const declaredTargets =
       typeof declared === 'function'
-        ? yield* liftSpec(spec, () => declared(context.cwd, context.profile))
+        ? yield* toTaskEffect(spec.id, () =>
+            declared(context.cwd, context.profile)
+          )
         : (declared ?? []);
     const drafts: Array<TargetDraft> = [];
     for (const target of declaredTargets) {
-      const draft = yield* liftSpec(spec, () => resolveTarget(target, context));
+      const draft = yield* toTaskEffect(spec.id, () =>
+        resolveTarget(target, context)
+      );
       drafts.push(draft);
     }
     const actionStatuses: Array<TaskStatus> = [];
     for (const action of spec.actions ?? []) {
-      const status = yield* liftSpec(spec, () =>
+      const status = yield* toTaskEffect(spec.id, () =>
         action.check(context.cwd, context.profile)
       );
       actionStatuses.push(status);
@@ -228,10 +217,10 @@ function resolveSpec(
       ]),
       targets: provisionalTargets,
     };
-    const deps = yield* liftSpec(spec, () =>
+    const deps = yield* toTaskEffect(spec.id, () =>
       resolveDeps(spec.deps, provisional, context)
     );
-    const targets = yield* liftSpec(spec, () =>
+    const targets = yield* toTaskEffect(spec.id, () =>
       applyDependencyStatus(drafts, deps, context.cwd)
     );
     return {
@@ -256,16 +245,18 @@ function applySpec(
     const diffs: Array<FileDiff> = [];
     for (const target of targets) {
       if (target.kind === 'packageJson') {
-        yield* liftSpec(spec, () => applyPackageJsonChange(cwd, target.patch));
+        yield* toTaskEffect(spec.id, () =>
+          applyPackageJsonChange(cwd, target.patch)
+        );
         continue;
       }
       if (target.diff) {
         diffs.push(target.diff);
       }
     }
-    yield* liftSpec(spec, () => writeTaskDiffs(cwd, diffs));
+    yield* toTaskEffect(spec.id, () => writeTaskDiffs(cwd, diffs));
     for (const action of spec.actions ?? []) {
-      yield* liftSpec(spec, () => action.run(cwd, profile));
+      yield* toTaskEffect(spec.id, () => action.run(cwd, profile));
     }
   });
 }
@@ -324,6 +315,23 @@ function resolveSearchMeta(spec: TaskSpec): TaskSearchMeta | undefined {
 }
 
 /**
+ * Build one `defineTask` entry method: resolve the spec once, project the
+ * resolution, and label failures at the boundary.
+ */
+function defineMethod<A>(
+  spec: TaskSpec,
+  method: string,
+  project: (resolution: TaskResolution) => A
+) {
+  return (cwd: string, profile: ProjectProfile) =>
+    labelFailure(
+      spec.id,
+      method,
+      Effect.map(resolveSpec(spec, { cwd, profile }), project)
+    );
+}
+
+/**
  * Build a Task from a declarative spec. One resolution produces the status, the
  * diffs, and the dependency list, so check, dryRun, apply, and the apply plan
  * cannot disagree about the same project. The spec resolves lazily on each
@@ -339,36 +347,9 @@ export function defineTask(spec: TaskSpec): DefinedTask {
         applySpec(spec, { cwd, profile })
       );
     },
-    check(cwd, profile) {
-      return labelFailure(
-        spec.id,
-        'defineTask.check',
-        Effect.map(
-          resolveSpec(spec, { cwd, profile }),
-          (resolution) => resolution.status
-        )
-      );
-    },
-    dryRun(cwd, profile) {
-      return labelFailure(
-        spec.id,
-        'defineTask.dryRun',
-        Effect.map(
-          resolveSpec(spec, { cwd, profile }),
-          (resolution) => resolution.diffs
-        )
-      );
-    },
-    getDeps(cwd, profile) {
-      return labelFailure(
-        spec.id,
-        'defineTask.getDeps',
-        Effect.map(
-          resolveSpec(spec, { cwd, profile }),
-          (resolution) => resolution.deps
-        )
-      );
-    },
+    check: defineMethod(spec, 'defineTask.check', (r) => r.status),
+    dryRun: defineMethod(spec, 'defineTask.dryRun', (r) => r.diffs),
+    getDeps: defineMethod(spec, 'defineTask.getDeps', (r) => r.deps),
     group: spec.group,
     id: spec.id,
     label: spec.label,

@@ -147,7 +147,6 @@ export const skillsInstallTask = defineTask({
         }
         return missing.length === total ? 'new' : 'patch';
       },
-      kind: 'action',
       run: (cwd, profile) =>
         Effect.gen(function* () {
           const { missing } = yield* toTaskEffect('skillsInstallTask.run', () =>

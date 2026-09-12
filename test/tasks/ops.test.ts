@@ -75,7 +75,6 @@ describe('defineTask failure labeling', () => {
       actions: [
         {
           check: () => 'skip',
-          kind: 'action',
           run: () => Effect.fail(new TaskError({ message: 'effect-boom' })),
         },
       ],

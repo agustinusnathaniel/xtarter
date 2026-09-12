@@ -189,7 +189,6 @@ describe('defineTask status projection', () => {
         actions: [
           {
             check: async () => 'patch',
-            kind: 'action',
             run: async () => undefined,
           },
         ],
@@ -421,7 +420,6 @@ describe('defineTask action', () => {
         actions: [
           {
             check: async () => 'new',
-            kind: 'action',
             run: async () => {
               runs += 1;
             },

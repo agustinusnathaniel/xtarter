@@ -170,7 +170,7 @@ function pnpmWorkspaceContent(
  * inserted entries, `skip` when the globs are present (or the project is not
  * a monorepo), and `conflict` when the shape cannot be edited safely.
  */
-const pnpmWorkspacePolicy: TargetPolicy = ({ after, before }, { profile }) => {
+const pnpmWorkspacePolicy: TargetPolicy = ({ after, before }, profile) => {
   if (before === null) {
     return;
   }

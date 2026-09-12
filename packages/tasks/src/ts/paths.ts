@@ -41,7 +41,7 @@ function getPathStatus(
  * `baseUrl: "."` outside Next) projects `skip`, and anything else projects
  * `conflict` so an existing alias is never silently overwritten.
  */
-const pathsPolicy: TargetPolicy = ({ before }, { profile }) => {
+const pathsPolicy: TargetPolicy = ({ before }, profile) => {
   if (before === null) {
     return;
   }
