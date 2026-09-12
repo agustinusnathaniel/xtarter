@@ -371,6 +371,9 @@ describe('skillsInstallTask apply', () => {
         path.join(tmpDir, 'tsconfig.json'),
         JSON.stringify({ compilerOptions: { target: 'ES2022' } }, null, 2)
       );
+      // Pin the package manager: without a lockfile nypm falls back to the
+      // invoking process, which under the test runner resolves to pnpm.
+      await fs.writeFile(path.join(tmpDir, 'package-lock.json'), '');
 
       const profile = await detectProject(tmpDir);
       await runWith(runnerLayer, skillsInstallTask.apply(tmpDir, profile));
@@ -423,6 +426,7 @@ describe('skillsInstallTask apply', () => {
         path.join(tmpDir, 'tsconfig.json'),
         JSON.stringify({ compilerOptions: { target: 'ES2022' } }, null, 2)
       );
+      await fs.writeFile(path.join(tmpDir, 'package-lock.json'), '');
 
       const profile = await detectProject(tmpDir);
       await expect(

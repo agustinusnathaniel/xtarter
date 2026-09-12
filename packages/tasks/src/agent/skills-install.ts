@@ -1,5 +1,5 @@
 import { readdir } from 'node:fs/promises';
-import type { ProjectProfile } from '@xtarterize/core';
+import type { PackageManager, ProjectProfile } from '@xtarterize/core';
 import {
   collectDependencyVersions,
   fileExists,
@@ -13,6 +13,45 @@ import { Duration, Effect } from 'effect';
 
 import { getSkillsToInstall, type SkillEntry } from '@/agent/catalog.js';
 import { defineTask } from '@/factory/define-task.js';
+
+const SKILLS_PACKAGE = 'skills@latest';
+
+/** The executor prefix a package manager accepts for a dlx-style run. */
+export interface SkillsExecutor {
+  command: string;
+  prefixArgs: ReadonlyArray<string>;
+}
+
+/**
+ * npm 11 rejects `npx` when `devEngines.packageManager` names another package
+ * manager (EBADDEVENGINES), and `quality/package-engines` writes that field
+ * during `init`. Projects on another package manager therefore go through their
+ * own dlx equivalent. Yarn classic has no `dlx` command, so it keeps the `npx`
+ * fallback: that stays the best available behavior, but npm 11 will still
+ * refuse it when the project's devEngines name is not npm.
+ */
+export function resolveSkillsExecutor(
+  packageManager: PackageManager,
+  options: { yarnBerry: boolean }
+): SkillsExecutor {
+  switch (packageManager) {
+    case 'pnpm':
+      return { command: 'pnpm', prefixArgs: ['dlx', SKILLS_PACKAGE] };
+    case 'yarn':
+      return options.yarnBerry
+        ? { command: 'yarn', prefixArgs: ['dlx', SKILLS_PACKAGE] }
+        : { command: 'npx', prefixArgs: ['--yes', SKILLS_PACKAGE] };
+    case 'bun':
+      return { command: 'bunx', prefixArgs: [SKILLS_PACKAGE] };
+    default:
+      return { command: 'npx', prefixArgs: ['--yes', SKILLS_PACKAGE] };
+  }
+}
+
+/** Yarn Berry projects carry `.yarnrc.yml`; Yarn classic does not. */
+async function isYarnBerry(cwd: string): Promise<boolean> {
+  return fileExists(resolvePath(cwd, '.yarnrc.yml'));
+}
 
 async function isDirNonEmpty(dirPath: string): Promise<boolean> {
   try {
@@ -115,18 +154,25 @@ export const skillsInstallTask = defineTask({
             resolveMissingSkills(cwd, profile)
           );
           const runner = yield* ProcessRunner;
+          const yarnBerry =
+            profile.packageManager === 'yarn' &&
+            (yield* toTaskEffect('skillsInstallTask.run', () =>
+              isYarnBerry(cwd)
+            ));
+          const executor = resolveSkillsExecutor(profile.packageManager, {
+            yarnBerry,
+          });
           const grouped = groupBySource(missing);
           for (const [source, skillNames] of grouped) {
             const args = [
-              '--yes',
-              'skills@latest',
+              ...executor.prefixArgs,
               'add',
               source,
               ...skillNames.flatMap((s) => ['--skill', s]),
               '-y',
             ];
             const result = yield* Effect.mapError(
-              runner.run('npx', args, {
+              runner.run(executor.command, args, {
                 cwd,
                 stdio: 'inherit',
                 timeout: Duration.millis(60_000),
