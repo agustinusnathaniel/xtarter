@@ -154,7 +154,7 @@ If multiple backups exist, prompts to select one; a single backup or `--yes` res
 
 ## `undo`
 
-Undo the last `init` or `add` run: restore every file it backed up and delete files it created. Reads the last run manifest and asks for confirmation; there is no `--yes` flag.
+Undo the last `init`, `sync`, or `add` run: restore every file it backed up and delete files it created. Reads the last run manifest and asks for confirmation; there is no `--yes` flag.
 
 ```bash
 npx xtarterize undo --json
@@ -192,7 +192,7 @@ Field names are stable agent contract; do not rename them.
 { "applied": 3, "errors": [], "ok": true, "skipped": 0, "taskId": "ts/strict", "status": "skip", "timing": { "detectionMs": 23, "resolutionMs": 14, "resolutionSumMs": 37 } }
 ```
 
-`taskId` and `status` appear for a single-task `add`; `timing` appears only with `--timing`. `ok` is false when `errors` is non-empty (exit 1).
+For a single-task `add`, `taskId` is present and `status` is one of `new`, `patch`, `skip`, `conflict`, or `not-applicable`; `timing` appears only with `--timing`. `ok` is false when `errors` is non-empty (exit 1).
 
 **`diff` and dry runs** (`init --dry-run`):
 
@@ -200,7 +200,7 @@ Field names are stable agent contract; do not rename them.
 {
   "files": [{ "action": "modify", "after": "{ ...new content... }", "before": "{ ...existing content... }", "filepath": "tsconfig.json", "hunks": [{ "header": "@@ ... @@", "lines": ["-old", "+new"], "added": 1, "removed": 1 }], "semantic": { "added": { "compilerOptions.strict": "true" } }, "stats": { "added": 5, "removed": 2 } }],
   "ok": false,
-  "summary": { "total": 1, "failures": 0, "stats": { "added": 5, "removed": 2 } }
+  "summary": { "total": 1, "stats": { "added": 5, "removed": 2 } }
 }
 ```
 

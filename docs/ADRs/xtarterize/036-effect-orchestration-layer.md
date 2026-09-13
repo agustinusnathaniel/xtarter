@@ -172,8 +172,8 @@ lifts in `apps/xtarterize/src/session.ts`.
 ## Verification
 
 - Baseline `pnpm check:ci` was green with 709 tests; the final branch was green
-  with 711. At HEAD, `pnpm test` reports 711 passed and 6 skipped across 64
-  test files `[verified]`.
+  with 711. At the time of this decision, `pnpm test` reported 711 passed and 6
+  skipped across 64 test files `[verified]`.
 - CLI output against the baseline `[reported during the refactor]`:
   `diff --json` and `doctor` are byte-identical; `list --json` and `check --json`
   differ only in timing fields.
