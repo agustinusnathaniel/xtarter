@@ -1,5 +1,15 @@
 # Changelog
 
+## 1.17.1
+
+### Patch Changes
+
+- [#199](https://github.com/agustinusnathaniel/xtarter/pull/199) [`1bc9c41`](https://github.com/agustinusnathaniel/xtarter/commit/1bc9c41ef5b9052e531f9056d83835cd87c57ad5) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Import the plain core entry so Effect stays out of the scaffold bundle
+  
+  `create-xtarter-app` now imports helpers from `@xtarterize/core/plain`, whose
+  import graph never reaches `effect`. The published bundle is smaller and
+  `effect` is no longer part of `inlinedDependencies`. Behavior is unchanged.
+
 ## 1.17.0
 
 ### Minor Changes
