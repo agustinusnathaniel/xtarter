@@ -1,5 +1,39 @@
 # @xtarterize/tasks
 
+## 2.0.0
+
+### Patch Changes
+
+- [#199](https://github.com/agustinusnathaniel/xtarter/pull/199) [`1bc9c41`](https://github.com/agustinusnathaniel/xtarter/commit/1bc9c41ef5b9052e531f9056d83835cd87c57ad5) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Re-adopt Effect as the CLI orchestration layer
+  
+  Internal architecture change recorded in ADR 036. `@xtarterize/core` and
+  `@xtarterize/tasks` now return `Effect` values, and the `xtarterize` CLI runs
+  each command program through a single Effect runtime edge.
+  
+  - Failures use typed tagged errors (`TaskError`, `DepsInstallError`,
+    `ProcessError`, `BackupError`, `FileSystemError`) with the same message text
+    as before.
+  - Effectful edges are services: `ProcessRunner`, `DepsInstaller`, and the
+    app-level `Prompter`.
+  - The task contract is Effect-only; synchronous and Promise-returning spec
+    functions are normalized at the `defineTask` seam.
+  - `effect` is pinned to `4.0.0-rc.113` and bundled into the CLI, so published
+    `dependencies` no longer include it.
+  - Observable CLI behavior and generated files are unchanged.
+
+- [#199](https://github.com/agustinusnathaniel/xtarter/pull/199) [`a9301da`](https://github.com/agustinusnathaniel/xtarter/commit/a9301da8eeaba1b58adb6971917b1e91cd712442) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Run the skills install through the project's package manager
+  
+  `agent/skills-install` now selects the dlx executor that matches the detected
+  package manager: `pnpm dlx`, `yarn dlx` for Yarn Berry projects, and `bunx`,
+  while npm keeps `npx --yes`. npm 11 rejects `npx` when
+  `devEngines.packageManager` names another package manager (EBADDEVENGINES), and
+  `quality/package-engines` writes that field during `init`, so pnpm, Yarn Berry,
+  and bun projects no longer fail the skills task. Yarn classic has no `dlx`
+  command and keeps the `npx` fallback as the best available behavior.
+- Updated dependencies [[`1bc9c41`](https://github.com/agustinusnathaniel/xtarter/commit/1bc9c41ef5b9052e531f9056d83835cd87c57ad5), [`fac0f63`](https://github.com/agustinusnathaniel/xtarter/commit/fac0f63c0f3afb78f8f515b81c589d85531f4240), [`6eac520`](https://github.com/agustinusnathaniel/xtarter/commit/6eac52055fa601a3c1092e372195138cb93c1582), [`d3b94ae`](https://github.com/agustinusnathaniel/xtarter/commit/d3b94ae7201278ba705f508e291e69f9f0a0f14c)]:
+  - @xtarterize/core@2.0.0
+  - @xtarterize/patchers@2.0.0
+
 ## 1.25.2
 
 ### Patch Changes

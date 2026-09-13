@@ -1,5 +1,7 @@
 # @xtarterize/patchers
 
+## 2.0.0
+
 ## 1.25.2
 
 ### Patch Changes

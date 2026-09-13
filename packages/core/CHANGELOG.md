@@ -1,5 +1,72 @@
 # @xtarterize/core
 
+## 2.0.0
+
+### Major Changes
+
+- [#199](https://github.com/agustinusnathaniel/xtarter/pull/199) [`6eac520`](https://github.com/agustinusnathaniel/xtarter/commit/6eac52055fa601a3c1092e372195138cb93c1582) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Remove external task plugins and the Promise task contract
+  
+  External task plugin loading is removed: the `plugins` key in `.xtarterizerc`,
+  `.xtarterizerc.json`, `.xtarterizerc.json5`, or the `"xtarterize"` key in
+  `package.json` is no longer read. Existing configs keep supporting `only` and
+  `skip` task selection with the same precedence rules.
+  
+  `PromiseTask` and `EffectTask` collapse into a single Effect-only `Task`
+  interface. `toTaskEffect()` remains as the normalizer for synchronous and
+  Promise-returning spec functions at the task-factory seam, and built-in tasks
+  are unchanged.
+  
+  **Breaking:** any project that configured `plugins` will no longer load those
+  task packages. Remove the `plugins` entries and use built-in tasks instead.
+
+### Patch Changes
+
+- [#199](https://github.com/agustinusnathaniel/xtarter/pull/199) [`1bc9c41`](https://github.com/agustinusnathaniel/xtarter/commit/1bc9c41ef5b9052e531f9056d83835cd87c57ad5) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Re-adopt Effect as the CLI orchestration layer
+  
+  Internal architecture change recorded in ADR 036. `@xtarterize/core` and
+  `@xtarterize/tasks` now return `Effect` values, and the `xtarterize` CLI runs
+  each command program through a single Effect runtime edge.
+  
+  - Failures use typed tagged errors (`TaskError`, `DepsInstallError`,
+    `ProcessError`, `BackupError`, `FileSystemError`) with the same message text
+    as before.
+  - Effectful edges are services: `ProcessRunner`, `DepsInstaller`, and the
+    app-level `Prompter`.
+  - The task contract is Effect-only; synchronous and Promise-returning spec
+    functions are normalized at the `defineTask` seam.
+  - `effect` is pinned to `4.0.0-rc.113` and bundled into the CLI, so published
+    `dependencies` no longer include it.
+  - Observable CLI behavior and generated files are unchanged.
+
+- [#199](https://github.com/agustinusnathaniel/xtarter/pull/199) [`fac0f63`](https://github.com/agustinusnathaniel/xtarter/commit/fac0f63c0f3afb78f8f515b81c589d85531f4240) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Fix the CLI failure contract and keep manifest errors typed
+  
+  - `runCliProgram` now returns `A | undefined` instead of promising a value it
+    cannot produce on failure or interrupt, and `query` returns early when extra
+    task statuses are interrupted instead of crashing.
+  - `writeRunManifest` wraps raw filesystem failures in `BackupError` with the
+    original message, and `liftBackup` no longer casts arbitrary rejections.
+  - `resolveProjectTasks` maps project-detection rejections to `TaskError`
+    instead of leaking them as defects.
+
+- [#199](https://github.com/agustinusnathaniel/xtarter/pull/199) [`d3b94ae`](https://github.com/agustinusnathaniel/xtarter/commit/d3b94ae7201278ba705f508e291e69f9f0a0f14c) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Remove synonym expansion from task query scoring
+  
+  The `query` command and `init --compose` no longer expand query terms through a
+  hardcoded synonym map. Scoring still tokenizes the query and matches tokens
+  against task metadata with stemming (0.95), fuzzy (0.85), prefix (0.75), and
+  substring (0.55) tiers, so the documented rankings for "strict typescript",
+  "ci pipeline", "linting and formatting tool", "react testing", and
+  "dependency updates" are unchanged.
+  
+  Queries that matched through a synonym still match their tasks but score much
+  lower: "types" still ranks `ts/strict` first, "updates" still ranks
+  `deps/renovate` first, and "code" still ranks `editor/vscode` second. "typing"
+  now returns no results. Broaden the query or lower `--threshold` when that
+  happens. Recorded in ADR 038.
+  
+  Patch rather than major: the CLI contract still works, and no dependency or
+  generated config format changed. A major bump for the fixed group is already
+  pending from the plugin-removal changeset, so this rides the same release.
+
 ## 1.25.2
 
 ### Patch Changes
