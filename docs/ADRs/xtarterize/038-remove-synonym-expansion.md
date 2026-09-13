@@ -4,6 +4,8 @@
 
 Accepted
 
+Update (2026-09-14): The removal of the transitive synonym map stands. ADR 039 restored a compact alias expansion with discounted matches and without cross-group closure; the recall numbers below remain the measured state before that restore.
+
 ## Date
 
 2026-09-13

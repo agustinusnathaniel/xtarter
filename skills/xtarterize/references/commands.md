@@ -118,7 +118,7 @@ Without `--json`, groups tasks by their group (Agent, CI/CD, Linting & Formattin
 
 ## `query <query>`
 
-Rank tasks by relevance to a natural language query using a pure-algorithmic scoring engine (no AI): tokenization, stemming, and fuzzy matching against task labels, IDs, groups, keywords, and config targets.
+Rank tasks by relevance to a natural language query using a pure-algorithmic scoring engine (no AI): tokenization, stemming, fuzzy matching, and compact alias expansion against task labels, IDs, groups, keywords, and config targets.
 
 ```bash
 npx xtarterize query "strict typescript" --json

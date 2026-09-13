@@ -90,12 +90,13 @@ This reorders tasks so the most relevant ones appear first in the interactive pl
 
 ## How It Works
 
-The scoring engine operates in four steps:
+The scoring engine operates in five steps:
 
 1. **Tokenize** - The query is split into words; stopwords (a, the, want, need, project, etc.) and short words are filtered out
-2. **Score** - For each query token, find the best match across all 5 signals (label, id, group, keywords, config targets), keeping the highest score per signal. Uses tiered match levels: exact (1.0), stem-match (0.95), fuzzy (0.85), prefix (0.75), substring (0.55)
-3. **Aggregate** - Signal scores are weighted and averaged; multi-token queries receive a coverage bonus that increases with the proportion of tokens matched
-4. **Group** - Results are organized by task group/domain bundle, with per-group actionable `xtarterize add` commands
+2. **Expand** - Each token is expanded through compact alias groups (for example, `updates` and `renovate`, or `typing` and `strict`). Expansion is bidirectional within a group and single-hop: aliases are not expanded again, so there is no cross-group chain. Alias matches score at a 0.85 discount, so a direct hit at the same tier always ranks above an alias match, and alias-derived substring matches require meaningful containment (the shorter side is at least 4 characters and at least half of the longer side)
+3. **Score** - For each query token, find the best match across all 5 signals (label, id, group, keywords, config targets), keeping the highest score per signal. Uses tiered match levels: exact (1.0), stem-match (0.95), fuzzy (0.85), prefix (0.75), substring (0.55)
+4. **Aggregate** - Signal scores are weighted and averaged; multi-token queries receive a coverage bonus that increases with the proportion of tokens matched
+5. **Group** - Results are organized by task group/domain bundle, with per-group actionable `xtarterize add` commands
 
 <Aside type="note">
   The scoring engine is entirely algorithmic - zero AI model calls, zero API dependencies.
