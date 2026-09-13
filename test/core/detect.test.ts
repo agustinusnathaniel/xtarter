@@ -1,5 +1,4 @@
 import fs from 'node:fs/promises';
-import os from 'node:os';
 import path from 'node:path';
 import { detectProject, runDiagnostics } from '@xtarterize/core';
 import { describe, expect } from 'vite-plus/test';
@@ -16,6 +15,7 @@ import {
 } from '../../packages/core/src/detect/registry/index.js';
 import { fixtureProfile, withProject } from '../helpers/project.js';
 import { run } from '../helpers/run.js';
+import { withTempDir } from '../helpers/temp.js';
 
 describe('detectProject', () => {
   test('detects react-vite-tailwind correctly', async () => {
@@ -124,32 +124,29 @@ describe('detectProject', () => {
   });
 
   test('detects monorepo when running inside workspace package', async () => {
-    const root = await fs.mkdtemp(
-      path.join(os.tmpdir(), 'xtarterize-workspace-')
-    );
-    await fs.mkdir(path.join(root, '.git'), { recursive: true });
-    await fs.writeFile(
-      path.join(root, 'pnpm-workspace.yaml'),
-      'packages:\n  - apps/*\n'
-    );
-    await fs.writeFile(
-      path.join(root, 'package.json'),
-      JSON.stringify({ name: 'workspace-root', version: '1.0.0' })
-    );
+    await withTempDir('xtarterize-workspace-', async (root) => {
+      await fs.mkdir(path.join(root, '.git'), { recursive: true });
+      await fs.writeFile(
+        path.join(root, 'pnpm-workspace.yaml'),
+        'packages:\n  - apps/*\n'
+      );
+      await fs.writeFile(
+        path.join(root, 'package.json'),
+        JSON.stringify({ name: 'workspace-root', version: '1.0.0' })
+      );
 
-    const appDir = path.join(root, 'apps', 'web');
-    await fs.mkdir(appDir, { recursive: true });
-    await fs.writeFile(
-      path.join(appDir, 'package.json'),
-      JSON.stringify({ name: 'web-app', version: '1.0.0' })
-    );
+      const appDir = path.join(root, 'apps', 'web');
+      await fs.mkdir(appDir, { recursive: true });
+      await fs.writeFile(
+        path.join(appDir, 'package.json'),
+        JSON.stringify({ name: 'web-app', version: '1.0.0' })
+      );
 
-    const profile = await detectProject(appDir);
-    expect(profile.monorepo).toBe(true);
-    expect(profile.workspaceRoot).toBe(false);
-    expect(profile.monorepoTool).toBeNull();
-
-    await fs.rm(root, { force: true, recursive: true });
+      const profile = await detectProject(appDir);
+      expect(profile.monorepo).toBe(true);
+      expect(profile.workspaceRoot).toBe(false);
+      expect(profile.monorepoTool).toBeNull();
+    });
   });
 
   test('detects bundlers from config files when dependencies are absent', async () => {
@@ -236,20 +233,17 @@ describe('detectProject', () => {
   });
 
   test('detects Vite+ from vite-plus dep', async () => {
-    const tmpDir = await fs.mkdtemp(
-      path.join(os.tmpdir(), 'xtarterize-vp-detect-')
+    await withProject(
+      {
+        'package.json': {
+          devDependencies: { 'vite-plus': '^0.1.0' },
+          name: 'vp-project',
+        },
+      },
+      async ({ profile }) => {
+        expect(profile.vitePlus).toBe(true);
+      }
     );
-    await fs.writeFile(
-      path.join(tmpDir, 'package.json'),
-      JSON.stringify({
-        devDependencies: { 'vite-plus': '^0.1.0' },
-        name: 'vp-project',
-      })
-    );
-
-    const profile = await detectProject(tmpDir);
-    expect(profile.vitePlus).toBe(true);
-    await fs.rm(tmpDir, { recursive: true });
   });
 
   test('detects Vite+ from fixtures/vite-plus-no-lint', async () => {
@@ -268,92 +262,65 @@ describe('detectProject', () => {
   });
 
   test('detects ESLint from dep', async () => {
-    const tmpDir = await fs.mkdtemp(
-      path.join(os.tmpdir(), 'xtarterize-eslint-dep-')
+    await withProject(
+      {
+        'package.json': {
+          devDependencies: { eslint: '^8.56.0' },
+          name: 'eslint-project',
+        },
+      },
+      async ({ profile }) => {
+        expect(profile.existing.eslint).toBe(true);
+      }
     );
-    await fs.writeFile(
-      path.join(tmpDir, 'package.json'),
-      JSON.stringify({
-        devDependencies: { eslint: '^8.56.0' },
-        name: 'eslint-project',
-      })
-    );
-
-    const profile = await detectProject(tmpDir);
-    expect(profile.existing.eslint).toBe(true);
-    await fs.rm(tmpDir, { recursive: true });
   });
 
   test('detects ESLint from eslintrc config', async () => {
-    const tmpDir = await fs.mkdtemp(
-      path.join(os.tmpdir(), 'xtarterize-eslintrc-')
+    await withProject(
+      {
+        '.eslintrc.json': { rules: {} },
+        'package.json': { name: 'eslint-project' },
+      },
+      async ({ profile }) => {
+        expect(profile.existing.eslint).toBe(true);
+      }
     );
-    await fs.writeFile(
-      path.join(tmpDir, 'package.json'),
-      JSON.stringify({ name: 'eslint-project' })
-    );
-    await fs.writeFile(
-      path.join(tmpDir, '.eslintrc.json'),
-      JSON.stringify({ rules: {} })
-    );
-
-    const profile = await detectProject(tmpDir);
-    expect(profile.existing.eslint).toBe(true);
-    await fs.rm(tmpDir, { recursive: true });
   });
 
   test('detects ESLint from eslint.config flat config', async () => {
-    const tmpDir = await fs.mkdtemp(
-      path.join(os.tmpdir(), 'xtarterize-flat-eslint-')
+    await withProject(
+      {
+        'eslint.config.js': 'export default []',
+        'package.json': { name: 'eslint-flat' },
+      },
+      async ({ profile }) => {
+        expect(profile.existing.eslint).toBe(true);
+      }
     );
-    await fs.writeFile(
-      path.join(tmpDir, 'package.json'),
-      JSON.stringify({ name: 'eslint-flat' })
-    );
-    await fs.writeFile(
-      path.join(tmpDir, 'eslint.config.js'),
-      'export default []'
-    );
-
-    const profile = await detectProject(tmpDir);
-    expect(profile.existing.eslint).toBe(true);
-    await fs.rm(tmpDir, { recursive: true });
   });
 
   test('detects oxlint config', async () => {
-    const tmpDir = await fs.mkdtemp(
-      path.join(os.tmpdir(), 'xtarterize-oxlint-detect-')
+    await withProject(
+      {
+        '.oxlintrc.json': { rules: {} },
+        'package.json': { name: 'oxlint-project' },
+      },
+      async ({ profile }) => {
+        expect(profile.existing.oxlint).toBe(true);
+      }
     );
-    await fs.writeFile(
-      path.join(tmpDir, 'package.json'),
-      JSON.stringify({ name: 'oxlint-project' })
-    );
-    await fs.writeFile(
-      path.join(tmpDir, '.oxlintrc.json'),
-      JSON.stringify({ rules: {} })
-    );
-
-    const profile = await detectProject(tmpDir);
-    expect(profile.existing.oxlint).toBe(true);
-    await fs.rm(tmpDir, { recursive: true });
   });
 
   test('detects oxfmt config', async () => {
-    const tmpDir = await fs.mkdtemp(
-      path.join(os.tmpdir(), 'xtarterize-oxfmt-detect-')
+    await withProject(
+      {
+        '.oxfmtrc.json': { indentStyle: 'space' },
+        'package.json': { name: 'oxfmt-project' },
+      },
+      async ({ profile }) => {
+        expect(profile.existing.oxfmt).toBe(true);
+      }
     );
-    await fs.writeFile(
-      path.join(tmpDir, 'package.json'),
-      JSON.stringify({ name: 'oxfmt-project' })
-    );
-    await fs.writeFile(
-      path.join(tmpDir, '.oxfmtrc.json'),
-      JSON.stringify({ indentStyle: 'space' })
-    );
-
-    const profile = await detectProject(tmpDir);
-    expect(profile.existing.oxfmt).toBe(true);
-    await fs.rm(tmpDir, { recursive: true });
   });
 
   test('detects ESLint from fixtures/eslint-project', async () => {
@@ -371,64 +338,43 @@ describe('detectProject', () => {
   });
 
   test('detects .eslintrc.mjs consistently with the doctor legacy check', async () => {
-    const tmpDir = await fs.mkdtemp(
-      path.join(os.tmpdir(), 'xtarterize-eslintrc-mjs-')
+    await withProject(
+      {
+        '.eslintrc.mjs': 'export default {}\n',
+        'package.json': { name: 'legacy-eslint-project' },
+      },
+      async ({ cwd, profile }) => {
+        expect(profile.existing.eslint).toBe(true);
+
+        const { groups } = await run(
+          runDiagnostics(cwd, {
+            groups: ['configuration'],
+          })
+        );
+        const checks = groups.flatMap((group) => group.checks);
+        const legacyCheck = checks.find(
+          (check) => check.name === 'Legacy config'
+        );
+        expect(legacyCheck?.message).toContain('.eslintrc.mjs');
+      }
     );
-    try {
-      await fs.writeFile(
-        path.join(tmpDir, 'package.json'),
-        JSON.stringify({ name: 'legacy-eslint-project' })
-      );
-      await fs.writeFile(
-        path.join(tmpDir, '.eslintrc.mjs'),
-        'export default {}\n'
-      );
-
-      const profile = await detectProject(tmpDir);
-      expect(profile.existing.eslint).toBe(true);
-
-      const { groups } = await run(
-        runDiagnostics(tmpDir, {
-          groups: ['configuration'],
-        })
-      );
-      const checks = groups.flatMap((group) => group.checks);
-      const legacyCheck = checks.find(
-        (check) => check.name === 'Legacy config'
-      );
-      expect(legacyCheck?.message).toContain('.eslintrc.mjs');
-    } finally {
-      await fs.rm(tmpDir, { force: true, recursive: true });
-    }
   });
 
   test('tsconfig.jsonc sets both existing.tsconfig and typescript', async () => {
-    const tmpDir = await fs.mkdtemp(
-      path.join(os.tmpdir(), 'xtarterize-tsconfig-jsonc-')
+    await withProject(
+      {
+        'package.json': { name: 'jsonc-tsconfig-project' },
+        'tsconfig.jsonc': { compilerOptions: {} },
+      },
+      async ({ profile }) => {
+        expect(profile.existing.tsconfig).toBe(true);
+        expect(profile.typescript).toBe(true);
+      }
     );
-    try {
-      await fs.writeFile(
-        path.join(tmpDir, 'package.json'),
-        JSON.stringify({ name: 'jsonc-tsconfig-project' })
-      );
-      await fs.writeFile(
-        path.join(tmpDir, 'tsconfig.jsonc'),
-        JSON.stringify({ compilerOptions: {} })
-      );
-
-      const profile = await detectProject(tmpDir);
-      expect(profile.existing.tsconfig).toBe(true);
-      expect(profile.typescript).toBe(true);
-    } finally {
-      await fs.rm(tmpDir, { force: true, recursive: true });
-    }
   });
 
   test('detects a workspace package under services/ from workspace dirs', async () => {
-    const root = await fs.mkdtemp(
-      path.join(os.tmpdir(), 'xtarterize-services-')
-    );
-    try {
+    await withTempDir('xtarterize-services-', async (root) => {
       await fs.mkdir(path.join(root, 'packages'), { recursive: true });
       const apiDir = path.join(root, 'services', 'api');
       await fs.mkdir(apiDir, { recursive: true });
@@ -441,9 +387,7 @@ describe('detectProject', () => {
       expect(profile.monorepo).toBe(true);
       expect(profile.workspaceRoot).toBe(false);
       expect(profile.monorepoTool).toBeNull();
-    } finally {
-      await fs.rm(root, { force: true, recursive: true });
-    }
+    });
   });
 });
 
