@@ -1,26 +1,21 @@
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { detectProject } from '@xtarterize/core';
 import { getAllTasks } from '@xtarterize/tasks';
 import { describe, expect } from 'vite-plus/test';
 
 import { versionrcTask } from '../../packages/tasks/src/release/versionrc.js';
 import { pnpmWorkspaceTask } from '../../packages/tasks/src/workspace/pnpm-workspace.js';
+import { fixtureDir, fixtureProfile } from '../helpers/project.js';
 import { run } from '../helpers/run.js';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const fixtures = path.resolve(__dirname, '../fixtures');
+import { withTempDir } from '../helpers/temp.js';
 
 const withPnpmProject = async (
   run: (cwd: string) => Promise<void>,
   workspace?: string
 ): Promise<void> => {
-  const tmpDir = await fs.mkdtemp(
-    path.join(os.tmpdir(), 'xtarterize-pnpm-workspace-')
-  );
-  try {
+  await withTempDir('xtarterize-pnpm-workspace-', async (tmpDir) => {
     await fs.writeFile(
       path.join(tmpDir, 'package.json'),
       JSON.stringify({ name: 'pnpm-workspace-test' })
@@ -30,9 +25,7 @@ const withPnpmProject = async (
       await fs.writeFile(path.join(tmpDir, 'pnpm-workspace.yaml'), workspace);
     }
     await run(tmpDir);
-  } finally {
-    await fs.rm(tmpDir, { force: true, recursive: true });
-  }
+  });
 };
 
 const workspacePath = (cwd: string): string =>
@@ -43,21 +36,19 @@ const readWorkspace = (cwd: string): Promise<string> =>
 
 describe('pnpmWorkspaceTask', () => {
   test('is applicable to pnpm projects', async () => {
-    const profile = await detectProject(path.join(fixtures, 'monorepo-turbo'));
+    const profile = await fixtureProfile('monorepo-turbo');
     expect(pnpmWorkspaceTask.applicable(profile)).toBe(true);
   });
 
   test('is not applicable to npm projects', async () => {
-    const profile = await detectProject(
-      path.join(fixtures, 'react-vite-no-styling')
-    );
+    const profile = await fixtureProfile('react-vite-no-styling');
     expect(pnpmWorkspaceTask.applicable(profile)).toBe(false);
   });
 
   test('skips when pnpm-workspace.yaml already exists', async () => {
-    const profile = await detectProject(path.join(fixtures, 'monorepo-turbo'));
+    const profile = await fixtureProfile('monorepo-turbo');
     const status = await run(
-      pnpmWorkspaceTask.check(path.join(fixtures, 'monorepo-turbo'), profile)
+      pnpmWorkspaceTask.check(fixtureDir('monorepo-turbo'), profile)
     );
     expect(status).toBe('skip');
   });
@@ -437,9 +428,7 @@ describe('pnpmWorkspaceTask', () => {
 
 describe('versionrcTask', () => {
   test('is applicable to all projects', async () => {
-    const profile = await detectProject(
-      path.join(fixtures, 'react-vite-tailwind')
-    );
+    const profile = await fixtureProfile('react-vite-tailwind');
     expect(versionrcTask.applicable(profile)).toBe(true);
   });
 

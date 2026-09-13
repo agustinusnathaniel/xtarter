@@ -1,41 +1,32 @@
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { detectProject } from '@xtarterize/core';
 import { describe, expect } from 'vite-plus/test';
 
 import { plopTask } from '../../packages/tasks/src/codegen/plop.js';
 import { packageScriptsTask } from '../../packages/tasks/src/factory/package-scripts.js';
+import { fixtureDir, fixtureProfile } from '../helpers/project.js';
 import { run } from '../helpers/run.js';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const fixtures = path.resolve(__dirname, '../fixtures');
 
 describe('plopTask', () => {
   test('is applicable to all projects', async () => {
-    const profile = await detectProject(
-      path.join(fixtures, 'react-vite-tailwind')
-    );
+    const profile = await fixtureProfile('react-vite-tailwind');
     expect(plopTask.applicable(profile)).toBe(true);
   });
 
   test('returns new on clean fixture', async () => {
-    const profile = await detectProject(
-      path.join(fixtures, 'react-vite-tailwind')
-    );
+    const profile = await fixtureProfile('react-vite-tailwind');
     const status = await run(
-      plopTask.check(path.join(fixtures, 'react-vite-tailwind'), profile)
+      plopTask.check(fixtureDir('react-vite-tailwind'), profile)
     );
     expect(status).toBe('new');
   });
 
   test('renders generators with prompts and actions', async () => {
-    const profile = await detectProject(
-      path.join(fixtures, 'react-vite-tailwind')
-    );
+    const profile = await fixtureProfile('react-vite-tailwind');
     const diffs = await run(
-      plopTask.dryRun(path.join(fixtures, 'react-vite-tailwind'), profile)
+      plopTask.dryRun(fixtureDir('react-vite-tailwind'), profile)
     );
 
     expect(diffs[0].after).toContain("plop.setGenerator('component'");

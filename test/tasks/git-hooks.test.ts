@@ -1,15 +1,12 @@
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { detectProject } from '@xtarterize/core';
 import { describe, expect } from 'vite-plus/test';
 
 import { gitHooksTask } from '../../packages/tasks/src/release/git-hooks.js';
+import { fixtureDir, fixtureProfile } from '../helpers/project.js';
 import { run } from '../helpers/run.js';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const fixtures = path.resolve(__dirname, '../fixtures');
 
 describe('gitHooksTask', () => {
   test('applies to any project', () => {
@@ -17,11 +14,9 @@ describe('gitHooksTask', () => {
   });
 
   test('returns new on clean fixture', async () => {
-    const profile = await detectProject(
-      path.join(fixtures, 'react-vite-tailwind')
-    );
+    const profile = await fixtureProfile('react-vite-tailwind');
     const status = await run(
-      gitHooksTask.check(path.join(fixtures, 'react-vite-tailwind'), profile)
+      gitHooksTask.check(fixtureDir('react-vite-tailwind'), profile)
     );
     expect(status).toBe('new');
   });
@@ -46,9 +41,9 @@ describe('gitHooksTask', () => {
   });
 
   test('uses turbo pre-push for turbo monorepos', async () => {
-    const profile = await detectProject(path.join(fixtures, 'monorepo-turbo'));
+    const profile = await fixtureProfile('monorepo-turbo');
     const diffs = await run(
-      gitHooksTask.dryRun(path.join(fixtures, 'monorepo-turbo'), profile)
+      gitHooksTask.dryRun(fixtureDir('monorepo-turbo'), profile)
     );
     const prePush = diffs.find((d) => d.filepath.includes('pre-push'));
     expect(prePush?.after).toContain('pnpm run check:turbo');

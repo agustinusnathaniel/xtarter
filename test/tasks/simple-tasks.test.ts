@@ -1,16 +1,9 @@
-import fs from 'node:fs/promises';
-import os from 'node:os';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { detectProject } from '@xtarterize/core';
 import { describe, expect } from 'vite-plus/test';
 
 import { npmrcTask } from '../../packages/tasks/src/npmrc.js';
 import { lintStagedTask } from '../../packages/tasks/src/quality/lint-staged.js';
+import { fixtureDir, fixtureProfile, withProject } from '../helpers/project.js';
 import { run } from '../helpers/run.js';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const fixtures = path.resolve(__dirname, '../fixtures');
 
 describe('npmrcTask', () => {
   test('applies to any project', () => {
@@ -18,42 +11,30 @@ describe('npmrcTask', () => {
   });
 
   test('returns new on clean fixture', async () => {
-    const profile = await detectProject(
-      path.join(fixtures, 'react-vite-tailwind')
-    );
+    const profile = await fixtureProfile('react-vite-tailwind');
     const status = await run(
-      npmrcTask.check(path.join(fixtures, 'react-vite-tailwind'), profile)
+      npmrcTask.check(fixtureDir('react-vite-tailwind'), profile)
     );
     expect(status).toBe('new');
   });
 
   test('returns expected content in dryRun', async () => {
-    const profile = await detectProject(
-      path.join(fixtures, 'react-vite-tailwind')
-    );
+    const profile = await fixtureProfile('react-vite-tailwind');
     const diffs = await run(
-      npmrcTask.dryRun(path.join(fixtures, 'react-vite-tailwind'), profile)
+      npmrcTask.dryRun(fixtureDir('react-vite-tailwind'), profile)
     );
     expect(diffs[0].filepath).toBe('.npmrc');
     expect(diffs[0].after).toContain('save-exact=true');
   });
 
   test('apply writes the expected file', async () => {
-    const tmpDir = await fs.mkdtemp(
-      path.join(os.tmpdir(), 'xtarterize-npmrc-apply-')
+    await withProject(
+      { 'package.json': { name: 'apply-test' } },
+      async ({ cwd, profile, readText }) => {
+        await run(npmrcTask.apply(cwd, profile));
+        await expect(readText('.npmrc')).resolves.toBeDefined();
+      }
     );
-    await fs.writeFile(
-      path.join(tmpDir, 'package.json'),
-      JSON.stringify({ name: 'apply-test' })
-    );
-    const profile = await detectProject(tmpDir);
-    await run(npmrcTask.apply(tmpDir, profile));
-    const exists = await fs
-      .access(path.join(tmpDir, '.npmrc'))
-      .then(() => true)
-      .catch(() => false);
-    expect(exists).toBe(true);
-    await fs.rm(tmpDir, { force: true, recursive: true });
   });
 });
 
@@ -63,42 +44,35 @@ describe('lintStagedTask', () => {
   });
 
   test('returns patch when config and dependency are missing', async () => {
-    const profile = await detectProject(
-      path.join(fixtures, 'react-vite-tailwind')
-    );
+    const profile = await fixtureProfile('react-vite-tailwind');
     const status = await run(
-      lintStagedTask.check(path.join(fixtures, 'react-vite-tailwind'), profile)
+      lintStagedTask.check(fixtureDir('react-vite-tailwind'), profile)
     );
     expect(status).toBe('patch');
   });
 
   test('uses biome check by default in dryRun', async () => {
-    const profile = await detectProject(
-      path.join(fixtures, 'react-vite-tailwind')
-    );
+    const profile = await fixtureProfile('react-vite-tailwind');
     const diffs = await run(
-      lintStagedTask.dryRun(path.join(fixtures, 'react-vite-tailwind'), profile)
+      lintStagedTask.dryRun(fixtureDir('react-vite-tailwind'), profile)
     );
     const diff = diffs.find((d) => d.filepath === '.lintstagedrc.json');
     expect(diff?.after).toContain('biome check');
   });
 
   test('uses ultracite when present', async () => {
-    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'xtarterize-'));
-    try {
-      await fs.writeFile(
-        path.join(tmpDir, 'package.json'),
-        JSON.stringify({
+    await withProject(
+      {
+        'package.json': {
           devDependencies: { ultracite: '^1.0.0' },
           name: 'ultracite-test',
-        })
-      );
-      const profile = await detectProject(tmpDir);
-      const diffs = await run(lintStagedTask.dryRun(tmpDir, profile));
-      const diff = diffs.find((d) => d.filepath === '.lintstagedrc.json');
-      expect(diff?.after).toContain('ultracite fix');
-    } finally {
-      await fs.rm(tmpDir, { force: true, recursive: true });
-    }
+        },
+      },
+      async ({ cwd, profile }) => {
+        const diffs = await run(lintStagedTask.dryRun(cwd, profile));
+        const diff = diffs.find((d) => d.filepath === '.lintstagedrc.json');
+        expect(diff?.after).toContain('ultracite fix');
+      }
+    );
   });
 });

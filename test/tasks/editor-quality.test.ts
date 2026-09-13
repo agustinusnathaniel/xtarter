@@ -1,7 +1,6 @@
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { detectProject } from '@xtarterize/core';
 import { describe, expect } from 'vite-plus/test';
 
@@ -9,30 +8,22 @@ import { agentsMdTask } from '../../packages/tasks/src/agent/agents-md.js';
 import { vscodeTask } from '../../packages/tasks/src/editor/vscode.js';
 import { turboTask } from '../../packages/tasks/src/monorepo/turbo.js';
 import { knipTask } from '../../packages/tasks/src/quality/knip.js';
+import { fixtureDir, fixtureProfile } from '../helpers/project.js';
 import { run } from '../helpers/run.js';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const fixtures = path.resolve(__dirname, '../fixtures');
 
 describe('knipTask', () => {
   test('is applicable to all projects (JSON format if no TS)', async () => {
-    const tsProfile = await detectProject(
-      path.join(fixtures, 'react-vite-tailwind')
-    );
+    const tsProfile = await fixtureProfile('react-vite-tailwind');
     expect(knipTask.applicable(tsProfile)).toBe(true);
 
-    const nonTsProfile = await detectProject(
-      path.join(fixtures, 'monorepo-turbo')
-    );
+    const nonTsProfile = await fixtureProfile('monorepo-turbo');
     expect(knipTask.applicable(nonTsProfile)).toBe(true);
   });
 
   test('returns new on clean fixture', async () => {
-    const profile = await detectProject(
-      path.join(fixtures, 'react-vite-tailwind')
-    );
+    const profile = await fixtureProfile('react-vite-tailwind');
     const status = await run(
-      knipTask.check(path.join(fixtures, 'react-vite-tailwind'), profile)
+      knipTask.check(fixtureDir('react-vite-tailwind'), profile)
     );
     expect(status).toBe('new');
   });
@@ -40,18 +31,14 @@ describe('knipTask', () => {
 
 describe('vscodeTask', () => {
   test('is applicable to all projects', async () => {
-    const profile = await detectProject(
-      path.join(fixtures, 'react-vite-tailwind')
-    );
+    const profile = await fixtureProfile('react-vite-tailwind');
     expect(vscodeTask.applicable(profile)).toBe(true);
   });
 
   test('dryRun returns settings and extensions diffs', async () => {
-    const profile = await detectProject(
-      path.join(fixtures, 'react-vite-tailwind')
-    );
+    const profile = await fixtureProfile('react-vite-tailwind');
     const diffs = await run(
-      vscodeTask.dryRun(path.join(fixtures, 'react-vite-tailwind'), profile)
+      vscodeTask.dryRun(fixtureDir('react-vite-tailwind'), profile)
     );
     expect(diffs.length).toBe(2);
     expect(diffs.some((d) => d.filepath.includes('settings.json'))).toBe(true);
@@ -61,11 +48,9 @@ describe('vscodeTask', () => {
   });
 
   test('includes practical framework and styling settings', async () => {
-    const profile = await detectProject(
-      path.join(fixtures, 'react-vite-tailwind')
-    );
+    const profile = await fixtureProfile('react-vite-tailwind');
     const diffs = await run(
-      vscodeTask.dryRun(path.join(fixtures, 'react-vite-tailwind'), profile)
+      vscodeTask.dryRun(fixtureDir('react-vite-tailwind'), profile)
     );
     const settings = JSON.parse(
       diffs.find((d) => d.filepath.includes('settings.json'))?.after ?? '{}'
@@ -82,11 +67,9 @@ describe('vscodeTask', () => {
   });
 
   test('renders byte-identical settings and extensions', async () => {
-    const profile = await detectProject(
-      path.join(fixtures, 'react-vite-tailwind')
-    );
+    const profile = await fixtureProfile('react-vite-tailwind');
     const diffs = await run(
-      vscodeTask.dryRun(path.join(fixtures, 'react-vite-tailwind'), profile)
+      vscodeTask.dryRun(fixtureDir('react-vite-tailwind'), profile)
     );
     const settings = diffs.find((d) => d.filepath.includes('settings.json'));
     const extensions = diffs.find((d) =>
@@ -232,28 +215,22 @@ describe('vscodeTask', () => {
 
 describe('agentsMdTask', () => {
   test('is applicable to all projects', async () => {
-    const profile = await detectProject(
-      path.join(fixtures, 'react-vite-tailwind')
-    );
+    const profile = await fixtureProfile('react-vite-tailwind');
     expect(agentsMdTask.applicable(profile)).toBe(true);
   });
 
   test('returns new when AGENTS.md is missing', async () => {
-    const profile = await detectProject(
-      path.join(fixtures, 'react-vite-tailwind')
-    );
+    const profile = await fixtureProfile('react-vite-tailwind');
     const status = await run(
-      agentsMdTask.check(path.join(fixtures, 'react-vite-tailwind'), profile)
+      agentsMdTask.check(fixtureDir('react-vite-tailwind'), profile)
     );
     expect(status).toBe('new');
   });
 
   test('renders minimal root with commands', async () => {
-    const profile = await detectProject(
-      path.join(fixtures, 'react-vite-tailwind')
-    );
+    const profile = await fixtureProfile('react-vite-tailwind');
     const [diff] = await run(
-      agentsMdTask.dryRun(path.join(fixtures, 'react-vite-tailwind'), profile)
+      agentsMdTask.dryRun(fixtureDir('react-vite-tailwind'), profile)
     );
 
     expect(diff.after).toContain('## Commands');
@@ -264,14 +241,10 @@ describe('agentsMdTask', () => {
 
 describe('turboTask', () => {
   test('is applicable to monorepos only', async () => {
-    const monoProfile = await detectProject(
-      path.join(fixtures, 'monorepo-turbo')
-    );
+    const monoProfile = await fixtureProfile('monorepo-turbo');
     expect(turboTask.applicable(monoProfile)).toBe(true);
 
-    const nonMonoProfile = await detectProject(
-      path.join(fixtures, 'react-vite-tailwind')
-    );
+    const nonMonoProfile = await fixtureProfile('react-vite-tailwind');
     expect(turboTask.applicable(nonMonoProfile)).toBe(false);
   });
 });

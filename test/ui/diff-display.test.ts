@@ -2,20 +2,7 @@ import type { FileDiff } from '@xtarterize/core';
 import { describe, expect } from 'vite-plus/test';
 
 import { displayDiffs } from '../../apps/xtarterize/src/ui/diff-display.js';
-
-function captureStdout(run: () => void): Array<string> {
-  const logs: Array<string> = [];
-  const originalLog = console.log;
-  console.log = (...args: Array<unknown>) => {
-    logs.push(args.map((arg) => String(arg)).join(' '));
-  };
-  try {
-    run();
-  } finally {
-    console.log = originalLog;
-  }
-  return logs;
-}
+import { captureConsole } from '../helpers/console.js';
 
 function makeDiff(overrides: Partial<FileDiff> = {}): FileDiff {
   return {
@@ -28,8 +15,8 @@ function makeDiff(overrides: Partial<FileDiff> = {}): FileDiff {
 }
 
 describe('displayDiffs JSON contract', () => {
-  test('emits a machine-readable payload when there are no diffs', () => {
-    const logs = captureStdout(() => {
+  test('emits a machine-readable payload when there are no diffs', async () => {
+    const { logs } = await captureConsole(() => {
       displayDiffs([], 'json');
     });
 
@@ -44,8 +31,8 @@ describe('displayDiffs JSON contract', () => {
     expect(parsed.files).toEqual([]);
   });
 
-  test('reports dry-run failures with ok:false in the payload', () => {
-    const logs = captureStdout(() => {
+  test('reports dry-run failures with ok:false in the payload', async () => {
+    const { logs } = await captureConsole(() => {
       displayDiffs([], 'json', 2);
     });
 
@@ -58,16 +45,16 @@ describe('displayDiffs JSON contract', () => {
     expect(parsed.summary.failures).toBe(2);
   });
 
-  test('renders nothing in terminal mode when there are no diffs', () => {
-    const logs = captureStdout(() => {
+  test('renders nothing in terminal mode when there are no diffs', async () => {
+    const { logs } = await captureConsole(() => {
       displayDiffs([], 'terminal');
     });
 
     expect(logs).toHaveLength(0);
   });
 
-  test('emits a payload with files when diffs exist', () => {
-    const logs = captureStdout(() => {
+  test('emits a payload with files when diffs exist', async () => {
+    const { logs } = await captureConsole(() => {
       displayDiffs([makeDiff()], 'json');
     });
 

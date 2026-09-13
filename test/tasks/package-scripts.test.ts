@@ -1,56 +1,49 @@
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { detectProject } from '@xtarterize/core';
 import { describe, expect } from 'vite-plus/test';
 
 import { packageScriptsTask } from '../../packages/tasks/src/factory/package-scripts.js';
+import { fixtureDir, fixtureProfile, withProject } from '../helpers/project.js';
 import { run } from '../helpers/run.js';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const fixtures = path.resolve(__dirname, '../fixtures');
 
 /** Dry-run `after` for a turbo + ultracite project, for the given scripts. */
 async function turboUltraciteAfter(scripts?: Record<string, string>) {
-  const tmpDir = await fs.mkdtemp(
-    path.join(os.tmpdir(), 'xtarterize-turbo-ultracite-')
-  );
-  await fs.writeFile(
-    path.join(tmpDir, 'package.json'),
-    JSON.stringify({
-      devDependencies: {
-        turbo: '^2.0.0',
-        typescript: '^5.3.0',
-        ultracite: '^1.0.0',
+  return withProject(
+    {
+      'package.json': {
+        devDependencies: {
+          turbo: '^2.0.0',
+          typescript: '^5.3.0',
+          ultracite: '^1.0.0',
+        },
+        scripts,
+        type: 'module',
       },
-      scripts,
-      type: 'module',
-    })
+    },
+    async ({ cwd, profile }) => {
+      const diffs = await run(packageScriptsTask.dryRun(cwd, profile));
+      return diffs.find((d) => d.filepath === 'package.json')?.after ?? '';
+    }
   );
-  const profile = await detectProject(tmpDir);
-  const diffs = await run(packageScriptsTask.dryRun(tmpDir, profile));
-  await fs.rm(tmpDir, { force: true, recursive: true });
-  return diffs.find((d) => d.filepath === 'package.json')?.after ?? '';
 }
 
 describe('packageScriptsTask', () => {
   test('is applicable to all projects', async () => {
-    const profile = await detectProject(
-      path.join(fixtures, 'react-vite-tailwind')
-    );
+    const profile = await fixtureProfile('react-vite-tailwind');
     expect(packageScriptsTask.applicable(profile)).toBe(true);
   });
 
   test('returns patch when project has existing scripts', async () => {
-    const cwd = path.join(fixtures, 'react-vite-tailwind');
+    const cwd = fixtureDir('react-vite-tailwind');
     const profile = await detectProject(cwd);
     const status = await run(packageScriptsTask.check(cwd, profile));
     expect(status).toBe('patch');
   });
 
   test('dryRun includes package.json diff', async () => {
-    const cwd = path.join(fixtures, 'react-vite-tailwind');
+    const cwd = fixtureDir('react-vite-tailwind');
     const profile = await detectProject(cwd);
     const diffs = await run(packageScriptsTask.dryRun(cwd, profile));
     const pkgDiff = diffs.find((d) => d.filepath === 'package.json');
@@ -67,73 +60,71 @@ describe('packageScriptsTask', () => {
   });
 
   test('preserves existing scripts and only adds missing ones', async () => {
-    const tmpDir = await fs.mkdtemp(
-      path.join(os.tmpdir(), 'xtarterize-script-conflict-')
-    );
-    await fs.writeFile(
-      path.join(tmpDir, 'package.json'),
-      JSON.stringify(
-        {
-          dependencies: {
-            next: '^14.1.0',
-            react: '^18.2.0',
-            'react-dom': '^18.2.0',
+    await withProject(
+      {
+        'package.json': JSON.stringify(
+          {
+            dependencies: {
+              next: '^14.1.0',
+              react: '^18.2.0',
+              'react-dom': '^18.2.0',
+            },
+            devDependencies: {
+              typescript: '^5.3.0',
+            },
+            name: 'script-conflict',
+            scripts: {
+              biome: 'eslint .',
+            },
+            type: 'module',
           },
-          devDependencies: {
-            typescript: '^5.3.0',
-          },
-          name: 'script-conflict',
-          scripts: {
-            biome: 'eslint .',
-          },
-          type: 'module',
-        },
-        null,
-        2
-      )
-    );
+          null,
+          2
+        ),
+      },
+      async ({ cwd, profile }) => {
+        const status = await run(packageScriptsTask.check(cwd, profile));
+        const diffs = await run(packageScriptsTask.dryRun(cwd, profile));
+        const pkgDiff = diffs.find((d) => d.filepath === 'package.json');
 
-    const profile = await detectProject(tmpDir);
-    const status = await run(packageScriptsTask.check(tmpDir, profile));
-    const diffs = await run(packageScriptsTask.dryRun(tmpDir, profile));
-    const pkgDiff = diffs.find((d) => d.filepath === 'package.json');
-
-    expect(status).toBe('patch');
-    expect(pkgDiff?.after).toContain('"biome": "eslint ."');
-    expect(pkgDiff?.after).toContain('"biome:fix": "biome check --write ."');
+        expect(status).toBe('patch');
+        expect(pkgDiff?.after).toContain('"biome": "eslint ."');
+        expect(pkgDiff?.after).toContain(
+          '"biome:fix": "biome check --write ."'
+        );
+      }
+    );
   });
 
   test('skips scripts whose value already exists under a different key', async () => {
-    const tmpDir = await fs.mkdtemp(
-      path.join(os.tmpdir(), 'xtarterize-script-dedup-')
-    );
-    await fs.writeFile(
-      path.join(tmpDir, 'package.json'),
-      JSON.stringify(
-        {
-          devDependencies: {
-            typescript: '^5.3.0',
+    await withProject(
+      {
+        'package.json': JSON.stringify(
+          {
+            devDependencies: {
+              typescript: '^5.3.0',
+            },
+            name: 'script-dedup',
+            scripts: {
+              dev: 'next dev',
+              'type:check': 'tsc --noEmit',
+            },
+            type: 'module',
           },
-          name: 'script-dedup',
-          scripts: {
-            dev: 'next dev',
-            'type:check': 'tsc --noEmit',
-          },
-          type: 'module',
-        },
-        null,
-        2
-      )
+          null,
+          2
+        ),
+      },
+      async ({ cwd, profile }) => {
+        const status = await run(packageScriptsTask.check(cwd, profile));
+        const diffs = await run(packageScriptsTask.dryRun(cwd, profile));
+        const pkgDiff = diffs.find((d) => d.filepath === 'package.json');
+
+        expect(status).toBe('patch');
+        expect(pkgDiff?.after).not.toContain('"typecheck"');
+        expect(pkgDiff?.after).toContain('"test"');
+      }
     );
-
-    const profile = await detectProject(tmpDir);
-    const status = await run(packageScriptsTask.check(tmpDir, profile));
-    const diffs = await run(packageScriptsTask.dryRun(tmpDir, profile));
-    const pkgDiff = diffs.find((d) => d.filepath === 'package.json');
-
-    expect(status).toBe('patch');
-    expect(pkgDiff?.after).not.toContain('"typecheck"');
-    expect(pkgDiff?.after).toContain('"test"');
   });
 
   test('does not add typecheck or knip for non-TS projects', async () => {
@@ -198,36 +189,36 @@ describe('packageScriptsTask', () => {
   });
 
   test('uses ultracite scripts when Ultracite is installed', async () => {
-    const tmpDir = await fs.mkdtemp(
-      path.join(os.tmpdir(), 'xtarterize-ultracite-')
-    );
-    await fs.writeFile(
-      path.join(tmpDir, 'package.json'),
-      JSON.stringify(
-        {
-          devDependencies: {
-            typescript: '^5.3.0',
-            ultracite: '^1.0.0',
+    await withProject(
+      {
+        'package.json': JSON.stringify(
+          {
+            devDependencies: {
+              typescript: '^5.3.0',
+              ultracite: '^1.0.0',
+            },
+            name: 'ultracite-project',
+            type: 'module',
           },
-          name: 'ultracite-project',
-          type: 'module',
-        },
-        null,
-        2
-      )
+          null,
+          2
+        ),
+      },
+      async ({ cwd, profile }) => {
+        const diffs = await run(packageScriptsTask.dryRun(cwd, profile));
+        const pkgDiff = diffs.find((d) => d.filepath === 'package.json');
+
+        expect(pkgDiff?.after).toContain(
+          '"ultracite:check": "ultracite check"'
+        );
+        expect(pkgDiff?.after).toContain('"ultracite:fix": "ultracite fix"');
+        expect(pkgDiff?.after).not.toContain('"lint"');
+        expect(pkgDiff?.after).not.toContain('"format"');
+        expect(pkgDiff?.after).not.toContain('biome');
+        expect(pkgDiff?.after).toContain('"typecheck"');
+        expect(pkgDiff?.after).toContain('"release"');
+      }
     );
-
-    const profile = await detectProject(tmpDir);
-    const diffs = await run(packageScriptsTask.dryRun(tmpDir, profile));
-    const pkgDiff = diffs.find((d) => d.filepath === 'package.json');
-
-    expect(pkgDiff?.after).toContain('"ultracite:check": "ultracite check"');
-    expect(pkgDiff?.after).toContain('"ultracite:fix": "ultracite fix"');
-    expect(pkgDiff?.after).not.toContain('"lint"');
-    expect(pkgDiff?.after).not.toContain('"format"');
-    expect(pkgDiff?.after).not.toContain('biome');
-    expect(pkgDiff?.after).toContain('"typecheck"');
-    expect(pkgDiff?.after).toContain('"release"');
   });
 
   test('skips biome when existing lint uses biome', async () => {

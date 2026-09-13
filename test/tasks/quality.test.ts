@@ -1,15 +1,12 @@
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { detectProject } from '@xtarterize/core';
 import { describe, expect } from 'vite-plus/test';
 
 import { packageEnginesTask } from '../../packages/tasks/src/quality/package-engines.js';
+import { fixtureDir, fixtureProfile } from '../helpers/project.js';
 import { run } from '../helpers/run.js';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const fixtures = path.resolve(__dirname, '../fixtures');
 
 const EXPECTED_DEV_ENGINES = {
   packageManager: { name: 'pnpm', version: '>=9' },
@@ -18,39 +15,25 @@ const EXPECTED_DEV_ENGINES = {
 
 describe('packageEnginesTask', () => {
   test('is applicable to all projects', async () => {
-    const tsProfile = await detectProject(
-      path.join(fixtures, 'react-vite-tailwind')
-    );
+    const tsProfile = await fixtureProfile('react-vite-tailwind');
     expect(packageEnginesTask.applicable(tsProfile)).toBe(true);
 
-    const nonTsProfile = await detectProject(
-      path.join(fixtures, 'monorepo-turbo')
-    );
+    const nonTsProfile = await fixtureProfile('monorepo-turbo');
     expect(packageEnginesTask.applicable(nonTsProfile)).toBe(true);
   });
 
   test('returns patch when devEngines is missing from package.json', async () => {
-    const profile = await detectProject(
-      path.join(fixtures, 'react-vite-tailwind')
-    );
+    const profile = await fixtureProfile('react-vite-tailwind');
     const status = await run(
-      packageEnginesTask.check(
-        path.join(fixtures, 'react-vite-tailwind'),
-        profile
-      )
+      packageEnginesTask.check(fixtureDir('react-vite-tailwind'), profile)
     );
     expect(status).toBe('patch');
   });
 
   test('dryRun shows devEngines diff', async () => {
-    const profile = await detectProject(
-      path.join(fixtures, 'react-vite-tailwind')
-    );
+    const profile = await fixtureProfile('react-vite-tailwind');
     const diffs = await run(
-      packageEnginesTask.dryRun(
-        path.join(fixtures, 'react-vite-tailwind'),
-        profile
-      )
+      packageEnginesTask.dryRun(fixtureDir('react-vite-tailwind'), profile)
     );
     expect(diffs.length).toBe(1);
     expect(diffs[0].filepath).toBe('package.json');

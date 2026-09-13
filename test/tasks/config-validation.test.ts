@@ -1,21 +1,16 @@
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { detectProject } from '@xtarterize/core';
 import { describe, expect } from 'vite-plus/test';
 
 import { renovateTask } from '../../packages/tasks/src/deps/renovate.js';
 import { vscodeTask } from '../../packages/tasks/src/editor/vscode.js';
 import { biomeTask } from '../../packages/tasks/src/lint/biome.js';
 import { oxfmtTask, oxlintTask } from '../../packages/tasks/src/lint/oxlint.js';
+import { fixtureDir, fixtureProfile } from '../helpers/project.js';
 import { run } from '../helpers/run.js';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const fixtures = path.resolve(__dirname, '../fixtures');
 
 describe('biome config validation', () => {
   test('rendered biome.json is valid JSON with expected structure', async () => {
-    const testDir = path.join(fixtures, 'react-vite-tailwind');
-    const profile = await detectProject(testDir);
+    const testDir = fixtureDir('react-vite-tailwind');
+    const profile = await fixtureProfile('react-vite-tailwind');
     const diffs = await run(biomeTask.dryRun(testDir, profile));
     const configFile = diffs.find((d) => d.filepath === 'biome.json');
     if (!configFile) {
@@ -29,8 +24,8 @@ describe('biome config validation', () => {
   });
 
   test('includes css.tailwindDirectives for tailwind projects', async () => {
-    const testDir = path.join(fixtures, 'react-vite-tailwind');
-    const profile = await detectProject(testDir);
+    const testDir = fixtureDir('react-vite-tailwind');
+    const profile = await fixtureProfile('react-vite-tailwind');
     const diffs = await run(biomeTask.dryRun(testDir, profile));
     const configFile = diffs.find((d) => d.filepath === 'biome.json');
     if (!configFile) {
@@ -44,8 +39,8 @@ describe('biome config validation', () => {
 
 describe('renovate config validation', () => {
   test('rendered renovate.json is valid JSON', async () => {
-    const testDir = path.join(fixtures, 'react-vite-tailwind');
-    const profile = await detectProject(testDir);
+    const testDir = fixtureDir('react-vite-tailwind');
+    const profile = await fixtureProfile('react-vite-tailwind');
     const diffs = await run(renovateTask.dryRun(testDir, profile));
     const configFile = diffs.find((d) => d.filepath === 'renovate.json');
 
@@ -60,8 +55,8 @@ describe('renovate config validation', () => {
 
 describe('vscode config validation', () => {
   test('rendered .vscode/settings.json is valid JSON', async () => {
-    const testDir = path.join(fixtures, 'react-vite-tailwind');
-    const profile = await detectProject(testDir);
+    const testDir = fixtureDir('react-vite-tailwind');
+    const profile = await fixtureProfile('react-vite-tailwind');
     const diffs = await run(vscodeTask.dryRun(testDir, profile));
     const settingsFile = diffs.find((d) =>
       d.filepath.endsWith('settings.json')
@@ -76,8 +71,8 @@ describe('vscode config validation', () => {
 
 describe('all config templates render without runtime errors', () => {
   test('all lint tool configs render for a Vite+ project', async () => {
-    const testDir = path.join(fixtures, 'vite-plus-no-lint');
-    const profile = await detectProject(testDir);
+    const testDir = fixtureDir('vite-plus-no-lint');
+    const profile = await fixtureProfile('vite-plus-no-lint');
     const results = await Promise.allSettled([
       run(oxlintTask.dryRun(testDir, profile)),
       run(oxfmtTask.dryRun(testDir, profile)),
@@ -91,8 +86,8 @@ describe('all config templates render without runtime errors', () => {
   });
 
   test('all lint tool configs render for a non-Vite+ project', async () => {
-    const testDir = path.join(fixtures, 'react-vite-tailwind');
-    const profile = await detectProject(testDir);
+    const testDir = fixtureDir('react-vite-tailwind');
+    const profile = await fixtureProfile('react-vite-tailwind');
     const results = await Promise.allSettled([
       run(biomeTask.dryRun(testDir, profile)),
       run(renovateTask.dryRun(testDir, profile)),

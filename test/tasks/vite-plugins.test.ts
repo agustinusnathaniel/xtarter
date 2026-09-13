@@ -1,34 +1,27 @@
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { detectProject, planTasks } from '@xtarterize/core';
 import { describe, expect } from 'vite-plus/test';
 
 import { viteCheckerTask } from '../../packages/tasks/src/vite/checker.js';
 import { viteVisualizerTask } from '../../packages/tasks/src/vite/visualizer.js';
+import { fixtureDir, fixtureProfile } from '../helpers/project.js';
 import { run } from '../helpers/run.js';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const fixtures = path.resolve(__dirname, '../fixtures');
 
 describe('viteCheckerTask', () => {
   test('is applicable to vite projects only', async () => {
-    const viteProfile = await detectProject(
-      path.join(fixtures, 'react-vite-tailwind')
-    );
+    const viteProfile = await fixtureProfile('react-vite-tailwind');
     expect(viteCheckerTask.applicable(viteProfile)).toBe(true);
 
-    const nextProfile = await detectProject(path.join(fixtures, 'nextjs'));
+    const nextProfile = await fixtureProfile('nextjs');
     expect(viteCheckerTask.applicable(nextProfile)).toBe(false);
   });
 
   test('returns patch when plugin is missing from an existing config', async () => {
-    const profile = await detectProject(
-      path.join(fixtures, 'react-vite-tailwind')
-    );
+    const profile = await fixtureProfile('react-vite-tailwind');
     const status = await run(
-      viteCheckerTask.check(path.join(fixtures, 'react-vite-tailwind'), profile)
+      viteCheckerTask.check(fixtureDir('react-vite-tailwind'), profile)
     );
     expect(status).toBe('patch');
   });
@@ -62,10 +55,8 @@ describe('viteCheckerTask', () => {
   });
 
   test('dryRun returns the real vite.config.ts diff', async () => {
-    const profile = await detectProject(
-      path.join(fixtures, 'react-vite-tailwind')
-    );
-    const cwd = path.join(fixtures, 'react-vite-tailwind');
+    const profile = await fixtureProfile('react-vite-tailwind');
+    const cwd = fixtureDir('react-vite-tailwind');
     const diffs = await run(viteCheckerTask.dryRun(cwd, profile));
     expect(diffs.length).toBe(1);
     expect(diffs[0].filepath).toBe('vite.config.ts');
@@ -107,21 +98,14 @@ describe('viteCheckerTask', () => {
 
 describe('viteVisualizerTask', () => {
   test('is applicable to vite projects only', async () => {
-    const viteProfile = await detectProject(
-      path.join(fixtures, 'react-vite-tailwind')
-    );
+    const viteProfile = await fixtureProfile('react-vite-tailwind');
     expect(viteVisualizerTask.applicable(viteProfile)).toBe(true);
   });
 
   test('returns patch when plugin is missing from an existing config', async () => {
-    const profile = await detectProject(
-      path.join(fixtures, 'react-vite-tailwind')
-    );
+    const profile = await fixtureProfile('react-vite-tailwind');
     const status = await run(
-      viteVisualizerTask.check(
-        path.join(fixtures, 'react-vite-tailwind'),
-        profile
-      )
+      viteVisualizerTask.check(fixtureDir('react-vite-tailwind'), profile)
     );
     expect(status).toBe('patch');
   });

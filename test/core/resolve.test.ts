@@ -1,21 +1,15 @@
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import type { ProjectProfile, Task, TaskScope } from '@xtarterize/core';
 import { resolveTaskStatuses, resolveTasks } from '@xtarterize/core';
 import { getAllTasks } from '@xtarterize/tasks';
 import { Effect } from 'effect';
 import { describe, expect } from 'vite-plus/test';
 
+import { fixtureDir, fixtureProfile } from '../helpers/project.js';
 import { run } from '../helpers/run.js';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const fixtures = path.resolve(__dirname, '../fixtures');
 
 describe('resolveTasks', () => {
   test('filters tasks by applicability', async () => {
-    const profile = await detectProject(
-      path.join(fixtures, 'react-vite-tailwind')
-    );
+    const profile = await fixtureProfile('react-vite-tailwind');
     const allTasks = getAllTasks();
     const tasks = resolveTasks(profile, allTasks);
     expect(tasks.length).toBeGreaterThan(0);
@@ -27,7 +21,7 @@ describe('resolveTasks', () => {
   });
 
   test('excludes vite tasks for non-vite projects', async () => {
-    const profile = await detectProject(path.join(fixtures, 'nextjs'));
+    const profile = await fixtureProfile('nextjs');
     const allTasks = getAllTasks();
     const tasks = resolveTasks(profile, allTasks);
     const viteTasks = tasks.filter((t) => t.group === 'Vite Plugins');
@@ -37,17 +31,11 @@ describe('resolveTasks', () => {
 
 describe('resolveTaskStatuses', () => {
   test('resolves statuses for all tasks', async () => {
-    const profile = await detectProject(
-      path.join(fixtures, 'react-vite-tailwind')
-    );
+    const profile = await fixtureProfile('react-vite-tailwind');
     const allTasks = getAllTasks();
     const tasks = resolveTasks(profile, allTasks);
     const statuses = await run(
-      resolveTaskStatuses(
-        tasks,
-        path.join(fixtures, 'react-vite-tailwind'),
-        profile
-      )
+      resolveTaskStatuses(tasks, fixtureDir('react-vite-tailwind'), profile)
     );
 
     for (const task of tasks) {
@@ -195,4 +183,3 @@ describe('resolveTasks - scope filtering', () => {
 });
 
 // Need to import detectProject for the test above
-import { detectProject } from '@xtarterize/core';

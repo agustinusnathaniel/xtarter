@@ -1,7 +1,6 @@
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { detectProject, runDiagnostics } from '@xtarterize/core';
 import { describe, expect } from 'vite-plus/test';
 
@@ -15,16 +14,12 @@ import {
   rootFileInputByBasename,
   workspacePackageDirs,
 } from '../../packages/core/src/detect/registry/index.js';
+import { fixtureProfile, withProject } from '../helpers/project.js';
 import { run } from '../helpers/run.js';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const fixtures = path.resolve(__dirname, '../fixtures');
 
 describe('detectProject', () => {
   test('detects react-vite-tailwind correctly', async () => {
-    const profile = await detectProject(
-      path.join(fixtures, 'react-vite-tailwind')
-    );
+    const profile = await fixtureProfile('react-vite-tailwind');
     expect(profile.framework).toBe('react');
     expect(profile.frameworkVersion).toBe('18.2.0');
     expect(profile.bundler).toBe('vite');
@@ -47,9 +42,7 @@ describe('detectProject', () => {
   });
 
   test('detects react-vite-no-styling correctly', async () => {
-    const profile = await detectProject(
-      path.join(fixtures, 'react-vite-no-styling')
-    );
+    const profile = await fixtureProfile('react-vite-no-styling');
     expect(profile.framework).toBe('react');
     expect(profile.bundler).toBe('vite');
     expect(profile.router).toBeNull();
@@ -63,7 +56,7 @@ describe('detectProject', () => {
   });
 
   test('detects vue-vite correctly', async () => {
-    const profile = await detectProject(path.join(fixtures, 'vue-vite'));
+    const profile = await fixtureProfile('vue-vite');
     expect(profile.framework).toBe('vue');
     expect(profile.frameworkVersion).toBe('3.4.0');
     expect(profile.bundler).toBe('vite');
@@ -76,7 +69,7 @@ describe('detectProject', () => {
   });
 
   test('detects nextjs correctly', async () => {
-    const profile = await detectProject(path.join(fixtures, 'nextjs'));
+    const profile = await fixtureProfile('nextjs');
     expect(profile.framework).toBe('react');
     expect(profile.frameworkVersion).toBe('18.2.0');
     expect(profile.bundler).toBe('nextjs');
@@ -89,9 +82,7 @@ describe('detectProject', () => {
   });
 
   test('detects react-native-expo correctly', async () => {
-    const profile = await detectProject(
-      path.join(fixtures, 'react-native-expo')
-    );
+    const profile = await fixtureProfile('react-native-expo');
     // Framework is react-native when both react and react-native are present
     expect(profile.framework).toBe('react-native');
     expect(profile.bundler).toBe('expo');
@@ -106,7 +97,7 @@ describe('detectProject', () => {
   });
 
   test('detects node-only correctly', async () => {
-    const profile = await detectProject(path.join(fixtures, 'node-only'));
+    const profile = await fixtureProfile('node-only');
     expect(profile.framework).toBe('node');
     expect(profile.frameworkVersion).toBeNull();
     expect(profile.bundler).toBe('none');
@@ -119,7 +110,7 @@ describe('detectProject', () => {
   });
 
   test('detects monorepo-turbo correctly', async () => {
-    const profile = await detectProject(path.join(fixtures, 'monorepo-turbo'));
+    const profile = await fixtureProfile('monorepo-turbo');
     expect(profile.monorepo).toBe(true);
     expect(profile.monorepoTool).toBe('turbo');
     expect(profile.workspaceRoot).toBe(true);
@@ -170,107 +161,78 @@ describe('detectProject', () => {
     ] as const;
 
     for (const [configFile, expectedBundler] of cases) {
-      const tmpDir = await fs.mkdtemp(
-        path.join(os.tmpdir(), `xtarterize-${expectedBundler}-`)
+      await withProject(
+        {
+          'package.json': { dependencies: {} },
+          [configFile]: 'export default {}\n',
+        },
+        async ({ profile }) => {
+          expect(profile.bundler).toBe(expectedBundler);
+        }
       );
-      await fs.writeFile(
-        path.join(tmpDir, 'package.json'),
-        JSON.stringify({ dependencies: {} })
-      );
-      await fs.writeFile(path.join(tmpDir, configFile), 'export default {}\n');
-
-      const profile = await detectProject(tmpDir);
-      expect(profile.bundler).toBe(expectedBundler);
     }
   });
 
   test('keeps dependency bundler detection ahead of config files', async () => {
-    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'xtarterize-deps-'));
-    await fs.writeFile(
-      path.join(tmpDir, 'package.json'),
-      JSON.stringify({ dependencies: { vite: '^5.0.0' } })
+    await withProject(
+      {
+        'next.config.js': 'export default {}\n',
+        'package.json': { dependencies: { vite: '^5.0.0' } },
+      },
+      async ({ profile }) => {
+        expect(profile.bundler).toBe('vite');
+      }
     );
-    await fs.writeFile(
-      path.join(tmpDir, 'next.config.js'),
-      'export default {}\n'
-    );
-
-    const profile = await detectProject(tmpDir);
-    expect(profile.bundler).toBe('vite');
   });
 
   test('nodeVersion defaults to 22 when no config present', async () => {
-    const tmpDir = await fs.mkdtemp(
-      path.join(os.tmpdir(), 'xtarterize-nodever-')
+    await withProject(
+      { 'package.json': { name: 'test-pkg' } },
+      async ({ profile }) => {
+        expect(profile.nodeVersion).toBe('22');
+      }
     );
-    await fs.writeFile(
-      path.join(tmpDir, 'package.json'),
-      JSON.stringify({ name: 'test-pkg' })
-    );
-
-    const profile = await detectProject(tmpDir);
-    expect(profile.nodeVersion).toBe('22');
   });
 
   test('nodeVersion reads from .nvmrc', async () => {
-    const tmpDir = await fs.mkdtemp(
-      path.join(os.tmpdir(), 'xtarterize-nvmrc-')
+    await withProject(
+      { '.nvmrc': '22\n', 'package.json': { name: 'test-pkg' } },
+      async ({ profile }) => {
+        expect(profile.nodeVersion).toBe('22');
+      }
     );
-    await fs.writeFile(path.join(tmpDir, '.nvmrc'), '22\n');
-    await fs.writeFile(
-      path.join(tmpDir, 'package.json'),
-      JSON.stringify({ name: 'test-pkg' })
-    );
-
-    const profile = await detectProject(tmpDir);
-    expect(profile.nodeVersion).toBe('22');
   });
 
   test('nodeVersion reads from .nvmrc stripping leading v', async () => {
-    const tmpDir = await fs.mkdtemp(
-      path.join(os.tmpdir(), 'xtarterize-nvmrc-v-')
+    await withProject(
+      { '.nvmrc': 'v18\n', 'package.json': { name: 'test-pkg' } },
+      async ({ profile }) => {
+        expect(profile.nodeVersion).toBe('18');
+      }
     );
-    await fs.writeFile(path.join(tmpDir, '.nvmrc'), 'v18\n');
-    await fs.writeFile(
-      path.join(tmpDir, 'package.json'),
-      JSON.stringify({ name: 'test-pkg' })
-    );
-
-    const profile = await detectProject(tmpDir);
-    expect(profile.nodeVersion).toBe('18');
   });
 
   test('nodeVersion falls back to engines.node from package.json', async () => {
-    const tmpDir = await fs.mkdtemp(
-      path.join(os.tmpdir(), 'xtarterize-engines-')
+    await withProject(
+      {
+        'package.json': { engines: { node: '>=22' }, name: 'test-pkg' },
+      },
+      async ({ profile }) => {
+        expect(profile.nodeVersion).toBe('22');
+      }
     );
-    await fs.writeFile(
-      path.join(tmpDir, 'package.json'),
-      JSON.stringify({
-        engines: { node: '>=22' },
-        name: 'test-pkg',
-      })
-    );
-
-    const profile = await detectProject(tmpDir);
-    expect(profile.nodeVersion).toBe('22');
   });
 
   test('nodeVersion prefers .nvmrc over engines.node', async () => {
-    const tmpDir = await fs.mkdtemp(
-      path.join(os.tmpdir(), 'xtarterize-prefer-nvmrc-')
+    await withProject(
+      {
+        '.nvmrc': '20\n',
+        'package.json': { engines: { node: '22' }, name: 'test-pkg' },
+      },
+      async ({ profile }) => {
+        expect(profile.nodeVersion).toBe('20');
+      }
     );
-    await fs.writeFile(path.join(tmpDir, '.nvmrc'), '20\n');
-    await fs.writeFile(
-      path.join(tmpDir, 'package.json'),
-      JSON.stringify({
-        engines: { node: '22' },
-        name: 'test-pkg',
-      })
-    );
-
-    const profile = await detectProject(tmpDir);
-    expect(profile.nodeVersion).toBe('20');
   });
 
   test('detects Vite+ from vite-plus dep', async () => {
@@ -291,9 +253,7 @@ describe('detectProject', () => {
   });
 
   test('detects Vite+ from fixtures/vite-plus-no-lint', async () => {
-    const profile = await detectProject(
-      path.join(fixtures, 'vite-plus-no-lint')
-    );
+    const profile = await fixtureProfile('vite-plus-no-lint');
     expect(profile.vitePlus).toBe(true);
     expect(profile.existing.biome).toBe(false);
     expect(profile.existing.eslint).toBe(false);
@@ -302,7 +262,7 @@ describe('detectProject', () => {
   });
 
   test('detects Vite+ with biome in vite-plus-biome fixture', async () => {
-    const profile = await detectProject(path.join(fixtures, 'vite-plus-biome'));
+    const profile = await fixtureProfile('vite-plus-biome');
     expect(profile.vitePlus).toBe(true);
     expect(profile.existing.biome).toBe(true);
   });
@@ -397,15 +357,13 @@ describe('detectProject', () => {
   });
 
   test('detects ESLint from fixtures/eslint-project', async () => {
-    const profile = await detectProject(path.join(fixtures, 'eslint-project'));
+    const profile = await fixtureProfile('eslint-project');
     expect(profile.existing.eslint).toBe(true);
     expect(profile.existing.biome).toBe(false);
   });
 
   test('detects oxlint standalone from fixtures/oxlint-standalone', async () => {
-    const profile = await detectProject(
-      path.join(fixtures, 'oxlint-standalone')
-    );
+    const profile = await fixtureProfile('oxlint-standalone');
     expect(profile.existing.oxlint).toBe(true);
     expect(profile.vitePlus).toBe(false);
     expect(profile.existing.biome).toBe(false);
@@ -517,9 +475,7 @@ describe('detection registry integrity', () => {
   });
 
   test('detection produces every derived existing key with the declared kind', async () => {
-    const profile = await detectProject(
-      path.join(fixtures, 'react-vite-tailwind')
-    );
+    const profile = await fixtureProfile('react-vite-tailwind');
     expect(Object.keys(profile.existing).sort()).toEqual(
       [...existingKeys()].sort()
     );

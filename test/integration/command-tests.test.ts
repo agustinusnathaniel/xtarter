@@ -1,5 +1,4 @@
 import fs from 'node:fs/promises';
-import os from 'node:os';
 import path from 'node:path';
 import { addCommand } from '@xtarterize/app/commands/add/index.js';
 import { initCommand } from '@xtarterize/app/commands/init.js';
@@ -14,6 +13,9 @@ import {
 import { Effect } from 'effect';
 import { describe, expect, vi } from 'vite-plus/test';
 
+import { captureConsole } from '../helpers/console.js';
+import { type ProjectFileMap, withProject } from '../helpers/project.js';
+
 const { mockGetAllTasks } = vi.hoisted(() => ({
   mockGetAllTasks: vi.fn(),
 }));
@@ -27,23 +29,24 @@ vi.mock('@xtarterize/tasks', async (importOriginal) => {
   return { ...actual, getAllTasks: mockGetAllTasks };
 });
 
-async function createMinimalProject(): Promise<string> {
-  const tmpDir = await fs.mkdtemp(
-    path.join(os.tmpdir(), 'xtarterize-cmd-test-')
-  );
-  await fs.mkdir(path.join(tmpDir, '.git'), { recursive: true });
-  await fs.writeFile(
-    path.join(tmpDir, 'package.json'),
-    JSON.stringify({
-      dependencies: { react: '^18.2.0' },
-      devDependencies: { typescript: '^5.0.0', vite: '^5.0.0' },
-      name: 'cmd-test-fixture',
-      type: 'module',
-      version: '1.0.0',
-    })
-  );
-  return tmpDir;
-}
+const MINIMAL_FILES: ProjectFileMap = {
+  'package.json': {
+    dependencies: { react: '^18.2.0' },
+    devDependencies: { typescript: '^5.0.0', vite: '^5.0.0' },
+    name: 'cmd-test-fixture',
+    type: 'module',
+    version: '1.0.0',
+  },
+};
+
+const OUTDATED_LINT_FILES: ProjectFileMap = {
+  'biome.json': JSON.stringify({
+    $schema: './node_modules/@biomejs/biome/configuration_schema.json',
+    formatter: { enabled: false },
+    linter: { enabled: true, rules: { recommended: true } },
+  }),
+  'tsconfig.json': '{"compilerOptions":{"strict":false}}\n',
+};
 
 // ---------------------------------------------------------------------------
 // Tests
@@ -51,114 +54,97 @@ async function createMinimalProject(): Promise<string> {
 
 describe('sync command', () => {
   test('exits cleanly on unchanged project', async () => {
-    const cwd = await createMinimalProject();
-    process.exitCode = 0;
-    try {
-      await fs.writeFile(
-        path.join(cwd, '.gitignore'),
-        '*.tsbuildinfo\n.tsbuildinfo/\n'
-      );
-      await fs.writeFile(
-        path.join(cwd, '.lintstagedrc.json'),
-        JSON.stringify({
-          '*.{js,jsx,ts,tsx,mjs,mts,cjs,cts}': ['biome check --write'],
-          '*.{json,md,yaml,yml}': ['biome check --write'],
-        })
-      );
-      const packageJson = JSON.parse(
-        await fs.readFile(path.join(cwd, 'package.json'), 'utf-8')
-      );
-      packageJson.devDependencies['lint-staged'] = '^15.0.0';
-      packageJson.devEngines = {
-        packageManager: { name: 'pnpm', version: '>=9' },
-        runtime: { name: 'node', version: '>=22' },
-      };
-      await fs.writeFile(
-        path.join(cwd, 'package.json'),
-        JSON.stringify(packageJson)
-      );
-
-      // The project now has the configs that sync manages, so no task is actionable.
-      await syncCommand.run?.({ args: { cwd, yes: true } } as never);
-      expect(process.exitCode).toBe(0);
-    } finally {
+    await withProject(MINIMAL_FILES, async ({ cwd, readJson }) => {
       process.exitCode = 0;
-      await fs.rm(cwd, { force: true, recursive: true });
-    }
+      try {
+        await fs.writeFile(
+          path.join(cwd, '.gitignore'),
+          '*.tsbuildinfo\n.tsbuildinfo/\n'
+        );
+        await fs.writeFile(
+          path.join(cwd, '.lintstagedrc.json'),
+          JSON.stringify({
+            '*.{js,jsx,ts,tsx,mjs,mts,cjs,cts}': ['biome check --write'],
+            '*.{json,md,yaml,yml}': ['biome check --write'],
+          })
+        );
+        const packageJson = await readJson<{
+          devDependencies: Record<string, string>;
+          devEngines?: unknown;
+        }>('package.json');
+        packageJson.devDependencies['lint-staged'] = '^15.0.0';
+        packageJson.devEngines = {
+          packageManager: { name: 'pnpm', version: '>=9' },
+          runtime: { name: 'node', version: '>=22' },
+        };
+        await fs.writeFile(
+          path.join(cwd, 'package.json'),
+          JSON.stringify(packageJson)
+        );
+
+        // The project now has the configs that sync manages, so no task is actionable.
+        await syncCommand.run?.({ args: { cwd, yes: true } } as never);
+        expect(process.exitCode).toBe(0);
+      } finally {
+        process.exitCode = 0;
+      }
+    });
   }, 30_000);
 
   test('detects outdated config and applies updates', async () => {
-    const cwd = await createMinimalProject();
-    try {
-      await fs.writeFile(
-        path.join(cwd, 'biome.json'),
-        JSON.stringify({
-          $schema: './node_modules/@biomejs/biome/configuration_schema.json',
-          formatter: { enabled: false },
-          linter: { enabled: true, rules: { recommended: true } },
-        })
-      );
+    await withProject(
+      { ...MINIMAL_FILES, ...OUTDATED_LINT_FILES },
+      async ({ cwd, readJson }) => {
+        await syncCommand.run?.({ args: { cwd, yes: true } } as never);
 
-      await syncCommand.run?.({ args: { cwd, yes: true } } as never);
-
-      const biome = JSON.parse(
-        await fs.readFile(path.join(cwd, 'biome.json'), 'utf-8')
-      );
-      expect(biome.vcs).toBeDefined();
-    } finally {
-      await fs.rm(cwd, { force: true, recursive: true });
-    }
+        const biome = await readJson<{ vcs?: unknown }>('biome.json');
+        expect(biome.vcs).toBeDefined();
+      }
+    );
   }, 60_000);
 
   test('dry-run exits 1 when pending changes exist', async () => {
-    const cwd = await createMinimalProject();
-    process.exitCode = 0;
-    try {
-      await fs.writeFile(
-        path.join(cwd, 'biome.json'),
-        JSON.stringify({
-          $schema: './node_modules/@biomejs/biome/configuration_schema.json',
-          formatter: { enabled: false },
-          linter: { enabled: true, rules: { recommended: true } },
-        })
-      );
-
-      await syncCommand.run?.({
-        args: { cwd, dryRun: true, quiet: true },
-      } as never);
-      expect(process.exitCode).toBe(1);
-    } finally {
-      process.exitCode = 0;
-      await fs.rm(cwd, { force: true, recursive: true });
-    }
+    await withProject(
+      { ...MINIMAL_FILES, ...OUTDATED_LINT_FILES },
+      async ({ cwd }) => {
+        process.exitCode = 0;
+        try {
+          await syncCommand.run?.({
+            args: { cwd, dryRun: true, quiet: true },
+          } as never);
+          expect(process.exitCode).toBe(1);
+        } finally {
+          process.exitCode = 0;
+        }
+      }
+    );
   }, 60_000);
 
   test('applies conflicting tasks when --include-conflicts is passed with --yes', async () => {
-    const cwd = await createMinimalProject();
-    process.exitCode = 0;
-    try {
-      // ts/strict reports 'conflict' when the existing config sets a
-      // compiler option to a different value (strict: false).
-      await fs.writeFile(
-        path.join(cwd, 'tsconfig.json'),
-        '{"compilerOptions":{"strict":false}}\n'
-      );
+    await withProject(
+      {
+        ...MINIMAL_FILES,
+        'tsconfig.json': '{"compilerOptions":{"strict":false}}\n',
+      },
+      async ({ cwd, readJson }) => {
+        process.exitCode = 0;
+        try {
+          await syncCommand.run?.({
+            args: { cwd, includeConflicts: true, yes: true },
+          } as never);
 
-      await syncCommand.run?.({
-        args: { cwd, includeConflicts: true, yes: true },
-      } as never);
-
-      // Applying the conflict must add the missing strict options.
-      // defu preserves the user's `strict: false`, so assert on a key
-      // that is only present after the conflict is applied.
-      const tsconfig = JSON.parse(
-        await fs.readFile(path.join(cwd, 'tsconfig.json'), 'utf-8')
-      );
-      expect(tsconfig.compilerOptions.noUnusedLocals).toBe(true);
-    } finally {
-      process.exitCode = 0;
-      await fs.rm(cwd, { force: true, recursive: true });
-    }
+          // Applying the conflict must add the missing strict options.
+          // defu preserves the user's `strict: false`, so assert on a key
+          // that is only present after the conflict is applied.
+          const tsconfig = await readJson<{
+            compilerOptions: { noUnusedLocals?: boolean };
+          }>('tsconfig.json');
+          expect(tsconfig.compilerOptions.noUnusedLocals).toBe(true);
+        } finally {
+          process.exitCode = 0;
+        }
+      }
+    );
   }, 60_000);
 });
 
@@ -167,26 +153,13 @@ describe('sync task selection via .xtarterizerc', () => {
   // `lint/biome` into `patch` status and a tsconfig with strict:false puts
   // `ts/incremental` into `patch` status (`ts/strict` becomes `conflict`,
   // which sync does not apply without --include-conflicts).
-  async function createSelectionProject(): Promise<string> {
-    const cwd = await createMinimalProject();
-    await fs.writeFile(
-      path.join(cwd, 'biome.json'),
-      JSON.stringify({
-        $schema: './node_modules/@biomejs/biome/configuration_schema.json',
-        formatter: { enabled: false },
-        linter: { enabled: true, rules: { recommended: true } },
-      })
-    );
-    await fs.writeFile(
-      path.join(cwd, 'tsconfig.json'),
-      '{"compilerOptions":{"strict":false}}\n'
-    );
-    return cwd;
-  }
+  const selectionFiles: ProjectFileMap = {
+    ...MINIMAL_FILES,
+    ...OUTDATED_LINT_FILES,
+  };
 
   test('sync honors skip from .xtarterizerc', async () => {
-    const cwd = await createSelectionProject();
-    try {
+    await withProject(selectionFiles, async ({ cwd, readJson }) => {
       await fs.writeFile(
         path.join(cwd, '.xtarterizerc'),
         JSON.stringify({ skip: ['ts/incremental'] })
@@ -195,24 +168,19 @@ describe('sync task selection via .xtarterizerc', () => {
       await syncCommand.run?.({ args: { cwd, yes: true } } as never);
 
       // The skipped task must NOT have been applied...
-      const tsconfig = JSON.parse(
-        await fs.readFile(path.join(cwd, 'tsconfig.json'), 'utf-8')
-      );
+      const tsconfig = await readJson<{
+        compilerOptions: { incremental?: unknown };
+      }>('tsconfig.json');
       expect(tsconfig.compilerOptions.incremental).toBeUndefined();
 
       // ...while other pending tasks were.
-      const biome = JSON.parse(
-        await fs.readFile(path.join(cwd, 'biome.json'), 'utf-8')
-      );
+      const biome = await readJson<{ vcs?: unknown }>('biome.json');
       expect(biome.vcs).toBeDefined();
-    } finally {
-      await fs.rm(cwd, { force: true, recursive: true });
-    }
+    });
   }, 60_000);
 
   test('--only overrides config.only', async () => {
-    const cwd = await createSelectionProject();
-    try {
+    await withProject(selectionFiles, async ({ cwd, readJson }) => {
       await fs.writeFile(
         path.join(cwd, '.xtarterizerc'),
         JSON.stringify({ only: ['ts/incremental', 'lint/biome'] })
@@ -224,176 +192,166 @@ describe('sync task selection via .xtarterizerc', () => {
 
       // CLI --only replaces the config list entirely: lint/biome runs,
       // ts/incremental stays untouched despite being listed in config.
-      const biome = JSON.parse(
-        await fs.readFile(path.join(cwd, 'biome.json'), 'utf-8')
-      );
+      const biome = await readJson<{ vcs?: unknown }>('biome.json');
       expect(biome.vcs).toBeDefined();
 
-      const tsconfig = JSON.parse(
-        await fs.readFile(path.join(cwd, 'tsconfig.json'), 'utf-8')
-      );
+      const tsconfig = await readJson<{
+        compilerOptions: { incremental?: unknown };
+      }>('tsconfig.json');
       expect(tsconfig.compilerOptions.incremental).toBeUndefined();
-    } finally {
-      await fs.rm(cwd, { force: true, recursive: true });
-    }
+    });
   }, 60_000);
 });
 
 describe('init command', () => {
   test('dry-run exits 1 when tasks are pending', async () => {
-    const cwd = await createMinimalProject();
-    process.exitCode = 0;
-    try {
-      await initCommand.run?.({
-        args: { cwd, dryRun: true, quiet: true },
-      } as never);
-      expect(process.exitCode).toBe(1);
-    } finally {
+    await withProject(MINIMAL_FILES, async ({ cwd }) => {
       process.exitCode = 0;
-      await fs.rm(cwd, { force: true, recursive: true });
-    }
+      try {
+        await initCommand.run?.({
+          args: { cwd, dryRun: true, quiet: true },
+        } as never);
+        expect(process.exitCode).toBe(1);
+      } finally {
+        process.exitCode = 0;
+      }
+    });
   }, 60_000);
 
   test('applies conflicting tasks when --include-conflicts is passed with --yes', async () => {
-    const cwd = await createMinimalProject();
-    process.exitCode = 0;
-    try {
-      // ts/strict reports 'conflict' when the existing config sets a
-      // compiler option to a different value (strict: false).
-      await fs.writeFile(
-        path.join(cwd, 'tsconfig.json'),
-        '{"compilerOptions":{"strict":false}}\n'
-      );
+    await withProject(
+      {
+        ...MINIMAL_FILES,
+        'tsconfig.json': '{"compilerOptions":{"strict":false}}\n',
+      },
+      async ({ cwd, readJson }) => {
+        process.exitCode = 0;
+        try {
+          await initCommand.run?.({
+            args: { cwd, includeConflicts: true, yes: true },
+          } as never);
 
-      await initCommand.run?.({
-        args: { cwd, includeConflicts: true, yes: true },
-      } as never);
-
-      // Applying the conflict must add the missing strict options.
-      // defu preserves the user's `strict: false`, so assert on a key
-      // that is only present after the conflict is applied.
-      const tsconfig = JSON.parse(
-        await fs.readFile(path.join(cwd, 'tsconfig.json'), 'utf-8')
-      );
-      expect(tsconfig.compilerOptions.noUnusedLocals).toBe(true);
-    } finally {
-      process.exitCode = 0;
-      await fs.rm(cwd, { force: true, recursive: true });
-    }
+          // Applying the conflict must add the missing strict options.
+          // defu preserves the user's `strict: false`, so assert on a key
+          // that is only present after the conflict is applied.
+          const tsconfig = await readJson<{
+            compilerOptions: { noUnusedLocals?: boolean };
+          }>('tsconfig.json');
+          expect(tsconfig.compilerOptions.noUnusedLocals).toBe(true);
+        } finally {
+          process.exitCode = 0;
+        }
+      }
+    );
   }, 240_000);
 });
 
 describe('add command', () => {
   test('applies a valid task ID', async () => {
-    const cwd = await createMinimalProject();
-    process.exitCode = 0;
-    try {
-      await addCommand.run?.({
-        args: { cwd, quiet: true, taskId: 'release/czg' },
-      } as never);
-
-      const pkg = JSON.parse(
-        await fs.readFile(path.join(cwd, 'package.json'), 'utf-8')
-      );
-      // Assert the outcome, not `process.exitCode`: it is a process-wide
-      // global that unrelated async paths (e.g. install child-process
-      // callbacks) can flip to 1 after the command resolved, which made
-      // this assertion fail on CI runners while the identical code passed
-      // locally. Deterministic exit-code failure paths are covered by the
-      // invalid-task-ID test below.
-      expect(pkg.scripts?.commit).toBe('czg');
-    } finally {
+    await withProject(MINIMAL_FILES, async ({ cwd, readJson }) => {
       process.exitCode = 0;
-      await fs.rm(cwd, { force: true, recursive: true });
-    }
+      try {
+        await addCommand.run?.({
+          args: { cwd, quiet: true, taskId: 'release/czg' },
+        } as never);
+
+        const pkg = await readJson<{ scripts?: Record<string, string> }>(
+          'package.json'
+        );
+        // Assert the outcome, not `process.exitCode`: it is a process-wide
+        // global that unrelated async paths (e.g. install child-process
+        // callbacks) can flip to 1 after the command resolved, which made
+        // this assertion fail on CI runners while the identical code passed
+        // locally. Deterministic exit-code failure paths are covered by the
+        // invalid-task-ID test below.
+        expect(pkg.scripts?.commit).toBe('czg');
+      } finally {
+        process.exitCode = 0;
+      }
+    });
   }, 60_000);
 
   test('handles invalid task ID gracefully', async () => {
-    const cwd = await createMinimalProject();
-    try {
-      // Should not throw - just logs an error
-      await addCommand.run?.({
-        args: { cwd, quiet: true, taskId: 'nonexistent/task' },
-      } as never);
-      expect(process.exitCode).toBe(1);
-    } finally {
-      process.exitCode = 0;
-      await fs.rm(cwd, { force: true, recursive: true });
-    }
+    await withProject(MINIMAL_FILES, async ({ cwd }) => {
+      try {
+        // Should not throw - just logs an error
+        await addCommand.run?.({
+          args: { cwd, quiet: true, taskId: 'nonexistent/task' },
+        } as never);
+        expect(process.exitCode).toBe(1);
+      } finally {
+        process.exitCode = 0;
+      }
+    });
   });
 
   test('reports conflict tasks as not applied and exits 1', async () => {
-    const cwd = await createMinimalProject();
-    process.exitCode = 0;
-    try {
-      const tsconfigPath = path.join(cwd, 'tsconfig.json');
-      const original = '{"compilerOptions":{"strict":false}}\n';
-      await fs.writeFile(tsconfigPath, original);
-
-      await addCommand.run?.({
-        args: { cwd, quiet: true, taskId: 'ts/strict' },
-      } as never);
-
-      expect(process.exitCode).toBe(1);
-      // The conflicting file must NOT have been overwritten
-      const tsconfig = await fs.readFile(tsconfigPath, 'utf-8');
-      expect(tsconfig).toBe(original);
-    } finally {
+    await withProject(MINIMAL_FILES, async ({ cwd, readText }) => {
       process.exitCode = 0;
-      await fs.rm(cwd, { force: true, recursive: true });
-    }
+      try {
+        await fs.writeFile(
+          path.join(cwd, 'tsconfig.json'),
+          '{"compilerOptions":{"strict":false}}\n'
+        );
+        const original = '{"compilerOptions":{"strict":false}}\n';
+
+        await addCommand.run?.({
+          args: { cwd, quiet: true, taskId: 'ts/strict' },
+        } as never);
+
+        expect(process.exitCode).toBe(1);
+        // The conflicting file must NOT have been overwritten
+        expect(await readText('tsconfig.json')).toBe(original);
+      } finally {
+        process.exitCode = 0;
+      }
+    });
   }, 60_000);
 
   test('applies conflicting tasks when --include-conflicts is passed with --all', async () => {
-    const cwd = await createMinimalProject();
-    process.exitCode = 0;
-    try {
-      // ts/strict reports 'conflict' when the existing config sets a
-      // compiler option to a different value (strict: false).
-      await fs.writeFile(
-        path.join(cwd, 'tsconfig.json'),
-        '{"compilerOptions":{"strict":false}}\n'
-      );
-
-      // A TS-only fixture trims `add --all` to a smaller task set than
-      // the react+vite fixture (no vite-plugin tasks), but release/
-      // quality tasks (czg, knip, ...) still install dev deps, so the
-      // test carries a 180s timeout below for cold-cache installs.
-      await fs.writeFile(
-        path.join(cwd, 'package.json'),
-        JSON.stringify({
+    // A TS-only fixture trims `add --all` to a smaller task set than
+    // the react+vite fixture (no vite-plugin tasks), but release/
+    // quality tasks (czg, knip, ...) still install dev deps, so the
+    // test carries a 180s timeout below for cold-cache installs.
+    await withProject(
+      {
+        'package.json': {
           devDependencies: { typescript: '^5.0.0' },
           name: 'cmd-test-fixture',
           type: 'module',
           version: '1.0.0',
-        })
-      );
-
-      await addCommand.run?.({
-        args: {
-          all: true,
-          cwd,
-          includeConflicts: true,
-          quiet: true,
         },
-      } as never);
+        'tsconfig.json': '{"compilerOptions":{"strict":false}}\n',
+      },
+      async ({ cwd, readJson }) => {
+        process.exitCode = 0;
+        try {
+          await addCommand.run?.({
+            args: {
+              all: true,
+              cwd,
+              includeConflicts: true,
+              quiet: true,
+            },
+          } as never);
 
-      // Do not assert exitCode: `add --all` applies every applicable
-      // task, and unrelated tasks may fail on a minimal fixture (e.g.
-      // vite plugins without a vite.config). The behavior under test is
-      // that the conflicting task WAS included and applied - same
-      // assertion style as the init/sync conflict tests above.
-      // Applying the conflict must add the missing strict options.
-      // defu preserves the user's `strict: false`, so assert on a key
-      // that is only present after the conflict is applied.
-      const tsconfig = JSON.parse(
-        await fs.readFile(path.join(cwd, 'tsconfig.json'), 'utf-8')
-      );
-      expect(tsconfig.compilerOptions.noUnusedLocals).toBe(true);
-    } finally {
-      process.exitCode = 0;
-      await fs.rm(cwd, { force: true, recursive: true });
-    }
+          // Do not assert exitCode: `add --all` applies every applicable
+          // task, and unrelated tasks may fail on a minimal fixture (e.g.
+          // vite plugins without a vite.config). The behavior under test is
+          // that the conflicting task WAS included and applied - same
+          // assertion style as the init/sync conflict tests above.
+          // Applying the conflict must add the missing strict options.
+          // defu preserves the user's `strict: false`, so assert on a key
+          // that is only present after the conflict is applied.
+          const tsconfig = await readJson<{
+            compilerOptions: { noUnusedLocals?: boolean };
+          }>('tsconfig.json');
+          expect(tsconfig.compilerOptions.noUnusedLocals).toBe(true);
+        } finally {
+          process.exitCode = 0;
+        }
+      }
+    );
     // add --all applies every applicable task, including release/quality
     // tasks that install dev dependencies (czg, commit-and-tag-version,
     // knip, ...). Cold-cache installs and shared pnpm-store contention
@@ -402,44 +360,44 @@ describe('add command', () => {
   }, 240_000);
 
   test('adds a conflicting task with --include-conflicts on a specific task ID', async () => {
-    const cwd = await createMinimalProject();
-    process.exitCode = 0;
-    try {
-      await fs.writeFile(
-        path.join(cwd, 'tsconfig.json'),
-        '{"compilerOptions":{"strict":false}}\n'
-      );
+    await withProject(
+      {
+        ...MINIMAL_FILES,
+        'tsconfig.json': '{"compilerOptions":{"strict":false}}\n',
+      },
+      async ({ cwd, readJson }) => {
+        process.exitCode = 0;
+        try {
+          await addCommand.run?.({
+            args: {
+              cwd,
+              includeConflicts: true,
+              quiet: true,
+              taskId: 'ts/strict',
+            },
+          } as never);
 
-      await addCommand.run?.({
-        args: {
-          cwd,
-          includeConflicts: true,
-          quiet: true,
-          taskId: 'ts/strict',
-        },
-      } as never);
-
-      expect(process.exitCode).toBe(0);
-      const tsconfig = JSON.parse(
-        await fs.readFile(path.join(cwd, 'tsconfig.json'), 'utf-8')
-      );
-      expect(tsconfig.compilerOptions.noUnusedLocals).toBe(true);
-    } finally {
-      process.exitCode = 0;
-      await fs.rm(cwd, { force: true, recursive: true });
-    }
+          expect(process.exitCode).toBe(0);
+          const tsconfig = await readJson<{
+            compilerOptions: { noUnusedLocals?: boolean };
+          }>('tsconfig.json');
+          expect(tsconfig.compilerOptions.noUnusedLocals).toBe(true);
+        } finally {
+          process.exitCode = 0;
+        }
+      }
+    );
   }, 60_000);
 
   test('skips already-configured task', async () => {
-    const cwd = await createMinimalProject();
-    try {
+    await withProject(MINIMAL_FILES, async ({ cwd, readJson }) => {
       // First apply czg
       await addCommand.run?.({
         args: { cwd, quiet: true, taskId: 'release/czg' },
       } as never);
 
-      const pkgBefore = JSON.parse(
-        await fs.readFile(path.join(cwd, 'package.json'), 'utf-8')
+      const pkgBefore = await readJson<{ scripts?: Record<string, string> }>(
+        'package.json'
       );
 
       // Apply again - should be idempotent
@@ -447,61 +405,54 @@ describe('add command', () => {
         args: { cwd, quiet: true, taskId: 'release/czg' },
       } as never);
 
-      const pkgAfter = JSON.parse(
-        await fs.readFile(path.join(cwd, 'package.json'), 'utf-8')
+      const pkgAfter = await readJson<{ scripts?: Record<string, string> }>(
+        'package.json'
       );
       expect(pkgAfter.scripts).toEqual(pkgBefore.scripts);
-    } finally {
-      await fs.rm(cwd, { force: true, recursive: true });
-    }
+    });
   }, 60_000);
 
   test('reports failed task checks in JSON ok field instead of claiming success', async () => {
-    const cwd = await createMinimalProject();
-    process.exitCode = 0;
-    const jsonLines: Array<string> = [];
-    const originalLog = console.log;
-    console.log = (...logArgs: Array<unknown>) => {
-      jsonLines.push(String(logArgs[0]));
-    };
-    try {
-      // A misbehaving task whose check() dies must surface as ok:false in the
-      // emitted JSON, agreeing with the exit code.
-      mockGetAllTasks.mockImplementationOnce(() =>
-        Effect.succeed([
-          {
-            applicable: () => true,
-            apply: () => Effect.void,
-            check: () => Effect.die(new Error('kaboom')),
-            dryRun: () => Effect.succeed([]),
-            group: 'test',
-            id: 'boom/failing',
-            label: 'Boom failing',
-          } as never,
-        ])
-      );
-
-      await addCommand.run?.({
-        args: { all: true, cwd, format: 'json', quiet: true },
-      } as never);
-
-      expect(process.exitCode).toBe(1);
-      const jsonLine = jsonLines.find((line) => line.startsWith('{'));
-      expect(jsonLine).toBeDefined();
-      const parsed = JSON.parse(jsonLine as string) as { ok: boolean };
-      expect(parsed.ok).toBe(false);
-    } finally {
-      console.log = originalLog;
+    await withProject(MINIMAL_FILES, async ({ cwd }) => {
       process.exitCode = 0;
-      await fs.rm(cwd, { force: true, recursive: true });
-    }
+      try {
+        // A misbehaving task whose check() dies must surface as ok:false in the
+        // emitted JSON, agreeing with the exit code.
+        mockGetAllTasks.mockImplementationOnce(() =>
+          Effect.succeed([
+            {
+              applicable: () => true,
+              apply: () => Effect.void,
+              check: () => Effect.die(new Error('kaboom')),
+              dryRun: () => Effect.succeed([]),
+              group: 'test',
+              id: 'boom/failing',
+              label: 'Boom failing',
+            } as never,
+          ])
+        );
+
+        const { logs } = await captureConsole(async () => {
+          await addCommand.run?.({
+            args: { all: true, cwd, format: 'json', quiet: true },
+          } as never);
+        });
+
+        expect(process.exitCode).toBe(1);
+        const jsonLine = logs.find((line) => line.startsWith('{'));
+        expect(jsonLine).toBeDefined();
+        const parsed = JSON.parse(jsonLine as string) as { ok: boolean };
+        expect(parsed.ok).toBe(false);
+      } finally {
+        process.exitCode = 0;
+      }
+    });
   }, 60_000);
 });
 
 describe('undo command', () => {
   test('reverts the last run', async () => {
-    const cwd = await createMinimalProject();
-    try {
+    await withProject(MINIMAL_FILES, async ({ cwd, readText }) => {
       await fs.writeFile(path.join(cwd, 'test.txt'), 'original content');
       await backupFile(cwd, 'test.txt');
       await writeRunManifest(cwd, ['test.txt']);
@@ -509,52 +460,50 @@ describe('undo command', () => {
 
       await undoCommand.run?.({ args: { cwd, quiet: true } } as never);
 
-      const content = await fs.readFile(path.join(cwd, 'test.txt'), 'utf-8');
-      expect(content).toBe('original content');
-    } finally {
-      await fs.rm(cwd, { force: true, recursive: true });
-    }
+      expect(await readText('test.txt')).toBe('original content');
+    });
   });
 
   test('removes files that were created by the run (no backup exists)', async () => {
-    const cwd = await createMinimalProject();
-    try {
-      // Simulate a run that created a brand-new file: the manifest
-      // lists it, but backupFile skipped it because it did not exist.
-      await fs.writeFile(path.join(cwd, 'created.txt'), 'new content');
-      await writeRunManifest(cwd, ['created.txt']);
+    await withProject(MINIMAL_FILES, async ({ cwd }) => {
+      try {
+        // Simulate a run that created a brand-new file: the manifest
+        // lists it, but backupFile skipped it because it did not exist.
+        await fs.writeFile(path.join(cwd, 'created.txt'), 'new content');
+        await writeRunManifest(cwd, ['created.txt']);
 
-      await undoCommand.run?.({ args: { cwd, quiet: true } } as never);
+        await undoCommand.run?.({ args: { cwd, quiet: true } } as never);
 
-      await expect(fs.access(path.join(cwd, 'created.txt'))).rejects.toThrow();
-      // Outcome-only assertion (see the add test above): the process-global
-      // exitCode is mutated by async paths outside this command's control.
-    } finally {
-      process.exitCode = 0;
-      await fs.rm(cwd, { force: true, recursive: true });
-    }
+        await expect(
+          fs.access(path.join(cwd, 'created.txt'))
+        ).rejects.toThrow();
+        // Outcome-only assertion (see the add test above): the process-global
+        // exitCode is mutated by async paths outside this command's control.
+      } finally {
+        process.exitCode = 0;
+      }
+    });
   });
 
   test('handles missing manifest gracefully', async () => {
-    const cwd = await createMinimalProject();
-    try {
-      const manifest = await readRunManifest(cwd);
-      expect(manifest).toBeNull();
+    await withProject(MINIMAL_FILES, async ({ cwd }) => {
+      try {
+        const manifest = await readRunManifest(cwd);
+        expect(manifest).toBeNull();
 
-      // Should not throw - just logs an error
-      await undoCommand.run?.({ args: { cwd, quiet: true } } as never);
-      expect(process.exitCode).toBe(1);
-    } finally {
-      process.exitCode = 0;
-      await fs.rm(cwd, { force: true, recursive: true });
-    }
+        // Should not throw - just logs an error
+        await undoCommand.run?.({ args: { cwd, quiet: true } } as never);
+        expect(process.exitCode).toBe(1);
+      } finally {
+        process.exitCode = 0;
+      }
+    });
   });
 });
 
 describe('restore command', () => {
   test('restores a specific file from backup', async () => {
-    const cwd = await createMinimalProject();
-    try {
+    await withProject(MINIMAL_FILES, async ({ cwd, readText }) => {
       await fs.writeFile(path.join(cwd, 'restore-me.txt'), 'original text');
       await backupFile(cwd, 'restore-me.txt');
       await fs.writeFile(path.join(cwd, 'restore-me.txt'), 'modified text');
@@ -563,27 +512,21 @@ describe('restore command', () => {
         args: { cwd, filepath: 'restore-me.txt' },
       } as never);
 
-      const content = await fs.readFile(
-        path.join(cwd, 'restore-me.txt'),
-        'utf-8'
-      );
-      expect(content).toBe('original text');
-    } finally {
-      await fs.rm(cwd, { force: true, recursive: true });
-    }
+      expect(await readText('restore-me.txt')).toBe('original text');
+    });
   });
 
   test('handles missing backups gracefully', async () => {
-    const cwd = await createMinimalProject();
-    try {
-      // Should not throw - just logs an error
-      await restoreCommand.run?.({
-        args: { cwd, filepath: 'nonexistent.txt' },
-      } as never);
-      expect(process.exitCode).toBe(1);
-    } finally {
-      process.exitCode = 0;
-      await fs.rm(cwd, { force: true, recursive: true });
-    }
+    await withProject(MINIMAL_FILES, async ({ cwd }) => {
+      try {
+        // Should not throw - just logs an error
+        await restoreCommand.run?.({
+          args: { cwd, filepath: 'nonexistent.txt' },
+        } as never);
+        expect(process.exitCode).toBe(1);
+      } finally {
+        process.exitCode = 0;
+      }
+    });
   });
 });

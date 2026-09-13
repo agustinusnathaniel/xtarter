@@ -1,20 +1,17 @@
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { detectProject } from '@xtarterize/core';
 import { describe, expect } from 'vite-plus/test';
 
 import { oxfmtTask, oxlintTask } from '../../packages/tasks/src/lint/oxlint.js';
+import { fixtureDir, fixtureProfile } from '../helpers/project.js';
 import { run } from '../helpers/run.js';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const fixtures = path.resolve(__dirname, '../fixtures');
 
 describe('oxlint config validation', () => {
   test('generated oxlint.config.ts has expected imports and rules', async () => {
-    const testDir = path.join(fixtures, 'vite-plus-no-lint');
-    const profile = await detectProject(testDir);
+    const testDir = fixtureDir('vite-plus-no-lint');
+    const profile = await fixtureProfile('vite-plus-no-lint');
     const diffs = await run(oxlintTask.dryRun(testDir, profile));
     const configFile = diffs.find((d) => d.filepath === 'oxlint.config.ts');
     if (!configFile) {
@@ -39,8 +36,8 @@ describe('oxlint config validation', () => {
   });
 
   test('generated oxlint.config.json preserves existing settings', async () => {
-    const testDir = path.join(fixtures, 'vite-plus-oxlint');
-    const profile = await detectProject(testDir);
+    const testDir = fixtureDir('vite-plus-oxlint');
+    const profile = await fixtureProfile('vite-plus-oxlint');
     const diffs = await run(oxlintTask.dryRun(testDir, profile));
     const configFile = diffs.find((d) => d.filepath === 'oxlint.config.json');
     if (!configFile) {
@@ -65,8 +62,8 @@ describe('oxlint config validation', () => {
   });
 
   test('includes ultracite react preset when framework is react', async () => {
-    const testDir = path.join(fixtures, 'vite-plus-no-lint');
-    const profile = await detectProject(testDir);
+    const testDir = fixtureDir('vite-plus-no-lint');
+    const profile = await fixtureProfile('vite-plus-no-lint');
     const diffs = await run(oxlintTask.dryRun(testDir, profile));
     const configFile = diffs.find((d) => d.filepath === 'oxlint.config.ts');
 
@@ -83,8 +80,8 @@ describe('oxlint config validation', () => {
 
 describe('oxfmt config validation', () => {
   test('generated oxfmt.config.ts has expected imports and options', async () => {
-    const testDir = path.join(fixtures, 'vite-plus-no-lint');
-    const profile = await detectProject(testDir);
+    const testDir = fixtureDir('vite-plus-no-lint');
+    const profile = await fixtureProfile('vite-plus-no-lint');
     const diffs = await run(oxfmtTask.dryRun(testDir, profile));
     const configFile = diffs.find((d) => d.filepath === 'oxfmt.config.ts');
 

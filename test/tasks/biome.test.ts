@@ -1,22 +1,17 @@
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { detectProject } from '@xtarterize/core';
 import { describe, expect } from 'vite-plus/test';
 
 import { biomeTask } from '../../packages/tasks/src/lint/biome.js';
 import { oxfmtTask, oxlintTask } from '../../packages/tasks/src/lint/oxlint.js';
+import { fixtureDir, fixtureProfile } from '../helpers/project.js';
 import { run } from '../helpers/run.js';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const fixtures = path.resolve(__dirname, '../fixtures');
 
 describe('biomeTask', () => {
   test('is applicable to project with biome dep', async () => {
-    const profile = await detectProject(
-      path.join(fixtures, 'react-vite-tailwind')
-    );
+    const profile = await fixtureProfile('react-vite-tailwind');
     expect(biomeTask.applicable(profile)).toBe(true);
   });
 
@@ -102,21 +97,17 @@ describe('biomeTask', () => {
   });
 
   test('returns new on clean fixture', async () => {
-    const profile = await detectProject(
-      path.join(fixtures, 'react-vite-tailwind')
-    );
+    const profile = await fixtureProfile('react-vite-tailwind');
     const status = await run(
-      biomeTask.check(path.join(fixtures, 'react-vite-tailwind'), profile)
+      biomeTask.check(fixtureDir('react-vite-tailwind'), profile)
     );
     expect(status).toBe('new');
   });
 
   test('dryRun returns diffs', async () => {
-    const profile = await detectProject(
-      path.join(fixtures, 'react-vite-tailwind')
-    );
+    const profile = await fixtureProfile('react-vite-tailwind');
     const diffs = await run(
-      biomeTask.dryRun(path.join(fixtures, 'react-vite-tailwind'), profile)
+      biomeTask.dryRun(fixtureDir('react-vite-tailwind'), profile)
     );
     expect(diffs.length).toBeGreaterThan(0);
     expect(diffs[0].filepath).toBe('biome.json');
@@ -124,22 +115,18 @@ describe('biomeTask', () => {
   });
 
   test('includes css.tailwindDirectives for tailwind projects', async () => {
-    const profile = await detectProject(
-      path.join(fixtures, 'react-vite-tailwind')
-    );
+    const profile = await fixtureProfile('react-vite-tailwind');
     const diffs = await run(
-      biomeTask.dryRun(path.join(fixtures, 'react-vite-tailwind'), profile)
+      biomeTask.dryRun(fixtureDir('react-vite-tailwind'), profile)
     );
     const config = JSON.parse(diffs[0].after ?? '{}');
     expect(config.css?.parser?.tailwindDirectives).toBe(true);
   });
 
   test('excludes css.tailwindDirectives for non-tailwind projects', async () => {
-    const profile = await detectProject(
-      path.join(fixtures, 'react-vite-no-styling')
-    );
+    const profile = await fixtureProfile('react-vite-no-styling');
     const diffs = await run(
-      biomeTask.dryRun(path.join(fixtures, 'react-vite-no-styling'), profile)
+      biomeTask.dryRun(fixtureDir('react-vite-no-styling'), profile)
     );
     const config = JSON.parse(diffs[0].after ?? '{}');
     expect(config.css).toBeUndefined();

@@ -1,13 +1,9 @@
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { ProcessError, runDiagnostics } from '@xtarterize/core';
 import { Effect } from 'effect';
 import { describe, expect } from 'vite-plus/test';
 
+import { fixtureDir } from '../helpers/project.js';
 import { processRunnerLayer, runWith } from '../helpers/run.js';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const fixtures = path.resolve(__dirname, '../fixtures');
 
 type DiagnosticGroupId = 'configuration' | 'environment' | 'project' | 'tools';
 
@@ -46,7 +42,7 @@ async function checksFor(cwd: string, group: DiagnosticGroupId) {
 describe('runDiagnostics environment group', () => {
   test('returns Node.js and Git checks', async () => {
     const checks = await checksFor(
-      path.join(fixtures, 'react-vite-tailwind'),
+      fixtureDir('react-vite-tailwind'),
       'environment'
     );
     const nodeCheck = checks.find((c) => c.name === 'Node.js');
@@ -61,7 +57,7 @@ describe('runDiagnostics environment group', () => {
 describe('runDiagnostics project group', () => {
   test('returns project structure checks', async () => {
     const checks = await checksFor(
-      path.join(fixtures, 'react-vite-tailwind'),
+      fixtureDir('react-vite-tailwind'),
       'project'
     );
     expect(checks.length).toBeGreaterThan(0);
@@ -75,7 +71,7 @@ describe('runDiagnostics project group', () => {
   });
 
   test('returns fewer checks for minimal project', async () => {
-    const checks = await checksFor(path.join(fixtures, 'node-only'), 'project');
+    const checks = await checksFor(fixtureDir('node-only'), 'project');
     expect(checks.length).toBeGreaterThan(0);
   });
 });
@@ -83,7 +79,7 @@ describe('runDiagnostics project group', () => {
 describe('runDiagnostics configuration group', () => {
   test('passes for clean project', async () => {
     const checks = await checksFor(
-      path.join(fixtures, 'react-vite-tailwind'),
+      fixtureDir('react-vite-tailwind'),
       'configuration'
     );
     expect(checks.some((c) => c.status === 'pass')).toBe(true);
@@ -92,10 +88,7 @@ describe('runDiagnostics configuration group', () => {
 
 describe('runDiagnostics tools group', () => {
   test('returns checks for tools in package.json', async () => {
-    const checks = await checksFor(
-      path.join(fixtures, 'react-vite-tailwind'),
-      'tools'
-    );
+    const checks = await checksFor(fixtureDir('react-vite-tailwind'), 'tools');
     // TypeScript is in devDependencies
     const tsCheck = checks.find((c) => c.name.includes('TypeScript'));
     expect(tsCheck).toBeDefined();
@@ -106,7 +99,7 @@ describe('runDiagnostics', () => {
   test('returns every group in canonical order with a matching summary', async () => {
     const { groups, summary } = await runWith(
       processRunner,
-      runDiagnostics(path.join(fixtures, 'react-vite-tailwind'))
+      runDiagnostics(fixtureDir('react-vite-tailwind'))
     );
 
     expect(groups.map((group) => group.title)).toEqual([

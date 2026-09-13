@@ -1,24 +1,16 @@
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-import {
-  detectProject,
-  resolveTaskStatuses,
-  resolveTasks,
-} from '@xtarterize/core';
+import { resolveTaskStatuses, resolveTasks } from '@xtarterize/core';
 import { getAllTasks } from '@xtarterize/tasks';
 import { describe, expect } from 'vite-plus/test';
 
+import { fixtureDir, fixtureProfile } from '../helpers/project.js';
 import { run } from '../helpers/run.js';
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const fixtures = path.resolve(__dirname, '../fixtures');
 
 describe('init integration', () => {
   const allTasks = getAllTasks();
 
   test('runs full init on react-vite-tailwind (biome baseline)', async () => {
-    const testDir = path.join(fixtures, 'react-vite-tailwind');
-    const profile = await detectProject(testDir);
+    const testDir = fixtureDir('react-vite-tailwind');
+    const profile = await fixtureProfile('react-vite-tailwind');
     expect(profile.framework).toBe('react');
     expect(profile.bundler).toBe('vite');
 
@@ -37,8 +29,7 @@ describe('init integration', () => {
   });
 
   test('applies oxlint/oxfmt tasks on vite-plus-no-lint, not biome', async () => {
-    const testDir = path.join(fixtures, 'vite-plus-no-lint');
-    const profile = await detectProject(testDir);
+    const profile = await fixtureProfile('vite-plus-no-lint');
     expect(profile.vitePlus).toBe(true);
     expect(profile.existing.biome).toBe(false);
 
@@ -49,8 +40,7 @@ describe('init integration', () => {
   });
 
   test('skips oxlint/oxfmt on vite-plus-biome, applies biome', async () => {
-    const testDir = path.join(fixtures, 'vite-plus-biome');
-    const profile = await detectProject(testDir);
+    const profile = await fixtureProfile('vite-plus-biome');
     expect(profile.vitePlus).toBe(true);
     expect(profile.existing.biome).toBe(true);
 
@@ -61,8 +51,7 @@ describe('init integration', () => {
   });
 
   test('skips all lint tasks on eslint-project', async () => {
-    const testDir = path.join(fixtures, 'eslint-project');
-    const profile = await detectProject(testDir);
+    const profile = await fixtureProfile('eslint-project');
     expect(profile.existing.eslint).toBe(true);
 
     const tasks = resolveTasks(profile, allTasks);
@@ -72,8 +61,7 @@ describe('init integration', () => {
   });
 
   test('skips biome on standalone oxlint, applies oxlint task', async () => {
-    const testDir = path.join(fixtures, 'oxlint-standalone');
-    const profile = await detectProject(testDir);
+    const profile = await fixtureProfile('oxlint-standalone');
     expect(profile.existing.oxlint).toBe(true);
     expect(profile.existing.oxfmt).toBe(false);
     expect(profile.vitePlus).toBe(false);
