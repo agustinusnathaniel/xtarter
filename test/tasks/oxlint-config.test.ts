@@ -1,11 +1,7 @@
-import fs from 'node:fs/promises';
-import os from 'node:os';
-import path from 'node:path';
-import { detectProject } from '@xtarterize/core';
 import { describe, expect } from 'vite-plus/test';
 
 import { oxfmtTask, oxlintTask } from '../../packages/tasks/src/lint/oxlint.js';
-import { fixtureDir, fixtureProfile } from '../helpers/project.js';
+import { fixtureDir, fixtureProfile, withProject } from '../helpers/project.js';
 import { run } from '../helpers/run.js';
 
 describe('oxlint config validation', () => {
@@ -97,29 +93,20 @@ describe('oxfmt config validation', () => {
   });
 
   test('reports conflict when an existing oxfmt.config.ts differs from the template', async () => {
-    const tmpDir = await fs.mkdtemp(
-      path.join(os.tmpdir(), 'xtarterize-oxfmt-status-')
-    );
-    try {
-      await fs.writeFile(
-        path.join(tmpDir, 'package.json'),
-        JSON.stringify({
+    await withProject(
+      {
+        'oxfmt.config.ts': 'export default {}\n',
+        'package.json': {
           devDependencies: { 'vite-plus': '^0.1.0' },
           name: 'vp-oxfmt-status',
           type: 'module',
-        })
-      );
-      await fs.writeFile(
-        path.join(tmpDir, 'oxfmt.config.ts'),
-        'export default {}\n'
-      );
-
-      const profile = await detectProject(tmpDir);
-      await expect(run(oxfmtTask.check(tmpDir, profile))).resolves.toBe(
-        'conflict'
-      );
-    } finally {
-      await fs.rm(tmpDir, { force: true, recursive: true });
-    }
+        },
+      },
+      async ({ cwd, profile }) => {
+        await expect(run(oxfmtTask.check(cwd, profile))).resolves.toBe(
+          'conflict'
+        );
+      }
+    );
   });
 });

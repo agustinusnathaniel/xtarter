@@ -1,14 +1,12 @@
 import fs from 'node:fs/promises';
-import os from 'node:os';
 import path from 'node:path';
-import { detectProject } from '@xtarterize/core';
 import { describe, expect } from 'vite-plus/test';
 
 import { agentsMdTask } from '../../packages/tasks/src/agent/agents-md.js';
 import { vscodeTask } from '../../packages/tasks/src/editor/vscode.js';
 import { turboTask } from '../../packages/tasks/src/monorepo/turbo.js';
 import { knipTask } from '../../packages/tasks/src/quality/knip.js';
-import { fixtureDir, fixtureProfile } from '../helpers/project.js';
+import { fixtureDir, fixtureProfile, withProject } from '../helpers/project.js';
 import { run } from '../helpers/run.js';
 
 describe('knipTask', () => {
@@ -123,93 +121,80 @@ describe('vscodeTask', () => {
   });
 
   test('additively merges extensions into existing list', async () => {
-    const tmpDir = await fs.mkdtemp(
-      path.join(os.tmpdir(), 'xtarterize-vsc-ext-')
-    );
-    await fs.mkdir(path.join(tmpDir, '.vscode'));
-    await fs.writeFile(
-      path.join(tmpDir, '.vscode', 'extensions.json'),
-      JSON.stringify({
-        recommendations: ['my-custom-extension', 'biomejs.biome'],
-      })
-    );
-    await fs.writeFile(
-      path.join(tmpDir, 'package.json'),
-      JSON.stringify({
-        devDependencies: {
-          '@biomejs/biome': '^1.0.0',
-          typescript: '^5.3.0',
+    await withProject(
+      {
+        '.vscode/extensions.json': {
+          recommendations: ['my-custom-extension', 'biomejs.biome'],
         },
-        name: 'vsc-test',
-      })
+        'package.json': {
+          devDependencies: {
+            '@biomejs/biome': '^1.0.0',
+            typescript: '^5.3.0',
+          },
+          name: 'vsc-test',
+        },
+      },
+      async ({ cwd, profile }) => {
+        const diffs = await run(vscodeTask.dryRun(cwd, profile));
+        const extDiff = diffs.find((d) =>
+          d.filepath.includes('extensions.json')
+        );
+        const result = JSON.parse(extDiff?.after ?? '{}');
+
+        expect(result.recommendations).toContain('my-custom-extension');
+        expect(result.recommendations).toContain('biomejs.biome');
+        expect(result.recommendations).toContain(
+          'ms-vscode.vscode-typescript-next'
+        );
+      }
     );
-
-    const profile = await detectProject(tmpDir);
-    const diffs = await run(vscodeTask.dryRun(tmpDir, profile));
-    const extDiff = diffs.find((d) => d.filepath.includes('extensions.json'));
-    const result = JSON.parse(extDiff?.after ?? '{}');
-
-    expect(result.recommendations).toContain('my-custom-extension');
-    expect(result.recommendations).toContain('biomejs.biome');
-    expect(result.recommendations).toContain(
-      'ms-vscode.vscode-typescript-next'
-    );
-
-    await fs.rm(tmpDir, { recursive: true });
   });
 
   test('skips when settings and extensions already match', async () => {
-    const tmpDir = await fs.mkdtemp(
-      path.join(os.tmpdir(), 'xtarterize-vsc-skip-')
-    );
-    await fs.mkdir(path.join(tmpDir, '.vscode'));
+    await withProject({}, async ({ cwd, profile }) => {
+      const settingsDiffs = await run(vscodeTask.dryRun(cwd, profile));
+      const settingsAfter = JSON.parse(
+        settingsDiffs.find((d) => d.filepath.includes('settings.json'))
+          ?.after ?? '{}'
+      );
+      const extAfter = JSON.parse(
+        settingsDiffs.find((d) => d.filepath.includes('extensions.json'))
+          ?.after ?? '{}'
+      );
 
-    const profile = await detectProject(tmpDir);
-    const settingsDiffs = await run(vscodeTask.dryRun(tmpDir, profile));
-    const settingsAfter = JSON.parse(
-      settingsDiffs.find((d) => d.filepath.includes('settings.json'))?.after ??
-        '{}'
-    );
-    const extAfter = JSON.parse(
-      settingsDiffs.find((d) => d.filepath.includes('extensions.json'))
-        ?.after ?? '{}'
-    );
+      await fs.mkdir(path.join(cwd, '.vscode'), { recursive: true });
+      await fs.writeFile(
+        path.join(cwd, '.vscode', 'settings.json'),
+        JSON.stringify(settingsAfter)
+      );
+      await fs.writeFile(
+        path.join(cwd, '.vscode', 'extensions.json'),
+        JSON.stringify(extAfter)
+      );
 
-    await fs.writeFile(
-      path.join(tmpDir, '.vscode', 'settings.json'),
-      JSON.stringify(settingsAfter)
-    );
-    await fs.writeFile(
-      path.join(tmpDir, '.vscode', 'extensions.json'),
-      JSON.stringify(extAfter)
-    );
-
-    const status = await run(vscodeTask.check(tmpDir, profile));
-    expect(status).toBe('skip');
-
-    await fs.rm(tmpDir, { recursive: true });
+      const status = await run(vscodeTask.check(cwd, profile));
+      expect(status).toBe('skip');
+    });
   });
 
   test('apply writes the expected file', async () => {
-    const tmpDir = await fs.mkdtemp(
-      path.join(os.tmpdir(), 'xtarterize-vsc-apply-')
+    await withProject(
+      {
+        'package.json': {
+          devDependencies: { typescript: '^5.3.0' },
+          name: 'apply-test',
+        },
+      },
+      async ({ cwd, profile }) => {
+        await run(vscodeTask.apply(cwd, profile));
+        const settingsPath = path.join(cwd, '.vscode', 'settings.json');
+        const exists = await fs
+          .access(settingsPath)
+          .then(() => true)
+          .catch(() => false);
+        expect(exists).toBe(true);
+      }
     );
-    await fs.writeFile(
-      path.join(tmpDir, 'package.json'),
-      JSON.stringify({
-        devDependencies: { typescript: '^5.3.0' },
-        name: 'apply-test',
-      })
-    );
-    const profile = await detectProject(tmpDir);
-    await run(vscodeTask.apply(tmpDir, profile));
-    const settingsPath = path.join(tmpDir, '.vscode', 'settings.json');
-    const exists = await fs
-      .access(settingsPath)
-      .then(() => true)
-      .catch(() => false);
-    expect(exists).toBe(true);
-    await fs.rm(tmpDir, { force: true, recursive: true });
   });
 });
 

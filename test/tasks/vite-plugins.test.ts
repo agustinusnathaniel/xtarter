@@ -1,12 +1,11 @@
 import fs from 'node:fs/promises';
-import os from 'node:os';
 import path from 'node:path';
-import { detectProject, planTasks } from '@xtarterize/core';
+import { planTasks } from '@xtarterize/core';
 import { describe, expect } from 'vite-plus/test';
 
 import { viteCheckerTask } from '../../packages/tasks/src/vite/checker.js';
 import { viteVisualizerTask } from '../../packages/tasks/src/vite/visualizer.js';
-import { fixtureDir, fixtureProfile } from '../helpers/project.js';
+import { fixtureDir, fixtureProfile, withProject } from '../helpers/project.js';
 import { run } from '../helpers/run.js';
 
 describe('viteCheckerTask', () => {
@@ -27,31 +26,23 @@ describe('viteCheckerTask', () => {
   });
 
   test('returns skip when the plugin is already imported', async () => {
-    const tmpDir = await fs.mkdtemp(
-      path.join(os.tmpdir(), 'xtarterize-vp-present-')
-    );
-    try {
-      await fs.writeFile(
-        path.join(tmpDir, 'package.json'),
-        JSON.stringify({
+    await withProject(
+      {
+        'package.json': {
           devDependencies: {
             vite: '^5.0.0',
             'vite-plugin-checker': '*',
           },
           name: 'checker-present',
-        })
-      );
-      await fs.writeFile(
-        path.join(tmpDir, 'vite.config.ts'),
-        `import checker from 'vite-plugin-checker'\nexport default { plugins: [checker()] }\n`
-      );
-      const profile = await detectProject(tmpDir);
-      await expect(run(viteCheckerTask.check(tmpDir, profile))).resolves.toBe(
-        'skip'
-      );
-    } finally {
-      await fs.rm(tmpDir, { force: true, recursive: true });
-    }
+        },
+        'vite.config.ts': `import checker from 'vite-plugin-checker'\nexport default { plugins: [checker()] }\n`,
+      },
+      async ({ cwd, profile }) => {
+        await expect(run(viteCheckerTask.check(cwd, profile))).resolves.toBe(
+          'skip'
+        );
+      }
+    );
   });
 
   test('dryRun returns the real vite.config.ts diff', async () => {
@@ -68,31 +59,26 @@ describe('viteCheckerTask', () => {
   });
 
   test('apply writes the expected file', async () => {
-    const tmpDir = await fs.mkdtemp(
-      path.join(os.tmpdir(), 'xtarterize-vp-apply-')
-    );
-    await fs.writeFile(
-      path.join(tmpDir, 'package.json'),
-      JSON.stringify({
-        devDependencies: {
-          vite: '^5.0.0',
-          'vite-plugin-checker': '*',
+    await withProject(
+      {
+        'package.json': {
+          devDependencies: {
+            vite: '^5.0.0',
+            'vite-plugin-checker': '*',
+          },
+          name: 'apply-test',
         },
-        name: 'apply-test',
-      })
+        'vite.config.ts': `import { defineConfig } from 'vite'\nexport default defineConfig({})`,
+      },
+      async ({ cwd, profile }) => {
+        await run(viteCheckerTask.apply(cwd, profile));
+        const content = await fs.readFile(
+          path.join(cwd, 'vite.config.ts'),
+          'utf-8'
+        );
+        expect(content).toContain('vite-plugin-checker');
+      }
     );
-    await fs.writeFile(
-      path.join(tmpDir, 'vite.config.ts'),
-      `import { defineConfig } from 'vite'\nexport default defineConfig({})`
-    );
-    const profile = await detectProject(tmpDir);
-    await run(viteCheckerTask.apply(tmpDir, profile));
-    const content = await fs.readFile(
-      path.join(tmpDir, 'vite.config.ts'),
-      'utf-8'
-    );
-    expect(content).toContain('vite-plugin-checker');
-    await fs.rm(tmpDir, { force: true, recursive: true });
   });
 });
 
