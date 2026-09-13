@@ -244,3 +244,57 @@ export const packageScriptsCases = defineScriptCases(20, [
     },
   },
 ]);
+
+/**
+ * package-scripts cases that lived in `plop.test.ts`, kept under their
+ * original `plopTask` describe chain by the suite.
+ */
+export const packageScriptsPlopCases = defineScriptCases(4, [
+  {
+    afterContains: [
+      '"lint": "vp lint"',
+      '"check": "vp check"',
+      '"fix": "vp check --fix"',
+    ],
+    afterNotContains: ['"biome"', '"biome:fix"'],
+    name: 'uses vp scripts when Vite+ detected and no existing biome',
+    pkg: {
+      devDependencies: { typescript: '^5.3.0', 'vite-plus': '^0.1.0' },
+      name: 'viteplus-nobiome',
+      type: 'module',
+    },
+  },
+  {
+    afterContains: [
+      '"biome": "biome check ."',
+      '"biome:fix": "biome check --write ."',
+    ],
+    afterNotContains: ['"lint": "vp lint"'],
+    name: 'keeps biome scripts when Vite+ detected but biome dep already present',
+    pkg: {
+      devDependencies: {
+        '@biomejs/biome': '^2.4.0',
+        typescript: '^5.3.0',
+        'vite-plus': '^0.1.0',
+      },
+      name: 'viteplus-biome',
+      type: 'module',
+    },
+  },
+  {
+    afterNotContains: ['"biome"', '"lint": "vp lint"', '"check"', '"fix"'],
+    name: 'skips lint scripts when ESLint is already set up',
+    pkg: scriptPkg('eslint-project', { lint: 'eslint .' }, DEPS.eslintTs),
+  },
+  {
+    afterContains: [
+      '"lint": "oxlint --import-plugin"',
+      '"check": "oxlint --import-plugin && oxfmt --check"',
+      '"fix": "oxlint --fix --import-plugin && oxfmt"',
+    ],
+    afterNotContains: ['"biome"', '"vp '],
+    extraFiles: { '.oxlintrc.json': { rules: { 'no-console': 'error' } } },
+    name: 'uses direct oxlint scripts when oxlint config exists without Vite+',
+    pkg: scriptPkg('oxlint-standalone', undefined, DEPS.ts),
+  },
+]);
