@@ -86,7 +86,7 @@ the search implementation in Meta's MIT-licensed Astryx design system
   alias-stacked result and below the strongest all-direct multi-signal result,
   so `agent skills` still ranks `agent/agents-md` first.
 - The alias table lists each term once per group instead of once per key/value
-  pair and needs no transitive closure pass, so it is 44 lines against the old
+  pair and needs no transitive closure pass, so it is 45 lines against the old
   map's 92 with a single table to audit.
 - The four keyword aliases are ordinary task metadata, so the tasks that anchor
   those queries also win direct hits, and no new task-level mechanism is
@@ -108,7 +108,7 @@ the search implementation in Meta's MIT-licensed Astryx design system
    easier to audit.
 4. **Adopt an external search library (for example Fuse.js or MiniSearch).**
    Adds a dependency to a pure, offline engine and an index lifecycle for a
-   29-task catalog. Rejected: 44 lines of alias data and the existing tiers
+   29-task catalog. Rejected: 45 lines of alias data and the existing tiers
    cover the need.
 
 ## Consequences
@@ -144,6 +144,12 @@ the search implementation in Meta's MIT-licensed Astryx design system
     residual: package-engines authors the exact `node version` keyword.
   - `npm scripts` favors `scripts/package-scripts` (`0.85`) over
     `scripts/npmrc` (`0.785`); package-scripts authors the exact phrase.
+  - Other authored-phrase queries promoted to top-1 by exact whole-phrase
+    matches: `ai tools` -> `agent/skills-install` (`0.85`),
+    `conventional commits` -> `release/commitlint` (`0.85`), `dead code` ->
+    `quality/knip` (`0.85`), and `package manager` ->
+    `quality/package-engines` (`0.85`, tied with `workspace/pnpm-workspace`
+    and broken by catalog order).
   - `vitest` and `jest` still return a weak `ci/ci` match; no task authors
     those terms, so alias expansion reaches the CI task's `test` keyword.
 - Multi-word alias keys such as `build cache` still do not fire through
