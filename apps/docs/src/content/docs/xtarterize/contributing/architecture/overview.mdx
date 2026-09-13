@@ -71,7 +71,7 @@ sequenceDiagram
     Core-->>Session: ProjectProfile + statuses + timing
     Session->>Core: planTasks (Effect)
     Core-->>Session: ApplyPlan (diffs, dependencies, files)
-    Session->>User: reportPlan / confirm via Prompter service
+    Session->>User: displayPlan + confirm via Prompter service
     User->>Session: Confirm
     Session->>Core: executePlan (Effect)
     Core->>Core: backupFile + writeRunManifest [plain leaves, lifted]

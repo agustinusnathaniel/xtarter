@@ -103,6 +103,11 @@ Commands that do **not** create or read `.xtarterize/` artifacts
 All commands resolve `cwd` via `resolveCwd(args)` (either directly or through
 `resolveCliContext(args).cwd`), so the same path resolution applies uniformly.
 
+Update (2026-09-14): `resolveCwd` and `resolveCliContext` have been removed.
+Commands resolve `cwd` through `resolveRuntimeContext(args)` (ADR 030), which
+also derives `json`, `quiet`, and `format`; the uniform path resolution
+described here is unchanged.
+
 ### Behavior specification
 
 The function follows a simple 5-step state machine:
@@ -284,3 +289,7 @@ Rejected because `undo` and `restore` read `.xtarterize/` via
   already the correct target. Workspace packages are not affected - the
   function operates on the scoped project root. If a future scope configuration
   mechanism changes `cwd` resolution, this should be re-evaluated.
+
+Update (2026-09-14): the helpers named in the monorepo bullet above have been
+removed; `resolveRuntimeContext(args).cwd` (ADR 030) is the current source used
+by `session.open`. The monorepo conclusion is unchanged.
