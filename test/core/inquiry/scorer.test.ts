@@ -318,4 +318,89 @@ describe('scoreTasks', () => {
     expect(results[0].taskId).toBe('alias/direct');
     expect(results[0].relevance).toBeGreaterThan(results[1].relevance);
   });
+
+  test('rejects alias substrings below the containment threshold', () => {
+    const task = makeTask({
+      id: 'containment/long',
+      searchMeta: {
+        configTargets: ['oxlintrc.json'],
+        keywords: [],
+        tags: [],
+      },
+    });
+
+    expect(scoreTasks([task], 'linting')).toHaveLength(0);
+  });
+
+  test('rejects alias substrings shorter than four characters', () => {
+    const task = makeTask({
+      id: 'containment/short',
+      searchMeta: { configTargets: [], keywords: ['maid'], tags: [] },
+    });
+
+    expect(scoreTasks([task], 'agent')).toHaveLength(0);
+  });
+
+  test('accepts alias substrings at or above the containment threshold', () => {
+    const task = makeTask({
+      id: 'containment/ok',
+      label: 'Pre-commit hook',
+      searchMeta: { configTargets: [], keywords: ['pre-commit'], tags: [] },
+    });
+
+    const results = scoreTasks([task], 'commitlint');
+    expect(results).toHaveLength(1);
+  });
+
+  test('keeps direct substring matching free of containment', () => {
+    const task = makeTask({
+      id: 'containment/direct',
+      searchMeta: { configTargets: ['oxlintrc.json'], keywords: [], tags: [] },
+    });
+
+    const results = scoreTasks([task], 'lint');
+    expect(results).toHaveLength(1);
+    expect(results[0].signals.find((s) => s.name === 'config')?.score).toBe(
+      0.55
+    );
+  });
+
+  test('promotes an exact multi-word phrase match over alias-only scores', () => {
+    const authored = makeTask({
+      id: 'phrase/authored',
+      label: 'Auto-update workflow',
+      searchMeta: { configTargets: [], keywords: ['auto update'], tags: [] },
+    });
+    const aliasStacked = makeTask({
+      id: 'phrase/alias',
+      label: 'Dependency automation',
+      searchMeta: {
+        configTargets: ['renovate.json'],
+        keywords: ['renovate', 'dependencies'],
+        tags: [],
+      },
+    });
+
+    const results = scoreTasks([aliasStacked, authored], 'auto update');
+    expect(results[0].taskId).toBe('phrase/authored');
+    expect(results[0].relevance).toBeGreaterThanOrEqual(0.85);
+  });
+
+  test('does not promote single-word or non-exact keyword matches', () => {
+    const single = makeTask({
+      id: 'phrase/single',
+      label: 'Lint options',
+      searchMeta: { configTargets: [], keywords: ['lint'], tags: [] },
+    });
+    const phrase = makeTask({
+      id: 'phrase/words',
+      label: 'Auto-update workflow',
+      searchMeta: { configTargets: [], keywords: ['auto update'], tags: [] },
+    });
+
+    expect(scoreTasks([single], 'lint')[0].relevance).toBeLessThan(0.85);
+    expect(scoreTasks([phrase], 'automatic update')[0].relevance).toBeLessThan(
+      0.85
+    );
+  });
 });

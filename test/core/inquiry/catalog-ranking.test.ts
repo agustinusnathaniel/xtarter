@@ -32,4 +32,11 @@ describe('catalog ranking regressions', () => {
   test('"ci pipeline" ranks ci/ci first', () => {
     expect(topResult('ci pipeline')?.taskId).toBe('ci/ci');
   });
+
+  test('authored keyword hits rank above alias-only matches', () => {
+    expect(topResult('skills')?.taskId).toBe('agent/skills-install');
+    expect(topResult('auto update')?.taskId).toBe('ci/auto-update');
+    expect(topResult('semver')?.taskId).toBe('release/cat-version');
+    expect(topResult('bump')?.taskId).toBe('release/cat-version');
+  });
 });

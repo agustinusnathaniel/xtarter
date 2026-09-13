@@ -24,6 +24,16 @@ type MatchTier = 0.0 | 0.55 | 0.75 | 0.85 | 0.95 | 1.0;
 /** Alias-derived matches are discounted so a direct hit outranks them. */
 const ALIAS_DISCOUNT = 0.85;
 
+/** Reserved score for a multi-word query that exactly matches a keyword. */
+const PHRASE_SCORE = 0.85;
+
+/** astryx-style exact whole-phrase promotion above alias-only token paths. */
+function matchesPhrase(task: Task, phrase: string): boolean {
+  return (task.searchMeta?.keywords ?? []).some(
+    (keyword) => tokenize(keyword).tokens.join(' ').toLowerCase() === phrase
+  );
+}
+
 function bestMatchTier(
   token: string,
   field: string | undefined,
@@ -205,6 +215,7 @@ export function scoreTasks(
   if (tokens.length === 0) {
     return [];
   }
+  const phrase = tokens.join(' ').toLowerCase();
 
   const results: Array<InquiryResult> = [];
 
@@ -213,8 +224,12 @@ export function scoreTasks(
       tokens,
       weights,
     });
-    if (score > minScore) {
-      results.push({ relevance: score, signals, task, taskId: task.id });
+    const relevance =
+      tokens.length > 1 && matchesPhrase(task, phrase)
+        ? Math.max(score, PHRASE_SCORE)
+        : score;
+    if (relevance > minScore) {
+      results.push({ relevance, signals, task, taskId: task.id });
     }
   }
 
