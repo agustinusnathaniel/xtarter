@@ -37,8 +37,8 @@ Restore query expansion in a compact, precision-preserving shape inspired by
 the search implementation in Meta's MIT-licensed Astryx design system
 (`facebook/astryx`, `packages/cli/api/search/search.mjs`).
 
-- `packages/core/src/inquiry/aliases.ts` holds 17 pipe-delimited, hand-written
-  alias groups (44 lines). Expansion is bidirectional and sibling-closed within
+- `packages/core/src/inquiry/aliases.ts` holds 18 pipe-delimited, hand-written
+  alias groups (45 lines). Expansion is bidirectional and sibling-closed within
   one group: every term maps to the other terms of its group, and aliases are
   never expanded again, so there is no cross-group transitive closure. A term
   listed in two groups gets the union of both groups, not their closure.
@@ -48,14 +48,20 @@ the search implementation in Meta's MIT-licensed Astryx design system
 - Alias-derived substring matches require meaningful containment: the shorter
   side must be at least 4 characters and at least half the length of the longer
   side.
+- A multi-word query that exactly matches an authored keyword is promoted to a
+  reserved 0.85, above alias-stacked token paths. Single-word queries and
+  non-exact phrases are not promoted. This ports astryx's reserved phrase tier
+  and fixes `auto update`, `npm scripts`, `node version`, and `build cache`,
+  where per-token expansion alone ranked an alias-stacked task first.
 - Four tasks gained a task-local keyword alias through the existing
   `searchMeta.keywords` field: `typing` on `ts/strict`, `versioning` on
   `release/versionrc`, `updates` on `deps/renovate`, and `hooks` on
   `release/git-hooks` (4 lines total).
 - Match tiers, weights, thresholds, the coverage bonus, and the `signals`
-  result shape are unchanged.
-- Production additions total 98 lines (44 aliases, 50 scorer wiring, 4
-  keywords); tests add 109 lines, including the real-catalog regression suite
+  result shape are unchanged; phrase promotion only raises the relevance of an
+  exact phrase hit.
+- Production additions total 106 lines (45 aliases, 57 scorer wiring, 4
+  keywords); tests add 201 lines, including the real-catalog regression suite
   `test/core/inquiry/catalog-ranking.test.ts`.
 - No dependencies change. The engine stays pure and offline.
 - Expansion lives in one compact hand-written table plus four task-local
@@ -73,6 +79,12 @@ the search implementation in Meta's MIT-licensed Astryx design system
 - Containment-checked substrings stop short aliases from matching unrelated
   fields. Without the rule, an alias such as `lint` would reach the substring
   tier inside `oxlint.config`.
+- Whole-phrase promotion ports astryx's reserved tier. Without it, `auto
+  update` ranked `deps/renovate` above `ci/auto-update`: per-token expansion
+  matched renovate's `auto` and `update` aliases while the authored phrase
+  never matched as a unit. The reserved score sits above every observed
+  alias-stacked result and below the strongest all-direct multi-signal result,
+  so `agent skills` still ranks `agent/agents-md` first.
 - The alias table lists each term once per group instead of once per key/value
   pair and needs no transitive closure pass, so it is 44 lines against the old
   map's 92 with a single table to audit.
@@ -103,28 +115,41 @@ the search implementation in Meta's MIT-licensed Astryx design system
 
 ### Positive
 
-- Recall is restored: the battery returns 169 results with mean top-1 relevance
-  0.821, zero-result queries are eliminated, `code` ranks `editor/vscode` first
+- Recall is restored: the battery returns 168 results with mean top-1 relevance
+  0.834, zero-result queries are eliminated, `code` ranks `editor/vscode` first
   again, `husky` returns 6 results, `commitlint` returns 5, and `updates`
-  scores 0.831 `[measured]`. `pnpm check` passes with 16/16 tasks and 696 tests
+  scores 0.831 `[measured]`. `pnpm check` passes with 16/16 tasks and 703 tests
   passed / 6 skipped `[verified]`.
-- Direct hits keep priority through the 0.85 discount, preserving the precision
-  property ADR 038 protected.
-- Expansion lives in one 44-line file plus contained scorer wiring; tiers,
+- Direct and authored hits keep priority: the 0.85 alias discount and the
+  reserved phrase tier keep literal task vocabulary above alias-only matches,
+  so `skills`, `auto update`, `semver`, and `bump` rank their authored tasks
+  first `[measured]`.
+- Expansion lives in one 45-line file plus contained scorer wiring; tiers,
   weights, thresholds, and the `signals` shape stay stable for consumers.
 - The engine stays pure, offline, and dependency-free.
 
 ### Negative
 
-- 98 production lines return to the maintained surface, and the alias table is
+- 106 production lines return to the maintained surface, and the alias table is
   a second hand-written list that can drift from task metadata. It is smaller
   and single-hop, but it needs the same periodic review the old map did, now
   bounded to roughly 20 groups before the design should be revisited.
-- `node version` now ranks `release/versionrc` (0.763) above
-  `release/cat-version` (0.729), where main had them tied with
-  `release/cat-version` first. The cause is the `versioning` keyword alias on
-  `release/versionrc`; both tasks belong to the release domain and their labels
-  overlap, so this is accepted rather than adjusted.
+- Known rankings after the precision pass:
+  - `analysis` favors `quality/knip` (intended), while `quality gate` and
+    `static analysis` favor `quality/lint-staged` (`0.85`) and `lint/oxlint`
+    (`0.85`) because those tasks author the exact phrases; phrase promotion
+    outranks knip's alias-derived score.
+  - `node version` favors `quality/package-engines` (`0.85`) through phrase
+    promotion. This supersedes the earlier accepted `release/versionrc`
+    residual: package-engines authors the exact `node version` keyword.
+  - `npm scripts` favors `scripts/package-scripts` (`0.85`) over
+    `scripts/npmrc` (`0.785`); package-scripts authors the exact phrase.
+  - `vitest` and `jest` still return a weak `ci/ci` match; no task authors
+    those terms, so alias expansion reaches the CI task's `test` keyword.
+- Multi-word alias keys such as `build cache` still do not fire through
+  expansion because expansion is applied per token; exact-phrase promotion now
+  covers whole-query matches only, which is why `build cache` reaches
+  `monorepo/turbo` only when typed as the full phrase.
 - Alias expansion adds approximate matches that can still outrank unrelated
   weak direct matches when they score a tier higher. The discount bounds this
   but does not eliminate it.
