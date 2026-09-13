@@ -1,9 +1,8 @@
 import { logWarn } from '@xtarterize/core';
-import { defineCommand } from 'citty';
 import { Effect } from 'effect';
 
+import { cliCommand } from '@/commands/command.js';
 import type { RunCommandArgs } from '@/commands/run-command.js';
-import { runCliProgram } from '@/runtime.js';
 import { openSession } from '@/session.js';
 import {
   commonArgs,
@@ -16,7 +15,7 @@ import { runInteractive } from './interactive.js';
 import { runSingleTask } from './single-task.js';
 import type { AddCommandError, AddCommandServices } from './types.js';
 
-export const addCommand = defineCommand({
+export const addCommand = cliCommand({
   args: {
     all: {
       description:
@@ -33,13 +32,9 @@ export const addCommand = defineCommand({
     },
     timing: timingArg,
   },
-  meta: {
-    description: 'Add a specific task (or pick interactively)',
-    name: 'add',
-  },
-  async run({ args }) {
-    await runCliProgram(addProgram(args));
-  },
+  description: 'Add a specific task (or pick interactively)',
+  name: 'add',
+  program: addProgram,
 });
 
 export type AddCommandArgs = RunCommandArgs & {

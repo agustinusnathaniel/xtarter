@@ -51,6 +51,12 @@ export const formatArgs = {
   format: formatArg,
 } as const;
 
+/** Report-only commands: shared flags plus the output format. */
+export const reportArgs = {
+  ...commonArgs,
+  ...formatArgs,
+} as const;
+
 /** Apply-run flags for the init/sync run pipeline. */
 export const runArgs = {
   dryRun: {

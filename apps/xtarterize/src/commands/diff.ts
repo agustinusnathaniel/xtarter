@@ -1,19 +1,13 @@
-import { defineCommand } from 'citty';
-
+import { cliCommand } from '@/commands/command.js';
 import { runCliProgram } from '@/runtime.js';
 import { openSession } from '@/session.js';
-import { commonArgs, formatArgs } from '@/utils/args.js';
+import { reportArgs } from '@/utils/args.js';
 
-export const diffCommand = defineCommand({
-  args: {
-    ...commonArgs,
-    ...formatArgs,
-  },
-  meta: {
-    description: 'Show pending changes without applying',
-    name: 'diff',
-  },
-  async run({ args }) {
+export const diffCommand = cliCommand({
+  args: reportArgs,
+  description: 'Show pending changes without applying',
+  name: 'diff',
+  program: async (args) => {
     const session = await runCliProgram(openSession(args));
     if (!session) {
       return;

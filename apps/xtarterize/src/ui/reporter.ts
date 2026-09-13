@@ -1,4 +1,4 @@
-import type { PreflightError, Task, TaskStatus } from '@xtarterize/core';
+import type { PreflightError } from '@xtarterize/core';
 import { logError, logInfo, logSuccess, pc } from '@xtarterize/core';
 
 import type { SessionOutcome } from '@/session.js';
@@ -7,7 +7,6 @@ import { printTiming } from '@/utils/timing-display.js';
 
 import { type DisplayFormat, displayDiffs } from './diff-display.js';
 import { formatRunResult } from './json-formatter.js';
-import { displayPlan } from './plan-display.js';
 
 function reportRunOutcome(
   outcome: SessionOutcome,
@@ -90,18 +89,6 @@ export function reportSessionOutcome(
       logInfo(outcome.message ?? 'Cancelled');
       return;
   }
-}
-
-/** Render the actionable plan unless the runtime is quiet. */
-export function reportPlan(
-  tasks: Array<Task>,
-  statuses: Map<string, TaskStatus>,
-  runtime: RuntimeContext
-): void {
-  if (runtime.quiet) {
-    return;
-  }
-  displayPlan(tasks, statuses);
 }
 
 /** Render a preflight failure as human text or a JSON failure payload. */

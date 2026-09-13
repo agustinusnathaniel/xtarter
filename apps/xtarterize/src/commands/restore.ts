@@ -11,14 +11,13 @@ import {
   logSuccess,
   restoreBackup,
 } from '@xtarterize/core';
-import { defineCommand } from 'citty';
 import { Effect } from 'effect';
 
-import { runCliProgram } from '@/runtime.js';
+import { cliCommand } from '@/commands/command.js';
 import { openSession } from '@/session.js';
 import { type PromptError, Prompter } from '@/ui/prompter.js';
 import { reportCommandFailure } from '@/ui/reporter.js';
-import { commonArgs, formatArgs, yesArg } from '@/utils/args.js';
+import { reportArgs, yesArg } from '@/utils/args.js';
 import type { RuntimeArgs } from '@/utils/runtime.js';
 
 export interface RestoreCommandArgs extends RuntimeArgs {
@@ -152,21 +151,16 @@ export function restoreProgram(
   });
 }
 
-export const restoreCommand = defineCommand({
+export const restoreCommand = cliCommand({
   args: {
-    ...commonArgs,
-    ...formatArgs,
+    ...reportArgs,
     filepath: {
       description: 'File to restore (e.g., tsconfig.json)',
       type: 'positional',
     },
     yes: yesArg,
   },
-  meta: {
-    description: 'Restore a file from backup',
-    name: 'restore',
-  },
-  async run({ args }) {
-    await runCliProgram(restoreProgram(args));
-  },
+  description: 'Restore a file from backup',
+  name: 'restore',
+  program: restoreProgram,
 });

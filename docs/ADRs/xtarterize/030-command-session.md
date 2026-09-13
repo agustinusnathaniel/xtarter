@@ -45,6 +45,11 @@ Update (2026-09-12): the session now returns Effects and prompts are provided
 by the app-level `Prompter` service (ADR 036). The lifecycle and outcome
 contracts described above are unchanged.
 
+Update (2026-09-13): commands declare through a thin `cliCommand` wrapper
+(`defineCommand` + `runCliProgram` + program passthrough). It removes the
+repeated citty boilerplate only, holds no command policy, and is not the
+rejected declarative command framework.
+
 ## Rationale
 
 - One lifecycle removes four apply and report paths and two flag resolvers.

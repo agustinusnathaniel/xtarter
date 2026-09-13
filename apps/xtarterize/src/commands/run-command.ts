@@ -6,14 +6,13 @@ import type {
   TaskError,
   TaskStatus,
 } from '@xtarterize/core';
-import { applyTaskSelection, logInfo, logWarn } from '@xtarterize/core';
+import { applyTaskSelection, logInfo, logWarn, pc } from '@xtarterize/core';
 import { Effect } from 'effect';
 
 import { type CommandSession, openSession } from '@/session.js';
+import { displayPlan } from '@/ui/plan-display.js';
 import { type PromptError, Prompter } from '@/ui/prompter.js';
-import { reportPlan } from '@/ui/reporter.js';
 import { selectTasks } from '@/ui/select-menu.js';
-import { printProjectProfile } from '@/utils/project.js';
 import type { RuntimeContext } from '@/utils/runtime.js';
 
 export interface RunCommandArgs {
@@ -156,7 +155,11 @@ function runSession(
   return Effect.gen(function* () {
     const { profile, runtime, selection, statuses, tasks } = session;
     if (!runtime.quiet) {
-      printProjectProfile(profile);
+      console.log('');
+      console.log(`${pc.bold(`Framework: ${profile.framework ?? 'none'}`)}`);
+      console.log(`${pc.bold(`Bundler: ${profile.bundler ?? 'none'}`)}`);
+      console.log(`${pc.bold(`Package Manager: ${profile.packageManager}`)}`);
+      console.log('');
     }
     warnUnknownSelection(selection, tasks, runtime.quiet);
     const actionableTasks = resolveActionableTasks(tasks, statuses, {
@@ -170,7 +173,9 @@ function runSession(
       session.reportOutcome(session.empty(options.emptyMessage));
       return;
     }
-    reportPlan(actionableTasks, statuses, runtime);
+    if (!runtime.quiet) {
+      displayPlan(actionableTasks, statuses);
+    }
     if (args.dryRun) {
       const outcome = yield* session.dryRun(actionableTasks);
       session.reportOutcome(outcome);

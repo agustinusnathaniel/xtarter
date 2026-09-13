@@ -5,8 +5,8 @@ import {
   scoreTasks,
   tokenize,
 } from '@xtarterize/core';
-import { defineCommand } from 'citty';
 
+import { cliCommand } from '@/commands/command.js';
 import { runCliProgram } from '@/runtime.js';
 import { type CommandSession, openSession } from '@/session.js';
 import { formatQueryResult } from '@/ui/json-formatter.js';
@@ -73,7 +73,7 @@ async function resolveMatchedStatuses(options: {
   return statuses;
 }
 
-export const queryCommand = defineCommand({
+export const queryCommand = cliCommand({
   args: {
     cwd: cwdArg,
     json: jsonArg,
@@ -92,11 +92,9 @@ export const queryCommand = defineCommand({
       type: 'string',
     },
   },
-  meta: {
-    description: 'Search tasks by natural language query',
-    name: 'query',
-  },
-  async run({ args }) {
+  description: 'Search tasks by natural language query',
+  name: 'query',
+  program: async (args) => {
     const session = await runCliProgram(openSession(args));
     if (!session) {
       return;

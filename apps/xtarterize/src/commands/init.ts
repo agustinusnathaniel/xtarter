@@ -1,15 +1,14 @@
 import type { Task } from '@xtarterize/core';
 import { scoreTasks } from '@xtarterize/core';
-import { defineCommand } from 'citty';
 import type { Effect } from 'effect';
 
+import { cliCommand } from '@/commands/command.js';
 import {
   type RunCommandArgs,
   type RunCommandError,
   type RunCommandServices,
   runCommand,
 } from '@/commands/run-command.js';
-import { runCliProgram } from '@/runtime.js';
 import { sharedRunArgs } from '@/utils/args.js';
 import type { RuntimeContext } from '@/utils/runtime.js';
 
@@ -79,7 +78,7 @@ export function initProgram(
   });
 }
 
-export const initCommand = defineCommand({
+export const initCommand = cliCommand({
   args: {
     ...sharedRunArgs,
     compose: {
@@ -92,11 +91,7 @@ export const initCommand = defineCommand({
       type: 'string',
     },
   },
-  meta: {
-    description: 'Initialize xtarterize conformance for a project',
-    name: 'init',
-  },
-  async run({ args }) {
-    await runCliProgram(initProgram(args));
-  },
+  description: 'Initialize xtarterize conformance for a project',
+  name: 'init',
+  program: initProgram,
 });

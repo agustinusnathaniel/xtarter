@@ -1,13 +1,12 @@
-import { defineCommand } from 'citty';
 import type { Effect } from 'effect';
 
+import { cliCommand } from '@/commands/command.js';
 import {
   type RunCommandArgs,
   type RunCommandError,
   type RunCommandServices,
   runCommand,
 } from '@/commands/run-command.js';
-import { runCliProgram } from '@/runtime.js';
 import { sharedRunArgs } from '@/utils/args.js';
 
 /** The `sync` run pipeline as one program (open, select, apply). */
@@ -21,13 +20,9 @@ export function syncProgram(
   });
 }
 
-export const syncCommand = defineCommand({
+export const syncCommand = cliCommand({
   args: sharedRunArgs,
-  meta: {
-    description: 'Update existing configurations to latest conformance',
-    name: 'sync',
-  },
-  async run({ args }) {
-    await runCliProgram(syncProgram(args));
-  },
+  description: 'Update existing configurations to latest conformance',
+  name: 'sync',
+  program: syncProgram,
 });

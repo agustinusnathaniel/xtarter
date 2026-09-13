@@ -10,14 +10,13 @@ import {
   readRunManifest,
   restoreBackup,
 } from '@xtarterize/core';
-import { defineCommand } from 'citty';
 import { Effect } from 'effect';
 
-import { runCliProgram } from '@/runtime.js';
+import { cliCommand } from '@/commands/command.js';
 import { openSession } from '@/session.js';
 import { type PromptError, Prompter } from '@/ui/prompter.js';
 import { reportCommandFailure } from '@/ui/reporter.js';
-import { commonArgs, formatArgs } from '@/utils/args.js';
+import { reportArgs } from '@/utils/args.js';
 import type { RuntimeArgs } from '@/utils/runtime.js';
 
 type UndoError = TaskError | PromptError;
@@ -181,16 +180,9 @@ export function undoProgram(
   });
 }
 
-export const undoCommand = defineCommand({
-  args: {
-    ...commonArgs,
-    ...formatArgs,
-  },
-  meta: {
-    description: 'Undo the last xtarterize run by restoring backed-up files',
-    name: 'undo',
-  },
-  async run({ args }) {
-    await runCliProgram(undoProgram(args));
-  },
+export const undoCommand = cliCommand({
+  args: reportArgs,
+  description: 'Undo the last xtarterize run by restoring backed-up files',
+  name: 'undo',
+  program: undoProgram,
 });
