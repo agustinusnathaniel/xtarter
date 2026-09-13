@@ -44,13 +44,8 @@ To apply conformance configuration to a project:
 
 ## Options
 
-| Flag | Description |
-|------|-------------|
-| `--dry-run` | Preview all changes without applying anything |
-| `--yes` | Skip all confirmations, apply all changes automatically |
-| `--skip <task-id>` | Exclude a specific task (comma-separated) |
-| `--only <task-id>` | Apply only a specific task (comma-separated) |
-| `--quiet` | Suppress interactive prompts and verbose output |
+See the [CLI reference](/xtarterize/guide/cli/overview/#init) for `init`'s full
+flag list, including `--dry-run`, `--yes`, `--skip`, `--only`, and `--quiet`.
 
 ## Examples
 
@@ -64,47 +59,14 @@ To apply conformance configuration to a project:
 
 ## Monorepo projects
 
-When you run `xtarterize init` in a monorepo, the set of offered tasks
-depends on where you run it:
-
-- **At the monorepo root** - You'll see root-level tasks: CI/CD workflows,
-  release tooling (commitlint, czg, git hooks), turbo configuration,
-  editor settings, and root package scripts. Package-level tasks (Vite
-  plugin configuration, tsconfig path aliases) are excluded.
-
-- **Inside a workspace package** - You'll see package-level tasks:
-  Vite plugin configuration, tsconfig path aliases, and other
-  per-package tooling. Root-level tasks (CI/CD, release tooling,
-  turbo) are excluded.
-
-This ensures you always see tasks relevant to your current position
-in the monorepo, without being offered tasks that belong at a different
-level.
-
-See the [Monorepo guide](/xtarterize/guide/monorepo) for a complete
-reference of which tasks are scoped to which level.
+Which tasks are offered depends on where you run. See the
+[Monorepo guide](/xtarterize/guide/monorepo/) for root and package scopes.
 
 ## What it can apply
 
-`init` applies only the tasks that match the detected project. The task catalog
-contains the full configuration and applicability details.
-
-| Group | What it can add or update | Main condition |
-| --- | --- | --- |
-| Linting and formatting | Biome for non-Vite+ projects, or Oxlint and Oxfmt for Vite+ projects. Each lint tool uses Ultracite presets. | No conflicting linter configuration |
-| TypeScript | Strict compiler options, path aliases, incremental builds, and `tsbuildinfo` entries in `.gitignore`. | TypeScript detected |
-| Vite plugins | `vite-plugin-checker` and `rollup-plugin-visualizer` in `vite.config.*`. | Browser Vite project detected |
-| CI/CD | GitHub Actions for CI, releases, and scheduled dependency updates. pnpm workflows use `pnpm/setup@v1`. | `.github/` detected |
-| Dependencies | Renovate configuration. | GitHub detected |
-| Release | Commitlint, czg, commit-and-tag-version, Git hooks, and changelog configuration. | Always, at the project root |
-| Quality | Knip and `devEngines`; lint-staged for non-Vite+ projects. | Always, with lint-staged excluded for Vite+ |
-| Code generation | Framework-specific Plop generators. | Framework detected |
-| Monorepo and workspace | Turborepo configuration and, for pnpm projects, `pnpm-workspace.yaml`. | Matching monorepo or package-manager signal |
-| Editor and agent setup | VS Code settings and extensions, `AGENTS.md`, and relevant agent skills. | Editor task is root-scoped; skills require TypeScript |
-| Package scripts | Standard lint, format, typecheck, test, and package-manager settings. | Always |
-
-See the [conformance task catalog](/xtarterize/guide/tasks/overview/) for task
-IDs, generated files, and detailed conditions.
+`init` applies only the tasks that match the detected project. See the
+[conformance task catalog](/xtarterize/guide/tasks/overview/) for task IDs,
+generated files, and applicability conditions.
 
 <Aside>
   Each task checks if it's already applied and skips if conformant. Running `init` twice produces no changes on the second run.
