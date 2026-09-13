@@ -2,45 +2,44 @@ import { describe, expect } from 'vite-plus/test';
 
 import { generateBadgeSvg } from '../../apps/xtarterize/src/ui/badge.js';
 
-const badgeCases: Array<
-  [
-    name: string,
-    conformant: number,
-    total: number,
-    expectedContains: Array<string>,
-  ]
-> = [
-  [
-    'generates valid SVG with 100% conformance',
-    10,
-    10,
-    ['<svg', '</svg>', '10/10', '100%', '#22c55e', 'all conformant'],
-  ],
-  [
-    'generates valid SVG with 0% conformance',
-    0,
-    10,
-    ['0/10', '0%', '#ef4444', '10 remaining'],
-  ],
-  [
-    'generates valid SVG with partial conformance',
-    7,
-    10,
-    ['7/10', '70%', '#84cc16', '3 remaining'],
-  ],
-  ['uses yellow for 50-69% range', 5, 10, ['50%', '#eab308']],
-  ['handles zero total gracefully', 0, 0, ['100%', 'all conformant']],
-];
-
 describe('generateBadgeSvg', () => {
-  for (const [name, conformant, total, expectedContains] of badgeCases) {
-    test(name, () => {
-      const svg = generateBadgeSvg({ conformant, total });
-      for (const expected of expectedContains) {
-        expect(svg).toContain(expected);
-      }
-    });
-  }
+  test('generates valid SVG with 100% conformance', () => {
+    const svg = generateBadgeSvg({ conformant: 10, total: 10 });
+    expect(svg).toContain('<svg');
+    expect(svg).toContain('</svg>');
+    expect(svg).toContain('10/10');
+    expect(svg).toContain('100%');
+    expect(svg).toContain('#22c55e'); // green
+    expect(svg).toContain('all conformant');
+  });
+
+  test('generates valid SVG with 0% conformance', () => {
+    const svg = generateBadgeSvg({ conformant: 0, total: 10 });
+    expect(svg).toContain('0/10');
+    expect(svg).toContain('0%');
+    expect(svg).toContain('#ef4444'); // red
+    expect(svg).toContain('10 remaining');
+  });
+
+  test('generates valid SVG with partial conformance', () => {
+    const svg = generateBadgeSvg({ conformant: 7, total: 10 });
+    expect(svg).toContain('7/10');
+    expect(svg).toContain('70%');
+    expect(svg).toContain('#84cc16'); // lime
+    expect(svg).toContain('3 remaining');
+  });
+
+  test('uses yellow for 50-69% range', () => {
+    const svg = generateBadgeSvg({ conformant: 5, total: 10 });
+    expect(svg).toContain('50%');
+    expect(svg).toContain('#eab308'); // yellow
+  });
+
+  test('handles zero total gracefully', () => {
+    const svg = generateBadgeSvg({ conformant: 0, total: 0 });
+    expect(svg).toContain('100%');
+    expect(svg).toContain('all conformant');
+  });
 
   test('includes aria-label for accessibility', () => {
     const svg = generateBadgeSvg({ conformant: 5, total: 10 });

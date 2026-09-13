@@ -33,165 +33,120 @@ function createEnv(entries: Array<[string, Response]>, fallback?: Response) {
   };
 }
 
-const wantsMarkdownCases: Array<
-  [name: string, cases: Array<[input: unknown, expected: boolean]>]
-> = [
-  ['true for text/markdown', [['text/markdown', true]]],
-  [
-    'true for text/html, text/markdown;q=0.9',
-    [['text/html, text/markdown;q=0.9', true]],
-  ],
-  [
-    'true case-insensitive and with charset param',
-    [
-      ['TEXT/MARKDOWN', true],
-      ['text/markdown; charset=utf-8', true],
-    ],
-  ],
-  [
-    'false for text/html only',
-    [
-      ['text/html', false],
-      ['text/html,application/xhtml+xml', false],
-    ],
-  ],
-  [
-    'false for text/markdown;q=0 and q=0 with other types',
-    [
-      ['text/markdown;q=0', false],
-      ['text/html, text/markdown;q=0', false],
-      ['text/markdown;q=0.0', false],
-    ],
-  ],
-  [
-    'false for missing / empty / wrong types',
-    [
-      ['', false],
-      [null, false],
-      [undefined, false],
-      ['*/*', false],
-      ['text/*', false],
-      ['application/json', false],
-    ],
-  ],
-  [
-    'false for q=0 even when other entries want markdown but are disabled',
-    [['text/markdown ; q=0 , text/html', false]],
-  ],
-  [
-    'handles whitespace and ordering',
-    [
-      [' text/html ; q=0.8 , text/markdown ; q=0.9 ', true],
-      ['text/markdown;q=0.9, text/html', true],
-    ],
-  ],
-];
-
 describe('wantsMarkdown', () => {
-  for (const [name, cases] of wantsMarkdownCases) {
-    test(name, () => {
-      for (const [input, expected] of cases) {
-        expect(wantsMarkdown(input as string)).toBe(expected);
-      }
-    });
-  }
-});
+  test('true for text/markdown', () => {
+    expect(wantsMarkdown('text/markdown')).toBe(true);
+  });
 
-const mergeVaryCases: Array<
-  [name: string, cases: Array<[input: unknown, expected: string]>]
-> = [
-  [
-    'merges missing existing to Accept, Accept-Encoding',
-    [
-      [undefined, 'Accept, Accept-Encoding'],
-      ['', 'Accept, Accept-Encoding'],
-      [null, 'Accept, Accept-Encoding'],
-    ],
-  ],
-  [
-    'dedupes case-insensitively and keeps stable base order',
-    [
-      ['accept-encoding', 'Accept, Accept-Encoding'],
-      ['Accept', 'Accept, Accept-Encoding'],
-      ['Accept-Encoding', 'Accept, Accept-Encoding'],
-      ['accept', 'Accept, Accept-Encoding'],
-    ],
-  ],
-  [
-    'appends extra tokens sorted case-insensitively',
-    [
-      ['Origin', 'Accept, Accept-Encoding, Origin'],
-      [
-        'X-Custom, accept-encoding, Accept-Language',
-        'Accept, Accept-Encoding, Accept-Language, X-Custom',
-      ],
-    ],
-  ],
-  [
-    'trims whitespace and ignores empty tokens',
-    [['  Origin  , , Accept-Encoding  ', 'Accept, Accept-Encoding, Origin']],
-  ],
-  [
-    'dedupes duplicate custom tokens case-insensitively',
-    [['X-Foo, x-foo, X-FOO', 'Accept, Accept-Encoding, X-Foo']],
-  ],
-];
+  test('true for text/html, text/markdown;q=0.9', () => {
+    expect(wantsMarkdown('text/html, text/markdown;q=0.9')).toBe(true);
+  });
+
+  test('true case-insensitive and with charset param', () => {
+    expect(wantsMarkdown('TEXT/MARKDOWN')).toBe(true);
+    expect(wantsMarkdown('text/markdown; charset=utf-8')).toBe(true);
+  });
+
+  test('false for text/html only', () => {
+    expect(wantsMarkdown('text/html')).toBe(false);
+    expect(wantsMarkdown('text/html,application/xhtml+xml')).toBe(false);
+  });
+
+  test('false for text/markdown;q=0 and q=0 with other types', () => {
+    expect(wantsMarkdown('text/markdown;q=0')).toBe(false);
+    expect(wantsMarkdown('text/html, text/markdown;q=0')).toBe(false);
+    expect(wantsMarkdown('text/markdown;q=0.0')).toBe(false);
+  });
+
+  test('false for missing / empty / wrong types', () => {
+    expect(wantsMarkdown('')).toBe(false);
+    expect(wantsMarkdown(null as unknown as string)).toBe(false);
+    expect(wantsMarkdown(undefined as unknown as string)).toBe(false);
+    expect(wantsMarkdown('*/*')).toBe(false);
+    expect(wantsMarkdown('text/*')).toBe(false);
+    expect(wantsMarkdown('application/json')).toBe(false);
+  });
+
+  test('false for q=0 even when other entries want markdown but are disabled', () => {
+    expect(wantsMarkdown('text/markdown ; q=0 , text/html')).toBe(false);
+  });
+
+  test('handles whitespace and ordering', () => {
+    expect(wantsMarkdown(' text/html ; q=0.8 , text/markdown ; q=0.9 ')).toBe(
+      true
+    );
+    expect(wantsMarkdown('text/markdown;q=0.9, text/html')).toBe(true);
+  });
+});
 
 describe('mergeVary', () => {
-  for (const [name, cases] of mergeVaryCases) {
-    test(name, () => {
-      for (const [input, expected] of cases) {
-        expect(mergeVary(input as string)).toBe(expected);
-      }
-    });
-  }
+  test('merges missing existing to Accept, Accept-Encoding', () => {
+    expect(mergeVary(undefined as unknown as string)).toBe(
+      'Accept, Accept-Encoding'
+    );
+    expect(mergeVary('')).toBe('Accept, Accept-Encoding');
+    expect(mergeVary(null as unknown as string)).toBe(
+      'Accept, Accept-Encoding'
+    );
+  });
+
+  test('dedupes case-insensitively and keeps stable base order', () => {
+    expect(mergeVary('accept-encoding')).toBe('Accept, Accept-Encoding');
+    expect(mergeVary('Accept')).toBe('Accept, Accept-Encoding');
+    expect(mergeVary('Accept-Encoding')).toBe('Accept, Accept-Encoding');
+    expect(mergeVary('accept')).toBe('Accept, Accept-Encoding');
+  });
+
+  test('appends extra tokens sorted case-insensitively', () => {
+    expect(mergeVary('Origin')).toBe('Accept, Accept-Encoding, Origin');
+    expect(mergeVary('X-Custom, accept-encoding, Accept-Language')).toBe(
+      'Accept, Accept-Encoding, Accept-Language, X-Custom'
+    );
+  });
+
+  test('trims whitespace and ignores empty tokens', () => {
+    expect(mergeVary('  Origin  , , Accept-Encoding  ')).toBe(
+      'Accept, Accept-Encoding, Origin'
+    );
+  });
+
+  test('dedupes duplicate custom tokens case-insensitively', () => {
+    expect(mergeVary('X-Foo, x-foo, X-FOO')).toBe(
+      'Accept, Accept-Encoding, X-Foo'
+    );
+  });
 });
 
-const markdownCandidatesCases: Array<
-  [name: string, cases: Array<[input: unknown, expected: Array<string>]>]
-> = [
-  ['"/" => ["/index.md"]', [['/', ['/index.md']]]],
-  [
-    'handles trailing slash',
-    [
-      ['/xtarterize/guide/', ['/xtarterize/guide/index.md']],
-      ['/foo/', ['/foo/index.md']],
-    ],
-  ],
-  [
-    'without trailing slash returns file and index candidates',
-    [
-      [
-        '/xtarterize/guide/cli/overview',
-        [
-          '/xtarterize/guide/cli/overview.md',
-          '/xtarterize/guide/cli/overview/index.md',
-        ],
-      ],
-      ['/foo', ['/foo.md', '/foo/index.md']],
-    ],
-  ],
-  [
-    'handles empty and missing leading slash',
-    [
-      ['', ['/index.md']],
-      [
-        'xtarterize/guide',
-        ['/xtarterize/guide.md', '/xtarterize/guide/index.md'],
-      ],
-      [null, ['/index.md']],
-    ],
-  ],
-];
-
 describe('markdownCandidates', () => {
-  for (const [name, cases] of markdownCandidatesCases) {
-    test(name, () => {
-      for (const [input, expected] of cases) {
-        expect(markdownCandidates(input as string)).toEqual(expected);
-      }
-    });
-  }
+  test('"/" => ["/index.md"]', () => {
+    expect(markdownCandidates('/')).toEqual(['/index.md']);
+  });
+
+  test('handles trailing slash', () => {
+    expect(markdownCandidates('/xtarterize/guide/')).toEqual([
+      '/xtarterize/guide/index.md',
+    ]);
+    expect(markdownCandidates('/foo/')).toEqual(['/foo/index.md']);
+  });
+
+  test('without trailing slash returns file and index candidates', () => {
+    expect(markdownCandidates('/xtarterize/guide/cli/overview')).toEqual([
+      '/xtarterize/guide/cli/overview.md',
+      '/xtarterize/guide/cli/overview/index.md',
+    ]);
+    expect(markdownCandidates('/foo')).toEqual(['/foo.md', '/foo/index.md']);
+  });
+
+  test('handles empty and missing leading slash', () => {
+    expect(markdownCandidates('')).toEqual(['/index.md']);
+    expect(markdownCandidates('xtarterize/guide')).toEqual([
+      '/xtarterize/guide.md',
+      '/xtarterize/guide/index.md',
+    ]);
+    expect(markdownCandidates(null as unknown as string)).toEqual([
+      '/index.md',
+    ]);
+  });
 });
 
 describe('worker fetch handler', () => {
