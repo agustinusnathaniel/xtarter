@@ -26,13 +26,11 @@ export interface MakeTaskOptions {
 
 /** Build a `Task` whose hooks default to no-op success. */
 export function makeTask(options: MakeTaskOptions = {}): Task {
+  const check = options.check ?? 'new';
   const task: Task = {
     applicable: options.applicable ?? (() => true),
     apply: options.apply ?? (() => Effect.void),
-    check:
-      typeof options.check === 'function'
-        ? options.check
-        : () => Effect.succeed(options.check ?? 'new'),
+    check: typeof check === 'function' ? check : () => Effect.succeed(check),
     dryRun: options.dryRun ?? (() => Effect.succeed([])),
     group: options.group ?? 'Test',
     id: options.id ?? 'mock/task',
@@ -75,6 +73,7 @@ const baseProfile: ProjectProfile = {
     tsconfig: false,
     turbo: false,
     versionrc: false,
+    viteConfig: false,
     vscodeSettings: false,
   },
   framework: 'node',

@@ -8,7 +8,7 @@ const annotationTask = (
   id: string,
   label: string,
   configTargets?: Array<string>
-) => makeTask({ check: 'skip', configTargets, id, label });
+) => makeTask({ check: 'skip', configTargets, group: 'test', id, label });
 
 describe('formatCheckAnnotations', () => {
   test('emits error annotation per non-conformant task with file target', () => {
