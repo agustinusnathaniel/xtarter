@@ -29,203 +29,132 @@ type DetectorInputSpec =
     }
   | { id: string; kind: 'packageJson'; name: string };
 
+const JSON_EXTENSIONS = ['.json', '.jsonc'] as const;
+const SCRIPT_EXTENSIONS = ['.ts', '.js', '.mjs'] as const;
+const BUNDLER_EXTENSIONS = [
+  '.ts',
+  '.js',
+  '.mts',
+  '.mjs',
+  '.cts',
+  '.cjs',
+] as const;
+const COMMITLINT_EXTENSIONS = ['.ts', '.js', '.mjs', '.mts', '.cts'] as const;
+const ESLINTRC_EXTENSIONS = [
+  '.js',
+  '.cjs',
+  '.mjs',
+  '.json',
+  '.yaml',
+  '.yml',
+] as const;
+const ESLINT_CONFIG_EXTENSIONS = [
+  '.js',
+  '.mjs',
+  '.cjs',
+  '.ts',
+  '.mts',
+  '.cts',
+] as const;
+const MARKDOWN_EXTENSIONS = ['.md'] as const;
+
+/** Declares a root file input. `extensions` are appended to `basename`. */
+function rootFile<
+  const Id extends string,
+  const Basename extends string,
+  const Extensions extends ReadonlyArray<string>,
+>(id: Id, basename: Basename, ...extensions: Extensions) {
+  return { basename, extensions, id, kind: 'rootFile' } as const;
+}
+
+function configDir<const Id extends string, const Dir extends string>(
+  id: Id,
+  dir: Dir
+) {
+  return { dir, id, kind: 'configDir' } as const;
+}
+
+function lockfile<
+  const Id extends string,
+  const Name extends string,
+  const Manager extends PackageManager,
+>(id: Id, name: Name, packageManager: Manager) {
+  return { id, kind: 'lockfile', name, packageManager } as const;
+}
+
+/** Declares an ancestor marker file. Detection looks for these on the way up. */
+function monorepoMarker<const Id extends string, const Name extends string>(
+  id: Id,
+  name: Name
+) {
+  return {
+    id,
+    kind: 'ancestorMarker',
+    name,
+    role: 'monorepoMarker',
+    type: 'file',
+  } as const;
+}
+
+/** Declares an ancestor workspace directory, such as `packages/` or `apps/`. */
+function workspaceDir<const Id extends string, const Name extends string>(
+  id: Id,
+  name: Name
+) {
+  return {
+    id,
+    kind: 'ancestorMarker',
+    name,
+    role: 'workspaceDir',
+    type: 'dir',
+  } as const;
+}
+
 /**
  * Declares an input by id. `extensions` are appended to `basename` to
  * enumerate candidate file names; an empty array means `basename` is exact.
  */
 export const DETECTOR_INPUTS = [
   // ── Root files ──
-  {
-    basename: 'biome',
-    extensions: ['.json', '.jsonc'],
-    id: 'biome',
-    kind: 'rootFile',
-  },
-  {
-    basename: 'tsconfig',
-    extensions: ['.json', '.jsonc'],
-    id: 'tsconfig',
-    kind: 'rootFile',
-  },
-  {
-    basename: 'renovate',
-    extensions: ['.json', '.jsonc'],
-    id: 'renovate',
-    kind: 'rootFile',
-  },
-  {
-    basename: 'commitlint.config',
-    extensions: ['.ts', '.js', '.mjs', '.mts', '.cts'],
-    id: 'commitlint-config',
-    kind: 'rootFile',
-  },
-  {
-    basename: 'knip',
-    extensions: ['.ts', '.mts'],
-    id: 'knip-config',
-    kind: 'rootFile',
-  },
-  {
-    basename: 'plopfile',
-    extensions: ['.ts', '.js', '.mjs'],
-    id: 'plopfile',
-    kind: 'rootFile',
-  },
-  {
-    basename: 'turbo',
-    extensions: ['.json'],
-    id: 'turbo-config',
-    kind: 'rootFile',
-  },
-  {
-    basename: 'vite.config',
-    extensions: ['.ts', '.js', '.mts', '.mjs', '.cts', '.cjs'],
-    id: 'vite-config',
-    kind: 'rootFile',
-  },
-  {
-    basename: 'next.config',
-    extensions: ['.ts', '.js', '.mts', '.mjs', '.cts', '.cjs'],
-    id: 'next-config',
-    kind: 'rootFile',
-  },
-  {
-    basename: 'rspack.config',
-    extensions: ['.ts', '.js', '.mts', '.mjs', '.cts', '.cjs'],
-    id: 'rspack-config',
-    kind: 'rootFile',
-  },
-  {
-    basename: 'webpack.config',
-    extensions: ['.ts', '.js', '.mts', '.mjs', '.cts', '.cjs'],
-    id: 'webpack-config',
-    kind: 'rootFile',
-  },
-  {
-    basename: '.vscode/settings',
-    extensions: ['.json'],
-    id: 'vscode-settings',
-    kind: 'rootFile',
-  },
-  { basename: '.versionrc', extensions: [], id: 'versionrc', kind: 'rootFile' },
-  { basename: '.gitignore', extensions: [], id: 'gitignore', kind: 'rootFile' },
-  {
-    basename: '.eslintrc',
-    extensions: ['.js', '.cjs', '.mjs', '.json', '.yaml', '.yml'],
-    id: 'eslintrc',
-    kind: 'rootFile',
-  },
-  {
-    basename: 'eslint.config',
-    extensions: ['.js', '.mjs', '.cjs', '.ts', '.mts', '.cts'],
-    id: 'eslint-config',
-    kind: 'rootFile',
-  },
-  {
-    basename: '.oxlintrc',
-    extensions: ['.json', '.jsonc'],
-    id: 'oxlintrc',
-    kind: 'rootFile',
-  },
-  {
-    basename: 'oxlint.config',
-    extensions: ['.ts', '.js', '.mjs'],
-    id: 'oxlint-config',
-    kind: 'rootFile',
-  },
-  {
-    basename: '.oxfmtrc',
-    extensions: ['.json', '.jsonc'],
-    id: 'oxfmtrc',
-    kind: 'rootFile',
-  },
-  {
-    basename: 'oxfmt.config',
-    extensions: ['.ts', '.js', '.mjs'],
-    id: 'oxfmt-config',
-    kind: 'rootFile',
-  },
-  { basename: 'AGENTS', extensions: ['.md'], id: 'agents', kind: 'rootFile' },
-  { basename: 'CLAUDE', extensions: ['.md'], id: 'claude', kind: 'rootFile' },
+  rootFile('biome', 'biome', ...JSON_EXTENSIONS),
+  rootFile('tsconfig', 'tsconfig', ...JSON_EXTENSIONS),
+  rootFile('renovate', 'renovate', ...JSON_EXTENSIONS),
+  rootFile('commitlint-config', 'commitlint.config', ...COMMITLINT_EXTENSIONS),
+  rootFile('knip-config', 'knip', '.ts', '.mts'),
+  rootFile('plopfile', 'plopfile', ...SCRIPT_EXTENSIONS),
+  rootFile('turbo-config', 'turbo', '.json'),
+  rootFile('vite-config', 'vite.config', ...BUNDLER_EXTENSIONS),
+  rootFile('next-config', 'next.config', ...BUNDLER_EXTENSIONS),
+  rootFile('rspack-config', 'rspack.config', ...BUNDLER_EXTENSIONS),
+  rootFile('webpack-config', 'webpack.config', ...BUNDLER_EXTENSIONS),
+  rootFile('vscode-settings', '.vscode/settings', '.json'),
+  rootFile('versionrc', '.versionrc'),
+  rootFile('gitignore', '.gitignore'),
+  rootFile('eslintrc', '.eslintrc', ...ESLINTRC_EXTENSIONS),
+  rootFile('eslint-config', 'eslint.config', ...ESLINT_CONFIG_EXTENSIONS),
+  rootFile('oxlintrc', '.oxlintrc', ...JSON_EXTENSIONS),
+  rootFile('oxlint-config', 'oxlint.config', ...SCRIPT_EXTENSIONS),
+  rootFile('oxfmtrc', '.oxfmtrc', ...JSON_EXTENSIONS),
+  rootFile('oxfmt-config', 'oxfmt.config', ...SCRIPT_EXTENSIONS),
+  rootFile('agents', 'AGENTS', ...MARKDOWN_EXTENSIONS),
+  rootFile('claude', 'CLAUDE', ...MARKDOWN_EXTENSIONS),
   // ── Config directories ──
-  { dir: '.github', id: 'github-dir', kind: 'configDir' },
-  { dir: '.changeset', id: 'changeset-dir', kind: 'configDir' },
+  configDir('github-dir', '.github'),
+  configDir('changeset-dir', '.changeset'),
   // ── Lockfiles ──
-  {
-    id: 'pnpm-lock',
-    kind: 'lockfile',
-    name: 'pnpm-lock.yaml',
-    packageManager: 'pnpm',
-  },
-  {
-    id: 'yarn-lock',
-    kind: 'lockfile',
-    name: 'yarn.lock',
-    packageManager: 'yarn',
-  },
-  {
-    id: 'bun-lockb',
-    kind: 'lockfile',
-    name: 'bun.lockb',
-    packageManager: 'bun',
-  },
-  { id: 'bun-lock', kind: 'lockfile', name: 'bun.lock', packageManager: 'bun' },
-  {
-    id: 'npm-lock',
-    kind: 'lockfile',
-    name: 'package-lock.json',
-    packageManager: 'npm',
-  },
+  lockfile('pnpm-lock', 'pnpm-lock.yaml', 'pnpm'),
+  lockfile('yarn-lock', 'yarn.lock', 'yarn'),
+  lockfile('bun-lockb', 'bun.lockb', 'bun'),
+  lockfile('bun-lock', 'bun.lock', 'bun'),
+  lockfile('npm-lock', 'package-lock.json', 'npm'),
   // ── Ancestor markers ──
-  {
-    id: 'monorepo-pnpm-workspace',
-    kind: 'ancestorMarker',
-    name: 'pnpm-workspace.yaml',
-    role: 'monorepoMarker',
-    type: 'file',
-  },
-  {
-    id: 'monorepo-turbo',
-    kind: 'ancestorMarker',
-    name: 'turbo.json',
-    role: 'monorepoMarker',
-    type: 'file',
-  },
-  {
-    id: 'monorepo-nx',
-    kind: 'ancestorMarker',
-    name: 'nx.json',
-    role: 'monorepoMarker',
-    type: 'file',
-  },
-  {
-    id: 'monorepo-lerna',
-    kind: 'ancestorMarker',
-    name: 'lerna.json',
-    role: 'monorepoMarker',
-    type: 'file',
-  },
-  {
-    id: 'workspace-packages',
-    kind: 'ancestorMarker',
-    name: 'packages',
-    role: 'workspaceDir',
-    type: 'dir',
-  },
-  {
-    id: 'workspace-apps',
-    kind: 'ancestorMarker',
-    name: 'apps',
-    role: 'workspaceDir',
-    type: 'dir',
-  },
-  {
-    id: 'workspace-services',
-    kind: 'ancestorMarker',
-    name: 'services',
-    role: 'workspaceDir',
-    type: 'dir',
-  },
+  monorepoMarker('monorepo-pnpm-workspace', 'pnpm-workspace.yaml'),
+  monorepoMarker('monorepo-turbo', 'turbo.json'),
+  monorepoMarker('monorepo-nx', 'nx.json'),
+  monorepoMarker('monorepo-lerna', 'lerna.json'),
+  workspaceDir('workspace-packages', 'packages'),
+  workspaceDir('workspace-apps', 'apps'),
+  workspaceDir('workspace-services', 'services'),
   // ── package.json ──
   { id: 'package-json', kind: 'packageJson', name: 'package.json' },
 ] as const satisfies ReadonlyArray<DetectorInputSpec>;
