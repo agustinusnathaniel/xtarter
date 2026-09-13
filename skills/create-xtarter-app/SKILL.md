@@ -20,13 +20,14 @@ This skill is activated when the user asks to create a new project, scaffold an 
 
 ```bash
 npx create-xtarter-app@latest                          # Interactive mode
-npx create-xtarter-app@latest my-app --yes              # Defaults (pnpm, git, no clean, default template)
+npx create-xtarter-app@latest my-app --yes              # Defaults: pnpm, git, no clean, next-chakra
 npx create-xtarter-app@latest my-app --yes --quiet      # Non-interactive, minimal output
-npx create-xtarter-app@latest my-app --yes --json        # Non-interactive, JSON result
+npx create-xtarter-app@latest my-app --yes --json       # Non-interactive, JSON result
 npx create-xtarter-app@latest my-app -t vite-tailwind   # Specific template
-npx create-xtarter-app@latest preview                   # Prompt for a template to preview
-npx create-xtarter-app@latest preview vite-tailwind     # Show one template
+npx create-xtarter-app@latest preview [template-name]   # Preview a template, or prompt without a name
 ```
+
+`preview` shows a template's description, repository, branch, and feature list; omit the name to be prompted for one.
 
 ## Decision parsing: which template to pick
 
@@ -58,7 +59,7 @@ npx create-xtarter-app@latest [project-name] [options]
 | `--clean` | | Remove supported CI/CD configuration files |
 | `--force` | `-f` | Overwrite a non-empty target directory |
 | `--ref <ref>` | | Download a branch, tag, or commit |
-| `--yes` | `-y` | Use defaults: pnpm, git init, no clean. Without `--template`, uses default template |
+| `--yes` | `-y` | Use defaults: pnpm, git init, no clean; without `--template`, uses `next-chakra` |
 | `--quiet` | | Suppress banners, spinners, and decorative output |
 | `--json` | | Output scaffold result as JSON (also suppresses banners/spinners) |
 | `--color` / `--no-color` | | Colorized output is on by default; `--no-color` disables it |
@@ -68,28 +69,11 @@ npx create-xtarter-app@latest [project-name] [options]
 `--yes` skips selection prompts, but it does not provide a project name. Pass
 `[project-name]` for a fully non-interactive run.
 
-Interactive mode prompts for: project name, template, package manager, git init, clean CI/CD.
-
-### Preview command
-
-```bash
-npx create-xtarter-app@latest preview [template-name]
-```
-
-Omit the template name to be prompted for one. The command shows its
-description, repository, branch, and feature list.
+Interactive mode prompts for: project name, template, package manager, clean CI/CD, git init.
 
 ## Available templates
 
-| ID | Name | Stack |
-|----|------|-------|
-| `next-chakra` | Next.js + Chakra UI | Next.js + Chakra UI v3 |
-| `next-tailwind` | Next.js + Tailwind | Next.js + Tailwind CSS v4 |
-| `vite-chakra` | Vite + React + Chakra | Vite+ + TanStack Router + Chakra UI v3 |
-| `vite-tailwind` | Vite + React + Tailwind | Vite+ + TanStack Router + Tailwind CSS v4 |
-| `vite-hero` | Vite + React + Hero UI | Vite+ + TanStack Router + Hero UI |
-
-**MANDATORY - Load** [references/templates.md](references/templates.md) **before using `--template`**. Only these 5 IDs are valid. Inventing template names fails.
+**MANDATORY - Load** [references/templates.md](references/templates.md) **before using `--template`**. Only its 5 IDs are valid; inventing template names fails.
 
 ## Agent workflows
 
@@ -142,5 +126,5 @@ npx create-xtarter-app@latest my-app --yes
 
 - **NEVER** scaffold into an existing non-empty directory - CLI rejects it
 - **NEVER** use `--clean` unless user asks - it removes CI, which is unexpected
-- **NEVER** invent template names - only the 5 above. Run `preview` if unsure
+- **NEVER** invent template names - only the 5 valid IDs (see [references/templates.md](references/templates.md)). Run `preview` if unsure
 - **NEVER** ignore `--pm` if user has a preference - pnpm is default but not universal

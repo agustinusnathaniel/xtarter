@@ -19,8 +19,8 @@ This skill is activated when the user asks about project conformance, linting se
 ## Quick reference
 
 ```bash
-npx xtarterize check --json   # { tasks: [{ id, label, group, status }] }
-npx xtarterize diff --json    # FileDiff[]
+npx xtarterize check --json   # { ok, summary, tasks: [{ id, label, group, status }], diagnostics }
+npx xtarterize diff --json    # { files: [{ filepath, stats }], ok, summary }
 npx xtarterize list --json    # { profile, tasks }
 npx xtarterize query "strict typescript" --json  # { type: "query", results: [...] }
 npx xtarterize doctor --json  # { diagnostics: [{ name, status, message }] }
@@ -36,21 +36,15 @@ After each command, parse the JSON to decide the next action:
 |---------|-----------------|-----------|
 | `check --json` | `tasks[].status` | If any status is `"new"` or `"patch"`, run `init` or `add` |
 | `check --json` | `diagnostics[].status` | If any is `"fail"`, run `doctor` before proceeding |
-| `diff --json` | Array length | If `[]`, nothing to change. If non-empty, show diffs to user |
-| `diff --json` | `[].filepath` | Which files will be modified |
-| `diff --json` | `[].stats.added + removed` | Magnitude of changes per file |
-| `list --json` | `tasks[].status` | Find the right task ID to pass to `add` |
-| `list --json` | `profile` | Understand the detected stack (framework, bundler, etc.) |
+| `diff --json` | `files`, `ok` | Empty `files` (or `ok: true`) means nothing to change; otherwise show `files[].filepath` and `files[].stats.added`/`stats.removed` as the change magnitude |
+| `list --json` | `tasks[].status`, `profile` | Find the right task ID to pass to `add`; understand the detected stack (framework, bundler, etc.) |
 | `doctor --json` | `diagnostics[].status` | Any `"fail"` needs fixing; `"warn"` is advisory |
 | `init --json` | `ok` | If `false`, something went wrong - check stderr |
 | `query --json` | `results[].relevance` | Score >= threshold means relevant. Use `results[].signals` to see which fields matched strongest |
 | `query --json` | `results[].taskId` | Pass to `add` to apply the matched task |
 | `query --json` | `count` | If 0, no tasks met the threshold - broaden query or lower `--threshold` |
 
-For the complete command and flag reference, load
-[references/commands.md](references/commands.md). Task statuses are `new`,
-`patch`, `skip`, and `conflict`; see the parsing patterns above for how to act
-on each status.
+Task statuses are `new`, `patch`, `skip`, and `conflict`; the parsing table above shows how to act on each.
 
 ## Agent workflows
 
