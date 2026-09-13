@@ -3,7 +3,7 @@ title: AI Agent Skills
 description: Install the create-xtarter-app skill for guidance on scaffolding commands, templates, and project creation workflows.
 ---
 
-import { Aside, LinkButton } from '@astrojs/starlight/components'
+import { LinkButton } from '@astrojs/starlight/components'
 
 Install the create-xtarter-app skill in a compatible AI tool to provide
 guidance for scaffolding, template selection, and project creation.
@@ -16,29 +16,16 @@ When installed, your AI assistant knows how to pick the right template from your
 npx skills add agustinusnathaniel/xtarter
 ```
 
-## How it works
+## What the skill teaches
 
-The skill activates when you ask about creating a project or mention a template:
+| Area | What the agent gets |
+| --- | --- |
+| Commands | Scaffold and `preview` commands with their flags (`--template`, `--pm`, `--git`/`--no-git`, `--clean`, `--force`, `--ref`, `--yes`, `--quiet`, `--json`, `--color`) |
+| Templates | The 5 valid IDs (`next-chakra`, `next-tailwind`, `vite-chakra`, `vite-tailwind`, `vite-hero`) and a decision table mapping stack descriptions to template IDs |
+| Workflows | Scaffolding, previewing, and CI usage, plus anti-patterns to avoid |
+| Typical asks | "Next.js with Tailwind" → `--template next-tailwind`; "Vite SPA with Chakra" → `--template vite-chakra`; "What templates are available?" → the 5 valid IDs; "Preview vite-tailwind" → `preview vite-tailwind` |
 
-| You ask... | The agent... |
-|------------|-------------|
-| "Scaffold a new project" | Runs interactive mode or suggests a template based on your stack |
-| "I want a Next.js app with Tailwind" | Maps to `next-tailwind`, runs scaffold with `--template next-tailwind` |
-| "Create a Vite SPA with Chakra UI" | Maps to `vite-chakra`, runs scaffold with `--template vite-chakra` |
-| "What templates are available?" | Uses the template catalog to explain the 5 valid IDs |
-| "Preview the vite-tailwind template" | Runs `preview vite-tailwind` to show repo and branch details |
-
-<Aside type="tip">
-  The skill teaches agents to match your stack description to the correct template ID using a decision table, so you don't need to remember template names.
-</Aside>
-
-## What's included
-
-- Scaffold and preview commands with all CLI flags, including `--template`, `--pm`, `--no-git`, `--clean`, `--force`, `--ref`, `--yes`, `--quiet`, and `--json`
-- Template selection decision table mapping stack descriptions to template IDs
-- All 5 templates (`next-chakra`, `next-tailwind`, `vite-chakra`, `vite-tailwind`, `vite-hero`)
-- Agent workflows for scaffolding, previewing, and CI usage
-- Anti-patterns - common mistakes agents should avoid
+The skill activates when you ask about creating a project or mention a template, and matches your stack description to the correct template ID so you don't need to remember template names.
 
 ## Resources
 

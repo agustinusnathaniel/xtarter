@@ -1,97 +1,35 @@
 # Task Reference
 
-All available tasks, organized by group. Each task has a unique `id` used with `npx xtarterize add <id>`.
+All 29 built-in tasks, each with a unique `id` used with `npx xtarterize add <id>`.
 
-## Agent
-
-| ID | Label | Applied when |
-|----|-------|-------------|
-| `agent/agents-md` | AGENTS.md | Always (creates if missing) |
-| `agent/skills-install` | Install agent skills | TypeScript project (uses `npx skills@latest`) |
-
-## CI
-
-| ID | Label | Applied when |
-|----|-------|-------------|
-| `ci/ci` | CI workflow | `.github` directory exists |
-| `ci/auto-update` | Auto-update workflow | `.github` directory exists |
-| `ci/release` | Release workflow | `.github` directory exists |
-
-## Codegen
-
-| ID | Label | Applied when |
-|----|-------|-------------|
-| `codegen/plop` | Plop generators | Framework detected |
-
-## Dependencies
-
-| ID | Label | Applied when |
-|----|-------|-------------|
-| `deps/renovate` | Renovate config | GitHub detected |
-
-## Editor
-
-| ID | Label | Applied when |
-|----|-------|-------------|
-| `editor/vscode` | VS Code settings | Always |
-
-## Lint
-
-| ID | Label | Applied when |
-|----|-------|-------------|
-| `lint/biome` | Biome linting | No ESLint, Oxlint, or Oxfmt; non-Vite+ or existing Biome |
-| `lint/oxlint` | Oxlint | Vite+ or existing Oxlint, with no ESLint or Biome |
-| `lint/oxfmt` | Oxfmt formatter | Vite+ or existing Oxfmt, with no ESLint or Biome |
-
-## Monorepo
-
-| ID | Label | Applied when |
-|----|-------|-------------|
-| `monorepo/turbo` | Turborepo pipeline | Turborepo detected or `turbo.json` exists |
-
-## Quality
-
-| ID | Label | Applied when |
-|----|-------|-------------|
-| `quality/knip` | Knip (dead code) | Always |
-| `quality/lint-staged` | Lint-staged | Non-Vite+ project |
-| `quality/package-engines` | devEngines in package.json | Always |
-
-## Release
-
-| ID | Label | Applied when |
-|----|-------|-------------|
-| `release/commitlint` | commitlint | Always |
-| `release/czg` | czg (commitizen) | Always |
-| `release/cat-version` | commit-and-tag-version | Always |
-| `release/git-hooks` | Git hooks (husky) | Always |
-| `release/versionrc` | .versionrc config | Always |
-
-## Scripts
-
-| ID | Label | Applied when |
-|----|-------|-------------|
-| `scripts/package-scripts` | Package scripts | Always |
-| `scripts/npmrc` | .npmrc config | Always |
-
-## TypeScript
-
-| ID | Label | Applied when |
-|----|-------|-------------|
-| `ts/strict` | Strict mode | TypeScript project |
-| `ts/paths` | Path aliases | TypeScript project |
-| `ts/incremental` | Incremental builds | TypeScript project |
-| `gitignore/tsbuildinfo` | .gitignore tsbuildinfo | TypeScript project |
-
-## Vite
-
-| ID | Label | Applied when |
-|----|-------|-------------|
-| `vite/checker` | vite-plugin-checker | Vite project |
-| `vite/visualizer` | rollup-plugin-visualizer | Vite project |
-
-## Workspace
-
-| ID | Label | Applied when |
-|----|-------|-------------|
-| `workspace/pnpm-workspace` | pnpm-workspace.yaml | pnpm project; existing files are never replaced: a `packages:` list gets missing `apps/*` and `packages/*` globs inserted, keyless settings files stay as they are |
+| Group                | ID                     | Label                                                                 | Applied when                                                                                                                                                                     |
+| -------------------- | ---------------------- | ---------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Agent                | `agent/agents-md`      | AGENTS.md                                                              | Always (creates if missing; existing file kept as is)                                                                                                                            |
+| Agent                | `agent/skills-install` | Install agent skills                                                   | TypeScript project (installs missing catalog skills via the project's package manager: `pnpm dlx`, Yarn Berry `yarn dlx`, `bunx`, or `npx --yes`)                               |
+| CI/CD                | `ci/ci`                | GitHub CI workflow                                                     | `.github` directory exists                                                                                                                                                       |
+| CI/CD                | `ci/auto-update`       | GitHub auto-update workflow                                            | `.github` directory exists                                                                                                                                                       |
+| CI/CD                | `ci/release`           | GitHub release workflow                                                | `.github` directory exists                                                                                                                                                       |
+| Codegen              | `codegen/plop`         | Plop (code generator)                                                  | Framework detected                                                                                                                                                               |
+| Dependencies         | `deps/renovate`        | Renovate config                                                        | `.github` directory exists                                                                                                                                                       |
+| Editor               | `editor/vscode`        | VSCode settings + extensions                                           | Always                                                                                                                                                                           |
+| Linting & Formatting | `lint/biome`           | Biome (lint + format)                                                  | No ESLint, Oxlint, or Oxfmt; non-Vite+ or existing Biome                                                                                                                         |
+| Linting & Formatting | `lint/oxlint`          | Oxlint config                                                          | Vite+ or existing Oxlint, with no ESLint or Biome                                                                                                                                |
+| Linting & Formatting | `lint/oxfmt`           | Oxfmt config                                                           | Vite+ or existing Oxfmt, with no ESLint or Biome                                                                                                                                 |
+| Monorepo             | `monorepo/turbo`       | Turbo                                                                  | Turborepo detected or `turbo.json` exists                                                                                                                                        |
+| Quality              | `quality/knip`         | Knip (unused code detection)                                           | Always                                                                                                                                                                           |
+| Quality              | `quality/lint-staged`  | lint-staged config                                                     | Non-Vite+ project                                                                                                                                                                |
+| Quality              | `quality/package-engines` | devEngines in package.json                                          | Always                                                                                                                                                                           |
+| Release              | `release/commitlint`   | Commitlint config                                                      | Always                                                                                                                                                                           |
+| Release              | `release/czg`          | czg (commitizen)                                                       | Always                                                                                                                                                                           |
+| Release              | `release/cat-version`  | commit-and-tag-version                                                 | Always                                                                                                                                                                           |
+| Release              | `release/git-hooks`    | Git hooks (commit-msg, prepare-commit-msg, pre-commit, pre-push)       | Always                                                                                                                                                                           |
+| Release              | `release/versionrc`    | .versionrc.json - changelog configuration                              | Always                                                                                                                                                                           |
+| Scripts              | `scripts/package-scripts` | package.json scripts                                                | Always                                                                                                                                                                           |
+| Scripts              | `scripts/npmrc`        | .npmrc - package manager config                                        | Always                                                                                                                                                                           |
+| TypeScript           | `ts/strict`            | tsconfig - strict compiler options                                     | TypeScript project                                                                                                                                                               |
+| TypeScript           | `ts/paths`             | tsconfig - path aliases                                                | TypeScript project                                                                                                                                                               |
+| TypeScript           | `ts/incremental`       | tsconfig - incremental: true                                           | TypeScript project                                                                                                                                                               |
+| TypeScript           | `gitignore/tsbuildinfo` | .gitignore - tsbuildinfo                                              | TypeScript project                                                                                                                                                               |
+| Vite Plugins         | `vite/checker`         | vite-plugin-checker                                                    | Vite project with a non-Node runtime                                                                                                                                             |
+| Vite Plugins         | `vite/visualizer`      | rollup-plugin-visualizer                                               | Vite project with a non-Node runtime                                                                                                                                             |
+| Workspace            | `workspace/pnpm-workspace` | pnpm-workspace.yaml - pnpm workspace config                        | pnpm project; existing files are never replaced: a `packages:` list gets missing `apps/*` and `packages/*` globs inserted, keyless settings files stay as they are, and shapes that cannot be edited safely report `conflict` |

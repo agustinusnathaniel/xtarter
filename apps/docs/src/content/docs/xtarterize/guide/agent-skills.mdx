@@ -3,12 +3,12 @@ title: AI Agent Skills
 description: Install the xtarterize skill for guidance on CLI commands, JSON output, tasks, and conformance workflows.
 ---
 
-import { Aside, LinkButton } from '@astrojs/starlight/components'
+import { LinkButton } from '@astrojs/starlight/components'
 
 Install the xtarterize skill in a compatible AI tool to provide guidance for
 the CLI, its JSON output, tasks, and conformance workflows.
 
-When installed, your AI assistant knows how to use `--json`, parse task statuses, follow agent workflows, and avoid common mistakes.
+When installed, your AI assistant knows how to use `--json` for every command, parse task statuses, follow agent workflows, and avoid common mistakes.
 
 ## Install
 
@@ -16,31 +16,16 @@ When installed, your AI assistant knows how to use `--json`, parse task statuses
 npx skills add agustinusnathaniel/xtarter
 ```
 
-## How it works
+## What the skill teaches
 
-The skill activates when you ask about conformance, linting, CI, or any xtarterize task:
+| Area | What the agent gets |
+| --- | --- |
+| Commands | The command and flag reference for `init`, `sync`, `diff`, `check`, `add`, `list`, `query`, `restore`, `undo`, and `doctor`, with JSON output shapes for each |
+| Statuses | The 4 task statuses (`new`, `patch`, `skip`, `conflict`) and how to handle each |
+| Workflows | Initialization, single tasks, diagnostics, and backups, plus anti-patterns to avoid |
+| Typical asks | "Set up linting" → `check --json`, then `init` or `add lint/biome`; "Add TypeScript strict mode" → `add ts/strict --json`; "What would change?" → `diff --json`; "Run diagnostics" → `doctor --json`; "Restore a backup" → `restore` |
 
-| You ask... | The agent... |
-|------------|-------------|
-| "Set up linting for this project" | Runs `check --json`, parses task statuses, applies `init` or `add lint/biome` |
-| "Check our conformance status" | Runs `check --json`, reports which tasks are `skip` vs `new`/`patch` |
-| "Add TypeScript strict mode" | Loads the task catalog, runs `add ts/strict --json` |
-| "What would change if I init?" | Runs `diff --json`, presents structured file diffs |
-| "Run diagnostics" | Runs `doctor --json`, reports any `fail` diagnostics |
-| "Restore a backup" | Uses `restore` to recover from `.xtarterize/backups/` |
-
-<Aside type="tip">
-  The skill teaches agents to use <code>--json</code> for every command and parse the structured output rather than terminal text.
-</Aside>
-
-## What's included
-
-- All 10 CLI commands (`init`, `sync`, `diff`, `check`, `add`, `list`, `query`, `restore`, `undo`, `doctor`)
-- JSON output shapes for every command
-- Parsing patterns - which JSON fields to inspect to decide the next action
-- The 4 task statuses (`new`, `patch`, `skip`, `conflict`) and how to handle each
-- Agent workflows for initialization, single tasks, diagnostics, and backups
-- Anti-patterns - common mistakes agents should avoid
+The skill activates when you ask about conformance, linting, CI, or any xtarterize task. It uses `--json` for every command and parses the structured output rather than terminal text.
 
 ## Resources
 

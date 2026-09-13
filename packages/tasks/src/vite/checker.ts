@@ -7,17 +7,15 @@ export const viteCheckerTask = defineTask({
   deps: [{ depName: 'vite-plugin-checker', dev: true }],
   group: 'Vite Plugins',
   id: 'vite/checker',
+  keywords: [
+    'vite checker',
+    'type checking',
+    'vite plugin',
+    'build validation',
+  ],
   label: 'vite-plugin-checker',
   scope: 'package',
-  searchMeta: {
-    keywords: [
-      'vite checker',
-      'type checking',
-      'vite plugin',
-      'build validation',
-    ],
-    tags: ['vite', 'plugin', 'type-checking', 'linting'],
-  },
+  tags: ['vite', 'plugin', 'type-checking', 'linting'],
   targets: [
     createVitePluginTarget({
       depName: 'vite-plugin-checker',

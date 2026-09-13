@@ -1,68 +1,11 @@
 # Template Reference
 
-Detailed information about each starter template.
+The 5 starter templates accepted by `--template`. Branch (`main`) and provider (GitHub) are constant across all of them; `Stack` lists each template's pre-configured features.
 
-## next-chakra
-
-| Property | Value |
-|----------|-------|
-| ID | `next-chakra` |
-| Name | Next.js + Chakra UI |
-| Description | Next.js with Chakra UI v3 |
-| Repo | `agustinusnathaniel/nextarter-chakra` |
-| Branch | `main` |
-| Provider | GitHub |
-
-Stack: Next.js, Chakra UI v3, Biome, TypeScript strict mode, GitHub Actions CI, VS Code settings, AI agent skills.
-
-## next-tailwind
-
-| Property | Value |
-|----------|-------|
-| ID | `next-tailwind` |
-| Name | Next.js + Tailwind |
-| Description | Next.js with Tailwind CSS v4 |
-| Repo | `agustinusnathaniel/nextarter-tailwind` |
-| Branch | `main` |
-| Provider | GitHub |
-
-Stack: Next.js, Tailwind CSS v4, Biome, TypeScript strict mode, GitHub Actions CI, VS Code settings, AI agent skills.
-
-## vite-chakra
-
-| Property | Value |
-|----------|-------|
-| ID | `vite-chakra` |
-| Name | Vite + React + Chakra |
-| Description | Vite+, TanStack Router, Chakra UI v3 |
-| Repo | `agustinusnathaniel/vite-react-chakra-starter` |
-| Branch | `main` |
-| Provider | GitHub |
-
-Stack: Vite+, React, TanStack Router, Chakra UI v3, Biome, TypeScript strict mode, GitHub Actions CI, VS Code settings, AI agent skills.
-
-## vite-tailwind
-
-| Property | Value |
-|----------|-------|
-| ID | `vite-tailwind` |
-| Name | Vite + React + Tailwind |
-| Description | Vite+, TanStack Router, Tailwind CSS v4 |
-| Repo | `agustinusnathaniel/vite-react-tailwind-starter` |
-| Branch | `main` |
-| Provider | GitHub |
-
-Stack: Vite+, React, TanStack Router, Tailwind CSS v4, Biome, TypeScript strict mode, GitHub Actions CI, VS Code settings, AI agent skills.
-
-## vite-hero
-
-| Property | Value |
-|----------|-------|
-| ID | `vite-hero` |
-| Name | Vite + React + Hero UI |
-| Description | Vite+, TanStack Router, Hero UI |
-| Repo | `agustinusnathaniel/vite-react-hero-starter` |
-| Branch | `main` |
-| Provider | GitHub |
-
-Stack: Vite+, React, TanStack Router, Hero UI, Biome, TypeScript strict mode, GitHub Actions CI, VS Code settings, AI agent skills.
+| ID              | Name                     | Description                          | Repo                                            | Stack                                                                                              |
+| --------------- | ------------------------ | ------------------------------------ | ----------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `next-chakra`   | Next.js + Chakra UI      | Next.js with Chakra UI               | `agustinusnathaniel/nextarter-chakra`           | Next.js 16, Chakra UI v3, Biome, Turborepo, TypeScript, Playwright                                 |
+| `next-tailwind` | Next.js + Tailwind       | Next.js with Tailwind CSS            | `agustinusnathaniel/nextarter-tailwind`         | Next.js 16, Tailwind CSS v4, Biome, TypeScript, Playwright                                         |
+| `vite-chakra`   | Vite + React + Chakra    | Vite+, TanStack Router, Chakra UI    | `agustinusnathaniel/vite-react-chakra-starter`  | Vite+ (Vite 8), React 19, Chakra UI v3, TanStack Router, TanStack Query, Biome, Vitest             |
+| `vite-tailwind` | Vite + React + Tailwind  | Vite+, TanStack Router, Tailwind CSS | `agustinusnathaniel/vite-react-tailwind-starter` | Vite+ (Vite 8), React 19, Tailwind CSS v4, TanStack Router, TanStack Query, Biome, Vitest          |
+| `vite-hero`     | Vite + React + Hero UI   | Vite+, TanStack Router, Hero UI      | `agustinusnathaniel/vite-react-hero-starter`    | Vite+ (Vite 8), React 19, Hero UI, TanStack Router, Biome, Vitest                                  |

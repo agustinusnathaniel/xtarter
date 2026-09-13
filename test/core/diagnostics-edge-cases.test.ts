@@ -1,13 +1,35 @@
 import fs from 'node:fs/promises';
-import os from 'node:os';
 import path from 'node:path';
-import { runDiagnostics } from '@xtarterize/core';
+import { ProcessError, runDiagnostics } from '@xtarterize/core';
+import { Effect } from 'effect';
 import { describe, expect } from 'vite-plus/test';
+
+import { processRunnerLayer, runWith } from '../helpers/run.js';
+import { withTempDir } from '../helpers/temp.js';
 
 type DiagnosticGroupId = 'configuration' | 'environment' | 'project' | 'tools';
 
+/**
+ * Stub ProcessRunner: Git reports an installed version, so environment checks
+ * do not depend on host binaries. Unknown commands act like missing binaries.
+ */
+const processRunner = processRunnerLayer((command) =>
+  command === 'git'
+    ? Effect.succeed({
+        exitCode: 0,
+        stderr: '',
+        stdout: 'git version 2.43.0',
+      })
+    : Effect.fail(
+        new ProcessError({ message: `Command "${command}" not found` })
+      )
+);
+
 async function checksFor(cwd: string, group: DiagnosticGroupId) {
-  const { groups } = await runDiagnostics(cwd, { groups: [group] });
+  const { groups } = await runWith(
+    processRunner,
+    runDiagnostics(cwd, { groups: [group] })
+  );
   return groups.flatMap((entry) => entry.checks);
 }
 
@@ -22,24 +44,18 @@ function createPkg(
   return fs.writeFile(path.join(dir, 'package.json'), JSON.stringify(content));
 }
 
-/**
- * Build a temporary project with the given dependencies/devDependencies for
- * conflict-detection tests.  Returns the temp directory path.
- */
-async function tmpProject(
+/** Build the package.json used by conflict-detection tests. */
+function createConflictPkg(
+  dir: string,
   deps: Record<string, string> = {},
   devDeps: Record<string, string> = {}
-): Promise<string> {
-  const tmpDir = await fs.mkdtemp(
-    path.join(os.tmpdir(), 'xtarterize-conflict-')
-  );
-  await createPkg(tmpDir, {
+): Promise<void> {
+  return createPkg(dir, {
     dependencies: deps,
     devDependencies: devDeps,
     name: 'test',
     version: '1.0.0',
   });
-  return tmpDir;
 }
 
 describe('runDiagnostics environment group with engine edge cases', () => {
@@ -49,125 +65,117 @@ describe('runDiagnostics environment group with engine edge cases', () => {
   );
 
   test('handles missing engines.node without error', async () => {
-    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'xtarterize-diag-'));
-    await createPkg(tmpDir, { name: 'test', version: '1.0.0' });
-    try {
+    await withTempDir('xtarterize-diag-', async (tmpDir) => {
+      await createPkg(tmpDir, { name: 'test', version: '1.0.0' });
       const checks = await checksFor(tmpDir, 'environment');
       const nodeCheck = checks.find((c) => c.name === 'Node.js');
       expect(nodeCheck).toBeDefined();
       // no engine constraint → always pass
       expect(nodeCheck?.status).toBe('pass');
-    } finally {
-      await fs.rm(tmpDir, { force: true, recursive: true });
-    }
+    });
   });
 
   test('correctly handles ">=16 <20" range', async () => {
-    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'xtarterize-diag-'));
-    await createPkg(tmpDir, {
-      engines: { node: '>=16 <20' },
-      name: 'test',
-      version: '1.0.0',
-    });
-    try {
+    await withTempDir('xtarterize-diag-', async (tmpDir) => {
+      await createPkg(tmpDir, {
+        engines: { node: '>=16 <20' },
+        name: 'test',
+        version: '1.0.0',
+      });
       const checks = await checksFor(tmpDir, 'environment');
       const nodeCheck = checks.find((c) => c.name === 'Node.js');
       expect(nodeCheck).toBeDefined();
       // engineMajor should be 16 (first numeric segment), not NaN
       expect(nodeCheck?.status).toBe(currentMajor >= 16 ? 'pass' : 'warn');
-    } finally {
-      await fs.rm(tmpDir, { force: true, recursive: true });
-    }
+    });
   });
 
   test('handles "^20.0.0-rc" prerelease range', async () => {
-    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'xtarterize-diag-'));
-    await createPkg(tmpDir, {
-      engines: { node: '^20.0.0-rc' },
-      name: 'test',
-      version: '1.0.0',
-    });
-    try {
+    await withTempDir('xtarterize-diag-', async (tmpDir) => {
+      await createPkg(tmpDir, {
+        engines: { node: '^20.0.0-rc' },
+        name: 'test',
+        version: '1.0.0',
+      });
       const checks = await checksFor(tmpDir, 'environment');
       const nodeCheck = checks.find((c) => c.name === 'Node.js');
       expect(nodeCheck).toBeDefined();
       // engineMajor should be 20 (not NaN from "-rc")
       expect(nodeCheck?.status).toBe(currentMajor >= 20 ? 'pass' : 'warn');
-    } finally {
-      await fs.rm(tmpDir, { force: true, recursive: true });
-    }
+    });
   });
 });
 
 describe('runDiagnostics configuration group edge cases', () => {
   test('warns when both Biome and ESLint are present', async () => {
-    const tmpDir = await tmpProject(
-      {},
-      { '@biomejs/biome': '^1.0.0', eslint: '^8.0.0' }
-    );
-    try {
+    await withTempDir('xtarterize-conflict-', async (tmpDir) => {
+      await createConflictPkg(
+        tmpDir,
+        {},
+        {
+          '@biomejs/biome': '^1.0.0',
+          eslint: '^8.0.0',
+        }
+      );
       const checks = await checksFor(tmpDir, 'configuration');
       const biomeslint = checks.filter((c) =>
         c.message.includes('Biome and ESLint')
       );
       expect(biomeslint).toHaveLength(1);
       expect(biomeslint[0].status).toBe('warn');
-    } finally {
-      await fs.rm(tmpDir, { force: true, recursive: true });
-    }
+    });
   });
 
   test('warns when both Biome and Prettier are present', async () => {
-    const tmpDir = await tmpProject(
-      {},
-      { '@biomejs/biome': '^1.0.0', prettier: '^3.0.0' }
-    );
-    try {
+    await withTempDir('xtarterize-conflict-', async (tmpDir) => {
+      await createConflictPkg(
+        tmpDir,
+        {},
+        {
+          '@biomejs/biome': '^1.0.0',
+          prettier: '^3.0.0',
+        }
+      );
       const checks = await checksFor(tmpDir, 'configuration');
       const biomePret = checks.filter((c) =>
         c.message.includes('Biome and Prettier')
       );
       expect(biomePret).toHaveLength(1);
       expect(biomePret[0].status).toBe('warn');
-    } finally {
-      await fs.rm(tmpDir, { force: true, recursive: true });
-    }
+    });
   });
 
   test('passes when only Biome is present (no conflict)', async () => {
-    const tmpDir = await tmpProject({}, { '@biomejs/biome': '^1.0.0' });
-    try {
+    await withTempDir('xtarterize-conflict-', async (tmpDir) => {
+      await createConflictPkg(tmpDir, {}, { '@biomejs/biome': '^1.0.0' });
       const checks = await checksFor(tmpDir, 'configuration');
       const passCheck = checks.find((c) => c.status === 'pass');
       expect(passCheck).toBeDefined();
       expect(checks.filter((c) => c.status === 'warn')).toHaveLength(0);
-    } finally {
-      await fs.rm(tmpDir, { force: true, recursive: true });
-    }
+    });
   });
 
   test('passes when none of Biome, ESLint, Prettier are present', async () => {
-    const tmpDir = await tmpProject({}, { typescript: '^5.0.0' });
-    try {
+    await withTempDir('xtarterize-conflict-', async (tmpDir) => {
+      await createConflictPkg(tmpDir, {}, { typescript: '^5.0.0' });
       const checks = await checksFor(tmpDir, 'configuration');
       const passCheck = checks.find((c) => c.status === 'pass');
       expect(passCheck).toBeDefined();
       expect(checks.filter((c) => c.status === 'warn')).toHaveLength(0);
-    } finally {
-      await fs.rm(tmpDir, { force: true, recursive: true });
-    }
+    });
   });
 
   test('produces 2 warnings when Biome + ESLint + Prettier are all present', async () => {
-    const tmpDir = await tmpProject(
-      {},
-      {
-        '@biomejs/biome': '^1.0.0',
-        eslint: '^8.0.0',
-        prettier: '^3.0.0',
-      }
-    );
-    try {
+    await withTempDir('xtarterize-conflict-', async (tmpDir) => {
+      await createConflictPkg(
+        tmpDir,
+        {},
+        {
+          '@biomejs/biome': '^1.0.0',
+          eslint: '^8.0.0',
+          prettier: '^3.0.0',
+        }
+      );
       const checks = await checksFor(tmpDir, 'configuration');
       const warnings = checks.filter((c) => c.status === 'warn');
       expect(warnings).toHaveLength(2);
@@ -177,8 +185,6 @@ describe('runDiagnostics configuration group edge cases', () => {
       expect(
         warnings.some((c) => c.message.includes('Biome and Prettier'))
       ).toBe(true);
-    } finally {
-      await fs.rm(tmpDir, { force: true, recursive: true });
-    }
+    });
   });
 });

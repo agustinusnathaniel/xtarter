@@ -1,48 +1,41 @@
 import fs from 'node:fs/promises';
-import os from 'node:os';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { runPreflight } from '@xtarterize/core';
 import { describe, expect } from 'vite-plus/test';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const fixtures = path.resolve(__dirname, '../fixtures');
+import { fixtureDir } from '../helpers/project.js';
+import { withTempDir } from '../helpers/temp.js';
 
 describe('runPreflight', () => {
   test('passes for valid project with git', async () => {
-    const tmpDir = await fs.mkdtemp(
-      path.join(os.tmpdir(), 'xtarterize-preflight-')
-    );
-    await fs.writeFile(
-      path.join(tmpDir, 'package.json'),
-      JSON.stringify({ name: 'test-project' })
-    );
-    await fs.mkdir(path.join(tmpDir, '.git'));
-    const result = await runPreflight(tmpDir);
-    expect(result.valid).toBe(true);
-    expect(result.errors).toHaveLength(0);
-    await fs.rm(tmpDir, { recursive: true });
+    await withTempDir('xtarterize-preflight-', async (tmpDir) => {
+      await fs.writeFile(
+        path.join(tmpDir, 'package.json'),
+        JSON.stringify({ name: 'test-project' })
+      );
+      await fs.mkdir(path.join(tmpDir, '.git'));
+      const result = await runPreflight(tmpDir);
+      expect(result.valid).toBe(true);
+      expect(result.errors).toHaveLength(0);
+    });
   });
 
   test('fails when package.json is missing', async () => {
     const result = await runPreflight(
-      path.join(fixtures, 'monorepo-turbo', 'apps')
+      path.join(fixtureDir('monorepo-turbo'), 'apps')
     );
     expect(result.valid).toBe(false);
     expect(result.errors[0].code).toBe('MISSING_PACKAGE_JSON');
   });
 
   test('fails when .git is missing', async () => {
-    const result = await runPreflight(path.join(fixtures, 'nextjs'));
+    const result = await runPreflight(fixtureDir('nextjs'));
     expect(result.valid).toBe(false);
     expect(result.errors.some((e) => e.code === 'MISSING_GIT')).toBe(true);
   });
 
   test('fails when package.json has no name', async () => {
-    const tmpDir = await fs.mkdtemp(
-      path.join(os.tmpdir(), 'xtarterize-preflight-invalid-')
-    );
-    try {
+    await withTempDir('xtarterize-preflight-invalid-', async (tmpDir) => {
       await fs.writeFile(path.join(tmpDir, 'package.json'), '{}');
 
       const result = await runPreflight(tmpDir);
@@ -51,8 +44,6 @@ describe('runPreflight', () => {
       expect(result.errors).toContainEqual(
         expect.objectContaining({ code: 'INVALID_PACKAGE_JSON' })
       );
-    } finally {
-      await fs.rm(tmpDir, { force: true, recursive: true });
-    }
+    });
   });
 });

@@ -70,4 +70,4 @@ exports.
 ### Related Decisions
 
 - ADR 010 (surgical JSON patching), ADR 019 (Effect TS error handling),
-  Plan 043 Step 3.3.
+  ADR 036 (Effect orchestration layer), Plan 043 Step 3.3.

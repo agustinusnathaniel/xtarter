@@ -5,6 +5,7 @@ import {
   detectPackageManager,
   isStringRecord,
 } from '@/detect/package-manager.js';
+import { describeCause } from '@/utils/errors.js';
 import { fileExists, resolvePath } from '@/utils/fs.js';
 
 export async function isPnpmWorkspace(cwd: string): Promise<boolean> {
@@ -93,10 +94,7 @@ export async function installDependenciesBatch(
 
   // Filter out already-installed deps
   const pkg = await readPackageJson(cwd);
-  const missing = deps.filter(
-    (d) =>
-      !(pkg?.devDependencies?.[d.depName] || pkg?.dependencies?.[d.depName])
-  );
+  const missing = deps.filter((d) => !hasDependency(pkg ?? {}, d.depName));
   if (missing.length === 0) {
     return;
   }
@@ -123,8 +121,7 @@ export async function installDependenciesBatch(
         workspace,
       });
     } catch (cause) {
-      const msg = cause instanceof Error ? cause.message : String(cause);
-      errors.push(`${label}: ${msg}`);
+      errors.push(`${label}: ${describeCause(cause)}`);
     }
   }
 

@@ -14,17 +14,15 @@ export const commitlintTask = defineTask({
   applicable: () => true,
   group: 'Release',
   id: 'release/commitlint',
+  keywords: [
+    'commitlint',
+    'commit message',
+    'conventional commits',
+    'lint commit',
+  ],
   label: 'Commitlint config',
   scope: 'root',
-  searchMeta: {
-    keywords: [
-      'commitlint',
-      'commit message',
-      'conventional commits',
-      'lint commit',
-    ],
-    tags: ['commit', 'linting', 'conventional-commits'],
-  },
+  tags: ['commit', 'linting', 'conventional-commits'],
   targets: [
     {
       extensions: ['.ts', '.js', '.mjs', '.mts', '.cts'],

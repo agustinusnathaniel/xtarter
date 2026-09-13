@@ -2,7 +2,9 @@
 
 ## Status
 
-Accepted
+Superseded by [ADR 036](036-effect-orchestration-layer.md).
+
+Update (2026-09-13): ADR 036 re-adopted Effect; ADR 037 later removed the Promise task contract and plugin loading. The body below records the state at the time of this decision.
 
 ## Date
 

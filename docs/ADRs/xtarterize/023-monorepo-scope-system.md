@@ -4,6 +4,8 @@
 
 Accepted
 
+Update (2026-09-13): ADR 037 removed external task plugins; the external-plugin compatibility claim in the Consequences section is superseded. Scope defaults and filtering are unchanged.
+
 ## Date
 
 2026-06-29

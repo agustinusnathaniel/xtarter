@@ -5,27 +5,23 @@
 
 ## Context
 
-xtarterize provides Biome, Oxlint, and Oxfmt conformance setup for
-JavaScript/TypeScript projects. ADR-004 (2026-04-29) decided to exclude
-Ultracite integration because:
+xtarterize provides Biome, Oxlint, and Oxfmt conformance setup. ADR-004
+(2026-04-29) excluded Ultracite integration because it had its own CLI and
+initialization flow, wrapping it would duplicate responsibilities, and the
+boundary was clear: xtarterize for setup, Ultracite for presets.
 
-- Ultracite had its own CLI and initialization flow
-- Wrapping it would duplicate responsibilities
-- The boundary was clear: xtarterize for setup, Ultracite for presets
+Since then:
 
-Since then, the landscape has shifted:
-
-- Ultracite v7.7.0 now distributes first-class presets for Biome, Oxlint, and
-  Oxfmt as importable packages (`ultracite/biome/*`, `ultracite/oxlint/*`,
+- Ultracite v7.7.0 distributes first-class presets for Biome, Oxlint, and Oxfmt
+  as importable packages (`ultracite/biome/*`, `ultracite/oxlint/*`,
   `ultracite/oxfmt`).
-- xtarterize's user template projects (e.g., nextarter-tailwind,
-  vite-react-tailwind-starter) already use `extends` to reference Ultracite
+- xtarterize's user template projects (nextarter-tailwind,
+  vite-react-tailwind-starter) already use `extends` to reference those
   presets, treating them as the de facto standard.
-- Separating the two tools creates a gap: running xtarterize and then Ultracite
-  results in conflicting config files, two sources of truth, and user confusion.
-- The `depNames` pattern in xtarterize's task factory (added in this work)
-  makes it trivial to install and manage `ultracite` alongside tool-specific
-  deps like `@biomejs/biome` or `oxlint`.
+- Running xtarterize and then Ultracite separately conflicts config files,
+  creates two sources of truth, and confuses users.
+- The `depNames` task-factory pattern (added in this work) makes it trivial to
+  install `ultracite` alongside `@biomejs/biome` or `oxlint`.
 
 ## Decision
 
@@ -35,60 +31,41 @@ and Oxfmt tasks. Every task that sets up one of these tools will also install
 
 ## Decision Drivers
 
-- **Template parity**: xtarterize's own templates already use Ultracite extends.
-  The tool should match what it ships.
-- **Seamless UX**: Running xtarterize + Ultracite sequentially is confusing and
-  error-prone. One tool should handle the full setup.
-- **Zero friction**: Users who want Ultracite presets get them automatically
-  without knowing about Ultracite. Users who don't want them can modify the
-  generated config.
-- **Low maintenance**: Ultracite presets are pure config imports - no tracking
-  of CLI behavior or initialization flows.
-- **Feature parity with user templates**: xtarterize should produce configs
-  that match what experienced users ship.
+- **Template parity**: xtarterize should produce what its own templates ship.
+- **Seamless UX**: one tool handles the full setup; sequential runs are
+  error-prone.
+- **Low maintenance**: Ultracite presets are pure config imports, so there is
+  no CLI behavior to track. Users get the presets automatically and can modify
+  the generated config to opt out.
 
 ## Considered Options
 
 ### Option 1 (Selected): First-Class Ultracite Integration
 
-Install `ultracite` whenever Biome/Oxlint/Oxfmt is selected. Generate config
-files that extend/import Ultracite presets.
+Install `ultracite` whenever Biome, Oxlint, or Oxfmt is selected, and generate
+config files that extend/import its presets.
 
-### Option 2: Keep ADR-004 Boundary
+### Option 2: Keep the ADR-004 Boundary
 
-Continue excluding Ultracite. Users must run xtarterize then Ultracite
-separately.
-
-- **Pros**: Clean separation, no coupling.
-- **Cons**: Two CLI invocations, potential for conflicting configs, users
-  templates already assume Ultracite is present.
-- **Rejected because**: creates a worse UX than Option 1 for the most common
-  workflow.
+Rejected: two CLI invocations, potential conflicting configs, and user
+templates that already assume Ultracite is present.
 
 ### Option 3: Auto-Detect Ultracite
 
-Only use Ultracite presets if `ultracite` is already installed.
-
-- **Pros**: Works for existing Ultracite users.
-- **Cons**: Inconsistent behavior based on order of operations, doesn't help
-  new users who want the best defaults.
-- **Rejected because**: the `depNames` pattern already handles installation
-  gracefully.
+Rejected: behavior would depend on order of operations and new users would not
+get the best defaults; the `depNames` pattern already handles installation.
 
 ## Consequences
 
 ### Positive
 
-- **Single source of truth**: xtarterize fully configures the linting stack in
-  one pass, with the same presets users expect from Ultracite.
-- **Template alignment**: Generated configs match xtarterize's own starter
-  templates exactly.
-- **New users get best defaults**: No extra step to discover and install
-  Ultracite.
-- \*\*Backward compatible`: Existing `.oxlintrc.json`files are detected and
-merged (JSON format), while new projects get`oxlint.config.ts`.
-- **`depNames` pattern extended**: The task factory now supports multiple
-  dependencies, which can be reused by other tasks.
+- **Single source of truth**: one pass configures the linting stack with the
+  presets users expect, matching xtarterize's starter templates.
+- **New users get best defaults** without an extra discovery step.
+- **Backward compatible**: existing `.oxlintrc.json` files are detected and
+  merged; new projects get `oxlint.config.ts`.
+- **`depNames` pattern extended** to multiple dependencies, reusable by other
+  tasks.
 
 ### Negative
 
@@ -111,20 +88,18 @@ merged (JSON format), while new projects get`oxlint.config.ts`.
 
 ## Implementation Notes
 
-- **Biome**: Config uses `extends: ['ultracite/biome/core', ...]` with
-  xtarterize overrides for conventions that differ from Ultracite defaults
-  (e.g., `useConsistentTypeDefinitions: 'off'`, `useFilenamingConvention`).
-- **Oxlint**: New projects generate `oxlint.config.ts` with `defineConfig` +
-  `import ... from 'ultracite/oxlint/...'`. Existing `.oxlintrc.json` and
-  `oxlint.config.json` files get JSON merge.
-- **Oxfmt**: New projects generate `oxfmt.config.ts` spreading the Ultracite
-  preset with `singleQuote: true`. Existing `.oxfmtrc.json` files are preserved
-  as-is.
-- **Detection**: Both old formats (`.oxlintrc.json`, `.oxfmtrc.json`) and new
-  formats (`oxlint.config.*`, `oxfmt.config.*`) are detected by custom
-  detectors in `detect.ts`.
-- **Scripts**: `package-scripts.ts` already resolves `useUltracite` to
-  determine which lint tool scripts to generate.
+- **Biome**: `extends: ['ultracite/biome/core', ...]` plus xtarterize overrides
+  for conventions that differ (e.g., `useConsistentTypeDefinitions: 'off'`,
+  `useFilenamingConvention`).
+- **Oxlint**: new projects generate `oxlint.config.ts` with `defineConfig` and
+  Ultracite imports; existing `.oxlintrc.json` / `oxlint.config.json` files get
+  JSON merge.
+- **Oxfmt**: new projects generate `oxfmt.config.ts` spreading the preset with
+  `singleQuote: true`; existing `.oxfmtrc.json` files are preserved.
+- **Detection**: custom detectors in `detect.ts` cover the old and new config
+  formats.
+- **Scripts**: `package-scripts.ts` resolves `useUltracite` to determine which
+  lint tool scripts to generate.
 
 ## Related Decisions
 

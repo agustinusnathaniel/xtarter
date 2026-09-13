@@ -1,78 +1,57 @@
 import fs from 'node:fs/promises';
-import os from 'node:os';
 import path from 'node:path';
 import { applyTaskSelection, loadSelectionConfig } from '@xtarterize/core';
 import { describe, expect } from 'vite-plus/test';
 
+import { run } from '../helpers/run.js';
+import { withTempDir } from '../helpers/temp.js';
+
 describe('loadSelectionConfig', () => {
   test('returns empty selection when no config file exists', async () => {
-    const tmpDir = await fs.mkdtemp(
-      path.join(os.tmpdir(), 'xtarter-selection-empty-')
-    );
-    try {
-      const selection = await loadSelectionConfig(tmpDir);
+    await withTempDir('xtarter-selection-empty-', async (tmpDir) => {
+      const selection = await run(loadSelectionConfig(tmpDir));
       expect(selection).toEqual({ only: [], skip: [] });
-    } finally {
-      await fs.rm(tmpDir, { force: true, recursive: true });
-    }
+    });
   });
 
   test('reads skip/only from .xtarterizerc', async () => {
-    const tmpDir = await fs.mkdtemp(
-      path.join(os.tmpdir(), 'xtarter-selection-dot-')
-    );
-    try {
+    await withTempDir('xtarter-selection-dot-', async (tmpDir) => {
       await fs.writeFile(
         path.join(tmpDir, '.xtarterizerc'),
         JSON.stringify({ only: ['ts/strict'], skip: ['agent/skills-install'] })
       );
-      const selection = await loadSelectionConfig(tmpDir);
+      const selection = await run(loadSelectionConfig(tmpDir));
       expect(selection).toEqual({
         only: ['ts/strict'],
         skip: ['agent/skills-install'],
       });
-    } finally {
-      await fs.rm(tmpDir, { force: true, recursive: true });
-    }
+    });
   });
 
   test('reads skip/only from .xtarterizerc.json', async () => {
-    const tmpDir = await fs.mkdtemp(
-      path.join(os.tmpdir(), 'xtarter-selection-json-')
-    );
-    try {
+    await withTempDir('xtarter-selection-json-', async (tmpDir) => {
       await fs.writeFile(
         path.join(tmpDir, '.xtarterizerc.json'),
         JSON.stringify({ skip: ['lint/biome'] })
       );
-      const selection = await loadSelectionConfig(tmpDir);
+      const selection = await run(loadSelectionConfig(tmpDir));
       expect(selection).toEqual({ only: [], skip: ['lint/biome'] });
-    } finally {
-      await fs.rm(tmpDir, { force: true, recursive: true });
-    }
+    });
   });
 
   test('falls back to package.json xtarterize key', async () => {
-    const tmpDir = await fs.mkdtemp(
-      path.join(os.tmpdir(), 'xtarter-selection-pkg-')
-    );
-    try {
+    await withTempDir('xtarter-selection-pkg-', async (tmpDir) => {
       await fs.writeFile(
         path.join(tmpDir, 'package.json'),
         JSON.stringify({ xtarterize: { skip: ['ts/incremental'] } })
       );
-      const selection = await loadSelectionConfig(tmpDir);
+      const selection = await run(loadSelectionConfig(tmpDir));
       expect(selection).toEqual({ only: [], skip: ['ts/incremental'] });
-    } finally {
-      await fs.rm(tmpDir, { force: true, recursive: true });
-    }
+    });
   });
 
   test('standalone file takes precedence over package.json key', async () => {
-    const tmpDir = await fs.mkdtemp(
-      path.join(os.tmpdir(), 'xtarter-selection-prio-')
-    );
-    try {
+    await withTempDir('xtarter-selection-prio-', async (tmpDir) => {
       await fs.writeFile(
         path.join(tmpDir, '.xtarterizerc'),
         JSON.stringify({ skip: ['from-file'] })
@@ -81,18 +60,13 @@ describe('loadSelectionConfig', () => {
         path.join(tmpDir, 'package.json'),
         JSON.stringify({ xtarterize: { skip: ['from-pkg'] } })
       );
-      const selection = await loadSelectionConfig(tmpDir);
+      const selection = await run(loadSelectionConfig(tmpDir));
       expect(selection).toEqual({ only: [], skip: ['from-file'] });
-    } finally {
-      await fs.rm(tmpDir, { force: true, recursive: true });
-    }
+    });
   });
 
   test('trims entries and drops empty strings and non-string entries', async () => {
-    const tmpDir = await fs.mkdtemp(
-      path.join(os.tmpdir(), 'xtarter-selection-sane-')
-    );
-    try {
+    await withTempDir('xtarter-selection-sane-', async (tmpDir) => {
       await fs.writeFile(
         path.join(tmpDir, '.xtarterizerc'),
         JSON.stringify({
@@ -100,43 +74,31 @@ describe('loadSelectionConfig', () => {
           skip: ['  ts/strict  ', '', 42, null, 'lint/biome'],
         })
       );
-      const selection = await loadSelectionConfig(tmpDir);
+      const selection = await run(loadSelectionConfig(tmpDir));
       expect(selection).toEqual({
         only: ['ts/incremental'],
         skip: ['ts/strict', 'lint/biome'],
       });
-    } finally {
-      await fs.rm(tmpDir, { force: true, recursive: true });
-    }
+    });
   });
 
   test('returns defaults on malformed JSON without throwing', async () => {
-    const tmpDir = await fs.mkdtemp(
-      path.join(os.tmpdir(), 'xtarter-selection-bad-')
-    );
-    try {
+    await withTempDir('xtarter-selection-bad-', async (tmpDir) => {
       await fs.writeFile(path.join(tmpDir, '.xtarterizerc'), 'not-json{');
-      const selection = await loadSelectionConfig(tmpDir);
+      const selection = await run(loadSelectionConfig(tmpDir));
       expect(selection).toEqual({ only: [], skip: [] });
-    } finally {
-      await fs.rm(tmpDir, { force: true, recursive: true });
-    }
+    });
   });
 
   test('treats an empty only array as no restriction (defaults)', async () => {
-    const tmpDir = await fs.mkdtemp(
-      path.join(os.tmpdir(), 'xtarter-selection-emptyonly-')
-    );
-    try {
+    await withTempDir('xtarter-selection-emptyonly-', async (tmpDir) => {
       await fs.writeFile(
         path.join(tmpDir, '.xtarterizerc'),
         JSON.stringify({ only: [] })
       );
-      const selection = await loadSelectionConfig(tmpDir);
+      const selection = await run(loadSelectionConfig(tmpDir));
       expect(selection).toEqual({ only: [], skip: [] });
-    } finally {
-      await fs.rm(tmpDir, { force: true, recursive: true });
-    }
+    });
   });
 });
 

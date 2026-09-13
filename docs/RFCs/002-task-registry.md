@@ -20,68 +20,16 @@ Evaluate whether `shadcn add` can serve as the file delivery mechanism for xtart
 
 ## How shadcn CLI Works
 
-The shadcn registry system works as follows:
-
-### Registry Resolution
-
-`shadcn add owner/repo/item` resolves a three-part address:
-
-| Part         | Meaning                | Example                               |
-| ------------ | ---------------------- | ------------------------------------- |
-| `owner/repo` | GitHub repository      | `agustinusnathaniel/xtarterize-tasks` |
-| `item`       | Key in `registry.json` | `lint/biome`                          |
-
-The CLI fetches `https://raw.githubusercontent.com/owner/repo/main/registry.json`, looks up the item, and downloads its declared `files[]` into the project.
-
-### `registry.json` Structure
-
-```jsonc
-{
-  "name": "my-registry",
-  "items": [
-    {
-      "id": "lint/biome",
-      "files": [
-        {
-          "path": "biome.json",
-          "content": "{ \"linter\": { \"enabled\": true } }",
-          "type": "registry:file",
-        },
-      ],
-      "dependencies": {
-        "npm": ["@biomejs/biome"],
-        "dev": true,
-      },
-    },
-  ],
-}
-```
-
-Key properties:
-
-| Field                  | Type              | Description                                               |
-| ---------------------- | ----------------- | --------------------------------------------------------- |
-| `files[].content`      | `string`          | Static file content - no variable substitution            |
-| `files[].type`         | `"registry:file"` | Only file type supported; no computed/rendered types      |
-| `files[].target`       | `string`          | Relative target path in the user's project                |
-| `registryDependencies` | `string[]`        | Other items in the same registry that must be added first |
-| `npm`                  | `string[]`        | npm packages to install (always devDependencies)          |
-
-### CLI Flags
-
-```
-shadcn add <source> [options]
-
---dry-run    Show what would change without writing
---diff       Show the diff of changes
---yes        Skip confirmation prompt
---silent     Minimal output
---overwrite  Overwrite existing files
-```
-
-### Git Ref Versioning
-
-`shadcn add owner/repo/item@v1.2.0` pins to a specific tag, branch, or commit SHA. Default is `@latest` (default branch). The resolved ref is not recorded or tracked - shadcn does not have a sync/update mechanism.
+`shadcn add owner/repo/item` fetches
+`https://raw.githubusercontent.com/owner/repo/main/registry.json`, looks up the
+item, and downloads its declared `files[]` into the project. An item lists
+static `files[]` (`content`, `target`, and only the `registry:file` type: no
+variable substitution or computed/rendered types), optional
+`registryDependencies`, and `npm` packages (always devDependencies). The CLI
+exposes `--dry-run`, `--diff`, `--yes`, `--silent`, and `--overwrite`.
+`shadcn add owner/repo/item@v1.2.0` pins to a tag, branch, or commit SHA
+(default `@latest`), but the resolved ref is not recorded or tracked - there is
+no sync/update mechanism.
 
 ## Template Classification Analysis
 
@@ -123,29 +71,23 @@ A `ShadcnTemplateTask` adapter would need to bridge shadcn CLI output into xtart
 
 ### `check()` - Determine if files would change
 
-Shell out to `shadcn add <source> --dry-run --yes --silent --overwrite`, parse stdout to see whether files would be created or modified.
-
-**Problem:** shadcn's dry-run output is not designed for machine parsing. It prints colored terminal text:
-
-```
-✔ Checking registry...
-  → biome.json will be created
-  → Installing dependencies...
-```
-
-No JSON output mode, no structured exit codes for "would change" vs "already matches." Parsing this is fragile across shadcn versions, locale settings, and terminal color configurations.
+Shell out to `shadcn add <source> --dry-run --yes --silent --overwrite` and
+parse stdout. **Problem:** the output is colored terminal text (no JSON mode, no
+structured exit codes for "would change" vs "already matches"), so parsing is
+fragile across shadcn versions, locales, and terminal color configurations.
 
 ### `dryRun()` - Show what would change
 
-Same shell out, but capture the diff output via `--diff`.
-
-**Problem:** shadcn's `--diff` prints a terminal-formatted diff with ANSI color codes and context lines. The output is not structured like xtarterize's `FileDiff[]` which needs to power the backup/undo system, multi-task rollup, and the `--json` output flag.
+Same shell out with `--diff`. **Problem:** the output is a terminal-formatted
+diff with ANSI colors, not the structured `FileDiff[]` that powers the
+backup/undo system, multi-task rollup, and `--json` output.
 
 ### `apply()` - Write files
 
-`shadcn add <source> --yes --overwrite`
-
-**Problem:** shadcn writes files directly to the filesystem - it has no hook for xtarterize's `backupFile()` mechanism. After `apply()`, xtarterize would need to re-read the written files and manually record them in the `RunManifest` for undo support. This means xtarterize is tracking side effects from an opaque external process.
+`shadcn add <source> --yes --overwrite`. **Problem:** shadcn writes files
+directly with no hook for xtarterize's `backupFile()`; xtarterize would have to
+re-read the files and record them in the `RunManifest` manually, tracking side
+effects from an opaque external process.
 
 ### Templating Gap
 
@@ -170,6 +112,12 @@ Even if shadcn downloads the file to the right location, xtarterize would need a
 
 3. **The plugin system (plan 019) is a better direction.** If templates need to live outside the npm package, they should be distributed as `Task` objects (TypeScript source with logic), not static files. The registry _concept_ (GitHub-hosted, ref-pinned) is useful for that. The shadcn CLI itself is not.
 
+Update (2026-09-14): verdict 3's plugin direction was removed by ADR 037, so
+external `Task` packages are no longer a supported extension point. The verdict
+(reject shadcn CLI) is unchanged; the historical reasoning is preserved. The
+referenced `plans/019-D3-extensibility-api.md` is gitignored and absent in a
+fresh clone.
+
 ## Open Questions (closed by rejection)
 
 | Question                                             | Resolution                                                       |
@@ -180,7 +128,8 @@ Even if shadcn downloads the file to the right location, xtarterize would need a
 
 ## References
 
-- `plans/019-D3-extensibility-api.md` - Plugin system prototype (the direction we chose instead)
+- `plans/019-D3-extensibility-api.md` - plugin system prototype (gitignored,
+  not present in a fresh clone; see the update note above)
 - `docs/RFCs/001-tui-mode-opentui.md` - First RFC format reference
 - https://ui.shadcn.com/docs/registry - shadcn registry docs
 - https://ui.shadcn.com/docs/registry/github - GitHub registry mode

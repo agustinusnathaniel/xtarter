@@ -3,23 +3,14 @@ title: Configuration
 description: How xtarterize detects and adapts to your project.
 ---
 
-import { Aside, FileTree, Tabs, TabItem } from '@astrojs/starlight/components'
+import { Aside, Tabs, TabItem } from '@astrojs/starlight/components'
 import AllPackageManagers from '@/components/AllPackageManagers.astro'
 
 xtarterize doesn't require a config file. It detects your project's stack automatically and applies only what's appropriate.
 
 ## Detection
 
-When you run `init`, xtarterize scans your project to build a `ProjectProfile`:
-
-- **Framework** - [React](https://react.dev/), [Vue](https://vuejs.org/), [Svelte](https://svelte.dev/), [Solid](https://www.solidjs.com/), [React Native](https://reactnative.dev/), or [Node](https://nodejs.org/) (from `package.json` deps)
-- **Bundler** - [Vite](https://vitejs.dev/), [Next.js](https://nextjs.org/), [TanStack Start](https://tanstack.com/start/latest), [Expo](https://expo.dev/), [Webpack](https://webpack.js.org/), [Rspack](https://rspack.dev/), or none
-- **Router** - [TanStack Router](https://tanstack.com/router/latest), [React Router](https://reactrouter.com/), [Vue Router](https://router.vuejs.org/), [Expo Router](https://docs.expo.dev/router/introduction/), or none
-- **Styling** - [Tailwind CSS](https://tailwindcss.com/), [CSS Modules](https://github.com/css-modules/css-modules), [Styled Components](https://styled-components.com/), [Vanilla Extract](https://vanilla-extract.style/), [NativeWind](https://www.nativewind.dev/), or Vanilla
-- **Package Manager** - [pnpm](https://pnpm.io/), [npm](https://www.npmjs.com/), [yarn](https://yarnpkg.com/), or [bun](https://bun.sh/) (from lockfiles or `packageManager` field)
-- **Monorepo** - Detected via [`pnpm-workspace.yaml`](https://pnpm.io/pnpm-workspace_yaml), [`turbo.json`](https://turbo.build/repo/docs/reference/configuration), [`nx.json`](https://nx.dev/reference/nx-json), [`lerna.json`](https://lerna.js.org/docs/configuration), or at least two of the `packages/`, `apps/`, `services/` directories
-- **GitHub** - [`.github/`](https://docs.github.com/en/actions/using-workflows/about-workflows) directory presence
-- **Existing Configs** - Checks for [`biome.json`](https://biomejs.dev/reference/configuration/), [`tsconfig.json`](https://www.typescriptlang.org/tsconfig/), [`renovate.json`](https://docs.renovatebot.com/configuration-options/), [`vite.config.*`](https://vitejs.dev/config/), [`.versionrc`](https://github.com/absolute-version/commit-and-tag-version#configuration), [`.gitignore`](https://git-scm.com/docs/gitignore), etc.
+When you run `init`, xtarterize scans `package.json`, lockfiles, config files, and directories to build a `ProjectProfile` covering framework, bundler, router, styling, package manager, monorepo status, GitHub, and existing configs. See [Project detection](/xtarterize/contributing/core/detect/) for the full profile schema and precedence rules.
 
 ## Detection Flow
 
@@ -67,37 +58,24 @@ flowchart TD
   </TabItem>
 </Tabs>
 
-## Ambiguity Resolution
+## Framework Precedence
 
 <Aside type="note">
-  If both `react` and `react-native` are detected, xtarterize prompts you to clarify which describes the project. In CI mode (`--quiet`), it defaults to `react`.
+  If both `react` and `react-native` (or `expo`) are detected, xtarterize treats the project as React Native. There is no prompt to clarify the framework.
 </Aside>
 
 ## Task Gating
 
 Tasks are gated on the detected profile:
 
-- Vite plugin tasks only run when `bundler === 'vite'`
+- Vite plugin tasks only run for browser Vite projects (`bundler === 'vite'` and `runtime !== 'node'`)
 - Monorepo tasks only run when `monorepo === true`
 - CI tasks only run when `hasGitHub === true`
 - TypeScript tasks only run when `typescript === true`
 
 ### Monorepo scope filtering
 
-When running inside a monorepo, xtarterize further filters tasks based on
-their **scope**. Each task declares one of three scopes:
-
-- **`root`** - The task applies only at the monorepo root.
-- **`package`** - The task applies only inside a workspace package.
-- **`both`** (default) - The task applies everywhere.
-
-At the monorepo root (`workspaceRoot: true`), package-scoped tasks are
-hidden. Inside a workspace package (`workspaceRoot: false`), root-scoped
-tasks are hidden. Tasks without an explicit scope (or with `scope: 'both'`)
-are visible in both positions.
-
-In non-monorepo projects, scope filtering is disabled - all tasks that
-pass the `applicable()` check are shown regardless of their declared scope.
+In monorepos, tasks are additionally filtered by their scope (`root`, `package`, or `both`). See the [Monorepo guide](/xtarterize/guide/monorepo/) for the scope table and filtering rules.
 
 ## Parameterized Templates
 
@@ -113,14 +91,6 @@ All templates adapt to the detected profile:
 
 Before any file is modified, xtarterize creates a timestamped backup in `.xtarterize/backups/`. An index file tracks all backups for easy restoration.
 
-<FileTree>
-- .xtarterize/
-  - backups/
-    - .index.json
-    - tsconfig.json.2024-01-15T10-30-00-000Z
-    - biome.json.2024-01-15T10-30-00-000Z
-</FileTree>
-
 The `.xtarterize/` directory is automatically added to your project's `.gitignore` when you run any `xtarterize` command. You won't see these internal artifacts in `git status`.
 
 Restore with:
@@ -129,11 +99,10 @@ Restore with:
 
 ## Task selection
 
-`.xtarterizerc` accepts `skip` and `only` arrays alongside `plugins` so repeat runs apply the same filter without CLI flags. The same fields work in the `"xtarterize"` key of `package.json`.
+`.xtarterizerc` accepts `skip` and `only` arrays so repeat runs apply the same filter without CLI flags. The same fields work in the `"xtarterize"` key of `package.json`.
 
 ```json
 {
-  "plugins": ["@acme/xtarterize-tasks"],
   "skip": ["agent/skills-install"],
   "only": ["ts/strict", "lint/biome"]
 }

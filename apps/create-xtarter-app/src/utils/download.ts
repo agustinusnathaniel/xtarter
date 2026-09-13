@@ -1,4 +1,5 @@
-import { consola } from '@xtarterize/core';
+import { setTimeout as sleep } from 'node:timers/promises';
+import { consola } from '@xtarterize/core/plain';
 import { downloadTemplate } from 'giget';
 
 import type { TemplateConfig } from '@/templates/registry';
@@ -14,10 +15,6 @@ export interface DownloadOptions {
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 1000;
 const NETWORK_ERROR_PATTERN = /ENOTFOUND|ECONNREFUSED|ETIMEDOUT|network|fetch/;
-
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
 
 export async function downloadTemplateFiles({
   template,

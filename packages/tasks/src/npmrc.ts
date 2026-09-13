@@ -13,18 +13,10 @@ export const npmrcTask = defineSingleTargetTask({
   applicable: () => true,
   group: 'Scripts',
   id: 'scripts/npmrc',
+  keywords: ['npmrc', 'npm config', 'registry', 'package manager', 'settings'],
   label: '.npmrc - package manager config',
   scope: 'root',
-  searchMeta: {
-    keywords: [
-      'npmrc',
-      'npm config',
-      'registry',
-      'package manager',
-      'settings',
-    ],
-    tags: ['package-manager', 'config', 'registry'],
-  },
+  tags: ['package-manager', 'config', 'registry'],
   target: {
     filepath: '.npmrc',
     kind: 'text',

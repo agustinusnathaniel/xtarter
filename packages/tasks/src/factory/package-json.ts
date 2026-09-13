@@ -52,11 +52,10 @@ export async function computePackageJsonChange(
 export async function applyPackageJsonChange(
   cwd: string,
   patch: object
-): Promise<PackageJsonChange | null> {
+): Promise<void> {
   const change = await computePackageJsonChange(cwd, patch);
   if (change === null) {
-    return null;
+    return;
   }
   await writeFile(resolvePath(cwd, change.filepath), change.after);
-  return change;
 }

@@ -2,8 +2,6 @@ import { isCI } from '@xtarterize/core';
 
 import type { DisplayFormat } from '@/ui/diff-display.js';
 
-import { resolveCwd } from './cwd.js';
-
 export interface RuntimeArgs {
   _?: Array<string | number>;
   cwd?: string;
@@ -41,5 +39,6 @@ export function resolveRuntimeContext(args: RuntimeArgs): RuntimeContext {
   const ci = isCI();
   const format = resolveFormat(args.format, json);
   const quiet = args.quiet === true || ci || format === 'json';
-  return { ci, cwd: resolveCwd(args), format, json, quiet };
+  const cwd = typeof args.cwd === 'string' ? args.cwd : process.cwd();
+  return { ci, cwd, format, json, quiet };
 }

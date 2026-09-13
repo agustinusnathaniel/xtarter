@@ -23,22 +23,13 @@ export interface TargetPolicyInput {
 }
 
 /**
- * Extra context a policy hook may need beyond the diff pair. Kept as a second
- * argument so `TargetPolicyInput` stays exactly the `before`/`after` pair the
- * diff was computed from.
- */
-export interface TargetPolicyContext {
-  profile: ProjectProfile;
-}
-
-/**
  * Optional per-target override. Returning a status wins over the default
  * projection; returning undefined keeps it. Use it to report `conflict` when an
  * existing value cannot be reconciled, such as a disabled strict option.
  */
 export type TargetPolicy = (
   input: TargetPolicyInput,
-  context: TargetPolicyContext
+  profile: ProjectProfile
 ) => TaskStatus | undefined;
 
 interface TargetBase {
@@ -161,7 +152,7 @@ async function resolveTextTarget(
       ? 'skip'
       : 'conflict'
     : 'new';
-  const status = target.policy?.({ after, before }, { profile }) ?? fallback;
+  const status = target.policy?.({ after, before }, profile) ?? fallback;
   return buildDraft(state, after, status);
 }
 
@@ -192,7 +183,7 @@ async function resolveJsonMergeTarget(
       ? 'skip'
       : 'patch'
     : 'new';
-  const status = target.policy?.({ after, before }, { profile }) ?? fallback;
+  const status = target.policy?.({ after, before }, profile) ?? fallback;
   return buildDraft(state, after, status);
 }
 
@@ -210,7 +201,7 @@ async function resolvePackageJsonTarget(
       ? 'new'
       : 'patch'
     : 'skip';
-  const status = target.policy?.({ after, before }, { profile }) ?? fallback;
+  const status = target.policy?.({ after, before }, profile) ?? fallback;
   const resolved: ResolvedTarget = {
     diff:
       status === 'skip'
@@ -245,7 +236,7 @@ async function resolveTransformTarget(
   const after = transformed ?? before;
   const fallback: TaskStatus =
     transformed === null || after === before ? 'skip' : 'patch';
-  const status = target.policy?.({ after, before }, { profile }) ?? fallback;
+  const status = target.policy?.({ after, before }, profile) ?? fallback;
   return buildDraft(state, after, status);
 }
 

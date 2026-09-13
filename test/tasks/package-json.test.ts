@@ -1,5 +1,4 @@
 import fs from 'node:fs/promises';
-import os from 'node:os';
 import path from 'node:path';
 import { describe, expect } from 'vite-plus/test';
 
@@ -7,19 +6,7 @@ import {
   applyPackageJsonChange,
   computePackageJsonChange,
 } from '../../packages/tasks/src/factory/package-json.js';
-
-const withTempDir = async (
-  run: (cwd: string) => Promise<void>
-): Promise<void> => {
-  const tmpDir = await fs.mkdtemp(
-    path.join(os.tmpdir(), 'xtarterize-package-json-')
-  );
-  try {
-    await run(tmpDir);
-  } finally {
-    await fs.rm(tmpDir, { force: true, recursive: true });
-  }
-};
+import { withTempDir } from '../helpers/temp.js';
 
 const packageJsonPath = (cwd: string): string => path.join(cwd, 'package.json');
 
@@ -31,7 +18,7 @@ const writePackageJson = (cwd: string, content: string): Promise<void> =>
 
 describe('package.json owner', () => {
   test('computed change equals the bytes written by apply', async () => {
-    await withTempDir(async (cwd) => {
+    await withTempDir('xtarterize-package-json-', async (cwd) => {
       await writePackageJson(
         cwd,
         `${JSON.stringify({ name: 'example' }, null, 2)}\n`
@@ -41,14 +28,13 @@ describe('package.json owner', () => {
       const change = await computePackageJsonChange(cwd, patch);
       expect(change).not.toBeNull();
 
-      const applied = await applyPackageJsonChange(cwd, patch);
-      expect(applied).toEqual(change);
+      await applyPackageJsonChange(cwd, patch);
       await expect(readPackageJson(cwd)).resolves.toBe(change?.after);
     });
   });
 
   test('comments and indentation survive a change', async () => {
-    await withTempDir(async (cwd) => {
+    await withTempDir('xtarterize-package-json-', async (cwd) => {
       const original = [
         '{',
         '    // keep this comment',
@@ -74,33 +60,29 @@ describe('package.json owner', () => {
     });
   });
 
-  test('applying an already-present change returns null and writes nothing', async () => {
-    await withTempDir(async (cwd) => {
+  test('applying an already-present change writes nothing', async () => {
+    await withTempDir('xtarterize-package-json-', async (cwd) => {
       await writePackageJson(
         cwd,
         `${JSON.stringify({ name: 'example' }, null, 2)}\n`
       );
       const patch = { scripts: { test: 'vitest run' } };
 
-      const first = await applyPackageJsonChange(cwd, patch);
-      expect(first).not.toBeNull();
+      await applyPackageJsonChange(cwd, patch);
       const afterFirst = await readPackageJson(cwd);
 
-      const second = await applyPackageJsonChange(cwd, patch);
-      expect(second).toBeNull();
+      await applyPackageJsonChange(cwd, patch);
       await expect(readPackageJson(cwd)).resolves.toBe(afterFirst);
     });
   });
 
   test('an external write between compute and apply survives', async () => {
-    await withTempDir(async (cwd) => {
+    await withTempDir('xtarterize-package-json-', async (cwd) => {
       await writePackageJson(
         cwd,
         `${JSON.stringify({ devDependencies: {}, name: 'example' }, null, 2)}\n`
       );
       const patch = { scripts: { test: 'vitest run' } };
-      const computed = await computePackageJsonChange(cwd, patch);
-      expect(computed).not.toBeNull();
 
       const external = JSON.parse(await readPackageJson(cwd)) as {
         devDependencies: Record<string, string>;
@@ -108,13 +90,13 @@ describe('package.json owner', () => {
       external.devDependencies['new-dep'] = '^1.0.0';
       await writePackageJson(cwd, `${JSON.stringify(external, null, 2)}\n`);
 
-      const applied = await applyPackageJsonChange(cwd, patch);
-      expect(applied).not.toBeNull();
+      const expected = await computePackageJsonChange(cwd, patch);
+      await applyPackageJsonChange(cwd, patch);
 
       const written = await readPackageJson(cwd);
       expect(written).toContain('"new-dep": "^1.0.0"');
       expect(written).toContain('"test": "vitest run"');
-      expect(written).toBe(applied?.after);
+      expect(written).toBe(expected?.after);
     });
   });
 });

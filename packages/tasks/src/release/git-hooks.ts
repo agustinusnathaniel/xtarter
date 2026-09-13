@@ -112,31 +112,29 @@ function hookTarget(options: {
 
 export const gitHooksTask = defineTask({
   applicable: () => true,
+  configTargets: [
+    '.husky/commit-msg',
+    '.husky/prepare-commit-msg',
+    '.husky/pre-commit',
+    '.husky/pre-push',
+  ],
   deps: (_resolution, { profile }) =>
     profile.vitePlus ? [] : [{ depName: 'husky', dev: true }],
   group: 'Release',
   id: 'release/git-hooks',
+  keywords: [
+    'git hooks',
+    'husky',
+    'pre-commit',
+    'commit-msg',
+    'prepare-commit-msg',
+    'commitizen',
+    'czg',
+    'quality gates',
+  ],
   label: 'Git hooks (commit-msg, prepare-commit-msg, pre-commit, pre-push)',
   scope: 'root',
-  searchMeta: {
-    configTargets: [
-      '.husky/commit-msg',
-      '.husky/prepare-commit-msg',
-      '.husky/pre-commit',
-      '.husky/pre-push',
-    ],
-    keywords: [
-      'git hooks',
-      'husky',
-      'pre-commit',
-      'commit-msg',
-      'prepare-commit-msg',
-      'commitizen',
-      'czg',
-      'quality gates',
-    ],
-    tags: ['git', 'hooks', 'husky', 'quality'],
-  },
+  tags: ['git', 'hooks', 'husky', 'quality'],
   targets: async (cwd, profile) => {
     const pkg = await readPackageJson(cwd);
     const [hooksExist, contents] = await Promise.all([

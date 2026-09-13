@@ -5,8 +5,9 @@ import {
   scoreTasks,
   tokenize,
 } from '@xtarterize/core';
-import { defineCommand } from 'citty';
 
+import { cliCommand } from '@/commands/command.js';
+import { runCliProgram } from '@/runtime.js';
 import { type CommandSession, openSession } from '@/session.js';
 import { formatQueryResult } from '@/ui/json-formatter.js';
 import { displayQueryResults } from '@/ui/query-display.js';
@@ -51,7 +52,7 @@ function resolveQueryLimits(args: {
 async function resolveMatchedStatuses(options: {
   matchedTasks: Array<Task>;
   session: CommandSession;
-}): Promise<Map<string, TaskStatus>> {
+}): Promise<Map<string, TaskStatus> | undefined> {
   const { matchedTasks, session } = options;
   const applicableIds = new Set(session.tasks.map((task) => task.id));
   const statuses = new Map(session.statuses);
@@ -60,18 +61,19 @@ async function resolveMatchedStatuses(options: {
     return statuses;
   }
 
-  const extraStatuses = await resolveTaskStatuses(
-    unresolved,
-    session.runtime.cwd,
-    session.profile
+  const extraStatuses = await runCliProgram(
+    resolveTaskStatuses(unresolved, session.runtime.cwd, session.profile)
   );
+  if (!extraStatuses) {
+    return undefined;
+  }
   for (const [taskId, status] of extraStatuses) {
     statuses.set(taskId, status);
   }
   return statuses;
 }
 
-export const queryCommand = defineCommand({
+export const queryCommand = cliCommand({
   args: {
     cwd: cwdArg,
     json: jsonArg,
@@ -90,12 +92,10 @@ export const queryCommand = defineCommand({
       type: 'string',
     },
   },
-  meta: {
-    description: 'Search tasks by natural language query',
-    name: 'query',
-  },
-  async run({ args }) {
-    const session = await openSession(args);
+  description: 'Search tasks by natural language query',
+  name: 'query',
+  program: async (args) => {
+    const session = await runCliProgram(openSession(args));
     if (!session) {
       return;
     }
@@ -117,6 +117,9 @@ export const queryCommand = defineCommand({
       matchedTasks,
       session,
     });
+    if (!statuses) {
+      return;
+    }
 
     if (ctx.json) {
       console.log(formatQueryResult({ query: queryStr, results, statuses }));

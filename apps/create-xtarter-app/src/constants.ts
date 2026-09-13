@@ -1,4 +1,4 @@
-import { pc } from '@xtarterize/core';
+import { pc } from '@xtarterize/core/plain';
 
 import { version } from '^/package.json';
 

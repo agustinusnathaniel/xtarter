@@ -38,16 +38,15 @@ This command does not support the shared formatting or output flags (`--quiet`, 
 Outputs tasks grouped by domain bundle with per-group actionable add commands:
 
 ```
-✻ xtarterize query "strict typescript" - 2 groups · 4 tasks
+✻ xtarterize query "strict typescript" - 1 group · 4 tasks
 
   TypeScript
-  ts/strict                80%  tsconfig - strict: true             tsconfig.json
-  ts/paths                 52%  tsconfig - path aliases             tsconfig.json
-  ts/incremental           24%  tsconfig - incremental: true        tsconfig.json
-  gitignore/tsbuildinfo    14%  .gitignore - tsbuildinfo             .gitignore
+  ts/strict              80%  patch     tsconfig - strict compiler options  tsconfig.json
+  ts/incremental         30%  skip      tsconfig - incremental: true        tsconfig.json
+  gitignore/tsbuildinfo  30%  patch     .gitignore - tsbuildinfo            .gitignore
+  ts/paths               15%  conflict  tsconfig - path aliases             tsconfig.json
 
-  xtarterize add ts/strict ts/paths ts/incremental gitignore/tsbuildinfo
-  xtarterize add scripts/package-scripts
+  xtarterize add ts/strict ts/incremental gitignore/tsbuildinfo ts/paths
 ```
 
 ### Search for linting and formatting
@@ -91,13 +90,12 @@ This reorders tasks so the most relevant ones appear first in the interactive pl
 
 ## How It Works
 
-The scoring engine operates in five steps:
+The scoring engine operates in four steps:
 
 1. **Tokenize** - The query is split into words; stopwords (a, the, want, need, project, etc.) and short words are filtered out
-2. **Expand** - Content words are expanded through a domain-specific synonym map with bidirectional transitive reverse-lookup (e.g. "lint" → "linter", "static-analysis", "check"; "typescript" → "ts", "type-safe", "strict")
-3. **Score** - For each original token, find the best match across all 5 signals (label, id, group, keywords, config targets) using the highest signal score among all terms (original + expanded synonyms). Uses tiered match levels: exact (1.0), stem-match (0.95), fuzzy (0.85), prefix (0.75), substring (0.55)
-4. **Aggregate** - Signal scores are weighted and averaged; multi-token queries receive a coverage bonus that increases with the proportion of tokens matched
-5. **Group** - Results are organized by task group/domain bundle, with per-group actionable `xtarterize add` commands
+2. **Score** - For each query token, find the best match across all 5 signals (label, id, group, keywords, config targets), keeping the highest score per signal. Uses tiered match levels: exact (1.0), stem-match (0.95), fuzzy (0.85), prefix (0.75), substring (0.55)
+3. **Aggregate** - Signal scores are weighted and averaged; multi-token queries receive a coverage bonus that increases with the proportion of tokens matched
+4. **Group** - Results are organized by task group/domain bundle, with per-group actionable `xtarterize add` commands
 
 <Aside type="note">
   The scoring engine is entirely algorithmic - zero AI model calls, zero API dependencies.

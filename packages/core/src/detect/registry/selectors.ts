@@ -9,20 +9,27 @@ import {
   type AncestorMarkerInput,
   ancestorMarkerInputs,
   type ConfigDirInput,
+  type DetectorInput,
   inputById,
   type RootFileInput,
 } from './inputs.js';
 
+/** Inputs of one kind referenced by an entry, in declaration order. */
+function inputsFor<K extends DetectorInput['kind']>(
+  entry: DetectorEntry,
+  kind: K
+): Array<Extract<DetectorInput, { kind: K }>> {
+  return entry.inputs
+    .map((inputId) => inputById(inputId))
+    .filter(
+      (input): input is Extract<DetectorInput, { kind: K }> =>
+        input.kind === kind
+    );
+}
+
 /** Root file inputs referenced by an entry, in declaration order. */
 export function rootFileInputsFor(entry: DetectorEntry): Array<RootFileInput> {
-  const result: Array<RootFileInput> = [];
-  for (const inputId of entry.inputs) {
-    const input = inputById(inputId);
-    if (input.kind === 'rootFile') {
-      result.push(input);
-    }
-  }
-  return result;
+  return inputsFor(entry, 'rootFile');
 }
 
 /** The single root file input a keyed file detector declares. */
@@ -40,14 +47,7 @@ export function rootFileInputFor(entry: FileDetectorEntry): RootFileInput {
 export function configDirInputsFor(
   entry: DetectorEntry
 ): Array<ConfigDirInput> {
-  const result: Array<ConfigDirInput> = [];
-  for (const inputId of entry.inputs) {
-    const input = inputById(inputId);
-    if (input.kind === 'configDir') {
-      result.push(input);
-    }
-  }
-  return result;
+  return inputsFor(entry, 'configDir');
 }
 
 /** Monorepo marker files, used by `detect/monorepo.ts`. */

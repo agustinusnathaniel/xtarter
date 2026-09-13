@@ -1,18 +1,13 @@
-import fs from 'node:fs/promises';
-import os from 'node:os';
-import path from 'node:path';
-import { detectProject } from '@xtarterize/core';
 import { describe, expect } from 'vite-plus/test';
+
+import { withProject } from '../helpers/project.js';
+import { run } from '../helpers/run.js';
 
 describe('pnpm workspace root', () => {
   test('detects workspace root and handles task apply correctly', async () => {
-    const tmpDir = await fs.mkdtemp(
-      path.join(os.tmpdir(), 'xtarterize-workspace-')
-    );
-    try {
-      await fs.writeFile(
-        path.join(tmpDir, 'package.json'),
-        JSON.stringify(
+    await withProject(
+      {
+        'package.json': JSON.stringify(
           {
             devDependencies: {
               czg: '^1.0.0',
@@ -22,50 +17,41 @@ describe('pnpm workspace root', () => {
           },
           null,
           2
-        )
-      );
-      await fs.writeFile(
-        path.join(tmpDir, 'pnpm-workspace.yaml'),
-        'packages:\n  - "packages/*"\n'
-      );
+        ),
+        'pnpm-workspace.yaml': 'packages:\n  - "packages/*"\n',
+      },
+      async ({ cwd, profile, readJson }) => {
+        expect(profile.workspaceRoot).toBe(true);
+        expect(profile.packageManager).toBe('pnpm');
 
-      const profile = await detectProject(tmpDir);
-      expect(profile.workspaceRoot).toBe(true);
-      expect(profile.packageManager).toBe('pnpm');
+        const { czgTask } = await import(
+          '../../packages/tasks/src/release/czg.js'
+        );
+        const status = await run(czgTask.check(cwd, profile));
+        expect(status).toBe('patch');
 
-      const { czgTask } = await import('@xtarterize/tasks');
-      const status = await czgTask.check(tmpDir, profile);
-      expect(status).toBe('patch');
+        const diffs = await run(czgTask.dryRun(cwd, profile));
+        const pkgDiff = diffs.find((d) => d.filepath === 'package.json');
+        expect(pkgDiff?.after).toContain('"commit": "czg"');
 
-      const diffs = await czgTask.dryRun(tmpDir, profile);
-      const pkgDiff = diffs.find((d) => d.filepath === 'package.json');
-      expect(pkgDiff?.after).toContain('"commit": "czg"');
+        await run(czgTask.apply(cwd, profile));
 
-      await czgTask.apply(tmpDir, profile);
-
-      const pkg = JSON.parse(
-        await fs.readFile(path.join(tmpDir, 'package.json'), 'utf-8')
-      );
-      expect(pkg.scripts?.commit).toBe('czg');
-    } finally {
-      await fs.rm(tmpDir, { force: true, recursive: true });
-    }
+        const pkg = await readJson<{ scripts?: { commit?: string } }>(
+          'package.json'
+        );
+        expect(pkg.scripts?.commit).toBe('czg');
+      }
+    );
   });
 
   test('sets workspaceRoot to false without pnpm-workspace.yaml', async () => {
-    const tmpDir = await fs.mkdtemp(
-      path.join(os.tmpdir(), 'xtarterize-nonworkspace-')
+    await withProject(
+      {
+        'package.json': JSON.stringify({ name: 'test-nonworkspace' }, null, 2),
+      },
+      async ({ profile }) => {
+        expect(profile.workspaceRoot).toBe(false);
+      }
     );
-    try {
-      await fs.writeFile(
-        path.join(tmpDir, 'package.json'),
-        JSON.stringify({ name: 'test-nonworkspace' }, null, 2)
-      );
-
-      const profile = await detectProject(tmpDir);
-      expect(profile.workspaceRoot).toBe(false);
-    } finally {
-      await fs.rm(tmpDir, { force: true, recursive: true });
-    }
   });
 });

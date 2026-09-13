@@ -1,4 +1,8 @@
+import type { Effect } from 'effect';
+
 import type { ProjectProfile } from '@/detect.js';
+import type { TaskError } from '@/errors.js';
+import type { ProcessRunner } from '@/services/process-runner.js';
 
 export type TaskStatus = 'new' | 'patch' | 'skip' | 'conflict';
 
@@ -40,21 +44,43 @@ export interface TaskSearchMeta {
   tags: Array<string>;
 }
 
-export interface Task {
+/** A dependency the apply plan installs before tasks run. */
+export interface TaskDep {
+  depName: string;
+  dev: boolean;
+}
+
+/** Services a task may require while running. */
+export type TaskServices = ProcessRunner;
+
+interface TaskBase {
   applicable: (profile: ProjectProfile) => boolean;
-  apply: (cwd: string, profile: ProjectProfile) => Promise<void>;
-  check: (cwd: string, profile: ProjectProfile) => Promise<TaskStatus>;
-  dryRun: (cwd: string, profile: ProjectProfile) => Promise<Array<FileDiff>>;
+  group: string;
+  id: string;
+  label: string;
+  scope?: TaskScope;
+  searchMeta?: TaskSearchMeta;
+}
+
+/** A task whose methods return effects requiring `TaskServices`. */
+export interface Task extends TaskBase {
+  apply: (
+    cwd: string,
+    profile: ProjectProfile
+  ) => Effect.Effect<void, TaskError, TaskServices>;
+  check: (
+    cwd: string,
+    profile: ProjectProfile
+  ) => Effect.Effect<TaskStatus, TaskError, TaskServices>;
+  dryRun: (
+    cwd: string,
+    profile: ProjectProfile
+  ) => Effect.Effect<Array<FileDiff>, TaskError, TaskServices>;
   /** Optional: declare dependencies needed by this task.
    * When implemented, the `planTasks`/`executePlan` pipeline batches these
    * across all tasks into a single install call before running any apply(). */
   getDeps?: (
     cwd: string,
     profile: ProjectProfile
-  ) => Promise<Array<{ depName: string; dev: boolean }>>;
-  group: string;
-  id: string;
-  label: string;
-  scope?: TaskScope;
-  searchMeta?: TaskSearchMeta;
+  ) => Effect.Effect<Array<TaskDep>, TaskError, TaskServices>;
 }

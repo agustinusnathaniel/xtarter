@@ -1,25 +1,17 @@
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { detectProject } from '@xtarterize/core';
-import {
-  autoUpdateWorkflowTask,
-  ciWorkflowTask,
-  releaseWorkflowTask,
-  renovateTask,
-} from '@xtarterize/tasks';
 import { describe, expect } from 'vite-plus/test';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const fixtures = path.resolve(__dirname, '../fixtures');
+import { autoUpdateWorkflowTask } from '../../packages/tasks/src/ci/auto-update.js';
+import { ciWorkflowTask } from '../../packages/tasks/src/ci/ci.js';
+import { releaseWorkflowTask } from '../../packages/tasks/src/ci/release.js';
+import { renovateTask } from '../../packages/tasks/src/deps/renovate.js';
+import { fixtureDir, fixtureProfile } from '../helpers/project.js';
+import { run } from '../helpers/run.js';
 
 describe('ciWorkflowTask', () => {
   test('renders package-manager-aware quality steps', async () => {
-    const profile = await detectProject(
-      path.join(fixtures, 'react-vite-tailwind')
-    );
-    const [diff] = await ciWorkflowTask.dryRun(
-      path.join(fixtures, 'react-vite-tailwind'),
-      profile
+    const profile = await fixtureProfile('react-vite-tailwind');
+    const [diff] = await run(
+      ciWorkflowTask.dryRun(fixtureDir('react-vite-tailwind'), profile)
     );
 
     expect(diff.after).toContain('cache: true');
@@ -32,12 +24,9 @@ describe('ciWorkflowTask', () => {
 
 describe('autoUpdateWorkflowTask', () => {
   test('updates dependencies and validates the result', async () => {
-    const profile = await detectProject(
-      path.join(fixtures, 'react-vite-tailwind')
-    );
-    const [diff] = await autoUpdateWorkflowTask.dryRun(
-      path.join(fixtures, 'react-vite-tailwind'),
-      profile
+    const profile = await fixtureProfile('react-vite-tailwind');
+    const [diff] = await run(
+      autoUpdateWorkflowTask.dryRun(fixtureDir('react-vite-tailwind'), profile)
     );
 
     expect(diff.after).toContain('pnpm update');
@@ -50,12 +39,9 @@ describe('autoUpdateWorkflowTask', () => {
 
 describe('releaseWorkflowTask', () => {
   test('runs quality checks before release', async () => {
-    const profile = await detectProject(
-      path.join(fixtures, 'react-vite-tailwind')
-    );
-    const [diff] = await releaseWorkflowTask.dryRun(
-      path.join(fixtures, 'react-vite-tailwind'),
-      profile
+    const profile = await fixtureProfile('react-vite-tailwind');
+    const [diff] = await run(
+      releaseWorkflowTask.dryRun(fixtureDir('react-vite-tailwind'), profile)
     );
 
     expect(diff.after).toContain('pnpm run lint');
@@ -67,12 +53,9 @@ describe('releaseWorkflowTask', () => {
 
 describe('renovateTask', () => {
   test('renders the reference-derived renovate defaults', async () => {
-    const profile = await detectProject(
-      path.join(fixtures, 'react-vite-tailwind')
-    );
-    const [diff] = await renovateTask.dryRun(
-      path.join(fixtures, 'react-vite-tailwind'),
-      profile
+    const profile = await fixtureProfile('react-vite-tailwind');
+    const [diff] = await run(
+      renovateTask.dryRun(fixtureDir('react-vite-tailwind'), profile)
     );
     const config = JSON.parse(diff.after);
 

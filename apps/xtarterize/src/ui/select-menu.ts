@@ -1,14 +1,14 @@
 import type { Task, TaskStatus } from '@xtarterize/core';
+import { Effect } from 'effect';
 
-import type { Prompter } from '@/ui/prompter.js';
+import { type PromptError, Prompter } from '@/ui/prompter.js';
 import { defaultSelectedIds, statusHint } from '@/utils/display.js';
 
 /** Resolve selected task IDs, or `null` when the user cancels the prompt. */
-export async function selectTasks(
+export function selectTasks(
   tasks: Array<Task>,
-  statuses: Map<string, TaskStatus>,
-  prompter: Prompter
-): Promise<Array<string> | null> {
+  statuses: Map<string, TaskStatus>
+): Effect.Effect<Array<string> | null, PromptError, Prompter> {
   const options = tasks.map((task) => ({
     hint: statusHint(statuses.get(task.id)),
     label: `${task.label} (${task.id})`,
@@ -19,9 +19,11 @@ export async function selectTasks(
     tasks.map((task) => ({ status: statuses.get(task.id), task }))
   );
 
-  return prompter.multiselect<string>({
-    initialValues: defaultSelected,
-    message: 'Select tasks to apply:',
-    options,
-  });
+  return Effect.flatMap(Prompter, (prompter) =>
+    prompter.multiselect<string>({
+      initialValues: defaultSelected,
+      message: 'Select tasks to apply:',
+      options,
+    })
+  );
 }

@@ -1,18 +1,15 @@
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
-import type { ProjectProfile, Task, TaskScope } from '@xtarterize/core';
+import type { Task } from '@xtarterize/core';
 import { resolveTaskStatuses, resolveTasks } from '@xtarterize/core';
 import { getAllTasks } from '@xtarterize/tasks';
 import { describe, expect } from 'vite-plus/test';
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const fixtures = path.resolve(__dirname, '../fixtures');
+import { makeProfile, makeTask } from '../helpers/factories.js';
+import { fixtureDir, fixtureProfile } from '../helpers/project.js';
+import { run } from '../helpers/run.js';
 
 describe('resolveTasks', () => {
   test('filters tasks by applicability', async () => {
-    const profile = await detectProject(
-      path.join(fixtures, 'react-vite-tailwind')
-    );
+    const profile = await fixtureProfile('react-vite-tailwind');
     const allTasks = getAllTasks();
     const tasks = resolveTasks(profile, allTasks);
     expect(tasks.length).toBeGreaterThan(0);
@@ -24,7 +21,7 @@ describe('resolveTasks', () => {
   });
 
   test('excludes vite tasks for non-vite projects', async () => {
-    const profile = await detectProject(path.join(fixtures, 'nextjs'));
+    const profile = await fixtureProfile('nextjs');
     const allTasks = getAllTasks();
     const tasks = resolveTasks(profile, allTasks);
     const viteTasks = tasks.filter((t) => t.group === 'Vite Plugins');
@@ -34,15 +31,11 @@ describe('resolveTasks', () => {
 
 describe('resolveTaskStatuses', () => {
   test('resolves statuses for all tasks', async () => {
-    const profile = await detectProject(
-      path.join(fixtures, 'react-vite-tailwind')
-    );
+    const profile = await fixtureProfile('react-vite-tailwind');
     const allTasks = getAllTasks();
     const tasks = resolveTasks(profile, allTasks);
-    const statuses = await resolveTaskStatuses(
-      tasks,
-      path.join(fixtures, 'react-vite-tailwind'),
-      profile
+    const statuses = await run(
+      resolveTaskStatuses(tasks, fixtureDir('react-vite-tailwind'), profile)
     );
 
     for (const task of tasks) {
@@ -54,66 +47,36 @@ describe('resolveTaskStatuses', () => {
 });
 
 describe('resolveTasks - scope filtering', () => {
-  function mockTask(id: string, scope: TaskScope | undefined): Task {
-    return {
-      applicable: () => true,
-      apply: async () => {},
-      check: async () => 'skip' as const,
-      dryRun: async () => [],
-      group: 'test',
-      id,
-      label: id,
-      scope,
-    };
-  }
-
-  function mockProfile(overrides: Partial<ProjectProfile>): ProjectProfile {
-    return {
-      bundler: null,
-      existing: {
-        agentsMd: false,
-        biome: false,
-        changeset: false,
-        commitlint: false,
-        eslint: false,
-        githubWorkflows: [],
-        gitignore: false,
-        knip: false,
-        oxfmt: false,
-        oxlint: false,
-        plop: false,
-        renovate: false,
-        tsconfig: false,
-        turbo: false,
-        versionrc: false,
-        viteConfig: false,
-        vscodeSettings: false,
-      },
-      framework: 'node',
-      frameworkVersion: null,
-      hasGit: false,
-      hasGitHub: false,
-      monorepo: false,
-      monorepoTool: null,
-      nodeVersion: '20',
-      packageManager: 'pnpm',
-      router: null,
-      runtime: 'node',
-      styling: ['vanilla'],
-      typescript: false,
-      vitePlus: false,
-      workspaceRoot: false,
-      ...overrides,
-    };
-  }
-
-  const rootTask = mockTask('test/root', 'root');
-  const packageTask = mockTask('test/package', 'package');
-  const bothTask = mockTask('test/both', 'both');
-  const noScopeTask = mockTask('test/noscope', undefined);
+  const rootTask = makeTask({
+    check: 'skip',
+    group: 'test',
+    id: 'test/root',
+    label: 'test/root',
+    scope: 'root',
+  });
+  const packageTask = makeTask({
+    check: 'skip',
+    group: 'test',
+    id: 'test/package',
+    label: 'test/package',
+    scope: 'package',
+  });
+  const bothTask = makeTask({
+    check: 'skip',
+    group: 'test',
+    id: 'test/both',
+    label: 'test/both',
+    scope: 'both',
+  });
+  const noScopeTask = makeTask({
+    check: 'skip',
+    group: 'test',
+    id: 'test/noscope',
+    label: 'test/noscope',
+  });
 
   test('includes all tasks regardless of scope in non-monorepo', () => {
-    const profile = mockProfile({ monorepo: false });
+    const profile = makeProfile({ monorepo: false });
     const tasks = resolveTasks(profile, [
       rootTask,
       packageTask,
@@ -130,7 +93,7 @@ describe('resolveTasks - scope filtering', () => {
   });
 
   test('excludes package-scoped tasks at monorepo root', () => {
-    const profile = mockProfile({ monorepo: true, workspaceRoot: true });
+    const profile = makeProfile({ monorepo: true, workspaceRoot: true });
     const tasks = resolveTasks(profile, [
       rootTask,
       packageTask,
@@ -146,7 +109,7 @@ describe('resolveTasks - scope filtering', () => {
   });
 
   test('excludes root-scoped tasks inside workspace package', () => {
-    const profile = mockProfile({ monorepo: true, workspaceRoot: false });
+    const profile = makeProfile({ monorepo: true, workspaceRoot: false });
     const tasks = resolveTasks(profile, [
       rootTask,
       packageTask,
@@ -166,15 +129,15 @@ describe('resolveTasks - scope filtering', () => {
       ...packageTask,
       applicable: () => false,
     };
-    const profile = mockProfile({ monorepo: true, workspaceRoot: false });
+    const profile = makeProfile({ monorepo: true, workspaceRoot: false });
     const tasks = resolveTasks(profile, [rootTask, nonApplicableTask]);
     // nonApplicableTask excluded by applicable(), rootTask excluded by scope
     expect(tasks).toHaveLength(0);
   });
 
   test('tasks without explicit scope are included everywhere', () => {
-    const rootProfile = mockProfile({ monorepo: true, workspaceRoot: true });
-    const packageProfile = mockProfile({
+    const rootProfile = makeProfile({ monorepo: true, workspaceRoot: true });
+    const packageProfile = makeProfile({
       monorepo: true,
       workspaceRoot: false,
     });
@@ -188,6 +151,3 @@ describe('resolveTasks - scope filtering', () => {
     expect(packageTasks[0].id).toBe('test/noscope');
   });
 });
-
-// Need to import detectProject for the test above
-import { detectProject } from '@xtarterize/core';

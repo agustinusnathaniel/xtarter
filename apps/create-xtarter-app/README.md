@@ -52,16 +52,7 @@ for the complete option and error reference.
 
 ## Templates
 
-| ID | Stack |
-| --- | --- |
-| `next-chakra` | Next.js 16, Chakra UI v3, Biome, Turborepo, TypeScript, Playwright |
-| `next-tailwind` | Next.js 16, Tailwind CSS v4, Biome, TypeScript, Playwright |
-| `vite-chakra` | Vite+ 8, React 19, TanStack Router, TanStack Query, Chakra UI v3, Biome, Vitest |
-| `vite-tailwind` | Vite+ 8, React 19, TanStack Router, TanStack Query, Tailwind CSS v4, Biome, Vitest |
-| `vite-hero` | Vite+ 8, React 19, TanStack Router, Hero UI, Biome, Vitest |
-
-All templates include strict TypeScript, GitHub Actions, VS Code settings, and
-agent skills. Their source repositories are listed in the [template catalog](https://xtarter.sznm.dev/create-xtarter-app/guide/templates/).
+Five templates: `next-chakra` and `next-tailwind` (Next.js), plus `vite-chakra`, `vite-tailwind`, and `vite-hero` (Vite + React). All include strict TypeScript, GitHub Actions, VS Code settings, and agent skills. See the [template catalog](https://xtarter.sznm.dev/create-xtarter-app/guide/templates/) for full stacks and source repositories.
 
 ## Programmatic API
 
@@ -81,17 +72,7 @@ await downloadTemplateFiles({
 
 ## Development
 
-From the monorepo root:
-
-```bash
-pnpm install
-pnpm --filter create-xtarter-app build
-pnpm --filter create-xtarter-app typecheck
-pnpm --filter create-xtarter-app test
-```
-
-See the root [README](../../README.md) for workspace conventions and the
-[architecture decisions](../../docs/ADRs/create-xtarter-app/).
+From the monorepo root: `pnpm install`, then `pnpm --filter create-xtarter-app build|typecheck|test`. See [CONTRIBUTING.md](../../CONTRIBUTING.md) for workspace conventions and the [architecture decisions](../../docs/ADRs/create-xtarter-app/).
 
 ## License
 

@@ -29,3 +29,22 @@ export function getUltraciteRouterPresetSuffix(
 
   return null;
 }
+
+export function collectUltracitePresets(
+  profile: ProjectProfile,
+  prefix = ''
+): Array<string> {
+  const presets = [`${prefix}core`];
+  const suffixes = [
+    getUltraciteFrameworkPresetSuffix(profile),
+    getUltraciteRouterPresetSuffix(profile),
+  ];
+
+  for (const suffix of suffixes) {
+    if (suffix) {
+      presets.push(`${prefix}${suffix}`);
+    }
+  }
+
+  return presets;
+}

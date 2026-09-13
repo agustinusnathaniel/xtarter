@@ -27,22 +27,20 @@ const VERSIONRC_TEMPLATE = `{
 
 export const catVersionTask = defineTask({
   applicable: () => true,
+  configTargets: ['.versionrc'],
   deps: [{ depName: 'commit-and-tag-version', dev: true }],
   group: 'Release',
   id: 'release/cat-version',
+  keywords: [
+    'commit-and-tag-version',
+    'version bump',
+    'changelog',
+    'release',
+    'semver',
+  ],
   label: 'commit-and-tag-version',
   scope: 'root',
-  searchMeta: {
-    configTargets: ['.versionrc'],
-    keywords: [
-      'commit-and-tag-version',
-      'version bump',
-      'changelog',
-      'release',
-      'semver',
-    ],
-    tags: ['release', 'version', 'changelog', 'semver'],
-  },
+  tags: ['release', 'version', 'changelog', 'semver'],
   targets: async (cwd) => {
     const { missingScripts, pkg } = await resolveScriptsResolution(
       cwd,

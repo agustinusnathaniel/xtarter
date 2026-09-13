@@ -6,7 +6,7 @@ import {
   createInvocationGuard,
   findFirstPositionalIndex,
   pc,
-} from '@xtarterize/core';
+} from '@xtarterize/core/plain';
 import {
   type ArgsDef,
   type CommandDef,

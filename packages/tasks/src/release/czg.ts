@@ -9,22 +9,20 @@ const CANDIDATES = [{ script: 'commit', value: 'czg' }];
 
 export const czgTask = defineTask({
   applicable: () => true,
+  configTargets: ['package.json'],
   deps: [{ depName: 'czg', dev: true }],
   group: 'Release',
   id: 'release/czg',
+  keywords: [
+    'czg',
+    'commitizen',
+    'commit',
+    'conventional commits',
+    'interactive',
+  ],
   label: 'czg (commitizen)',
   scope: 'root',
-  searchMeta: {
-    configTargets: ['package.json'],
-    keywords: [
-      'czg',
-      'commitizen',
-      'commit',
-      'conventional commits',
-      'interactive',
-    ],
-    tags: ['commit', 'cli', 'conventional-commits', 'interactive'],
-  },
+  tags: ['commit', 'cli', 'conventional-commits', 'interactive'],
   targets: async (cwd) => {
     const { missingScripts, pkg } = await resolveScriptsResolution(
       cwd,

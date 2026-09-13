@@ -1,25 +1,6 @@
 import type { ProjectProfile } from '@xtarterize/core';
 
-import {
-  getUltraciteFrameworkPresetSuffix,
-  getUltraciteRouterPresetSuffix,
-} from './ultracite-presets.js';
-
-function getUltraciteExtends(profile: ProjectProfile): Array<string> {
-  const presets = ['ultracite/biome/core'];
-
-  const frameworkPreset = getUltraciteFrameworkPresetSuffix(profile);
-  if (frameworkPreset) {
-    presets.push(`ultracite/biome/${frameworkPreset}`);
-  }
-
-  const routerPreset = getUltraciteRouterPresetSuffix(profile);
-  if (routerPreset) {
-    presets.push(`ultracite/biome/${routerPreset}`);
-  }
-
-  return presets;
-}
+import { collectUltracitePresets } from './ultracite-presets.js';
 
 function buildBiomeFilesConfig(): Record<string, unknown> {
   return {
@@ -116,7 +97,7 @@ function buildBiomeConfig(profile: ProjectProfile): Record<string, unknown> {
   return {
     $schema: './node_modules/@biomejs/biome/configuration_schema.json',
     assist: buildBiomeAssistConfig(),
-    extends: getUltraciteExtends(profile),
+    extends: collectUltracitePresets(profile, 'ultracite/biome/'),
     files: buildBiomeFilesConfig(),
     formatter: { enabled: true, indentStyle: 'space' },
     javascript: { formatter: { quoteStyle: 'single' } },

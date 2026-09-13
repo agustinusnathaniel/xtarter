@@ -33,16 +33,6 @@ changelog sections.
 
 **Hidden sections** (excluded from changelog): `docs`, `style`, `test`, `chore`, `ci`, `build`, `revert`
 
-## Details
-
-| Property | Value |
-|----------|-------|
-| **Task ID** | `release/versionrc` |
-| **Group** | Release |
-| **Scope** | Root (monorepo root only) |
-| **Applicable When** | Always |
-| **Config Target** | `.versionrc.json` |
-
 <Aside type="tip">
   This task is separate from `release/cat-version`. The `cat-version` task
   installs the `commit-and-tag-version` dependency and generates a
@@ -50,3 +40,5 @@ changelog sections.
   `.versionrc.json` (strict JSON, more feature-complete). You can use both
   in combination, or only `versionrc` if you install the tool separately.
 </Aside>
+
+See the [task catalog](/xtarterize/guide/tasks/overview/) for the task ID, group, applicability, and generated files, and the [Monorepo guide](/xtarterize/guide/monorepo/) for root-scope rules.

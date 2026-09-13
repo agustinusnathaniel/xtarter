@@ -4,16 +4,14 @@ export const incrementalTask = defineSingleTargetTask({
   applicable: (profile) => profile.typescript,
   group: 'TypeScript',
   id: 'ts/incremental',
+  keywords: [
+    'incremental',
+    'build speed',
+    'typescript performance',
+    'watch mode',
+  ],
   label: 'tsconfig - incremental: true',
-  searchMeta: {
-    keywords: [
-      'incremental',
-      'build speed',
-      'typescript performance',
-      'watch mode',
-    ],
-    tags: ['typescript', 'performance', 'build-speed'],
-  },
+  tags: ['typescript', 'performance', 'build-speed'],
   target: {
     filepath: 'tsconfig.json',
     incoming: () => ({

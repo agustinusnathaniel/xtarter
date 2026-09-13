@@ -3,38 +3,22 @@ export interface BadgeOptions {
   total: number;
 }
 
-function getBadgeColor(percentage: number): string {
-  if (percentage >= 90) {
-    return '#22c55e'; // green
-  }
-  if (percentage >= 70) {
-    return '#84cc16'; // lime
-  }
-  if (percentage >= 50) {
-    return '#eab308'; // yellow
-  }
-  return '#ef4444'; // red
-}
+const BADGE_TIERS = [
+  { color: '#22c55e', min: 90, status: 'excellent' },
+  { color: '#84cc16', min: 70, status: 'good' },
+  { color: '#eab308', min: 50, status: 'fair' },
+  { color: '#ef4444', min: 0, status: 'needs work' },
+];
 
-function getStatusText(percentage: number): string {
-  if (percentage >= 90) {
-    return 'excellent';
-  }
-  if (percentage >= 70) {
-    return 'good';
-  }
-  if (percentage >= 50) {
-    return 'fair';
-  }
-  return 'needs work';
+function getBadgeTier(percentage: number) {
+  return BADGE_TIERS.find((tier) => percentage >= tier.min) ?? BADGE_TIERS[3];
 }
 
 export function generateBadgeSvg(options: BadgeOptions): string {
   const { conformant, total } = options;
   const percentage = total === 0 ? 100 : Math.round((conformant / total) * 100);
   const nonConformant = total - conformant;
-  const color = getBadgeColor(percentage);
-  const status = getStatusText(percentage);
+  const { color, status } = getBadgeTier(percentage);
 
   const width = 204;
   const height = 68;

@@ -1,5 +1,5 @@
 import { confirm } from '@clack/prompts';
-import { abortIfCancelled } from '@xtarterize/core';
+import { abortIfCancelled } from '@xtarterize/core/plain';
 
 async function confirmPrompt(
   message: string,

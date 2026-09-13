@@ -7,8 +7,9 @@ import type {
   TaskStatus,
 } from '@xtarterize/core';
 import { logSuccess, pc, runDiagnostics, statusTag } from '@xtarterize/core';
-import { defineCommand } from 'citty';
 
+import { cliCommand } from '@/commands/command.js';
+import { runCliProgram } from '@/runtime.js';
 import { openSession } from '@/session.js';
 import { formatCheckAnnotations } from '@/ui/annotations.js';
 import { generateBadgeSvg } from '@/ui/badge.js';
@@ -21,6 +22,69 @@ import { commonArgs } from '@/utils/args.js';
 import { diagnosticIcon, taskStatusIcon } from '@/utils/display.js';
 import type { RuntimeContext } from '@/utils/runtime.js';
 import { printTiming } from '@/utils/timing-display.js';
+
+export const checkCommand = cliCommand({
+  args: {
+    annotations: {
+      description:
+        'Emit GitHub Actions workflow command annotations (auto-enabled in CI)',
+      type: 'boolean',
+    },
+    badge: {
+      description:
+        'Generate conformance badge SVG (provide output path, or - for stdout)',
+      type: 'string',
+    },
+    ...commonArgs,
+  },
+  description: 'Audit current conformance status',
+  name: 'check',
+  program: async (args) => {
+    const session = await runCliProgram(openSession(args));
+    if (!session) {
+      return;
+    }
+    const diagnostics = await runCliProgram(
+      runDiagnostics(session.runtime.cwd, {
+        groups: ['tools', 'configuration'],
+      })
+    );
+    if (!diagnostics) {
+      return;
+    }
+    const { groups } = diagnostics;
+    const ctx = session.runtime;
+    const { statuses, tasks, timing } = session;
+    const badgeToStdout = args.badge === '-';
+    const allDiagnostics = groups.flatMap((group) => group.checks);
+    const { conformant, total } = countCheckSummary(tasks, statuses);
+    if (!computeCheckOk({ conformant, total }, allDiagnostics)) {
+      process.exitCode = 1;
+    }
+    emitAnnotations({
+      annotations: Boolean(args.annotations),
+      diagnostics: allDiagnostics,
+      statuses,
+      tasks,
+    });
+    await handleBadgeOutput({
+      badge: args.badge,
+      conformant,
+      ctx,
+      total,
+    });
+    renderCheckSummary({
+      badgeToStdout,
+      conformant,
+      ctx,
+      diagnostics: allDiagnostics,
+      statuses,
+      tasks,
+      timing,
+      total,
+    });
+  },
+});
 
 function emitAnnotations(options: {
   annotations: boolean;
@@ -122,62 +186,3 @@ function renderCheckSummary(options: {
   }
   auditStream.write(`${conformant}/${total} conformant\n`);
 }
-
-export const checkCommand = defineCommand({
-  args: {
-    annotations: {
-      description:
-        'Emit GitHub Actions workflow command annotations (auto-enabled in CI)',
-      type: 'boolean',
-    },
-    badge: {
-      description:
-        'Generate conformance badge SVG (provide output path, or - for stdout)',
-      type: 'string',
-    },
-    ...commonArgs,
-  },
-  meta: {
-    description: 'Audit current conformance status',
-    name: 'check',
-  },
-  async run({ args }) {
-    const session = await openSession(args);
-    if (!session) {
-      return;
-    }
-    const ctx = session.runtime;
-    const { statuses, tasks, timing } = session;
-    const badgeToStdout = args.badge === '-';
-    const { groups } = await runDiagnostics(ctx.cwd, {
-      groups: ['tools', 'configuration'],
-    });
-    const diagnostics = groups.flatMap((group) => group.checks);
-    const { conformant, total } = countCheckSummary(tasks, statuses);
-    if (!computeCheckOk({ conformant, total }, diagnostics)) {
-      process.exitCode = 1;
-    }
-    emitAnnotations({
-      annotations: Boolean(args.annotations),
-      diagnostics,
-      statuses,
-      tasks,
-    });
-    await handleBadgeOutput({
-      badge: args.badge,
-      conformant,
-      ctx,
-      total,
-    });
-    renderCheckSummary({
-      badgeToStdout,
-      conformant,
-      ctx,
-      diagnostics,
-      statuses,
-      tasks,
-      timing,
-      total,
-    });
-  },
-});

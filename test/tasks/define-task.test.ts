@@ -1,7 +1,6 @@
 import fs from 'node:fs/promises';
-import os from 'node:os';
 import path from 'node:path';
-import { detectProject, planTasks } from '@xtarterize/core';
+import { planTasks } from '@xtarterize/core';
 import { getAllTasks } from '@xtarterize/tasks';
 import { describe, expect } from 'vite-plus/test';
 
@@ -9,19 +8,8 @@ import {
   defineTask,
   type TargetPolicyInput,
 } from '../../packages/tasks/src/factory/define-task.js';
-
-const withTempDir = async (
-  run: (cwd: string) => Promise<void>
-): Promise<void> => {
-  const tmpDir = await fs.mkdtemp(
-    path.join(os.tmpdir(), 'xtarterize-define-task-')
-  );
-  try {
-    await run(tmpDir);
-  } finally {
-    await fs.rm(tmpDir, { force: true, recursive: true });
-  }
-};
+import { withProject } from '../helpers/project.js';
+import { run } from '../helpers/run.js';
 
 const writeFile = (cwd: string, filepath: string, content: string) =>
   fs.writeFile(path.join(cwd, filepath), content);
@@ -38,7 +26,7 @@ const metadata = {
 
 describe('defineTask status projection', () => {
   test('text: absent is new, changed is conflict, unchanged is skip', async () => {
-    await withTempDir(async (cwd) => {
+    await withProject({}, async ({ cwd, profile }) => {
       const task = defineTask({
         ...metadata,
         targets: [
@@ -49,10 +37,9 @@ describe('defineTask status projection', () => {
           },
         ],
       });
-      const profile = await detectProject(cwd);
 
-      expect(await task.check(cwd, profile)).toBe('new');
-      const created = await task.dryRun(cwd, profile);
+      expect(await run(task.check(cwd, profile))).toBe('new');
+      const created = await run(task.dryRun(cwd, profile));
       expect(created).toHaveLength(1);
       expect(created[0]).toEqual({
         after: '# Agents\n',
@@ -61,20 +48,20 @@ describe('defineTask status projection', () => {
       });
 
       await writeFile(cwd, 'AGENTS.md', '# Different\n');
-      expect(await task.check(cwd, profile)).toBe('conflict');
-      const changed = await task.dryRun(cwd, profile);
+      expect(await run(task.check(cwd, profile))).toBe('conflict');
+      const changed = await run(task.dryRun(cwd, profile));
       expect(changed).toHaveLength(1);
       expect(changed[0].before).toBe('# Different\n');
       expect(changed[0].after).toBe('# Agents\n');
 
       await writeFile(cwd, 'AGENTS.md', '# Agents\n');
-      expect(await task.check(cwd, profile)).toBe('skip');
-      expect(await task.dryRun(cwd, profile)).toEqual([]);
+      expect(await run(task.check(cwd, profile))).toBe('skip');
+      expect(await run(task.dryRun(cwd, profile))).toEqual([]);
     });
   });
 
   test('jsonMerge: absent is new, changed is patch, unchanged is skip', async () => {
-    await withTempDir(async (cwd) => {
+    await withProject({}, async ({ cwd, profile }) => {
       const task = defineTask({
         ...metadata,
         targets: [
@@ -85,17 +72,16 @@ describe('defineTask status projection', () => {
           },
         ],
       });
-      const profile = await detectProject(cwd);
 
-      expect(await task.check(cwd, profile)).toBe('new');
-      const created = await task.dryRun(cwd, profile);
+      expect(await run(task.check(cwd, profile))).toBe('new');
+      const created = await run(task.dryRun(cwd, profile));
       expect(created).toHaveLength(1);
       expect(created[0].filepath).toBe('tsconfig.json');
       expect(created[0].before).toBeNull();
 
       await writeFile(cwd, 'tsconfig.json', '{\n  "compilerOptions": {}\n}\n');
-      expect(await task.check(cwd, profile)).toBe('patch');
-      const changed = await task.dryRun(cwd, profile);
+      expect(await run(task.check(cwd, profile))).toBe('patch');
+      const changed = await run(task.dryRun(cwd, profile));
       expect(changed).toHaveLength(1);
       expect(changed[0].after).toContain('"strict": true');
 
@@ -104,13 +90,13 @@ describe('defineTask status projection', () => {
         'tsconfig.json',
         '{\n  "compilerOptions": { "strict": true }\n}\n'
       );
-      expect(await task.check(cwd, profile)).toBe('skip');
-      expect(await task.dryRun(cwd, profile)).toEqual([]);
+      expect(await run(task.check(cwd, profile))).toBe('skip');
+      expect(await run(task.dryRun(cwd, profile))).toEqual([]);
     });
   });
 
   test('packageJson: absent is new, changed is patch, unchanged is skip', async () => {
-    await withTempDir(async (cwd) => {
+    await withProject({}, async ({ cwd, profile }) => {
       const task = defineTask({
         ...metadata,
         targets: [
@@ -120,16 +106,15 @@ describe('defineTask status projection', () => {
           },
         ],
       });
-      const profile = await detectProject(cwd);
 
-      expect(await task.check(cwd, profile)).toBe('new');
-      const created = await task.dryRun(cwd, profile);
+      expect(await run(task.check(cwd, profile))).toBe('new');
+      const created = await run(task.dryRun(cwd, profile));
       expect(created).toHaveLength(1);
       expect(created[0].before).toBeNull();
 
       await writeFile(cwd, 'package.json', '{\n  "name": "example"\n}\n');
-      expect(await task.check(cwd, profile)).toBe('patch');
-      const changed = await task.dryRun(cwd, profile);
+      expect(await run(task.check(cwd, profile))).toBe('patch');
+      const changed = await run(task.dryRun(cwd, profile));
       expect(changed).toHaveLength(1);
       expect(changed[0].after).toContain('"test": "vitest run"');
 
@@ -138,13 +123,13 @@ describe('defineTask status projection', () => {
         'package.json',
         '{\n  "scripts": {\n    "test": "vitest run"\n  }\n}\n'
       );
-      expect(await task.check(cwd, profile)).toBe('skip');
-      expect(await task.dryRun(cwd, profile)).toEqual([]);
+      expect(await run(task.check(cwd, profile))).toBe('skip');
+      expect(await run(task.dryRun(cwd, profile))).toEqual([]);
     });
   });
 
   test('transform: absent is new, changed is patch, unchanged is skip', async () => {
-    await withTempDir(async (cwd) => {
+    await withProject({}, async ({ cwd, profile }) => {
       const task = defineTask({
         ...metadata,
         targets: [
@@ -156,18 +141,17 @@ describe('defineTask status projection', () => {
           },
         ],
       });
-      const profile = await detectProject(cwd);
 
-      expect(await task.check(cwd, profile)).toBe('new');
-      expect(await task.dryRun(cwd, profile)).toEqual([]);
+      expect(await run(task.check(cwd, profile))).toBe('new');
+      expect(await run(task.dryRun(cwd, profile))).toEqual([]);
 
       await writeFile(
         cwd,
         'vite.config.ts',
         'export default { plugins: [] }\n'
       );
-      expect(await task.check(cwd, profile)).toBe('patch');
-      const changed = await task.dryRun(cwd, profile);
+      expect(await run(task.check(cwd, profile))).toBe('patch');
+      const changed = await run(task.dryRun(cwd, profile));
       expect(changed).toHaveLength(1);
       expect(changed[0].filepath).toBe('vite.config.ts');
 
@@ -176,77 +160,74 @@ describe('defineTask status projection', () => {
         'vite.config.ts',
         "export default { plugins: ['plugin'] }\n"
       );
-      expect(await task.check(cwd, profile)).toBe('skip');
-      expect(await task.dryRun(cwd, profile)).toEqual([]);
+      expect(await run(task.check(cwd, profile))).toBe('skip');
+      expect(await run(task.dryRun(cwd, profile))).toEqual([]);
     });
   });
 
   test('action: status comes from the probe with no file diff', async () => {
-    await withTempDir(async (cwd) => {
+    await withProject({}, async ({ cwd, profile }) => {
       const task = defineTask({
         ...metadata,
         actions: [
           {
             check: async () => 'patch',
-            kind: 'action',
             run: async () => undefined,
           },
         ],
       });
-      const profile = await detectProject(cwd);
 
-      expect(await task.check(cwd, profile)).toBe('patch');
-      expect(await task.dryRun(cwd, profile)).toEqual([]);
+      expect(await run(task.check(cwd, profile))).toBe('patch');
+      expect(await run(task.dryRun(cwd, profile))).toEqual([]);
     });
   });
 });
 
 describe('defineTask policy hook', () => {
   test('policy sees the diff before/after and can report conflict', async () => {
-    await withTempDir(async (cwd) => {
-      await writeFile(
-        cwd,
-        'tsconfig.json',
-        '{\n  "compilerOptions": { "strict": false }\n}\n'
-      );
-      const seen: Array<TargetPolicyInput> = [];
-      const task = defineTask({
-        ...metadata,
-        targets: [
-          {
-            filepath: 'tsconfig.json',
-            incoming: () => ({ compilerOptions: { strict: true } }),
-            kind: 'jsonMerge',
-            policy: (input) => {
-              seen.push(input);
-              return 'conflict';
+    await withProject(
+      {
+        'tsconfig.json': '{\n  "compilerOptions": { "strict": false }\n}\n',
+      },
+      async ({ cwd, profile }) => {
+        const seen: Array<TargetPolicyInput> = [];
+        const task = defineTask({
+          ...metadata,
+          targets: [
+            {
+              filepath: 'tsconfig.json',
+              incoming: () => ({ compilerOptions: { strict: true } }),
+              kind: 'jsonMerge',
+              policy: (input) => {
+                seen.push(input);
+                return 'conflict';
+              },
             },
-          },
-        ],
-      });
-      const profile = await detectProject(cwd);
-
-      expect(await task.check(cwd, profile)).toBe('conflict');
-      const diffs = await task.dryRun(cwd, profile);
-      expect(diffs).toHaveLength(1);
-      expect(seen).toHaveLength(2);
-      for (const input of seen) {
-        expect(input).toEqual({
-          after: diffs[0].after,
-          before: diffs[0].before,
+          ],
         });
+
+        expect(await run(task.check(cwd, profile))).toBe('conflict');
+        const diffs = await run(task.dryRun(cwd, profile));
+        expect(diffs).toHaveLength(1);
+        expect(seen).toHaveLength(2);
+        for (const input of seen) {
+          expect(input).toEqual({
+            after: diffs[0].after,
+            before: diffs[0].before,
+          });
+        }
+        // mergeJson keeps the existing strict value, so the policy saw no
+        // content change and still reported the conflict.
+        expect(diffs[0].after).toBe(diffs[0].before);
+        expect(diffs[0].after).toContain('"strict": false');
       }
-      // mergeJson keeps the existing strict value, so the policy saw no
-      // content change and still reported the conflict.
-      expect(diffs[0].after).toBe(diffs[0].before);
-      expect(diffs[0].after).toContain('"strict": false');
-    });
+    );
   });
 });
 
 describe('defineTask dependencies', () => {
   test('a static list is returned as declared', async () => {
-    await withTempDir(async (cwd) => {
+    await withProject({}, async ({ cwd, profile }) => {
       const task = defineTask({
         ...metadata,
         deps: [{ depName: 'acme', dev: true }],
@@ -254,15 +235,14 @@ describe('defineTask dependencies', () => {
           { filepath: 'acme.json', kind: 'text', render: () => '{}\n' },
         ],
       });
-      const profile = await detectProject(cwd);
 
-      const deps = await task.getDeps?.(cwd, profile);
+      const deps = await run(task.getDeps(cwd, profile));
       expect(deps).toEqual([{ depName: 'acme', dev: true }]);
     });
   });
 
   test('a resolver gates a dependency on the resolution status', async () => {
-    await withTempDir(async (cwd) => {
+    await withProject({}, async ({ cwd, profile }) => {
       const task = defineTask({
         ...metadata,
         deps: (resolution) =>
@@ -273,22 +253,20 @@ describe('defineTask dependencies', () => {
           { filepath: 'acme.json', kind: 'text', render: () => '{}\n' },
         ],
       });
-      const profile = await detectProject(cwd);
 
-      const needed = await task.getDeps?.(cwd, profile);
+      const needed = await run(task.getDeps(cwd, profile));
       expect(needed).toEqual([
         { depName: 'needed-only-when-changed', dev: true },
       ]);
 
       await writeFile(cwd, 'acme.json', '{}\n');
-      const satisfied = await task.getDeps?.(cwd, profile);
+      const satisfied = await run(task.getDeps(cwd, profile));
       expect(satisfied).toEqual([]);
     });
   });
 
   test('an existing matching file with a missing dependency is patch', async () => {
-    await withTempDir(async (cwd) => {
-      await writeFile(cwd, 'acme.json', '{}\n');
+    await withProject({ 'acme.json': '{}\n' }, async ({ cwd, profile }) => {
       const task = defineTask({
         ...metadata,
         deps: [{ depName: 'acme', dev: true }],
@@ -296,47 +274,45 @@ describe('defineTask dependencies', () => {
           { filepath: 'acme.json', kind: 'text', render: () => '{}\n' },
         ],
       });
-      const profile = await detectProject(cwd);
 
-      expect(await task.check(cwd, profile)).toBe('patch');
-      expect(await task.dryRun(cwd, profile)).toEqual([]);
-      const deps = await task.getDeps?.(cwd, profile);
+      expect(await run(task.check(cwd, profile))).toBe('patch');
+      expect(await run(task.dryRun(cwd, profile))).toEqual([]);
+      const deps = await run(task.getDeps(cwd, profile));
       expect(deps).toEqual([{ depName: 'acme', dev: true }]);
 
-      const plan = await planTasks({ cwd, profile, tasks: [task] });
+      const plan = await run(planTasks({ cwd, profile, tasks: [task] }));
       expect(plan.dependencies).toEqual([{ depName: 'acme', dev: true }]);
       expect(plan.files).toEqual([]);
     });
   });
 
   test('an existing matching file with the dependency installed is skip', async () => {
-    await withTempDir(async (cwd) => {
-      await writeFile(cwd, 'acme.json', '{}\n');
-      await writeFile(
-        cwd,
-        'package.json',
-        `${JSON.stringify(
+    await withProject(
+      {
+        'acme.json': '{}\n',
+        'package.json': `${JSON.stringify(
           { devDependencies: { acme: '^1.0.0' }, name: 'acme-installed' },
           null,
           2
-        )}\n`
-      );
-      const task = defineTask({
-        ...metadata,
-        deps: [{ depName: 'acme', dev: true }],
-        targets: [
-          { filepath: 'acme.json', kind: 'text', render: () => '{}\n' },
-        ],
-      });
-      const profile = await detectProject(cwd);
+        )}\n`,
+      },
+      async ({ cwd, profile }) => {
+        const task = defineTask({
+          ...metadata,
+          deps: [{ depName: 'acme', dev: true }],
+          targets: [
+            { filepath: 'acme.json', kind: 'text', render: () => '{}\n' },
+          ],
+        });
 
-      expect(await task.check(cwd, profile)).toBe('skip');
-      expect(await task.dryRun(cwd, profile)).toEqual([]);
-    });
+        expect(await run(task.check(cwd, profile))).toBe('skip');
+        expect(await run(task.dryRun(cwd, profile))).toEqual([]);
+      }
+    );
   });
 
   test('an absent target stays new when a declared dependency is missing', async () => {
-    await withTempDir(async (cwd) => {
+    await withProject({}, async ({ cwd, profile }) => {
       const task = defineTask({
         ...metadata,
         deps: [{ depName: 'acme', dev: true }],
@@ -344,17 +320,15 @@ describe('defineTask dependencies', () => {
           { filepath: 'acme.json', kind: 'text', render: () => '{}\n' },
         ],
       });
-      const profile = await detectProject(cwd);
 
-      expect(await task.check(cwd, profile)).toBe('new');
-      const deps = await task.getDeps?.(cwd, profile);
+      expect(await run(task.check(cwd, profile))).toBe('new');
+      const deps = await run(task.getDeps(cwd, profile));
       expect(deps).toEqual([{ depName: 'acme', dev: true }]);
     });
   });
 
   test('a resolver-provided dependency is checked against the project', async () => {
-    await withTempDir(async (cwd) => {
-      await writeFile(cwd, 'acme.json', '{}\n');
+    await withProject({ 'acme.json': '{}\n' }, async ({ cwd, profile }) => {
       const task = defineTask({
         ...metadata,
         deps: () => [{ depName: 'acme-tool', dev: false }],
@@ -362,10 +336,9 @@ describe('defineTask dependencies', () => {
           { filepath: 'acme.json', kind: 'text', render: () => '{}\n' },
         ],
       });
-      const profile = await detectProject(cwd);
 
-      expect(await task.check(cwd, profile)).toBe('patch');
-      const deps = await task.getDeps?.(cwd, profile);
+      expect(await run(task.check(cwd, profile))).toBe('patch');
+      const deps = await run(task.getDeps(cwd, profile));
       expect(deps).toEqual([{ depName: 'acme-tool', dev: false }]);
     });
   });
@@ -373,72 +346,67 @@ describe('defineTask dependencies', () => {
 
 describe('defineTask transform target', () => {
   test('diffs carry the discovered path and apply writes the transformed content', async () => {
-    await withTempDir(async (cwd) => {
-      await writeFile(
-        cwd,
-        'vite.config.ts',
-        'export default { plugins: [] }\n'
-      );
-      const task = defineTask({
-        ...metadata,
-        targets: [
-          {
-            extensions: ['.ts', '.js', '.mts', '.mjs', '.cjs', '.cts'],
-            filepath: 'vite.config',
-            kind: 'transform',
-            transform: (content) => content.replace('[]', "['checked']"),
-          },
-        ],
-      });
-      const profile = await detectProject(cwd);
+    await withProject(
+      { 'vite.config.ts': 'export default { plugins: [] }\n' },
+      async ({ cwd, profile }) => {
+        const task = defineTask({
+          ...metadata,
+          targets: [
+            {
+              extensions: ['.ts', '.js', '.mts', '.mjs', '.cjs', '.cts'],
+              filepath: 'vite.config',
+              kind: 'transform',
+              transform: (content) => content.replace('[]', "['checked']"),
+            },
+          ],
+        });
 
-      const diffs = await task.dryRun(cwd, profile);
-      expect(diffs).toHaveLength(1);
-      expect(diffs[0].filepath).toBe('vite.config.ts');
-      expect(diffs[0].before).toContain('[]');
-      expect(diffs[0].after).toContain("['checked']");
+        const diffs = await run(task.dryRun(cwd, profile));
+        expect(diffs).toHaveLength(1);
+        expect(diffs[0].filepath).toBe('vite.config.ts');
+        expect(diffs[0].before).toContain('[]');
+        expect(diffs[0].after).toContain("['checked']");
 
-      await task.apply(cwd, profile);
-      await expect(readFile(cwd, 'vite.config.ts')).resolves.toContain(
-        "['checked']"
-      );
-    });
+        await run(task.apply(cwd, profile));
+        await expect(readFile(cwd, 'vite.config.ts')).resolves.toContain(
+          "['checked']"
+        );
+      }
+    );
   });
 });
 
 describe('defineTask action', () => {
   test('an action has no file diff and no backup entry', async () => {
-    await withTempDir(async (cwd) => {
-      await writeFile(
-        cwd,
-        'package.json',
-        `${JSON.stringify({ name: 'action-test' }, null, 2)}\n`
-      );
-      let runs = 0;
-      const task = defineTask({
-        ...metadata,
-        actions: [
-          {
-            check: async () => 'new',
-            kind: 'action',
-            run: async () => {
-              runs += 1;
+    await withProject(
+      {
+        'package.json': `${JSON.stringify({ name: 'action-test' }, null, 2)}\n`,
+      },
+      async ({ cwd, profile }) => {
+        let runs = 0;
+        const task = defineTask({
+          ...metadata,
+          actions: [
+            {
+              check: async () => 'new',
+              run: async () => {
+                runs += 1;
+              },
             },
-          },
-        ],
-      });
-      const profile = await detectProject(cwd);
+          ],
+        });
 
-      expect(await task.check(cwd, profile)).toBe('new');
-      expect(await task.dryRun(cwd, profile)).toEqual([]);
+        expect(await run(task.check(cwd, profile))).toBe('new');
+        expect(await run(task.dryRun(cwd, profile))).toEqual([]);
 
-      const plan = await planTasks({ cwd, profile, tasks: [task] });
-      expect(plan.files).toEqual([]);
-      expect(plan.entries[0].diffs).toEqual([]);
+        const plan = await run(planTasks({ cwd, profile, tasks: [task] }));
+        expect(plan.files).toEqual([]);
+        expect(plan.entries[0].diffs).toEqual([]);
 
-      await task.apply(cwd, profile);
-      expect(runs).toBe(1);
-    });
+        await run(task.apply(cwd, profile));
+        expect(runs).toBe(1);
+      }
+    );
   });
 });
 
@@ -446,10 +414,8 @@ describe('defineTask searchMeta configTargets', () => {
   test('derives declared filepaths and extension variants from targets', () => {
     const task = defineTask({
       ...metadata,
-      searchMeta: {
-        keywords: ['derived'],
-        tags: ['derived'],
-      },
+      keywords: ['derived'],
+      tags: ['derived'],
       targets: [
         {
           extensions: ['.ts', '.js'],
@@ -479,10 +445,8 @@ describe('defineTask searchMeta configTargets', () => {
   test('derives package.json for packageJson targets', () => {
     const task = defineTask({
       ...metadata,
-      searchMeta: {
-        keywords: ['derived'],
-        tags: ['derived'],
-      },
+      keywords: ['derived'],
+      tags: ['derived'],
       targets: [{ change: () => ({}), kind: 'packageJson' }],
     });
 
@@ -492,11 +456,7 @@ describe('defineTask searchMeta configTargets', () => {
   test('keeps an explicit configTargets override', () => {
     const task = defineTask({
       ...metadata,
-      searchMeta: {
-        configTargets: ['custom.json'],
-        keywords: [],
-        tags: [],
-      },
+      configTargets: ['custom.json'],
       targets: [{ filepath: 'custom.config', kind: 'text', render: () => '' }],
     });
 

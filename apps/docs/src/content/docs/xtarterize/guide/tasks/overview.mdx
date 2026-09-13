@@ -5,7 +5,7 @@ sidebar:
   order: 1
 ---
 
-import { Aside, LinkButton } from '@astrojs/starlight/components'
+import { LinkButton } from '@astrojs/starlight/components'
 
 xtarterize applies conformance configuration through discrete, independently applicable tasks. Each task detects whether it's needed and only applies changes if necessary.
 
@@ -198,37 +198,8 @@ The catalog is the source of truth. Its current groups include:
 
 ## Idempotency
 
-<Aside type="tip">
-  Every task is idempotent. Running `init` twice produces no changes on the second run.
-</Aside>
+Every task is idempotent: running `init` twice produces no changes on the second run. Tasks implement `check()` (returns `new`, `patch`, `skip`, or `conflict`), `dryRun()` (exact diffs without writing), and `apply()` (writes changes, backing up files first).
 
-Each task implements `check()`, `dryRun()`, and `apply()`:
-
-- **`check()`** - Returns `new`, `patch`, `skip`, or `conflict` based on current state
-- **`dryRun()`** - Returns exact diffs without writing anything
-- **`apply()`** - Writes changes, backing up files first
-
-### Smart Equivalence Detection
-
-xtarterize doesn't just check key names - it also detects when an equivalent value already exists under a different key. This prevents redundant entries:
-
-| Scenario | Existing | xtarterize Action |
-|----------|----------|-------------------|
-| Script name alias | `"type:check": "tsc --noEmit"` | Skips adding `"typecheck": "tsc --noEmit"` |
-| Config extends format | `"extends": "config:base"` | Treats same as `"extends": ["config:base"]` |
-| VS Code extensions | `["biomejs.biome"]` | Adds `"ms-vscode.vscode-typescript-next"`, keeps existing |
-
-If the exact same command, value, or configuration already exists somewhere, xtarterize skips adding a duplicate.
-
-## Task gating
-
-Each task table above states its applicability. For detection and monorepo scope
-rules, see the [configuration guide](/xtarterize/guide/config/overview/).
-
-## References
-
-See the external links in each task row and the [configuration guide](/xtarterize/guide/config/overview/)
-for detection and scope behavior.
-
+Script equivalence goes beyond key names: a script whose command already exists under another name is skipped, so `"type:check": "tsc --noEmit"` prevents adding `"typecheck": "tsc --noEmit"`. VS Code extension recommendations are unioned with existing ones rather than replaced.
 
 <LinkButton href="/xtarterize/contributing/tasks/overview/">Learn how to contribute a new task →</LinkButton>

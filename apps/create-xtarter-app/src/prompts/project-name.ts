@@ -1,5 +1,5 @@
 import { text } from '@clack/prompts';
-import { abortIfCancelled } from '@xtarterize/core';
+import { abortIfCancelled } from '@xtarterize/core/plain';
 
 const PROJECT_NAME_REGEX = /^[a-zA-Z0-9-_]+$/;
 

@@ -338,23 +338,21 @@ async function resolvePackageScripts(
 
 export const packageScriptsTask = defineTask({
   applicable: () => true,
+  configTargets: ['package.json'],
   deps: async (_resolution, { cwd, profile }) =>
     (await resolvePackageScripts(cwd, profile)).deps,
   group: 'Scripts',
   id: 'scripts/package-scripts',
+  keywords: [
+    'scripts',
+    'npm scripts',
+    'package.json scripts',
+    'task commands',
+    'build scripts',
+  ],
   label: 'package.json scripts',
   scope: 'root',
-  searchMeta: {
-    configTargets: ['package.json'],
-    keywords: [
-      'scripts',
-      'npm scripts',
-      'package.json scripts',
-      'task commands',
-      'build scripts',
-    ],
-    tags: ['scripts', 'package.json', 'commands'],
-  },
+  tags: ['scripts', 'package.json', 'commands'],
   targets: async (cwd, profile) => {
     const { hasExistingScripts, missingScripts, patch } =
       await resolvePackageScripts(cwd, profile);

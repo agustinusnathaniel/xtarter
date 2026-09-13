@@ -1,152 +1,132 @@
-import type { Task } from '@xtarterize/core';
 import { scoreTasks } from '@xtarterize/core';
 import { describe, expect } from 'vite-plus/test';
 
-const mockTasks: Array<Task> = [
+import { makeTask } from '../../helpers/factories.js';
+
+const searchTasks: Array<{
+  configTargets: Array<string>;
+  group: string;
+  id: string;
+  keywords: Array<string>;
+  label: string;
+  tags: Array<string>;
+}> = [
   {
-    applicable: () => true,
-    apply: async () => {},
-    check: async () => 'new' as const,
-    dryRun: async () => [],
+    configTargets: ['biome.json'],
     group: 'Linting & Formatting',
     id: 'lint/biome',
+    keywords: ['biome', 'linter', 'formatter', 'lint', 'format', 'all-in-one'],
     label: 'Biome (lint + format)',
-    searchMeta: {
-      configTargets: ['biome.json'],
-      keywords: [
-        'biome',
-        'linter',
-        'formatter',
-        'lint',
-        'format',
-        'all-in-one',
-      ],
-      tags: ['linting', 'formatting', 'all-in-one', 'quality'],
-    },
+    tags: ['linting', 'formatting', 'all-in-one', 'quality'],
   },
   {
-    applicable: () => true,
-    apply: async () => {},
-    check: async () => 'new' as const,
-    dryRun: async () => [],
+    configTargets: ['tsconfig.json'],
     group: 'TypeScript',
     id: 'ts/strict',
+    keywords: [
+      'strict',
+      'typescript strict',
+      'type checking',
+      'strict mode',
+      'type safety',
+    ],
     label: 'tsconfig - strict: true',
-    searchMeta: {
-      configTargets: ['tsconfig.json'],
-      keywords: [
-        'strict',
-        'typescript strict',
-        'type checking',
-        'strict mode',
-        'type safety',
-      ],
-      tags: ['typescript', 'strict', 'type-checking', 'quality'],
-    },
+    tags: ['typescript', 'strict', 'type-checking', 'quality'],
   },
   {
-    applicable: () => true,
-    apply: async () => {},
-    check: async () => 'new' as const,
-    dryRun: async () => [],
+    configTargets: ['.github/workflows/ci.yml'],
     group: 'CI/CD',
     id: 'ci/ci',
+    keywords: [
+      'ci',
+      'continuous integration',
+      'github actions',
+      'pipeline',
+      'test',
+      'build',
+    ],
     label: 'GitHub CI workflow',
-    searchMeta: {
-      configTargets: ['.github/workflows/ci.yml'],
-      keywords: [
-        'ci',
-        'continuous integration',
-        'github actions',
-        'pipeline',
-        'test',
-        'build',
-      ],
-      tags: ['ci', 'testing', 'github-actions', 'quality'],
-    },
+    tags: ['ci', 'testing', 'github-actions', 'quality'],
   },
   {
-    applicable: () => true,
-    apply: async () => {},
-    check: async () => 'new' as const,
-    dryRun: async () => [],
+    configTargets: ['.vscode/settings.json', '.vscode/extensions.json'],
     group: 'Editor',
     id: 'editor/vscode',
+    keywords: [
+      'vscode',
+      'visual studio code',
+      'editor config',
+      'ide settings',
+      'extensions',
+    ],
     label: 'VSCode settings + extensions',
-    searchMeta: {
-      configTargets: ['.vscode/settings.json', '.vscode/extensions.json'],
-      keywords: [
-        'vscode',
-        'visual studio code',
-        'editor config',
-        'ide settings',
-        'extensions',
-      ],
-      tags: ['editor', 'ide', 'settings', 'extensions'],
-    },
+    tags: ['editor', 'ide', 'settings', 'extensions'],
   },
   {
-    applicable: () => true,
-    apply: async () => {},
-    check: async () => 'new' as const,
-    dryRun: async () => [],
+    configTargets: ['renovate.json'],
     group: 'Dependencies',
     id: 'deps/renovate',
+    keywords: [
+      'renovate',
+      'dependencies',
+      'dependency updates',
+      'dependabot',
+      'auto',
+    ],
     label: 'Renovate config',
-    searchMeta: {
-      configTargets: ['renovate.json'],
-      keywords: [
-        'renovate',
-        'dependencies',
-        'dependency updates',
-        'dependabot',
-        'auto',
-      ],
-      tags: ['dependencies', 'updates', 'maintenance', 'automation'],
-    },
+    tags: ['dependencies', 'updates', 'maintenance', 'automation'],
   },
 ];
 
-const taskNoMeta: Task = {
-  applicable: () => true,
-  apply: async () => {},
-  check: async () => 'new' as const,
-  dryRun: async () => [],
+const mockTasks = searchTasks.map((task) =>
+  makeTask({
+    check: 'new',
+    group: task.group,
+    id: task.id,
+    label: task.label,
+    searchMeta: {
+      configTargets: task.configTargets,
+      keywords: task.keywords,
+      tags: task.tags,
+    },
+  })
+);
+
+const taskNoMeta = makeTask({
+  check: 'new',
   group: 'Example',
   id: 'example/no-meta',
   label: 'Example task without metadata',
-};
+});
+
+const topResultCases: Array<[name: string, query: string, top: string]> = [
+  [
+    'returns "strict typescript" with ts/strict as top result',
+    'strict typescript',
+    'ts/strict',
+  ],
+  ['returns "lint" with lint/biome on top', 'lint', 'lint/biome'],
+  [
+    'returns "vscode editor" with editor/vscode as top result',
+    'vscode editor',
+    'editor/vscode',
+  ],
+  ['returns "ci pipeline" with ci/ci as top result', 'ci pipeline', 'ci/ci'],
+  [
+    'returns "dependency updates" with deps/renovate as top result',
+    'dependency updates',
+    'deps/renovate',
+  ],
+];
 
 describe('scoreTasks', () => {
-  test('returns "strict typescript" with ts/strict as top result', () => {
-    const results = scoreTasks(mockTasks, 'strict typescript');
-    expect(results.length).toBeGreaterThan(0);
-    expect(results[0].taskId).toBe('ts/strict');
-  });
-
-  test('returns "lint" with lint/biome on top', () => {
-    const results = scoreTasks(mockTasks, 'lint');
-    expect(results.length).toBeGreaterThan(0);
-    expect(results[0].taskId).toBe('lint/biome');
-  });
-
-  test('returns "vscode editor" with editor/vscode as top result', () => {
-    const results = scoreTasks(mockTasks, 'vscode editor');
-    expect(results.length).toBeGreaterThan(0);
-    expect(results[0].taskId).toBe('editor/vscode');
-  });
-
-  test('returns "ci pipeline" with ci/ci as top result', () => {
-    const results = scoreTasks(mockTasks, 'ci pipeline');
-    expect(results.length).toBeGreaterThan(0);
-    expect(results[0].taskId).toBe('ci/ci');
-  });
-
-  test('returns "dependency updates" with deps/renovate as top result via synonym expansion', () => {
-    const results = scoreTasks(mockTasks, 'dependency updates');
-    expect(results.length).toBeGreaterThan(0);
-    expect(results[0].taskId).toBe('deps/renovate');
-  });
+  for (const [name, query, top] of topResultCases) {
+    test(name, () => {
+      const results = scoreTasks(mockTasks, query);
+      expect(results.length).toBeGreaterThan(0);
+      expect(results[0].taskId).toBe(top);
+    });
+  }
 
   test('performs multi-word aggregation for "typescript with strict checking"', () => {
     const results = scoreTasks(mockTasks, 'typescript with strict checking');

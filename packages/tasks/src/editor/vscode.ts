@@ -17,18 +17,16 @@ export const vscodeTask = defineTask({
   applicable: () => true,
   group: 'Editor',
   id: 'editor/vscode',
+  keywords: [
+    'vscode',
+    'visual studio code',
+    'editor config',
+    'ide settings',
+    'extensions',
+  ],
   label: 'VSCode settings + extensions',
   scope: 'root',
-  searchMeta: {
-    keywords: [
-      'vscode',
-      'visual studio code',
-      'editor config',
-      'ide settings',
-      'extensions',
-    ],
-    tags: ['editor', 'ide', 'settings', 'extensions'],
-  },
+  tags: ['editor', 'ide', 'settings', 'extensions'],
   targets: [
     {
       extensions: ['.json'],

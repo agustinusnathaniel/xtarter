@@ -55,18 +55,16 @@ export const turboTask = defineTask({
   deps: [{ depName: 'turbo', dev: true }],
   group: 'Monorepo',
   id: 'monorepo/turbo',
+  keywords: [
+    'turbo',
+    'turborepo',
+    'monorepo',
+    'build cache',
+    'task orchestration',
+  ],
   label: 'Turbo',
   scope: 'root',
-  searchMeta: {
-    keywords: [
-      'turbo',
-      'turborepo',
-      'monorepo',
-      'build cache',
-      'task orchestration',
-    ],
-    tags: ['monorepo', 'build', 'orchestration', 'caching'],
-  },
+  tags: ['monorepo', 'build', 'orchestration', 'caching'],
   targets: [
     {
       filepath: 'turbo.json',

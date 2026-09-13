@@ -12,11 +12,12 @@ Superseded by [ADR 034](034-direct-project-detection.md).
 
 ## Context
 
-`detectProject(cwd)` is called fresh on every CLI invocation (`init`, `check`, `sync`, `diff`, `list`, `add`). It re-reads `package.json`, stat-checks a dozen config files, detects lockfiles, and inspects git/config directories - all from scratch each time.
-
-For a single project this is fast (~50-150ms). But on re-runs it's wasted I/O. In CI pipelines or during interactive use (e.g., running `check` after `sync`), the same inputs produce the same profile, yet the work repeats identically.
-
-The project was already using Effect TS v4 for structured concurrency and typed error handling (ADR 019), so any caching solution should integrate with that pattern.
+`detectProject(cwd)` was called fresh on every CLI invocation (`init`, `check`,
+`sync`, `diff`, `list`, `add`), re-reading `package.json`, config files,
+lockfiles, and git/config directories. That is fast for a single project
+(~50-150ms) but repeats identical work on re-runs with unchanged inputs. The
+project already used Effect TS v4 for structured concurrency and typed errors
+(ADR 019), so caching should follow that pattern.
 
 ## Decision
 
@@ -42,62 +43,46 @@ We use **mtime + size** instead of content hashing because:
 
 ### Cache storage
 
-**Location:** `.xtarterize/cache/profile-fingerprint.json` (project-local, predictable)
+**Location:** `.xtarterize/cache/profile-fingerprint.json` (project-local,
+predictable)
 
-**Storage format:**
+**Format:** `{ version: 2, fingerprint, profile, computedAt, durationMs }`.
 
-```typescript
-interface ProfileCacheEntry {
-  version: 2;
-  fingerprint: ProjectFingerprint;
-  profile: ProjectProfile;
-  computedAt: string; // ISO timestamp
-  durationMs: number; // how long detection took
-}
-```
-
-**Write strategy:** Atomic write via temp-then-rename (same pattern as backup index in `backup.ts`) to prevent partial reads from concurrent invocations.
+**Write strategy:** Atomic write via temp-then-rename (same pattern as the
+backup index in `backup.ts`) to prevent partial reads from concurrent
+invocations.
 
 ### Invalidation rules
 
 Cache is invalidated if **any** fingerprint field changes:
 
 1. `package.json` mtime or size changes
-2. Lockfile mtime or size changes (or lockfile appears/disappears)
-3. Config directory mtime changes (file added/removed from `.github/`, `.vscode/`, `.changeset/`)
-4. Root input files change (detector configs at cwd: `tsconfig`, `vite.config`, monorepo markers, `.nvmrc`, ...)
-5. Ancestor inputs change (monorepo markers, `packages`/`apps` dirs, or `.git` appearing/disappearing in any ancestor walked by `detectMonorepo`)
+2. Lockfile mtime or size changes (or the lockfile appears/disappears)
+3. Config directory mtime changes (file added/removed in `.github/`,
+   `.vscode/`, `.changeset/`)
+4. Root input files change (detector configs at cwd: `tsconfig`,
+   `vite.config`, monorepo markers, `.nvmrc`, ...)
+5. Ancestor inputs change (monorepo markers, `packages`/`apps` dirs, or `.git`
+   appearing/disappearing in any ancestor walked by `detectMonorepo`)
 6. Cache version doesn't match
-7. Cache file is missing or corrupt (JSON parse fails → fall through to compute)
+7. Cache file is missing or corrupt (JSON parse fails -> fall through to
+   compute)
 
-Cache does **not** depend on git HEAD - the profile is determined by deps and configs, not code content.
+Cache does **not** depend on git HEAD - the profile is determined by deps and
+configs, not code content.
 
 ### Error handling (best-effort)
 
-Cache I/O uses the **boundary pattern** from ADR 019:
-
-- Internal: `Effect.tryPromise` with `FileSystemError` + `Effect.orElseSucceed` fallback
-- Public: `Effect.runPromise` at function boundary, returning `Promise<T>`
-- All cache errors (read, write, parse) are silently handled - the system falls through to full re-computation
-
-This means the cache is **always optional** - a corrupt or missing cache file never causes detection to fail.
+Cache I/O used the boundary pattern from ADR 019: `Effect.tryPromise` with
+`FileSystemError` + `Effect.orElseSucceed` internally, unwrapped to
+`Promise<T>` at the function boundary. All read, write, and parse errors fall
+through to full re-computation, so the cache is **always optional**.
 
 ### Integration point
 
-```typescript
-export async function detectProject(cwd: string): Promise<ProjectProfile> {
-  const fingerprint = await computeFingerprint(cwd)
-  const cached = await readProfileCache(cwd)
-  if (cached && isCacheValid(cached, fingerprint)) {
-    return cached.profile
-  }
-  const profile = await computeProjectProfile(cwd)
-  await writeProfileCache(cwd, { version: 2, fingerprint, profile, ... })
-  return profile
-}
-```
-
-The original detection body was extracted into `computeProjectProfile()` as a private function.
+`detectProject(cwd)` computes the fingerprint, returns `cached.profile` when
+`isCacheValid` passes, and otherwise calls `computeProjectProfile()` (the
+extracted original detection body) and writes the cache entry.
 
 ## Rationale
 
@@ -117,14 +102,15 @@ The original detection body was extracted into `computeProjectProfile()` as a pr
 
 ### Positive
 
-- ✅ Cache hit: <1ms vs 50-150ms for full detection
-- ✅ Best-effort: corrupt/missing cache never breaks detection
-- ✅ Follows ADR-019 Effect boundary pattern
-- ✅ Atomic writes prevent partial reads from concurrent processes
-- ✅ Gitignored fixture cache artifacts in test setup
+- Cache hit <1ms vs 50-150ms for full detection.
+- Best-effort: corrupt or missing cache never breaks detection, and atomic
+  writes prevent partial reads from concurrent processes.
+- Gitignored fixture cache artifacts in test setup.
 
 ### Negative
 
-- ⚠️ Adds `.xtarterize/cache/` directory to projects (gitignored if `.xtarterize/` is in root `.gitignore`)
-- ⚠️ mtime comparisons can produce false positives on some filesystems (e.g., NFS, CI clone) - harmless but triggers unnecessary re-computation
-- ⚠️ Resolved in implementation: recursive per-file fingerprinting now detects content changes. See `fingerprintConfigDirs()` in `cache.ts`.
+- Adds `.xtarterize/cache/` to projects (gitignored when the root
+  `.gitignore` has the entry); mtime comparisons can false-positive on some
+  filesystems (NFS, CI clones) and trigger unnecessary re-computation.
+- Resolved in implementation: recursive per-file fingerprinting detects content
+  changes in config dirs (`fingerprintConfigDirs()` in `cache.ts`).

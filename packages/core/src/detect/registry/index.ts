@@ -21,10 +21,8 @@ export type {
   RootFileInput,
 } from './inputs.js';
 export {
-  ancestorMarkerInputs,
   DETECTOR_INPUTS,
   inputById,
-  inputsOfKind,
   lockfileInputs,
   rootFileInputByBasename,
 } from './inputs.js';

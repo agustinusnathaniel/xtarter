@@ -103,6 +103,11 @@ Commands that do **not** create or read `.xtarterize/` artifacts
 All commands resolve `cwd` via `resolveCwd(args)` (either directly or through
 `resolveCliContext(args).cwd`), so the same path resolution applies uniformly.
 
+Update (2026-09-14): `resolveCwd` and `resolveCliContext` have been removed.
+Commands resolve `cwd` through `resolveRuntimeContext(args)` (ADR 030), which
+also derives `json`, `quiet`, and `format`; the uniform path resolution
+described here is unchanged.
+
 ### Behavior specification
 
 The function follows a simple 5-step state machine:
@@ -134,8 +139,12 @@ This means the gitignore mechanism is always optional - a failure has zero
 impact on the rest of the command execution.
 
 Update (2026-09-11): the Effect boundary pattern was replaced by plain
-`try/catch` (ADR 035). The best-effort behavior is unchanged:
-`ensureXtarterizeGitignore()` still returns `{ action: 'noop' }` on any error.
+`try/catch` (ADR 035).
+
+Update (2026-09-12): Effect returned for command orchestration (ADR 036), but
+`ensureXtarterizeGitignore()` stays a plain Promise-returning leaf, lifted at
+the session seam. The best-effort behavior is unchanged: it still returns
+`{ action: 'noop' }` on any error.
 
 ### Export location
 
@@ -150,34 +159,19 @@ to `applyTasks()` above describe the state at the time of this decision.
 
 ### Why not a task
 
-The existing `gitignore/tsbuildinfo` task guards a user-selected feature
-(tsbuildinfo files). Users may legitimately want to track those files.
-`.xtarterize/` is different - it is a tool implementation detail, not a
-project configuration choice. Making it a task would:
+`.xtarterize/` is a tool implementation detail, not a project configuration
+choice like the tsbuildinfo files the `gitignore/tsbuildinfo` task guards. A
+task would be skippable at the prompt, would frame a tool side effect as a user
+option, and would miss `check` and `diff` (no `applyTasks()`) and `list` (no
+task engine).
 
-- Let users accidentally skip it
-- Frame a tool side effect as a user option
-- Miss `check` and `diff` commands which don't run `applyTasks()`
-- Miss `list` which doesn't run tasks at all
+### Why per-command calls
 
-### Why per-command call, not a single routing point
-
-The decision description originally proposed a single hook in `runCommand()`.
-Codebase analysis shows this is insufficient: `runCommand()` is only used by
-`init` and `sync`. Commands like `check`, `diff`, `add`, `list`, `undo`, and
-`restore` use `scanProject()` or direct `detectProject()` calls instead.
-
-The alternatives considered for a single chokepoint:
-
-- **`runPreflight()`** - called by all commands, but adding a side effect
-  (writing a file) to a function named "preflight" violates the principle of
-  least surprise. Preflight checks state; it doesn't mutate it.
-- **`detectProject()`** - called by most but not all commands. `undo` and
-  `restore` read `.xtarterize/` via `readRunManifest()` / `listBackups()`
-  without ever calling `detectProject()`.
-
-Per-command calls are explicit, grepable, and easy to spot during code
-review. The cost is 8 import + call sites, which is acceptable and maintainable.
+A single chokepoint would have to be `runCommand()` (only `init` and `sync`),
+`runPreflight()` (a validator; adding a write violates least surprise), or
+`detectProject()` (`undo` and `restore` read `.xtarterize/` without calling
+it). Per-command calls are explicit and grepable; the cost is 8 import + call
+sites.
 
 ### Idempotency guarantee
 
@@ -224,38 +218,18 @@ project's idempotency contract (see AGENTS.md).
 
 ## Alternatives Considered
 
-### Single hook in `runCommand()`
-
-Proposed in the original decision summary. Rejected because `runCommand()` is
-only called by `init` and `sync`. Commands `check`, `diff`, `add`, `list`,
-`undo`, and `restore` use different entry paths and would be missed.
-
-### Hook in `runPreflight()`
-
-Rejected because `runPreflight()` is a validation function - it reads project
-state and returns errors. Adding a side effect (writing `.gitignore`) would
-violate the principle of least surprise and make the function's name
-misleading.
-
-### Task-based approach (`gitignore/xtarterize` task)
-
-Rejected because:
-
-- `check` and `diff` don't run `applyTasks()` so the task would never execute
-- `list` doesn't run the task engine at all
-- Frames a tool implementation detail as a user-configurable choice
-- Users could skip it at the interactive prompt
-
-### Hook at creation sites (`backup.ts`, `cache.ts`)
-
-Decentralized and fragile - each artifact creation point would need its own
-`.gitignore` check. Hard to test (3+ distributed code paths instead of 1
-function). Easy to miss a new artifact directory.
-
-### Hook in `detectProject()`
-
-Rejected because `undo` and `restore` read `.xtarterize/` via
-`readRunManifest()` / `listBackups()` without calling `detectProject()`.
+- **Single hook in `runCommand()`** - only `init` and `sync` route through it,
+  so `check`, `diff`, `add`, `list`, `undo`, and `restore` would be missed.
+- **Hook in `runPreflight()`** - adds a write side effect to a validation
+  function, violating least surprise.
+- **Task-based approach (`gitignore/xtarterize`)** - skippable at the prompt,
+  frames a tool side effect as a user option, and misses `check`/`diff` (no
+  `applyTasks()`) and `list` (no task engine).
+- **Hook at creation sites (`backup.ts`, `cache.ts`)** - decentralized and
+  fragile: 3+ code paths to guard and test, easy to miss a new artifact
+  directory.
+- **Hook in `detectProject()`** - `undo` and `restore` read `.xtarterize/` via
+  `readRunManifest()` / `listBackups()` without calling `detectProject()`.
 
 ### Related Decisions
 
@@ -264,6 +238,8 @@ Rejected because `undo` and `restore` read `.xtarterize/` via
 - ADR 022: Run Manifest for Undo - added more `.xtarterize/backups/` artifacts
 - ADR 019: Effect TS Error Handling - established the boundary pattern for
   best-effort I/O
+- ADR 036: Effect orchestration layer - Effect returned for command
+  orchestration; this leaf stays Promise-based
 
 ## Unresolved Questions
 
@@ -278,3 +254,7 @@ Rejected because `undo` and `restore` read `.xtarterize/` via
   already the correct target. Workspace packages are not affected - the
   function operates on the scoped project root. If a future scope configuration
   mechanism changes `cwd` resolution, this should be re-evaluated.
+
+Update (2026-09-14): the helpers named in the monorepo bullet above have been
+removed; `resolveRuntimeContext(args).cwd` (ADR 030) is the current source used
+by `session.open`. The monorepo conclusion is unchanged.

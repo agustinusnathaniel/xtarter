@@ -1,7 +1,7 @@
 import { existsSync } from 'node:fs';
 import { mkdir, readdir, rm } from 'node:fs/promises';
 import { basename, resolve } from 'node:path';
-import { logWarn } from '@xtarterize/core';
+import { logWarn } from '@xtarterize/core/plain';
 
 import type { TemplateConfig } from '@/templates/registry';
 import type { PackageManager } from '@/types';

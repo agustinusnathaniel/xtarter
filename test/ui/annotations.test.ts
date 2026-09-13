@@ -1,37 +1,19 @@
-import type { DiagnosticCheck, Task, TaskStatus } from '@xtarterize/core';
+import type { DiagnosticCheck } from '@xtarterize/core';
 import { describe, expect } from 'vite-plus/test';
 
 import { formatCheckAnnotations } from '../../apps/xtarterize/src/ui/annotations.js';
+import { makeStatuses, makeTask } from '../helpers/factories.js';
 
-function makeTask(
+const annotationTask = (
   id: string,
   label: string,
   configTargets?: Array<string>
-): Task {
-  return {
-    applicable: () => true,
-    apply: async () => {},
-    check: async () => 'skip' as const,
-    dryRun: async () => [],
-    group: 'test',
-    id,
-    label,
-    searchMeta: configTargets
-      ? { configTargets, keywords: [], tags: [] }
-      : undefined,
-  };
-}
-
-function makeStatuses(
-  entries: Array<[string, TaskStatus]>
-): Map<string, TaskStatus> {
-  return new Map(entries);
-}
+) => makeTask({ check: 'skip', configTargets, group: 'test', id, label });
 
 describe('formatCheckAnnotations', () => {
   test('emits error annotation per non-conformant task with file target', () => {
     const tasks = [
-      makeTask('ts/strict', 'Strict TypeScript', ['tsconfig.json']),
+      annotationTask('ts/strict', 'Strict TypeScript', ['tsconfig.json']),
     ];
     const statuses = makeStatuses([['ts/strict', 'patch']]);
 
@@ -44,7 +26,7 @@ describe('formatCheckAnnotations', () => {
 
   test('omits conformant tasks', () => {
     const tasks = [
-      makeTask('ts/strict', 'Strict TypeScript', ['tsconfig.json']),
+      annotationTask('ts/strict', 'Strict TypeScript', ['tsconfig.json']),
     ];
     const statuses = makeStatuses([['ts/strict', 'skip']]);
 
@@ -56,7 +38,7 @@ describe('formatCheckAnnotations', () => {
 
   test('uses configTargets[0] as file', () => {
     const tasks = [
-      makeTask('ts/strict', 'Strict TypeScript', [
+      annotationTask('ts/strict', 'Strict TypeScript', [
         'tsconfig.json',
         'package.json',
       ]),
@@ -70,7 +52,7 @@ describe('formatCheckAnnotations', () => {
   });
 
   test('omits file when no configTargets', () => {
-    const tasks = [makeTask('ts/strict', 'Strict TypeScript')];
+    const tasks = [annotationTask('ts/strict', 'Strict TypeScript')];
     const statuses = makeStatuses([['ts/strict', 'patch']]);
 
     const output = formatCheckAnnotations(tasks, statuses, []);
@@ -93,7 +75,7 @@ describe('formatCheckAnnotations', () => {
   });
 
   test('escapes property and data values', () => {
-    const tasks = [makeTask('ts/strict', 'A:B, C%', ['tsconfig.json'])];
+    const tasks = [annotationTask('ts/strict', 'A:B, C%', ['tsconfig.json'])];
     const statuses = makeStatuses([['ts/strict', 'patch']]);
     const diagnostics: Array<DiagnosticCheck> = [
       { message: '100% done\nnext', name: 'Tool', status: 'fail' },
@@ -109,8 +91,8 @@ describe('formatCheckAnnotations', () => {
 
   test('annotations join with newline', () => {
     const tasks = [
-      makeTask('ts/strict', 'Strict TypeScript', ['tsconfig.json']),
-      makeTask('lint/biome', 'Biome', ['biome.json']),
+      annotationTask('ts/strict', 'Strict TypeScript', ['tsconfig.json']),
+      annotationTask('lint/biome', 'Biome', ['biome.json']),
     ];
     const statuses = makeStatuses([
       ['ts/strict', 'patch'],

@@ -1,19 +1,28 @@
-import { defineCommand } from 'citty';
+import type { Effect } from 'effect';
 
-import { runCommand } from '@/commands/run-command.js';
+import { cliCommand } from '@/commands/command.js';
+import {
+  type RunCommandArgs,
+  type RunCommandError,
+  type RunCommandServices,
+  runCommand,
+} from '@/commands/run-command.js';
 import { sharedRunArgs } from '@/utils/args.js';
 
-export const syncCommand = defineCommand({
+/** The `sync` run pipeline as one program (open, select, apply). */
+export function syncProgram(
+  args: RunCommandArgs
+): Effect.Effect<void, RunCommandError, RunCommandServices> {
+  return runCommand(args, {
+    actionableStatuses: ['patch', 'conflict'],
+    confirmMessage: 'How would you like to proceed?',
+    emptyMessage: 'No updates available',
+  });
+}
+
+export const syncCommand = cliCommand({
   args: sharedRunArgs,
-  meta: {
-    description: 'Update existing configurations to latest conformance',
-    name: 'sync',
-  },
-  async run({ args }) {
-    await runCommand(args, {
-      actionableStatuses: ['patch', 'conflict'],
-      confirmMessage: 'How would you like to proceed?',
-      emptyMessage: 'No updates available',
-    });
-  },
+  description: 'Update existing configurations to latest conformance',
+  name: 'sync',
+  program: syncProgram,
 });

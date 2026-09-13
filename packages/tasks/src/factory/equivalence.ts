@@ -151,5 +151,5 @@ export function hasScriptWithEquivalentValue(
   scripts: PackageScriptsMap,
   value: string
 ): boolean {
-  return Object.values(scripts).some((v) => v && areEquivalent(v, value));
+  return findEquivalentScriptKey(scripts, value) !== null;
 }

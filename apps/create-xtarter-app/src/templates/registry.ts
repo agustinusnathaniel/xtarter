@@ -11,8 +11,11 @@ export interface TemplateConfig {
   repo: string;
 }
 
-// IMPORTANT: When adding or removing templates here, also update the
-// matching entry in apps/xtarter-create/package.json (createConfig.templates).
+// IMPORTANT: When adding or removing templates here, also update
+// apps/xtarter-create/package.json (createConfig.templates),
+// apps/docs/src/data/template-catalog.ts, and the template tables in
+// apps/create-xtarter-app/README.md and the create-xtarter-app docs
+// guide pages (templates/index.mdx and org-templates.mdx).
 export const TEMPLATES: Array<TemplateConfig> = [
   {
     branch: 'main',

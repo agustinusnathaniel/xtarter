@@ -66,17 +66,7 @@ export function mergeVary(existingHeaderValue) {
       tokens.push(token);
     }
   }
-  tokens.sort((a, b) => {
-    const la = a.toLowerCase();
-    const lb = b.toLowerCase();
-    if (la < lb) {
-      return -1;
-    }
-    if (la > lb) {
-      return 1;
-    }
-    return 0;
-  });
+  tokens.sort((a, b) => (a.toLowerCase() < b.toLowerCase() ? -1 : 1));
   return ['Accept', 'Accept-Encoding', ...tokens].join(', ');
 }
 
@@ -109,7 +99,7 @@ async function fetchMarkdownAsset(candidatePath, requestUrl, env) {
     const res = await env.ASSETS.fetch(
       new Request(new URL(candidatePath, requestUrl))
     );
-    if (res && res.status === 200) {
+    if (res.status === 200) {
       return res;
     }
   } catch {}
@@ -141,6 +131,7 @@ async function handleRequest(request, env) {
     }
   }
   const response = await env.ASSETS.fetch(request);
+  const contentType = response.headers.get('content-type') ?? '';
   if (response.status === 404) {
     if (negotiate) {
       return new Response(MARKDOWN_404_BODY, {
@@ -151,20 +142,17 @@ async function handleRequest(request, env) {
         status: 404,
       });
     }
-    const ct = response.headers.get('content-type') ?? '';
-    if (!ct.startsWith('text/html')) {
-      try {
-        const explicit = await env.ASSETS.fetch(
-          new Request(new URL('/404.html', request.url))
-        );
-        if (explicit && explicit.status === 200) {
-          return withVary(explicit, { status: 404 });
-        }
-      } catch {}
+    if (!contentType.startsWith('text/html')) {
+      const explicit = await fetchMarkdownAsset('/404.html', request.url, env);
+      if (explicit) {
+        return withVary(explicit, { status: 404 });
+      }
     }
   }
-  const ct = response.headers.get('content-type') ?? '';
-  if (ct.startsWith('text/html') || ct.startsWith('text/markdown')) {
+  if (
+    contentType.startsWith('text/html') ||
+    contentType.startsWith('text/markdown')
+  ) {
     return withVary(response);
   }
   return response;

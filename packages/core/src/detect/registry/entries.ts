@@ -9,132 +9,63 @@ type DetectorEntrySpec = {
   | { existing?: undefined; key?: undefined }
 );
 
+/** Declares a file detector whose single input keys a boolean `existing`. */
+function fileFlag<
+  const Id extends string,
+  const Key extends string,
+  const Input extends DetectorInputId,
+>(id: Id, key: Key, input: Input) {
+  return {
+    detector: 'file',
+    existing: 'flag',
+    id,
+    inputs: [input],
+    key,
+  } as const;
+}
+
+/** Declares a custom detector that keys a boolean `existing`. */
+function customFlag<
+  const Id extends string,
+  const Key extends string,
+  const Inputs extends ReadonlyArray<DetectorInputId>,
+>(id: Id, key: Key, ...inputs: Inputs) {
+  return { detector: 'custom', existing: 'flag', id, inputs, key } as const;
+}
+
+/** Declares a custom detector that keys a string-list `existing`. */
+function customList<
+  const Id extends string,
+  const Key extends string,
+  const Inputs extends ReadonlyArray<DetectorInputId>,
+>(id: Id, key: Key, ...inputs: Inputs) {
+  return { detector: 'custom', existing: 'list', id, inputs, key } as const;
+}
+
 /**
  * Every declared detector entry and the inputs it reads. Entries project into
  * `ProjectProfile.existing`.
  */
 export const DETECTOR_ENTRIES = [
   // ── Keyed file detectors ──
-  {
-    detector: 'file',
-    existing: 'flag',
-    id: 'biome',
-    inputs: ['biome'],
-    key: 'biome',
-  },
-  {
-    detector: 'file',
-    existing: 'flag',
-    id: 'tsconfig',
-    inputs: ['tsconfig'],
-    key: 'tsconfig',
-  },
-  {
-    detector: 'file',
-    existing: 'flag',
-    id: 'renovate',
-    inputs: ['renovate'],
-    key: 'renovate',
-  },
-  {
-    detector: 'file',
-    existing: 'flag',
-    id: 'commitlint',
-    inputs: ['commitlint-config'],
-    key: 'commitlint',
-  },
-  {
-    detector: 'file',
-    existing: 'flag',
-    id: 'knip',
-    inputs: ['knip-config'],
-    key: 'knip',
-  },
-  {
-    detector: 'file',
-    existing: 'flag',
-    id: 'plop',
-    inputs: ['plopfile'],
-    key: 'plop',
-  },
-  {
-    detector: 'file',
-    existing: 'flag',
-    id: 'turbo',
-    inputs: ['turbo-config'],
-    key: 'turbo',
-  },
-  {
-    detector: 'file',
-    existing: 'flag',
-    id: 'viteConfig',
-    inputs: ['vite-config'],
-    key: 'viteConfig',
-  },
-  {
-    detector: 'file',
-    existing: 'flag',
-    id: 'versionrc',
-    inputs: ['versionrc'],
-    key: 'versionrc',
-  },
-  {
-    detector: 'file',
-    existing: 'flag',
-    id: 'gitignore',
-    inputs: ['gitignore'],
-    key: 'gitignore',
-  },
-  {
-    detector: 'file',
-    existing: 'flag',
-    id: 'vscodeSettings',
-    inputs: ['vscode-settings'],
-    key: 'vscodeSettings',
-  },
+  fileFlag('biome', 'biome', 'biome'),
+  fileFlag('tsconfig', 'tsconfig', 'tsconfig'),
+  fileFlag('renovate', 'renovate', 'renovate'),
+  fileFlag('commitlint', 'commitlint', 'commitlint-config'),
+  fileFlag('knip', 'knip', 'knip-config'),
+  fileFlag('plop', 'plop', 'plopfile'),
+  fileFlag('turbo', 'turbo', 'turbo-config'),
+  fileFlag('viteConfig', 'viteConfig', 'vite-config'),
+  fileFlag('versionrc', 'versionrc', 'versionrc'),
+  fileFlag('gitignore', 'gitignore', 'gitignore'),
+  fileFlag('vscodeSettings', 'vscodeSettings', 'vscode-settings'),
   // ── Custom detectors ──
-  {
-    detector: 'custom',
-    existing: 'flag',
-    id: 'eslint',
-    inputs: ['eslintrc', 'eslint-config', 'package-json'],
-    key: 'eslint',
-  },
-  {
-    detector: 'custom',
-    existing: 'flag',
-    id: 'oxlint',
-    inputs: ['oxlintrc', 'oxlint-config'],
-    key: 'oxlint',
-  },
-  {
-    detector: 'custom',
-    existing: 'flag',
-    id: 'oxfmt',
-    inputs: ['oxfmtrc', 'oxfmt-config'],
-    key: 'oxfmt',
-  },
-  {
-    detector: 'custom',
-    existing: 'list',
-    id: 'githubWorkflows',
-    inputs: ['github-dir'],
-    key: 'githubWorkflows',
-  },
-  {
-    detector: 'custom',
-    existing: 'flag',
-    id: 'changeset',
-    inputs: ['changeset-dir', 'package-json'],
-    key: 'changeset',
-  },
-  {
-    detector: 'custom',
-    existing: 'flag',
-    id: 'agentsMd',
-    inputs: ['agents', 'claude'],
-    key: 'agentsMd',
-  },
+  customFlag('eslint', 'eslint', 'eslintrc', 'eslint-config', 'package-json'),
+  customFlag('oxlint', 'oxlint', 'oxlintrc', 'oxlint-config'),
+  customFlag('oxfmt', 'oxfmt', 'oxfmtrc', 'oxfmt-config'),
+  customList('githubWorkflows', 'githubWorkflows', 'github-dir'),
+  customFlag('changeset', 'changeset', 'changeset-dir', 'package-json'),
+  customFlag('agentsMd', 'agentsMd', 'agents', 'claude'),
 ] as const satisfies ReadonlyArray<DetectorEntrySpec>;
 
 export type DetectorEntry = (typeof DETECTOR_ENTRIES)[number];

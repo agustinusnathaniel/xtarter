@@ -23,6 +23,8 @@ The registry does not declare every detector: framework, router, styling, runtim
 
 ## detectProject Function
 
+`detectProject()` stays a Promise-returning leaf: it does not compose Effects and never calls a runtime. The engine lifts it with `Effect.tryPromise` at the nearest orchestration seam (for example `resolveProjectTasks` in `resolve.ts`). See ADR 036 for the boundary rule.
+
 ```typescript
 import { detectProject } from '@xtarterize/core'
 
@@ -129,10 +131,10 @@ discovered via parent-directory walk-up. In non-monorepos,
   </TabItem>
 </Tabs>
 
-## Ambiguity Handling
+## Framework Precedence
 
 <Aside type="note">
-  When both `react` and `react-native` are present in dependencies, `detectProject()` returns `framework: null`. The CLI layer then prompts the user to clarify which describes the project. In `--quiet` mode, it defaults to `react`.
+  When both `react` and `react-native` (or `expo`) are present in dependencies, `detectFramework()` returns `'react-native'`; there is no prompt to disambiguate. `framework` is `null` only when the project has no `package.json`.
 </Aside>
 
 ## Example

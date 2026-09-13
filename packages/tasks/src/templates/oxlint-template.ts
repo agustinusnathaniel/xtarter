@@ -1,9 +1,6 @@
 import type { ProjectProfile } from '@xtarterize/core';
 
-import {
-  getUltraciteFrameworkPresetSuffix,
-  getUltraciteRouterPresetSuffix,
-} from './ultracite-presets.js';
+import { collectUltracitePresets } from './ultracite-presets.js';
 
 function getOxlintEnv(profile: ProjectProfile): Record<string, boolean> {
   const env: Record<string, boolean> = { builtin: true };
@@ -16,24 +13,8 @@ function getOxlintEnv(profile: ProjectProfile): Record<string, boolean> {
   return env;
 }
 
-function getUltracitePresets(profile: ProjectProfile): Array<string> {
-  const presets = ['core'];
-
-  const frameworkPreset = getUltraciteFrameworkPresetSuffix(profile);
-  if (frameworkPreset) {
-    presets.push(frameworkPreset);
-  }
-
-  const routerPreset = getUltraciteRouterPresetSuffix(profile);
-  if (routerPreset) {
-    presets.push(routerPreset);
-  }
-
-  return presets;
-}
-
 export function renderOxlintTsConfig(profile: ProjectProfile): string {
-  const presets = getUltracitePresets(profile);
+  const presets = collectUltracitePresets(profile);
 
   const importLines = presets.map(
     (p) => `import ${p} from "ultracite/oxlint/${p}"`

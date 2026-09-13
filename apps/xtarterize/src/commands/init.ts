@@ -1,8 +1,14 @@
 import type { Task } from '@xtarterize/core';
 import { scoreTasks } from '@xtarterize/core';
-import { defineCommand } from 'citty';
+import type { Effect } from 'effect';
 
-import { runCommand } from '@/commands/run-command.js';
+import { cliCommand } from '@/commands/command.js';
+import {
+  type RunCommandArgs,
+  type RunCommandError,
+  type RunCommandServices,
+  runCommand,
+} from '@/commands/run-command.js';
 import { sharedRunArgs } from '@/utils/args.js';
 import type { RuntimeContext } from '@/utils/runtime.js';
 
@@ -10,6 +16,8 @@ interface ComposeArgs {
   compose?: string;
   threshold?: string;
 }
+
+export type InitCommandArgs = ComposeArgs & RunCommandArgs;
 
 function composeThreshold(args: ComposeArgs): number {
   if (!args.threshold) {
@@ -58,7 +66,19 @@ function orderTasksByCompose(
   return ordered;
 }
 
-export const initCommand = defineCommand({
+/** The `init` run pipeline as one program (open, compose, select, apply). */
+export function initProgram(
+  args: InitCommandArgs
+): Effect.Effect<void, RunCommandError, RunCommandServices> {
+  return runCommand(args, {
+    actionableStatuses: ['new', 'patch', 'conflict'],
+    confirmMessage: 'How would you like to proceed?',
+    emptyMessage: 'Project is already fully conformant!',
+    orderTasks: (tasks, runtime) => orderTasksByCompose(tasks, args, runtime),
+  });
+}
+
+export const initCommand = cliCommand({
   args: {
     ...sharedRunArgs,
     compose: {
@@ -71,16 +91,7 @@ export const initCommand = defineCommand({
       type: 'string',
     },
   },
-  meta: {
-    description: 'Initialize xtarterize conformance for a project',
-    name: 'init',
-  },
-  async run({ args }) {
-    await runCommand(args, {
-      actionableStatuses: ['new', 'patch', 'conflict'],
-      confirmMessage: 'How would you like to proceed?',
-      emptyMessage: 'Project is already fully conformant!',
-      orderTasks: (tasks, runtime) => orderTasksByCompose(tasks, args, runtime),
-    });
-  },
+  description: 'Initialize xtarterize conformance for a project',
+  name: 'init',
+  program: initProgram,
 });

@@ -43,22 +43,20 @@ async function resolveDevEngines(
 
 export const packageEnginesTask = defineSingleTargetTask({
   applicable: () => true,
+  configTargets: ['package.json'],
   group: 'Quality',
   id: TASK_ID,
+  keywords: [
+    'devEngines',
+    'engines',
+    'node version',
+    'package manager',
+    'pnpm',
+    'runtime',
+  ],
   label: 'devEngines in package.json',
   scope: 'root',
-  searchMeta: {
-    configTargets: ['package.json'],
-    keywords: [
-      'devEngines',
-      'engines',
-      'node version',
-      'package manager',
-      'pnpm',
-      'runtime',
-    ],
-    tags: ['quality', 'engines', 'node', 'pnpm', 'package-manager'],
-  },
+  tags: ['quality', 'engines', 'node', 'pnpm', 'package-manager'],
   target: {
     change: resolveDevEngines,
     kind: 'packageJson',
