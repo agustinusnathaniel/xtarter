@@ -3,7 +3,6 @@ import path from 'node:path';
 import type {
   ApplyPlan,
   ApplyResult,
-  FileDiff,
   ProjectProfile,
   Task,
   TaskDep,
@@ -12,7 +11,6 @@ import type {
 import {
   DepsInstallError,
   DepsInstaller,
-  detectProject,
   executePlan,
   ProcessRunner,
   planTasks,
@@ -20,8 +18,9 @@ import {
 import { Effect, Layer } from 'effect';
 import { describe, expect, vi } from 'vite-plus/test';
 
+import { makeTask } from '../helpers/factories.js';
+import { withProject } from '../helpers/project.js';
 import { runWith } from '../helpers/run.js';
-import { withTempDir } from '../helpers/temp.js';
 
 const mockInstall = vi.fn<
   (
@@ -36,32 +35,6 @@ const TestApplyLayer = Layer.mergeAll(
   ProcessRunner.layer,
   Layer.succeed(DepsInstaller, { install: mockInstall })
 );
-
-interface MockTaskOptions {
-  apply?: Task['apply'];
-  check?: TaskStatus;
-  dryRun?: Task['dryRun'];
-  getDeps?: Task['getDeps'];
-  id?: string;
-  label?: string;
-}
-
-/** Build an Effect task whose identity and hooks default to a no-op. */
-function makeTask(options: MockTaskOptions = {}): Task {
-  const task: Task = {
-    applicable: () => true,
-    apply: options.apply ?? (() => Effect.void),
-    check: () => Effect.succeed(options.check ?? 'new'),
-    dryRun: options.dryRun ?? (() => Effect.succeed([] as Array<FileDiff>)),
-    group: 'Test',
-    id: options.id ?? 'mock/task',
-    label: options.label ?? 'Mock Task',
-  };
-  if (options.getDeps) {
-    task.getDeps = options.getDeps;
-  }
-  return task;
-}
 
 function runPlan(
   cwd: string,
@@ -116,24 +89,11 @@ async function applyTasks(options: {
   );
 }
 
-/** Run `fn` against a temp project containing only a package.json. */
-function withProject<Result>(
-  prefix: string,
-  fn: (dir: string) => Promise<Result>
-): Promise<Result> {
-  return withTempDir(prefix, async (dir) => {
-    await fs.writeFile(
-      path.join(dir, 'package.json'),
-      JSON.stringify({ name: 'test', version: '1.0.0' })
-    );
-    return fn(dir);
-  });
-}
+const projectFiles = { 'package.json': { name: 'test', version: '1.0.0' } };
 
 describe('applyTasks', () => {
   test('applies a single task successfully', async () => {
-    await withProject('xtarterize-apply-', async (tmpDir) => {
-      const profile = await detectProject(tmpDir);
+    await withProject(projectFiles, async ({ cwd: tmpDir, profile }) => {
       const mockTask = makeTask({
         apply: () =>
           Effect.promise(() =>
@@ -156,10 +116,9 @@ describe('applyTasks', () => {
   });
 
   test('skips tasks that are already applied', async () => {
-    await withProject('xtarterize-skip-', async (tmpDir) => {
+    await withProject(projectFiles, async ({ cwd: tmpDir, profile }) => {
       await fs.writeFile(path.join(tmpDir, 'test.txt'), 'hello');
 
-      const profile = await detectProject(tmpDir);
       const mockTask = makeTask({
         check: 'skip',
         dryRun: () =>
@@ -179,10 +138,9 @@ describe('applyTasks', () => {
   });
 
   test('backs up existing files before applying selected tasks', async () => {
-    await withProject('xtarterize-backup-', async (tmpDir) => {
+    await withProject(projectFiles, async ({ cwd: tmpDir, profile }) => {
       await fs.writeFile(path.join(tmpDir, 'test.txt'), 'before');
 
-      const profile = await detectProject(tmpDir);
       const mockTask = makeTask({
         apply: () =>
           Effect.promise(() =>
@@ -220,8 +178,7 @@ describe('applyTasks', () => {
   });
 
   test('skips conflict tasks unless includeConflicts is set', async () => {
-    await withProject('xtarterize-conflict-', async (tmpDir) => {
-      const profile = await detectProject(tmpDir);
+    await withProject(projectFiles, async ({ cwd: tmpDir, profile }) => {
       let applied = false;
       const mockTask = makeTask({
         apply: () =>
@@ -270,8 +227,7 @@ describe('applyTasks', () => {
   });
 
   test('continues applying remaining tasks after one fails', async () => {
-    await withProject('xtarterize-partial-', async (tmpDir) => {
-      const profile = await detectProject(tmpDir);
+    await withProject(projectFiles, async ({ cwd: tmpDir, profile }) => {
       const failingTask = makeTask({
         apply: () => Effect.die(new Error('intentional failure')),
         id: 'mock/fail',
@@ -302,8 +258,7 @@ describe('applyTasks', () => {
 
 describe('planTasks', () => {
   test('plans diffs without writing, backing up, or installing', async () => {
-    await withProject('xtarterize-plan-', async (tmpDir) => {
-      const profile = await detectProject(tmpDir);
+    await withProject(projectFiles, async ({ cwd: tmpDir, profile }) => {
       const mockTask = makeTask({
         apply: () =>
           Effect.promise(() =>
@@ -341,8 +296,7 @@ describe('planTasks', () => {
   });
 
   test('keeps skipped tasks in the plan without diffs or dependency installs', async () => {
-    await withProject('xtarterize-plan-skip-', async (tmpDir) => {
-      const profile = await detectProject(tmpDir);
+    await withProject(projectFiles, async ({ cwd: tmpDir, profile }) => {
       const mockTask = makeTask({
         check: 'skip',
         dryRun: () =>
@@ -366,10 +320,9 @@ describe('planTasks', () => {
 
 describe('executePlan', () => {
   test('backs up and manifests exactly the plan files', async () => {
-    await withProject('xtarterize-exec-plan-', async (tmpDir) => {
+    await withProject(projectFiles, async ({ cwd: tmpDir, profile }) => {
       await fs.writeFile(path.join(tmpDir, 'test.txt'), 'before');
 
-      const profile = await detectProject(tmpDir);
       const mockTask = makeTask({
         apply: () =>
           Effect.promise(() =>
@@ -415,8 +368,7 @@ describe('executePlan', () => {
   });
 
   test('reports per-entry apply errors and continues with remaining entries', async () => {
-    await withProject('xtarterize-exec-errors-', async (tmpDir) => {
-      const profile = await detectProject(tmpDir);
+    await withProject(projectFiles, async ({ cwd: tmpDir, profile }) => {
       const failingTask = makeTask({
         apply: () => Effect.die(new Error('entry failure')),
         id: 'mock/plan-fail',
@@ -453,8 +405,7 @@ describe('executePlan', () => {
   });
 
   test('reports per-entry dry-run errors and excludes the entry from the plan', async () => {
-    await withProject('xtarterize-dryrun-', async (tmpDir) => {
-      const profile = await detectProject(tmpDir);
+    await withProject(projectFiles, async ({ cwd: tmpDir, profile }) => {
       const failingTask = makeTask({
         dryRun: () => Effect.die(new Error('dryRun boom')),
         getDeps: () => Effect.succeed([{ depName: 'failed-dep', dev: true }]),
@@ -474,8 +425,7 @@ describe('executePlan', () => {
   });
 
   test('surfaces batch install failure in ApplyResult.errors', async () => {
-    await withProject('xtarterize-install-fail-', async (tmpDir) => {
-      const profile = await detectProject(tmpDir);
+    await withProject(projectFiles, async ({ cwd: tmpDir, profile }) => {
       let applied = false;
       const mockTask = makeTask({
         apply: () =>

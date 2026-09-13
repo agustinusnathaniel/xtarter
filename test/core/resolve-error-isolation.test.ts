@@ -1,40 +1,31 @@
-import type { ProjectProfile, Task, TaskStatus } from '@xtarterize/core';
+import type { TaskStatus } from '@xtarterize/core';
 import { resolveProjectTasks, resolveTaskStatuses } from '@xtarterize/core';
 import { Effect } from 'effect';
 import { describe, expect } from 'vite-plus/test';
 
+import { makeProfile, makeTask } from '../helpers/factories.js';
 import { run } from '../helpers/run.js';
 
-function makeTask(id: string, check: () => Effect.Effect<TaskStatus>): Task {
-  return {
-    applicable: () => true,
-    apply: () => Effect.void,
-    check,
-    dryRun: () => Effect.succeed([]),
-    group: 'test',
-    id,
-    label: id,
-  };
-}
+const checkedTask = (
+  id: string,
+  check: () => Effect.Effect<TaskStatus>
+): ReturnType<typeof makeTask> =>
+  makeTask({ check, group: 'test', id, label: id });
 
-const profile: ProjectProfile = {
+const profile = makeProfile({
   bundler: 'none',
-  detectedFiles: [],
-  framework: 'node',
-  monorepo: false,
   packageManager: 'npm',
   typescript: true,
-  workspaceRoot: null,
-};
+});
 
 describe('resolveTaskStatuses error isolation', () => {
   test('resolves all statuses when one check throws', async () => {
     const tasks = [
-      makeTask('ok-task', () => Effect.succeed('skip')),
-      makeTask('boom-task', () =>
+      checkedTask('ok-task', () => Effect.succeed('skip')),
+      checkedTask('boom-task', () =>
         Effect.die(new Error('simulated check failure'))
       ),
-      makeTask('ok-task-2', () => Effect.succeed('patch')),
+      checkedTask('ok-task-2', () => Effect.succeed('patch')),
     ];
 
     const statuses = await run(resolveTaskStatuses(tasks, '/tmp', profile));
@@ -47,10 +38,10 @@ describe('resolveTaskStatuses error isolation', () => {
 
   test('resolveProjectTasks does not crash on a throwing check', async () => {
     const tasks = [
-      makeTask('boom-task', () =>
+      checkedTask('boom-task', () =>
         Effect.die(new Error('simulated check failure'))
       ),
-      makeTask('ok-task', () => Effect.succeed('skip')),
+      checkedTask('ok-task', () => Effect.succeed('skip')),
     ];
 
     const result = await run(resolveProjectTasks('/tmp', tasks));
