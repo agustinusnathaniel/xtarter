@@ -47,8 +47,8 @@ declares what detection reads and which detectors consume it.
 - `.eslintrc.mjs` aligns with doctor; `typescript` and `existing.tsconfig`
   share a tsconfig declaration, and `package.json` is read once per detection.
 
-Declarations with no consumer yet (css-modules, universal, frameworkVersion,
-and the unreachable ambiguity prompt) are documented as follow-up.
+Declarations with no consumer yet (css-modules, universal, frameworkVersion)
+are documented as follow-up.
 
 Update (2026-09-11): the profile cache was removed by ADR 034. The registry
 still declares the inputs and keyed detector entries that detection and

@@ -29,7 +29,6 @@ import { Effect } from 'effect';
 import { mergeFileDiffs } from '@/ui/merge-file-diffs.js';
 import type { PromptError, Prompter } from '@/ui/prompter.js';
 import { reportPreflightFailure, reportSessionOutcome } from '@/ui/reporter.js';
-import { detectProjectWithAmbiguity } from '@/utils/project.js';
 import {
   type RuntimeArgs,
   type RuntimeContext,
@@ -212,16 +211,11 @@ export class CommandSession {
         : discovered;
       const {
         checkErrors,
-        profile: baseProfile,
+        profile,
         tasks: resolvedTasks,
         statuses,
         timing,
       } = yield* resolveProjectTasks(runtime.cwd, tasks);
-      const profile = yield* detectProjectWithAmbiguity({
-        baseProfile,
-        cwd: runtime.cwd,
-        quiet: runtime.quiet,
-      });
       const selection = yield* loadSelectionConfig(runtime.cwd);
 
       return {
