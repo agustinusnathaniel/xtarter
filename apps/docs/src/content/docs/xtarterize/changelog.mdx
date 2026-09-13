@@ -5,6 +5,20 @@ description: What's new in xtarterize.
 
 Latest updates and feature releases for xtarterize. Entries for v1.16 and newer are curated below; see the [full changelog](https://github.com/agustinusnathaniel/xtarter/blob/main/apps/xtarterize/CHANGELOG.md) for complete notes and every patch version.
 
+## v2.0.0 - 2026-09-14
+
+### External task plugins removed
+
+The `plugins` key in `.xtarterizerc`, `.xtarterizerc.json`, `.xtarterizerc.json5`, or the `"xtarterize"` key in `package.json` is no longer read. Remove any `plugins` entries and use built-in tasks instead; `skip` and `only` task selection keeps working with the same precedence rules.
+
+### Package-manager-aware skills install
+
+`agent/skills-install` now selects the executor for the detected package manager: `pnpm dlx`, `yarn dlx` for Yarn Berry, and `bunx`, while npm keeps `npx --yes`. npm 11 rejects `npx` when `devEngines.packageManager` names another package manager, and `quality/package-engines` writes that field during `init`, so pnpm, Yarn Berry, and bun projects no longer fail the skills task. Yarn classic has no `dlx` command and keeps the `npx` fallback.
+
+### Query scoring without synonyms
+
+`query` and `init --compose` no longer expand query terms through a hardcoded synonym map. Documented rankings are unchanged, but queries that matched through a synonym score much lower ("typing" now returns no results); broaden the query or lower `--threshold` when that happens.
+
 ## v1.25.2 - 2026-09-11
 
 ### Stricter invocation, faster detection
