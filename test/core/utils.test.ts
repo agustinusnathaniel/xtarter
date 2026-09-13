@@ -1,5 +1,4 @@
 import fs from 'node:fs/promises';
-import os from 'node:os';
 import path from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 import {
@@ -15,6 +14,8 @@ import {
   validateInvocation,
 } from '@xtarterize/core';
 import { describe, expect } from 'vite-plus/test';
+
+import { withTempDir } from '../helpers/temp.js';
 
 const cliArgsDef = {
   cwd: { type: 'string' },
@@ -286,32 +287,25 @@ describe('isDeepStrictEqual (node:util)', () => {
 
 describe('findConfigFile', () => {
   test('finds existing file by extension', async () => {
-    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'xtarterize-'));
-    try {
+    await withTempDir('xtarterize-', async (tmpDir) => {
       await fs.writeFile(path.join(tmpDir, 'vite.config.ts'), '');
       const result = await findConfigFile(tmpDir, 'vite.config', [
         '.ts',
         '.js',
       ]);
       expect(result).toBe(path.join(tmpDir, 'vite.config.ts'));
-    } finally {
-      await fs.rm(tmpDir, { force: true, recursive: true });
-    }
+    });
   });
 
   test('returns null when no file matches', async () => {
-    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'xtarterize-'));
-    try {
+    await withTempDir('xtarterize-', async (tmpDir) => {
       const result = await findConfigFile(tmpDir, 'missing', ['.ts', '.js']);
       expect(result).toBeNull();
-    } finally {
-      await fs.rm(tmpDir, { force: true, recursive: true });
-    }
+    });
   });
 
   test('tries extensions in order', async () => {
-    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'xtarterize-'));
-    try {
+    await withTempDir('xtarterize-', async (tmpDir) => {
       await fs.writeFile(path.join(tmpDir, 'config.js'), '');
       const result = await findConfigFile(tmpDir, 'config', [
         '.ts',
@@ -319,26 +313,20 @@ describe('findConfigFile', () => {
         '.mjs',
       ]);
       expect(result).toBe(path.join(tmpDir, 'config.js'));
-    } finally {
-      await fs.rm(tmpDir, { force: true, recursive: true });
-    }
+    });
   });
 });
 
 describe('readPackageJson', () => {
   test('returns null when no package.json', async () => {
-    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'xtarterize-'));
-    try {
+    await withTempDir('xtarterize-', async (tmpDir) => {
       const result = await readPackageJson(tmpDir);
       expect(result).toBeNull();
-    } finally {
-      await fs.rm(tmpDir, { force: true, recursive: true });
-    }
+    });
   });
 
   test('reads existing package.json', async () => {
-    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'xtarterize-'));
-    try {
+    await withTempDir('xtarterize-', async (tmpDir) => {
       await fs.writeFile(
         path.join(tmpDir, 'package.json'),
         JSON.stringify({ name: 'test-pkg', version: '1.0.0' })
@@ -346,9 +334,7 @@ describe('readPackageJson', () => {
       const result = await readPackageJson(tmpDir);
       expect(result?.name).toBe('test-pkg');
       expect(result?.version).toBe('1.0.0');
-    } finally {
-      await fs.rm(tmpDir, { force: true, recursive: true });
-    }
+    });
   });
 });
 
@@ -370,8 +356,7 @@ describe('hasDependency', () => {
 
 describe('restoreBackup', () => {
   test('restores a backed up file', async () => {
-    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'xtarterize-'));
-    try {
+    await withTempDir('xtarterize-', async (tmpDir) => {
       await fs.writeFile(path.join(tmpDir, 'test.txt'), 'original');
       await backupFile(tmpDir, 'test.txt');
 
@@ -382,14 +367,11 @@ describe('restoreBackup', () => {
       await restoreBackup(tmpDir, backups[0]);
       const content = await fs.readFile(path.join(tmpDir, 'test.txt'), 'utf-8');
       expect(content).toBe('original');
-    } finally {
-      await fs.rm(tmpDir, { force: true, recursive: true });
-    }
+    });
   });
 
   test('restores the most recent backup', async () => {
-    const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'xtarterize-'));
-    try {
+    await withTempDir('xtarterize-', async (tmpDir) => {
       await fs.writeFile(path.join(tmpDir, 'test.txt'), 'v1');
       await backupFile(tmpDir, 'test.txt');
 
@@ -403,8 +385,6 @@ describe('restoreBackup', () => {
       await restoreBackup(tmpDir, backups[0]);
       const content = await fs.readFile(path.join(tmpDir, 'test.txt'), 'utf-8');
       expect(content).toBe('v2');
-    } finally {
-      await fs.rm(tmpDir, { force: true, recursive: true });
-    }
+    });
   });
 });
