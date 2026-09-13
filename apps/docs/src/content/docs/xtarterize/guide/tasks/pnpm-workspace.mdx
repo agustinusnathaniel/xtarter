@@ -30,17 +30,9 @@ already exists:
 Layouts that cannot be edited safely, such as a flow-style `packages:` list
 that is missing a glob, are reported as a conflict instead of being rewritten.
 
-## Details
-
-| Property | Value |
-|----------|-------|
-| **Task ID** | `workspace/pnpm-workspace` |
-| **Group** | Monorepo |
-| **Scope** | Root (monorepo root only) |
-| **Applicable When** | `packageManager` is `pnpm` |
-| **Config Target** | `pnpm-workspace.yaml` |
-
 <Aside type="tip">
   This task only applies when `pnpm` is the detected package manager.
   Non-pnpm projects do not need a `pnpm-workspace.yaml`.
 </Aside>
+
+See the [task catalog](/xtarterize/guide/tasks/overview/) for the task ID, group, applicability, and generated files, and the [Monorepo guide](/xtarterize/guide/monorepo/) for root-scope rules.

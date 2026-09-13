@@ -25,21 +25,14 @@ The task generates:
 }
 ```
 
-The `packageManager.version` is set based on the detected package manager:
-`>=9` for pnpm, `>=10` for npm, yarn, or bun.
-
-## Details
-
-| Property | Value |
-|----------|-------|
-| **Task ID** | `quality/package-engines` |
-| **Group** | Quality |
-| **Scope** | Root (monorepo root only) |
-| **Applicable When** | Always |
-| **Config Target** | `package.json` |
+`packageManager.version` defaults to `>=9` for pnpm and `>=10` for npm, yarn,
+or bun, and uses the version from an existing `packageManager` field when
+present.
 
 <Aside type="tip">
   This task writes `package.json` through the package.json owner and merges
   into an existing `devEngines` field rather than replacing it. Existing values
   take precedence over incoming values.
 </Aside>
+
+See the [task catalog](/xtarterize/guide/tasks/overview/) for the task ID, group, applicability, and generated files, and the [Monorepo guide](/xtarterize/guide/monorepo/) for root-scope rules.

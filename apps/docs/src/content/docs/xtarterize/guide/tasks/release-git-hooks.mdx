@@ -20,7 +20,8 @@ to enforce commit conventions and run quality gates before pushing.
 ### pre-commit behavior
 
 In [Vite+](https://viteplus.dev/) projects, the pre-commit hook uses `vp staged`
-instead of lint-staged or Biome. This delegates to Vite+'s own staging pipeline.
+instead of lint-staged or Biome, and husky is not installed. This delegates to
+Vite+'s own staging pipeline.
 
 ### pre-push behavior
 
@@ -37,19 +38,10 @@ The pre-push hook adapts to the project setup:
 Hooks are written to `.husky/` by default. In Vite+ projects, they are written
 to `.vite-hooks/` instead.
 
-## Details
-
-| Property | Value |
-|----------|-------|
-| **Task ID** | `release/git-hooks` |
-| **Group** | Release |
-| **Scope** | Root (monorepo root only) |
-| **Applicable When** | Always |
-| **Config Targets** | `.husky/commit-msg`, `.husky/prepare-commit-msg`, `.husky/pre-commit`, `.husky/pre-push` |
-| **Dependency** | `husky` (dev) - skipped in Vite+ projects |
-
 <Aside type="tip">
   The `prepare-commit-msg` hook is a no-op when no commit wizard
   (`czg` or `commitizen`) is installed, so it won't interfere with your
   existing workflow.
 </Aside>
+
+See the [task catalog](/xtarterize/guide/tasks/overview/) for the task ID, group, applicability, and generated files, and the [Monorepo guide](/xtarterize/guide/monorepo/) for root-scope rules.
