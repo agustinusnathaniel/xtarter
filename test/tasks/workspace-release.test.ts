@@ -28,6 +28,53 @@ const withPnpmProject = (
     run
   );
 
+/** Existing workspace files that already satisfy the task. */
+const skipWorkspaceCases: Array<[name: string, content: string]> = [
+  [
+    'skips existing content that already declares both globs',
+    [
+      '# workspace configuration',
+      'catalog:',
+      '  react: ^19.0.0',
+      'packages:',
+      "  - 'apps/*'",
+      "  - './packages/*'",
+      'overrides:',
+      '  esbuild: ^0.25.0',
+      'onlyBuiltDependencies:',
+      '  - esbuild',
+      '',
+    ].join('\n'),
+  ],
+  [
+    'skips a settings-only file without a packages key',
+    // The workspace file makes detection report a monorepo, yet a keyless
+    // settings file must stay byte-identical.
+    ['onlyBuiltDependencies:', '  - esbuild', ''].join('\n'),
+  ],
+  ['skips an existing empty file', ''],
+  [
+    'skips a flow-style packages list with both globs',
+    'packages: [apps/*, "./packages/*"]\n',
+  ],
+];
+
+/** Existing workspace files that must be reported as conflicts. */
+const conflictWorkspaceCases: Array<[name: string, content: string]> = [
+  [
+    'reports conflict for a flow-style list missing a glob',
+    'packages: [apps/*]\n',
+  ],
+  [
+    'reports conflict for an unparseable packages value',
+    'packages: { apps: true }\n',
+  ],
+  [
+    'reports conflict when the last packages item spans multiple lines',
+    ['packages:', "  - 'apps/*'", '  - |-', '    internal/*', ''].join('\n'),
+  ],
+];
+
 const workspacePath = (cwd: string): string =>
   path.join(cwd, 'pnpm-workspace.yaml');
 
@@ -137,26 +184,15 @@ describe('pnpmWorkspaceTask', () => {
     );
   });
 
-  test('skips existing content that already declares both globs', async () => {
-    const content = [
-      '# workspace configuration',
-      'catalog:',
-      '  react: ^19.0.0',
-      'packages:',
-      "  - 'apps/*'",
-      "  - './packages/*'",
-      'overrides:',
-      '  esbuild: ^0.25.0',
-      'onlyBuiltDependencies:',
-      '  - esbuild',
-      '',
-    ].join('\n');
-    await withPnpmProject(async ({ cwd, profile }) => {
-      expect(await run(pnpmWorkspaceTask.check(cwd, profile))).toBe('skip');
-      expect(await run(pnpmWorkspaceTask.dryRun(cwd, profile))).toEqual([]);
-      await expect(readWorkspace(cwd)).resolves.toBe(content);
-    }, content);
-  });
+  for (const [name, content] of skipWorkspaceCases) {
+    test(name, async () => {
+      await withPnpmProject(async ({ cwd, profile }) => {
+        expect(await run(pnpmWorkspaceTask.check(cwd, profile))).toBe('skip');
+        expect(await run(pnpmWorkspaceTask.dryRun(cwd, profile))).toEqual([]);
+        await expect(readWorkspace(cwd)).resolves.toBe(content);
+      }, content);
+    });
+  }
 
   test('inserts missing globs and preserves the rest of the file', async () => {
     const content = [
@@ -192,25 +228,6 @@ describe('pnpmWorkspaceTask', () => {
       expect(await run(pnpmWorkspaceTask.check(cwd, profile))).toBe('skip');
       expect(await run(pnpmWorkspaceTask.dryRun(cwd, profile))).toEqual([]);
     }, content);
-  });
-
-  test('skips a settings-only file without a packages key', async () => {
-    const content = ['onlyBuiltDependencies:', '  - esbuild', ''].join('\n');
-    await withPnpmProject(async ({ cwd, profile }) => {
-      // The workspace file makes detection report a monorepo, yet a keyless
-      // settings file must stay byte-identical.
-      expect(await run(pnpmWorkspaceTask.check(cwd, profile))).toBe('skip');
-      expect(await run(pnpmWorkspaceTask.dryRun(cwd, profile))).toEqual([]);
-      await expect(readWorkspace(cwd)).resolves.toBe(content);
-    }, content);
-  });
-
-  test('skips an existing empty file', async () => {
-    await withPnpmProject(async ({ cwd, profile }) => {
-      expect(await run(pnpmWorkspaceTask.check(cwd, profile))).toBe('skip');
-      expect(await run(pnpmWorkspaceTask.dryRun(cwd, profile))).toEqual([]);
-      await expect(readWorkspace(cwd)).resolves.toBe('');
-    }, '');
   });
 
   test('inserts both globs into an empty packages list', async () => {
@@ -262,29 +279,16 @@ describe('pnpmWorkspaceTask', () => {
     }, unquoted);
   });
 
-  test('skips a flow-style packages list with both globs', async () => {
-    const content = 'packages: [apps/*, "./packages/*"]\n';
-    await withPnpmProject(async ({ cwd, profile }) => {
-      expect(await run(pnpmWorkspaceTask.check(cwd, profile))).toBe('skip');
-      expect(await run(pnpmWorkspaceTask.dryRun(cwd, profile))).toEqual([]);
-    }, content);
-  });
-
-  test('reports conflict for a flow-style list missing a glob', async () => {
-    const content = 'packages: [apps/*]\n';
-    await withPnpmProject(async ({ cwd, profile }) => {
-      expect(await run(pnpmWorkspaceTask.check(cwd, profile))).toBe('conflict');
-      await expect(readWorkspace(cwd)).resolves.toBe(content);
-    }, content);
-  });
-
-  test('reports conflict for an unparseable packages value', async () => {
-    const content = 'packages: { apps: true }\n';
-    await withPnpmProject(async ({ cwd, profile }) => {
-      expect(await run(pnpmWorkspaceTask.check(cwd, profile))).toBe('conflict');
-      await expect(readWorkspace(cwd)).resolves.toBe(content);
-    }, content);
-  });
+  for (const [name, content] of conflictWorkspaceCases) {
+    test(name, async () => {
+      await withPnpmProject(async ({ cwd, profile }) => {
+        expect(await run(pnpmWorkspaceTask.check(cwd, profile))).toBe(
+          'conflict'
+        );
+        await expect(readWorkspace(cwd)).resolves.toBe(content);
+      }, content);
+    });
+  }
 
   test('preserves CRLF line endings when inserting', async () => {
     const content = 'packages:\r\ncatalog:\r\n  react: ^19.0.0\r\n';
@@ -328,20 +332,6 @@ describe('pnpmWorkspaceTask', () => {
       expect(applied).toBe(expected);
       expect(await run(pnpmWorkspaceTask.check(cwd, profile))).toBe('skip');
       expect(await run(pnpmWorkspaceTask.dryRun(cwd, profile))).toEqual([]);
-    }, content);
-  });
-
-  test('reports conflict when the last packages item spans multiple lines', async () => {
-    const content = [
-      'packages:',
-      "  - 'apps/*'",
-      '  - |-',
-      '    internal/*',
-      '',
-    ].join('\n');
-    await withPnpmProject(async ({ cwd, profile }) => {
-      expect(await run(pnpmWorkspaceTask.check(cwd, profile))).toBe('conflict');
-      await expect(readWorkspace(cwd)).resolves.toBe(content);
     }, content);
   });
 
