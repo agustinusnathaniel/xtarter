@@ -28,8 +28,7 @@ describe('package.json owner', () => {
       const change = await computePackageJsonChange(cwd, patch);
       expect(change).not.toBeNull();
 
-      const applied = await applyPackageJsonChange(cwd, patch);
-      expect(applied).toEqual(change);
+      await applyPackageJsonChange(cwd, patch);
       await expect(readPackageJson(cwd)).resolves.toBe(change?.after);
     });
   });
@@ -61,7 +60,7 @@ describe('package.json owner', () => {
     });
   });
 
-  test('applying an already-present change returns null and writes nothing', async () => {
+  test('applying an already-present change writes nothing', async () => {
     await withTempDir('xtarterize-package-json-', async (cwd) => {
       await writePackageJson(
         cwd,
@@ -69,12 +68,10 @@ describe('package.json owner', () => {
       );
       const patch = { scripts: { test: 'vitest run' } };
 
-      const first = await applyPackageJsonChange(cwd, patch);
-      expect(first).not.toBeNull();
+      await applyPackageJsonChange(cwd, patch);
       const afterFirst = await readPackageJson(cwd);
 
-      const second = await applyPackageJsonChange(cwd, patch);
-      expect(second).toBeNull();
+      await applyPackageJsonChange(cwd, patch);
       await expect(readPackageJson(cwd)).resolves.toBe(afterFirst);
     });
   });
@@ -86,8 +83,6 @@ describe('package.json owner', () => {
         `${JSON.stringify({ devDependencies: {}, name: 'example' }, null, 2)}\n`
       );
       const patch = { scripts: { test: 'vitest run' } };
-      const computed = await computePackageJsonChange(cwd, patch);
-      expect(computed).not.toBeNull();
 
       const external = JSON.parse(await readPackageJson(cwd)) as {
         devDependencies: Record<string, string>;
@@ -95,13 +90,13 @@ describe('package.json owner', () => {
       external.devDependencies['new-dep'] = '^1.0.0';
       await writePackageJson(cwd, `${JSON.stringify(external, null, 2)}\n`);
 
-      const applied = await applyPackageJsonChange(cwd, patch);
-      expect(applied).not.toBeNull();
+      const expected = await computePackageJsonChange(cwd, patch);
+      await applyPackageJsonChange(cwd, patch);
 
       const written = await readPackageJson(cwd);
       expect(written).toContain('"new-dep": "^1.0.0"');
       expect(written).toContain('"test": "vitest run"');
-      expect(written).toBe(applied?.after);
+      expect(written).toBe(expected?.after);
     });
   });
 });

@@ -81,15 +81,6 @@ export type SpecTargetResolver = (
   profile: ProjectProfile
 ) => SpecResult<Array<TaskTarget>>;
 
-/**
- * Metadata whose `configTargets` is derived from the declared targets when the
- * author leaves it out. Resolver targets are profile-dependent, so they must
- * declare `configTargets` explicitly.
- */
-export type SpecSearchMeta = Omit<TaskSearchMeta, 'configTargets'> & {
-  configTargets?: Array<string>;
-};
-
 export interface TaskSpec {
   actions?: Array<TaskAction>;
   applicable: (profile: ProjectProfile) => boolean;
@@ -102,7 +93,6 @@ export interface TaskSpec {
   keywords?: Array<string>;
   label: string;
   scope?: TaskScope;
-  searchMeta?: SpecSearchMeta;
   /** Descriptive search tags, assembled into `searchMeta`. */
   tags?: Array<string>;
   targets?: Array<TaskTarget> | SpecTargetResolver;
@@ -283,28 +273,26 @@ function labelFailure<A>(
 }
 
 /**
- * Assemble search metadata from the top-level fields or the nested `searchMeta`
- * form. Keywords and tags stay authored; only targets the spec declares
- * statically can be derived. Authored `configTargets` keeps its leading key
- * position, a derived one is appended last, matching the historical shape.
+ * Assemble search metadata from the top-level fields. Keywords and tags stay
+ * authored; only targets the spec declares statically can be derived. An
+ * authored `configTargets` keeps its leading key position, a derived one is
+ * appended last, matching the historical shape.
  */
 function resolveSearchMeta(spec: TaskSpec): TaskSearchMeta | undefined {
-  const { configTargets, keywords, searchMeta, tags } = spec;
+  const { configTargets, keywords, tags } = spec;
   if (
     configTargets === undefined &&
     keywords === undefined &&
-    searchMeta === undefined &&
     tags === undefined
   ) {
     return undefined;
   }
-  const authoredConfigTargets = configTargets ?? searchMeta?.configTargets;
   const authored = {
-    keywords: keywords ?? searchMeta?.keywords ?? [],
-    tags: tags ?? searchMeta?.tags ?? [],
+    keywords: keywords ?? [],
+    tags: tags ?? [],
   };
-  if (authoredConfigTargets !== undefined) {
-    return { configTargets: authoredConfigTargets, ...authored };
+  if (configTargets !== undefined) {
+    return { configTargets, ...authored };
   }
   return {
     ...authored,

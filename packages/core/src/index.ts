@@ -84,7 +84,6 @@ export {
 export { describeCause } from '@/utils/errors.js';
 export {
   assertPathWithin,
-  ensureDir,
   fileExists,
   findConfigFile,
   readFile,

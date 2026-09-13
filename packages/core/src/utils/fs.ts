@@ -7,14 +7,6 @@ import { fileExists } from '@/utils/file-exists.js';
 
 export { fileExists };
 
-export async function ensureDir(dirPath: string): Promise<void> {
-  try {
-    await fs.mkdir(dirPath, { recursive: true });
-  } catch (cause) {
-    throw new FileSystemError({ cause, path: dirPath });
-  }
-}
-
 export async function readFile(filePath: string): Promise<string> {
   try {
     return await fs.readFile(filePath, 'utf-8');

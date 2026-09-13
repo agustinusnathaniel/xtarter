@@ -104,7 +104,9 @@ export interface TaskSpec {
   targets?: Array<TaskTarget> | TargetResolver
   actions?: Array<TaskAction>
   deps?: DepsDeclaration
-  searchMeta?: SpecSearchMeta
+  configTargets?: Array<string>
+  keywords?: Array<string>
+  tags?: Array<string>
 }
 ```
 

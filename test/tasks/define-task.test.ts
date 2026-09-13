@@ -414,10 +414,8 @@ describe('defineTask searchMeta configTargets', () => {
   test('derives declared filepaths and extension variants from targets', () => {
     const task = defineTask({
       ...metadata,
-      searchMeta: {
-        keywords: ['derived'],
-        tags: ['derived'],
-      },
+      keywords: ['derived'],
+      tags: ['derived'],
       targets: [
         {
           extensions: ['.ts', '.js'],
@@ -447,10 +445,8 @@ describe('defineTask searchMeta configTargets', () => {
   test('derives package.json for packageJson targets', () => {
     const task = defineTask({
       ...metadata,
-      searchMeta: {
-        keywords: ['derived'],
-        tags: ['derived'],
-      },
+      keywords: ['derived'],
+      tags: ['derived'],
       targets: [{ change: () => ({}), kind: 'packageJson' }],
     });
 
@@ -460,11 +456,7 @@ describe('defineTask searchMeta configTargets', () => {
   test('keeps an explicit configTargets override', () => {
     const task = defineTask({
       ...metadata,
-      searchMeta: {
-        configTargets: ['custom.json'],
-        keywords: [],
-        tags: [],
-      },
+      configTargets: ['custom.json'],
       targets: [{ filepath: 'custom.config', kind: 'text', render: () => '' }],
     });
 

@@ -3,6 +3,7 @@ import { Cause, Effect } from 'effect';
 import { isRecord } from '@/detect/package-manager.js';
 import { findConfigFile, readJson } from '@/utils/fs.js';
 import { logWarn } from '@/utils/logger.js';
+import { readPackageJsonOrNull } from '@/utils/pkg.js';
 
 /**
  * Configuration file basenames searched in order.
@@ -58,14 +59,8 @@ function readRawXtarterizeConfig(cwd: string): Effect.Effect<RawConfigResult> {
     }
 
     // 2. package.json under "xtarterize" key
-    const config = yield* Effect.promise(() =>
-      readJson<{ xtarterize?: Record<string, unknown> }>(
-        `${cwd}/package.json`
-      ).then(
-        (pkg) => pkg?.xtarterize,
-        () => undefined
-      )
-    );
+    const pkg = yield* Effect.promise(() => readPackageJsonOrNull(cwd));
+    const config = pkg?.xtarterize;
     if (isRecord(config)) {
       return { config, status: 'found' };
     }
