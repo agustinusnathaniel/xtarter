@@ -3,9 +3,9 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { detectProject } from '@xtarterize/core';
-import { packageEnginesTask } from '@xtarterize/tasks';
 import { describe, expect } from 'vite-plus/test';
 
+import { packageEnginesTask } from '../../packages/tasks/src/quality/package-engines.js';
 import { run } from '../helpers/run.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));

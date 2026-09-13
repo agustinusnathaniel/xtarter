@@ -3,14 +3,12 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { detectProject } from '@xtarterize/core';
-import {
-  agentsMdTask,
-  knipTask,
-  turboTask,
-  vscodeTask,
-} from '@xtarterize/tasks';
 import { describe, expect } from 'vite-plus/test';
 
+import { agentsMdTask } from '../../packages/tasks/src/agent/agents-md.js';
+import { vscodeTask } from '../../packages/tasks/src/editor/vscode.js';
+import { turboTask } from '../../packages/tasks/src/monorepo/turbo.js';
+import { knipTask } from '../../packages/tasks/src/quality/knip.js';
 import { run } from '../helpers/run.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));

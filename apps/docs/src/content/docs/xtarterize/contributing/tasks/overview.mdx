@@ -194,7 +194,7 @@ Dependencies are part of the resolution. A `deps` declaration is either a static
 
 1. Declare the task with `defineTask()` from `packages/tasks/src/factory/define-task.ts`
 2. Create your task file in `packages/tasks/src/<category>/<task>.ts`
-3. Export it from `packages/tasks/src/index.ts` and register it in `getAllTasks()`
+3. Import it into `packages/tasks/src/index.ts` and register it in `taskRegistry`
 4. Add or update tests only when they provide meaningful regression protection. Extend the nearest existing suite when possible; see the repository [`docs/TESTING.md`](https://github.com/agustinusnathaniel/xtarterize/blob/main/docs/TESTING.md)
 
 A minimal spec looks like this:

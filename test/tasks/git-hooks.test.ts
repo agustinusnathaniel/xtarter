@@ -3,9 +3,9 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { detectProject } from '@xtarterize/core';
-import { gitHooksTask } from '@xtarterize/tasks';
 import { describe, expect } from 'vite-plus/test';
 
+import { gitHooksTask } from '../../packages/tasks/src/release/git-hooks.js';
 import { run } from '../helpers/run.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));

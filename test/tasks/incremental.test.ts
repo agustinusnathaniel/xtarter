@@ -1,9 +1,10 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { detectProject } from '@xtarterize/core';
-import { getAllTasks, incrementalTask } from '@xtarterize/tasks';
+import { getAllTasks } from '@xtarterize/tasks';
 import { describe, expect } from 'vite-plus/test';
 
+import { incrementalTask } from '../../packages/tasks/src/ts/incremental.js';
 import { run } from '../helpers/run.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));

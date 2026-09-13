@@ -29,7 +29,7 @@ test/               # Shared test fixtures and test suites
 
 1. Declare the task with `defineTask()` from `packages/tasks/src/factory/define-task.ts`; the `Task` contract in `packages/core/src/_base.ts` is a single interface whose methods return Effects requiring `TaskServices`
 2. Create your task file in `packages/tasks/src/<category>/<task>.ts`
-3. Export it from `packages/tasks/src/index.ts` and add to `getAllTasks()`
+3. Import it into `packages/tasks/src/index.ts` and register it in `taskRegistry`
 4. Add or update tests only when they provide meaningful regression protection. Extend the nearest existing suite when possible; see [`docs/TESTING.md`](docs/TESTING.md)
 
 Each task must implement:

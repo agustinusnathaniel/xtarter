@@ -3,15 +3,13 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { detectProject } from '@xtarterize/core';
-import {
-  catVersionTask,
-  commitlintTask,
-  czgTask,
-  releaseWorkflowTask,
-  renderReleaseWorkflow,
-} from '@xtarterize/tasks';
 import { describe, expect } from 'vite-plus/test';
 
+import { releaseWorkflowTask } from '../../packages/tasks/src/ci/release.js';
+import { catVersionTask } from '../../packages/tasks/src/release/cat-version.js';
+import { commitlintTask } from '../../packages/tasks/src/release/commitlint.js';
+import { czgTask } from '../../packages/tasks/src/release/czg.js';
+import { renderReleaseWorkflow } from '../../packages/tasks/src/templates/workflows/release-yml.js';
 import { run } from '../helpers/run.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));

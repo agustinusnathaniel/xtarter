@@ -3,13 +3,11 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { detectProject } from '@xtarterize/core';
-import {
-  getAllTasks,
-  pnpmWorkspaceTask,
-  versionrcTask,
-} from '@xtarterize/tasks';
+import { getAllTasks } from '@xtarterize/tasks';
 import { describe, expect } from 'vite-plus/test';
 
+import { versionrcTask } from '../../packages/tasks/src/release/versionrc.js';
+import { pnpmWorkspaceTask } from '../../packages/tasks/src/workspace/pnpm-workspace.js';
 import { run } from '../helpers/run.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));

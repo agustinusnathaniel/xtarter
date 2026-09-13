@@ -3,9 +3,10 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { detectProject } from '@xtarterize/core';
-import { lintStagedTask, npmrcTask } from '@xtarterize/tasks';
 import { describe, expect } from 'vite-plus/test';
 
+import { npmrcTask } from '../../packages/tasks/src/npmrc.js';
+import { lintStagedTask } from '../../packages/tasks/src/quality/lint-staged.js';
 import { run } from '../helpers/run.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));

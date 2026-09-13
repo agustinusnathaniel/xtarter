@@ -18,10 +18,9 @@ const { mockGetAllTasks } = vi.hoisted(() => ({
   mockGetAllTasks: vi.fn(),
 }));
 
-// Module-global mock: spread the original tasks module so every other export
-// keeps its real implementation, and default getAllTasks to the real one so
-// un-mocked tests are unaffected. Individual tests override with
-// mockImplementationOnce.
+// Module-global mock: spread the real tasks module and default getAllTasks to
+// the real one so un-mocked tests are unaffected. Individual tests override
+// with mockImplementationOnce.
 vi.mock('@xtarterize/tasks', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@xtarterize/tasks')>();
   mockGetAllTasks.mockImplementation(actual.getAllTasks);

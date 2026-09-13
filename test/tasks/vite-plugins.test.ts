@@ -3,9 +3,10 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { detectProject, planTasks } from '@xtarterize/core';
-import { viteCheckerTask, viteVisualizerTask } from '@xtarterize/tasks';
 import { describe, expect } from 'vite-plus/test';
 
+import { viteCheckerTask } from '../../packages/tasks/src/vite/checker.js';
+import { viteVisualizerTask } from '../../packages/tasks/src/vite/visualizer.js';
 import { run } from '../helpers/run.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));

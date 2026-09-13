@@ -3,9 +3,10 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { detectProject } from '@xtarterize/core';
-import { packageScriptsTask, plopTask } from '@xtarterize/tasks';
 import { describe, expect } from 'vite-plus/test';
 
+import { plopTask } from '../../packages/tasks/src/codegen/plop.js';
+import { packageScriptsTask } from '../../packages/tasks/src/factory/package-scripts.js';
 import { run } from '../helpers/run.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));

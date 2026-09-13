@@ -35,7 +35,9 @@ describe('pnpm workspace root', () => {
       expect(profile.workspaceRoot).toBe(true);
       expect(profile.packageManager).toBe('pnpm');
 
-      const { czgTask } = await import('@xtarterize/tasks');
+      const { czgTask } = await import(
+        '../../packages/tasks/src/release/czg.js'
+      );
       const status = await run(czgTask.check(tmpDir, profile));
       expect(status).toBe('patch');
 

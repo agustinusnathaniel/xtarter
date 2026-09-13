@@ -1,9 +1,11 @@
 import { detectProject } from '@xtarterize/core';
-import { skillsInstallTask } from '@xtarterize/tasks';
 import { Duration } from 'effect';
 import { beforeEach, describe, expect } from 'vite-plus/test';
 
-import { resolveSkillsExecutor } from '../../packages/tasks/src/agent/skills-install.js';
+import {
+  resolveSkillsExecutor,
+  skillsInstallTask,
+} from '../../packages/tasks/src/agent/skills-install.js';
 import { recordingProcessRunner, runWith } from '../helpers/run.js';
 import { withSkillsProject } from '../helpers/skills-project.js';
 

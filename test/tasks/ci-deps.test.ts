@@ -1,14 +1,12 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { detectProject } from '@xtarterize/core';
-import {
-  autoUpdateWorkflowTask,
-  ciWorkflowTask,
-  releaseWorkflowTask,
-  renovateTask,
-} from '@xtarterize/tasks';
 import { describe, expect } from 'vite-plus/test';
 
+import { autoUpdateWorkflowTask } from '../../packages/tasks/src/ci/auto-update.js';
+import { ciWorkflowTask } from '../../packages/tasks/src/ci/ci.js';
+import { releaseWorkflowTask } from '../../packages/tasks/src/ci/release.js';
+import { renovateTask } from '../../packages/tasks/src/deps/renovate.js';
 import { run } from '../helpers/run.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));

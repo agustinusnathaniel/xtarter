@@ -2,9 +2,9 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { detectProject } from '@xtarterize/core';
-import { packageScriptsTask } from '@xtarterize/tasks';
 import { describe, expect } from 'vite-plus/test';
 
+import { packageScriptsTask } from '../../packages/tasks/src/factory/package-scripts.js';
 import { run } from '../helpers/run.js';
 
 describe('packageScriptsTask', () => {

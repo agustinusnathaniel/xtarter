@@ -5,11 +5,11 @@ import {
   type ProjectProfile,
   planTasks,
 } from '@xtarterize/core';
-import { skillsInstallTask } from '@xtarterize/tasks';
 import { Duration } from 'effect';
 import { beforeEach, describe, expect } from 'vite-plus/test';
 
 import { SKILL_CATALOG } from '../../packages/tasks/src/agent/catalog.js';
+import { skillsInstallTask } from '../../packages/tasks/src/agent/skills-install.js';
 import { recordingProcessRunner, run, runWith } from '../helpers/run.js';
 import { withSkillsProject } from '../helpers/skills-project.js';
 

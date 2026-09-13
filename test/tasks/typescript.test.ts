@@ -3,14 +3,12 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { detectProject } from '@xtarterize/core';
-import {
-  gitignoreTsbuildinfoTask,
-  incrementalTask,
-  pathsTask,
-  strictTask,
-} from '@xtarterize/tasks';
 import { describe, expect } from 'vite-plus/test';
 
+import { gitignoreTsbuildinfoTask } from '../../packages/tasks/src/ts/gitignore-tsbuildinfo.js';
+import { incrementalTask } from '../../packages/tasks/src/ts/incremental.js';
+import { pathsTask } from '../../packages/tasks/src/ts/paths.js';
+import { strictTask } from '../../packages/tasks/src/ts/strict.js';
 import { run } from '../helpers/run.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));

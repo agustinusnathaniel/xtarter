@@ -3,9 +3,9 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { detectProject } from '@xtarterize/core';
-import { oxfmtTask, oxlintTask } from '@xtarterize/tasks';
 import { describe, expect } from 'vite-plus/test';
 
+import { oxfmtTask, oxlintTask } from '../../packages/tasks/src/lint/oxlint.js';
 import { run } from '../helpers/run.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
