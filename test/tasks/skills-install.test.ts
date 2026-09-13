@@ -8,7 +8,11 @@ import { beforeEach, describe, expect } from 'vite-plus/test';
 
 import { SKILL_CATALOG } from '../../packages/tasks/src/agent/catalog.js';
 import { skillsInstallTask } from '../../packages/tasks/src/agent/skills-install.js';
-import { fixtureDir, fixtureProfile } from '../helpers/project.js';
+import {
+  type FixtureName,
+  fixtureDir,
+  fixtureProfile,
+} from '../helpers/project.js';
 import { recordingProcessRunner, run, runWith } from '../helpers/run.js';
 import { withSkillsProject } from '../helpers/skills-project.js';
 
@@ -34,6 +38,10 @@ const installOutput = async (
 beforeEach(() => {
   runner.reset();
 });
+
+/** Install output for an on-disk fixture whose profile is cached. */
+const fixtureInstallOutput = async (name: FixtureName): Promise<string> =>
+  installOutput(fixtureDir(name), await fixtureProfile(name));
 
 describe('skillsInstallTask', () => {
   test('is applicable to TypeScript projects', async () => {
@@ -68,10 +76,7 @@ describe('skillsInstallTask', () => {
   });
 
   test('installs react and frontend skills for react projects', async () => {
-    const commands = await installOutput(
-      fixtureDir('react-vite-tailwind'),
-      await fixtureProfile('react-vite-tailwind')
-    );
+    const commands = await fixtureInstallOutput('react-vite-tailwind');
     // React skills
     expect(commands).toContain('vercel-react-best-practices');
     expect(commands).toContain('vercel-composition-patterns');
@@ -95,8 +100,7 @@ describe('skillsInstallTask', () => {
   });
 
   test('installs vue and frontend skills for vue projects', async () => {
-    const cwd = fixtureDir('vue-vite');
-    const commands = await installOutput(cwd, await fixtureProfile('vue-vite'));
+    const commands = await fixtureInstallOutput('vue-vite');
     // Vue skills
     expect(commands).toContain('vue');
     expect(commands).toContain('vue-best-practices');
@@ -114,8 +118,7 @@ describe('skillsInstallTask', () => {
   });
 
   test('installs nextjs skills for nextjs projects', async () => {
-    const cwd = fixtureDir('nextjs');
-    const commands = await installOutput(cwd, await fixtureProfile('nextjs'));
+    const commands = await fixtureInstallOutput('nextjs');
     // Next.js skills
     expect(commands).toContain('next-dev-loop');
     expect(commands).toContain('next-cache-components-optimizer');
@@ -129,11 +132,7 @@ describe('skillsInstallTask', () => {
   });
 
   test('installs expo skills for expo projects', async () => {
-    const cwd = fixtureDir('react-native-expo');
-    const commands = await installOutput(
-      cwd,
-      await fixtureProfile('react-native-expo')
-    );
+    const commands = await fixtureInstallOutput('react-native-expo');
     expect(commands).toContain('expo-overview');
     expect(commands).toContain('expo-router');
     expect(commands).toContain('eas-workflows');
@@ -148,52 +147,32 @@ describe('skillsInstallTask', () => {
   });
 
   test('installs antd skill for projects with antd', async () => {
-    const cwd = fixtureDir('react-ui-libraries');
-    const commands = await installOutput(
-      cwd,
-      await fixtureProfile('react-ui-libraries')
-    );
+    const commands = await fixtureInstallOutput('react-ui-libraries');
     expect(commands).toContain('antd');
     expect(commands).toContain('ant-design/ant-design-cli');
   });
 
   test('installs heroui-react skill for projects with @heroui/react', async () => {
-    const cwd = fixtureDir('react-ui-libraries');
-    const commands = await installOutput(
-      cwd,
-      await fixtureProfile('react-ui-libraries')
-    );
+    const commands = await fixtureInstallOutput('react-ui-libraries');
     expect(commands).toContain('heroui-react');
     expect(commands).toContain('heroui-inc/heroui');
   });
 
   test('installs chakra-ui skills for projects with @chakra-ui/react', async () => {
-    const cwd = fixtureDir('react-ui-libraries');
-    const commands = await installOutput(
-      cwd,
-      await fixtureProfile('react-ui-libraries')
-    );
+    const commands = await fixtureInstallOutput('react-ui-libraries');
     expect(commands).toContain('chakra-ui-builder');
     expect(commands).toContain('chakra-ui-refactor');
     expect(commands).toContain('chakra-ui/chakra-ui');
   });
 
   test('installs heroui-native skill for react-native projects with heroui-native', async () => {
-    const cwd = fixtureDir('react-native-hero');
-    const commands = await installOutput(
-      cwd,
-      await fixtureProfile('react-native-hero')
-    );
+    const commands = await fixtureInstallOutput('react-native-hero');
     expect(commands).toContain('heroui-native');
     expect(commands).toContain('heroui-inc/heroui');
   });
 
   test('does not include component library skills in plain react projects', async () => {
-    const cwd = fixtureDir('react-vite-tailwind');
-    const commands = await installOutput(
-      cwd,
-      await fixtureProfile('react-vite-tailwind')
-    );
+    const commands = await fixtureInstallOutput('react-vite-tailwind');
     expect(commands).not.toContain('antd');
     expect(commands).not.toContain('heroui-react');
     expect(commands).not.toContain('heroui-native');
@@ -233,11 +212,7 @@ describe('skillsInstallTask', () => {
   });
 
   test('batches skills from the same source into a single command', async () => {
-    const cwd = fixtureDir('react-native-expo');
-    const commands = await installOutput(
-      cwd,
-      await fixtureProfile('react-native-expo')
-    );
+    const commands = await fixtureInstallOutput('react-native-expo');
     // expo/skills has 10 skills - they should appear in a single command
     const expoLine = commands
       .split('\n')
