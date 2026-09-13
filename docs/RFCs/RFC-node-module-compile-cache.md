@@ -61,6 +61,12 @@ Document this as a TODO item for when Node.js 22+ becomes the minimum target.
 2. **Infrequent execution.** Unlike a dev server or build watcher that runs hundreds of times a day, xtarterize is invoked a handful of times per project. Even a 40% startup improvement would save fractions of a second in practice.
 3. **Wrong bottleneck.** xtarterize's cold-start cost is dominated by file I/O (scanning the project directory, reading config files, writing templates) and subprocess calls (installing packages). Module compilation is a minor contributor.
 
+Update (2026-09-14): the repository now requires Node.js 24 (README;
+`devEngines.runtime.version` 24.16.0), so the Node 20 premise in Approach 1 and
+reason 1 no longer applies. The defer recommendation stands on reasons 2 and 3,
+and the action items below are unchanged; enabling the cache is now
+version-eligible follow-up work rather than blocked by the engine target.
+
 ## Action Items
 
 - [ ] When Node.js 22 becomes the minimum engine target, add `module.enableCompileCache()` to `apps/xtarterize/src/index.ts` before the `runMain(main)` call

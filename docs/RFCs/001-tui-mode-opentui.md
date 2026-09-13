@@ -22,34 +22,18 @@ Rather than incrementally bolting interactive elements onto the current prompt s
 
 ## What is OpenTUI
 
-[OpenTUI](https://opentui.com) | [GitHub](https://github.com/anomalyco/opentui)
+[OpenTUI](https://opentui.com) | [GitHub](https://github.com/anomalyco/opentui) - a native Zig-core TUI library (C ABI) with TypeScript, React, and Solid bindings, Yoga flexbox layout, and components including Text, Box, Input, Select, TabSelect, ScrollBox, Code (tree-sitter), Diff, Markdown, and Slider. `@opentui/core` ships prebuilt native binaries per platform; the dev toolchain is Bun + Zig. Runtime support is Bun-exclusive today with Node/Deno in progress (v0.2.9, pre-1.0), and production users include OpenCode and terminal.shop.
 
-| Property             | Details                                                                                    |
-| -------------------- | ------------------------------------------------------------------------------------------ |
-| **Core**             | Native Zig, exposes C ABI                                                                  |
-| **Bindings**         | TypeScript (imperative), React (reconciler), Solid.js (reconciler)                         |
-| **Components**       | Text, Box, Input, Select, TabSelect, ScrollBox, Code (tree-sitter), Diff, Markdown, Slider |
-| **Layout**           | Yoga flexbox, CSS-like properties                                                          |
-| **Distribution**     | `@opentui/core` on npm - ships prebuilt native binaries per platform                       |
-| **Dev toolchain**    | Bun + Zig                                                                                  |
-| **Runtime**          | Bun-exclusive currently; Node/Deno support in-progress                                     |
-| **Version**          | v0.2.9 (pre-1.0)                                                                           |
-| **Production users** | OpenCode, terminal.shop                                                                    |
-
-Key capabilities it brings that `@clack/prompts` cannot:
-
-- **Persistent full-screen layout** - composable component tree, not linear prompts
-- **ScrollBox** - scrollable content regions
-- **Code/Diff** - tree-sitter syntax highlighting for config file previews
-- **Flexbox layout** - multi-panel dashboards
-- **Focus management** - keyboard-driven navigation
-- **Rich components** - TabSelect, Slider, Markdown rendering
+Key capabilities beyond `@clack/prompts`: persistent full-screen layouts, scrollable regions, syntax-highlighted Code/Diff, flexbox dashboards, focus management, and rich components (TabSelect, Slider, Markdown).
 
 ## Important Clarification: Native Addon vs Bun Runtime
 
-OpenTUI's npm package (`@opentui/core`) ships **prebuilt native binaries** per platform. End-users install it like any other npm package - they don't need Bun or Zig. The "Bun-only" restriction applies to the **development toolchain** (building from source, running examples), not to the published package.
-
-The open question is whether the native addon works reliably when loaded from a **Node.js process** (as opposed to Bun). The project lists Node/Deno support as "in-progress." If Node.js compatibility is solid, there's zero runtime friction. If not, TUI mode would require Bun as a runtime - a significant adoption barrier.
+`@opentui/core` ships **prebuilt native binaries**, so end users install it like
+any npm package; the "Bun-only" restriction applies to the development toolchain.
+The open question is whether the native addon loads reliably from a **Node.js
+process** (the project lists Node/Deno support as in-progress). If Node.js
+compatibility is solid there is zero runtime friction; if not, TUI mode would
+require Bun, a significant adoption barrier.
 
 ## Design
 
@@ -61,43 +45,22 @@ xtarterize init --tui               # TUI for init flow
 xtarterize doctor --tui             # TUI dashboard for project health
 ```
 
-The `--tui` flag works with any subcommand. Non-TUI args (like `--cwd`) compose naturally:
-
-```
-xtarterize init --tui --cwd ../other-project
-```
-
-The flag is position-independent and parsed before command dispatch.
+The flag works with any subcommand, composes with non-TUI args (for example
+`xtarterize init --tui --cwd ../other-project`), is position-independent, and is
+parsed before command dispatch.
 
 ### Package Boundary
 
-OpenTUI should **not** be a dependency of the main `xtarterize` package. The TUI lives in its own package to keep the core CLI free of native dependencies. Two options:
+OpenTUI should **not** be a dependency of the main `xtarterize` package; the TUI
+lives in its own package to keep the core CLI free of native dependencies.
 
-**Option A: Separate app (`apps/xtarterize-tui`)**
+**Option A: Separate app (`apps/xtarterize-tui`)** - `xtarterize --tui`
+shell-execs a separate binary. Clean isolation and independent installation, but
+more distribution complexity.
 
-```
-apps/
-  xtarterize/          # Existing CLI - no changes
-  xtarterize-tui/      # New TUI binary
-```
-
-- `xtarterize --tui` shell-execs the separate binary
-- Clean isolation - native deps stay out of the main package
-- Can be installed independently or auto-installed on first `--tui` use
-- More distribution complexity
-
-**Option B: Internal package dependency**
-
-```
-packages/
-  @xtarterize/tui/     # TUI components + entry points
-apps/
-  xtarterize/          # Depends on @xtarterize/tui as optional dep
-```
-
-- Single binary entrypoint
-- OpenTUI is an optional peer dependency - installs only if user opts in
-- Tighter coupling but simpler distribution
+**Option B: Internal package dependency (`@xtarterize/tui`)** - a single binary
+entrypoint with OpenTUI as an optional peer dependency. Tighter coupling,
+simpler distribution.
 
 ### Component Tree (Conceptual)
 
@@ -109,9 +72,7 @@ function App({ project }) {
   return (
     <Box flexDirection="column" height="100%">
       <Header project={project} />
-      <TabSelect value={tab} onChange={setTab}
-        tabs={['Tasks', 'Doctor', 'Diff']}
-      />
+      <TabSelect value={tab} onChange={setTab} tabs={['Tasks', 'Doctor', 'Diff']} />
       {tab === 'tasks' && <TaskView project={project} />}
       {tab === 'doctor' && <DoctorView project={project} />}
       {tab === 'diff' && <DiffView project={project} />}
@@ -158,21 +119,14 @@ function App({ project }) {
 
 ## Alternatives Considered
 
-### Keep using @clack/prompts only
-
-Simplest path. But the interaction patterns will always be constrained - no multi-panel layouts, no scrollable diffs, no real-time updates.
-
-### Use Ink (React for CLI)
-
-Ink uses React reconciliation for terminal output but has no native core, no tree-sitter, and no flexbox layout engine. It's also less actively maintained than OpenTUI.
-
-### Build on Blessed/Blessed-contrib
-
-Mature but unmaintained. No React bindings, no tree-sitter, no flexbox. Feels like building on a deprecated foundation.
-
-### Use a web-based approach (local server + browser)
-
-Overkill for a CLI tool. User would need to open a browser. Breaks the terminal-native experience.
+- **Keep using `@clack/prompts` only** - simplest path, but no multi-panel
+  layouts, scrollable diffs, or real-time updates.
+- **Ink (React for CLI)** - no native core, tree-sitter, or flexbox layout
+  engine, and less actively maintained than OpenTUI.
+- **Blessed / Blessed-contrib** - mature but unmaintained; no React bindings,
+  tree-sitter, or flexbox.
+- **Web-based approach (local server + browser)** - overkill for a CLI tool and
+  breaks the terminal-native experience.
 
 ## Decision
 
