@@ -1,5 +1,4 @@
 import fs from 'node:fs/promises';
-import os from 'node:os';
 import path from 'node:path';
 import { detectProject, planTasks } from '@xtarterize/core';
 import { getAllTasks } from '@xtarterize/tasks';
@@ -10,19 +9,7 @@ import {
   type TargetPolicyInput,
 } from '../../packages/tasks/src/factory/define-task.js';
 import { run } from '../helpers/run.js';
-
-const withTempDir = async (
-  run: (cwd: string) => Promise<void>
-): Promise<void> => {
-  const tmpDir = await fs.mkdtemp(
-    path.join(os.tmpdir(), 'xtarterize-define-task-')
-  );
-  try {
-    await run(tmpDir);
-  } finally {
-    await fs.rm(tmpDir, { force: true, recursive: true });
-  }
-};
+import { withTempDir } from '../helpers/temp.js';
 
 const writeFile = (cwd: string, filepath: string, content: string) =>
   fs.writeFile(path.join(cwd, filepath), content);
@@ -39,7 +26,7 @@ const metadata = {
 
 describe('defineTask status projection', () => {
   test('text: absent is new, changed is conflict, unchanged is skip', async () => {
-    await withTempDir(async (cwd) => {
+    await withTempDir('xtarterize-define-task-', async (cwd) => {
       const task = defineTask({
         ...metadata,
         targets: [
@@ -75,7 +62,7 @@ describe('defineTask status projection', () => {
   });
 
   test('jsonMerge: absent is new, changed is patch, unchanged is skip', async () => {
-    await withTempDir(async (cwd) => {
+    await withTempDir('xtarterize-define-task-', async (cwd) => {
       const task = defineTask({
         ...metadata,
         targets: [
@@ -111,7 +98,7 @@ describe('defineTask status projection', () => {
   });
 
   test('packageJson: absent is new, changed is patch, unchanged is skip', async () => {
-    await withTempDir(async (cwd) => {
+    await withTempDir('xtarterize-define-task-', async (cwd) => {
       const task = defineTask({
         ...metadata,
         targets: [
@@ -145,7 +132,7 @@ describe('defineTask status projection', () => {
   });
 
   test('transform: absent is new, changed is patch, unchanged is skip', async () => {
-    await withTempDir(async (cwd) => {
+    await withTempDir('xtarterize-define-task-', async (cwd) => {
       const task = defineTask({
         ...metadata,
         targets: [
@@ -183,7 +170,7 @@ describe('defineTask status projection', () => {
   });
 
   test('action: status comes from the probe with no file diff', async () => {
-    await withTempDir(async (cwd) => {
+    await withTempDir('xtarterize-define-task-', async (cwd) => {
       const task = defineTask({
         ...metadata,
         actions: [
@@ -203,7 +190,7 @@ describe('defineTask status projection', () => {
 
 describe('defineTask policy hook', () => {
   test('policy sees the diff before/after and can report conflict', async () => {
-    await withTempDir(async (cwd) => {
+    await withTempDir('xtarterize-define-task-', async (cwd) => {
       await writeFile(
         cwd,
         'tsconfig.json',
@@ -246,7 +233,7 @@ describe('defineTask policy hook', () => {
 
 describe('defineTask dependencies', () => {
   test('a static list is returned as declared', async () => {
-    await withTempDir(async (cwd) => {
+    await withTempDir('xtarterize-define-task-', async (cwd) => {
       const task = defineTask({
         ...metadata,
         deps: [{ depName: 'acme', dev: true }],
@@ -262,7 +249,7 @@ describe('defineTask dependencies', () => {
   });
 
   test('a resolver gates a dependency on the resolution status', async () => {
-    await withTempDir(async (cwd) => {
+    await withTempDir('xtarterize-define-task-', async (cwd) => {
       const task = defineTask({
         ...metadata,
         deps: (resolution) =>
@@ -287,7 +274,7 @@ describe('defineTask dependencies', () => {
   });
 
   test('an existing matching file with a missing dependency is patch', async () => {
-    await withTempDir(async (cwd) => {
+    await withTempDir('xtarterize-define-task-', async (cwd) => {
       await writeFile(cwd, 'acme.json', '{}\n');
       const task = defineTask({
         ...metadata,
@@ -310,7 +297,7 @@ describe('defineTask dependencies', () => {
   });
 
   test('an existing matching file with the dependency installed is skip', async () => {
-    await withTempDir(async (cwd) => {
+    await withTempDir('xtarterize-define-task-', async (cwd) => {
       await writeFile(cwd, 'acme.json', '{}\n');
       await writeFile(
         cwd,
@@ -336,7 +323,7 @@ describe('defineTask dependencies', () => {
   });
 
   test('an absent target stays new when a declared dependency is missing', async () => {
-    await withTempDir(async (cwd) => {
+    await withTempDir('xtarterize-define-task-', async (cwd) => {
       const task = defineTask({
         ...metadata,
         deps: [{ depName: 'acme', dev: true }],
@@ -353,7 +340,7 @@ describe('defineTask dependencies', () => {
   });
 
   test('a resolver-provided dependency is checked against the project', async () => {
-    await withTempDir(async (cwd) => {
+    await withTempDir('xtarterize-define-task-', async (cwd) => {
       await writeFile(cwd, 'acme.json', '{}\n');
       const task = defineTask({
         ...metadata,
@@ -373,7 +360,7 @@ describe('defineTask dependencies', () => {
 
 describe('defineTask transform target', () => {
   test('diffs carry the discovered path and apply writes the transformed content', async () => {
-    await withTempDir(async (cwd) => {
+    await withTempDir('xtarterize-define-task-', async (cwd) => {
       await writeFile(
         cwd,
         'vite.config.ts',
@@ -408,7 +395,7 @@ describe('defineTask transform target', () => {
 
 describe('defineTask action', () => {
   test('an action has no file diff and no backup entry', async () => {
-    await withTempDir(async (cwd) => {
+    await withTempDir('xtarterize-define-task-', async (cwd) => {
       await writeFile(
         cwd,
         'package.json',
