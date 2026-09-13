@@ -52,12 +52,7 @@ for the complete option and error reference.
 
 ## Templates
 
-Five templates: `next-chakra` and `next-tailwind` (Next.js), plus `vite-chakra`,
-`vite-tailwind`, and `vite-hero` (Vite + React). All include strict TypeScript,
-GitHub Actions, VS Code settings, and agent skills. Run `preview <id>` for one
-template's details, or see the [template
-catalog](https://xtarter.sznm.dev/create-xtarter-app/guide/templates/) for full
-stacks and source repositories.
+Five templates: `next-chakra` and `next-tailwind` (Next.js), plus `vite-chakra`, `vite-tailwind`, and `vite-hero` (Vite + React). All include strict TypeScript, GitHub Actions, VS Code settings, and agent skills. See the [template catalog](https://xtarter.sznm.dev/create-xtarter-app/guide/templates/) for full stacks and source repositories.
 
 ## Programmatic API
 
@@ -77,10 +72,7 @@ await downloadTemplateFiles({
 
 ## Development
 
-From the monorepo root: `pnpm install`, then
-`pnpm --filter create-xtarter-app build|typecheck|test`. See
-[CONTRIBUTING.md](../../CONTRIBUTING.md) for workspace conventions and the
-[architecture decisions](../../docs/ADRs/create-xtarter-app/).
+From the monorepo root: `pnpm install`, then `pnpm --filter create-xtarter-app build|typecheck|test`. See [CONTRIBUTING.md](../../CONTRIBUTING.md) for workspace conventions and the [architecture decisions](../../docs/ADRs/create-xtarter-app/).
 
 ## License
 
