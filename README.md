@@ -114,19 +114,7 @@ xtarterize/
 
 ## Contributing a New Task
 
-1. Declare the task with `defineTask()` from [`packages/tasks/src/factory/define-task.ts`](packages/tasks/src/factory/define-task.ts); the [`Task`](packages/core/src/_base.ts) contract is a single interface whose methods return Effects requiring `TaskServices`
-2. Create your task file in `packages/tasks/src/<category>/<task>.ts`
-3. Import it into [`packages/tasks/src/index.ts`](packages/tasks/src/index.ts) and register it in `taskRegistry`
-4. Add or update tests only when they provide meaningful regression protection. Extend the nearest existing suite when possible; see [`docs/TESTING.md`](docs/TESTING.md)
-
-Each task must implement:
-
-- `applicable(profile)` - Should this task run for this project?
-- `check(cwd, profile)` - What's the current status?
-- `dryRun(cwd, profile)` - What would change?
-- `apply(cwd, profile)` - Make the changes
-
-`defineTask()` returns a `DefinedTask`, a `Task` whose spec functions may be synchronous, return a Promise, or return an Effect; `toTaskEffect()` normalizes those spec results into one Effect at the factory seam.
+[`CONTRIBUTING.md`](CONTRIBUTING.md#adding-a-new-task) is the canonical guide: it covers the `defineTask()` factory, the `Task` contract, file placement, registry wiring, testing, and quality standards.
 
 ## Development
 
