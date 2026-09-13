@@ -1,5 +1,6 @@
 import type { Task } from '@/_base.js';
 
+import { expandAliases } from './aliases.js';
 import { similarity } from './fuzzy.js';
 import { stem } from './stemmer.js';
 import { tokenize } from './tokenizer.js';
@@ -20,7 +21,14 @@ const DEFAULT_WEIGHTS: WeightConfig = {
 
 type MatchTier = 0.0 | 0.55 | 0.75 | 0.85 | 0.95 | 1.0;
 
-function bestMatchTier(token: string, field: string | undefined): MatchTier {
+/** Alias-derived matches are discounted so a direct hit outranks them. */
+const ALIAS_DISCOUNT = 0.85;
+
+function bestMatchTier(
+  token: string,
+  field: string | undefined,
+  requireContainment = false
+): MatchTier {
   if (!field) {
     return 0.0;
   }
@@ -43,6 +51,15 @@ function bestMatchTier(token: string, field: string | undefined): MatchTier {
     return 0.75;
   }
   if (lowerField.includes(lowerToken)) {
+    // Alias containment: the shorter side must carry at least half the field
+    // and be meaningful on its own, so "lint" does not match "oxlint.config".
+    const shorter = Math.min(lowerToken.length, lowerField.length);
+    if (
+      requireContainment &&
+      (shorter < 4 || shorter / lowerField.length < 0.5)
+    ) {
+      return 0.0;
+    }
     return 0.55;
   }
   return 0.0;
@@ -50,14 +67,15 @@ function bestMatchTier(token: string, field: string | undefined): MatchTier {
 
 function bestMatchInArray(
   token: string,
-  arr: Array<string> | undefined
+  arr: Array<string> | undefined,
+  requireContainment = false
 ): MatchTier {
   if (!arr || arr.length === 0) {
     return 0.0;
   }
   let best: MatchTier = 0.0;
   for (const item of arr) {
-    const match = bestMatchTier(token, item);
+    const match = bestMatchTier(token, item, requireContainment);
     if (match > best) {
       best = match;
     }
@@ -68,16 +86,40 @@ function bestMatchInArray(
   return best;
 }
 
+/** Best tier over the token and its aliases; aliases are discounted. */
+function bestFieldMatch(token: string, field: string | undefined): number {
+  let best: number = bestMatchTier(token, field);
+  if (best === 1.0) {
+    return best;
+  }
+  for (const alias of expandAliases(token)) {
+    best = Math.max(best, bestMatchTier(alias, field, true) * ALIAS_DISCOUNT);
+  }
+  return best;
+}
+
+/** Best tier over the token and its aliases across an array field. */
+function bestArrayMatch(token: string, arr: Array<string> | undefined): number {
+  let best: number = bestMatchInArray(token, arr);
+  if (best === 1.0) {
+    return best;
+  }
+  for (const alias of expandAliases(token)) {
+    best = Math.max(best, bestMatchInArray(alias, arr, true) * ALIAS_DISCOUNT);
+  }
+  return best;
+}
+
 function matchTaskToToken(token: string, task: Task) {
   return {
-    config: bestMatchInArray(
+    config: bestArrayMatch(
       token,
       task.searchMeta?.configTargets ?? task.searchMeta?.tags
     ),
-    group: bestMatchTier(token, task.group),
-    id: bestMatchTier(token, task.id.replace(/\//g, ' ')),
-    keywords: bestMatchInArray(token, task.searchMeta?.keywords),
-    label: bestMatchTier(token, task.label),
+    group: bestFieldMatch(token, task.group),
+    id: bestFieldMatch(token, task.id.replace(/\//g, ' ')),
+    keywords: bestArrayMatch(token, task.searchMeta?.keywords),
+    label: bestFieldMatch(token, task.label),
   };
 }
 
