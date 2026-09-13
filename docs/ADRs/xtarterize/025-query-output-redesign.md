@@ -16,83 +16,47 @@ the scoring engine (ADR 024) but has proven too noisy for everyday use.
 
 ### Problems with the current output
 
-1. **Signal breakdown per result** - every result prints a second line with
-   per-signal scores (label: 100%, id: 75%, ...). This is debugging detail,
-   not actionable information.
-
-2. **Relevance bars are visual noise** - the ████░ bar takes 10 characters per
-   row and adds no information beyond the percentage. A colored percentage alone
-   is faster to scan.
-
-3. **Tier headers add little value** - "EXACT MATCHES", "STRONG MATCHES",
-   "RELATED" partition results into three groups but the relevance percentage
-   already encodes this signal. The tiers force the user to read two things
-   (tier + percentage) instead of one.
-
-4. **No config target shown** - the most useful context for deciding whether a
-   result is relevant ("what file does this touch?") is buried in the task's
+1. **Signal breakdown per result** - a second line of per-signal scores;
+   debugging detail, not actionable information.
+2. **Relevance bars** - the `████░` bar adds nothing beyond the percentage.
+3. **Tier headers** - "EXACT / STRONG / RELATED" partitions results that the
+   percentage already ranks continuously.
+4. **No config target** - "what file does this touch?" is buried in
    `searchMeta` and never displayed.
-
-5. **No actionable next step** - after seeing results, the user has no hint
-   about how to apply them.
-
-6. **No count in header** - the user can't tell at a glance how many results
-   were found.
+5. **No next step** - no hint about how to apply a result.
+6. **No count in header** - how many results were found is not visible.
 
 ### Design goals
 
-- **Compact**: one line per result, no signal breakdown (signals remain in `--json` output)
-- **Scannable**: colored relevance percentage as the primary visual anchor
-- **Informative**: show config target as context for relevance judgment
-- **Actionable**: hint at the bottom tells the user how to proceed
-- **Distinctive**: not copying astryx's multi-line result blocks
+Compact (one line per result), scannable (colored percentage as the visual
+anchor), informative (config target for relevance judgment), actionable
+(footer hint), and distinctive (not astryx's multi-line result blocks).
 
 ### What is NOT changing
 
 - `--json` output (already clean, machine-readable, includes signals)
-- The scoring engine itself
-- `xtarterize init --compose` which uses the scoring engine internally
+- The scoring engine, and `xtarterize init --compose` which uses it
 - The `InquiryResult` type - signals remain in the data model for debugging
 
 ## Decision
 
 Replace `displayQueryResults` in `apps/xtarterize/src/ui/query-display.ts` with
-a new terminal layout consisting of:
+a terminal layout of three parts: a header (icon + query + result count), one
+body line per result (dimmed task ID, colored relevance, label, dimmed config
+target), and a footer hint naming the `xtarterize add` command. The
+`formatQueryResult` JSON path is unchanged.
 
-1. **Header**: icon + query + result count
-2. **Body**: single line per result - dimmed task ID | colored relevance |
-   label | dimmed config target
-3. **Footer**: hint with the `xtarterize add` command
+Each row is
+`indent(2) + taskId.padEnd(maxIdLen + 2) + relevance(4) + " " + label + right-aligned configTarget`,
+sized to `process.stdout.columns`. If a row would exceed the terminal width,
+truncate the label first (appending an ellipsis), then the config target.
 
-The existing `formatQueryResult` (JSON) path is unchanged.
-
-### Line layout (annotated)
-
-```
-  ts/strict                80%  tsconfig - strict: true             tsconfig.json
-  ↑dim                    ↑bold+colored                           ↑dim
-```
-
-Each row has four zones:
-
-| Zone | Content                    | Style               | Width                                     |
-| ---- | -------------------------- | ------------------- | ----------------------------------------- |
-| 1    | Task ID, right-padded      | `pc.dim()`          | max(taskId.length) + 2                    |
-| 2    | Relevance " XX%"           | `pc.bold()` + color | 4 chars fixed (RHS)                       |
-| 3    | Label                      | normal              | remaining width (config column subtracts) |
-| 4    | Config target, left-padded | `pc.dim()`          | computed per row                          |
-
-### Color rules for relevance
-
-| Range  | Color                       | Style           |
-| ------ | --------------------------- | --------------- |
-| ≥70%   | `pc.green()` + `pc.bold()`  | "strong match"  |
-| 40–69% | `pc.yellow()` + `pc.bold()` | "partial match" |
-| <40%   | `pc.dim()`                  | "weak match"    |
+Relevance colors: >=70% green + bold ("strong match"), 40-69% yellow + bold
+("partial match"), <40% dim ("weak match").
 
 ### States
 
-**Normal (≥1 result):**
+Normal output (one line per result):
 
 ```
 ✻ xtarterize query "strict typescript" - 4 matches
@@ -105,65 +69,23 @@ Each row has four zones:
   → xtarterize add <task-id> to apply a task
 ```
 
-**Zero results:**
-
-```
-✻ xtarterize query "strict typescript" - no matches
-
-  No tasks matched your query.
-    • try broader terms (e.g. "typescript" instead of "strict typescript")
-    • lower the threshold with --threshold 0.05
-    • browse all tasks with xtarterize list
-```
-
-**Entirely stopwords (tokenizes to empty):**
-
-```
-✻ xtarterize query "need help with" - no matches
-
-  Your query "need help with" consists entirely of common words.
-    • try specific tool names (e.g. "biome", "tsconfig", "vite")
-    • use technical terms related to the setup you want
-```
-
-### Single result (slim variant):
-
-```
-✻ xtarterize query "biome formatting" - 1 match
-
-  lint/biome              89%  Biome (lint + format)               biome.json
-
-  → xtarterize add lint/biome to apply
-```
-
-Note: the footer hint changes to the specific task ID when there's one result.
-
-### Column width logic
-
-1. Compute `maxIdLen = max(results, r => r.taskId.length)`
-2. Each row: indent(2) + taskId.padEnd(maxIdLen + 2) + relevance(4) + " " + label + right-aligned configTarget
-
-For the label + config target area, use the terminal width (process.stdout.columns)
-to determine available space. If the row would exceed terminal width:
-
-- Truncate the label first (append "…")
-- If still too wide, truncate the config target
+Zero results and entirely-stopword queries substitute their own guidance (try
+broader terms or `--threshold 0.05`; for stopwords, try specific tool names). A
+single result uses the same layout with the footer hint
+`xtarterize add <task-id> to apply`.
 
 ### Migration
 
-1. Replace `displayQueryResults` in `query-display.ts` with the new
-   implementation (inline, no new file or module needed)
-2. Update the docs at `apps/docs/src/content/docs/xtarterize/guide/cli/query.mdx`
-   to show the new output
-3. Remove unused helper functions: `relevanceBar`, `signalBreakdown`
+- Replace `displayQueryResults` in `query-display.ts` (inline; no new module)
+  and update `apps/docs/src/content/docs/xtarterize/guide/cli/query.mdx`.
+- Remove the unused `relevanceBar` and `signalBreakdown` helpers.
 
 ### Retained paths
 
-- **`--json`**: unchanged - `formatQueryResult` in `json-formatter.ts` remains
-  as-is. JSON output still includes the full `signals` array.
-- **`--verbose`** (future): if users need signal breakdown, add a `--verbose`
-  flag to print the second line. Not implemented in this change - defer until
-  someone asks.
+- **`--json`**: unchanged - `formatQueryResult` in `json-formatter.ts` still
+  includes the full `signals` array.
+- **`--verbose`** (future): print the signal breakdown on demand; not
+  implemented in this change.
 
 Update (2026-09-11): `--verbose` was never added to `query`. The command
 accepts `--cwd`, `--json`, `--limit`, and `--threshold`; `--json` remains the

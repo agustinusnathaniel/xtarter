@@ -79,28 +79,19 @@ restore `Equal.equals` (ADR 031 keeps `isDeepStrictEqual`).
 
 ### Task contract and plugin compatibility
 
-- `packages/core/src/_base.ts` defines a union:
-  `Task = PromiseTask | EffectTask`. `EffectTask` methods return
-  `Effect.Effect<A, TaskError, TaskServices>`, where
-  `TaskServices = ProcessRunner`. `PromiseTask` keeps the original Promise
-  signatures.
-- `toTaskEffect(taskId, invoke)` in
-  [`packages/core/src/task-effect.ts`](../../../packages/core/src/task-effect.ts)
-  normalizes both shapes: the invocation is lazy (`Effect.suspend`), a
-  synchronous throw or promise rejection becomes a `TaskError` with the
-  pre-Effect message text, and an already-Effect result passes through
-  untouched.
-- `defineTask` in
-  [`packages/tasks/src/factory/define-task.ts`](../../../packages/tasks/src/factory/define-task.ts)
-  returns a `DefinedTask` (an `EffectTask` that always implements `getDeps`).
-  Spec functions accept
-  `SpecResult<A> = A | Promise<A> | Effect.Effect<A, TaskError, TaskServices>`,
-  so an author may stay synchronous, return a Promise, or return an Effect.
-  Failures are labeled once at the `defineTask` boundary as
-  `<method> failed: <String(cause)>`, matching the removed `wrapTask` text.
-- External duck-typed Promise plugins keep working unchanged. `loadPluginTasks`
-  collects `default`, `tasks`, and `task` exports as `Task`; the engine
-  normalizes each method. Plugins may also export Effect tasks.
+At the time of this decision, `packages/core/src/_base.ts` defined
+`Task = PromiseTask | EffectTask`: `EffectTask` methods returned
+`Effect.Effect<A, TaskError, TaskServices>` (`TaskServices = ProcessRunner`)
+and `PromiseTask` kept the Promise signatures. `toTaskEffect` in
+[`task-effect.ts`](../../../packages/core/src/task-effect.ts) normalized both
+shapes lazily: a synchronous throw or rejection became a `TaskError` with the
+pre-Effect message, and an already-Effect result passed through. `defineTask`
+returned a `DefinedTask` accepting sync, Promise, or Effect spec results, with
+failures labeled once as `<method> failed: <String(cause)>`. `loadPluginTasks`
+kept external duck-typed Promise plugins working unchanged.
+
+Superseded by ADR 037 (see the Status update): the plugin loader and
+`PromiseTask` were removed, so `Task` is a single Effect interface.
 
 ### Services
 
@@ -181,33 +172,22 @@ lifts in `apps/xtarterize/src/session.ts`.
 ## Verification
 
 - Baseline `pnpm check:ci` was green with 709 tests; the final branch was green
-  with 711 tests. At HEAD, `pnpm test` reports 711 passed and 6 skipped across
-  64 test files (63 passed, 1 skipped) `[verified]`.
-- CLI output comparisons against the baseline build `[reported during the
-  refactor]`: `diff --json` is byte-identical; `list --json` and `check --json`
-  are identical except timing fields; `doctor` is byte-identical.
-- SIGINT during an interactive prompt exits 0 within about 250ms. The baseline
-  exited 0 immediately, so the deliberate difference is a grace period
-  (`SIGNAL_EXIT_GRACE_MS = 250`, an unref'd timer in
-  `apps/xtarterize/src/index.ts`); a second SIGINT exits 0 immediately
-  `[reported during the refactor; the code at HEAD matches]`.
-- The create-xtarter-app bundle initially grew because it imported
-  `@xtarterize/core` helpers and core now imports Effect. Built from both
-  revisions `[verified]`, the dist total went from 138.08 kB on `main` to
-  209.58 kB, and the scaffold chunk from 85.14 kB (gzip 26.43 kB) to
-  156.63 kB (gzip 51.11 kB). After the `@xtarterize/core/plain` entry landed,
-  the app's dist total is 99.36 kB and its scaffold chunk is 46.42 kB (gzip
-  15.22 kB), with no `effect` in the output or in `inlinedDependencies`
-  `[verified]`.
-- The boundary guard moved from the custom script to the Biome plugin
-  `[verified]`: `pnpm ultracite:check` exits 0 on the clean tree and exits 1
-  with a `plugin` diagnostic for probes under `packages/core/src` covering
-  member calls, bare calls, renamed destructuring
-  (`const { runPromise: rp } = Effect`), and `new ManagedRuntime(...)`. The
-  legitimate `Effect.runPromiseExit` edge in
-  `apps/xtarterize/src/runtime.ts` is not flagged, and `pnpm check:ci` stays
-  green with 715 passed and 6 skipped tests across 65 test files (64 passed,
-  1 skipped).
+  with 711. At HEAD, `pnpm test` reports 711 passed and 6 skipped across 64
+  test files `[verified]`.
+- CLI output against the baseline `[reported during the refactor]`:
+  `diff --json` and `doctor` are byte-identical; `list --json` and `check --json`
+  differ only in timing fields.
+- SIGINT during a prompt exits 0 after a deliberate 250ms grace period
+  (`SIGNAL_EXIT_GRACE_MS`), and a second SIGINT exits immediately; the baseline
+  exited 0 immediately `[reported during the refactor; the code at HEAD matches]`.
+- create-xtarter-app: 138.08 kB dist on `main`, 209.58 kB importing root
+  `@xtarterize/core`, 99.36 kB with the `@xtarterize/core/plain` entry and no
+  `effect` in the output `[verified]`.
+- Boundary plugin `[verified]`: `pnpm ultracite:check` exits 0 on the clean tree
+  and exits 1 for member-call, bare-call, renamed-destructuring, and
+  `new ManagedRuntime(...)` probes, while the `runPromiseExit` edge in
+  `apps/xtarterize/src/runtime.ts` is not flagged; `pnpm check:ci` is green with
+  715 tests.
 
 ## Rationale
 
