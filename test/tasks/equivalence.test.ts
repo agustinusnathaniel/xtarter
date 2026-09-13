@@ -91,106 +91,169 @@ describe('hasScriptWithEquivalentValue', () => {
   });
 });
 
+const equivalenceCases: Array<
+  [rule: string, name: string, left: string, right: string, expected: boolean]
+> = [
+  [
+    'EXACT_MATCH rule',
+    'returns true for identical commands',
+    'tsc --noEmit',
+    'tsc --noEmit',
+    true,
+  ],
+  [
+    'EXACT_MATCH rule',
+    'returns true for identical simple commands',
+    'tsc',
+    'tsc',
+    true,
+  ],
+  [
+    'COMPOSITE rules',
+    'returns true when both are composite with same tasks',
+    'turbo run build lint',
+    'turbo run build lint',
+    true,
+  ],
+  [
+    'COMPOSITE rules',
+    'returns false when composite mixed with non-composite',
+    'turbo run build',
+    'tsc --noEmit',
+    false,
+  ],
+  [
+    'COMPOSITE rules',
+    'returns false for turborepo variants whose tasks cannot be extracted',
+    'turborepo run a',
+    'turborepo run b',
+    false,
+  ],
+  [
+    'COMPOSITE rules',
+    'keeps exact matches for non-extractable composite variants',
+    'turborepo run a',
+    'turborepo run a',
+    true,
+  ],
+  [
+    'SHELL_OPERATOR_MISMATCH rule',
+    'returns false when one has shell operator and other does not',
+    'lint && format',
+    'lint',
+    false,
+  ],
+  [
+    'SHELL_OPERATOR_MISMATCH rule',
+    'returns false in reverse order',
+    'lint',
+    'lint && format',
+    false,
+  ],
+  [
+    'TOOL_MISMATCH rule',
+    'returns false for completely different tools',
+    'tsc --noEmit',
+    'eslint .',
+    false,
+  ],
+  [
+    'TOOL_MISMATCH rule',
+    'returns false even when tools normalize to same category but args differ',
+    'eslint .',
+    'biome check .',
+    false,
+  ],
+  [
+    'SAME_TOOL_SAME_ARGS rule',
+    'returns true for functionally equivalent release tools',
+    'commit-and-tag-version',
+    'standard-version',
+    true,
+  ],
+  [
+    'SAME_TOOL_SAME_ARGS rule',
+    'returns true for release-it vs standard-version',
+    'release-it',
+    'standard-version',
+    true,
+  ],
+  [
+    'EQUIVALENT_SUBCOMMANDS rule',
+    'detects equivalent biome subcommands',
+    'biome check .',
+    'biome lint .',
+    true,
+  ],
+  [
+    'EQUIVALENT_SUBCOMMANDS rule',
+    'detects equivalent biome subcommands with --write',
+    'biome check --write .',
+    'biome format --write .',
+    true,
+  ],
+  [
+    'EQUIVALENT_SUBCOMMANDS rule',
+    'detects equivalent ultracite subcommands',
+    'ultracite check',
+    'ultracite fix',
+    true,
+  ],
+  [
+    'EQUIVALENT_SUBCOMMANDS rule',
+    'detects equivalent vp subcommands',
+    'vp lint',
+    'vp check',
+    true,
+  ],
+  [
+    'SCRIPT_REF_MATCH rule',
+    'returns true when both reference the same script name',
+    'pnpm run build',
+    'npm run build',
+    true,
+  ],
+  [
+    'SCRIPT_REF_MATCH rule',
+    'returns false when script refs differ',
+    'pnpm run build',
+    'pnpm run test',
+    false,
+  ],
+  [
+    'non-equivalent cases',
+    'returns false for different commands with same tool but different args',
+    'tsc --noEmit',
+    'tsc --build',
+    false,
+  ],
+  [
+    'non-equivalent cases',
+    'returns false for completely unrelated commands',
+    'echo hello',
+    'ls -la',
+    false,
+  ],
+];
+
 describe('areEquivalent', () => {
-  describe('EXACT_MATCH rule', () => {
-    test('returns true for identical commands', () => {
-      expect(areEquivalent('tsc --noEmit', 'tsc --noEmit')).toBe(true);
-    });
+  const rules = new Map<
+    string,
+    Array<[name: string, left: string, right: string, expected: boolean]>
+  >();
+  for (const [rule, name, left, right, expected] of equivalenceCases) {
+    const rows = rules.get(rule) ?? [];
+    rows.push([name, left, right, expected]);
+    rules.set(rule, rows);
+  }
 
-    test('returns true for identical simple commands', () => {
-      expect(areEquivalent('tsc', 'tsc')).toBe(true);
+  for (const [rule, rows] of rules) {
+    describe(rule, () => {
+      for (const [name, left, right, expected] of rows) {
+        test(name, () => {
+          expect(areEquivalent(left, right)).toBe(expected);
+        });
+      }
     });
-  });
-
-  describe('COMPOSITE rules', () => {
-    test('returns true when both are composite with same tasks', () => {
-      expect(
-        areEquivalent('turbo run build lint', 'turbo run build lint')
-      ).toBe(true);
-    });
-
-    test('returns false when composite mixed with non-composite', () => {
-      expect(areEquivalent('turbo run build', 'tsc --noEmit')).toBe(false);
-    });
-
-    test('returns false for turborepo variants whose tasks cannot be extracted', () => {
-      expect(areEquivalent('turborepo run a', 'turborepo run b')).toBe(false);
-    });
-
-    test('keeps exact matches for non-extractable composite variants', () => {
-      expect(areEquivalent('turborepo run a', 'turborepo run a')).toBe(true);
-    });
-  });
-
-  describe('SHELL_OPERATOR_MISMATCH rule', () => {
-    test('returns false when one has shell operator and other does not', () => {
-      expect(areEquivalent('lint && format', 'lint')).toBe(false);
-    });
-
-    test('returns false in reverse order', () => {
-      expect(areEquivalent('lint', 'lint && format')).toBe(false);
-    });
-  });
-
-  describe('TOOL_MISMATCH rule', () => {
-    test('returns false for completely different tools', () => {
-      expect(areEquivalent('tsc --noEmit', 'eslint .')).toBe(false);
-    });
-
-    test('returns false even when tools normalize to same category but args differ', () => {
-      expect(areEquivalent('eslint .', 'biome check .')).toBe(false);
-    });
-  });
-
-  describe('SAME_TOOL_SAME_ARGS rule', () => {
-    test('returns true for functionally equivalent release tools', () => {
-      expect(areEquivalent('commit-and-tag-version', 'standard-version')).toBe(
-        true
-      );
-    });
-
-    test('returns true for release-it vs standard-version', () => {
-      expect(areEquivalent('release-it', 'standard-version')).toBe(true);
-    });
-  });
-
-  describe('EQUIVALENT_SUBCOMMANDS rule', () => {
-    test('detects equivalent biome subcommands', () => {
-      expect(areEquivalent('biome check .', 'biome lint .')).toBe(true);
-    });
-
-    test('detects equivalent biome subcommands with --write', () => {
-      expect(
-        areEquivalent('biome check --write .', 'biome format --write .')
-      ).toBe(true);
-    });
-
-    test('detects equivalent ultracite subcommands', () => {
-      expect(areEquivalent('ultracite check', 'ultracite fix')).toBe(true);
-    });
-
-    test('detects equivalent vp subcommands', () => {
-      expect(areEquivalent('vp lint', 'vp check')).toBe(true);
-    });
-  });
-
-  describe('SCRIPT_REF_MATCH rule', () => {
-    test('returns true when both reference the same script name', () => {
-      expect(areEquivalent('pnpm run build', 'npm run build')).toBe(true);
-    });
-
-    test('returns false when script refs differ', () => {
-      expect(areEquivalent('pnpm run build', 'pnpm run test')).toBe(false);
-    });
-  });
-
-  describe('non-equivalent cases', () => {
-    test('returns false for different commands with same tool but different args', () => {
-      expect(areEquivalent('tsc --noEmit', 'tsc --build')).toBe(false);
-    });
-
-    test('returns false for completely unrelated commands', () => {
-      expect(areEquivalent('echo hello', 'ls -la')).toBe(false);
-    });
-  });
+  }
 });

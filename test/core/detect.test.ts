@@ -13,9 +13,74 @@ import {
   rootFileInputByBasename,
   workspacePackageDirs,
 } from '../../packages/core/src/detect/registry/index.js';
-import { fixtureProfile, withProject } from '../helpers/project.js';
+import {
+  fixtureProfile,
+  type ProjectFileMap,
+  withProject,
+} from '../helpers/project.js';
 import { run } from '../helpers/run.js';
 import { withTempDir } from '../helpers/temp.js';
+
+const nodeVersionCases: Array<
+  [name: string, files: ProjectFileMap, expected: string]
+> = [
+  [
+    'nodeVersion defaults to 22 when no config present',
+    { 'package.json': { name: 'test-pkg' } },
+    '22',
+  ],
+  [
+    'nodeVersion reads from .nvmrc',
+    { '.nvmrc': '22\n', 'package.json': { name: 'test-pkg' } },
+    '22',
+  ],
+  [
+    'nodeVersion reads from .nvmrc stripping leading v',
+    { '.nvmrc': 'v18\n', 'package.json': { name: 'test-pkg' } },
+    '18',
+  ],
+  [
+    'nodeVersion falls back to engines.node from package.json',
+    {
+      'package.json': { engines: { node: '>=22' }, name: 'test-pkg' },
+    },
+    '22',
+  ],
+  [
+    'nodeVersion prefers .nvmrc over engines.node',
+    {
+      '.nvmrc': '20\n',
+      'package.json': { engines: { node: '22' }, name: 'test-pkg' },
+    },
+    '20',
+  ],
+];
+
+const eslintCases: Array<[name: string, files: ProjectFileMap]> = [
+  [
+    'detects ESLint from dep',
+    {
+      'package.json': {
+        devDependencies: { eslint: '^8.56.0' },
+        name: 'eslint-project',
+      },
+    },
+  ],
+  [
+    'detects ESLint from eslintrc config',
+    {
+      '.eslintrc.json': { rules: {} },
+      'package.json': { name: 'eslint-project' },
+    },
+  ],
+  [
+    'detects ESLint from eslint.config flat config',
+    {
+      'eslint.config.js': 'export default []',
+      'package.json': { name: 'eslint-flat' },
+    },
+  ],
+];
 
 describe('detectProject', () => {
   test('detects react-vite-tailwind correctly', async () => {
@@ -182,55 +247,13 @@ describe('detectProject', () => {
     );
   });
 
-  test('nodeVersion defaults to 22 when no config present', async () => {
-    await withProject(
-      { 'package.json': { name: 'test-pkg' } },
-      async ({ profile }) => {
-        expect(profile.nodeVersion).toBe('22');
-      }
-    );
-  });
-
-  test('nodeVersion reads from .nvmrc', async () => {
-    await withProject(
-      { '.nvmrc': '22\n', 'package.json': { name: 'test-pkg' } },
-      async ({ profile }) => {
-        expect(profile.nodeVersion).toBe('22');
-      }
-    );
-  });
-
-  test('nodeVersion reads from .nvmrc stripping leading v', async () => {
-    await withProject(
-      { '.nvmrc': 'v18\n', 'package.json': { name: 'test-pkg' } },
-      async ({ profile }) => {
-        expect(profile.nodeVersion).toBe('18');
-      }
-    );
-  });
-
-  test('nodeVersion falls back to engines.node from package.json', async () => {
-    await withProject(
-      {
-        'package.json': { engines: { node: '>=22' }, name: 'test-pkg' },
-      },
-      async ({ profile }) => {
-        expect(profile.nodeVersion).toBe('22');
-      }
-    );
-  });
-
-  test('nodeVersion prefers .nvmrc over engines.node', async () => {
-    await withProject(
-      {
-        '.nvmrc': '20\n',
-        'package.json': { engines: { node: '22' }, name: 'test-pkg' },
-      },
-      async ({ profile }) => {
-        expect(profile.nodeVersion).toBe('20');
-      }
-    );
-  });
+  for (const [name, files, expected] of nodeVersionCases) {
+    test(name, async () => {
+      await withProject(files, async ({ profile }) => {
+        expect(profile.nodeVersion).toBe(expected);
+      });
+    });
+  }
 
   test('detects Vite+ from vite-plus dep', async () => {
     await withProject(
@@ -261,43 +284,13 @@ describe('detectProject', () => {
     expect(profile.existing.biome).toBe(true);
   });
 
-  test('detects ESLint from dep', async () => {
-    await withProject(
-      {
-        'package.json': {
-          devDependencies: { eslint: '^8.56.0' },
-          name: 'eslint-project',
-        },
-      },
-      async ({ profile }) => {
+  for (const [name, files] of eslintCases) {
+    test(name, async () => {
+      await withProject(files, async ({ profile }) => {
         expect(profile.existing.eslint).toBe(true);
-      }
-    );
-  });
-
-  test('detects ESLint from eslintrc config', async () => {
-    await withProject(
-      {
-        '.eslintrc.json': { rules: {} },
-        'package.json': { name: 'eslint-project' },
-      },
-      async ({ profile }) => {
-        expect(profile.existing.eslint).toBe(true);
-      }
-    );
-  });
-
-  test('detects ESLint from eslint.config flat config', async () => {
-    await withProject(
-      {
-        'eslint.config.js': 'export default []',
-        'package.json': { name: 'eslint-flat' },
-      },
-      async ({ profile }) => {
-        expect(profile.existing.eslint).toBe(true);
-      }
-    );
-  });
+      });
+    });
+  }
 
   test('detects oxlint config', async () => {
     await withProject(

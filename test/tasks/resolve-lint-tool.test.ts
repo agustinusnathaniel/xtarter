@@ -1,114 +1,57 @@
 import { describe, expect } from 'vite-plus/test';
 
 import {
+  type LintTool,
   lintToolScripts,
   resolveLintTool,
 } from '../../packages/tasks/src/factory/package-scripts.js';
 
+type ResolveLintToolInput = Parameters<typeof resolveLintTool>[0];
+
+const defaultInput: ResolveLintToolInput = {
+  existingEslint: false,
+  existingOxfmt: false,
+  existingOxlint: false,
+  hasBiomeDep: false,
+  useUltracite: false,
+  vitePlus: false,
+};
+
+const lintToolCases: Array<
+  [
+    name: string,
+    input: Partial<ResolveLintToolInput>,
+    expected: LintTool | null,
+  ]
+> = [
+  ['returns null when eslint is present', { existingEslint: true }, null],
+  ['returns ultracite when present', { useUltracite: true }, 'ultracite'],
+  ['returns biome when dep is present', { hasBiomeDep: true }, 'biome'],
+  [
+    'returns oxlint when oxlint config exists',
+    { existingOxlint: true },
+    'oxlint',
+  ],
+  [
+    'returns oxlint when oxfmt config exists',
+    { existingOxfmt: true },
+    'oxlint',
+  ],
+  ['returns vp when only vitePlus is true', { vitePlus: true }, 'vp'],
+  ['defaults to biome when nothing is configured', {}, 'biome'],
+  [
+    'ultracite takes priority over biome dep',
+    { hasBiomeDep: true, useUltracite: true },
+    'ultracite',
+  ],
+];
+
 describe('resolveLintTool', () => {
-  test('returns null when eslint is present', () => {
-    expect(
-      resolveLintTool({
-        existingEslint: true,
-        existingOxfmt: false,
-        existingOxlint: false,
-        hasBiomeDep: false,
-        useUltracite: false,
-        vitePlus: false,
-      })
-    ).toBeNull();
-  });
-
-  test('returns ultracite when present', () => {
-    expect(
-      resolveLintTool({
-        existingEslint: false,
-        existingOxfmt: false,
-        existingOxlint: false,
-        hasBiomeDep: false,
-        useUltracite: true,
-        vitePlus: false,
-      })
-    ).toBe('ultracite');
-  });
-
-  test('returns biome when dep is present', () => {
-    expect(
-      resolveLintTool({
-        existingEslint: false,
-        existingOxfmt: false,
-        existingOxlint: false,
-        hasBiomeDep: true,
-        useUltracite: false,
-        vitePlus: false,
-      })
-    ).toBe('biome');
-  });
-
-  test('returns oxlint when oxlint config exists', () => {
-    expect(
-      resolveLintTool({
-        existingEslint: false,
-        existingOxfmt: false,
-        existingOxlint: true,
-        hasBiomeDep: false,
-        useUltracite: false,
-        vitePlus: false,
-      })
-    ).toBe('oxlint');
-  });
-
-  test('returns oxlint when oxfmt config exists', () => {
-    expect(
-      resolveLintTool({
-        existingEslint: false,
-        existingOxfmt: true,
-        existingOxlint: false,
-        hasBiomeDep: false,
-        useUltracite: false,
-        vitePlus: false,
-      })
-    ).toBe('oxlint');
-  });
-
-  test('returns vp when only vitePlus is true', () => {
-    expect(
-      resolveLintTool({
-        existingEslint: false,
-        existingOxfmt: false,
-        existingOxlint: false,
-        hasBiomeDep: false,
-        useUltracite: false,
-        vitePlus: true,
-      })
-    ).toBe('vp');
-  });
-
-  test('defaults to biome when nothing is configured', () => {
-    expect(
-      resolveLintTool({
-        existingEslint: false,
-        existingOxfmt: false,
-        existingOxlint: false,
-        hasBiomeDep: false,
-        useUltracite: false,
-        vitePlus: false,
-      })
-    ).toBe('biome');
-  });
-
-  test('ultracite takes priority over biome dep', () => {
-    expect(
-      resolveLintTool({
-        existingEslint: false,
-        existingOxfmt: false,
-        existingOxlint: false,
-        hasBiomeDep: true,
-        useUltracite: true,
-        vitePlus: false,
-      })
-    ).toBe('ultracite');
-  });
+  for (const [name, input, expected] of lintToolCases) {
+    test(name, () => {
+      expect(resolveLintTool({ ...defaultInput, ...input })).toBe(expected);
+    });
+  }
 });
 
 describe('lintToolScripts', () => {

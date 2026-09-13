@@ -1,17 +1,117 @@
-import fs from 'node:fs/promises';
-import os from 'node:os';
-import path from 'node:path';
-import { detectProject } from '@xtarterize/core';
 import { describe, expect } from 'vite-plus/test';
 
 import { packageEnginesTask } from '../../packages/tasks/src/quality/package-engines.js';
-import { fixtureDir, fixtureProfile } from '../helpers/project.js';
+import {
+  fixtureDir,
+  fixtureProfile,
+  type ProjectContext,
+  type ProjectFileMap,
+  withProject,
+} from '../helpers/project.js';
 import { run } from '../helpers/run.js';
 
 const EXPECTED_DEV_ENGINES = {
   packageManager: { name: 'pnpm', version: '>=9' },
   runtime: { name: 'node', version: '>=18' },
 };
+
+interface DevEnginesCase {
+  files: ProjectFileMap;
+  name: string;
+  verify: (context: ProjectContext) => Promise<void>;
+}
+
+const devEnginesCases: Array<DevEnginesCase> = [
+  {
+    files: {
+      '.nvmrc': '18\n',
+      'package.json': {
+        devEngines: EXPECTED_DEV_ENGINES,
+        name: 'engines-test',
+      },
+    },
+    name: 'skips when devEngines already matches',
+    verify: async ({ cwd, profile }) => {
+      const status = await run(packageEnginesTask.check(cwd, profile));
+      expect(status).toBe('skip');
+    },
+  },
+  {
+    files: {
+      'package.json': {
+        devEngines: {
+          packageManager: { name: 'pnpm', version: '>=8' },
+          runtime: { name: 'node', version: '>=18' },
+        },
+        name: 'engines-test',
+      },
+    },
+    name: 'skips when devEngines already exists (merge keeps existing values)',
+    verify: async ({ cwd, profile }) => {
+      const status = await run(packageEnginesTask.check(cwd, profile));
+      expect(status).toBe('skip');
+    },
+  },
+  {
+    files: {
+      '.nvmrc': '20.11.1\n',
+      'package.json': { name: 'engines-test' },
+    },
+    name: 'derives runtime floor from .nvmrc',
+    verify: async ({ cwd, profile }) => {
+      const diffs = await run(packageEnginesTask.dryRun(cwd, profile));
+      expect(diffs.length).toBe(1);
+      expect(JSON.parse(diffs[0].after).devEngines).toEqual({
+        packageManager: { name: 'pnpm', version: '>=9' },
+        runtime: { name: 'node', version: '>=20' },
+      });
+    },
+  },
+  {
+    files: {
+      'package.json': {
+        engines: { node: '^22.14.0' },
+        name: 'engines-test',
+      },
+    },
+    name: 'derives runtime floor from engines.node',
+    verify: async ({ cwd, profile }) => {
+      const diffs = await run(packageEnginesTask.dryRun(cwd, profile));
+      expect(diffs.length).toBe(1);
+      expect(JSON.parse(diffs[0].after).devEngines).toEqual({
+        packageManager: { name: 'pnpm', version: '>=9' },
+        runtime: { name: 'node', version: '>=22' },
+      });
+    },
+  },
+  {
+    files: {
+      'package.json': {
+        name: 'engines-test',
+        packageManager: 'pnpm@11.8.0',
+      },
+    },
+    name: 'derives package manager floor from packageManager field',
+    verify: async ({ cwd, profile }) => {
+      const diffs = await run(packageEnginesTask.dryRun(cwd, profile));
+      expect(diffs.length).toBe(1);
+      const devEngines = JSON.parse(diffs[0].after).devEngines;
+      expect(devEngines.packageManager.version).toBe('>=11.8.0');
+    },
+  },
+  {
+    files: {
+      '.nvmrc': '18\n',
+      'package.json': { devDependencies: {}, name: 'engines-test' },
+    },
+    name: 'apply writes devEngines to package.json',
+    verify: async ({ cwd, profile, readJson }) => {
+      await run(packageEnginesTask.apply(cwd, profile));
+      const content = await readJson<{ devEngines: unknown }>('package.json');
+      expect(content.devEngines).toEqual(EXPECTED_DEV_ENGINES);
+    },
+  },
+];
 
 describe('packageEnginesTask', () => {
   test('is applicable to all projects', async () => {
@@ -40,133 +140,7 @@ describe('packageEnginesTask', () => {
     expect(JSON.parse(diffs[0].after).devEngines).toEqual(EXPECTED_DEV_ENGINES);
   });
 
-  test('skips when devEngines already matches', async () => {
-    const tmpDir = await fs.mkdtemp(
-      path.join(os.tmpdir(), 'xtarterize-engines-skip-')
-    );
-    await fs.writeFile(
-      path.join(tmpDir, 'package.json'),
-      JSON.stringify({
-        devEngines: EXPECTED_DEV_ENGINES,
-        name: 'engines-test',
-      })
-    );
-    await fs.writeFile(path.join(tmpDir, '.nvmrc'), '18\n');
-
-    const profile = await detectProject(tmpDir);
-    const status = await run(packageEnginesTask.check(tmpDir, profile));
-    expect(status).toBe('skip');
-
-    await fs.rm(tmpDir, { recursive: true });
-  });
-
-  test('skips when devEngines already exists (merge keeps existing values)', async () => {
-    const tmpDir = await fs.mkdtemp(
-      path.join(os.tmpdir(), 'xtarterize-engines-diff-')
-    );
-    await fs.writeFile(
-      path.join(tmpDir, 'package.json'),
-      JSON.stringify({
-        devEngines: {
-          packageManager: { name: 'pnpm', version: '>=8' },
-          runtime: { name: 'node', version: '>=18' },
-        },
-        name: 'engines-test',
-      })
-    );
-
-    const profile = await detectProject(tmpDir);
-    const status = await run(packageEnginesTask.check(tmpDir, profile));
-    expect(status).toBe('skip');
-
-    await fs.rm(tmpDir, { recursive: true });
-  });
-
-  test('derives runtime floor from .nvmrc', async () => {
-    const tmpDir = await fs.mkdtemp(
-      path.join(os.tmpdir(), 'xtarterize-engines-nvmrc-')
-    );
-    await fs.writeFile(
-      path.join(tmpDir, 'package.json'),
-      JSON.stringify({ name: 'engines-test' })
-    );
-    await fs.writeFile(path.join(tmpDir, '.nvmrc'), '20.11.1\n');
-
-    const profile = await detectProject(tmpDir);
-    const diffs = await run(packageEnginesTask.dryRun(tmpDir, profile));
-    expect(diffs.length).toBe(1);
-    expect(JSON.parse(diffs[0].after).devEngines).toEqual({
-      packageManager: { name: 'pnpm', version: '>=9' },
-      runtime: { name: 'node', version: '>=20' },
-    });
-
-    await fs.rm(tmpDir, { recursive: true });
-  });
-
-  test('derives runtime floor from engines.node', async () => {
-    const tmpDir = await fs.mkdtemp(
-      path.join(os.tmpdir(), 'xtarterize-engines-node-')
-    );
-    await fs.writeFile(
-      path.join(tmpDir, 'package.json'),
-      JSON.stringify({
-        engines: { node: '^22.14.0' },
-        name: 'engines-test',
-      })
-    );
-
-    const profile = await detectProject(tmpDir);
-    const diffs = await run(packageEnginesTask.dryRun(tmpDir, profile));
-    expect(diffs.length).toBe(1);
-    expect(JSON.parse(diffs[0].after).devEngines).toEqual({
-      packageManager: { name: 'pnpm', version: '>=9' },
-      runtime: { name: 'node', version: '>=22' },
-    });
-
-    await fs.rm(tmpDir, { recursive: true });
-  });
-
-  test('derives package manager floor from packageManager field', async () => {
-    const tmpDir = await fs.mkdtemp(
-      path.join(os.tmpdir(), 'xtarterize-engines-pm-')
-    );
-    await fs.writeFile(
-      path.join(tmpDir, 'package.json'),
-      JSON.stringify({
-        name: 'engines-test',
-        packageManager: 'pnpm@11.8.0',
-      })
-    );
-
-    const profile = await detectProject(tmpDir);
-    const diffs = await run(packageEnginesTask.dryRun(tmpDir, profile));
-    expect(diffs.length).toBe(1);
-    const devEngines = JSON.parse(diffs[0].after).devEngines;
-    expect(devEngines.packageManager.version).toBe('>=11.8.0');
-
-    await fs.rm(tmpDir, { recursive: true });
-  });
-
-  test('apply writes devEngines to package.json', async () => {
-    const tmpDir = await fs.mkdtemp(
-      path.join(os.tmpdir(), 'xtarterize-engines-apply-')
-    );
-    await fs.writeFile(
-      path.join(tmpDir, 'package.json'),
-      JSON.stringify({
-        devDependencies: {},
-        name: 'engines-test',
-      })
-    );
-    await fs.writeFile(path.join(tmpDir, '.nvmrc'), '18\n');
-
-    const profile = await detectProject(tmpDir);
-    await run(packageEnginesTask.apply(tmpDir, profile));
-    const content = JSON.parse(
-      await fs.readFile(path.join(tmpDir, 'package.json'), 'utf-8')
-    );
-    expect(content.devEngines).toEqual(EXPECTED_DEV_ENGINES);
-
-    await fs.rm(tmpDir, { force: true, recursive: true });
-  });
+  for (const { files, name, verify } of devEnginesCases) {
+    test(name, () => withProject(files, verify));
+  }
 });
