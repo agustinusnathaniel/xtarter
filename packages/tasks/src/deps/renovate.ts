@@ -32,6 +32,7 @@ export const renovateTask = defineSingleTargetTask({
     'dependency updates',
     'dependabot',
     'auto',
+    'updates',
   ],
   label: 'Renovate config',
   scope: 'root',

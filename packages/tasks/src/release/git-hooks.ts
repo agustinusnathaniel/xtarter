@@ -124,6 +124,7 @@ export const gitHooksTask = defineTask({
   id: 'release/git-hooks',
   keywords: [
     'git hooks',
+    'hooks',
     'husky',
     'pre-commit',
     'commit-msg',

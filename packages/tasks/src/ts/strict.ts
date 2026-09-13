@@ -66,6 +66,7 @@ export const strictTask = defineTask({
     'type checking',
     'strict mode',
     'type safety',
+    'typing',
   ],
   label: 'tsconfig - strict compiler options',
   tags: [
