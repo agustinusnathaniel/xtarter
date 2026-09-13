@@ -10,5 +10,5 @@ Fix the CLI failure contract and keep manifest errors typed
   task statuses are interrupted instead of crashing.
 - `writeRunManifest` wraps raw filesystem failures in `BackupError` with the
   original message, and `liftBackup` no longer casts arbitrary rejections.
-- `detectProjectWithAmbiguity` maps rejections to `TaskError` instead of
-  leaking them as defects.
+- `resolveProjectTasks` maps project-detection rejections to `TaskError`
+  instead of leaking them as defects.

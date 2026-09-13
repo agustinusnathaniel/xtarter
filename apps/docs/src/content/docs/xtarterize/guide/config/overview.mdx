@@ -67,10 +67,10 @@ flowchart TD
   </TabItem>
 </Tabs>
 
-## Ambiguity Resolution
+## Framework Precedence
 
 <Aside type="note">
-  If both `react` and `react-native` are detected, xtarterize prompts you to clarify which describes the project. In CI mode (`--quiet`), it defaults to `react`.
+  If both `react` and `react-native` (or `expo`) are detected, xtarterize treats the project as React Native. There is no prompt to clarify the framework.
 </Aside>
 
 ## Task Gating

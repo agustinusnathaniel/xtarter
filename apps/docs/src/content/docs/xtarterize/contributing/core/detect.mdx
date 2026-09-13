@@ -131,10 +131,10 @@ discovered via parent-directory walk-up. In non-monorepos,
   </TabItem>
 </Tabs>
 
-## Ambiguity Handling
+## Framework Precedence
 
 <Aside type="note">
-  When both `react` and `react-native` are present in dependencies, `detectProject()` returns `framework: null`. The CLI layer then prompts the user to clarify which describes the project. In `--quiet` mode, it defaults to `react`.
+  When both `react` and `react-native` (or `expo`) are present in dependencies, `detectFramework()` returns `'react-native'`; there is no prompt to disambiguate. `framework` is `null` only when the project has no `package.json`.
 </Aside>
 
 ## Example
