@@ -216,6 +216,8 @@ export const packageScriptsCases = defineScriptCases(20, [
     afterContains: [
       '"ultracite:check": "ultracite check"',
       '"ultracite:fix": "ultracite fix"',
+      // No `ultracite` task key is generated, so referencing it would make
+      // `turbo run check:turbo` fail for consumers.
       '"check:turbo": "turbo run typecheck test"',
     ],
     name: 'omits ultracite from check:turbo when no ultracite script exists',
