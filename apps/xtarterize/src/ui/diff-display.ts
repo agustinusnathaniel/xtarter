@@ -14,7 +14,7 @@ export function displayDiffs(
   // empty-diffs case - so consumers can always parse stdout. Terminal
   // mode has nothing to render when diffs are empty.
   if (format === 'json') {
-    displayJsonDiffs(diffs, failures);
+    console.log(JSON.stringify(buildJsonOutput(diffs, failures)));
     return;
   }
 
@@ -86,11 +86,6 @@ function renderHunkDiff(hunks: Array<DiffHunk>): void {
       }
     }
   }
-}
-
-function displayJsonDiffs(diffs: Array<FileDiff>, failures = 0): void {
-  const output = buildJsonOutput(diffs, failures);
-  console.log(JSON.stringify(output));
 }
 
 function buildJsonOutput(diffs: Array<FileDiff>, failures = 0): JsonOutput {
