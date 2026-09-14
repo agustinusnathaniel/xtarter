@@ -1,34 +1,22 @@
 # ADR-007: Array Replacement in JSON Merge Strategy
 
-**Status:** Accepted  
+**Status:** Accepted
 **Date:** 2026-04-29
 
 ## Decision
 
-`mergeJson` (used for `biome.json`, `tsconfig.json`, VSCode settings, etc.) shall **replace arrays** rather than concatenate them. This is implemented via a custom `createDefu` callback that overwrites array values instead of merging them.
+JSON configuration merges replace array values instead of concatenating them. Object values still merge deeply and additively.
 
 ## Rationale
 
-The default `defu` behavior concatenates arrays: `[100] + [100] = [100, 100]`. For JSON configuration files, this produces incorrect results:
+The underlying merge library concatenates arrays by default, which corrupts merged configuration: a ruler list or a preset list would double on every run. Configuration arrays are usually intentional replacements, not additive collections.
 
-- `editor.rulers: [100]` merged with `editor.rulers: [100]` → `[100, 100]` (duplicate ruler)
-- `extends: ["biome"]` merged with `extends: ["biome"]` → `["biome", "biome"]` (duplicate extends)
+## Alternatives Considered
 
-Configuration arrays are typically intentional replacements, not additive collections.
-
-## Implementation
-
-```typescript
-const mergeJsonDefu = createDefu((obj, key, value) => {
-  if (Array.isArray(obj[key])) {
-    obj[key] = value
-    return true
-  }
-})
-```
+- Concatenate arrays as the library does by default: produces duplicate entries in merged configs.
 
 ## Consequences
 
-- Array values in JSON configs are replaced, not merged.
-- Prevents duplicate values in `biome.json`, `tsconfig.json`, `.vscode/settings.json`.
-- Object merging remains deep and additive (the desired behavior for non-array values).
+- Merged configuration never accumulates duplicate array entries.
+- A task can only replace an array wholesale; it cannot append a single item to a user's array.
+- Object merging remains deep and additive.

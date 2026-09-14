@@ -3,50 +3,22 @@
 **Status:** Accepted  
 **Date:** 2026-04-17
 
+## Context
+
+The monorepo separates library packages from applications, and the packages need a dependency direction that prevents import cycles.
+
 ## Decision
 
-Strict one-way dependency graph:
+Enforce a strict one-way dependency graph: the CLI app depends on core and tasks; tasks depends on core and patchers; core and patchers depend on nothing else in the workspace. No package may import from a package it does not declare, and circular dependencies are forbidden.
 
-```
-apps/xtarterize
-  → @xtarterize/core
-  → @xtarterize/tasks
-        → @xtarterize/core
-        → @xtarterize/patchers
-```
-
-No package may import from a package it doesn't depend on. No circular dependencies.
-
-### Package responsibilities
-
-| Package                        | Owns                                                                                                                                            | Depends on                                                              |
-| ------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| `@xtarterize/core`             | `ProjectProfile`, `detectProject()`, `Task` interface, `resolveTasks()`, `planTasks()`, `executePlan()`, `backup.ts`, all utils (`fs`, `pkg`, `diff`, `logger`) | npm: `@clack/prompts`, `citty`, `consola`, `diff`, `effect`, `json5`, `nypm`, `pathe`, `picocolors`, `pkg-types`, `tinyexec` |
-| `@xtarterize/patchers`         | `mergeJson()`, `parseJsonc()`, `patchJson()`, `injectVitePluginIntoCode()`                                                                      | npm: `defu`, `json5`, `jsonc-parser`, `magicast`, `pathe`               |
-| `@xtarterize/tasks`            | All 19 task implementations, all template renderers                                                                                             | `@xtarterize/core`, `@xtarterize/patchers`, npm: `nypm`                 |
-| `xtarterize` (apps/xtarterize) | CLI commands, UI components, citty entry point                                                                                                  | `@xtarterize/core`, `@xtarterize/tasks`, npm: `@clack/prompts`, `citty` |
-
-The YAML patcher (`mergeYaml`, `parseYaml`) and the filesystem `injectVitePlugin` wrapper were retired after this ADR: workflows are emitted as text templates, and Vite config patching is content-level via `injectVitePluginIntoCode`.
-
-Update (2026-09-12): `effect` is a `@xtarterize/core` dependency again, pinned to `4.0.0-rc.113` in the workspace catalog (ADR 036). It had been removed by ADR 035 on 2026-09-11. The rest of the dependency list in the table above reflects the state at the time of this decision.
-
-### Circular dependency resolution
-
-The `Task` interface (`_base.ts`) lives in `@xtarterize/core` - not in `@xtarterize/tasks` - because:
-
-- `core/apply.ts` and `core/resolve.ts` need to import `Task`
-- `tasks/` needs to import `ProjectProfile` from `core/detect.ts`
-- Putting `_base.ts` in `tasks/` would create a cycle: `core → tasks → core`
+The task interface lives in core rather than tasks because core's orchestration code imports it while tasks must import core's project detection; placing it in tasks would create a core-to-tasks-to-core cycle.
 
 ## Rationale
 
-- `@xtarterize/core` is the foundational layer - everything else builds on it
-- `@xtarterize/patchers` is orthogonal - it handles file transformation mechanics
-- `@xtarterize/tasks` combines both to produce concrete task implementations
-- `apps/xtarterize` is the thinnest layer - just user interaction and orchestration
+- Core is the foundational layer, patchers handle file transformation mechanics, tasks combine both, and the CLI is the thinnest layer of user interaction and orchestration.
+- A single direction keeps the graph acyclic and lets packages build and publish independently.
 
 ## Consequences
 
-- `tsup` in `@xtarterize/tasks` and `apps/xtarterize` needs `noExternal: [/^@xtarterize\//]` to bundle workspace deps
-- Tests at root level need vitest aliases to resolve workspace packages
-- Adding a new task means touching `@xtarterize/tasks` only - no other package changes
+- Workspace packages need explicit resolution configuration in builds and tests when imported across boundaries.
+- Adding a task touches only the tasks package, no other package.
