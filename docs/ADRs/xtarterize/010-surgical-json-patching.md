@@ -5,56 +5,24 @@
 
 ## Context
 
-JSON configuration tasks (`tsconfig.json`, `biome.json`, `turbo.json`, `.vscode/settings.json`) previously used `JSON.stringify(mergeJson(...), null, 2)` to produce the patched output. This approach:
-
-- Destroyed user comments (`//`, `/* */`)
-- Reordered keys alphabetically, breaking intentional grouping
-- Changed indentation style (tabs → spaces, or 4 spaces → 2 spaces)
-- Produced large noisy diffs even for tiny changes
-
-For example, adding `incremental: true` to a `tsconfig.json` with comments and custom formatting would rewrite the entire file.
+JSON config tasks previously serialized the merged object back to text. That destroyed user comments, reordered keys, changed indentation, and produced whole-file diffs for one-line changes.
 
 ## Decision
 
-Introduce `patchJson` in `@xtarterize/patchers`, powered by Microsoft's [`jsonc-parser`](https://github.com/microsoft/node-jsonc-parser). It generates byte-level text edits that preserve:
-
-- Comments (inline `//` and block `/* */`)
-- Key ordering
-- Whitespace and indentation style
-- Trailing commas (in JSONC)
-
-Tasks that write JSON configs shall use `patchJson` for the final text transformation, while still using `mergeJson` for the object-level merge logic.
-
-## Implementation
-
-```typescript
-// 1. Compute target state via mergeJson
-const actual = parseJsonc(before)
-const merged = mergeJson(actual ?? {}, incoming)
-
-// 2. Apply surgically via patchJson
-const after = patchJson(before, merged)
-```
-
-`patchJson` uses `jsonc-parser` to compute `Edit[]` operations (insert, replace, delete at byte offsets) and applies them in reverse order to avoid offset shifting.
+Patch JSON configs surgically: compute the target object with the merge logic, then apply the difference as byte-level text edits that preserve comments, key order, whitespace, indentation, and trailing commas. Use [`jsonc-parser`](https://github.com/microsoft/node-jsonc-parser) to compute the edits. Object-level merging and text-level patching remain separate steps.
 
 ## Rationale
 
-- **Preservation > Normalization**: Users intentionally format and comment their configs. Overwriting them is hostile.
-- **Minimal diffs**: Only the changed lines appear in `diff` output, making review easier.
-- **Ecosystem standard**: `jsonc-parser` is maintained by Microsoft (VS Code team) and battle-tested on millions of JSONC files.
+Preservation beats normalization: users format and comment configs deliberately, and overwriting that is hostile. Minimal diffs make review easier, and the parser is maintained by Microsoft's VS Code team and battle-tested on JSONC files.
 
 ## Alternatives Considered
 
-| Approach | Rejected Because |
-|----------|------------------|
-| Custom text parser | Would require ~400 lines of complex offset arithmetic; NIH syndrome |
-| `json5` stringify | Doesn't preserve comments; only preserves some formatting |
-| AST-based (recast for JSON) | No mature JSONC AST tool; overkill for config patches |
+- Hand-written text parser: hundreds of lines of offset arithmetic for no gain.
+- JSON5 stringify: does not preserve comments and only some formatting.
+- AST-based rewriting: no mature JSONC AST tool, overkill for config patches.
 
 ## Consequences
 
-- `@xtarterize/patchers` gains a new runtime dependency: `jsonc-parser`
-- CLI bundler (`tsdown`) must mark `jsonc-parser` as `neverBundle` to avoid runtime module resolution errors
-- All JSON config tasks (`createJsonMergeTask`, `createMultiFileJsonMergeTask`, `createPackageJsonTask`) now produce minimal, formatting-preserving diffs
-- Test expectations must account for preserved formatting rather than normalized output
+- Config diffs stay minimal and preserve user formatting.
+- A runtime dependency on `jsonc-parser` is added, and the CLI bundler must keep it external.
+- Test expectations must account for preserved formatting instead of normalized output.

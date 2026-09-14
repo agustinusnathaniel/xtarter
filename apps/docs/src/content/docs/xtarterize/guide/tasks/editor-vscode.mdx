@@ -1,45 +1,29 @@
 ---
 title: editor/vscode
-description: Configure .vscode/settings.json and .vscode/extensions.json for consistent editor behavior.
+description: Write workspace settings and extension recommendations for VS Code.
 ---
 
-import { Aside } from '@astrojs/starlight/components'
+Writes or merges `.vscode/settings.json` and `.vscode/extensions.json`.
 
-Writes or merges VS Code workspace settings and extension recommendations.
+## Settings
 
-## Settings (.vscode/settings.json)
+- Biome formats TS, JS, JSON, and JSONC, with format on save enabled and format on paste disabled
+- Biome fix and organize imports as explicit code actions on save
+- Non-relative import module specifiers (`@/` paths); update imports on file move for TS and JS
 
-Applies a set of opinionated defaults:
+Detected tools add settings:
 
-- **Formatter**: Biome as default formatter for TS, JS, JSON, JSONC
-- **Format on save**: Enabled
-- **Format on paste**: Disabled (avoids unwanted formatting during paste)
-- **Code actions on save**: Biome fix and organize imports (explicit)
-- **Import module specifier**: Non-relative (`@/` paths)
-- **Update imports on file move**: Always (TS and JS)
+| Detected | Added |
+| --- | --- |
+| Monorepo | `typescript.tsdk` from the workspace; `search.exclude` for `node_modules`, `.turbo`, `dist` |
+| Vite | `files.associations` maps `.css` to Tailwind CSS |
+| Vue | `vue.server.hybridMode`; Vue formatter |
+| React Native | `typescript.tsserver.watchOptions` for fs events |
+| Next.js | `typescript.tsdk`; Emmet JSX languages |
+| TanStack Router | `files.exclude` hides `routeTree.gen.ts` |
+| Tailwind CSS | CVA/CN class regex patterns for IntelliSense |
+| TypeScript | `typescript.disableAutomaticTypeAcquisition`; `typescript.enablePromptUseWorkspaceTsdk` |
 
-Conditional settings based on detected tools:
+## Extensions
 
-| Detected | Settings Added |
-|----------|----------------|
-| **Monorepo** | `typescript.tsdk` set to workspace TypeScript; `search.exclude` for node_modules, .turbo, dist |
-| **Vite** | `files.associations` maps `.css` to Tailwind CSS language mode |
-| **Vue** | `vue.server.hybridMode: true`; Vue formatter |
-| **React Native** | `typescript.tsserver.watchOptions` for fs events |
-| **Next.js** | `typescript.tsdk`; Emmet JSX include languages |
-| **TanStack Router** | `files.exclude` hides `routeTree.gen.ts` from file explorer |
-| **Tailwind CSS** | CVA/CN class regex patterns for IntelliSense |
-| **TypeScript** | `typescript.disableAutomaticTypeAcquisition: true`; `typescript.enablePromptUseWorkspaceTsdk: true` |
-
-## Extensions (.vscode/extensions.json)
-
-Recommends `biomejs.biome` and `ms-vscode.vscode-typescript-next`, plus
-framework-specific extensions when detected (Tailwind CSS, Vue, React Native).
-
-<Aside type="tip">
-  Extension recommendations are **merged** with any existing
-  `recommendations` array in your file. Your custom extensions are never
-  removed.
-</Aside>
-
-See the [task catalog](/xtarterize/guide/tasks/overview/) for the task ID, group, applicability, and generated files, and the [Monorepo guide](/xtarterize/guide/monorepo/) for root-scope rules.
+Recommends `biomejs.biome` and `ms-vscode.vscode-typescript-next`, plus framework-specific extensions for Tailwind CSS, Vue, or React Native. Existing recommendations are kept and merged, never removed.

@@ -3,7 +3,7 @@ title: Vite+ Organization Templates
 description: Use @xtarter/create with vp create to scaffold projects via Vite+.
 ---
 
-[`@xtarter/create`](https://www.npmjs.com/package/@xtarter/create) is a Vite+ organization template package. It exposes the same curated starter templates as `create-xtarter-app` through the `vp create` workflow.
+[`@xtarter/create`](https://www.npmjs.com/package/@xtarter/create) exposes the same starter templates as `create-xtarter-app` through the Vite+ `vp create` workflow.
 
 ## Prerequisites
 
@@ -12,21 +12,16 @@ description: Use @xtarter/create with vp create to scaffold projects via Vite+.
 ## Usage
 
 ```bash
-# Interactive picker
-vp create @xtarter
-
-# Direct selection
-vp create @xtarter:vite-tailwind
-
-# With a specific version
-vp create @xtarter:vite-tailwind@0.1.0
+vp create @xtarter                 # Interactive picker
+vp create @xtarter:vite-tailwind   # Direct selection
+vp create @xtarter:vite-tailwind@0.1.0  # Specific version
 ```
 
-## Available Templates
+## Available templates
 
 | Command | Template |
 |---------|----------|
-| `vp create @xtarter:next-chakra` | Next.js 16 + Chakra UI v3 + Biome + Turborepo |
+| `vp create @xtarter:next-chakra` | Next.js 16 + Chakra UI v3 + Turborepo |
 | `vp create @xtarter:next-tailwind` | Next.js 16 + Tailwind CSS v4 |
 | `vp create @xtarter:vite-chakra` | Vite+ (Vite 8) + TanStack Router + Chakra UI v3 |
 | `vp create @xtarter:vite-tailwind` | Vite+ (Vite 8) + TanStack Router + Tailwind CSS v4 |
@@ -34,22 +29,4 @@ vp create @xtarter:vite-tailwind@0.1.0
 
 ## Limitations
 
-`vp create` copies template files as-is - it does not run a template engine. Unlike `create-xtarter-app`, these are **not** performed automatically:
-
-- `package.json` project name update
-- Dependency installation
-- Git repository initialization
-- CI/CD config cleanup
-
-If you need the full interactive workflow, use `create-xtarter-app` instead.
-
-## Comparison
-
-| Feature | `vp create @xtarter` | `create-xtarter-app` |
-|---------|---------------------|---------------------|
-| Template selection | Interactive picker built into Vite+ | Interactive prompts via `@clack/prompts` |
-| Package manager choice | - (manual) | pnpm, npm, bun, yarn |
-| Deps installation | - | Auto with chosen package manager |
-| Git init | - | Auto |
-| CI/CD cleanup | - | Optional (`--clean`) |
-| Requires Vite+ | Yes | No |
+`vp create` copies template files as-is. Unlike `create-xtarter-app`, it does not update the `package.json` name, install dependencies, initialize Git, or clean CI/CD configs. Use `create-xtarter-app` for the full workflow.

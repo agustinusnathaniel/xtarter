@@ -1,124 +1,31 @@
 # ADR-020: Include Ultracite as a First-Class Conformance Dependency
 
-**Status:** Accepted (Supersedes ADR-004)  
+**Status:** Accepted (Supersedes [ADR-004](004-exclude-ultracite-integration.md))
 **Date:** 2026-05-21
 
 ## Context
 
-xtarterize provides Biome, Oxlint, and Oxfmt conformance setup. ADR-004
-(2026-04-29) excluded Ultracite integration because it had its own CLI and
-initialization flow, wrapping it would duplicate responsibilities, and the
-boundary was clear: xtarterize for setup, Ultracite for presets.
-
-Since then:
-
-- Ultracite v7.7.0 distributes first-class presets for Biome, Oxlint, and Oxfmt
-  as importable packages (`ultracite/biome/*`, `ultracite/oxlint/*`,
-  `ultracite/oxfmt`).
-- xtarterize's user template projects (nextarter-tailwind,
-  vite-react-tailwind-starter) already use `extends` to reference those
-  presets, treating them as the de facto standard.
-- Running xtarterize and then Ultracite separately conflicts config files,
-  creates two sources of truth, and confuses users.
-- The `depNames` task-factory pattern (added in this work) makes it trivial to
-  install `ultracite` alongside `@biomejs/biome` or `oxlint`.
+xtarterize sets up Biome, Oxlint, and Oxfmt conformance. ADR-004 excluded Ultracite because it had its own CLI and initialization flow. That boundary no longer holds: Ultracite ships importable presets for all three tools, xtarterize's own starter templates already extend them, and running both tools separately conflicts config files and creates two sources of truth.
 
 ## Decision
 
-Include `ultracite` as a first-class dependency in xtarterize's Biome, Oxlint,
-and Oxfmt tasks. Every task that sets up one of these tools will also install
-`ultracite` and generate config files that extend/import Ultracite presets.
+Install `ultracite` whenever xtarterize sets up Biome, Oxlint, or Oxfmt, and generate config files that extend or import its presets. Ultracite becomes a first-class conformance dependency rather than an optional extra.
 
-## Decision Drivers
+## Rationale
 
-- **Template parity**: xtarterize should produce what its own templates ship.
-- **Seamless UX**: one tool handles the full setup; sequential runs are
-  error-prone.
-- **Low maintenance**: Ultracite presets are pure config imports, so there is
-  no CLI behavior to track. Users get the presets automatically and can modify
-  the generated config to opt out.
+- Template parity: xtarterize should produce what its own starter templates ship.
+- One tool handles the full setup; running xtarterize and Ultracite separately is error-prone.
+- The presets are pure config imports, so there is no separate CLI behavior to track.
 
-## Considered Options
+## Alternatives Considered
 
-### Option 1 (Selected): First-Class Ultracite Integration
-
-Install `ultracite` whenever Biome, Oxlint, or Oxfmt is selected, and generate
-config files that extend/import its presets.
-
-### Option 2: Keep the ADR-004 Boundary
-
-Rejected: two CLI invocations, potential conflicting configs, and user
-templates that already assume Ultracite is present.
-
-### Option 3: Auto-Detect Ultracite
-
-Rejected: behavior would depend on order of operations and new users would not
-get the best defaults; the `depNames` pattern already handles installation.
+- **Keep the ADR-004 boundary.** Rejected: two invocations, potentially conflicting configs, and templates that already assume Ultracite is present.
+- **Auto-detect Ultracite and adapt only then.** Rejected: behavior would depend on order of operations, and new users would miss the best defaults.
 
 ## Consequences
 
-### Positive
-
-- **Single source of truth**: one pass configures the linting stack with the
-  presets users expect, matching xtarterize's starter templates.
-- **New users get best defaults** without an extra discovery step.
-- **Backward compatible**: existing `.oxlintrc.json` files are detected and
-  merged; new projects get `oxlint.config.ts`.
-- **`depNames` pattern extended** to multiple dependencies, reusable by other
-  tasks.
-
-### Negative
-
-- Users who explicitly don't want Ultracite must add overrides to their config.
-- The `extends` field in `biome.json` means rules live in `node_modules`, not
-  inline - users must look at the Ultracite source to understand rule behavior.
-- Install time increases slightly (additional package download).
-
-### Risks
-
-- **Ultracite breaking changes**: If Ultracite renames a preset or changes a
-  rule default, projects may see new lint errors.
-  - **Mitigation**: xtarterize pins to the semantic version of Ultracite and
-    provides a `check` diff so users can review proposed changes.
-- **Ghost `.oxlintrc.json` files**: Projects migrating from standalone
-  `.oxlintrc.json` will end up with both the old JSON file and the new
-  `oxlint.config.ts`/`oxlint.config.json`.
-  - **Mitigation**: Detection now covers both formats. Users can safely delete
-    the old file after verifying the new config works.
-
-## Implementation Notes
-
-- **Biome**: `extends: ['ultracite/biome/core', ...]` plus xtarterize overrides
-  for conventions that differ (e.g., `useConsistentTypeDefinitions: 'off'`,
-  `useFilenamingConvention`).
-- **Oxlint**: new projects generate `oxlint.config.ts` with `defineConfig` and
-  Ultracite imports; existing `.oxlintrc.json` / `oxlint.config.json` files get
-  JSON merge.
-- **Oxfmt**: new projects generate `oxfmt.config.ts` spreading the preset with
-  `singleQuote: true`; existing `.oxfmtrc.json` files are preserved.
-- **Detection**: custom detectors in `detect.ts` cover the old and new config
-  formats.
-- **Scripts**: `package-scripts.ts` resolves `useUltracite` to determine which
-  lint tool scripts to generate.
-
-## Related Decisions
-
-- **ADR-004**: Superseded by this ADR.
-- **ADR-007**: Array replacement in JSON merge - relevant for understanding how
-  `extends` arrays behave during merge.
-- **ADR-009**: Framework-aware Biome config - extended by this ADR to use
-  Ultracite extends instead of inline rules.
-- **ADR-014**: Vite+ migration - oxlint/oxfmt tasks are now Vite+-aware and
-  generate their full configs.
-
-## Schema Limitation: Biome skipComments
-
-Biome 2.5.9 only supports `skipBlankLines` for `noExcessiveLinesPerFile` / `noExcessiveLinesPerFunction` (`skipComments` not in schema); Oxlint supports both. See https://biomejs.dev/linter/rules/no-excessive-lines-per-function/ and https://biomejs.dev/linter/rules/no-excessive-lines-per-file/.
-
-## References
-
-- Ultracite source: `~/.opensrc/repos/github.com/haydenbleasel/ultracite`
-- Presets analyzed at
-  `packages/cli/config/ultracite/biome/*`,
-  `packages/cli/config/ultracite/oxlint/*`,
-  `packages/cli/config/ultracite/oxfmt`
+- One pass configures the linting stack with the presets users expect, and new projects get good defaults without a discovery step.
+- Users who do not want Ultracite must override the generated config, and rule behavior lives in `node_modules` rather than inline, so understanding a rule means reading Ultracite's source.
+- Ultracite preset or rule changes can surface new lint errors in existing projects; `check` reports which configs differ so users can review proposed changes.
+- Migrating a legacy standalone Oxlint JSON config can leave both the old and new config files in place; detection covers both, and the old file can be deleted after verifying the new one.
+- Dependency count and install time increase slightly.

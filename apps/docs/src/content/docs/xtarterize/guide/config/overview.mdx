@@ -1,105 +1,34 @@
 ---
 title: Configuration
-description: How xtarterize detects and adapts to your project.
+description: Detection behavior and task selection keys for xtarterize.
 ---
 
-import { Aside, Tabs, TabItem } from '@astrojs/starlight/components'
-import AllPackageManagers from '@/components/AllPackageManagers.astro'
-
-xtarterize doesn't require a config file. It detects your project's stack automatically and applies only what's appropriate.
+No config file is required. xtarterize detects your stack and applies only what fits.
 
 ## Detection
 
-When you run `init`, xtarterize scans `package.json`, lockfiles, config files, and directories to build a `ProjectProfile` covering framework, bundler, router, styling, package manager, monorepo status, GitHub, and existing configs. See [Project detection](/xtarterize/contributing/core/detect/) for the full profile schema and precedence rules.
+xtarterize reads `package.json`, lockfiles, config files, and directories to determine your framework, bundler, router, styling, package manager, monorepo status, and existing configs.
 
-## Detection Flow
+- Framework, bundler, router, styling, and TypeScript come from `dependencies` and `devDependencies`.
+- The package manager comes from the lockfile: `pnpm-lock.yaml`, `yarn.lock`, `package-lock.json`, `bun.lock`, or `bun.lockb`.
+- Monorepo status, GitHub, and existing configs come from the file system.
 
-```mermaid
-flowchart TD
-    A[read package.json] --> B[detectFramework]
-    A --> C[detectBundler]
-    A --> D[detectStyling]
-    A --> E[detectVitePlus]
-    B --> F[detectRouter]
-    C --> F
-    
-    B --> G[detectRuntime]
-    C --> G
-    
-    A --> H[detectPackageManager]
-    A --> I[detectMonorepo]
-    A --> J[detectGitHubWorkflows]
-    A --> K[detectExistingConfigs]
-    
-    G --> L[ProjectProfile]
-    F --> L
-    D --> L
-    E --> L
-    H --> L
-    I --> L
-    J --> L
-    K --> L
-    
-    style A fill:#6366f1,color:#fff
-    style L fill:#22c55e,color:#fff
-```
+:::note
+If `react` and `react-native` or `expo` are both present, the project is treated as React Native.
+:::
 
-## Detection Sources
+## Task gating
 
-<Tabs>
-  <TabItem label="package.json">
-    Framework, bundler, router, styling, and TypeScript are all detected from [`dependencies`](https://docs.npmjs.com/cli/v10/configuring-npm/package-json#dependencies) and [`devDependencies`](https://docs.npmjs.com/cli/v10/configuring-npm/package-json#devdependencies).
-  </TabItem>
-  <TabItem label="Lock files">
-    Package manager is detected from lock file presence: [`pnpm-lock.yaml`](https://pnpm.io/), [`yarn.lock`](https://yarnpkg.com/features/zero-installs), [`package-lock.json`](https://docs.npmjs.com/cli/v10/configuring-npm/package-lock-json), [`bun.lock`](https://bun.sh/docs/install/lockfile), or `bun.lockb`.
-  </TabItem>
-  <TabItem label="File system">
-    Monorepo status, GitHub, and existing configs are detected by checking for specific files and directories.
-  </TabItem>
-</Tabs>
+- Vite plugin tasks need a browser Vite project
+- Monorepo tasks need a detected monorepo
+- CI tasks need a GitHub repository
+- TypeScript tasks need TypeScript
 
-## Framework Precedence
-
-<Aside type="note">
-  If both `react` and `react-native` (or `expo`) are detected, xtarterize treats the project as React Native. There is no prompt to clarify the framework.
-</Aside>
-
-## Task Gating
-
-Tasks are gated on the detected profile:
-
-- Vite plugin tasks only run for browser Vite projects (`bundler === 'vite'` and `runtime !== 'node'`)
-- Monorepo tasks only run when `monorepo === true`
-- CI tasks only run when `hasGitHub === true`
-- TypeScript tasks only run when `typescript === true`
-
-### Monorepo scope filtering
-
-In monorepos, tasks are additionally filtered by their scope (`root`, `package`, or `both`). See the [Monorepo guide](/xtarterize/guide/monorepo/) for the scope table and filtering rules.
-
-## Parameterized Templates
-
-All templates adapt to the detected profile:
-
-- GitHub workflows use the detected package manager for install commands
-- Knip entry points are inferred from the bundler/framework
-- Plop generators vary by framework (React gets component+hook, Vue gets component+composable, etc.)
-- VS Code extensions include framework-specific recommendations
-- AGENTS.md includes framework-specific instructions
-
-## Backup System
-
-Before any file is modified, xtarterize creates a timestamped backup in `.xtarterize/backups/`. An index file tracks all backups for easy restoration.
-
-The `.xtarterize/` directory is automatically added to your project's `.gitignore` when you run any `xtarterize` command. You won't see these internal artifacts in `git status`.
-
-Restore with:
-
-<AllPackageManagers type="exec" pkg="xtarterize@latest" args="restore tsconfig.json" />
+In monorepos, tasks are also filtered by scope. See the [monorepo guide](/xtarterize/guide/monorepo/).
 
 ## Task selection
 
-`.xtarterizerc` accepts `skip` and `only` arrays so repeat runs apply the same filter without CLI flags. The same fields work in the `"xtarterize"` key of `package.json`.
+`.xtarterizerc` accepts `skip` and `only` arrays, and the same fields work under the `"xtarterize"` key in `package.json`.
 
 ```json
 {
@@ -108,12 +37,9 @@ Restore with:
 }
 ```
 
-Precedence rules:
+- CLI `--only` replaces the config `only` list
+- CLI `--skip` adds to the config `skip` list
+- `skip` wins when a task is in both lists
+- An absent or empty `only` list imposes no restriction
 
-- CLI `--only` overrides the config `only` list when provided
-- CLI `--skip` extends the config `skip` list
-- A task in both `skip` and `only` is excluded - skip wins
-- An empty or absent `only` list means no restriction, not "apply nothing"
-
-For command behavior, see the [CLI reference](/xtarterize/guide/cli/overview/).
-For generated files, see the [task catalog](/xtarterize/guide/tasks/overview/).
+For command behavior, see the [CLI reference](/xtarterize/guide/cli/overview/); for generated files, see the [task catalog](/xtarterize/guide/tasks/overview/).

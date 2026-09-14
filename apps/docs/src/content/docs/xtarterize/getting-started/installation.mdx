@@ -1,48 +1,30 @@
 ---
 title: Installation
-description: Install and set up xtarterize.
+description: Install and run xtarterize.
 ---
 
-import { Aside, Steps, LinkButton } from '@astrojs/starlight/components'
 import AllPackageManagers from '@/components/AllPackageManagers.astro'
 
 ## Prerequisites
 
-- [Node.js](https://nodejs.org/) 24 or later
-- A [JavaScript](https://developer.mozilla.org/en-US/docs/Web/JavaScript)/[TypeScript](https://www.typescriptlang.org/) project (or starting fresh)
+- Node.js 24 or later
+- A JavaScript or TypeScript project, or a directory for a new one
+- A `package.json` with a `name` field and an initialized Git repository (preflight checks validate both before making changes)
 
-<Aside>
-  xtarterize requires a [`package.json`](https://docs.npmjs.com/cli/v10/configuring-npm/package-json) with a `name` field and an initialized [Git](https://git-scm.com/) repository. These are validated by the preflight checks before any changes are made.
-</Aside>
+## Run without installing
 
-## Run Without Installing
-
-You can use xtarterize without installing it globally by using `npx`:
+Run it without installing anything globally:
 
 <AllPackageManagers type="exec" pkg="xtarterize@latest" args="init" />
 
-This is the recommended approach - you always get the latest version.
-
-## Verify It Works
+## Verify it works
 
 <AllPackageManagers type="exec" pkg="xtarterize@latest" args="--version" />
 
 <AllPackageManagers type="exec" pkg="xtarterize@latest" args="--help" />
 
-## Next Steps
+## Next steps
 
-<Steps>
-
-1. **Initialize a project** - Run `init` to detect and apply conformance. [Learn more →](/xtarterize/getting-started/initialization/)
-2. **Check status** - Run `check` to audit current conformance. [CLI Reference →](/xtarterize/guide/cli/overview/)
-3. **Explore tasks** - See what conformance tasks are available. [Tasks Guide →](/xtarterize/guide/tasks/overview/)
-
-</Steps>
-
-## References
-
-- [Node.js Downloads](https://nodejs.org/) - Download the latest LTS version
-- [npm npx Documentation](https://docs.npmjs.com/cli/v10/commands/npx) - Using npx to run packages without installing
-- [Git Documentation](https://git-scm.com/doc) - Getting started with Git version control
-
-<LinkButton href="/xtarterize/getting-started/initialization/">Initialize your project →</LinkButton>
+- [Initialize your project](/xtarterize/getting-started/initialization/) with `init`
+- [Audit conformance](/xtarterize/guide/cli/overview/) with `check`
+- [Explore conformance tasks](/xtarterize/guide/tasks/overview/)

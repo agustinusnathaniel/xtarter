@@ -1,48 +1,28 @@
 ---
 title: Getting Started with create-xtarter-app
-description: Scaffold a new JavaScript/TypeScript project from production-grade templates in seconds.
+description: Scaffold a new project from a curated template.
 ---
 
 import { LinkButton } from '@astrojs/starlight/components'
 import AllPackageManagers from '@/components/AllPackageManagers.astro'
 
-`create-xtarter-app` scaffolds a new project from a curated template, installs
-its dependencies, and can initialize Git. Templates include Biome, strict
-TypeScript, CI, VS Code settings, and agent skills.
+`create-xtarter-app` scaffolds a new project from a curated template, installs its dependencies, and can initialize Git.
 
 ## Quick start
 
-Scaffold a new project in one command:
-
 <AllPackageManagers type="create" pkg="xtarter-app@latest" />
 
-The interactive CLI will guide you through:
-1. **Project name** - what to call your new project
-2. **Template** - pick from Next.js, Vite + React, and more
-3. **Package manager** - pnpm (recommended), npm, bun, or yarn
-4. **Git init** - whether to initialize a git repository
-5. **CI/CD cleanup** - whether to remove pre-configured CI configs
-
-:::note
-Use `--yes` / `-y` to skip the template, package manager, Git, and cleanup
-prompts. It uses pnpm, the `next-chakra` template, Git init, and no CI cleanup.
-The project-name prompt still appears unless you provide a positional name.
-Any explicit flag such as `--pm bun` or `--clean` takes priority over `--yes`.
-:::
+The CLI prompts for a project name, template, package manager, Git init, and CI/CD cleanup. Use `--yes` / `-y` to accept the defaults (pnpm, `next-chakra`, Git init, no cleanup); the project name prompt still appears unless you pass a positional name. Explicit flags such as `--pm bun` or `--clean` take priority.
 
 <AllPackageManagers type="create" pkg="xtarter-app@latest" args="my-app --yes" title="Scaffold with defaults" />
 
-<AllPackageManagers type="create" pkg="xtarter-app@latest" args=". -t vite-tailwind" title="Scaffold into current directory" />
+<AllPackageManagers type="create" pkg="xtarter-app@latest" args="my-app -t vite-tailwind" title="Pick a template" />
 
-<AllPackageManagers type="create" pkg="xtarter-app@latest" args="my-app -t vite-tailwind --force" title="Overwrite existing directory" />
-
-<AllPackageManagers type="create" pkg="xtarter-app@latest" args="my-app --ref v1.0.0" title="Pin to a specific template version" />
-
-<LinkButton href="/create-xtarter-app/guide/templates/" size="lg">Browse all templates →</LinkButton>
+<LinkButton href="/create-xtarter-app/guide/templates/" size="lg">Browse all templates</LinkButton>
 
 ## Next steps
 
-- [Usage Guide](/create-xtarter-app/getting-started/usage/) - Walk through each prompt and option
-- [CLI Reference](/create-xtarter-app/guide/cli/) - All commands, arguments, and flags
-- [Template Catalog](/create-xtarter-app/guide/templates/) - Detailed descriptions of every template
-- [Keep in Sync](/xtarterize/) - After scaffolding, use xtarterize to maintain your configs
+- [Usage guide](/create-xtarter-app/getting-started/usage/) - Walk through each prompt
+- [CLI reference](/create-xtarter-app/guide/cli/) - Commands, arguments, and flags
+- [Template catalog](/create-xtarter-app/guide/templates/) - Every template
+- [Keep in sync](/xtarterize/) - Maintain configs after scaffolding

@@ -1,144 +1,27 @@
 ---
 title: Preflight & Diagnostics
-description: How xtarterize validates projects before making changes and audits for issues.
+description: Validation xtarterize runs before changes and the checks behind doctor.
 ---
 
-import { Aside, Tabs, TabItem } from '@astrojs/starlight/components'
+Every project command runs preflight before doing work, and `check` and `doctor` additionally run tooling diagnostics.
 
-Before any conformance changes are applied, xtarterize runs a series of validation checks. After changes, it can also diagnose potential issues with your project's tooling setup.
+## Preflight checks
 
-## Preflight Checks
+Preflight requires:
 
-Every command that targets a project (`init`, `sync`, `diff`, `check`, `add`,
-`list`, `query`, `restore`, `undo`, and `doctor`) runs preflight checks via
-`runPreflight(cwd)` before continuing.
+- A `package.json` in the project root (`MISSING_PACKAGE_JSON` when absent)
+- A `name` field in `package.json` (`INVALID_PACKAGE_JSON` when absent)
+- A git repository (`MISSING_GIT` when absent)
 
-### Validations
-
-| Check | Requirement | Error Code |
-|-------|-------------|------------|
-| [`package.json`](https://docs.npmjs.com/cli/v10/configuring-npm/package-json) exists | Project root must contain a `package.json` | `MISSING_PACKAGE_JSON` |
-| [`name`](https://docs.npmjs.com/cli/v10/configuring-npm/package-json#name) field present | `package.json` must have a `"name"` field | `INVALID_PACKAGE_JSON` |
-| [Git](https://git-scm.com/) repository | [`.git`](https://git-scm.com/book/en/v2/Getting-Started-What-is-Git%3F) directory must exist | `MISSING_GIT` |
-
-### Behavior
-
-If preflight checks fail, the CLI exits with code `1` and displays all errors with hints:
-
-```
-✖ Preflight checks failed
-
-  ✗ No package.json found
-    Run xtarterize init from the root of a JS/TS project.
-
-  ✗ No .git directory found
-    Initialize a git repository with "git init" before running xtarterize.
-```
-
-<Aside type="note">
-  A failed preflight prevents conformance tasks from running. The CLI may still
-  maintain `.gitignore` so its internal `.xtarterize/` directory stays out of
-  version control.
-</Aside>
+Covered commands are `init`, `sync`, `diff`, `check`, `add`, `list`, `query`, `restore`, `undo`, and `doctor`. When a check fails, the CLI prints every error with a hint and exits with code `1`, and conformance tasks do not run. `doctor` continues so it can still report diagnostics. The CLI can maintain `.gitignore` so the internal `.xtarterize/` directory stays out of version control even when preflight fails.
 
 ## Diagnostics
 
-The `check` command runs additional diagnostics to surface potential issues:
+- **Conflicting tools**: Biome alongside ESLint or Prettier, and legacy `.eslintrc` files, are reported as warnings.
+- **Tool installation**: for each tool declared in `package.json` (Biome, ESLint, TypeScript, Commitlint, Knip), the tool's version command confirms it is installed.
 
-### Conflict Checks
+`check` runs the tools and configuration groups. `doctor` runs every group (environment, tools, project, and configuration), and `--verbose` adds a system group with host platform information. Checks report `pass`, `warn`, or `fail` with a message. A check that throws becomes a single failure entry, so one broken check never hides the others, and a failing diagnostic sets exit code `1`.
 
-Detects incompatible or redundant tooling configurations:
+## CI mode
 
-| Check | Condition | Status |
-|-------|-----------|--------|
-| Biome + ESLint | Both [`@biomejs/biome`](https://biomejs.dev/) and [`eslint`](https://eslint.org/) in dependencies | `warn` |
-| Biome + Prettier | Both [`@biomejs/biome`](https://biomejs.dev/) and [`prettier`](https://prettier.io/) in dependencies | `warn` |
-| Legacy ESLint config | [`.eslintrc.*`](https://eslint.org/docs/latest/use/configure/configuration-files-deprecated) file exists | `warn` |
-| No conflicts | None of the above | `pass` |
-
-### Tool Installation Checks
-
-Verifies that tools listed in [`package.json`](https://docs.npmjs.com/cli/v10/configuring-npm/package-json) [`dependencies`](https://docs.npmjs.com/cli/v10/configuring-npm/package-json#dependencies)/[`devDependencies`](https://docs.npmjs.com/cli/v10/configuring-npm/package-json#devdependencies) are actually installed in [`node_modules`](https://docs.npmjs.com/cli/v10/configuring-npm/folders#node-modules):
-
-| Tool | Dependency | Command Checked |
-|------|------------|-----------------|
-| [Biome](https://biomejs.dev/) | [`@biomejs/biome`](https://www.npmjs.com/package/@biomejs/biome) | [`biome --version`](https://biomejs.dev/reference/cli/) |
-| [ESLint](https://eslint.org/) | [`eslint`](https://www.npmjs.com/package/eslint) | [`eslint --version`](https://eslint.org/docs/latest/use/command-line-interface) |
-| [TypeScript](https://www.typescriptlang.org/) | [`typescript`](https://www.npmjs.com/package/typescript) | [`tsc --version`](https://www.typescriptlang.org/docs/handbook/compiler-options.html) |
-| [Commitlint](https://commitlint.js.org/) | [`@commitlint/cli`](https://www.npmjs.com/package/@commitlint/cli) | [`commitlint --version`](https://commitlint.js.org/reference/cli.html) |
-| [Knip](https://knip.dev/) | [`knip`](https://www.npmjs.com/package/knip) | [`knip --version`](https://knip.dev/reference/cli/) |
-
-### Diagnostic Output
-
-```
-Diagnostics
-
-  ✔ Biome installation - Biome is installed
-  ~ ESLint installation - ESLint is in package.json but not installed (run install)
-  ~ Conflicting tools - Both Biome and ESLint are configured. Consider using one as primary.
-```
-
-## API Reference
-
-### `runPreflight(cwd)`
-
-`runPreflight()` stays a Promise-returning leaf and calls no Effect runtime. The command session lifts it with `Effect.tryPromise` at the session seam (ADR 036).
-
-```typescript
-import { runPreflight } from '@xtarterize/core'
-
-const result = await runPreflight('/path/to/project')
-
-if (!result.valid) {
-  for (const error of result.errors) {
-    console.log(error.code)    // 'MISSING_PACKAGE_JSON'
-    console.log(error.message) // 'No package.json found'
-    console.log(error.hint)    // 'Run xtarterize init from...'
-  }
-}
-```
-
-### `runDiagnostics(cwd, options)`
-
-`runDiagnostics()` returns an Effect requiring `ProcessRunner`, because tool checks shell out.
-
-```typescript
-import { Effect } from 'effect'
-import { ProcessRunner, runDiagnostics } from '@xtarterize/core'
-
-const { groups, summary } = await Effect.runPromise(
-  runDiagnostics('/path/to/project', {
-    groups: ['tools', 'configuration'],
-  }).pipe(Effect.provide(ProcessRunner.layer))
-)
-
-for (const group of groups) {
-  console.log(group.title) // 'Tools'
-  for (const check of group.checks) {
-    console.log(check.name)    // 'Biome installation'
-    console.log(check.status)  // 'pass' | 'warn' | 'fail'
-    console.log(check.message) // 'Biome is installed'
-  }
-}
-
-console.log(summary) // { pass, warn, fail, total }
-```
-
-`options.groups` selects a subset of `'environment' | 'tools' | 'project' | 'configuration'`
-(defaults to all four); `options.verbose` prepends a `System` group with host
-platform information. A group whose checks throw is replaced by a single
-failure check, so one broken check never hides the others.
-
-## References
-
-- [Biome Documentation](https://biomejs.dev/) - Fast linter and formatter
-- [ESLint Documentation](https://eslint.org/docs/latest/) - Pluggable JavaScript linter
-- [Prettier Documentation](https://prettier.io/docs/en/) - Opinionated code formatter
-- [ESLint Configuration Files (Deprecated)](https://eslint.org/docs/latest/use/configure/configuration-files-deprecated) - Legacy `.eslintrc` format
-- [TypeScript Documentation](https://www.typescriptlang.org/docs/) - Typed JavaScript
-- [Commitlint Documentation](https://commitlint.js.org/) - Lint commit messages
-- [Knip Documentation](https://knip.dev/) - Find unused files and dependencies
-
-## CI Mode
-
-In CI environments (`CI=true` or `CI=1`), the `--quiet` flag is automatically enabled for all commands, suppressing interactive prompts and verbose output.
+In CI (`CI=true` or `CI=1`), xtarterize enables quiet mode for all commands, suppressing prompts and verbose output. Quiet mode is also enabled by `--quiet`, `--json`, and `--format json`.

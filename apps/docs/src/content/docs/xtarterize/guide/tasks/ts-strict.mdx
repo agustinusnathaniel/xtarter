@@ -1,40 +1,17 @@
 ---
 title: ts/strict
-description: Enable strict TypeScript compiler options for type safety.
+description: Enable strict compiler options in tsconfig.json.
 ---
 
-import { Aside } from '@astrojs/starlight/components'
-
-Patches `tsconfig.json` with four compiler options for maximum type safety:
-
-```json
-{
-  "compilerOptions": {
-    "strict": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "verbatimModuleSyntax": true
-  }
-}
-```
+Patches `tsconfig.json` with four options:
 
 | Option | Purpose |
-|--------|---------|
-| `strict: true` | Enables all strict type-checking options |
-| `noUnusedLocals: true` | Error on unused local variables |
-| `noUnusedParameters: true` | Error on unused function parameters |
-| `verbatimModuleSyntax: true` | Enforce `import type` for type-only imports |
+| --- | --- |
+| `strict` | Enable all strict type-checking options |
+| `noUnusedLocals` | Error on unused local variables |
+| `noUnusedParameters` | Error on unused function parameters |
+| `verbatimModuleSyntax` | Require `import type` for type-only imports |
 
-## Conflict Detection
+Each option is checked independently. An existing option with a different value is reported as a conflict instead of being overwritten, so intentional settings are never loosened.
 
-Each option is checked independently. If any option already exists with a
-different value (e.g. `strict: false`), the task returns `conflict` rather
-than overwriting it. This prevents accidental loosening of intentional
-configurations.
-
-<Aside type="tip">
-  Use `--skip ts/strict` when initializing to skip this task. The other
-  TypeScript tasks remain available unless you also skip them.
-</Aside>
-
-See the [task catalog](/xtarterize/guide/tasks/overview/) for the task ID, group, applicability, and generated files.
+Use `--skip ts/strict` to leave this task out; the other TypeScript tasks still apply.

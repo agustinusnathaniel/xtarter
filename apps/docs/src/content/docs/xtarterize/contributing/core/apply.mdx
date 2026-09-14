@@ -1,124 +1,45 @@
 ---
 title: Apply Engine
-description: How xtarterize plans and applies conformance tasks with backups and error handling.
+description: How xtarterize plans, backs up, and applies conformance tasks.
 ---
 
-import { Aside } from '@astrojs/starlight/components'
+The apply engine is the final stage of the pipeline. It plans a task set, backs up modified files, installs dependencies in one batch, runs the tasks, and reports errors.
 
-The apply engine is the final stage of the conformance pipeline. It plans a task set, backs up modified files, installs dependencies in one batch, runs the tasks, and reports errors.
+## Plan, then execute
 
-## Plan and Execute
+Planning is side-effect free, so a preview is exact and execution replays the plan unchanged.
 
-The pipeline is split into a side-effect-free plan and an execution step, so previews are exact and `executePlan()` replays exactly what was planned.
+The plan collects, for the selected tasks:
 
-### `planTasks(options)`
+- Each task's status, reusing statuses computed while the session opened
+- The diffs for tasks that are not skipped or conflicting
+- The dependencies each runnable task declares
+- The unique file paths in the diffs, which are also the backup set
 
-[`planTasks`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/apply/plan.ts) computes an `ApplyPlan`:
+Execution replays the plan:
 
-1. **Check** - Resolves each task's status, reusing statuses already computed during session open
-2. **Dry-run** - Collects the diffs for tasks that are not skipped or conflicting
-3. **Dependencies** - Asks each runnable task's `getDeps()` for its packages
-4. **Files** - Collects the unique filepaths from the diffs, which is also the backup set
+1. Back up every affected file once and write a run manifest for the `undo` command.
+2. Install the collected dependencies in one batch.
+3. Run each task's apply in sequence, collecting per-task errors instead of aborting.
+4. Return the applied count, skipped count, collected errors, and timing.
 
-`planTasks()` performs no writes, no backups, and no installs. It returns an Effect that requires `TaskServices` (`ProcessRunner`):
+## Backups
 
-```typescript
-import { Effect } from 'effect'
-import { planTasks, ProcessRunner } from '@xtarterize/core'
+Before any file is modified, the engine writes a timestamped copy under `.xtarterize/backups/` and indexes it in `.xtarterize/backups/.index.json` for `restore`. Each unique file path is backed up once per run, even when several tasks modify it. The `.xtarterize/` directory is added to `.gitignore` automatically.
 
-const plan = await Effect.runPromise(
-  planTasks({
-    cwd: '/path/to/project',
-    profile,
-    statuses, // optional: reuse statuses from session open
-    tasks,
-    includeConflicts: true, // optional: allow conflicts
-  }).pipe(Effect.provide(ProcessRunner.layer))
-)
+## Error handling
 
-console.log(plan.entries)      // per-task status, diffs, and timing
-console.log(plan.dependencies) // collected packages to install
-console.log(plan.files)        // files to back up, one manifest for the run
-```
+Errors are collected and reported without aborting the run:
 
-### `executePlan(options)`
+- A check that throws becomes a `conflict` with the error message, and the task is skipped.
+- A dry-run failure is reported and the task is skipped without a backup.
+- A failed dependency install is recorded in the result. Tasks that need the missing packages fail individually, while file-only tasks still run.
+- A failed apply is logged with the task id and message, and later tasks continue.
 
-[`executePlan`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/apply/execute.ts) runs the plan:
-
-1. **Backup** - Backs up every file in the plan once and writes one run manifest
-2. **Batch Install** - Installs the plan's collected dependencies in a single call through the `DepsInstaller` service, grouped by dev/prod
-3. **Apply** - Runs `task.apply()` sequentially for each planned task, accumulating per-entry errors instead of aborting
-4. **Report** - Returns `{ applied, skipped, errors, timing }`
-
-The apply spinner is created and stopped with `Effect.acquireUseRelease`, so it is released even on interruption or failure. `executePlan()` requires `DepsInstaller | TaskServices`:
-
-```typescript
-import { Effect, Layer } from 'effect'
-import { DepsInstaller, executePlan, ProcessRunner } from '@xtarterize/core'
-
-const services = Layer.mergeAll(DepsInstaller.layer, ProcessRunner.layer)
-const result = await Effect.runPromise(
-  executePlan({ cwd: '/path/to/project', plan, profile }).pipe(
-    Effect.provide(services)
-  )
-)
-
-console.log(result.applied) // number of successfully applied tasks
-console.log(result.errors)  // error messages for failed tasks and installs
-```
-
-### Composing both
-
-Callers that need the plan before executing, such as the CLI's diff preview and confirmation flow, compose both Effects in one program. The CLI provides the same services through `AppLayer` in `apps/xtarterize/src/runtime.ts`:
-
-```typescript
-import { Effect, Layer } from 'effect'
-import {
-  DepsInstaller,
-  executePlan,
-  planTasks,
-  ProcessRunner,
-} from '@xtarterize/core'
-
-const appLayer = Layer.mergeAll(DepsInstaller.layer, ProcessRunner.layer)
-const program = Effect.gen(function* () {
-  const plan = yield* planTasks({ cwd: '/path/to/project', profile, tasks })
-  return yield* executePlan({ cwd: '/path/to/project', plan, profile })
-})
-const result = await Effect.runPromise(Effect.provide(program, appLayer))
-```
-
-## Backup System
-
-Before any file is modified, the engine creates timestamped backups in `.xtarterize/backups/`:
-
-```
-.xtarterize/backups/
-├── .index.json
-├── biome.json.2026-04-30T17-36-00-000Z
-├── tsconfig.json.2026-04-30T17-36-00-000Z
-└── ...
-```
-
-- Each unique filepath is backed up **once**, even if multiple tasks modify it
-- Backups are indexed in `.xtarterize/backups/.index.json` for the `restore` command
-- The `backupFile()` utility handles directory creation and timestamping
-- The `.xtarterize/` directory is automatically gitignored via ADR 026 - no manual `.gitignore` maintenance needed
-
-## Error Handling
-
-Errors are collected and reported without aborting the entire run:
-
-- **Check failures** - A throwing `check()` becomes a `conflict` with an error message and the task is skipped
-- **Dry-run failures** - Collected in the plan and reported; the file is not backed up and the task is skipped
-- **Batch install failures** - Recorded in `ApplyResult.errors`. Tasks whose `apply()` needs the missing packages fail individually, while file-only tasks still run
-- **Apply failures** - Logged with the task ID and error message; subsequent tasks continue
-
-Check, dry-run, install, and task-apply failures are collected in the result. Backup or manifest failures fail the Effect before task execution begins. Task methods return Effects; `toTaskEffect()` normalizes synchronous and Promise-returning spec functions at the `defineTask()` factory seam, so all tasks follow the same failure rules.
+Backup or manifest failures stop execution before any task runs. Tasks declared from a synchronous or Promise-returning spec follow the same rules as Effect-based tasks.
 
 ## References
 
 - [Task interface](/xtarterize/contributing/tasks/overview/)
 - [Task resolution](/xtarterize/contributing/core/resolve/)
 - [Preflight checks](/xtarterize/contributing/core/preflight/)
-- [Backup utilities](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/backup.ts)

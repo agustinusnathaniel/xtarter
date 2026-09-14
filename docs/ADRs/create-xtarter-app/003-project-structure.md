@@ -4,54 +4,28 @@
 Accepted
 
 ## Context
-Organizing the CLI codebase for maintainability and scalability.
 
-## Structure
+The CLI codebase needs an organization that separates interactive prompts, template data, and side effects, so that logic stays maintainable and testable.
 
-```
-create-xtarter-app/
-├── src/
-│   ├── cli.ts                 # Main entry point
-│   ├── constants.ts           # CLI constants, banner, help text
-│   ├── index.ts               # Programmatic API exports
-│   ├── types.ts               # TypeScript types/interfaces
-│   ├── prompts/               # Interactive prompts
-│   │   ├── project-name.ts
-│   │   ├── template.ts
-│   │   ├── package-manager.ts
-│   │   └── options.ts
-│   ├── templates/
-│   │   └── registry.ts        # Template definitions
-│   └── utils/                 # Utility functions
-│       ├── download.ts        # giget wrapper
-│       ├── install.ts         # Package manager install
-│       ├── git.ts             # Git initialization
-│       └── modify-package.ts  # Post-scaffold modifications
-├── docs/
-│   └── adr/                   # Architectural Decision Records
-├── dist/                      # Build output (gitignored)
-└── package.json
-```
+## Decision
 
-## Naming Conventions
-- Files: kebab-case (`modify-package.ts`)
-- Functions: camelCase (`downloadTemplateFiles`)
-- Types: PascalCase (`TemplateConfig`)
-- Constants: UPPER_SNAKE_CASE (`DEFAULT_TEMPLATE`)
+Organize the source into focused areas with explicit responsibilities:
 
-## Import Strategy
-- Use `@/` alias for all internal imports
-- Relative imports only within same directory
-- Group imports: stdlib → external → internal
+- Interactive prompts define prompt logic only and produce no side effects.
+- Utilities are pure functions, testable in isolation.
+- Template definitions are static configuration.
+- The CLI entry orchestrates the flow and handles errors.
+- The package exposes a programmatic API alongside the CLI.
 
-## Module Boundaries
-- `prompts/` - Only prompt logic, no side effects
-- `utils/` - Pure functions, testable in isolation
-- `templates/` - Static configuration only
-- `cli.ts` - Orchestrates flow, handles errors
+Internal imports use the `@/` path alias; relative imports are used only within the same directory. Naming stays consistent: kebab-case files, camelCase functions, PascalCase types, UPPER_SNAKE_CASE constants.
+
+## Rationale
+
+- Clear separation of concerns makes new prompts and templates easy to add.
+- Pure utilities can be tested without the CLI runtime.
+- A single orchestration point keeps error handling in one place.
 
 ## Consequences
-- Clear separation of concerns
-- Easy to add new prompts or templates
-- Utils can be tested independently
-- Programmatic API via `index.ts`
+
+- Every new prompt, utility, or template must fit the existing responsibility split.
+- Contributors must follow the alias and naming conventions.

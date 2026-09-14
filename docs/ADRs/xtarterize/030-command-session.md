@@ -10,83 +10,40 @@ Accepted
 
 ## Context
 
-The CLI has four apply and report paths. `commands/run-command.ts` (436 lines)
-serves only `init` and `sync`, and `add` has two more flows (515 and 325
-lines). `resolveCliContext` and `resolveRuntimeFlags` both derive
-`json`/`quiet`/`format`, `ensureXtarterizeGitignore` has eight call sites
-(ADR 026), and `scanProject` re-runs preflight. Output is console-only
-(roughly 90 `console.log` calls, 32 `process.exitCode` writes), and prompts
-plus exits live in core (`packages/core/src/utils/prompts.ts`).
-
-Interactive `add` applies tasks one at a time and writes a run manifest per
-task, so `undo` restores only the last task.
+The CLI had four apply and report paths, two flag resolvers deriving JSON, quiet, and format, and repeated gitignore and preflight handling. Output was console-only, prompts and exits lived in core, and interactive `add` wrote a run manifest per task, so `undo` restored only the last task.
 
 ## Decision
 
-A `CommandSession` in `apps/xtarterize` owns open, plan, execute, and report.
-Commands declare selection policy, prompts, and output shape; the session runs
-the lifecycle:
+A command session owns open, plan, execute, and report. Commands declare selection policy, prompts, and output shape; the session runs the lifecycle.
 
-- `SessionOutcome` carries applied and skipped counts, errors, statuses, diffs,
-  and timing. One reporter renders it through terminal and JSON adapters.
-- Prompts are injected: the clack adapter in production, a scripted adapter in
-  tests. Cancellation is an outcome, not a thrown exit.
-- One runtime resolver returns `RuntimeContext` (`cwd`, `json`, `quiet`,
-  `format`, `ci`), replacing `resolveCliContext` and `resolveRuntimeFlags`, and
-  commands share citty argument groups.
-- `session.open` owns the gitignore entry (ADR 026) and preflight exactly once;
-  `doctor` opts out of fail-fast.
-- The entry sets the exit code from `outcome.ok`.
-
-`add --all` and interactive `add` plan and execute once, so one run manifest
-covers the whole operation.
-
-Update (2026-09-12): the session now returns Effects and prompts are provided
-by the app-level `Prompter` service (ADR 036). The lifecycle and outcome
-contracts described above are unchanged.
-
-Update (2026-09-13): commands declare through a thin `cliCommand` wrapper
-(`defineCommand` + `runCliProgram` + program passthrough). It removes the
-repeated citty boilerplate only, holds no command policy, and is not the
-rejected declarative command framework.
+- The outcome carries applied and skipped counts, errors, statuses, diffs, and timing, and one reporter renders it through terminal and JSON adapters.
+- Prompts are injected (interactive adapter in production, scripted in tests), and cancellation is an outcome, not a thrown exit.
+- One runtime resolver and shared argument groups replace per-command flag derivation.
+- The session owns the gitignore entry and preflight once per command; doctor opts out of fail-fast.
+- The entry point sets the exit code from the outcome.
+- One plan and execute per `add` operation, and one run manifest covering it, so `undo` restores the whole operation (ADR 022).
+- The session runs as an Effect program with prompts from a service seam (ADR 036), and commands declare through a thin wrapper that adds no policy.
 
 ## Rationale
 
 - One lifecycle removes four apply and report paths and two flag resolvers.
-- Injected prompts make interactive flows testable and remove prompt and exit
-  calls from core.
-- One manifest per `add` makes `undo` restore the whole operation (ADR 022).
-- Terminal and JSON render from the same outcome, so a preflight failure under
-  `--json` is JSON instead of human text.
+- Injected prompts make interactive flows testable and remove prompt and exit calls from core.
+- One manifest per `add` makes `undo` restore the whole operation.
+- Terminal and JSON render from the same outcome, including preflight failures under `--json`.
 
 ## Alternatives Considered
 
-- **Unify report formatting only.** Leaves the apply paths, flag resolvers, and
-  per-command preflight duplication.
-- **Declarative command framework.** More machinery than the four verbs need;
-  the session boundary is the load-bearing part.
-- **Keep prompts inside commands.** Untestable interactive flows and exit calls
-  scattered across core and apps.
-- **Keep per-command gitignore and preflight.** The eight call sites and
-  repeated preflight this ADR removes.
+- **Unify report formatting only.** Leaves the apply paths, flag resolvers, and per-command preflight duplication.
+- **Declarative command framework.** More machinery than the verbs need; the session boundary is the load-bearing part.
+- **Keep prompts inside commands.** Untestable interactive flows and exit calls scattered across core and apps.
 
 ## Consequences
 
 ### Positive
 
-- Exit codes are centralized; interactive flows are testable with a scripted
-  prompter.
-- One gitignore pass and one preflight per command.
+- Exit codes are centralized, interactive flows are testable with a scripted prompter, and commands share one gitignore pass and one preflight.
 
 ### Negative
 
-- One manifest per `add` changes `undo` behavior (it now restores the whole
-  operation); needs a changeset.
-- Core loses prompt and exit usage on its public path; callers must be updated.
-- A new integration suite (`test/integration/session.test.ts`) is added.
-
-### Related Decisions
-
-- ADR 019 (Effect), superseded for this session by ADR 036 (Effect
-  orchestration layer), ADR 022 (manifest), ADR 026 (gitignore), Plan 043
-  Phase 4.
+- One manifest per `add` changes `undo` to restore the whole operation, which needs a changeset.
+- Core loses prompt and exit usage on its public path, so callers must be updated.

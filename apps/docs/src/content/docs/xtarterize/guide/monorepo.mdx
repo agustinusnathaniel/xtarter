@@ -1,114 +1,38 @@
 ---
 title: Monorepo support
-description: How xtarterize handles monorepo projects
+description: How xtarterize filters tasks in monorepo projects.
 ---
 
-import { Steps } from '@astrojs/starlight/components'
+xtarterize detects monorepos and filters tasks by scope, so the offered list matches your current directory.
 
-xtarterize has built-in support for monorepos. When you run commands
-inside a monorepo, tasks are automatically filtered based on their
-scope - root-level tasks vs package-level tasks - so you always see
-what's relevant to your current position.
+## Detection
 
-## Monorepo detection
-
-xtarterize detects monorepos by checking for these markers at or
-above the current directory:
+xtarterize looks for these markers at or above the current directory:
 
 - `pnpm-workspace.yaml`
 - `turbo.json`
 - `nx.json`
 - `lerna.json`
-- At least two of the `packages/`, `apps/`, or `services/` directories
+- At least two of `packages/`, `apps/`, or `services/`
 
-If no marker is found at the current directory, xtarterize walks up
-the directory tree looking for one. If it finds a marker inside a
-`packages/`, `apps/`, or `services/` directory, it knows you're
-inside a workspace package.
+A marker inside `packages/`, `apps/`, or `services/` means you are inside a workspace package.
 
 ## Task scopes
 
-Every task in xtarterize has a **scope** that determines where it
-applies:
+| Scope | Applies at |
+| --- | --- |
+| `root` | Monorepo root only |
+| `package` | Inside a workspace package only |
+| `both` | Everywhere |
 
-| Scope | Applies at | Examples |
-|---|---|---|
-| `root` | Monorepo root only | CI/CD workflows, release tooling, turbo.json, editor settings, npmrc |
-| `package` | Inside a workspace package only | Vite plugin config, tsconfig path aliases |
-| `both` | Everywhere | Biome config, TypeScript strict mode, Knip, Plop |
+## Root and package behavior
 
-## Running at the monorepo root
+Running at the monorepo root offers CI workflows, release tooling, `turbo.json`, Renovate, `.vscode` settings, root scripts, `.npmrc`, and cross-cutting tooling such as Biome, Knip, and TypeScript strict mode. Package-only tasks, such as Vite plugins and tsconfig path aliases, are hidden.
 
-When you run `xtarterize init` at the monorepo root (the directory
-containing `pnpm-workspace.yaml`, `turbo.json`, or similar), you'll
-see:
+Running inside a workspace package offers package-scoped tasks plus cross-cutting tooling; root-only tasks are hidden.
 
-- CI/CD workflows (CI, release, auto-update)
-- Release tooling (commitlint, czg, commit-and-tag-version, git hooks)
-- Monorepo configuration (turbo.json)
-- Dependency management (Renovate config)
-- Editor configuration (.vscode/settings.json, extensions.json)
-- Root-level scripts (package.json scripts, .npmrc)
-- Cross-cutting tooling (Biome, TypeScript strict mode, Knip, Plop)
-
-Package-level tasks like Vite plugin configuration and tsconfig path
-aliases are hidden - those belong inside individual workspace packages.
-
-## Running inside a workspace package
-
-When you run `xtarterize init` inside a workspace package (a directory
-under `packages/`, `apps/`, or `services/`), you'll see:
-
-- Vite plugin configuration (vite-plugin-checker,
-  rollup-plugin-visualizer)
-- TypeScript path aliases
-- Cross-cutting tooling (Biome, TypeScript strict mode, Knip, Plop)
-
-Root-level tasks like CI/CD workflows, release tooling, and turbo
-configuration are hidden - those are configured once at the root.
-
-## Non-monorepo projects
-
-In single-package projects (not detected as a monorepo), the scope
-system is disabled. All tasks that pass the `applicable()` check are
-offered regardless of their declared scope.
+In single-package projects, scope filtering is disabled and every applicable task is offered.
 
 ## Task reference
 
-### Root-scoped tasks
-
-| Task | ID | Group |
-|---|---|---|
-| GitHub CI workflow | `ci/ci` | CI/CD |
-| GitHub release workflow | `ci/release` | CI/CD |
-| GitHub auto-update workflow | `ci/auto-update` | CI/CD |
-| Renovate config | `deps/renovate` | Dependencies |
-| VSCode settings + extensions | `editor/vscode` | Editor |
-| devEngines in package.json | `quality/package-engines` | Quality |
-| Turbo | `monorepo/turbo` | Monorepo |
-| Commitlint config | `release/commitlint` | Release |
-| czg (commitizen) | `release/czg` | Release |
-| commit-and-tag-version | `release/cat-version` | Release |
-| Git hooks | `release/git-hooks` | Release |
-| Changelog config | `release/versionrc` | Release |
-| package.json scripts | `scripts/package-scripts` | Scripts |
-| .npmrc | `scripts/npmrc` | Scripts |
-| .gitignore - tsbuildinfo | `gitignore/tsbuildinfo` | TypeScript |
-| pnpm workspace config | `workspace/pnpm-workspace` | Workspace |
-
-### Package-scoped tasks
-
-| Task | ID | Group |
-|---|---|---|
-| vite-plugin-checker | `vite/checker` | Vite Plugins |
-| rollup-plugin-visualizer | `vite/visualizer` | Vite Plugins |
-| tsconfig - path aliases | `ts/paths` | TypeScript |
-
-### Cross-cutting tasks (both)
-
-These tasks appear everywhere - at the monorepo root and inside
-workspace packages:
-
-Biome, Oxlint config, Oxfmt config, TypeScript strict mode,
-TypeScript incremental builds, Knip, lint-staged, Plop, AGENTS.md,
-agent skills install
+See the [task catalog](/xtarterize/guide/tasks/overview/) for task IDs, and the [configuration guide](/xtarterize/guide/config/overview/) for gating rules.

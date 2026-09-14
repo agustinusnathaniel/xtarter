@@ -1,305 +1,152 @@
 ---
 title: CLI Overview
-description: Complete reference for the xtarterize command-line interface.
+description: Commands, flags, and exit codes for the xtarterize CLI.
 ---
 
-import { Aside, LinkButton } from '@astrojs/starlight/components'
 import AllPackageManagers from '@/components/AllPackageManagers.astro'
 
-The xtarterize CLI provides commands to detect, apply, and maintain conformance configuration for [JavaScript](https://developer.mozilla.org/en-US/docs/Web/JavaScript)/[TypeScript](https://www.typescriptlang.org/) projects.
+xtarterize detects, applies, and maintains conformance configuration for JavaScript and TypeScript projects.
 
-## Options
+## Global options
 
-Flags are declared per command and must be passed after the command name. The entry command declares no options of its own, so `xtarterize --json check` is rejected with an actionable error; use `xtarterize check --json` instead.
+Flags follow the command name: `xtarterize check --json` works, `xtarterize --json check` is rejected.
 
 | Option | Commands | Description |
-|--------|----------|-------------|
-| `--cwd <path>` | all | Target directory (default: current working directory) |
+| --- | --- | --- |
+| `--cwd <path>` | all | Target directory (default: current directory) |
 | `--json` | all | Output machine-readable JSON |
-| `--quiet` | all except `query` | Suppress interactive prompts and verbose output |
+| `--quiet` | all except `query` | Suppress prompts and verbose output; `restore` still prompts for a backup unless `--yes` |
 | `--help` | all | Show help for a command |
-| `--version` | entry | Show version number |
+| `--version` | entry | Show the version number |
 
-## Available Commands
+## Commands
 
 | Command | Description |
-|---------|-------------|
-| [`xtarterize init`](#init) | Full conformance setup - detect, plan, apply |
-| [`xtarterize sync`](#sync) | Update existing configs to latest templates |
-| [`xtarterize diff`](#diff) | Show pending changes without applying |
-| [`xtarterize check`](#check) | Audit current conformance status |
-| [`xtarterize doctor`](#doctor) | Run environment, tools, and project diagnostics |
-| [`xtarterize add [task-id]`](#add) | Apply a single task, or pick interactively |
-| [`xtarterize undo`](#undo) | Undo the last run by restoring backed-up files |
-| [`xtarterize restore <file>`](#restore) | Restore a file from backup |
-| [`xtarterize list`](#list) | List all available tasks with status |
-| [`xtarterize query`](#query) | Search tasks by natural language query |
+| --- | --- |
+| [`init`](#init) | Full conformance setup: detect, plan, apply |
+| [`sync`](#sync) | Update existing configs to the latest templates |
+| [`diff`](#diff) | Show pending changes without applying |
+| [`check`](#check) | Audit current conformance status |
+| [`doctor`](#doctor) | Run environment, tool, and project diagnostics |
+| [`add [task-id]`](#add) | Apply one task, or pick interactively |
+| [`undo`](#undo) | Undo the last run by restoring backed-up files |
+| [`restore <file>`](#restore) | Restore one file from backup |
+| [`list`](#list) | List available tasks with their status |
+| [`query`](#query) | Search tasks by natural language query |
 
-## Exit Codes
+## Exit codes
 
-The CLI follows the Unix convention: exit code `0` means success, `1` means the command found something that needs attention. This makes `xtarterize` usable as a CI gate.
+`0` means success; `1` means the command found something that needs attention. `check`, `diff`, and `doctor` work as CI gates.
 
-| Command | Exit 0 | Exit 1 |
-|---------|--------|--------|
-| `check` | Fully conformant, no failing diagnostics | Pending changes or failing diagnostics |
-| `diff` | No pending changes, all dry runs succeed | At least one pending change, or a task failed to dry-run |
-| `doctor` | All diagnostics pass | At least one diagnostic fails |
-| `add` | All requested tasks applied | Task not found, or at least one task failed to apply |
-| `init` / `sync` | All updates applied | At least one task failed to apply |
-| `init` / `sync` with `--dry-run` | No pending changes, all dry runs succeed | At least one pending change (same contract as `diff`), or a task failed to dry-run |
-| `undo` | All files restored | Nothing to undo, or at least one file failed to restore |
-| `restore` | File restored | No backup found, or restore failed |
+| Command | Exits `1` when |
+| --- | --- |
+| `check` | A task is non-conformant or a diagnostic fails |
+| `diff`, `init --dry-run`, `sync --dry-run` | A change is pending or a dry run fails |
+| `doctor` | A diagnostic fails |
+| `init`, `sync` | A task fails to apply (unknown `--only` or `--skip` IDs do not fail the run; unknown IDs in the selection config warn) |
+| `add` | The task ID is unknown or the task fails to apply |
+| `undo`, `restore` | Nothing to restore, or a restore fails |
 
-```bash
-# Fail CI when the project is not conformant
-npx xtarterize check --quiet || exit 1
-```
+Unknown commands and options exit `1` before anything runs and suggest a correction when one is close.
 
-Invalid invocations also exit `1` before any command runs: unknown commands and unknown options print an actionable line on stderr with a suggested correction when one is close (for example, `Unknown option --jsn for "xtarterize check". Did you mean --json?`), so a typo never silently changes behavior.
-
-In GitHub Actions, `check` also emits native workflow command annotations - one `::error` per non-conformant task (linked to the config file it would modify) and one per failing diagnostic - so failures appear inline on the PR. Annotations are written to stderr, so
-`--json` and `--badge -` output stays machine-readable:
-
-<AllPackageManagers type="exec" pkg="xtarterize@latest" args="check --annotations" title="CI annotations" />
+In GitHub Actions, `check` also writes one `::error` annotation per non-conformant task and per failing diagnostic, forced with `--annotations` or enabled automatically in CI. Annotations go to stderr, so `--json` and `--badge -` output stays machine-readable.
 
 ## `doctor`
 
-Run comprehensive project diagnostics. Checks are grouped into four categories:
-
-| Group | Checks |
-|-------|--------|
-| **Environment** | Node.js version against `engines.node`, Git installation |
-| **Tools** | Required tools from `package.json` are installed (with version info) |
-| **Project** | Lockfile, `tsconfig.json`, `README.md`, `.gitignore` |
-| **Configuration** | Conflicting tool detection (e.g., Biome + ESLint/Prettier) |
-
-### Options
-
-| Option | Description |
-|--------|-------------|
-| `--verbose` | Show system information (OS, architecture, CPU count, RAM) |
-| `--quiet` | Suppress detailed output, show summary only |
-| `--json` | Output machine-readable JSON diagnostics |
+Run diagnostics for the environment, declared tools, project files (`tsconfig.json`, `README.md`, `.gitignore`), and conflicting configurations such as Biome with ESLint or Prettier. Options: `--verbose` (adds system information), `--quiet` (summary only), `--json`.
 
 <AllPackageManagers type="exec" pkg="xtarterize@latest" args="doctor" />
 
-With `--verbose`, a **System** group adds platform, OS release, architecture,
-CPU count, and RAM. Diagnostics also support `--json`.
-
 ## `init`
 
-Full conformance setup. Detects your project stack, shows a plan, and applies changes.
-
-### Options
+Detect the project stack, show a plan, and apply changes.
 
 | Option | Description |
-|--------|-------------|
-| `--dry-run` | Preview all changes without applying |
-| `--yes` | Skip all confirmations, apply all changes automatically |
-| `--compose <query>` | Rank tasks by relevance to a natural language query |
-| `--threshold <n>` | Minimum relevance score for `--compose` (0-1, default: `0.1`) |
-| `--skip <task-id>` | Exclude a specific task (comma-separated) |
-| `--only <task-id>` | Apply only a specific task (comma-separated) |
-| `--quiet` | Suppress interactive prompts and verbose output |
-| `--include-conflicts` | Include conflicting tasks when applying (default: false) |
-| `--format <format>` | Output format (`terminal` or `json`) |
-| `--timing` | Show detailed per-task timing breakdown |
+| --- | --- |
+| `--dry-run` | Preview changes without applying |
+| `--yes` | Skip confirmations |
+| `--compose <query>` | Rank tasks by relevance to a query |
+| `--threshold <n>` | Minimum score for `--compose` (0-1, default `0.1`) |
+| `--skip <task-id>` | Exclude tasks (comma-separated) |
+| `--only <task-id>` | Apply only these tasks (comma-separated) |
+| `--include-conflicts` | Apply conflicting tasks too |
+| `--format <format>` | Output format: `terminal` or `json` |
+| `--timing` | Show per-task timing |
 
-<AllPackageManagers type="exec" pkg="xtarterize@latest" args="init" title="Basic" />
+<AllPackageManagers type="exec" pkg="xtarterize@latest" args="init" />
 
 ## `sync`
 
-Update existing project configs to match the latest conformance templates. Only shows tasks with `patch` or `conflict` status.
-
-### Options
-
-| Option | Description |
-|--------|-------------|
-| `--dry-run` | Preview changes without applying |
-| `--yes` | Skip all confirmations, apply all updates automatically |
-| `--skip <task-id>` | Exclude a specific task (comma-separated) |
-| `--only <task-id>` | Apply only a specific task (comma-separated) |
-| `--quiet` | Suppress interactive prompts and verbose output |
-| `--include-conflicts` | Include conflicting tasks when applying (default: false) |
-| `--format <format>` | Output format (`terminal` or `json`) |
-| `--timing` | Show detailed per-task timing breakdown |
+Update existing configs to match the latest templates. Unlike `init`, only tasks in `patch` or `conflict` status are offered, and `--compose` and `--threshold` are not supported. All other `init` options apply.
 
 <AllPackageManagers type="exec" pkg="xtarterize@latest" args="sync" />
 
-<Aside type="note">
-  Unlike `init`, `sync` only targets tasks with `patch` or `conflict` status. It won't re-apply already conformant configs.
-</Aside>
-
 ## `diff`
 
-Show pending changes for all tasks with `new`, `patch`, or `conflict` status, without applying anything. Read-only. Uses [unified diffs](https://www.gnu.org/software/diffutils/manual/html_node/Unified-Format.html) for patch comparisons.
+Preview changes for `new`, `patch`, and `conflict` tasks without writing any conformance files; the project `.gitignore` may still be created or updated. New files are shown in full; patched files use unified diffs. Changes to the same JSON file are merged into one diff.
 
-### Options
-
-| Option | Description |
-|--------|-------------|
-| `--quiet` | Suppress verbose output |
-| `--format <format>` | Output format (`terminal` or `json`) |
+Options: `--format <terminal|json>`.
 
 <AllPackageManagers type="exec" pkg="xtarterize@latest" args="diff" />
 
-<Aside type="tip">
-  The <code>diff</code> command shows full file contents for <code>new</code> tasks (files that don't exist yet) and [unified diffs](https://www.gnu.org/software/diffutils/manual/html_node/Detailed-Unified.html) for <code>patch</code> tasks (existing files that need updates).
-</Aside>
-
-<Aside type="note">
-  When multiple tasks modify the same JSON file (e.g., <code>tsconfig.json</code>), <code>diff</code> merges their changes into a single unified diff so you see the complete intended state rather than overlapping individual patches.
-</Aside>
-
 ## `check`
 
-Audit which tasks are conformant and which need attention. Also runs diagnostics for conflicting tools and missing installations.
-
-### Options
+Audit which tasks are conformant and report conflicting tools, legacy ESLint configs, and missing tool installations.
 
 | Option | Description |
-|--------|-------------|
-| `--quiet` | Suppress verbose output |
-| `--badge <path>` | Generate a conformance badge SVG (use `-` for stdout) |
-| `--annotations` | Emit GitHub Actions workflow command annotations (auto-enabled in CI) |
+| --- | --- |
+| `--badge <path>` | Write a conformance badge SVG (`-` for stdout) |
+| `--annotations` | Emit GitHub Actions annotations (auto-enabled in CI) |
 
 <AllPackageManagers type="exec" pkg="xtarterize@latest" args="check" />
 
-Output shows:
-
-| Icon | Status | Meaning |
-|------|--------|---------|
-| ✔ | `skip` | Conformant - no action needed |
-| ~ | `patch` | Needs update - will be patched |
-| ✗ | `new` | Missing entirely - will be created |
-| ⚠ | `conflict` | Incompatible config - needs manual resolution |
-
-`check` also displays diagnostics for:
-- **Conflicting tools** - Biome + ESLint/Prettier detected together
-- **Legacy configs** - ESLint flat config migration recommendations
-- **Tool installations** - Tools in package.json but not installed locally
-
 ## `add`
 
-Apply a single conformance task, or pick interactively from a grouped menu.
-
-When called **with a task ID**, applies that specific task after showing a diff preview and confirmation. When called **without a task ID**, shows a grouped multi-select menu of all applicable tasks with their current status.
-
-### Options
+Apply one task, or show a grouped multi-select menu when no task ID is given.
 
 | Option | Description |
-|--------|-------------|
-| `--quiet` | Suppress interactive prompts |
-| `--format <format>` | Output format (`terminal` or `json`) |
-| `--timing` | Show detailed per-task timing breakdown |
-| `--all` | Apply all applicable new and patch tasks without interaction |
-| `--include-conflicts` | Include conflicting tasks when applying (default: false) |
+| --- | --- |
+| `--all` | Apply all new and patch tasks without prompting |
+| `--include-conflicts` | Apply conflicting tasks too |
+| `--format <format>` | Output format: `terminal` or `json` |
+| `--timing` | Show per-task timing |
 
 <AllPackageManagers type="exec" pkg="xtarterize@latest" args="add lint/biome" title="Specific task" />
 
 ## `undo`
 
-Undo the last `init`, `sync`, or `add` run by restoring all files that were backed up. Reads the run manifest (`.xtarterize/backups/last-run.json`) written during apply to identify which files to restore.
+Undo the last `init`, `sync`, or `add` run. Backed-up files are restored, and files the run created are deleted.
 
-### Options
-
-| Option | Description |
-|--------|-------------|
-| `--quiet` | Skip confirmation prompt |
-| `--json` | Output machine-readable JSON |
-| `--format <format>` | Output format (`terminal` or `json`) |
+Options: `--quiet`, `--json`, `--format <terminal|json>`.
 
 <AllPackageManagers type="exec" pkg="xtarterize@latest" args="undo" />
 
-```bash
-$ npx xtarterize undo --json
-{"ok":true,"timestamp":"2026-08-22T12:00:00.000Z","restored":2,"total":2,"files":["biome.json","tsconfig.json"],"errors":[],"removed":1}
-```
-
-`removed` appears only when the run created files that had no backup to restore from; undo deletes them to return the project to its pre-run state.
-
-<Aside type="tip">
-  The <code>undo</code> command restores all files from the most recent run in one step. For single-file restores, use <code>xtarterize restore &lt;file&gt;</code> instead.
-</Aside>
-
 ## `restore`
 
-Restore a file from a previous backup. If multiple backups exist, you'll be prompted to select one. Use `--yes` to automatically restore the latest backup without prompting.
+Restore one file from a previous backup. If several backups exist, xtarterize prompts for one; `--yes` restores the latest.
 
-### Arguments
-
-| Argument | Required | Description |
-|----------|----------|-------------|
-| `filepath` | Yes | Path to the file to restore |
-
-### Options
-
-| Option | Description |
-|--------|-------------|
-| `--yes` | Skip confirmation, restore latest backup when multiple exist |
-| `--quiet` | Suppress verbose output |
-| `--json` | Output machine-readable JSON |
-| `--format <format>` | Output format (`terminal` or `json`) |
+Options: `--yes`, `--quiet`, `--json`, `--format <terminal|json>`.
 
 <AllPackageManagers type="exec" pkg="xtarterize@latest" args="restore tsconfig.json" />
 
-```bash
-$ npx xtarterize restore tsconfig.json --json
-{"ok":true,"filepath":"tsconfig.json","restoredFrom":".xtarterize/backups/tsconfig.json.2026-08-22T12-00-00-000Z","timestamp":"2026-08-22T12-00-00-000Z"}
-```
-
 ## `list`
 
-List all registered tasks grouped by category, with current status.
+List available tasks grouped by category, with their current status.
 
-### Options
-
-| Option | Description |
-|--------|-------------|
-| `--quiet` | Suppress verbose output |
-| `--json` | Output machine-readable JSON |
-
-<AllPackageManagers type="exec" pkg="xtarterize@latest" args="list" />
+Options: `--quiet`, `--json`.
 
 ## `query`
 
-Search tasks by natural language query. No need to remember exact task IDs - just describe what you're looking for.
-
-### Options
-
-| Option | Description | Default |
-|--------|-------------|---------|
-| `--limit <n>` | Maximum number of results to show | `20` |
-| `--threshold <n>` | Minimum relevance score (0-1) | `0.1` |
-| `--json` | Output machine-readable JSON | `false` |
+Search tasks by natural language query. Options: `--limit <n>` (default `20`), `--threshold <n>` (default `0.1`), `--json`. See the [query command page](/xtarterize/guide/cli/query/).
 
 <AllPackageManagers type="exec" pkg="xtarterize@latest" args='query "strict typescript"' />
 
-<AllPackageManagers type="exec" pkg="xtarterize@latest" args='query "ci pipeline" --json' title="JSON output" />
+## Task statuses
 
-<AllPackageManagers type="exec" pkg="xtarterize@latest" args='query "linting and formatting tool" --limit 5' title="Limit results" />
+`new` means the config does not exist yet; `patch` means it needs updates; `skip` means it is conformant; `conflict` means it is incompatible and needs a decision.
 
-<Aside type="tip">
-  For a full reference, see the [query command page](/xtarterize/guide/cli/query/).
-</Aside>
+## Backups
 
-## Task Status Values
+Before modifying a file, xtarterize writes a timestamped backup under `.xtarterize/backups/` and records the run in `last-run.json`. The `.xtarterize/` directory is added to `.gitignore`. Use `undo` to revert a whole run, or `restore <file>` for one file.
 
-Each task reports one of four statuses:
-
-| Status | Meaning |
-|--------|---------|
-| `new` | File/config doesn't exist yet |
-| `patch` | File exists but needs additions/updates |
-| `skip` | Already conformant, nothing to do |
-| `conflict` | Existing config is incompatible; requires decision |
-
-## Backup System
-
-Before any file is modified, xtarterize creates a timestamped backup in `.xtarterize/backups/`. A run manifest (`last-run.json`) is also written so `undo` can restore all files from a run in one step. The `.xtarterize/` directory is automatically added to your project's `.gitignore`, keeping internal artifacts out of version control.
-
-<Aside type="tip">
-  Backups are stored with timestamps in `.xtarterize/backups/` and indexed in `.xtarterize/backups/.index.json`. Use <code>xtarterize undo</code> to revert an entire run, or <code>xtarterize restore &lt;file&gt;</code> to revert a single file.
-</Aside>
-
-<LinkButton href="/xtarterize/guide/tasks/overview/">Explore conformance tasks →</LinkButton>
+See the [conformance tasks](/xtarterize/guide/tasks/overview/) and the [configuration guide](/xtarterize/guide/config/overview/).

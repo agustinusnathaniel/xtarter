@@ -10,76 +10,26 @@ Accepted
 
 ## Context
 
-`package.json` has three writers: whole-object writes from the task factory
-(which caches the parsed file in a module-level `__pkgCache` and writes the
-object back with `pkg-types`, `packages/tasks/src/factory/task.ts`), text
-writes from `quality/package-engines` (via `patchJson`), and the package
-manager itself, which `installDependenciesBatch` spawns to install dependencies
-and which rewrites the file as a side effect (`packages/core/src/utils/pkg.ts`).
-
-The cache goes stale when other writers touch the file, and within one
-`applyTasks` run a whole-object writer can overwrite dependency entries the
-install just added. Preview and apply also serialize differently (`patchJson`
-versus the in-memory object), so comments are lost and the diff's `after` is
-not what lands, breaking the dry-run contract and conflicting with ADR 010.
+`package.json` had three writers: the task factory, which cached the parsed file and wrote the whole object back; a text-based patch writer for one task; and the package manager run during dependency install, which rewrites the file itself. The cache went stale after other writers ran, and within one apply a whole-object write could overwrite dependencies the install had just added. Preview and apply also serialized differently, so the diff's `after` was not what landed, breaking the dry-run contract.
 
 ## Decision
 
-One module, `packages/tasks/src/factory/package-json.ts`, is the only
-xtarterize writer of `package.json`. It exports:
-
-- `readPackageJson(cwd)`: wraps the core reader. No second parser, no cache.
-- `computePackageJsonChange(cwd, patch)`: applies a JSON merge patch with
-  `patchJson` against current file text; returns `{ before, after, filepath }`
-  or `null` when nothing changes.
-- `applyPackageJsonChange(cwd, patch)`: recomputes against current text, writes
-  with the core `writeFile`, and returns the same pair or `null`.
-
-Rules: comments, indentation, key order, and trailing whitespace survive; a
-change already present returns `null`; a missing file is created from the patch
-at 2-space indent; invalid JSON throws from the patch parse. Installs are
-external writers: the owner never caches, so a fresh read absorbs their
-effects. The dead core writer `writePackageJson` is removed; the owner lives in
-`packages/tasks` because core cannot depend on patchers (ADR 002).
-
-Update (2026-09-11): `applyTasks` was removed after this ADR (see ADR 028).
-Callers now compose `planTasks` and `executePlan` directly; the reference above
-describes the state at the time of this decision.
+One module owns every xtarterize write to `package.json`. It reads the file fresh on each call, applies changes as a JSON merge patch against current file text, and returns the before/after pair; apply recomputes and writes that pair. Comments, indentation, key order, and trailing whitespace survive, and a change that is already present is a no-op. The previous whole-object writer and its cache are removed.
 
 ## Rationale
 
-- Patch-based writes preserve formatting (ADR 010), and computing against
-  current text makes the computed `after` equal the written bytes.
-- Fresh reads make cross-writer staleness structurally impossible; tasks owns
-  the owner because core cannot depend on patchers (ADR 002), and ADR 021's
-  profile cache stays separate.
-
-Update (2026-09-11): the ADR 021 profile cache was removed (ADR 034). The
-owner's fresh-read rule is unchanged; there is simply no other cache to stay
-separate from.
+- Patch-based writes preserve formatting, and computing against current text makes the computed `after` equal the written bytes.
+- Fresh reads make cross-writer staleness structurally impossible; installs are external writers, so the owner never caches.
 
 ## Alternatives Considered
 
-- **Object-based writes in core.** Loses comments and ordered keys (ADR 010).
-- **Run-scoped store.** Needs a new public `Task` field or ambient state.
-- **Split ownership.** Keeps the second writer and the overwrite precedence.
-- **Keep the cache and invalidate.** Still races external writers and edits.
+- **Object-based writes in core.** Loses comments and key order.
+- **A run-scoped store shared between tasks.** Needs a new public task field or ambient state.
+- **Split ownership between modules.** Keeps the second writer and the overwrite precedence.
+- **Keep the cache and invalidate it.** Still races external writers and user edits.
 
 ## Consequences
 
-### Positive
-
-- Formatting, comments, and key order survive xtarterize writes.
-- The diff's `after` is exactly what is written; dry-run parity is testable.
-- Core loses a config writer; package boundaries stay intact.
-
-### Negative
-
-- Each apply re-reads and rewrites the file (small cost).
-- External writers can interleave between compute and apply; the last writer
-  wins, so apply recomputes rather than restoring stale bytes.
-
-### Related Decisions
-
-- ADR 002 (package boundaries), ADR 010 (JSON patching), ADR 021 (profile
-  cache, superseded by ADR 034), Plan 043 Phase 1.
+- Formatting, comments, and key order survive xtarterize writes, and preview matches apply.
+- Every apply re-reads and rewrites the file, a small cost per run.
+- A user or process can edit the file between compute and apply; the last writer wins, so apply recomputes instead of restoring stale bytes.

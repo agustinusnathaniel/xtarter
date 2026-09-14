@@ -4,47 +4,21 @@
 Accepted
 
 ## Context
-Selecting the right dependencies for a modern, performant CLI tool.
+
+The CLI needs a small dependency set for process execution, prompts, template download, build, argument parsing, and logging.
 
 ## Decisions
 
-### Process Execution: tinyexec over execa
-- **tinyexec** (1.0.4): 36M weekly downloads, lighter footprint, simpler API
-- **execa** (9.6.1): More features but heavier
-- **Decision**: tinyexec - sufficient for CLI needs, smaller bundle
+- **Process execution: tinyexec over execa.** Lighter footprint and a simpler API, sufficient for CLI needs.
+- **Prompts: `@clack/prompts`.** The standard choice for interactive CLI UI and actively maintained.
+- **Template download: giget over degit** (see ADR 001).
+- **Build tool: tsdown over tsup.** Better TypeScript support, built on Rolldown by the Vite team.
+- **CLI arguments: citty.** Type-safe argument parsing from the Nuxt team.
+- **Logging: consola.** Pairs well with clack.
+- **File operations: native `node:fs/promises`.** fs-extra was replaced by the native API (ADR 004).
 
-### File Operations: fs-extra
-- Native `fs.promises` lacks recursive copy/remove
-- fs-extra (11.3.4) remains the standard
-- **Decision**: fs-extra with ESM imports (`fs-extra/esm`)
+## Consequences
 
-### Prompts: @clack/prompts
-- Industry standard for beautiful CLI UI
-- Actively maintained (1.1.0, updated March 2026)
-- **Decision**: @clack/prompts
-
-### Template Download: giget
-- See ADR 001 for full rationale
-- **Decision**: giget over degit
-
-### Build Tool: tsdown
-- Rolldown-powered (Rust-based, faster)
-- By Vite team
-- Better TypeScript support than tsup
-- **Decision**: tsdown
-
-### CLI Args: citty
-- By Nuxt team
-- Modern, type-safe argument parsing
-- **Decision**: citty
-
-### Logging: consola
-- Beautiful console output
-- Pairs well with clack
-- **Decision**: consola
-
-## Version Policy
-- Use latest stable versions
-- Pin major versions with `^`
-- Run `pnpm outdated` regularly
-- Update lockfile on every change
+- The dependency count stays small and the bundle stays lightweight.
+- Shared dependency versions are centralized in the pnpm catalog (ADR 015); package-local dependencies use caret ranges.
+- giget and tsdown are newer than the alternatives they replaced, so breaking changes are a maintenance risk.

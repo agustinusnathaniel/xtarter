@@ -1,44 +1,11 @@
 ---
 title: release/versionrc
-description: Generate .versionrc.json for commit-and-tag-version / standard-version changelog customization.
+description: Write .versionrc.json for changelog sections.
 ---
 
-import { Aside } from '@astrojs/starlight/components'
+Writes `.versionrc.json` for [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) and compatible tools. The file maps conventional commit types to changelog sections and sets `bumpFiles` to `package.json`.
 
-Generates a `.versionrc.json` configuration file for
-[commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version)
-(and standard-version-compatible tools) that maps conventional commit types to
-changelog sections.
+- Visible: `feat`, `fix`, `refactor`, `perf`
+- Hidden: `docs`, `style`, `test`, `chore`, `ci`, `build`, `revert`
 
-```json
-{
-  "bumpFiles": ["package.json"],
-  "types": [
-    { "type": "feat", "section": "Features" },
-    { "type": "fix", "section": "Bug Fixes" },
-    { "type": "refactor", "section": "Code Refactoring" },
-    { "type": "perf", "section": "Performance Improvements" },
-    { "type": "docs", "section": "Documentation", "hidden": true },
-    { "type": "style", "section": "Styles", "hidden": true },
-    { "type": "test", "section": "Tests", "hidden": true },
-    { "type": "chore", "section": "Chores", "hidden": true },
-    { "type": "ci", "section": "CI/CD", "hidden": true },
-    { "type": "build", "section": "Build System", "hidden": true },
-    { "type": "revert", "section": "Reverts", "hidden": true }
-  ]
-}
-```
-
-**Visible sections** (appear in changelog): `feat`, `fix`, `refactor`, `perf`
-
-**Hidden sections** (excluded from changelog): `docs`, `style`, `test`, `chore`, `ci`, `build`, `revert`
-
-<Aside type="tip">
-  This task is separate from `release/cat-version`. The `cat-version` task
-  installs the `commit-and-tag-version` dependency and generates a
-  `.versionrc` file (JSONC, legacy format). The `versionrc` task generates
-  `.versionrc.json` (strict JSON, more feature-complete). You can use both
-  in combination, or only `versionrc` if you install the tool separately.
-</Aside>
-
-See the [task catalog](/xtarterize/guide/tasks/overview/) for the task ID, group, applicability, and generated files, and the [Monorepo guide](/xtarterize/guide/monorepo/) for root-scope rules.
+The separate `release/cat-version` task installs the `commit-and-tag-version` dependency and writes the legacy `.versionrc` file. Use both together, or `versionrc` alone if you install the tool yourself.

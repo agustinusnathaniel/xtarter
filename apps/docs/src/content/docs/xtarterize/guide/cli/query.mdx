@@ -1,12 +1,11 @@
 ---
 title: query
-description: Search and discover xtarterize tasks using natural language queries.
+description: Search xtarterize tasks with natural language queries.
 ---
 
-import { Aside, Tabs, TabItem } from '@astrojs/starlight/components'
 import AllPackageManagers from '@/components/AllPackageManagers.astro'
 
-The `query` command lets you search xtarterize tasks using natural language - no need to remember exact task IDs. It uses a pure algorithmic scoring engine (no AI) to rank tasks by relevance to your query.
+The `query` command searches tasks by natural language, so you do not need exact task IDs. Scoring runs locally, with no AI or network calls.
 
 ## Usage
 
@@ -14,96 +13,30 @@ The `query` command lets you search xtarterize tasks using natural language - no
 xtarterize query "<query>" [options]
 ```
 
-A query is any natural language description of the tooling setup you're looking for.
-
 ### Options
 
 | Option | Description | Default |
-|--------|-------------|---------|
+| --- | --- | --- |
 | `--json` | Output machine-readable JSON | `false` |
-| `--limit <n>` | Maximum number of results to show | `20` |
+| `--limit <n>` | Maximum number of results | `20` |
 | `--threshold <n>` | Minimum relevance score (0-1) | `0.1` |
 | `--cwd <path>` | Target directory | current directory |
 
-### Other options
-
-This command does not support the shared formatting or output flags (`--quiet`, `--format`). Use `--json` for machine-readable output.
+`--quiet` and `--format` are not supported; use `--json` for machine-readable output.
 
 ## Examples
 
-### Find tasks by description
-
 <AllPackageManagers type="exec" pkg="xtarterize@latest" args='query "strict typescript"' />
 
-Outputs tasks grouped by domain bundle with per-group actionable add commands:
+Results are grouped by category, and each group prints a ready-to-run `xtarterize add` command.
 
-```
-✻ xtarterize query "strict typescript" - 1 group · 4 tasks
+<AllPackageManagers type="exec" pkg="xtarterize@latest" args='query "ci pipeline" --json' title="JSON output" />
 
-  TypeScript
-  ts/strict              80%  patch     tsconfig - strict compiler options  tsconfig.json
-  ts/incremental         30%  skip      tsconfig - incremental: true        tsconfig.json
-  gitignore/tsbuildinfo  30%  patch     .gitignore - tsbuildinfo            .gitignore
-  ts/paths               15%  conflict  tsconfig - path aliases             tsconfig.json
+<AllPackageManagers type="exec" pkg="xtarterize@latest" args='init --compose "react project with ci and linting"' title="Rank an init plan" />
 
-  xtarterize add ts/strict ts/incremental gitignore/tsbuildinfo ts/paths
-```
+`init --compose` reorders the plan by relevance without excluding any applicable task.
 
-### Search for linting and formatting
+## See also
 
-<AllPackageManagers type="exec" pkg="xtarterize@latest" args='query "linting and formatting tool" --limit 5' />
-
-### Machine-readable output
-
-<AllPackageManagers type="exec" pkg="xtarterize@latest" args='query "ci pipeline" --json' />
-
-```json
-{
-  "type": "query",
-  "query": "ci pipeline",
-  "count": 3,
-  "results": [
-    {
-      "taskId": "ci/ci",
-      "label": "GitHub CI workflow",
-      "group": "CI/CD",
-      "relevance": 0.85,
-      "signals": [
-        { "name": "label", "score": 1.0 },
-        { "name": "id", "score": 0.85 },
-        { "name": "keywords", "score": 0.9 },
-        { "name": "config", "score": 1.0 },
-        { "name": "group", "score": 1.0 }
-      ]
-    }
-  ]
-}
-```
-
-### Compose an init plan
-
-Combine query with the init workflow to get a ranked task plan:
-
-<AllPackageManagers type="exec" pkg="xtarterize@latest" args='init --compose "react project with ci and linting"' />
-
-This reorders tasks so the most relevant ones appear first in the interactive plan, without excluding any applicable tasks.
-
-## How It Works
-
-The scoring engine operates in five steps:
-
-1. **Tokenize** - The query is split into words; stopwords (a, the, want, need, project, etc.) and short words are filtered out
-2. **Expand** - Each token expands through compact alias groups (for example, `updates` and `renovate`). Expansion is bidirectional and single-hop per group: aliases are not expanded again, so there is no cross-group chain. Alias matches take a 0.85 discount, so a same-tier direct hit wins; alias-derived substrings need meaningful containment (shorter side at least 4 characters and at least half the longer side). A multi-word query exactly matching an authored keyword outranks alias-stacked matches, so `auto update` ranks `ci/auto-update` first.
-3. **Score** - For each query token, find the best match across all 5 signals (label, id, group, keywords, config targets), keeping the highest score per signal. Uses tiered match levels: exact (1.0), stem-match (0.95), fuzzy (0.85), prefix (0.75), substring (0.55)
-4. **Aggregate** - Signal scores are weighted and averaged; multi-token queries receive a coverage bonus that increases with the proportion of tokens matched
-5. **Group** - Results are organized by task group/domain bundle, with per-group actionable `xtarterize add` commands
-
-<Aside type="note">
-  The scoring engine is entirely algorithmic - zero AI model calls, zero API dependencies.
-  It runs offline and completes in milliseconds.
-</Aside>
-
-## See Also
-
-- [CLI Overview](/xtarterize/guide/cli/overview/) - full command reference
-- [Tasks Overview](/xtarterize/guide/tasks/overview/) - understanding tasks and their metadata
+- [CLI overview](/xtarterize/guide/cli/overview/)
+- [Conformance tasks](/xtarterize/guide/tasks/overview/)

@@ -1,13 +1,9 @@
 ---
 title: workspace/pnpm-workspace
-description: Generate pnpm-workspace.yaml for pnpm monorepos.
+description: Keep workspace globs in pnpm-workspace.yaml.
 ---
 
-import { Aside } from '@astrojs/starlight/components'
-
-Generates a `pnpm-workspace.yaml` file for projects using pnpm as their
-package manager. The file defines the workspace globs that pnpm uses to
-discover packages.
+Ensures `pnpm-workspace.yaml` declares the workspace globs pnpm needs; in a single-package project it creates the file with only a comment placeholder:
 
 ```yaml
 packages:
@@ -15,24 +11,8 @@ packages:
   - 'packages/*'
 ```
 
-## Existing files
+When the file exists with a `packages:` list, only missing globs are inserted. Comments, other keys such as `catalog:` and `overrides:`, key order, indentation, quote style, and line endings stay untouched. A file without a `packages:` key is left alone.
 
-The task creates `pnpm-workspace.yaml` when it is missing. When the file
-already exists:
+Layouts that cannot be edited safely, such as a flow-style `packages:` list missing a glob, are reported as a conflict.
 
-- With a top-level `packages:` list, only the missing `apps/*` and `packages/*`
-  entries are inserted. Comments, other keys such as `catalog:`, `overrides:`,
-  and `onlyBuiltDependencies`, key order, indentation, quote style, and line
-  endings stay untouched.
-- Without a `packages:` key, the file is left untouched, so a settings-only
-  `pnpm-workspace.yaml` never gains workspace globs.
-
-Layouts that cannot be edited safely, such as a flow-style `packages:` list
-that is missing a glob, are reported as a conflict instead of being rewritten.
-
-<Aside type="tip">
-  This task only applies when `pnpm` is the detected package manager.
-  Non-pnpm projects do not need a `pnpm-workspace.yaml`.
-</Aside>
-
-See the [task catalog](/xtarterize/guide/tasks/overview/) for the task ID, group, applicability, and generated files, and the [Monorepo guide](/xtarterize/guide/monorepo/) for root-scope rules.
+The task applies only when pnpm is the detected package manager.

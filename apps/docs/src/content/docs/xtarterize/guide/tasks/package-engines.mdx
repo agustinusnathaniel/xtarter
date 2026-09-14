@@ -1,38 +1,17 @@
 ---
 title: quality/package-engines
-description: Add devEngines to package.json specifying Node and package manager requirements.
+description: Add devEngines to package.json.
 ---
 
-import { Aside } from '@astrojs/starlight/components'
-
-Adds a `devEngines` field to `package.json` declaring the expected Node.js and
-package manager versions for the project.
-
-The task generates:
+Adds a `devEngines` field to `package.json` with the expected Node.js version and package manager, for example:
 
 ```json
 {
   "devEngines": {
-    "runtime": {
-      "name": "node",
-      "version": ">=24"
-    },
-    "packageManager": {
-      "name": "pnpm",
-      "version": ">=9"
-    }
+    "runtime": { "name": "node", "version": ">=22" },
+    "packageManager": { "name": "pnpm", "version": ">=9" }
   }
 }
 ```
 
-`packageManager.version` defaults to `>=9` for pnpm and `>=10` for npm, yarn,
-or bun, and uses the version from an existing `packageManager` field when
-present.
-
-<Aside type="tip">
-  This task writes `package.json` through the package.json owner and merges
-  into an existing `devEngines` field rather than replacing it. Existing values
-  take precedence over incoming values.
-</Aside>
-
-See the [task catalog](/xtarterize/guide/tasks/overview/) for the task ID, group, applicability, and generated files, and the [Monorepo guide](/xtarterize/guide/monorepo/) for root-scope rules.
+The Node version comes from `.nvmrc`, `engines.node`, or a default of `22` (written as `>=22`). `packageManager.version` defaults to `>=9` for pnpm and `>=10` for npm, yarn, or bun, and uses an existing `packageManager` field when present. Existing `devEngines` values take precedence during the merge.

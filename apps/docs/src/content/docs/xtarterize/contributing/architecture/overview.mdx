@@ -1,167 +1,66 @@
 ---
 title: Architecture Overview
-description: Understand how xtarterize is structured and how the packages work together.
+description: How the xtarterize packages and the conformance pipeline fit together.
 ---
 
-import {
-  Aside,
-  FileTree,
-  Tabs,
-  TabItem,
-  LinkButton,
-} from "@astrojs/starlight/components";
+import { LinkButton } from '@astrojs/starlight/components'
 
-xtarterize is organized as a monorepo using [Turborepo](https://turbo.build/repo) for task orchestration, [pnpm](https://pnpm.io/) for package management, and [Vite Plus](https://viteplus.dev) for build, test, and development workflows.
+xtarterize is a pnpm monorepo orchestrated with [Turborepo](https://turbo.build/repo) and built with [Vite Plus](https://viteplus.dev).
 
-## Package Structure
+## Packages
 
-<FileTree>
-- packages/
-  - core/ - [`@xtarterize/core`](https://github.com/agustinusnathaniel/xtarterize/tree/main/packages/core) - [`detect.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/detect.ts) + [`detect/`](https://github.com/agustinusnathaniel/xtarterize/tree/main/packages/core/src/detect), [`resolve.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/resolve.ts), [`apply/`](https://github.com/agustinusnathaniel/xtarterize/tree/main/packages/core/src/apply), [`services/`](https://github.com/agustinusnathaniel/xtarterize/tree/main/packages/core/src/services), [`backup.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/backup.ts), [`preflight.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/preflight.ts)
-  - patchers/ - [`@xtarterize/patchers`](https://github.com/agustinusnathaniel/xtarterize/tree/main/packages/patchers) - [`json-merge.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/patchers/src/json-merge.ts), [`ast-patch.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/patchers/src/ast-patch.ts)
-  - tasks/ - [`@xtarterize/tasks`](https://github.com/agustinusnathaniel/xtarterize/tree/main/packages/tasks) - [`factory/define-task.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/tasks/src/factory/define-task.ts), [`factory/package-json.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/tasks/src/factory/package-json.ts), all task implementations
-- apps/
-  - xtarterize/ - **xtarterize** - CLI binary ([citty](https://github.com/unjs/citty) + [@clack/prompts](https://github.com/natemoo-re/clack))
-  - create-xtarter-app/ - **create-xtarter-app** - Template scaffolding CLI ([citty](https://github.com/unjs/citty) + [giget](https://github.com/unjs/giget))
-  - xtarter-create/ - **@xtarter/create** - Vite+ organization template manifest
-  - docs/ - @xtarter/docs - This documentation site ([Astro](https://astro.build/)/[Starlight](https://starlight.astro.build/))
-- test/
-  - fixtures/ - Test fixtures for various project types
-</FileTree>
+- **`@xtarterize/core`** - detection, task resolution, preflight, the apply engine, and shared services. It has no CLI dependency, so other tools can reuse it.
+- **`@xtarterize/patchers`** - safe edits to JSON and to Vite config source.
+- **`@xtarterize/tasks`** - the conformance tasks xtarterize ships.
+- **`xtarterize`** - the CLI users run.
+- **`create-xtarter-app`** - a scaffolding CLI for new projects.
+- **`@xtarter/create`** - the Vite+ organization template manifest.
+- **`@xtarter/docs`** - this documentation site.
 
-## Package Dependencies
+The CLI depends on core and tasks. Tasks depend on core and patchers. Core and patchers are leaf packages with no workspace dependencies.
 
-```mermaid
-flowchart TD
-    CLI["xtarterize<br/>apps/xtarterize"] --> Core["@xtarterize/core"]
-    CLI --> Tasks["@xtarterize/tasks"]
-    Tasks --> Core
-    Tasks --> Patchers["@xtarterize/patchers"]
+## Pipeline
 
-    style CLI fill:#6366f1,color:#fff
-    style Core fill:#22c55e,color:#fff
-    style Tasks fill:#f59e0b,color:#fff
-    style Patchers fill:#a855f7,color:#fff
+1. **Detect** - inspect the project directory and build a profile of framework, bundler, runtime, package manager, and monorepo layout.
+2. **Resolve** - filter the task registry by applicability and scope, then check each task's status.
+3. **Plan** - collect statuses, diffs, dependencies, and the backup set without writing anything.
+4. **Confirm** - show the plan and ask the user unless the command runs non-interactively.
+5. **Execute** - back up each affected file once, install dependencies in one batch, then run the tasks.
+6. **Report** - print the outcome and set the exit code.
+
+## Design decisions
+
+- **One resolution per task** - status, diffs, apply, and dependency collection all come from the same resolution, so they cannot disagree.
+- **Plan, then execute** - the previewed diffs are exactly what execution writes.
+- **Idempotency is non-negotiable** - a second run makes no changes.
+- **Tasks are independent** - every task can run on its own with `add <task-id>`.
+- **Packages return Effects, apps run them** - `packages/*` build Effects and never call a runtime. The CLI runtime is the only Effect edge, and plain Promise leaves are lifted there.
+- **Services own the effectful edges** - process execution, dependency installs, and interactive prompts are services provided at the runtime edge.
+- **Failures surface** - a failed install or task is collected in the result and reflected in the exit code instead of being ignored.
+
+## Development
+
+From the repository root:
+
+```bash
+pnpm install    # install dependencies
+pnpm build      # build every package
+vp test         # run the test suite
+pnpm check      # typecheck, build, lint, and tests
+pnpm typecheck  # type checks only
+pnpm dev        # development servers
 ```
-
-<Aside>
-  `@xtarterize/patchers` and `@xtarterize/core` have no internal workspace
-  dependencies - they are leaf packages that can be used independently.
-</Aside>
-
-## How It Works
-
-```mermaid
-sequenceDiagram
-    participant User
-    participant CLI as CLI (citty)
-    participant Runtime as runtime.ts (runCliProgram)
-    participant Session as CommandSession
-    participant Core as @xtarterize/core
-    participant Tasks as @xtarterize/tasks
-    participant Patchers as @xtarterize/patchers
-
-    User->>CLI: xtarterize init
-    CLI->>Runtime: runCliProgram(initProgram)
-    Runtime->>Runtime: provide AppLayer (DepsInstaller + ProcessRunner + Prompter)
-    Runtime->>Session: CommandSession.open(args)
-    Session->>Core: ensureXtarterizeGitignore(cwd) [plain leaf, lifted]
-    Session->>Core: runPreflight(cwd) [plain leaf, lifted]
-    Session->>Core: detectProject + resolveProjectTasks (Effect)
-    Core-->>Session: ProjectProfile + statuses + timing
-    Session->>Core: planTasks (Effect)
-    Core-->>Session: ApplyPlan (diffs, dependencies, files)
-    Session->>User: displayPlan + confirm via Prompter service
-    User->>Session: Confirm
-    Session->>Core: executePlan (Effect)
-    Core->>Core: backupFile + writeRunManifest [plain leaves, lifted]
-    Core->>Core: DepsInstaller.install(dependencies)
-    Core->>Tasks: task.check/dryRun/apply (Effect or Promise, normalized)
-    Tasks->>Patchers: mergeJson / patchJson / injectVitePluginIntoCode
-    Patchers-->>Tasks: Modified content
-    Tasks-->>Core: Result or TaskError
-    Core-->>Session: ApplyResult
-    Session->>User: report outcome (terminal or JSON)
-    Runtime->>Runtime: Exit/Cause -> exit code (interrupt-only = 0)
-```
-
-## Key Design Decisions
-
-- **Detection lives in core** - No CLI dependency, reusable by other consumers
-- **Tasks are independent** - Each task can run standalone via `add <task-id>`
-- **One resolution per task** - A task spec resolves once and drives check, dry-run, apply, and dependencies, so status and diffs cannot disagree
-- **Plan, then execute** - `planTasks()` computes statuses, diffs, dependencies, and the backup set without writing; `executePlan()` replays one plan with one backup set and one run manifest
-- **Dry-run is exact** - The plan's diffs are the content `executePlan()` writes
-- **Idempotency is non-negotiable** - Running twice produces no changes on second run
-- **Templates are parameterized** - All templates receive `ProjectProfile` and adapt accordingly
-- **One command session** - `CommandSession` owns open, plan, execute, and report; commands declare selection policy and output shape, and prompts are injected through the `Prompter` service (clack in production, scripted in tests)
-- **Batch install failures surface** - A failed dependency install is reported in the apply result and exit code instead of being logged and ignored
-- **Packages return Effects, apps run them** - `packages/core` and `packages/tasks` construct `Effect` values; `apps/xtarterize/src/runtime.ts` is the single runtime edge (`runCliProgram` with `AppLayer`). Pure and Promise leaves (detection, filesystem, backup, preflight) stay plain and are lifted at the nearest seam (ADR 036)
-- **Effect services own the effectful edges** - `ProcessRunner` (tinyexec with interruption and timeout), `DepsInstaller` (batched installs), and `Prompter` (interactive prompts) are Effect services provided at the runtime edge
-
-## Development Workflow
-
-<Tabs>
-  <TabItem label="Setup">
-    ```bash
-    # Install dependencies
-    pnpm install
-    ```
-  </TabItem>
-  <TabItem label="Build">
-    ```bash
-    # Build all packages
-    pnpm build
-    ```
-  </TabItem>
-  <TabItem label="Test">
-    ```bash
-    # Run tests
-    vp test
-    ```
-  </TabItem>
-  <TabItem label="Check">
-    ```bash
-    # Format and lint with Biome
-    pnpm check
-
-    # Type check separately (Turborepo)
-    pnpm typecheck
-    ```
-
-  </TabItem>
-  <TabItem label="Develop">
-    ```bash
-    # Start development (watch mode)
-    pnpm dev
-    ```
-  </TabItem>
-</Tabs>
 
 ## Toolchain
 
-| Tool                                                   | Purpose                           | Command                                    |
-| ------------------------------------------------------ | --------------------------------- | ------------------------------------------ |
-| [Vite Plus](https://viteplus.dev)                      | Build, test, pack, dev server     | `vp build`, `vp test`, `vp pack`, `vp dev` |
-| [Turborepo](https://turbo.build/repo)                  | Monorepo task orchestration       | `turbo run build`, `turbo run typecheck`   |
-| [Biome](https://biomejs.dev/)                          | Linting and formatting            | `biome lint .`, `biome check --write .`    |
-| [pnpm](https://pnpm.io/)                               | Package management, workspaces    | `pnpm install`, `catalog:` for shared deps |
-| [Changesets](https://github.com/changesets/changesets) | Version management and publishing | `changeset`, `changeset version`           |
-
-## References
-
-- [Vite Plus Documentation](https://viteplus.dev/guide/) - Unified toolchain for the web
-- [Turborepo Documentation](https://turbo.build/repo/docs) - Monorepo task orchestration
-- [pnpm Workspaces](https://pnpm.io/workspaces) - Workspace and monorepo management
-- [citty](https://github.com/unjs/citty) - Elegant CLI framework for Node.js
-- [@clack/prompts](https://github.com/natemoo-re/clack) - Interactive command-line prompts
-- [Astro](https://astro.build/) - Content-focused web framework
-- [Starlight](https://starlight.astro.build/) - Documentation framework for Astro
-- [defu](https://github.com/unjs/defu) - Deep merge utility
-- [magicast](https://github.com/unjs/magicast) - AST manipulation for JavaScript/TypeScript
-- [picocolors](https://github.com/alexeyraspopov/picocolors) - Tiny terminal colors library
-- [pkg-types](https://github.com/unjs/pkg-types) - Package.json type definitions and utilities
+| Tool | Purpose |
+| ---- | ------- |
+| [Vite Plus](https://viteplus.dev) | Build, test, pack, and dev server |
+| [Turborepo](https://turbo.build/repo) | Monorepo task orchestration |
+| [Biome](https://biomejs.dev/) | Linting and formatting |
+| [pnpm](https://pnpm.io/) | Package management and workspaces |
+| [Changesets](https://github.com/changesets/changesets) | Versioning and publishing |
 
 <LinkButton href="/xtarterize/contributing/core/detect/">
-  Explore project detection →
+  Explore project detection
 </LinkButton>

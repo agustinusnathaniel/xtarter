@@ -1,121 +1,66 @@
 ---
 title: CLI Reference
-description: Complete command reference for create-xtarter-app - all arguments, options, and usage examples.
+description: Commands, arguments, and options for create-xtarter-app.
 ---
 
 import AllPackageManagers from '@/components/AllPackageManagers.astro'
 
 ## Command
 
-```
+```bash
 npx create-xtarter-app@latest [project-name] [options]
 ```
+
+The package also exports a programmatic API for scripts, described in the [package README](https://www.npmjs.com/package/create-xtarter-app).
 
 ## Arguments
 
 | Argument | Required | Description |
 |----------|----------|-------------|
-| `project-name` | No | Name for the new project. If omitted, you'll be prompted. |
+| `project-name` | No | Project name. If omitted, the CLI prompts. |
 
 ## Options
 
-| Option | Alias | Type | Default | Description |
-|--------|-------|------|---------|-------------|
-| `--template` | `-t` | string | - | Template ID to use (skips prompt). See [Templates](/create-xtarter-app/guide/templates/) |
-| `--pm` | `-p` | string | - | Package manager (`pnpm`, `npm`, `bun`, `yarn`) |
-| `--git` / `--no-git` | - | boolean | `true` | Git init is on by default; `--no-git` skips it |
-| `--clean` | - | boolean | - | Remove CI/CD config files after scaffolding |
-| `--force` | `-f` | boolean | - | Overwrite existing target directory |
-| `--ref` | - | string | - | Git ref (branch, tag, or commit SHA) to download |
-| `--yes` | `-y` | boolean | - | Skip selection prompts and use defaults (`next-chakra`, pnpm, Git init, no cleanup) |
-| `--quiet` | - | boolean | - | Suppress banners, spinners, and decorative output |
-| `--json` | - | boolean | - | Output scaffold result as JSON (also suppresses banners and spinners) |
-| `--color` / `--no-color` | - | boolean | `true` | Colorized output is on by default; `--no-color` disables it |
-| `--help` | `-h` | boolean | - | Show help text |
-| `--version` | `-v` | boolean | - | Show version |
+| Option | Alias | Default | Description |
+|--------|-------|---------|-------------|
+| `--template` | `-t` | - | Template ID, skipping the prompt. See [Templates](/create-xtarter-app/guide/templates/) |
+| `--pm` | `-p` | - | Package manager: `pnpm`, `npm`, `bun`, or `yarn` |
+| `--git` / `--no-git` | - | `true` | Git init |
+| `--clean` | - | - | Remove CI/CD config files after scaffolding |
+| `--force` | `-f` | - | Overwrite an existing target directory |
+| `--ref` | - | - | Git ref (branch, tag, or commit SHA) to download |
+| `--yes` | `-y` | - | Skip selection prompts and use defaults (`next-chakra`, pnpm, Git init, no cleanup) |
+| `--quiet` | - | - | Suppress banners, spinners, and decorative output |
+| `--json` | - | - | Output the scaffold result as JSON (implies `--quiet`) |
+| `--color` / `--no-color` | - | `true` | Colorized output |
+| `--help` | `-h` | - | Show help |
+| `--version` | `-v` | - | Show the version |
 
-The project name has no default. Provide `[project-name]` when using `--yes`
-for a fully non-interactive run; otherwise the CLI still prompts for a name.
+The project name has no default. Provide `[project-name]` with `--yes` for a fully non-interactive run.
 
 ## Subcommands
 
 | Command | Description |
 |---------|-------------|
-| `preview [template]` | Preview template details without scaffolding |
-
-## Package managers
-
-| Manager | Command | Note |
-|---------|---------|------|
-| `pnpm` | Default for `--yes` | Disk-efficient package management |
-| `npm` | Supported | npm package manager |
-| `bun` | Supported | JavaScript runtime and package manager |
-| `yarn` | Supported | Yarn package manager |
+| `preview [template]` | Show template details without scaffolding |
 
 ## Examples
 
-<AllPackageManagers type="create" pkg="xtarter-app@latest" title="Interactive" />
+<AllPackageManagers type="create" pkg="xtarter-app@latest" args="my-app --yes" title="Defaults" />
 
-<AllPackageManagers type="create" pkg="xtarter-app@latest" args="my-app --yes" title="Quick start with defaults" />
+<AllPackageManagers type="create" pkg="xtarter-app@latest" args=". -t vite-tailwind" title="Current directory" />
 
-<AllPackageManagers type="create" pkg="xtarter-app@latest" args=". -t vite-tailwind" title="Scaffold in current directory" />
+<AllPackageManagers type="create" pkg="xtarter-app@latest" args="my-app --pm bun --no-git" title="Bun, no git" />
 
-<AllPackageManagers type="create" pkg="xtarter-app@latest" args="my-app --template vite-tailwind" title="Pick a template" />
+<AllPackageManagers type="create" pkg="xtarter-app@latest" args="my-app -t vite-tailwind --force" title="Overwrite" />
 
-<AllPackageManagers type="create" pkg="xtarter-app@latest" args="my-app --pm bun --no-git" title="Specific package manager, no git" />
+<AllPackageManagers type="create" pkg="xtarter-app@latest" args="preview next-tailwind" title="Preview" />
 
-<AllPackageManagers type="create" pkg="xtarter-app@latest" args="my-app -t vite-tailwind --force" title="Overwrite existing directory" />
+## Errors
 
-<AllPackageManagers type="create" pkg="xtarter-app@latest" args="my-app --ref v1.0.0" title="Download a specific tag" />
-
-<AllPackageManagers type="create" pkg="xtarter-app@latest" args="preview next-tailwind" title="Preview a template" />
-
-## Error handling
-
-- **Invalid template ID** - prints all valid template IDs and exits
-- **Invalid package manager** - prints valid options and exits
-- **Validation order** - template, package manager, and other explicit inputs are validated before the target directory is created, modified, or deleted, so `--force` never removes a directory for an invalid invocation
-- **Target directory exists** - cancels with an error unless `--force` is used
-- **Unknown option or command** - exits `1` before anything runs, with a suggested correction when one is close (for example, `Unknown option --jsn ... Did you mean --json?`), so a typo never silently changes behavior
-- **Invalid project name** - the interactive prompt rejects names containing characters outside letters, numbers, hyphens, and underscores
-- **Download failure** - network failures are retried up to 3 times, then the command exits with an error
-- **Install failure** - cleans up the created directory (if the CLI created it), then exits
-- **Git init failure** - logs a warning and reports `gitInitialized: false` in `--json` output; the successful scaffold is not discarded
-- **Partial scaffold** - if a non-git scaffold step fails after download, a directory created by the CLI is cleaned up automatically
-
-## Programmatic API
-
-The package also exports a programmatic API for use in scripts and tooling:
-
-```ts
-import {
-  downloadTemplateFiles,
-  modifyPackageJson,
-  installDependencies,
-  initializeGit,
-  isGitInstalled,
-  cleanCIConfigs,
-  getTemplateById,
-  getTemplateChoices,
-  TEMPLATES,
-} from 'create-xtarter-app'
-
-// Download a template
-await downloadTemplateFiles({
-  template: getTemplateById('vite-tailwind')!,
-  targetPath: './my-app',
-})
-
-// Modify package.json
-await modifyPackageJson({ projectPath: './my-app', projectName: 'my-app' })
-
-// Install dependencies
-await installDependencies({ packageManager: 'pnpm', projectPath: './my-app' })
-
-// Initialize git
-if (isGitInstalled()) {
-  await initializeGit({ projectPath: './my-app' })
-}
-```
-
-See [Templates](/create-xtarter-app/guide/templates/) for the full `TemplateConfig` type.
+- Invalid template ID or package manager: prints the valid values and exits.
+- Invalid invocation: unknown options and commands exit `1` before anything runs, with a suggested correction when one is close.
+- Existing target directory: cancels unless `--force` is used. Explicit inputs are validated before the directory is created, modified, or deleted.
+- Download failure: retries up to 3 times, then exits.
+- Install failure: removes the target directory when the CLI created it, then exits.
+- Git init failure: logs a warning and reports `gitInitialized: false` in `--json` output without discarding the scaffold.

@@ -1,111 +1,25 @@
 ---
 title: JSON Merge
-description: How the JSON merge patcher safely combines configuration objects.
+description: How the JSON merge patcher combines configuration safely.
 ---
 
-The `mergeJson` function performs a deep merge of two JavaScript objects using the [`defu`](https://github.com/unjs/defu) library. It's used whenever xtarterize needs to modify JSON configuration files like [`tsconfig.json`](https://www.typescriptlang.org/tsconfig/), [`biome.json`](https://biomejs.dev/reference/configuration/), or [`.vscode/settings.json`](https://code.visualstudio.com/docs/getstarted/settings).
+The JSON merge patcher performs a deep merge of two objects using [`defu`](https://github.com/unjs/defu). xtarterize uses it whenever it updates JSON configuration such as `tsconfig.json`, `biome.json`, or VS Code settings.
 
-## Usage
+## Merge behavior
 
-```typescript
-import { mergeJson } from '@xtarterize/patchers'
+- Existing keys take precedence; incoming values only fill gaps.
+- Nested objects merge recursively.
+- Arrays are replaced entirely, not concatenated. Tasks that need to combine arrays use a custom merge.
 
-const existing = { compilerOptions: { strict: true, target: "ES2022" } }
-const incoming = { compilerOptions: { incremental: true } }
+## Writing to files
 
-const merged = mergeJson(existing, incoming)
-// { compilerOptions: { strict: true, target: "ES2022", incremental: true } }
-```
+Object merging alone would discard comments and formatting, so file writes use a second patcher that edits the JSON text directly. It preserves:
 
-## Parameters
+- Comments
+- Key order
+- Whitespace and indentation
+- Trailing commas in JSONC
 
-| Parameter | Type | Description |
-|-----------|------|-------------|
-| `existing` | `object` | The current configuration (takes precedence) |
-| `incoming` | `object` | The new configuration to merge in (fills gaps) |
+JSON merge targets combine both steps: the object merge computes the target state, then the text patch applies it to the original file.
 
-## Return Value
-
-Returns the merged `object`. Existing keys always take precedence over incoming keys.
-
-## Deep Merge Behavior
-
-Nested objects are merged recursively. Existing keys take precedence, missing keys are filled from incoming:
-
-```typescript
-const existing = {
-  compilerOptions: {
-    strict: true,        // https://www.typescriptlang.org/tsconfig/#strict
-    target: "ES2022"     // https://www.typescriptlang.org/tsconfig/#target
-  }
-}
-
-const incoming = {
-  compilerOptions: {
-    incremental: true,           // https://www.typescriptlang.org/tsconfig/#incremental
-    tsBuildInfoFile: ".tsbuildinfo"  // https://www.typescriptlang.org/tsconfig/#tsBuildInfoFile
-  }
-}
-
-const merged = mergeJson(existing, incoming)
-// {
-//   compilerOptions: {
-//     strict: true,           // preserved from existing
-//     target: "ES2022",       // preserved from existing
-//     incremental: true,      // added from incoming
-//     tsBuildInfoFile: ".tsbuildinfo"  // added from incoming
-//   }
-// }
-```
-
-### Object vs Array Merge
-
-| Type | Behavior | Example |
-|------|----------|---------|
-| **Objects** | Deep merge, existing keys win | `{ a: { b: 1 } }` + `{ a: { c: 2 } }` → `{ a: { b: 1, c: 2 } }` |
-| **Arrays** | Replace entirely | `{ rules: ["a"] }` + `{ rules: ["b"] }` → `{ rules: ["b"] }` |
-
-Tasks that need to combine arrays, such as VS Code extension
-recommendations, use a custom merge function instead of `mergeJson`.
-
-## `patchJson`: Surgical Text Editing
-
-While `mergeJson` operates on objects, `patchJson` edits JSON text directly using [`jsonc-parser`](https://github.com/microsoft/node-jsonc-parser). It preserves:
-
-- Existing comments (`// inline` and `/* block */`)
-- Key ordering
-- Whitespace and indentation style
-- Trailing commas (in JSONC)
-
-### Usage
-
-```typescript
-import { patchJson } from '@xtarterize/patchers'
-
-const existing = `{
-  // Keep this comment
-  "strict": true,
-  "target": "ES2022"
-}`
-
-const incoming = { compilerOptions: { incremental: true } }
-const result = patchJson(existing, incoming)
-// {
-//   // Keep this comment
-//   "strict": true,
-//   "target": "ES2022",
-//   "incremental": true
-// }
-```
-
-### When to Use Each
-
-| Function | Use When | Preservation |
-|----------|----------|--------------|
-| `mergeJson` | Object-level logic, deep merging | None (returns new object) |
-| `patchJson` | Writing changes back to a file | Comments, formatting, key order |
-
-`jsonMerge` targets in `@xtarterize/tasks` use both functions: `mergeJson`
-computes the target state, then `patchJson` applies it surgically to the
-original text. This shared behavior lives in
-[`factory/targets.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/tasks/src/factory/targets.ts).
+See the [patchers overview](/xtarterize/contributing/patchers/overview/) for how the patchers fit together.
