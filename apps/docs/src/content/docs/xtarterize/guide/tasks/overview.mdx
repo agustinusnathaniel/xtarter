@@ -1,205 +1,105 @@
 ---
 title: Conformance Tasks
-description: All available conformance tasks and what they do.
+description: Task IDs and one-line descriptions for every xtarterize task.
 sidebar:
   order: 1
 ---
 
 import { LinkButton } from '@astrojs/starlight/components'
 
-xtarterize applies conformance configuration through discrete, independently applicable tasks. Each task detects whether it's needed and only applies changes if necessary.
+xtarterize applies configuration through discrete tasks. Each task detects whether it is needed and applies changes only when necessary. Use `--only <task-id>` or `--skip <task-id>` to select tasks.
 
-In monorepos, tasks are further filtered by their **scope**. Root-scoped
-tasks (CI/CD, release tooling, editor config, etc.) only appear when
-running from the monorepo root. Package-scoped tasks (Vite plugins,
-tsconfig paths) only appear inside workspace packages. See the
-[Monorepo guide](/xtarterize/guide/monorepo) for details.
+In monorepos, tasks are filtered by scope: root tasks appear only at the monorepo root, and package tasks only inside workspace packages. See the [monorepo guide](/xtarterize/guide/monorepo/).
 
-## Linting & Formatting
+## Linting and formatting
 
-| Task ID | Description | Applicable When |
-|---------|-------------|-----------------|
-| `lint/biome` | Install [Biome](https://biomejs.dev/) + [Ultracite](https://ultracite.ai/), write `biome.json` extending Ultracite presets with framework-aware overrides | Non-Vite+ projects (no ESLint/Oxlint detected) |
-| `lint/oxlint` | Install [Oxlint](https://oxc.rs/) + Ultracite, write `oxlint.config.ts` or `.oxlintrc.json` (legacy) extending Ultracite presets | [Vite+](https://viteplus.dev/) projects (no ESLint/Biome detected) |
-| `lint/oxfmt` | Install [Oxfmt](https://oxc.rs/) + Ultracite, write `oxfmt.config.ts` or `.oxfmtrc.json` (legacy) extending Ultracite preset | Vite+ projects (no ESLint/Biome detected) |
-
-All three tasks install [Ultracite](https://ultracite.ai/) automatically alongside the tool-specific dependency and generate configs that extend/import Ultracite presets. No separate `ultracite init` step needed.
-
-### Framework-Aware Biome Config
-
-When [Tailwind CSS](https://tailwindcss.com/) is detected, the generated [`biome.json`](https://biomejs.dev/reference/configuration/) includes:
-
-```json
-{
-  "css": {
-    "parser": {
-      "tailwindDirectives": true
-    }
-  }
-}
-```
-
-This enables Biome to parse [Tailwind v4 directives](https://tailwindcss.com/docs/functions-and-directives) like [`@theme`](https://tailwindcss.com/docs/functions-and-directives#theme-directive) without errors. See [`css.parser.tailwindDirectives`](https://biomejs.dev/reference/configuration/#cssparsertailwinddirectives) in Biome's configuration reference.
+| Task | What it does |
+| --- | --- |
+| `lint/biome` | Install Biome and Ultracite, write `biome.json` |
+| `lint/oxlint` | Install Oxlint and Ultracite for Vite+ projects, write `oxlint.config.ts` or the legacy `.oxlintrc.json` |
+| `lint/oxfmt` | Install Oxfmt and Ultracite for Vite+ projects, write `oxfmt.config.ts` or the legacy `.oxfmtrc.json` |
 
 ## TypeScript
 
-| Task ID | Description | Applicable When |
-|---------|-------------|-----------------|
-| `ts/strict` | Patch [`tsconfig.json`](https://www.typescriptlang.org/tsconfig/) with 4 compiler options: [`strict: true`](https://www.typescriptlang.org/tsconfig/#strict), [`noUnusedLocals: true`](https://www.typescriptlang.org/tsconfig/#noUnusedLocals), [`noUnusedParameters: true`](https://www.typescriptlang.org/tsconfig/#noUnusedParameters), [`verbatimModuleSyntax: true`](https://www.typescriptlang.org/tsconfig/#verbatimModuleSyntax) (each checked independently) | TypeScript detected |
-| `ts/paths` | Patch `tsconfig.json` with [`baseUrl`](https://www.typescriptlang.org/tsconfig/#baseUrl) and [`paths`](https://www.typescriptlang.org/tsconfig/#paths) aliases (`@/*` → [`./src/*`](https://www.typescriptlang.org/tsconfig/#paths)) | TypeScript detected |
-| `ts/incremental` | Patch `tsconfig.json` with [`incremental: true`](https://www.typescriptlang.org/tsconfig/#incremental) and [`tsBuildInfoFile: ".tsbuildinfo"`](https://www.typescriptlang.org/tsconfig/#tsBuildInfoFile) | TypeScript detected |
-| `gitignore/tsbuildinfo` | Add `*.tsbuildinfo` and `.tsbuildinfo/` to [`.gitignore`](https://git-scm.com/docs/gitignore) | TypeScript detected |
+| Task | What it does |
+| --- | --- |
+| [`ts/strict`](/xtarterize/guide/tasks/ts-strict/) | Enable strict compiler options in `tsconfig.json` |
+| `ts/paths` | Add `baseUrl` and `@/*` path aliases to `tsconfig.json` |
+| `ts/incremental` | Enable `incremental` and `tsBuildInfoFile` |
+| `gitignore/tsbuildinfo` | Ignore `*.tsbuildinfo` in `.gitignore` |
 
-## Vite Plugins
+## Vite plugins
 
-| Task ID | Description | Applicable When |
-|---------|-------------|-----------------|
-| `vite/checker` | Inject [`vite-plugin-checker`](https://vite-plugin-checker.netlify.app/) ([`checker()`](https://vite-plugin-checker.netlify.app/checkers/typescript.html)) into [`vite.config.ts`](https://vitejs.dev/config/) via [AST](https://github.com/unjs/magicast) | Browser [Vite](https://vitejs.dev/) project |
-| `vite/visualizer` | Inject [`rollup-plugin-visualizer`](https://github.com/btd/rollup-plugin-visualizer) ([`visualizer()`](https://github.com/btd/rollup-plugin-visualizer#usage)) into `vite.config.ts` via AST | Browser Vite project |
+| Task | What it does |
+| --- | --- |
+| `vite/checker` | Add `vite-plugin-checker` to `vite.config.ts` |
+| `vite/visualizer` | Add `rollup-plugin-visualizer` to `vite.config.ts` |
 
 ## CI/CD
 
-| Task ID | Description | Applicable When |
-|---------|-------------|-----------------|
-| `ci/release` | Write [`.github/workflows/release.yml`](https://docs.github.com/en/actions/using-workflows/about-workflows) - triggers on [`push.tags`](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#running-your-workflow-when-a-push-of-a-specific-tag-occurs) | [GitHub](https://github.com/) detected |
-| `ci/auto-update` | Write [`.github/workflows/auto-update.yml`](https://docs.github.com/en/actions/using-workflows/about-workflows) - [`schedule.cron`](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#schedule) for weekly dependency updates | GitHub detected |
-| `ci/ci` | Write [`.github/workflows/ci.yml`](https://docs.github.com/en/actions/using-workflows/about-workflows) - lint, typecheck, test on [`pull_request`](https://docs.github.com/en/actions/using-workflows/events-that-trigger-workflows#pull_request) | GitHub detected |
-
-### Conditional pnpm Setup
-
-For projects using [**pnpm**](https://pnpm.io/), CI workflows automatically include [`pnpm/setup@v1`](https://github.com/pnpm/setup) with [`cache: true`](https://github.com/pnpm/setup#usage) before [`actions/setup-node@v6`](https://github.com/actions/setup-node). This ensures reproducible pnpm versions across runs. [npm](https://www.npmjs.com/) and [yarn](https://yarnpkg.com/) projects are unaffected.
-
-### Monorepo Workspace Config
-
-When running in a pnpm monorepo, the `workspace/pnpm-workspace` task ensures a `pnpm-workspace.yaml` file declares both workspace globs:
-
-```yaml
-packages:
-  - 'apps/*'
-  - 'packages/*'
-```
-
-Existing files with a `packages:` list keep their comments, catalogs, overrides, and other settings; only missing globs are inserted, and files without the key are left untouched. Layouts that cannot be edited safely are reported as conflicts instead of being rewritten. The task only applies when the detected package manager is pnpm.
+| Task | What it does |
+| --- | --- |
+| `ci/ci` | Write a GitHub Actions workflow for lint, typecheck, and test |
+| `ci/release` | Write a release workflow triggered by tags |
+| `ci/auto-update` | Write a weekly dependency update workflow |
 
 ## Dependencies
 
-| Task ID | Description | Applicable When |
-|---------|-------------|-----------------|
-| `deps/renovate` | Write [`renovate.json`](https://docs.renovatebot.com/configuration-options/) with [`extends: ["config:base"]`](https://docs.renovatebot.com/presets-config/#configbase), [`automerge`](https://docs.renovatebot.com/key-concepts/automerge/), and [`stabilityDays: 2`](https://docs.renovatebot.com/configuration-options/#stabilitydays) | [GitHub](https://github.com/) detected |
+| Task | What it does |
+| --- | --- |
+| `deps/renovate` | Write `renovate.json` |
 
 ## Release
 
-| Task ID | Description | Applicable When |
-|---------|-------------|-----------------|
-| `release/commitlint` | Install [commitlint](https://commitlint.js.org/) with [`@commitlint/config-conventional`](https://commitlint.js.org/reference/rules.html), write [`commitlint.config.ts`](https://commitlint.js.org/reference/configuration.html) | [Git](https://git-scm.com/) detected |
-| `release/czg` | Install [czg](https://cz-git.qbb.sh/cli/) ([Commitizen](https://commitizen.github.io/cz-cli/) adapter), add [`commit`](https://docs.npmjs.com/cli/v10/using-npm/scripts) script to `package.json` | Always |
-| `release/cat-version` | Install [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version), write [`.versionrc`](https://github.com/absolute-version/commit-and-tag-version#configuration) | Always |
-| `release/git-hooks` | Install [husky](https://typicode.github.io/husky/), wire 4 hooks: `commit-msg` (commitlint), `prepare-commit-msg` (czg/commitizen integration), `pre-commit` (lint-staged / biome), `pre-push` (typecheck + test / turbo) | Always |
-| `release/versionrc` | Write [`.versionrc.json`](https://github.com/absolute-version/commit-and-tag-version#configuration) mapping conventional commit types to changelog sections (feat/fix/refactor/perf visible, others hidden) | Always |
+| Task | What it does |
+| --- | --- |
+| `release/commitlint` | Install commitlint and write `commitlint.config.ts` |
+| `release/czg` | Install czg and add a `commit` script |
+| `release/cat-version` | Install commit-and-tag-version and write `.versionrc` |
+| [`release/git-hooks`](/xtarterize/guide/tasks/release-git-hooks/) | Install husky and wire the commit-msg, prepare-commit-msg, pre-commit, and pre-push hooks |
+| [`release/versionrc`](/xtarterize/guide/tasks/versionrc/) | Write `.versionrc.json` with changelog sections |
 
-## Code Quality
+## Code quality
 
-| Task ID | Description | Applicable When |
-|---------|-------------|-----------------|
-| `quality/knip` | Install [Knip](https://knip.dev/), write [`knip.json`](https://knip.dev/reference/configuration) with framework-aware [`entry`](https://knip.dev/reference/configuration#entry) and [`project`](https://knip.dev/reference/configuration#project) paths | Always (JSON format if no TypeScript) |
-| `quality/lint-staged` | Install [lint-staged](https://github.com/okonet/lint-staged), write [`.lintstagedrc.json`](https://github.com/okonet/lint-staged#configuration) running Biome on staged files | Non-Vite+ projects |
-| `quality/package-engines` | Add [`devEngines`](https://docs.npmjs.com/cli/v10/configuring-npm/package-json#devengines) to `package.json` with a Node floor derived from the detected Node version and detected package manager version constraint | Always |
+| Task | What it does |
+| --- | --- |
+| `quality/knip` | Install Knip and write `knip.json` |
+| `quality/lint-staged` | Install lint-staged and write `.lintstagedrc.json` |
+| [`quality/package-engines`](/xtarterize/guide/tasks/package-engines/) | Add `devEngines` to `package.json` |
 
-## Code Generation
+## Code generation
 
-| Task ID | Description | Applicable When |
-|---------|-------------|-----------------|
-| `codegen/plop` | Install [Plop](https://plopjs.com/), write [`plopfile.ts`](https://plopjs.com/documentation/#getting-started) with framework-specific [generators](https://plopjs.com/documentation/#setgenerator) | Framework detected |
+| Task | What it does |
+| --- | --- |
+| `codegen/plop` | Install Plop and write `plopfile.ts` with framework-specific generators |
 
 ## Monorepo
 
-| Task ID | Description | Applicable When |
-|---------|-------------|-----------------|
-| `monorepo/turbo` | Install [Turborepo](https://turbo.build/), write [`turbo.json`](https://turbo.build/repo/docs/reference/configuration) with [`pipeline`](https://turbo.build/repo/docs/reference/configuration#pipeline) for build/lint/test | Monorepo detected |
-| `workspace/pnpm-workspace` | Ensure [`pnpm-workspace.yaml`](https://pnpm.io/pnpm-workspace_yaml) declares the `apps/*` and `packages/*` globs, preserving existing settings | `packageManager` is `pnpm` |
+| Task | What it does |
+| --- | --- |
+| `monorepo/turbo` | Install Turborepo and write `turbo.json` |
+| [`workspace/pnpm-workspace`](/xtarterize/guide/tasks/pnpm-workspace/) | Add workspace globs to `pnpm-workspace.yaml` |
 
 ## Editor
 
-| Task ID | Description | Applicable When |
-|---------|-------------|-----------------|
-| `editor/vscode` | Write/merge [`.vscode/settings.json`](https://code.visualstudio.com/docs/getstarted/settings#_settingsjson) (Biome formatter, save/on-paste actions, per-framework config) and [`.vscode/extensions.json`](https://code.visualstudio.com/docs/editor/extension-marketplace#_workspace-recommended-extensions) | Always |
-
-### Git Hooks
-
-The `release/git-hooks` task installs [husky](https://typicode.github.io/husky/) and generates 4 hooks:
-
-| Hook | Action |
-|------|--------|
-| **commit-msg** | Runs `commitlint --edit` on the commit message |
-| **prepare-commit-msg** | Runs `cz --hook` when `czg` or `commitizen` is detected; no-op otherwise |
-| **pre-commit** | Runs `lint-staged` (or `biome check --write`, or `vp staged` for Vite+ projects) |
-| **pre-push** | Runs `typecheck` + `test` (or `check:turbo` for Turborepo monorepos) |
-
-In Vite+ projects, hooks are written to `.vite-hooks/` instead of `.husky/`.
-
-### Changelog Configuration
-
-The `release/versionrc` task generates `.versionrc.json` for [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) with:
-
-- **Visible**: `feat` (Features), `fix` (Bug Fixes), `refactor` (Code Refactoring), `perf` (Performance Improvements)
-- **Hidden**: `docs`, `style`, `test`, `chore`, `ci`, `build`, `revert`
-
-This is separate from the `release/cat-version` task, which generates a legacy `.versionrc` file and installs the `commit-and-tag-version` dependency. The `versionrc` task can be used standalone or in combination with `cat-version`.
-
-### Additive Extension Merging
-
-When `.vscode/extensions.json` already exists, xtarterize **adds** its recommended extensions to your existing [`recommendations`](https://code.visualstudio.com/docs/editor/extension-marketplace#_workspace-recommended-extensions) array rather than replacing them. Your custom extensions are always preserved.
-
-### devEngines
-
-The `quality/package-engines` task adds a `devEngines` field to `package.json`:
-
-| Field | Value |
-|-------|-------|
-| `runtime.name` | `node` |
-| `runtime.version` | `>=` + the project's detected Node version (from `.nvmrc`, `engines.node`, or the CLI default), matching the version installed by generated CI workflows |
-| `packageManager.name` | Detected package manager |
-| `packageManager.version` | `>=9` (pnpm) or `>=10` (npm, yarn, bun) |
+| Task | What it does |
+| --- | --- |
+| [`editor/vscode`](/xtarterize/guide/tasks/editor-vscode/) | Write or merge `.vscode/settings.json` and `.vscode/extensions.json` |
 
 ## Agent
 
-| Task ID | Description | Applicable When |
-|---------|-------------|-----------------|
-| `agent/agents-md` | Write [`AGENTS.md`](https://docs.opencode.ai/agents) with project description and commands | Always |
-| `agent/skills-install` | Install relevant [agent skills](https://skills.sh) via `npx skills@latest add` for your stack | TypeScript detected |
-
-### Skills Install
-
-The `agent/skills-install` task installs [agent skills](https://skills.sh) from
-the catalog in [`packages/tasks/src/agent/catalog.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/tasks/src/agent/catalog.ts).
-It combines general skills with entries selected from the detected runtime,
-framework, bundler, and dependencies. Before installing, it checks local skill
-directories (`.agents/skills`, `.claude/skills`, and `.cursor/skills`) so
-existing skills are not installed again.
-
-The catalog is the source of truth. Its current groups include:
-
-| Signal | Examples |
+| Task | What it does |
 | --- | --- |
-| Every TypeScript project | `opensrc`, `grill-me`, `handoff`, `improve` |
-| Browser or edge runtime | `frontend-design`, `web-design-guidelines`, `fixing-accessibility` |
-| React or Next.js | `vercel-react-best-practices`, `react-dev`, `react-useeffect` |
-| Next.js | `next-dev-loop`, `next-cache-components-optimizer`, `next-cache-components-adoption` |
-| Vue or Nuxt | `vue`, `vue-best-practices`, `nuxt` |
-| Expo or React Native | `expo-overview`, `expo-router`, `eas-workflows`, `eas-app-stores`, `eas-update` |
-| Detected dependencies | Skills for component libraries, Vite, Vitest, tsdown, Turborepo, databases, auth, AI SDKs, and Remotion |
+| `agent/agents-md` | Write `AGENTS.md` with project description and commands |
+| `agent/skills-install` | Install agent skills for the detected stack |
 
 ## Scripts
 
-| Task ID | Description | Applicable When |
-|---------|-------------|-----------------|
-| `scripts/package-scripts` | Patch [`package.json`](https://docs.npmjs.com/cli/v10/configuring-npm/package-json) [`scripts`](https://docs.npmjs.com/cli/v10/using-npm/scripts) with `lint`, `format`, `typecheck`, etc. | Always |
-| `scripts/npmrc` | Write [`.npmrc`](https://docs.npmjs.com/cli/v10/configuring-npm/npmrc) with `save-exact`, `strict-peer-dependencies`, and `auto-install-peers` | Always |
+| Task | What it does |
+| --- | --- |
+| `scripts/package-scripts` | Add `lint`, `format`, `typecheck`, and similar scripts to `package.json` |
+| `scripts/npmrc` | Write `.npmrc` with `save-exact` and peer dependency settings |
 
-## Idempotency
+All tasks are idempotent: a second run makes no changes. Each task reports one of `new`, `patch`, `skip`, or `conflict`.
 
-Every task is idempotent: running `init` twice produces no changes on the second run. Tasks implement `check()` (returns `new`, `patch`, `skip`, or `conflict`), `dryRun()` (exact diffs without writing), and `apply()` (writes changes, backing up files first).
-
-Script equivalence goes beyond key names: a script whose command already exists under another name is skipped, so `"type:check": "tsc --noEmit"` prevents adding `"typecheck": "tsc --noEmit"`. VS Code extension recommendations are unioned with existing ones rather than replaced.
-
-<LinkButton href="/xtarterize/contributing/tasks/overview/">Learn how to contribute a new task →</LinkButton>
+<LinkButton href="/xtarterize/contributing/tasks/overview/">Learn how to contribute a task</LinkButton>

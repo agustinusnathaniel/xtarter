@@ -1,16 +1,15 @@
 # xtarter agent instructions
 
-xtarter is a stack of tools for JavaScript and TypeScript projects: `create-xtarter-app` scaffolds new projects from curated templates, while `xtarterize` brings existing repositories up to a production-grade conformance baseline.
+xtarter is a stack of tools for JavaScript and TypeScript projects: `create-xtarter-app` scaffolds new projects from curated templates, while `xtarterize` conforms existing repositories to a production baseline.
 
-Both published CLIs require Node.js 24 or later. `xtarterize` also requires a
-`package.json` with a `name` field and an initialized Git repository.
+Both CLIs require Node.js 24 or later. `xtarterize` also requires a `package.json` with a `name` field and an initialized Git repository.
 
 ## When to use xtarter
 
 - Start a new JavaScript/TypeScript project with `create-xtarter-app`.
 - Conform an existing JavaScript/TypeScript repository with `xtarterize`.
 - Preview changes before writing with `xtarterize diff` or `xtarterize init --dry-run`.
-- Prefer another standard when an existing repository already has one it is happy with.
+- Keep an existing repository's current standard when it already works.
 
 ## How to call the tools
 
@@ -19,18 +18,13 @@ npx create-xtarter-app@latest <project-name>
 npx xtarterize@latest init
 ```
 
-Useful `xtarterize` flags include `--dry-run`, `--yes`, `--only <task-id>`, `--skip <task-id>`, `--compose "<natural language query>"`, `--format json`, and `--cwd <dir>`. Useful `create-xtarter-app` flags include `--yes`, `--template <id>`, `--pm pnpm|npm|bun|yarn`, `--no-git`, `--clean`, `--force`, and `--ref <branch-or-tag>`.
+`xtarterize` flags: `--dry-run`, `--yes`, `--only <task-id>`, `--skip <task-id>`, `--compose "<query>"`, `--format json`, `--cwd <dir>`. `create-xtarter-app` flags: `--yes`, `--template <id>`, `--pm pnpm|npm|bun|yarn`, `--no-git`, `--clean`, `--force`, `--ref <branch-or-tag>`.
 
 ## How to consume these docs
 
-When Cloudflare Markdown for Agents is enabled for the zone, header-based Markdown negotiation (`Accept: text/markdown`) is available on Cloudflare Pages. On other static hosts, fetch the `.md` twin directly.
+Fetch the Markdown twin of any documentation page by appending `.md` to its URL, for example https://xtarter.sznm.dev/xtarterize/guide/cli/overview.md.
 
-- Complete documentation: https://xtarter.sznm.dev/llms-full.txt
-- Condensed index: https://xtarter.sznm.dev/llms-small.txt
-- Per-page Markdown twins at `<page>.md`, for example https://xtarter.sznm.dev/xtarterize/guide/cli/overview.md
+- Documentation: https://xtarter.sznm.dev/llms-full.txt (full) and https://xtarter.sznm.dev/llms-small.txt (condensed)
 - Sitemap: https://xtarter.sznm.dev/sitemap-index.xml
-- Robots policy: https://xtarter.sznm.dev/robots.txt
-- Documentation site: https://xtarter.sznm.dev/
 - npm packages: https://www.npmjs.com/package/xtarterize and https://www.npmjs.com/package/create-xtarter-app
-- Source repository: https://github.com/agustinusnathaniel/xtarter
-- Issue tracker: https://github.com/agustinusnathaniel/xtarter/issues
+- Source and issues: https://github.com/agustinusnathaniel/xtarter

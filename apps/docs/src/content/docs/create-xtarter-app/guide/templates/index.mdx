@@ -1,113 +1,42 @@
 ---
 title: Templates
-description: All available templates for create-xtarter-app - framework, tools, and features for each.
+description: Template catalog for create-xtarter-app.
 ---
 
 import AllPackageManagers from '@/components/AllPackageManagers.astro'
 
-Every template is a production-grade starter with Biome linting & formatting,
-TypeScript strict mode, GitHub Actions CI, and VS Code settings pre-configured.
-
-## Available Templates
+## Available templates
 
 ### Next.js + Chakra UI
 
-| | |
-|---|---|
-| **ID** | `next-chakra` |
-| **Stack** | Next.js 16, Chakra UI v3, TypeScript |
-| **Repo** | [`nextarter-chakra`](https://github.com/agustinusnathaniel/nextarter-chakra) |
-
-**Features:** Next.js 16, Chakra UI v3, Biome, Turborepo, TypeScript, Playwright
+`next-chakra` - Next.js 16 with Chakra UI v3, Turborepo, TypeScript, and Playwright.
 
 <AllPackageManagers type="create" pkg="xtarter-app@latest" args="my-app --template next-chakra" />
 
----
-
 ### Next.js + Tailwind
 
-| | |
-|---|---|
-| **ID** | `next-tailwind` |
-| **Stack** | Next.js 16, Tailwind CSS v4, TypeScript |
-| **Repo** | [`nextarter-tailwind`](https://github.com/agustinusnathaniel/nextarter-tailwind) |
-
-**Features:** Next.js 16, Tailwind CSS v4, Biome, TypeScript, Playwright
+`next-tailwind` - Next.js 16 with Tailwind CSS v4, TypeScript, and Playwright.
 
 <AllPackageManagers type="create" pkg="xtarter-app@latest" args="my-app --template next-tailwind" />
 
----
-
 ### Vite + React + Chakra
 
-| | |
-|---|---|
-| **ID** | `vite-chakra` |
-| **Stack** | Vite+ (Vite 8), React 19, Chakra UI v3, TanStack Router |
-| **Repo** | [`vite-react-chakra-starter`](https://github.com/agustinusnathaniel/vite-react-chakra-starter) |
-
-**Features:** Vite+ (Vite 8), React 19, Chakra UI v3, TanStack Router, TanStack Query, Biome, Vitest
+`vite-chakra` - Vite+ (Vite 8), React 19, Chakra UI v3, TanStack Router, TanStack Query, and Vitest.
 
 <AllPackageManagers type="create" pkg="xtarter-app@latest" args="my-app --template vite-chakra" />
 
----
-
 ### Vite + React + Tailwind
 
-| | |
-|---|---|
-| **ID** | `vite-tailwind` |
-| **Stack** | Vite+ (Vite 8), React 19, Tailwind CSS v4, TanStack Router |
-| **Repo** | [`vite-react-tailwind-starter`](https://github.com/agustinusnathaniel/vite-react-tailwind-starter) |
-
-**Features:** Vite+ (Vite 8), React 19, Tailwind CSS v4, TanStack Router, TanStack Query, Biome, Vitest
+`vite-tailwind` - Vite+ (Vite 8), React 19, Tailwind CSS v4, TanStack Router, TanStack Query, and Vitest.
 
 <AllPackageManagers type="create" pkg="xtarter-app@latest" args="my-app --template vite-tailwind" />
 
----
-
 ### Vite + React + Hero UI
 
-| | |
-|---|---|
-| **ID** | `vite-hero` |
-| **Stack** | Vite+ (Vite 8), React 19, Hero UI |
-| **Repo** | [`vite-react-hero-starter`](https://github.com/agustinusnathaniel/vite-react-hero-starter) |
-
-**Features:** Vite+ (Vite 8), React 19, Hero UI, TanStack Router, Biome, Vitest
+`vite-hero` - Vite+ (Vite 8), React 19, Hero UI, TanStack Router, and Vitest.
 
 <AllPackageManagers type="create" pkg="xtarter-app@latest" args="my-app --template vite-hero" />
 
----
+## Preview before scaffolding
 
-## Template structure
-
-Every template follows a consistent layout:
-
-```
-my-app/
-├── src/                   # Application source
-├── public/                # Static assets
-├── biome.json             # Biome linting + formatting config
-├── tsconfig.json          # TypeScript strict mode
-├── package.json           # Dependencies and scripts
-├── .vscode/               # Editor settings + extensions
-├── .github/workflows/     # CI/CD workflows
-└── .agents/               # AI agent skills
-```
-
-## TemplateConfig type
-
-For programmatic usage, the `TemplateConfig` type:
-
-```ts
-interface TemplateConfig {
-  id: string          // Unique identifier (e.g. "vite-tailwind")
-  name: string        // Human-readable name
-  description: string // One-line description
-  repo: string        // GitHub owner/repo
-  branch: string      // Git branch (always "main")
-  provider: "github"  // Download provider
-  path?: string       // Optional subdirectory within repo
-}
-```
+<AllPackageManagers type="create" pkg="xtarter-app@latest" args="preview vite-tailwind" title="Preview a template" />

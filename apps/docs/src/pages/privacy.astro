@@ -4,16 +4,16 @@ import TrustPageLayout from '@/layouts/TrustPageLayout.astro'
 
 <TrustPageLayout
   title="Privacy | xtarter"
-  description="What the xtarter docs site measures: cookieless Umami usage analytics loaded only when configured, aggregate event tracking, GitHub avatar fetches for the contributors page. No cookies, no ads."
+  description="What the xtarter docs site measures: cookieless Umami analytics loaded only when configured, aggregate events, and GitHub avatar fetches for the contributors page. No cookies, no ads."
   eyebrow="xtarter · privacy"
   heading="No cookies. No ads. Just counts."
-  lede="This site measures usage in aggregate to decide what to document better, and it is deliberately built so that measurement touches as little of your data as possible."
+  lede="This site measures usage in aggregate to decide what to document better, and it is built to touch as little of your data as possible."
 >
   <section class="xt-section">
     <h2 class="xt-section-title">Cookies</h2>
     <p>
-      This site sets no cookies. There is no login, no comment system, and nothing on these
-      pages stores identifiers in your browser. The documentation itself is fully static.
+      This site sets no cookies. There is no login, no comments, and nothing here stores
+      identifiers in your browser. The docs are fully static.
     </p>
   </section>
 
@@ -25,13 +25,12 @@ import TrustPageLayout from '@/layouts/TrustPageLayout.astro'
         umami.sznm.dev.
       </li>
       <li>
-        The analytics script loads only when the site build is configured with UMAMI_SRC and
-        UMAMI_WEBSITE_ID environment variables; without that configuration it never loads at
-        all.
+        The analytics script loads only when the site build has UMAMI_SRC and UMAMI_WEBSITE_ID
+        configured. Without them it never loads.
       </li>
       <li>
-        Aggregate click and change events (for example: hero buttons, theme toggles, search
-        opens) are recorded through the same Umami instance.
+        Aggregate click and change events (hero buttons, theme toggles, search opens) go
+        through the same Umami instance.
       </li>
       <li>Measurement is aggregate: no advertising profiles are built from this data.</li>
     </ul>
@@ -41,17 +40,17 @@ import TrustPageLayout from '@/layouts/TrustPageLayout.astro'
     <h2 class="xt-section-title">GitHub avatars and API</h2>
     <p>
       The contributors page loads contributor avatars from avatars.githubusercontent.com and
-      queries api.github.com for contributor metadata. Those requests go directly to GitHub
-      from your browser when you visit that page; this site itself keeps no copy of them.
+      queries api.github.com for metadata. Those requests go from your browser directly to
+      GitHub; this site keeps no copy of them.
     </p>
   </section>
 
   <section class="xt-section">
     <h2 class="xt-section-title">No ads, no data sales</h2>
     <p>
-      This site runs no advertising and sells no data. Nothing collected here is shared with
-      ad networks or data brokers, because there is nothing here to share beyond anonymous,
-      aggregate counters.
+      This site runs no advertising and sells no data. Nothing collected here goes to ad
+      networks or data brokers; there is nothing to share beyond anonymous, aggregate
+      counters.
     </p>
     <p>
       Questions about privacy? Open an issue at{' '}

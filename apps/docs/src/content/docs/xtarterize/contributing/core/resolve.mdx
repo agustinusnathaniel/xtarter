@@ -1,79 +1,32 @@
 ---
 title: Task Resolution
-description: How xtarterize filters tasks by applicability and computes statuses.
+description: How xtarterize filters tasks by applicability and computes their statuses.
 ---
 
-After project detection builds a [`ProjectProfile`](/xtarterize/contributing/core/detect/), xtarterize resolves which tasks are relevant and what their current status is.
+After detection builds the project profile, xtarterize resolves which tasks are relevant and what their current status is.
 
-## Resolution Pipeline
+## Filtering
 
-```
-ProjectProfile → resolveTasks() → applicable tasks → resolveTaskStatuses() → status map
-```
+Resolution keeps the tasks whose applicability check accepts the profile. This is a pure filter with no I/O.
 
-### `resolveTasks(profile, allTasks)`
+In a monorepo, resolution also filters tasks by scope (`root`, `package`, or both). Non-monorepo projects skip scope filtering. See the [monorepo guide](/xtarterize/guide/monorepo/) for the user-facing rules.
 
-Filters the full task registry to only those where `task.applicable(profile)` returns `true`. This is a pure synchronous filter - no I/O, no side effects.
+## Statuses
 
-```typescript
-import { resolveTasks } from '@xtarterize/core'
+Applicability checks read profile properties, for example TypeScript projects, browser Vite projects, GitHub repositories, or Turborepo monorepos.
 
-const applicable = resolveTasks(profile, getAllTasks())
-// → only tasks whose conditions are met
-```
+Status checks run in parallel. Each task inspects the filesystem and reports one of four statuses:
 
-### Scope filtering
-
-When the project is a monorepo, `resolveTasks()` additionally filters by each task's `scope` (`'root' | 'package' | 'both'`, default `'both'`): package-scoped tasks are excluded at the monorepo root, and root-scoped tasks are excluded inside a workspace package. Non-monorepo projects skip scope filtering entirely. See the [Monorepo guide](/xtarterize/guide/monorepo/) for the user-facing rules.
-
-### `resolveTaskStatuses(tasks, cwd, profile)`
-
-Returns an Effect that runs `task.check()` for each applicable task in parallel and produces a `Map<taskId, TaskStatus>`. Each task determines its own status by inspecting the filesystem. Packages return Effects; run them at the app boundary (the CLI's `runCliProgram`, or `Effect.runPromise` with a provisioned layer in tests).
-
-```typescript
-import { Effect } from 'effect'
-import { ProcessRunner, resolveTaskStatuses } from '@xtarterize/core'
-
-const statuses = await Effect.runPromise(
-  resolveTaskStatuses(applicable, cwd, profile).pipe(
-    Effect.provide(ProcessRunner.layer)
-  )
-)
-// → Map<string, 'new' | 'patch' | 'skip' | 'conflict'>
-```
-
-The four statuses drive which tasks appear as actionable:
-
-| Status | Meaning | Actionable for `init` | Actionable for `sync` |
-|--------|---------|----------------------|----------------------|
-| `new` | Config doesn't exist yet | Yes | No |
-| `patch` | Config exists, can be updated | Yes | Yes |
+| Status | Meaning | `init` acts | `sync` acts |
+| ------ | ------- | ----------- | ----------- |
+| `new` | Config does not exist yet | Yes | No |
+| `patch` | Config exists and can be updated | Yes | Yes |
 | `skip` | Already conformant | No | No |
-| `conflict` | Incompatible changes needed | Only if explicitly selected | Only if explicitly selected |
+| `conflict` | Changes need explicit approval | Only when selected | Only when selected |
 
-## Task Gating Logic
-
-Each task's `applicable()` method checks `ProjectProfile` properties:
-
-```typescript
-// TypeScript tasks: only if project uses TS
-applicable: (profile) => profile.typescript
-
-// Vite plugin tasks: only for browser Vite projects
-applicable: (profile) =>
-  profile.bundler === 'vite' && profile.runtime !== 'node'
-
-// CI tasks: only if GitHub detected
-applicable: (profile) => profile.hasGitHub
-
-// Turbo task: only if monorepo uses Turborepo
-applicable: (profile) => profile.monorepoTool === 'turbo'
-```
-
-Task statuses are evaluated with `Effect.forEach` at concurrency 8 (`TASK_CONCURRENCY`). Each check runs under `Effect.exit`, so a task that throws is logged and reported as `conflict` with its error detail instead of failing the whole resolution. Interruption still propagates, and results stay in input order.
+A check that throws is reported as a `conflict` with its error detail instead of failing the whole resolution.
 
 ## References
 
 - [Task interface](/xtarterize/contributing/tasks/overview/)
 - [Project detection](/xtarterize/contributing/core/detect/)
-- [Task spec](/xtarterize/contributing/tasks/overview/#task-spec)

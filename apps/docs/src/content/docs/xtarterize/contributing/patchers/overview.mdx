@@ -1,85 +1,21 @@
 ---
 title: Patchers Overview
-description: How xtarterize safely modifies configuration files.
+description: How xtarterize modifies configuration files without overwriting customizations.
 ---
 
-import { Aside, Steps } from '@astrojs/starlight/components'
+The `@xtarterize/patchers` package provides safe ways to modify configuration files. Patchers return new content, and the caller decides whether to write it.
 
-The `@xtarterize/patchers` package provides utilities for safely modifying configuration files without overwriting existing customizations.
+## Patchers
 
-## Available Patchers
+- **JSON merge**: deep merges objects with [`defu`](https://github.com/unjs/defu), so existing keys win and incoming values only fill gaps.
+- **Vite plugin injection**: inserts an import and a plugin call into Vite config source using [`magicast`](https://github.com/unjs/magicast).
 
-| Patcher | Description |
-|---------|-------------|
-| `mergeJson` | Deep merge JSON objects using [`defu`](https://github.com/unjs/defu) - existing keys take precedence |
-| `injectVitePluginIntoCode` | AST-based plugin injection into Vite config source using [`magicast`](https://github.com/unjs/magicast) |
+## Vite Plugin Injection
 
-## Architecture
+Injection is idempotent: a plugin that is already imported is not added again. The patcher parses the config, inserts the import, appends the plugin call to the `plugins` array, and returns the generated source.
 
-```mermaid
-flowchart TD
-    Task["Conformance Task"] --> P{"Which patcher?"}
-    P -->|"JSON config"| MJ["mergeJson<br/>defu deep merge"]
-    P -->|"Vite config"| AP["injectVitePluginIntoCode<br/>magicast AST"]
-    
-    MJ --> W["Caller writes file"]
-    AP --> W
-    
-    style Task fill:#6366f1,color:#fff
-    style MJ fill:#22c55e,color:#fff
-    style AP fill:#22c55e,color:#fff
-```
+When the config structure is non-standard, such as a factory function or a conditional export, the patcher returns manual instructions instead of rewriting the file.
 
 ## JSON Merge
 
-```typescript
-import { mergeJson } from '@xtarterize/patchers'
-
-const existing = { compilerOptions: { strict: true, target: "ES2022" } }
-const incoming = { compilerOptions: { incremental: true, strict: true } }
-
-const merged = mergeJson(existing, incoming)
-// { compilerOptions: { strict: true, target: "ES2022", incremental: true } }
-```
-
-<Aside type="tip">
-  The [`defu`](https://github.com/unjs/defu) library ensures that existing user configuration is never overwritten - incoming values only fill gaps. Learn more in the [JSON Merge](/xtarterize/contributing/patchers/json-merge/) reference.
-</Aside>
-
-## AST Patching (Vite Plugins)
-
-```typescript
-import { injectVitePluginIntoCode } from '@xtarterize/patchers'
-
-const result = injectVitePluginIntoCode(source, {
-  configPath: '/path/to/vite.config.ts',
-  importPath: 'vite-plugin-checker',
-  importName: 'checker',
-  pluginExpression: 'checker({ typescript: true })',
-})
-
-if (!result.success) {
-  console.log(result.fallback) // Manual instructions if AST structure is unsupported
-}
-// On success, result.generatedCode holds the transformed source: the caller writes it
-```
-
-<Steps>
-
-1. **Parse** - Parses the Vite config source using `magicast`
-2. **Check** - Checks if the plugin is already imported (idempotent)
-3. **Insert import** - Inserts the import at the top of the file
-4. **Append plugin** - Appends the plugin call to the `plugins` array
-5. **Return** - Returns the generated source; the caller decides whether to write it
-
-</Steps>
-
-<Aside type="note">
-  If the config structure is non-standard (factory functions, conditional exports), the AST patcher falls back to returning manual instructions rather than corrupting the file.
-</Aside>
-
-## References
-
-- [defu](https://github.com/unjs/defu) - Deep merge utility for JavaScript objects
-- [magicast](https://github.com/unjs/magicast) - AST manipulation library for JavaScript/TypeScript
-- [Vite Plugin API](https://vitejs.dev/guide/api-plugin.html) - How Vite plugins work
+The merge combines objects with existing keys winning, and a second patcher applies the result to JSON text so comments, key order, and formatting survive. See [JSON Merge](/xtarterize/contributing/patchers/json-merge/) for merge behavior in detail.

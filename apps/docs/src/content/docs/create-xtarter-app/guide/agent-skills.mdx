@@ -1,14 +1,9 @@
 ---
 title: AI Agent Skills
-description: Install the create-xtarter-app skill for guidance on scaffolding commands, templates, and project creation workflows.
+description: Install the create-xtarter-app skill for AI editors.
 ---
 
-import { LinkButton } from '@astrojs/starlight/components'
-
-Install the create-xtarter-app skill in a compatible AI tool to provide
-guidance for scaffolding, template selection, and project creation.
-
-When installed, your AI assistant knows how to pick the right template from your stack description, use proper flags, and follow best practices.
+Install the create-xtarter-app skill to teach a compatible AI tool how to scaffold projects, pick a template from a stack description, and use the right flags.
 
 ## Install
 
@@ -16,21 +11,10 @@ When installed, your AI assistant knows how to pick the right template from your
 npx skills add agustinusnathaniel/xtarter
 ```
 
-## What the skill teaches
-
-| Area | What the agent gets |
-| --- | --- |
-| Commands | Scaffold and `preview` commands with their flags (`--template`, `--pm`, `--git`/`--no-git`, `--clean`, `--force`, `--ref`, `--yes`, `--quiet`, `--json`, `--color`) |
-| Templates | The 5 valid IDs (`next-chakra`, `next-tailwind`, `vite-chakra`, `vite-tailwind`, `vite-hero`) and a decision table mapping stack descriptions to template IDs |
-| Workflows | Scaffolding, previewing, and CI usage, plus anti-patterns to avoid |
-| Typical asks | "Next.js with Tailwind" → `--template next-tailwind`; "Vite SPA with Chakra" → `--template vite-chakra`; "What templates are available?" → the 5 valid IDs; "Preview vite-tailwind" → `preview vite-tailwind` |
-
-The skill activates when you ask about creating a project or mention a template, and matches your stack description to the correct template ID so you don't need to remember template names.
+The skill covers the scaffold and `preview` commands, all flags, and the five template IDs (`next-chakra`, `next-tailwind`, `vite-chakra`, `vite-tailwind`, `vite-hero`).
 
 ## Resources
 
-- [CLI Reference](/create-xtarter-app/guide/cli/) - Full command reference
-- [Templates](/create-xtarter-app/guide/templates/) - Template catalog
-- [skills.sh](https://skills.sh) - Learn more about AI skills
-
-<LinkButton href="/create-xtarter-app/guide/templates/">Browse Templates →</LinkButton>
+- [CLI reference](/create-xtarter-app/guide/cli/)
+- [Template catalog](/create-xtarter-app/guide/templates/)
+- [skills.sh](https://skills.sh)

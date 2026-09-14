@@ -1,156 +1,36 @@
 ---
 title: Project Detection
-description: How xtarterize detects your project's stack and builds a ProjectProfile.
+description: How xtarterize detects a project's stack and builds a project profile.
 ---
 
-import { Aside, Tabs, TabItem } from '@astrojs/starlight/components'
+Detection is the first step in every xtarterize command. It reads the project directory and builds a project profile that drives which conformance tasks apply.
 
-The `@xtarterize/core` package provides the `detectProject()` function - the foundation of xtarterize's context-aware behavior. It analyzes your project directory to build a [`ProjectProfile`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/detect.ts) that drives which conformance tasks are applicable.
+## What the Profile Contains
 
-`detectProject()` is the orchestration layer in [`packages/core/src/detect.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/detect.ts). It runs inline detection for framework, router, styling, runtime, and Vite+, and calls the helper modules in [`packages/core/src/detect/`](https://github.com/agustinusnathaniel/xtarterize/tree/main/packages/core/src/detect) for bundler, monorepo, and package-manager detection. The [detection registry](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/detect/registry/index.ts) contributes the keyed detector entries behind the `existing` profile keys plus the inputs consumed by those helpers and by doctor checks (ADR 032).
+- Framework and framework version, bundler, router, and styling
+- TypeScript usage, runtime target, and Node version
+- Package manager and whether the project uses Vite+
+- Monorepo status, monorepo tool, and whether the current directory is the workspace root
+- Git and GitHub presence
+- Existing configuration files, such as Biome, ESLint, tsconfig, Renovate, commitlint, knip, Vite config, and GitHub workflows
 
-## Overview
+## How Detection Works
 
-Project detection is the first step in every xtarterize command. It analyzes your project directory to build a `ProjectProfile` that drives which conformance tasks are applicable.
+Detection runs on every invocation; there is no profile cache. Each run inspects `package.json`, root config files, lockfiles, config directories, and ancestor markers, then computes a fresh profile.
 
-### Direct detection
+Signals come from two sources:
 
-Detection runs directly on every invocation. There is no profile cache: `detectProject()` inspects the project directory (`package.json`, root config files, lockfiles, config directories, and ancestor markers) and computes a fresh `ProjectProfile` each time. Inline detection modules read most files directly; the registry supplies shared declarations for the keyed detector entries, bundler config extensions, monorepo markers, and lockfile checks.
+- **Dependencies**: framework, bundler, router, and styling packages in `package.json`
+- **Filesystem**: TypeScript config presence, lockfiles, monorepo markers, and a `.github/` directory
 
-Earlier versions cached the profile in `.xtarterize/cache/profile-fingerprint.json`, keyed by a fingerprint of those inputs (ADR 021, superseded by ADR 034). The cache was removed because a warm cache hit measured about 2.2ms versus about 1.3ms for direct detection, so it added I/O and state without a measurable benefit.
+Framework, router, styling, runtime, and Vite+ detection run inline. Bundler, monorepo, and package manager detection consume shared declarations from the detection registry, which also supplies lockfile checks for diagnostics. New keyed detectors belong in the registry.
 
-The registry does not declare every detector: framework, router, styling, runtime, Vite+, and Node version have no registry consumer and run inline in the detection modules; bundler, monorepo, and package manager run inline but consume registry inputs. The registry declares the keyed detector entries that produce the `existing` keys plus the inputs consumed by bundler config extension lookup, monorepo markers, and doctor lockfile checks.
+## Precedence and Edge Cases
 
-## detectProject Function
+When both `react` and `react-native` (or `expo`) are present in dependencies, detection reports `react-native`; there is no prompt to disambiguate. The framework is `null` only when the project has no `package.json`.
 
-`detectProject()` stays a Promise-returning leaf: it does not compose Effects and never calls a runtime. The engine lifts it with `Effect.tryPromise` at the nearest orchestration seam (for example `resolveProjectTasks` in `resolve.ts`). See ADR 036 for the boundary rule.
+`workspaceRoot` is true when the current directory contains monorepo markers such as `pnpm-workspace.yaml` or `turbo.json`. It is false inside a workspace package discovered by walking up parent directories. In non-monorepos it matches `monorepo`.
 
-```typescript
-import { detectProject } from '@xtarterize/core'
+Detection stays a plain async function and does not compose Effects. The engine lifts it at the nearest orchestration seam.
 
-const profile = await detectProject('/path/to/project')
-```
-
-## ProjectProfile Schema
-
-The detection returns a `ProjectProfile` object:
-
-```typescript
-interface ProjectProfile {
-  // Framework
-  framework: 'react' | 'react-native' | 'vue' | 'svelte' | 'solid' | 'node' | null
-  frameworkVersion: string | null
-
-  // Bundler
-  bundler: 'vite' | 'nextjs' | 'tanstack-start' | 'expo' | 'webpack' | 'rspack' | 'none' | null
-
-  // Router
-  router: 'tanstack-router' | 'react-router' | 'next' | 'expo-router' | 'vue-router' | null
-
-  // Styling
-  styling: ('tailwind' | 'css-modules' | 'styled-components' | 'vanilla-extract' | 'nativewind' | 'vanilla')[]
-
-  // Language & Runtime
-  typescript: boolean
-  runtime: 'browser' | 'node' | 'edge' | 'native' | 'universal'
-
-  // Package manager
-  packageManager: 'npm' | 'pnpm' | 'yarn' | 'bun'
-
-  // Repo structure
-  monorepo: boolean
-  monorepoTool: 'turbo' | 'nx' | 'lerna' | null
-  workspaceRoot: boolean
-
-  // Git
-  hasGitHub: boolean
-  hasGit: boolean
-
-  // Existing config presence
-  existing: {
-    biome: boolean
-    oxlint: boolean
-    oxfmt: boolean
-    eslint: boolean
-    tsconfig: boolean
-    renovate: boolean
-    commitlint: boolean
-    knip: boolean
-    plop: boolean
-    turbo: boolean
-    vscodeSettings: boolean
-    agentsMd: boolean
-    githubWorkflows: string[]
-    viteConfig: boolean
-    versionrc: boolean
-    gitignore: boolean
-    changeset: boolean
-  }
-
-  // Detected toolchain details
-  nodeVersion: string
-  vitePlus: boolean
-}
-```
-
-The `workspaceRoot` field is set to `true` when the current directory
-itself contains monorepo markers (`pnpm-workspace.yaml`, `turbo.json`,
-etc.). It is `false` when running from inside a workspace package
-discovered via parent-directory walk-up. In non-monorepos,
-`workspaceRoot` has the same value as `monorepo`.
-
-## Detection Logic
-
-### Detection modules
-
-- [`detect.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/detect.ts) - orchestration plus framework, runtime, router, styling, and Vite+ detection
-- [`registry/index.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/detect/registry/index.ts) - declares the keyed detector entries and the inputs consumed by detection helpers and doctor checks (ADR 032)
-- [`bundler.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/detect/bundler.ts) - bundler detection from dependencies and config files
-- [`package-manager.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/detect/package-manager.ts) - package-manager and framework-version detection
-- [`monorepo.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/detect/monorepo.ts) - workspace and monorepo detection
-- [`types.ts`](https://github.com/agustinusnathaniel/xtarterize/blob/main/packages/core/src/detect/types.ts) - shared detection types
-
-## Detection Sources
-
-<Tabs>
-  <TabItem label="Dependencies">
-    | Signal | Source |
-    |--------|--------|
-    | Framework | [`package.json`](https://docs.npmjs.com/cli/v10/configuring-npm/package-json) dependencies ([`react`](https://react.dev/), [`vue`](https://vuejs.org/), [`react-native`](https://reactnative.dev/), etc.) |
-    | Bundler | [`vite`](https://vitejs.dev/), [`next`](https://nextjs.org/), [`expo`](https://expo.dev/), [`webpack`](https://webpack.js.org/), [`@rspack/core`](https://rspack.dev/) in deps |
-    | Router | [`@tanstack/react-router`](https://tanstack.com/router/latest), [`react-router-dom`](https://reactrouter.com/), [`vue-router`](https://router.vuejs.org/) in deps |
-    | Styling | [`tailwindcss`](https://tailwindcss.com/), [`styled-components`](https://styled-components.com/), [`nativewind`](https://www.nativewind.dev/) in deps |
-  </TabItem>
-  <TabItem label="Filesystem">
-    | Signal | Source |
-    |--------|--------|
-    | TypeScript | [`tsconfig.json`](https://www.typescriptlang.org/tsconfig/) or `tsconfig.jsonc` existence, `typescript` in deps |
-    | Package manager | Lockfile presence ([`pnpm-lock.yaml`](https://pnpm.io/), [`yarn.lock`](https://yarnpkg.com/), [`package-lock.json`](https://docs.npmjs.com/cli/v10/configuring-npm/package-lock-json), [`bun.lock`](https://bun.sh/docs/install/lockfile), `bun.lockb`) |
-    | Monorepo | [`pnpm-workspace.yaml`](https://pnpm.io/workspaces), [`turbo.json`](https://turbo.build/repo/docs), [`nx.json`](https://nx.dev/reference/nx-json), [`lerna.json`](https://lerna.js.org/docs/configuration), or at least two of `packages/`, `apps/`, `services/` |
-    | GitHub | [`.github/`](https://docs.github.com/en/actions) directory presence |
-  </TabItem>
-</Tabs>
-
-## Framework Precedence
-
-<Aside type="note">
-  When both `react` and `react-native` (or `expo`) are present in dependencies, `detectFramework()` returns `'react-native'`; there is no prompt to disambiguate. `framework` is `null` only when the project has no `package.json`.
-</Aside>
-
-## Example
-
-```typescript
-const profile = await detectProject('/path/to/project')
-
-if (profile.bundler === 'vite' && profile.typescript) {
-  // Vite plugin tasks will be applicable
-}
-
-if (profile.monorepo && profile.monorepoTool === 'turbo') {
-  // Turbo task may be skip if already configured
-}
-```
-
-See the [configuration guide](/xtarterize/guide/config/overview/) for the
-user-facing detection summary and the source links above for implementation
-details.
+See the [configuration guide](/xtarterize/guide/config/overview/) for the user-facing detection summary.

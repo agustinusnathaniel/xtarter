@@ -1,51 +1,28 @@
 ---
 title: Initialization
-description: Initialize conformance configuration for a project with xtarterize.
+description: Apply conformance configuration to a project.
 ---
 
 import { Aside, Steps } from '@astrojs/starlight/components'
 import AllPackageManagers from '@/components/AllPackageManagers.astro'
 
-## Initialize a Project
-
-To apply conformance configuration to a project:
+## Initialize a project
 
 <AllPackageManagers type="exec" pkg="xtarterize@latest" args="init" />
 
 <Steps>
 
-1. **Scan** your project directory to detect framework, bundler, package manager, monorepo status, and existing configs
-2. **Resolve** which conformance tasks are applicable for your stack
-3. **Check** each task's current status (`new`, `patch`, `skip`, or `conflict`)
-4. **Display** a conformance plan table showing what will change
-5. **Prompt** you to apply all, select specific tasks, dry-run, or quit
+1. **Scan** the project for framework, bundler, package manager, monorepo status, and existing configs
+2. **Resolve** which tasks apply to the detected stack
+3. **Check** each task's status: `new`, `patch`, `skip`, or `conflict`
+4. **Plan** the changes in a conformance table
+5. **Prompt** to apply all, select tasks, dry-run, or quit
 
 </Steps>
 
-## Example Output
-
-```
-✦ Scanning project...
-
-  Detected:
-    Framework:   React 18
-    Bundler:     Vite 5
-    Package Manager: pnpm
-
-  Conformance plan:
-
-    ✔ Biome (lint + format)              lint/biome           [new]
-    ✔ vite-plugin-checker                vite/checker         [new]
-    ~ tsconfig - incremental: true       ts/incremental       [patch]
-    = Turbo                              monorepo/turbo       [skip - no monorepo]
-
-  [A] Apply all   [S] Select items   [D] Dry-run   [Q] Quit
-```
-
 ## Options
 
-See the [CLI reference](/xtarterize/guide/cli/overview/#init) for `init`'s full
-flag list, including `--dry-run`, `--yes`, `--skip`, `--only`, and `--quiet`.
+See the [CLI reference](/xtarterize/guide/cli/overview/#init) for every `init` flag.
 
 ## Examples
 
@@ -59,21 +36,16 @@ flag list, including `--dry-run`, `--yes`, `--skip`, `--only`, and `--quiet`.
 
 ## Monorepo projects
 
-Which tasks are offered depends on where you run. See the
-[Monorepo guide](/xtarterize/guide/monorepo/) for root and package scopes.
+Which tasks are offered depends on where you run. See the [monorepo guide](/xtarterize/guide/monorepo/) for root and package scopes.
 
 ## What it can apply
 
-`init` applies only the tasks that match the detected project. See the
-[conformance task catalog](/xtarterize/guide/tasks/overview/) for task IDs,
-generated files, and applicability conditions.
+`init` applies only tasks that match the detected project. See the [task catalog](/xtarterize/guide/tasks/overview/) for task IDs and applicability.
 
 <Aside>
-  Each task checks if it's already applied and skips if conformant. Running `init` twice produces no changes on the second run.
+  Each task skips itself when already conformant, so running `init` twice produces no changes on the second run.
 </Aside>
 
 ## Ultracite
 
-[Ultracite](https://ultracite.ai/) is installed automatically alongside any lint tool (Biome, Oxlint, or Oxfmt). The generated configs extend or import Ultracite presets by default - no separate `ultracite init` step needed.
-
-xtarterize overlays its own conventions on top of Ultracite defaults where they differ (e.g., kebab-case filenames, single quotes, generic array types). You can further customize by editing the generated config files directly.
+[Ultracite](https://ultracite.ai/) is installed alongside any lint task (Biome, Oxlint, or Oxfmt), and generated configs extend its presets. xtarterize overlays its own conventions, such as kebab-case filenames and single quotes; customize by editing the generated config files.
