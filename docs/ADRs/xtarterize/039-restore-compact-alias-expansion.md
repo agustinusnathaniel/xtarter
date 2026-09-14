@@ -31,7 +31,7 @@ the search implementation in Meta's MIT-licensed Astryx design system
 (`facebook/astryx`, `packages/cli/api/search/search.mjs`).
 
 - `packages/core/src/inquiry/aliases.ts` holds 18 pipe-delimited, hand-written
-  alias groups (45 lines). Expansion is bidirectional and sibling-closed within
+  alias groups (41 lines). Expansion is bidirectional and sibling-closed within
   one group: every term maps to the other terms of its group, aliases are never
   expanded again, and there is no cross-group transitive closure. A term in two
   groups gets the union of both groups, not their closure.
@@ -50,8 +50,8 @@ the search implementation in Meta's MIT-licensed Astryx design system
 - Match tiers, weights, thresholds, the coverage bonus, and the `signals`
   result shape are unchanged; phrase promotion only raises the relevance of an
   exact phrase hit. No dependencies change; the engine stays pure and offline.
-- Production additions total 106 lines (45 aliases, 57 scorer wiring, 4
-  keywords); tests add 201 lines, including the real-catalog regression suite
+- Production additions total 89 lines (41 aliases, 44 scorer wiring, 4
+  keywords); tests add 160 lines, including the real-catalog regression suite
   `test/core/inquiry/catalog-ranking.test.ts`.
 - Expansion lives in one compact hand-written table plus four task-local
   keywords, the primary maintenance point; revisit past roughly 20 groups.
@@ -83,7 +83,7 @@ the search implementation in Meta's MIT-licensed Astryx design system
    table is easier to audit.
 4. **Adopt an external search library (for example Fuse.js or MiniSearch).**
    Adds a dependency and an index lifecycle to a pure, offline 29-task engine.
-   Rejected: 45 lines of alias data and the existing tiers cover the need.
+   Rejected: 41 lines of alias data and the existing tiers cover the need.
 
 ## Consequences
 
@@ -97,12 +97,12 @@ the search implementation in Meta's MIT-licensed Astryx design system
 - Direct and authored hits keep priority: the 0.85 discount and reserved phrase
   tier keep literal vocabulary above alias-only matches, so `skills`, `auto
   update`, `semver`, and `bump` rank their authored tasks first `[measured]`.
-  Expansion stays contained to one 45-line file, tiers and signals shape stay
+  Expansion stays contained to one 41-line file, tiers and signals shape stay
   stable, and the engine remains pure, offline, and dependency-free.
 
 ### Negative
 
-- 106 production lines return to the maintained surface, and the alias table is
+- 89 production lines return to the maintained surface, and the alias table is
   a second hand-written list that can drift from task metadata. It is smaller
   and single-hop, but needs the same periodic review, now bounded to roughly 20
   groups before the design is revisited.
