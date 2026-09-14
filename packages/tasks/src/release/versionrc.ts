@@ -11,6 +11,7 @@ export const versionrcTask = defineSingleTargetTask({
     'conventional commits',
     'standard-version',
     'commit-and-tag-version',
+    'versioning',
   ],
   label: '.versionrc.json - changelog configuration',
   scope: 'root',

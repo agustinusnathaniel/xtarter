@@ -244,4 +244,132 @@ describe('scoreTasks', () => {
     // All matching tasks should be included (not capped)
     expect(results.length).toBeGreaterThanOrEqual(1);
   });
+
+  test('expands sibling aliases bidirectionally within a group', () => {
+    const renovate = makeTask({
+      id: 'alias/renovate',
+      label: 'Renovate alias',
+      searchMeta: {
+        configTargets: ['renovate.json'],
+        keywords: ['renovate'],
+        tags: [],
+      },
+    });
+    const updates = makeTask({
+      id: 'alias/updates',
+      label: 'Updates alias',
+      searchMeta: {
+        configTargets: ['renovate.json'],
+        keywords: ['updates'],
+        tags: [],
+      },
+    });
+
+    expect(scoreTasks([renovate], 'updates')[0]?.taskId).toBe('alias/renovate');
+    expect(scoreTasks([updates], 'renovate')[0]?.taskId).toBe('alias/updates');
+  });
+
+  test('does not expand aliases across groups transitively', () => {
+    const paths = makeTask({
+      id: 'alias/paths',
+      label: 'Path aliases',
+      searchMeta: {
+        configTargets: ['tsconfig.json'],
+        keywords: ['paths'],
+        tags: [],
+      },
+    });
+    const strict = makeTask({
+      id: 'alias/strict',
+      label: 'Strict options',
+      searchMeta: {
+        configTargets: ['compiler.json'],
+        keywords: ['strict'],
+        tags: [],
+      },
+    });
+
+    const results = scoreTasks([paths, strict], 'tsconfig');
+    expect(results.map((r) => r.taskId)).toContain('alias/paths');
+    expect(results.map((r) => r.taskId)).not.toContain('alias/strict');
+  });
+
+  test('ranks a direct hit above an alias hit at the same tier', () => {
+    const direct = makeTask({
+      id: 'alias/direct',
+      label: 'Shared label',
+      searchMeta: { configTargets: [], keywords: ['updates'], tags: [] },
+    });
+    const alias = makeTask({
+      id: 'alias/alias',
+      label: 'Shared label',
+      searchMeta: { configTargets: [], keywords: ['renovate'], tags: [] },
+    });
+
+    const results = scoreTasks([alias, direct], 'updates');
+    expect(results[0].taskId).toBe('alias/direct');
+    expect(results[0].relevance).toBeGreaterThan(results[1].relevance);
+  });
+
+  test('enforces the alias containment threshold', () => {
+    const long = makeTask({
+      id: 'containment/long',
+      searchMeta: { configTargets: ['oxlintrc.json'], keywords: [], tags: [] },
+    });
+    const short = makeTask({
+      id: 'containment/short',
+      searchMeta: { configTargets: [], keywords: ['maid'], tags: [] },
+    });
+    const ok = makeTask({
+      id: 'containment/ok',
+      label: 'Pre-commit hook',
+      searchMeta: { configTargets: [], keywords: ['pre-commit'], tags: [] },
+    });
+
+    expect(scoreTasks([long], 'linting')).toHaveLength(0);
+    expect(scoreTasks([short], 'agent')).toHaveLength(0);
+    expect(scoreTasks([ok], 'commitlint')).toHaveLength(1);
+  });
+
+  test('keeps direct substring matching free of containment', () => {
+    const task = makeTask({
+      id: 'containment/direct',
+      searchMeta: { configTargets: ['oxlintrc.json'], keywords: [], tags: [] },
+    });
+
+    const results = scoreTasks([task], 'lint');
+    expect(results).toHaveLength(1);
+    expect(results[0].signals.find((s) => s.name === 'config')?.score).toBe(
+      0.55
+    );
+  });
+
+  test('promotes only exact multi-word phrase matches', () => {
+    const authored = makeTask({
+      id: 'phrase/authored',
+      label: 'Auto-update workflow',
+      searchMeta: { configTargets: [], keywords: ['auto update'], tags: [] },
+    });
+    const aliasStacked = makeTask({
+      id: 'phrase/alias',
+      label: 'Dependency automation',
+      searchMeta: {
+        configTargets: ['renovate.json'],
+        keywords: ['renovate', 'dependencies'],
+        tags: [],
+      },
+    });
+    const single = makeTask({
+      id: 'phrase/single',
+      label: 'Lint options',
+      searchMeta: { configTargets: [], keywords: ['lint'], tags: [] },
+    });
+
+    const results = scoreTasks([aliasStacked, authored], 'auto update');
+    expect(results[0].taskId).toBe('phrase/authored');
+    expect(results[0].relevance).toBeGreaterThanOrEqual(0.85);
+    expect(scoreTasks([single], 'lint')[0].relevance).toBeLessThan(0.85);
+    const automatic = scoreTasks([authored], 'automatic update')[0];
+    expect(automatic.relevance).toBeLessThan(0.85);
+  });
 });

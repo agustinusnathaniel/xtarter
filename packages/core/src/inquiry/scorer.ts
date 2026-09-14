@@ -1,5 +1,6 @@
 import type { Task } from '@/_base.js';
 
+import { expandAliases } from './aliases.js';
 import { similarity } from './fuzzy.js';
 import { stem } from './stemmer.js';
 import { tokenize } from './tokenizer.js';
@@ -20,9 +21,39 @@ const DEFAULT_WEIGHTS: WeightConfig = {
 
 type MatchTier = 0.0 | 0.55 | 0.75 | 0.85 | 0.95 | 1.0;
 
-function bestMatchTier(token: string, field: string | undefined): MatchTier {
+/** Alias-derived matches are discounted so a direct hit outranks them. */
+const ALIAS_DISCOUNT = 0.85;
+
+/** Reserved score for a multi-word query that exactly matches a keyword. */
+const PHRASE_SCORE = 0.85;
+
+/** astryx-style exact whole-phrase promotion above alias-only token paths. */
+function matchesPhrase(task: Task, phrase: string): boolean {
+  return (task.searchMeta?.keywords ?? []).some(
+    (keyword) => tokenize(keyword).tokens.join(' ').toLowerCase() === phrase
+  );
+}
+
+function bestMatchTier(
+  token: string,
+  field: string | Array<string> | undefined,
+  requireContainment = false
+): MatchTier {
   if (!field) {
     return 0.0;
+  }
+  if (Array.isArray(field)) {
+    let best: MatchTier = 0.0;
+    for (const item of field) {
+      const tier = bestMatchTier(token, item, requireContainment);
+      if (tier > best) {
+        best = tier;
+      }
+      if (best === 1.0) {
+        break;
+      }
+    }
+    return best;
   }
   const lowerToken = token.toLowerCase();
   const lowerField = field.toLowerCase();
@@ -43,42 +74,44 @@ function bestMatchTier(token: string, field: string | undefined): MatchTier {
     return 0.75;
   }
   if (lowerField.includes(lowerToken)) {
+    // Alias containment: the shorter side must carry at least half the field
+    // and be meaningful on its own, so "lint" does not match "oxlint.config".
+    const shorter = Math.min(lowerToken.length, lowerField.length);
+    if (
+      requireContainment &&
+      (shorter < 4 || shorter / lowerField.length < 0.5)
+    ) {
+      return 0.0;
+    }
     return 0.55;
   }
   return 0.0;
 }
 
-function bestMatchInArray(
-  token: string,
-  arr: Array<string> | undefined
-): MatchTier {
-  if (!arr || arr.length === 0) {
-    return 0.0;
-  }
-  let best: MatchTier = 0.0;
-  for (const item of arr) {
-    const match = bestMatchTier(token, item);
-    if (match > best) {
-      best = match;
-    }
-    if (best === 1.0) {
-      break;
-    }
-  }
-  return best;
+/** Query token at full tier, then its aliases discounted and containment-gated. */
+function bestTermMatch(
+  terms: Array<string>,
+  field: string | Array<string> | undefined
+): number {
+  const [token, ...aliases] = terms;
+  const direct = bestMatchTier(token, field);
+  return direct === 1.0
+    ? direct
+    : Math.max(
+        direct,
+        ...aliases.map((a) => bestMatchTier(a, field, true) * ALIAS_DISCOUNT)
+      );
 }
 
-function matchTaskToToken(token: string, task: Task) {
-  return {
-    config: bestMatchInArray(
-      token,
-      task.searchMeta?.configTargets ?? task.searchMeta?.tags
-    ),
-    group: bestMatchTier(token, task.group),
-    id: bestMatchTier(token, task.id.replace(/\//g, ' ')),
-    keywords: bestMatchInArray(token, task.searchMeta?.keywords),
-    label: bestMatchTier(token, task.label),
-  };
+function matchTaskToToken(terms: Array<string>, task: Task) {
+  const [config, group, id, keywords, label] = [
+    task.searchMeta?.configTargets ?? task.searchMeta?.tags,
+    task.group,
+    task.id.replace(/\//g, ' '),
+    task.searchMeta?.keywords,
+    task.label,
+  ].map((field) => bestTermMatch(terms, field));
+  return { config, group, id, keywords, label };
 }
 
 type TokenMatch = ReturnType<typeof matchTaskToToken>;
@@ -96,14 +129,15 @@ function maxSignal(match: TokenMatch): number {
 function scoreTaskForQuery(
   task: Task,
   queryTerms: {
+    expansions: Map<string, Array<string>>;
     tokens: Array<string>;
     weights: WeightConfig;
   }
 ): { signals: Array<RelevanceSignal>; score: number } {
-  const { tokens, weights } = queryTerms;
+  const { expansions, tokens, weights } = queryTerms;
   const matches = new Map<string, TokenMatch>();
-  for (const term of new Set(tokens)) {
-    matches.set(term, matchTaskToToken(term, task));
+  for (const [token, terms] of expansions) {
+    matches.set(token, matchTaskToToken(terms, task));
   }
 
   // Best match per signal across all query tokens.
@@ -163,16 +197,26 @@ export function scoreTasks(
   if (tokens.length === 0) {
     return [];
   }
+  const phrase = tokens.join(' ').toLowerCase();
+  const expansions = new Map<string, Array<string>>();
+  for (const token of new Set(tokens)) {
+    expansions.set(token, [token, ...expandAliases(token)]);
+  }
 
   const results: Array<InquiryResult> = [];
 
   for (const task of tasks) {
     const { signals, score } = scoreTaskForQuery(task, {
+      expansions,
       tokens,
       weights,
     });
-    if (score > minScore) {
-      results.push({ relevance: score, signals, task, taskId: task.id });
+    const relevance =
+      tokens.length > 1 && matchesPhrase(task, phrase)
+        ? Math.max(score, PHRASE_SCORE)
+        : score;
+    if (relevance > minScore) {
+      results.push({ relevance, signals, task, taskId: task.id });
     }
   }
 
