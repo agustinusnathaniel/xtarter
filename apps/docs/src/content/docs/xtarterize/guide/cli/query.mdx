@@ -26,13 +26,13 @@ xtarterize query "<query>" [options]
 
 ## Examples
 
-<AllPackageManagers type="exec" pkg="xtarterize@latest" args='query "strict typescript"' />
+<AllPackageManagers type="dlx" pkg="xtarterize@latest" args='query "strict typescript"' />
 
 Results are grouped by category, and each group prints a ready-to-run `xtarterize add` command.
 
-<AllPackageManagers type="exec" pkg="xtarterize@latest" args='query "ci pipeline" --json' title="JSON output" />
+<AllPackageManagers type="dlx" pkg="xtarterize@latest" args='query "ci pipeline" --json' title="JSON output" />
 
-<AllPackageManagers type="exec" pkg="xtarterize@latest" args='init --compose "react project with ci and linting"' title="Rank an init plan" />
+<AllPackageManagers type="dlx" pkg="xtarterize@latest" args='init --compose "react project with ci and linting"' title="Rank an init plan" />
 
 `init --compose` reorders the plan by relevance without excluding any applicable task.
 

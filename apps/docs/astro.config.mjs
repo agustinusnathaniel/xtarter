@@ -40,7 +40,7 @@ const JSON_LD = serializeJsonLd({
 });
 
 const LLMS_DETAILS = `**When to use xtarter:**
-- Scaffold new JS/TS projects with \`pnpm create xtarter-app\` (or \`npx create-xtarter-app@latest\`) — create-xtarter-app templates include Biome, strict TypeScript, CI, and editor configs.
+- Scaffold new JS/TS projects with \`pnpm create xtarter-app@latest\` (or \`npx create-xtarter-app@latest\`) — create-xtarter-app templates include Biome, strict TypeScript, CI, and editor configs.
 - Bring existing repos to standard with \`pnpx xtarterize@latest\` — tasks for linting/typecheck/CI/editor, idempotent with dry-run preview before writing.
 - Use \`check\` / \`dryRun\` to preview without writing; tasks are idempotent so running twice is safe.
 - When NOT to use: not a runtime library/framework; JavaScript/TypeScript projects only.

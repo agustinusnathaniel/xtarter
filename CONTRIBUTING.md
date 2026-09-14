@@ -68,3 +68,5 @@ pnpm docs:build
 ```
 
 Use `pnpm docs:dev` for a local preview.
+
+Package-manager commands in MDX pages use the `AllPackageManagers` component (`type="dlx"` to run remote packages, `type="create"` to scaffold), imported from `@/components/AllPackageManagers.astro`. Keep synopsis signatures, CLI syntax examples, and intentionally package-manager-specific commands as plain code fences.

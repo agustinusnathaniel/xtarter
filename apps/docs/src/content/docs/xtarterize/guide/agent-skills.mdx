@@ -3,13 +3,13 @@ title: AI Agent Skills
 description: Install the xtarterize skill for AI coding tools.
 ---
 
+import AllPackageManagers from '@/components/AllPackageManagers.astro'
+
 The xtarterize skill teaches AI tools how to drive the CLI: commands, flags, `--json` output shapes, task statuses, and conformance workflows.
 
 ## Install
 
-```bash
-npx skills add agustinusnathaniel/xtarter
-```
+<AllPackageManagers type="dlx" pkg="skills@latest" args="add agustinusnathaniel/xtarter" />
 
 The skill activates when you ask about conformance, linting, CI, or any xtarterize task.
 
