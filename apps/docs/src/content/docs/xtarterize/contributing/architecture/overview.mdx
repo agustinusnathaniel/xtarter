@@ -3,7 +3,7 @@ title: Architecture Overview
 description: How the xtarterize packages and the conformance pipeline fit together.
 ---
 
-import { LinkButton } from "@astrojs/starlight/components";
+import { LinkButton } from '@astrojs/starlight/components'
 
 xtarterize is a pnpm monorepo orchestrated with [Turborepo](https://turbo.build/repo) and built with [Vite Plus](https://viteplus.dev).
 
@@ -28,7 +28,7 @@ The CLI depends on core and tasks. Tasks depend on core and patchers. Core and p
 5. **Execute** - back up each affected file once, install dependencies in one batch, then run the tasks.
 6. **Report** - print the outcome and set the exit code.
 
-## Design Decisions
+## Design decisions
 
 - **One resolution per task** - status, diffs, apply, and dependency collection all come from the same resolution, so they cannot disagree.
 - **Plan, then execute** - the previewed diffs are exactly what execution writes.

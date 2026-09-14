@@ -16,7 +16,9 @@ import AllPackageManagers from '@/components/AllPackageManagers.astro'
 
 2. ### Enter a project name
 
-   Names allow letters, numbers, hyphens, and underscores, up to 214 characters. You can pass the name as a positional argument instead: `pnpm create xtarter-app my-app`.
+   Names allow letters, numbers, hyphens, and underscores, up to 214 characters. You can pass the name as a positional argument instead:
+
+   <AllPackageManagers type="create" pkg="xtarter-app@latest" args="my-app" />
 
 3. ### Pick a template
 
@@ -36,7 +38,7 @@ import AllPackageManagers from '@/components/AllPackageManagers.astro'
 
 6. ### Clean CI/CD configs (optional)
 
-   When enabled, removes pre-configured CI/CD files such as GitHub Actions workflows, `.gitlab-ci.yml`, `.travis.yml`, CircleCI, Vercel, Netlify, Railway, and Fly configs. Use `--clean` to enable it directly.
+   When enabled, it removes pre-configured CI/CD files such as GitHub Actions workflows, `.gitlab-ci.yml`, `.travis.yml`, CircleCI, Vercel, Netlify, Railway, and Fly configs. Use `--clean` to enable it directly.
 
 7. ### Wait for download and install
 

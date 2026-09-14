@@ -7,7 +7,6 @@ lastUpdated: false
 hero: {}
 ---
 
-import { Aside } from '@astrojs/starlight/components'
 import AllPackageManagers from '@/components/AllPackageManagers.astro'
 import SectionHead from '@/components/SectionHead.astro'
 import FeatureGrid from '@/components/FeatureGrid.astro'
@@ -23,19 +22,19 @@ import CtaBand from '@/components/CtaBand.astro'
 </ol>
 </div>
 
-<Aside type="caution" title="Current focus: Vite + React + TypeScript">
-  Task coverage is deepest for Vite, React, and TypeScript projects. Other stacks such as Vue, Svelte, Solid, Node CLIs, and Bun work but stay experimental with fewer tasks. Contributions to expand coverage are welcome.
-</Aside>
+:::caution[Current focus: Vite + React + TypeScript]
+Task coverage is deepest for Vite, React, and TypeScript projects. Other stacks such as Vue, Svelte, Solid, Node CLIs, and Bun work but stay experimental with fewer tasks. Contributions to expand coverage are welcome.
+:::
 
 <div class="xt-section"><SectionHead index="02" eyebrow="safety model" id="safety" title="Nothing moves without you" lead="Preview every change, back up originals, and write only after you approve." />
 <FeatureGrid items={[
-  { title: 'Preview the plan', body: 'Run init or sync with --dry-run to see every planned change before anything touches your files.' },
+  { title: 'Preview the plan', body: 'Run init or sync with --dry-run to preview every planned change; `.gitignore` may be created or updated, but no conformance files are written.' },
   { title: 'Backups by default', body: 'Modified files are copied to .xtarterize/backups/ first. Undo and restore are built in.' },
   { title: 'You approve writes', body: 'init asks before it applies, and conflicts surface instead of overwriting your configs.' },
 ]} />
 </div>
 
-<div class="xt-section"><SectionHead index="03" eyebrow="task catalog" id="task-groups" title="What it can manage" lead="Task groups cover linting, types, CI, editor setup, agent skills, Vite plugins, and more." />
+<div class="xt-section"><SectionHead index="03" eyebrow="task catalog" id="task-groups" title="What it can manage" lead="Task groups cover linting, types, CI, editor setup, agent skills, and Vite plugins." />
 <ul class="xt-link-cluster" aria-label="Task groups">
   <li>Linting &amp; Formatting</li>
   <li>TypeScript</li>

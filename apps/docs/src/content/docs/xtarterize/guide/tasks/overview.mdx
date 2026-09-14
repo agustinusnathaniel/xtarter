@@ -16,15 +16,15 @@ In monorepos, tasks are filtered by scope: root tasks appear only at the monorep
 | Task | What it does |
 | --- | --- |
 | `lint/biome` | Install Biome and Ultracite, write `biome.json` |
-| `lint/oxlint` | Install Oxlint and Ultracite for Vite+ projects, write `oxlint.config.ts` or the legacy `.oxlintrc.json` |
-| `lint/oxfmt` | Install Oxfmt and Ultracite for Vite+ projects, write `oxfmt.config.ts` or the legacy `.oxfmtrc.json` |
+| `lint/oxlint` | Install Oxlint and Ultracite when Vite+ or an existing Oxlint config is detected; write `oxlint.config.ts` or update an existing `oxlint.config.*` (legacy `.oxlintrc.json` is detected but not rewritten) |
+| `lint/oxfmt` | Install Oxfmt and Ultracite when Vite+ or an existing Oxfmt config is detected; write `oxfmt.config.ts` (legacy `.oxfmtrc.json` is detected but not rewritten) |
 
 ## TypeScript
 
 | Task | What it does |
 | --- | --- |
 | [`ts/strict`](/xtarterize/guide/tasks/ts-strict/) | Enable strict compiler options in `tsconfig.json` |
-| `ts/paths` | Add `baseUrl` and `@/*` path aliases to `tsconfig.json` |
+| `ts/paths` | Add the `@/*` path alias to `tsconfig.json`, plus `baseUrl` outside Next.js |
 | `ts/incremental` | Enable `incremental` and `tsBuildInfoFile` |
 | `gitignore/tsbuildinfo` | Ignore `*.tsbuildinfo` in `.gitignore` |
 
@@ -40,7 +40,7 @@ In monorepos, tasks are filtered by scope: root tasks appear only at the monorep
 | Task | What it does |
 | --- | --- |
 | `ci/ci` | Write a GitHub Actions workflow for lint, typecheck, and test |
-| `ci/release` | Write a release workflow triggered by tags |
+| `ci/release` | Write a release workflow triggered by tags, or by branch/PR when Changesets is detected |
 | `ci/auto-update` | Write a weekly dependency update workflow |
 
 ## Dependencies
@@ -53,7 +53,7 @@ In monorepos, tasks are filtered by scope: root tasks appear only at the monorep
 
 | Task | What it does |
 | --- | --- |
-| `release/commitlint` | Install commitlint and write `commitlint.config.ts` |
+| `release/commitlint` | Write `commitlint.config.ts`; the git hook runs commitlint via dlx |
 | `release/czg` | Install czg and add a `commit` script |
 | `release/cat-version` | Install commit-and-tag-version and write `.versionrc` |
 | [`release/git-hooks`](/xtarterize/guide/tasks/release-git-hooks/) | Install husky and wire the commit-msg, prepare-commit-msg, pre-commit, and pre-push hooks |
@@ -63,7 +63,7 @@ In monorepos, tasks are filtered by scope: root tasks appear only at the monorep
 
 | Task | What it does |
 | --- | --- |
-| `quality/knip` | Install Knip and write `knip.json` |
+| `quality/knip` | Write `knip.config.ts`; Knip is installed by `scripts/package-scripts` when it adds the `knip` script |
 | `quality/lint-staged` | Install lint-staged and write `.lintstagedrc.json` |
 | [`quality/package-engines`](/xtarterize/guide/tasks/package-engines/) | Add `devEngines` to `package.json` |
 
@@ -97,7 +97,7 @@ In monorepos, tasks are filtered by scope: root tasks appear only at the monorep
 
 | Task | What it does |
 | --- | --- |
-| `scripts/package-scripts` | Add `lint`, `format`, `typecheck`, and similar scripts to `package.json` |
+| `scripts/package-scripts` | Add `lint`, `check`, `fix`, `typecheck`, and similar scripts to `package.json` |
 | `scripts/npmrc` | Write `.npmrc` with `save-exact` and peer dependency settings |
 
 All tasks are idempotent: a second run makes no changes. Each task reports one of `new`, `patch`, `skip`, or `conflict`.

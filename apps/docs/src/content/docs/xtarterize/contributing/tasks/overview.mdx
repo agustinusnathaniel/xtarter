@@ -3,11 +3,11 @@ title: Conformance Task Architecture
 description: How xtarterize tasks are structured and how to add one.
 ---
 
-import { LinkButton } from '@astrojs/starlight/components'
+import { LinkButton, Steps } from '@astrojs/starlight/components'
 
 xtarterize applies conformance configuration through discrete, independently applicable tasks. Each task inspects one area of a project, reports a status, previews its changes, and applies them without assuming other tasks have run.
 
-## Task Contract
+## Task contract
 
 Every task declares:
 
@@ -19,9 +19,9 @@ Every task declares:
 - `apply`: the write itself
 - An optional dependency declaration, which the apply plan collects and installs in one batch before any task runs
 
-Task methods return Effects. A spec may be synchronous, return a Promise, or use services; the task factory normalizes all three into one Effect before the engine calls them. The only service required today runs external processes.
+Task methods return Effects. A spec may be synchronous, return a Promise, or return an Effect; the task factory normalizes all three before the engine calls them. The only service required today runs external processes.
 
-## Task Specs
+## Task specs
 
 Most tasks come from a declarative spec rather than a hand-written implementation. A spec declares metadata, applicability, targets, actions, and dependencies. It resolves once per call, and status, diffs, apply, and dependency collection all project from that resolution, so a task's status cannot disagree with its diffs.
 
@@ -48,15 +48,19 @@ Dependencies are part of the resolution. A task can declare a fixed list or comp
 
 One shared module is the only xtarterize writer of `package.json`. It patches the current file text, so comments, indentation, and key order survive, and it recomputes the change at apply time, so entries added by the package manager or another task are kept.
 
-## Conflict Detection
+## Conflict detection
 
-JSON merge targets project a tristate status to avoid permanent patch loops. A missing key is added (`new`), a matching value is left alone (`skip`), and a different value is reported as a `conflict` without overwriting it. When a value must never be replaced, the target forces `conflict` explicitly.
+JSON merge targets project a tristate status to avoid permanent patch loops. A missing key is added (`patch`), a matching value is `skip`, and a differing value is left in place unless the target policy forces `conflict`.
 
-## Adding a Task
+## Adding a task
+
+<Steps>
 
 1. Declare the task with the task factory: id, label, group, applicability, targets or actions, and dependencies. Start from a nearby task in the [repository](https://github.com/agustinusnathaniel/xtarter).
 2. Register it in the task registry.
 3. Verify idempotency: a second run reports no changes.
 4. Add or update tests when they protect a real regression, and extend the nearest existing suite when possible.
+
+</Steps>
 
 <LinkButton href="/xtarterize/contributing/architecture/overview/">Learn about the overall architecture</LinkButton>

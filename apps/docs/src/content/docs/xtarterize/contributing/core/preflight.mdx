@@ -5,7 +5,7 @@ description: Validation xtarterize runs before changes and the checks behind doc
 
 Every project command runs preflight before doing work, and `check` and `doctor` additionally run tooling diagnostics.
 
-## Preflight Checks
+## Preflight checks
 
 Preflight requires:
 
@@ -22,6 +22,6 @@ Covered commands are `init`, `sync`, `diff`, `check`, `add`, `list`, `query`, `r
 
 `check` runs the tools and configuration groups. `doctor` runs every group (environment, tools, project, and configuration), and `--verbose` adds a system group with host platform information. Checks report `pass`, `warn`, or `fail` with a message. A check that throws becomes a single failure entry, so one broken check never hides the others, and a failing diagnostic sets exit code `1`.
 
-## CI Mode
+## CI mode
 
 In CI (`CI=true` or `CI=1`), xtarterize enables quiet mode for all commands, suppressing prompts and verbose output. Quiet mode is also enabled by `--quiet`, `--json`, and `--format json`.

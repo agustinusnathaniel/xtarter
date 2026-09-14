@@ -18,7 +18,7 @@ npx create-xtarter-app@latest <project-name>
 npx xtarterize@latest init
 ```
 
-`xtarterize` flags: `--dry-run`, `--yes`, `--only <task-id>`, `--skip <task-id>`, `--compose "<query>"`, `--format json`, `--cwd <dir>`. `create-xtarter-app` flags: `--yes`, `--template <id>`, `--pm pnpm|npm|bun|yarn`, `--no-git`, `--clean`, `--force`, `--ref <branch-or-tag>`.
+`xtarterize` run flags (`init`, with most also on `sync`): `--dry-run`, `--yes`, `--only <task-id>`, `--skip <task-id>`, `--compose "<query>"` (`sync` has no `--compose`); `--cwd <dir>` is global. Each command has its own options: `check` and `doctor` do not take `--format`, and `query` rejects `--quiet` and `--format`. `create-xtarter-app` flags: `--yes`, `--template <id>`, `--pm pnpm|npm|bun|yarn`, `--no-git`, `--clean`, `--force`, `--ref <branch-or-tag>`.
 
 ## How to consume these docs
 

@@ -5,7 +5,7 @@ description: How xtarterize plans, backs up, and applies conformance tasks.
 
 The apply engine is the final stage of the pipeline. It plans a task set, backs up modified files, installs dependencies in one batch, runs the tasks, and reports errors.
 
-## Plan, Then Execute
+## Plan, then execute
 
 Planning is side-effect free, so a preview is exact and execution replays the plan unchanged.
 
@@ -18,7 +18,7 @@ The plan collects, for the selected tasks:
 
 Execution replays the plan:
 
-1. Back up every affected file once and write a run manifest for the restore command.
+1. Back up every affected file once and write a run manifest for the `undo` command.
 2. Install the collected dependencies in one batch.
 3. Run each task's apply in sequence, collecting per-task errors instead of aborting.
 4. Return the applied count, skipped count, collected errors, and timing.
@@ -27,7 +27,7 @@ Execution replays the plan:
 
 Before any file is modified, the engine writes a timestamped copy under `.xtarterize/backups/` and indexes it in `.xtarterize/backups/.index.json` for `restore`. Each unique file path is backed up once per run, even when several tasks modify it. The `.xtarterize/` directory is added to `.gitignore` automatically.
 
-## Error Handling
+## Error handling
 
 Errors are collected and reported without aborting the run:
 

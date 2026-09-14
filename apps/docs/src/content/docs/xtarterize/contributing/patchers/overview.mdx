@@ -10,12 +10,12 @@ The `@xtarterize/patchers` package provides safe ways to modify configuration fi
 - **JSON merge**: deep merges objects with [`defu`](https://github.com/unjs/defu), so existing keys win and incoming values only fill gaps.
 - **Vite plugin injection**: inserts an import and a plugin call into Vite config source using [`magicast`](https://github.com/unjs/magicast).
 
-## Vite Plugin Injection
+## Vite plugin injection
 
 Injection is idempotent: a plugin that is already imported is not added again. The patcher parses the config, inserts the import, appends the plugin call to the `plugins` array, and returns the generated source.
 
 When the config structure is non-standard, such as a factory function or a conditional export, the patcher returns manual instructions instead of rewriting the file.
 
-## JSON Merge
+## JSON merge
 
 The merge combines objects with existing keys winning, and a second patcher applies the result to JSON text so comments, key order, and formatting survive. See [JSON Merge](/xtarterize/contributing/patchers/json-merge/) for merge behavior in detail.

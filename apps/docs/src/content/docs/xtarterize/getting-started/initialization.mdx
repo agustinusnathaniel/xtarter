@@ -3,7 +3,7 @@ title: Initialization
 description: Apply conformance configuration to a project.
 ---
 
-import { Aside, Steps } from '@astrojs/starlight/components'
+import { Steps } from '@astrojs/starlight/components'
 import AllPackageManagers from '@/components/AllPackageManagers.astro'
 
 ## Initialize a project
@@ -42,9 +42,9 @@ Which tasks are offered depends on where you run. See the [monorepo guide](/xtar
 
 `init` applies only tasks that match the detected project. See the [task catalog](/xtarterize/guide/tasks/overview/) for task IDs and applicability.
 
-<Aside>
-  Each task skips itself when already conformant, so running `init` twice produces no changes on the second run.
-</Aside>
+:::note
+A task that is already conformant is skipped, so running `init` twice produces no changes on the second run.
+:::
 
 ## Ultracite
 

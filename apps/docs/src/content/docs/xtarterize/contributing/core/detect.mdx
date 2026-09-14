@@ -5,7 +5,7 @@ description: How xtarterize detects a project's stack and builds a project profi
 
 Detection is the first step in every xtarterize command. It reads the project directory and builds a project profile that drives which conformance tasks apply.
 
-## What the Profile Contains
+## What the profile contains
 
 - Framework and framework version, bundler, router, and styling
 - TypeScript usage, runtime target, and Node version
@@ -14,18 +14,18 @@ Detection is the first step in every xtarterize command. It reads the project di
 - Git and GitHub presence
 - Existing configuration files, such as Biome, ESLint, tsconfig, Renovate, commitlint, knip, Vite config, and GitHub workflows
 
-## How Detection Works
+## How detection works
 
 Detection runs on every invocation; there is no profile cache. Each run inspects `package.json`, root config files, lockfiles, config directories, and ancestor markers, then computes a fresh profile.
 
 Signals come from two sources:
 
 - **Dependencies**: framework, bundler, router, and styling packages in `package.json`
-- **Filesystem**: TypeScript config presence, lockfiles, monorepo markers, and a `.github/` directory
+- **Filesystem**: TypeScript config presence, lockfiles, monorepo markers, bundler config files, and a `.github/` directory
 
 Framework, router, styling, runtime, and Vite+ detection run inline. Bundler, monorepo, and package manager detection consume shared declarations from the detection registry, which also supplies lockfile checks for diagnostics. New keyed detectors belong in the registry.
 
-## Precedence and Edge Cases
+## Precedence and edge cases
 
 When both `react` and `react-native` (or `expo`) are present in dependencies, detection reports `react-native`; there is no prompt to disambiguate. The framework is `null` only when the project has no `package.json`.
 

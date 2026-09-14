@@ -6,7 +6,11 @@ description: What xtarterize does and how a run works.
 import { LinkButton } from '@astrojs/starlight/components'
 import AllPackageManagers from '@/components/AllPackageManagers.astro'
 
-xtarterize scans JavaScript and TypeScript projects, selects the conformance tasks that apply, previews the changes, and applies approved updates. Coverage is deepest for Vite, React, and TypeScript; other stacks work but stay experimental.
+xtarterize scans JavaScript and TypeScript projects, selects the conformance tasks that apply, previews the changes, and applies approved updates. Coverage is deepest for Vite, React, and TypeScript.
+
+:::caution[Experimental stacks]
+Other stacks such as Vue, Svelte, Solid, Node CLIs, and Bun work but stay experimental with fewer tasks.
+:::
 
 ## Why xtarterize?
 

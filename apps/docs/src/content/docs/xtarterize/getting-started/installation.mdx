@@ -9,12 +9,11 @@ import AllPackageManagers from '@/components/AllPackageManagers.astro'
 
 - Node.js 24 or later
 - A JavaScript or TypeScript project, or a directory for a new one
-
-xtarterize also needs a `package.json` with a `name` field and an initialized Git repository. Preflight checks validate both before making changes.
+- A `package.json` with a `name` field and an initialized Git repository (preflight checks validate both before making changes)
 
 ## Run without installing
 
-Run the latest version directly with `npx`:
+Run it without installing anything globally:
 
 <AllPackageManagers type="exec" pkg="xtarterize@latest" args="init" />
 

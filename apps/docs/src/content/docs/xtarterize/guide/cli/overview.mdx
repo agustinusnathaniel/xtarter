@@ -15,7 +15,7 @@ Flags follow the command name: `xtarterize check --json` works, `xtarterize --js
 | --- | --- | --- |
 | `--cwd <path>` | all | Target directory (default: current directory) |
 | `--json` | all | Output machine-readable JSON |
-| `--quiet` | all except `query` | Suppress prompts and verbose output |
+| `--quiet` | all except `query` | Suppress prompts and verbose output; `restore` still prompts for a backup unless `--yes` |
 | `--help` | all | Show help for a command |
 | `--version` | entry | Show the version number |
 
@@ -43,7 +43,8 @@ Flags follow the command name: `xtarterize check --json` works, `xtarterize --js
 | `check` | A task is non-conformant or a diagnostic fails |
 | `diff`, `init --dry-run`, `sync --dry-run` | A change is pending or a dry run fails |
 | `doctor` | A diagnostic fails |
-| `init`, `sync`, `add` | A task is not found or fails to apply |
+| `init`, `sync` | A task fails to apply (unknown `--only` or `--skip` IDs do not fail the run; unknown IDs in the selection config warn) |
+| `add` | The task ID is unknown or the task fails to apply |
 | `undo`, `restore` | Nothing to restore, or a restore fails |
 
 Unknown commands and options exit `1` before anything runs and suggest a correction when one is close.
@@ -82,7 +83,7 @@ Update existing configs to match the latest templates. Unlike `init`, only tasks
 
 ## `diff`
 
-Preview changes for `new`, `patch`, and `conflict` tasks without writing anything. New files are shown in full; patched files use unified diffs. Changes to the same JSON file are merged into one diff.
+Preview changes for `new`, `patch`, and `conflict` tasks without writing any conformance files; the project `.gitignore` may still be created or updated. New files are shown in full; patched files use unified diffs. Changes to the same JSON file are merged into one diff.
 
 Options: `--format <terminal|json>`.
 
@@ -142,7 +143,7 @@ Search tasks by natural language query. Options: `--limit <n>` (default `20`), `
 
 ## Task statuses
 
-`new` means the config does not exist yet, `patch` that it needs updates, `skip` that it is conformant, and `conflict` that it is incompatible and needs a decision.
+`new` means the config does not exist yet; `patch` means it needs updates; `skip` means it is conformant; `conflict` means it is incompatible and needs a decision.
 
 ## Backups
 

@@ -3,8 +3,6 @@ title: Configuration
 description: Detection behavior and task selection keys for xtarterize.
 ---
 
-import { Aside } from '@astrojs/starlight/components'
-
 No config file is required. xtarterize detects your stack and applies only what fits.
 
 ## Detection
@@ -15,9 +13,9 @@ xtarterize reads `package.json`, lockfiles, config files, and directories to det
 - The package manager comes from the lockfile: `pnpm-lock.yaml`, `yarn.lock`, `package-lock.json`, `bun.lock`, or `bun.lockb`.
 - Monorepo status, GitHub, and existing configs come from the file system.
 
-<Aside type="note">
-  If `react` and `react-native` or `expo` are both present, the project is treated as React Native.
-</Aside>
+:::note
+If `react` and `react-native` or `expo` are both present, the project is treated as React Native.
+:::
 
 ## Task gating
 
