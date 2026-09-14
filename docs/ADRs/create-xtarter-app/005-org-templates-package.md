@@ -10,7 +10,7 @@ Accepted
 
 ## Decision
 
-**Adopt Option 1.** Publish `@xtarter/create` as a thin, manifest-only package. Its `createConfig.templates` manifest points at the existing GitHub template repositories, and no build or runtime code is shipped.
+Publish `@xtarter/create` as a thin, manifest-only package. Its `createConfig.templates` manifest points at the existing GitHub template repositories, and no build or runtime code is shipped.
 
 ## Rationale
 

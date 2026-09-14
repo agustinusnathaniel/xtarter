@@ -33,5 +33,5 @@ Present each result as one line: task ID, relevance percentage, label, and the c
 
 - Results are faster to scan and carry more decision-relevant information per line.
 - Debugging why a score is what it is requires `--json`, which always includes the signals; a verbose flag was considered but never added.
-- Very long labels and config targets can still exceed narrow terminals; the label truncates first, then the target.
+- Very long labels and config targets can still exceed narrow terminals; the label truncates while the target is shown in full.
 - The decorative icon may not render in every terminal; it carries no information.

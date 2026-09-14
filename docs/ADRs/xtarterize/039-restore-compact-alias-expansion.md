@@ -10,7 +10,7 @@ Accepted
 
 ## Context
 
-ADR 038 removed the transitive synonym map and its cross-group expansion, leaving tokenization, stemming, fuzzy and prefix matching, substring matching, the coverage bonus, and signal weights untouched. That decision was right that the old map was a hand-maintained catalog that could outrank literal matches, but a broader query battery measured a recall regression: fewer results, lower relevance, zero-result queries, and inverted top results. The loss came from dropping expansion entirely, not from those defects, so this is not a revert.
+ADR 038 removed the transitive synonym map and its cross-group expansion, leaving tokenization, stemming, fuzzy and prefix matching, substring matching, the coverage bonus, and signal weights untouched. The old map was indeed a hand-maintained catalog that could outrank literal matches, but a broader query battery measured a recall regression: fewer results, lower relevance, zero-result queries, and inverted top results. The loss came from dropping expansion entirely, not from those defects, so this is not a revert.
 
 ## Decision
 
@@ -20,7 +20,7 @@ Restore query expansion in a compact, precision-preserving shape inspired by the
 - The scorer matches each token directly and then through its aliases, discounting alias-derived scores so a direct hit outranks an alias hit at the same tier; direct exact matches still short-circuit at the top.
 - Alias-derived substring matches require meaningful containment, so short aliases cannot match unrelated fields.
 - A multi-word query that exactly matches an authored keyword is promoted to a reserved tier above alias-stacked token paths, fixing phrase queries.
-- Tasks add aliases through their existing keyword metadata; match tiers, weights, thresholds, coverage bonus, result shape, and dependencies are unchanged.
+- Aliases live in the core alias table, while tasks contribute keywords through their search metadata; match tiers, weights, thresholds, coverage bonus, result shape, and dependencies are unchanged.
 - The alias table is the primary maintenance point; revisit the design if it grows beyond a bounded size.
 
 ## Rationale

@@ -14,7 +14,7 @@ xtarterize backs up each file before modifying it and keeps an index of backups,
 
 ## Decision
 
-Write a run manifest during apply that lists every file backed up in that run, and consume it in a new `undo` command that restores the listed files after confirmation.
+Write a run manifest during apply that lists every file the run may touch, including files it creates, and consume it in a new `undo` command that restores the listed files after confirmation.
 
 ## Rationale
 

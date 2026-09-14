@@ -15,7 +15,7 @@ xtarterize configures projects; it does not impose package manager choices, and 
 
 ## Alternatives Considered
 
-- Force pnpm universally: too opinionated, creates friction, and turns xtarterize from configurator into package manager advocate.
+- Force pnpm universally: too opinionated, creates friction, and turns xtarterize from a configurator into a package manager advocate.
 - Always include pnpm setup: a no-op or error for npm and yarn projects, and noise in their workflows.
 - Omit pnpm setup entirely: version drift when runner images update pnpm independently.
 - Keep the older two-action pairing: two actions where one now suffices, without the unified caching.

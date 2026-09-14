@@ -43,7 +43,7 @@ Effect owns CLI command orchestration.
 ### Positive
 
 - One cancellation, resource, and error model across the CLI lifecycle.
-- The bounded-concurrency helper, timeout race, config cache map, and prompt singleton disappear.
+- The bounded-concurrency helper, timeout race, hand-rolled Promise cache, and prompt singleton disappear; the raw config read keeps a cached memo.
 - Effect declares no runtime dependencies, so the runtime surface is what is imported.
 
 ### Negative

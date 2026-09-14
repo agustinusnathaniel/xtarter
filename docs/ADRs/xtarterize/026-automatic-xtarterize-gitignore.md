@@ -19,12 +19,12 @@ Every command that creates or reads `.xtarterize/` ensures the project's `.gitig
 ## Rationale
 
 - The directory is a tool side effect, not a user configuration choice, so it does not belong in a skippable task.
-- No single hook covers every affected command: some only read the directory, and some never run the task engine, so each affected command calls the helper explicitly.
+- A single hook covers every affected command: the helper runs once from the shared session open path, so no per-command wiring is needed.
 
 ## Alternatives Considered
 
 - **A `gitignore/xtarterize` task.** Rejected: skippable at the prompt, and it would miss commands that do not run the task engine.
-- **A single hook in a shared command router.** Rejected: only some affected commands route through it.
+- **A single hook in a shared command router.** Rejected at the time: only `init` and `sync` routed through one. The shared session open path later provided this hook (ADR 030).
 - **A hook in preflight validation.** Rejected: adds a write side effect to validation, violating least surprise.
 - **A hook at each artifact creation site.** Rejected: decentralized, and easy to miss a new artifact path.
 
@@ -35,4 +35,4 @@ Every command that creates or reads `.xtarterize/` ensures the project's `.gitig
 - A project without a `.gitignore` gets one, and existing files gain a comment header; both are deliberate, minor diffs.
 - Write failures are ignored, so the entry is best-effort and never blocks a command.
 - Concurrent invocations can both append the entry, producing a harmless duplicate.
-- The helper is called from several commands rather than one chokepoint, so new commands must remember to call it.
+- The helper runs once from the shared session open path, so any command that opens a session gets it.

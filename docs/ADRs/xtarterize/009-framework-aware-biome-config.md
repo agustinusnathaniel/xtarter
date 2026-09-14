@@ -5,7 +5,7 @@
 
 ## Decision
 
-Generated Biome configuration enables framework-specific parser options when the target project uses syntax Biome would otherwise reject. Tailwind CSS directive support is the current implementation, enabled when Tailwind is detected in the project's dependencies.
+Generated Biome configuration enables framework-specific parser options when the target project uses syntax Biome would otherwise reject. The current case is Tailwind CSS directive support, enabled when Tailwind is detected in the project's dependencies.
 
 ## Rationale
 

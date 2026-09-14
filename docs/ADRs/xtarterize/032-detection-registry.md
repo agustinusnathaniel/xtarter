@@ -16,8 +16,8 @@ The inputs that define a project profile were re-listed across detection, finger
 
 One registry declares what detection reads and which detectors consume it.
 
-- Input kinds: root file with extensions, config directory, lockfile with package-manager mapping, ancestor marker, cwd marker, and the package manifest.
-- Detector entries have stable ids and bind to one input: keyed file detectors and custom detectors, plus the inputs consumed by detection helpers and doctor lockfile checks.
+- Input kinds: root file with extensions, config directory, lockfile with package-manager mapping, ancestor marker, and the package manifest.
+- Detector entries have stable ids and bind to their declared input(s): keyed file detectors and custom detectors, plus the inputs consumed by detection helpers and doctor lockfile checks.
 - The profile existence keys derive from the registry instead of a hand-written list and an unchecked cast.
 
 The registry holds only inputs with a runtime consumer. The profile cache and its fingerprint were removed by ADR 034, and the logic detector declarations whose only consumer was that fingerprint were removed with it.

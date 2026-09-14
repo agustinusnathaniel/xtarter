@@ -32,5 +32,5 @@ Add optional search metadata to the task interface and a pure-function scoring e
 ## Consequences
 
 - Users can discover tasks by description; tasks without search metadata still score on label, id, and group.
-- Scoring is algorithmic and cannot match AI nuance; this is by design.
+- Scoring is algorithmic and cannot match AI nuance, by design.
 - Every built-in task needs search metadata, and the match terms need updating as the catalog grows.

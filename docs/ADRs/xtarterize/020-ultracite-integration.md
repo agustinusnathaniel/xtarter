@@ -26,6 +26,6 @@ Install `ultracite` whenever xtarterize sets up Biome, Oxlint, or Oxfmt, and gen
 
 - One pass configures the linting stack with the presets users expect, and new projects get good defaults without a discovery step.
 - Users who do not want Ultracite must override the generated config, and rule behavior lives in `node_modules` rather than inline, so understanding a rule means reading Ultracite's source.
-- Ultracite preset or rule changes can surface new lint errors in existing projects; xtarterize pins the semantic version and offers a `check` diff so users can review proposed changes.
+- Ultracite preset or rule changes can surface new lint errors in existing projects; `check` reports which configs differ so users can review proposed changes.
 - Migrating a legacy standalone Oxlint JSON config can leave both the old and new config files in place; detection covers both, and the old file can be deleted after verifying the new one.
 - Dependency count and install time increase slightly.

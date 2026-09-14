@@ -20,7 +20,7 @@ One task spec replaces the factories. A spec declares metadata and applicability
 - An action target pairs a status probe with a run effect and reports no file diff.
 - A per-target policy hook may force a conflict, seeing the same before and after the diff used.
 - Dependencies are part of resolution.
-- Apply performs the resolution's effects: the manifest owner writes that target kind and the standard writer handles file targets. Factories retire family by family as callers migrate.
+- Apply performs the resolution's effects: the manifest owner writes that target kind and the standard writer handles file targets.
 
 ## Rationale
 
