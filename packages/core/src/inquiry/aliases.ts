@@ -29,13 +29,9 @@ const aliasIndex = new Map<string, Array<string>>();
 for (const group of TASK_ALIAS_GROUPS) {
   const terms = group.split('|');
   for (const term of terms) {
-    const siblings = aliasIndex.get(term) ?? [];
-    for (const sibling of terms) {
-      if (sibling !== term && !siblings.includes(sibling)) {
-        siblings.push(sibling);
-      }
-    }
-    aliasIndex.set(term, siblings);
+    const siblings = new Set([...(aliasIndex.get(term) ?? []), ...terms]);
+    siblings.delete(term);
+    aliasIndex.set(term, [...siblings]);
   }
 }
 

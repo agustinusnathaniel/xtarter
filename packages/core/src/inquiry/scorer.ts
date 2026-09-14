@@ -36,11 +36,24 @@ function matchesPhrase(task: Task, phrase: string): boolean {
 
 function bestMatchTier(
   token: string,
-  field: string | undefined,
+  field: string | Array<string> | undefined,
   requireContainment = false
 ): MatchTier {
   if (!field) {
     return 0.0;
+  }
+  if (Array.isArray(field)) {
+    let best: MatchTier = 0.0;
+    for (const item of field) {
+      const tier = bestMatchTier(token, item, requireContainment);
+      if (tier > best) {
+        best = tier;
+      }
+      if (best === 1.0) {
+        break;
+      }
+    }
+    return best;
   }
   const lowerToken = token.toLowerCase();
   const lowerField = field.toLowerCase();
@@ -75,62 +88,30 @@ function bestMatchTier(
   return 0.0;
 }
 
-function bestMatchInArray(
-  token: string,
-  arr: Array<string> | undefined,
-  requireContainment = false
-): MatchTier {
-  if (!arr || arr.length === 0) {
-    return 0.0;
-  }
-  let best: MatchTier = 0.0;
-  for (const item of arr) {
-    const match = bestMatchTier(token, item, requireContainment);
-    if (match > best) {
-      best = match;
-    }
-    if (best === 1.0) {
-      break;
-    }
-  }
-  return best;
+/** Query token at full tier, then its aliases discounted and containment-gated. */
+function bestTermMatch(
+  terms: Array<string>,
+  field: string | Array<string> | undefined
+): number {
+  const [token, ...aliases] = terms;
+  const direct = bestMatchTier(token, field);
+  return direct === 1.0
+    ? direct
+    : Math.max(
+        direct,
+        ...aliases.map((a) => bestMatchTier(a, field, true) * ALIAS_DISCOUNT)
+      );
 }
 
-/** Best tier over the token and its aliases; aliases are discounted. */
-function bestFieldMatch(token: string, field: string | undefined): number {
-  let best: number = bestMatchTier(token, field);
-  if (best === 1.0) {
-    return best;
-  }
-  for (const alias of expandAliases(token)) {
-    best = Math.max(best, bestMatchTier(alias, field, true) * ALIAS_DISCOUNT);
-  }
-  return best;
-}
-
-/** Best tier over the token and its aliases across an array field. */
-function bestArrayMatch(token: string, arr: Array<string> | undefined): number {
-  let best: number = bestMatchInArray(token, arr);
-  if (best === 1.0) {
-    return best;
-  }
-  for (const alias of expandAliases(token)) {
-    best = Math.max(best, bestMatchInArray(alias, arr, true) * ALIAS_DISCOUNT);
-  }
-  return best;
-}
-
-function matchTaskToToken(token: string, task: Task) {
-  return {
-    config: bestArrayMatch(
-      token,
-      task.searchMeta?.configTargets ?? task.searchMeta?.tags
-    ),
-    group: bestFieldMatch(token, task.group),
-    id: bestFieldMatch(token, task.id.replace(/\//g, ' ')),
-    keywords: bestArrayMatch(token, task.searchMeta?.keywords),
-    label: bestFieldMatch(token, task.label),
-  };
+function matchTaskToToken(terms: Array<string>, task: Task) {
+  const [config, group, id, keywords, label] = [
+    task.searchMeta?.configTargets ?? task.searchMeta?.tags,
+    task.group,
+    task.id.replace(/\//g, ' '),
+    task.searchMeta?.keywords,
+    task.label,
+  ].map((field) => bestTermMatch(terms, field));
+  return { config, group, id, keywords, label };
 }
 
 type TokenMatch = ReturnType<typeof matchTaskToToken>;
@@ -148,14 +129,15 @@ function maxSignal(match: TokenMatch): number {
 function scoreTaskForQuery(
   task: Task,
   queryTerms: {
+    expansions: Map<string, Array<string>>;
     tokens: Array<string>;
     weights: WeightConfig;
   }
 ): { signals: Array<RelevanceSignal>; score: number } {
-  const { tokens, weights } = queryTerms;
+  const { expansions, tokens, weights } = queryTerms;
   const matches = new Map<string, TokenMatch>();
-  for (const term of new Set(tokens)) {
-    matches.set(term, matchTaskToToken(term, task));
+  for (const [token, terms] of expansions) {
+    matches.set(token, matchTaskToToken(terms, task));
   }
 
   // Best match per signal across all query tokens.
@@ -216,11 +198,16 @@ export function scoreTasks(
     return [];
   }
   const phrase = tokens.join(' ').toLowerCase();
+  const expansions = new Map<string, Array<string>>();
+  for (const token of new Set(tokens)) {
+    expansions.set(token, [token, ...expandAliases(token)]);
+  }
 
   const results: Array<InquiryResult> = [];
 
   for (const task of tasks) {
     const { signals, score } = scoreTaskForQuery(task, {
+      expansions,
       tokens,
       weights,
     });
