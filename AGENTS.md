@@ -62,6 +62,7 @@
 8. **Documentation**
    - Add or update ADRs in the appropriate `docs/ADRs/` subdirectory
    - Update Starlight docs in `apps/docs/src/content/docs/` if behavior or features change
+   - Treat `apps/docs/src/content/docs/xtarterize/changelog.mdx` as append-only, newest-first user-facing release history: add new releases at the top and never condense, stub, delete, or rewrite existing entries
    - Present package-manager commands in docs with `<AllPackageManagers>`: `type="dlx"` to run remote packages, `type="create"` to scaffold; import it from `@/components/AllPackageManagers.astro` in each page
    - Keep synopsis signatures, CLI syntax examples, and intentionally package-manager-specific commands (for example contributor-only pnpm workflows) as plain code fences; static surfaces that cannot render tabs (landing components, `public/agents.md`, llms text) use one canonical command and note alternatives in prose
    - Preview with `pnpm docs:dev`; ensure `pnpm docs:build` passes
