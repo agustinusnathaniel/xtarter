@@ -3,13 +3,13 @@ title: AI Agent Skills
 description: Install the create-xtarter-app skill for AI editors.
 ---
 
+import AllPackageManagers from '@/components/AllPackageManagers.astro'
+
 Install the create-xtarter-app skill to teach a compatible AI tool how to scaffold projects, pick a template from a stack description, and use the right flags.
 
 ## Install
 
-```bash
-npx skills add agustinusnathaniel/xtarter
-```
+<AllPackageManagers type="dlx" pkg="skills@latest" args="add agustinusnathaniel/xtarter" />
 
 The skill covers the scaffold and `preview` commands, all flags, and the five template IDs (`next-chakra`, `next-tailwind`, `vite-chakra`, `vite-tailwind`, `vite-hero`).
 

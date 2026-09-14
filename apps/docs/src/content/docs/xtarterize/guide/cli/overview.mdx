@@ -55,7 +55,7 @@ In GitHub Actions, `check` also writes one `::error` annotation per non-conforma
 
 Run diagnostics for the environment, declared tools, project files (`tsconfig.json`, `README.md`, `.gitignore`), and conflicting configurations such as Biome with ESLint or Prettier. Options: `--verbose` (adds system information), `--quiet` (summary only), `--json`.
 
-<AllPackageManagers type="exec" pkg="xtarterize@latest" args="doctor" />
+<AllPackageManagers type="dlx" pkg="xtarterize@latest" args="doctor" />
 
 ## `init`
 
@@ -73,13 +73,13 @@ Detect the project stack, show a plan, and apply changes.
 | `--format <format>` | Output format: `terminal` or `json` |
 | `--timing` | Show per-task timing |
 
-<AllPackageManagers type="exec" pkg="xtarterize@latest" args="init" />
+<AllPackageManagers type="dlx" pkg="xtarterize@latest" args="init" />
 
 ## `sync`
 
 Update existing configs to match the latest templates. Unlike `init`, only tasks in `patch` or `conflict` status are offered, and `--compose` and `--threshold` are not supported. All other `init` options apply.
 
-<AllPackageManagers type="exec" pkg="xtarterize@latest" args="sync" />
+<AllPackageManagers type="dlx" pkg="xtarterize@latest" args="sync" />
 
 ## `diff`
 
@@ -87,7 +87,7 @@ Preview changes for `new`, `patch`, and `conflict` tasks without writing any con
 
 Options: `--format <terminal|json>`.
 
-<AllPackageManagers type="exec" pkg="xtarterize@latest" args="diff" />
+<AllPackageManagers type="dlx" pkg="xtarterize@latest" args="diff" />
 
 ## `check`
 
@@ -98,7 +98,7 @@ Audit which tasks are conformant and report conflicting tools, legacy ESLint con
 | `--badge <path>` | Write a conformance badge SVG (`-` for stdout) |
 | `--annotations` | Emit GitHub Actions annotations (auto-enabled in CI) |
 
-<AllPackageManagers type="exec" pkg="xtarterize@latest" args="check" />
+<AllPackageManagers type="dlx" pkg="xtarterize@latest" args="check" />
 
 ## `add`
 
@@ -111,7 +111,7 @@ Apply one task, or show a grouped multi-select menu when no task ID is given.
 | `--format <format>` | Output format: `terminal` or `json` |
 | `--timing` | Show per-task timing |
 
-<AllPackageManagers type="exec" pkg="xtarterize@latest" args="add lint/biome" title="Specific task" />
+<AllPackageManagers type="dlx" pkg="xtarterize@latest" args="add lint/biome" title="Specific task" />
 
 ## `undo`
 
@@ -119,7 +119,7 @@ Undo the last `init`, `sync`, or `add` run. Backed-up files are restored, and fi
 
 Options: `--quiet`, `--json`, `--format <terminal|json>`.
 
-<AllPackageManagers type="exec" pkg="xtarterize@latest" args="undo" />
+<AllPackageManagers type="dlx" pkg="xtarterize@latest" args="undo" />
 
 ## `restore`
 
@@ -127,7 +127,7 @@ Restore one file from a previous backup. If several backups exist, xtarterize pr
 
 Options: `--yes`, `--quiet`, `--json`, `--format <terminal|json>`.
 
-<AllPackageManagers type="exec" pkg="xtarterize@latest" args="restore tsconfig.json" />
+<AllPackageManagers type="dlx" pkg="xtarterize@latest" args="restore tsconfig.json" />
 
 ## `list`
 
@@ -139,7 +139,7 @@ Options: `--quiet`, `--json`.
 
 Search tasks by natural language query. Options: `--limit <n>` (default `20`), `--threshold <n>` (default `0.1`), `--json`. See the [query command page](/xtarterize/guide/cli/query/).
 
-<AllPackageManagers type="exec" pkg="xtarterize@latest" args='query "strict typescript"' />
+<AllPackageManagers type="dlx" pkg="xtarterize@latest" args='query "strict typescript"' />
 
 ## Task statuses
 

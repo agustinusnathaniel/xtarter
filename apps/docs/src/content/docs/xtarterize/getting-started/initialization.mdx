@@ -8,7 +8,7 @@ import AllPackageManagers from '@/components/AllPackageManagers.astro'
 
 ## Initialize a project
 
-<AllPackageManagers type="exec" pkg="xtarterize@latest" args="init" />
+<AllPackageManagers type="dlx" pkg="xtarterize@latest" args="init" />
 
 <Steps>
 
@@ -26,13 +26,13 @@ See the [CLI reference](/xtarterize/guide/cli/overview/#init) for every `init` f
 
 ## Examples
 
-<AllPackageManagers type="exec" pkg="xtarterize@latest" args="init --dry-run" title="Preview" />
+<AllPackageManagers type="dlx" pkg="xtarterize@latest" args="init --dry-run" title="Preview" />
 
-<AllPackageManagers type="exec" pkg="xtarterize@latest" args="init --yes" title="Apply all" />
+<AllPackageManagers type="dlx" pkg="xtarterize@latest" args="init --yes" title="Apply all" />
 
-<AllPackageManagers type="exec" pkg="xtarterize@latest" args="init --skip codegen/plop,agent/skills-install" title="Skip tasks" />
+<AllPackageManagers type="dlx" pkg="xtarterize@latest" args="init --skip codegen/plop,agent/skills-install" title="Skip tasks" />
 
-<AllPackageManagers type="exec" pkg="xtarterize@latest" args="init --only lint/biome" title="Only specific" />
+<AllPackageManagers type="dlx" pkg="xtarterize@latest" args="init --only lint/biome" title="Only specific" />
 
 ## Monorepo projects
 
