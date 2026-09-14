@@ -4,29 +4,21 @@
 'xtarterize': patch
 ---
 
-Restore query recall with compact alias groups
+Restore task search recall for related words
 
-`query` and `init --compose` expand query tokens through 18 compact alias
-groups again. Expansion is bidirectional and single-hop within a group, alias
-matches are discounted to 0.85 so a direct hit at the same tier ranks first,
-and alias-derived substring matches require meaningful containment (the
-shorter side is at least 4 characters and at least half of the longer side).
-A multi-word query that exactly matches an authored keyword is promoted to a
-reserved score above alias-stacked token paths, so `auto update` ranks
-`ci/auto-update` first. Four tasks gained a keyword alias (`typing` on
-`ts/strict`, `versioning` on `release/versionrc`, `updates` on
-`deps/renovate`, and `hooks` on `release/git-hooks`).
+`query` and `init --compose` find tasks from related phrasings again. Searches
+for `typing` reach the TypeScript strict task, `updates` reaches the dependency
+updater, `husky` and `commitlint` return the git hook tasks, and `code` leads
+with the VS Code task. Multi-word queries like `auto update` and `npm scripts`
+rank the task that owns that exact phrase first.
 
-The 33-query battery measures both sides directly. Current main before this
-change: 83 results and 0.580 mean top-1 relevance. This branch: 168 results
-and 0.834 mean top-1 relevance. The pre-removal baseline (commit 6eac520) was
-191 results and 0.783 mean top-1 relevance. Zero-result queries disappear,
-`code` ranks `editor/vscode` first again, `husky` returns 6 results, and
-`updates` scores 0.831.
+A 33-query check went from 83 results and 0.580 mean top-1 relevance before
+this change to 168 results and 0.834, close to the 191 results and 0.783 the
+search returned before 2.0.0 removed synonym expansion. Tokenization,
+stemming, fuzzy, prefix, and substring matching are unchanged; expansion now
+comes from a small alias list, a direct match at the same tier always outranks
+an alias match, and approximate alias matches are discounted. Recorded in
+ADR 039.
 
-This is not a revert of the transitive synonym map removed in 2.0.0: there is
-no cross-group closure, the table is 18 groups and 45 lines instead of 92
-lines, and alias matches are discounted rather than scored at full strength.
-Recorded in ADR 039.
-
-Patch: no dependency, config, or CLI contract change.
+Patch: the command surface is unchanged and no dependency or config format
+moved.
