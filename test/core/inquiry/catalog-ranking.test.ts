@@ -4,39 +4,29 @@ import { describe, expect } from 'vite-plus/test';
 
 const tasks = getAllTasks();
 
-function topResult(query: string) {
-  return scoreTasks(tasks, query)[0];
-}
+const topCases: Array<[query: string, top: string, minScore?: number]> = [
+  ['code', 'editor/vscode'],
+  ['strict typescript', 'ts/strict'],
+  ['ci pipeline', 'ci/ci'],
+  ['skills', 'agent/skills-install'],
+  ['auto update', 'ci/auto-update'],
+  ['semver', 'release/cat-version'],
+  ['bump', 'release/cat-version'],
+  ['updates', 'deps/renovate', 0.6],
+];
 
 describe('catalog ranking regressions', () => {
+  for (const [query, top, minScore = 0] of topCases) {
+    test(`"${query}" ranks ${top} first`, () => {
+      const result = scoreTasks(tasks, query)[0];
+      expect(result?.taskId).toBe(top);
+      expect(result?.relevance).toBeGreaterThanOrEqual(minScore);
+    });
+  }
+
   test('"typing" ranks ts/strict in the top three', () => {
-    const results = scoreTasks(tasks, 'typing');
-    expect(results.length).toBeGreaterThan(0);
-    expect(results.slice(0, 3).map((r) => r.taskId)).toContain('ts/strict');
-  });
-
-  test('"updates" ranks deps/renovate first with a strong score', () => {
-    const top = topResult('updates');
-    expect(top?.taskId).toBe('deps/renovate');
-    expect(top?.relevance).toBeGreaterThanOrEqual(0.6);
-  });
-
-  test('"code" ranks editor/vscode first', () => {
-    expect(topResult('code')?.taskId).toBe('editor/vscode');
-  });
-
-  test('"strict typescript" ranks ts/strict first', () => {
-    expect(topResult('strict typescript')?.taskId).toBe('ts/strict');
-  });
-
-  test('"ci pipeline" ranks ci/ci first', () => {
-    expect(topResult('ci pipeline')?.taskId).toBe('ci/ci');
-  });
-
-  test('authored keyword hits rank above alias-only matches', () => {
-    expect(topResult('skills')?.taskId).toBe('agent/skills-install');
-    expect(topResult('auto update')?.taskId).toBe('ci/auto-update');
-    expect(topResult('semver')?.taskId).toBe('release/cat-version');
-    expect(topResult('bump')?.taskId).toBe('release/cat-version');
+    const ids = scoreTasks(tasks, 'typing').map((r) => r.taskId);
+    expect(ids.length).toBeGreaterThan(0);
+    expect(ids.slice(0, 3)).toContain('ts/strict');
   });
 });

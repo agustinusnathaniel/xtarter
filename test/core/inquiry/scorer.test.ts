@@ -298,20 +298,12 @@ describe('scoreTasks', () => {
     const direct = makeTask({
       id: 'alias/direct',
       label: 'Shared label',
-      searchMeta: {
-        configTargets: [],
-        keywords: ['updates'],
-        tags: [],
-      },
+      searchMeta: { configTargets: [], keywords: ['updates'], tags: [] },
     });
     const alias = makeTask({
       id: 'alias/alias',
       label: 'Shared label',
-      searchMeta: {
-        configTargets: [],
-        keywords: ['renovate'],
-        tags: [],
-      },
+      searchMeta: { configTargets: [], keywords: ['renovate'], tags: [] },
     });
 
     const results = scoreTasks([alias, direct], 'updates');
@@ -319,37 +311,24 @@ describe('scoreTasks', () => {
     expect(results[0].relevance).toBeGreaterThan(results[1].relevance);
   });
 
-  test('rejects alias substrings below the containment threshold', () => {
-    const task = makeTask({
+  test('enforces the alias containment threshold', () => {
+    const long = makeTask({
       id: 'containment/long',
-      searchMeta: {
-        configTargets: ['oxlintrc.json'],
-        keywords: [],
-        tags: [],
-      },
+      searchMeta: { configTargets: ['oxlintrc.json'], keywords: [], tags: [] },
     });
-
-    expect(scoreTasks([task], 'linting')).toHaveLength(0);
-  });
-
-  test('rejects alias substrings shorter than four characters', () => {
-    const task = makeTask({
+    const short = makeTask({
       id: 'containment/short',
       searchMeta: { configTargets: [], keywords: ['maid'], tags: [] },
     });
-
-    expect(scoreTasks([task], 'agent')).toHaveLength(0);
-  });
-
-  test('accepts alias substrings at or above the containment threshold', () => {
-    const task = makeTask({
+    const ok = makeTask({
       id: 'containment/ok',
       label: 'Pre-commit hook',
       searchMeta: { configTargets: [], keywords: ['pre-commit'], tags: [] },
     });
 
-    const results = scoreTasks([task], 'commitlint');
-    expect(results).toHaveLength(1);
+    expect(scoreTasks([long], 'linting')).toHaveLength(0);
+    expect(scoreTasks([short], 'agent')).toHaveLength(0);
+    expect(scoreTasks([ok], 'commitlint')).toHaveLength(1);
   });
 
   test('keeps direct substring matching free of containment', () => {
@@ -365,7 +344,7 @@ describe('scoreTasks', () => {
     );
   });
 
-  test('promotes an exact multi-word phrase match over alias-only scores', () => {
+  test('promotes only exact multi-word phrase matches', () => {
     const authored = makeTask({
       id: 'phrase/authored',
       label: 'Auto-update workflow',
@@ -380,27 +359,17 @@ describe('scoreTasks', () => {
         tags: [],
       },
     });
-
-    const results = scoreTasks([aliasStacked, authored], 'auto update');
-    expect(results[0].taskId).toBe('phrase/authored');
-    expect(results[0].relevance).toBeGreaterThanOrEqual(0.85);
-  });
-
-  test('does not promote single-word or non-exact keyword matches', () => {
     const single = makeTask({
       id: 'phrase/single',
       label: 'Lint options',
       searchMeta: { configTargets: [], keywords: ['lint'], tags: [] },
     });
-    const phrase = makeTask({
-      id: 'phrase/words',
-      label: 'Auto-update workflow',
-      searchMeta: { configTargets: [], keywords: ['auto update'], tags: [] },
-    });
 
+    const results = scoreTasks([aliasStacked, authored], 'auto update');
+    expect(results[0].taskId).toBe('phrase/authored');
+    expect(results[0].relevance).toBeGreaterThanOrEqual(0.85);
     expect(scoreTasks([single], 'lint')[0].relevance).toBeLessThan(0.85);
-    expect(scoreTasks([phrase], 'automatic update')[0].relevance).toBeLessThan(
-      0.85
-    );
+    const automatic = scoreTasks([authored], 'automatic update')[0];
+    expect(automatic.relevance).toBeLessThan(0.85);
   });
 });
