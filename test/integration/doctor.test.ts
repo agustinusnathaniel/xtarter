@@ -1,8 +1,7 @@
+import { captureConsole } from '@test/helpers/console.js';
+import { type ProjectFileMap, withProject } from '@test/helpers/project.js';
 import { doctorCommand } from '@xtarterize/app/commands/doctor.js';
 import { describe, expect } from 'vite-plus/test';
-
-import { captureConsole } from '../helpers/console.js';
-import { type ProjectFileMap, withProject } from '../helpers/project.js';
 
 const DOCTOR_FILES: ProjectFileMap = {
   'package.json': {

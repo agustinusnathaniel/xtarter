@@ -1,11 +1,11 @@
+import { fixtureDir, fixtureProfile } from '@test/helpers/project.js';
+import { run } from '@test/helpers/run.js';
 import { describe, expect } from 'vite-plus/test';
 
 import { renovateTask } from '../../packages/tasks/src/deps/renovate.js';
 import { vscodeTask } from '../../packages/tasks/src/editor/vscode.js';
 import { biomeTask } from '../../packages/tasks/src/lint/biome.js';
 import { oxfmtTask, oxlintTask } from '../../packages/tasks/src/lint/oxlint.js';
-import { fixtureDir, fixtureProfile } from '../helpers/project.js';
-import { run } from '../helpers/run.js';
 
 describe('biome config validation', () => {
   test('rendered biome.json is valid JSON with expected structure', async () => {

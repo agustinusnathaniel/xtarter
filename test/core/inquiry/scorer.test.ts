@@ -1,7 +1,6 @@
+import { makeTask } from '@test/helpers/factories.js';
 import { scoreTasks } from '@xtarterize/core';
 import { describe, expect } from 'vite-plus/test';
-
-import { makeTask } from '../../helpers/factories.js';
 
 const searchTasks: Array<{
   configTargets: Array<string>;

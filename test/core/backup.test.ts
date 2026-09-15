@@ -1,5 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { withTempDir } from '@test/helpers/temp.js';
 import {
   BackupError,
   backupFile,
@@ -9,8 +10,6 @@ import {
   writeRunManifest,
 } from '@xtarterize/core';
 import { describe, expect } from 'vite-plus/test';
-
-import { withTempDir } from '../helpers/temp.js';
 
 describe('backup', () => {
   test('recovers when backup index is malformed', async () => {

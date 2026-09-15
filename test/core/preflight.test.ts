@@ -1,10 +1,9 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { fixtureDir } from '@test/helpers/project.js';
+import { withTempDir } from '@test/helpers/temp.js';
 import { runPreflight } from '@xtarterize/core';
 import { describe, expect } from 'vite-plus/test';
-
-import { fixtureDir } from '../helpers/project.js';
-import { withTempDir } from '../helpers/temp.js';
 
 describe('runPreflight', () => {
   test('passes for valid project with git', async () => {

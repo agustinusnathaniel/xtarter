@@ -1,5 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { withProject } from '@test/helpers/project.js';
+import { withTempDir } from '@test/helpers/temp.js';
 import { writeFile } from '@xtarterize/core';
 import { describe, expect } from 'vite-plus/test';
 
@@ -7,8 +9,6 @@ import {
   isExecutableFile,
   writeTaskDiffs,
 } from '../../packages/tasks/src/factory/ops.js';
-import { withProject } from '../helpers/project.js';
-import { withTempDir } from '../helpers/temp.js';
 
 describe('security: profile value sanitization', () => {
   test('nodeVersion contains only digits from engines.node', async () => {

@@ -1,5 +1,10 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { captureJson } from '@test/helpers/console.js';
+import { type ProjectFileMap, withProject } from '@test/helpers/project.js';
+import { createScriptedPrompter } from '@test/helpers/prompter.js';
+import { run, runCli } from '@test/helpers/run.js';
+import { withTempDir } from '@test/helpers/temp.js';
 import { addProgram } from '@xtarterize/app/commands/add/index.js';
 import { listCommand } from '@xtarterize/app/commands/list.js';
 import { openSession } from '@xtarterize/app/session.js';
@@ -13,12 +18,6 @@ import {
   test,
   vi,
 } from 'vite-plus/test';
-
-import { captureJson } from '../helpers/console.js';
-import { type ProjectFileMap, withProject } from '../helpers/project.js';
-import { createScriptedPrompter } from '../helpers/prompter.js';
-import { run, runCli } from '../helpers/run.js';
-import { withTempDir } from '../helpers/temp.js';
 
 const coreMocks = vi.hoisted(() => ({
   ensureXtarterizeGitignore: vi.fn(),

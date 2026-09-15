@@ -1,4 +1,11 @@
 import {
+  type FixtureName,
+  fixtureDir,
+  fixtureProfile,
+} from '@test/helpers/project.js';
+import { recordingProcessRunner, run, runWith } from '@test/helpers/run.js';
+import { withSkillsProject } from '@test/helpers/skills-project.js';
+import {
   detectProject,
   type ProjectProfile,
   planTasks,
@@ -11,13 +18,6 @@ import {
   resolveSkillsExecutor,
   skillsInstallTask,
 } from '../../packages/tasks/src/agent/skills-install.js';
-import {
-  type FixtureName,
-  fixtureDir,
-  fixtureProfile,
-} from '../helpers/project.js';
-import { recordingProcessRunner, run, runWith } from '../helpers/run.js';
-import { withSkillsProject } from '../helpers/skills-project.js';
 
 // The task talks to the ProcessRunner service, so the test swaps in a stub
 // layer that records commands and scripts the exit code per test.

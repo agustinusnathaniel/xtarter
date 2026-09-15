@@ -1,10 +1,9 @@
+import { makeProfile, makeTask } from '@test/helpers/factories.js';
+import { run } from '@test/helpers/run.js';
 import type { TaskStatus } from '@xtarterize/core';
 import { resolveProjectTasks, resolveTaskStatuses } from '@xtarterize/core';
 import { Effect } from 'effect';
 import { describe, expect } from 'vite-plus/test';
-
-import { makeProfile, makeTask } from '../helpers/factories.js';
-import { run } from '../helpers/run.js';
 
 const checkedTask = (
   id: string,

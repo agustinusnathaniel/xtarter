@@ -16,7 +16,8 @@
       "@xtarterize/patchers": ["./packages/patchers/src/index.ts"],
       "@xtarterize/tasks": ["./packages/tasks/src/index.ts"],
       "@xtarterize/app/*": ["./apps/xtarterize/src/*"],
-      "@docs/*": ["./apps/docs/*"]
+      "@docs/*": ["./apps/docs/*"],
+      "@test/*": ["./test/*"]
     }
   },
   "include": ["test"],

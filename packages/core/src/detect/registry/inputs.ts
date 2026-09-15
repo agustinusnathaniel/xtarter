@@ -1,4 +1,4 @@
-import type { PackageManager } from '../types.js';
+import type { PackageManager } from '@/detect/types.js';
 
 /**
  * Declares the detection inputs that have a runtime consumer: keyed detector

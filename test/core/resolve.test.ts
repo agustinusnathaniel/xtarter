@@ -1,11 +1,10 @@
+import { makeProfile, makeTask } from '@test/helpers/factories.js';
+import { fixtureDir, fixtureProfile } from '@test/helpers/project.js';
+import { run } from '@test/helpers/run.js';
 import type { Task } from '@xtarterize/core';
 import { resolveTaskStatuses, resolveTasks } from '@xtarterize/core';
 import { getAllTasks } from '@xtarterize/tasks';
 import { describe, expect } from 'vite-plus/test';
-
-import { makeProfile, makeTask } from '../helpers/factories.js';
-import { fixtureDir, fixtureProfile } from '../helpers/project.js';
-import { run } from '../helpers/run.js';
 
 describe('resolveTasks', () => {
   test('filters tasks by applicability', async () => {

@@ -1,19 +1,19 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import {
+  fixtureDir,
+  fixtureProfile,
+  type ProjectContext,
+  withProject,
+} from '@test/helpers/project.js';
+import { run } from '@test/helpers/run.js';
+import { withTempDir } from '@test/helpers/temp.js';
 import { detectProject } from '@xtarterize/core';
 import { getAllTasks } from '@xtarterize/tasks';
 import { describe, expect } from 'vite-plus/test';
 
 import { versionrcTask } from '../../packages/tasks/src/release/versionrc.js';
 import { pnpmWorkspaceTask } from '../../packages/tasks/src/workspace/pnpm-workspace.js';
-import {
-  fixtureDir,
-  fixtureProfile,
-  type ProjectContext,
-  withProject,
-} from '../helpers/project.js';
-import { run } from '../helpers/run.js';
-import { withTempDir } from '../helpers/temp.js';
 
 const withPnpmProject = (
   run: (context: ProjectContext) => Promise<void>,

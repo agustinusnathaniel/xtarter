@@ -32,7 +32,7 @@ declare global {
 // (aria-hidden; frozen by the prefers-reduced-motion kill switch).
 import DefaultHero from '@astrojs/starlight/components/Hero.astro'
 import TerminalDemo from './TerminalDemo.astro'
-import { TEMPLATE_CATALOG } from '../data/template-catalog'
+import { TEMPLATE_CATALOG } from '@/data/template-catalog'
 
 const { entry } = Astro.locals.starlightRoute
 const path = Astro.url.pathname.replace(/\/+$/, '') || '/'

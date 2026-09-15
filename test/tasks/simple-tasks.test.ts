@@ -1,9 +1,13 @@
+import {
+  fixtureDir,
+  fixtureProfile,
+  withProject,
+} from '@test/helpers/project.js';
+import { run } from '@test/helpers/run.js';
 import { describe, expect } from 'vite-plus/test';
 
 import { npmrcTask } from '../../packages/tasks/src/npmrc.js';
 import { lintStagedTask } from '../../packages/tasks/src/quality/lint-staged.js';
-import { fixtureDir, fixtureProfile, withProject } from '../helpers/project.js';
-import { run } from '../helpers/run.js';
 
 describe('npmrcTask', () => {
   test('applies to any project', () => {
