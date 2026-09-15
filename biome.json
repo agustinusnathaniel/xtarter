@@ -149,9 +149,6 @@
               }
             }
           },
-          "complexity": {
-            "noExcessiveLinesPerFunction": "off"
-          },
           "suspicious": {
             "noExplicitAny": "off",
             "noBitwiseOperators": "off"
