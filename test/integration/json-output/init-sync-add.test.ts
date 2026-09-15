@@ -72,7 +72,9 @@ describe('init/sync/add json output', () => {
       }
     });
   }, 60_000);
+});
 
+describe('init/sync/add json output', () => {
   test('init --yes --json emits an apply result payload', async () => {
     await withProject(PROJECT_FILES, async ({ cwd }) => {
       try {
@@ -126,7 +128,9 @@ describe('init/sync/add json output', () => {
       }
     });
   }, 120_000);
+});
 
+describe('init/sync/add json output', () => {
   test('add ts/strict --format json emits the payload as the first thing on stdout', async () => {
     await withProject(PROJECT_FILES, async ({ cwd }) => {
       try {
@@ -153,7 +157,9 @@ describe('init/sync/add json output', () => {
       }
     });
   }, 120_000);
+});
 
+describe('init/sync/add json output', () => {
   test('add ts/strict --json ignores check errors from unrelated tasks', async () => {
     // A malformed unrelated config makes the lint/biome check fail; the
     // requested ts/strict task must still apply and report success.
@@ -188,7 +194,9 @@ describe('init/sync/add json output', () => {
       }
     );
   }, 120_000);
+});
 
+describe('init/sync/add json output', () => {
   test('add ts/strict --json reports the requested task check failure', async () => {
     // The requested task's own check reads a malformed tsconfig.json, so
     // the run must fail with that task's check error.
@@ -242,7 +250,9 @@ describe('init/sync/add json output', () => {
       }
     );
   }, 60_000);
+});
 
+describe('init/sync/add json output', () => {
   test('add --all --format json emits a summary payload', async () => {
     await withProject(PROJECT_FILES, async ({ cwd }) => {
       try {
@@ -266,7 +276,9 @@ describe('init/sync/add json output', () => {
       }
     });
   }, 180_000);
+});
 
+describe('init/sync/add json output', () => {
   test('sync --yes --json emits a machine-readable result payload with no human text', async () => {
     await withProject(MINIMAL_FILES, async ({ cwd }) => {
       try {

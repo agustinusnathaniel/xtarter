@@ -157,7 +157,9 @@ describe('scaffoldProject', () => {
     expect(result.ciCleaned).toBe(true);
     await rm(dir, { force: true, recursive: true });
   });
+});
 
+describe('scaffoldProject', () => {
   test('should initialize git when enabled', async () => {
     const dir = await tempDir();
     await writeFixture(dir);
@@ -195,7 +197,9 @@ describe('scaffoldProject', () => {
     expect(existsSync(join(dir, '.git'))).toBe(true);
     await rm(dir, { force: true, recursive: true });
   });
+});
 
+describe('scaffoldProject', () => {
   test('should clean up created dir on failure', async () => {
     const parent = await tempDir();
     const dir = join(parent, 'project');
@@ -246,7 +250,9 @@ describe('scaffoldProject', () => {
       await rm(parent, { force: true, recursive: true });
     }
   });
+});
 
+describe('scaffoldProject', () => {
   test('should not clean up pre-existing dir on failure', async () => {
     const dir = await tempDir();
     vi.mocked(installDependencies).mockRejectedValueOnce(

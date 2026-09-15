@@ -158,7 +158,9 @@ describe('scoreTasks', () => {
       );
     }
   });
+});
 
+describe('scoreTasks', () => {
   test('includes relevance signals in each result', () => {
     const results = scoreTasks(mockTasks, 'strict');
     expect(results.length).toBeGreaterThan(0);
@@ -197,7 +199,9 @@ describe('scoreTasks', () => {
     expect(Array.isArray(results)).toBe(true);
     expect(results).toHaveLength(0);
   });
+});
 
+describe('scoreTasks', () => {
   test('allows custom weight configuration', () => {
     const weightedResults = scoreTasks(mockTasks, 'lint', {
       weights: {
@@ -244,7 +248,9 @@ describe('scoreTasks', () => {
     // All matching tasks should be included (not capped)
     expect(results.length).toBeGreaterThanOrEqual(1);
   });
+});
 
+describe('scoreTasks', () => {
   test('expands sibling aliases bidirectionally within a group', () => {
     const renovate = makeTask({
       id: 'alias/renovate',
@@ -293,7 +299,9 @@ describe('scoreTasks', () => {
     expect(results.map((r) => r.taskId)).toContain('alias/paths');
     expect(results.map((r) => r.taskId)).not.toContain('alias/strict');
   });
+});
 
+describe('scoreTasks', () => {
   test('ranks a direct hit above an alias hit at the same tier', () => {
     const direct = makeTask({
       id: 'alias/direct',
@@ -343,7 +351,9 @@ describe('scoreTasks', () => {
       0.55
     );
   });
+});
 
+describe('scoreTasks', () => {
   test('promotes only exact multi-word phrase matches', () => {
     const authored = makeTask({
       id: 'phrase/authored',

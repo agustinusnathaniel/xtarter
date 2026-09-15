@@ -58,7 +58,9 @@ describe('biomeTask', () => {
       }
     );
   });
+});
 
+describe('biomeTask', () => {
   test('is not applicable to Vite+ project without biome dep', async () => {
     await withProject(
       {

@@ -59,7 +59,9 @@ describe('doctor command', () => {
       expect(fullOutput).toMatch(/(CPUs|GB RAM)/);
     });
   });
+});
 
+describe('doctor command', () => {
   test('includes project health diagnostics', async () => {
     // Add a tsconfig.json to make the TypeScript check pass
     await withProject(

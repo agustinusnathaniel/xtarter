@@ -59,7 +59,9 @@ describe('package.json owner', () => {
       expect(change?.after).toContain('\n        "test": "vitest run"');
     });
   });
+});
 
+describe('package.json owner', () => {
   test('applying an already-present change writes nothing', async () => {
     await withTempDir('xtarterize-package-json-', async (cwd) => {
       await writePackageJson(

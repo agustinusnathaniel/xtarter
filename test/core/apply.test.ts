@@ -136,7 +136,9 @@ describe('applyTasks', () => {
       expect(result.applied).toBe(0);
     });
   });
+});
 
+describe('applyTasks', () => {
   test('backs up existing files before applying selected tasks', async () => {
     await withProject(projectFiles, async ({ cwd: tmpDir, profile }) => {
       await fs.writeFile(path.join(tmpDir, 'test.txt'), 'before');
@@ -176,7 +178,9 @@ describe('applyTasks', () => {
       ).resolves.toBe('after');
     });
   });
+});
 
+describe('applyTasks', () => {
   test('skips conflict tasks unless includeConflicts is set', async () => {
     await withProject(projectFiles, async ({ cwd: tmpDir, profile }) => {
       let applied = false;
@@ -225,7 +229,9 @@ describe('applyTasks', () => {
       expect(applied).toBe(true);
     });
   });
+});
 
+describe('applyTasks', () => {
   test('continues applying remaining tasks after one fails', async () => {
     await withProject(projectFiles, async ({ cwd: tmpDir, profile }) => {
       const failingTask = makeTask({
@@ -366,7 +372,9 @@ describe('executePlan', () => {
       ).resolves.toBe('after');
     });
   });
+});
 
+describe('executePlan', () => {
   test('reports per-entry apply errors and continues with remaining entries', async () => {
     await withProject(projectFiles, async ({ cwd: tmpDir, profile }) => {
       const failingTask = makeTask({
@@ -403,7 +411,9 @@ describe('executePlan', () => {
       expect(goodEntry?.applyError).toBeUndefined();
     });
   });
+});
 
+describe('executePlan', () => {
   test('reports per-entry dry-run errors and excludes the entry from the plan', async () => {
     await withProject(projectFiles, async ({ cwd: tmpDir, profile }) => {
       const failingTask = makeTask({

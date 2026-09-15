@@ -131,7 +131,9 @@ describe('areEquivalent', () => {
       expect(areEquivalent('lint', 'lint && format')).toBe(false);
     });
   });
+});
 
+describe('areEquivalent', () => {
   describe('TOOL_MISMATCH rule', () => {
     test('returns false for completely different tools', () => {
       expect(areEquivalent('tsc --noEmit', 'eslint .')).toBe(false);
@@ -173,7 +175,9 @@ describe('areEquivalent', () => {
       expect(areEquivalent('vp lint', 'vp check')).toBe(true);
     });
   });
+});
 
+describe('areEquivalent', () => {
   describe('SCRIPT_REF_MATCH rule', () => {
     test('returns true when both reference the same script name', () => {
       expect(areEquivalent('pnpm run build', 'npm run build')).toBe(true);

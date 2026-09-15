@@ -144,7 +144,9 @@ describe('runDiagnostics configuration group edge cases', () => {
       expect(biomePret[0].status).toBe('warn');
     });
   });
+});
 
+describe('runDiagnostics configuration group edge cases', () => {
   test('passes when only Biome is present (no conflict)', async () => {
     await withTempDir('xtarterize-conflict-', async (tmpDir) => {
       await createConflictPkg(tmpDir, {}, { '@biomejs/biome': '^1.0.0' });

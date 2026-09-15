@@ -74,7 +74,9 @@ describe('cli json output', () => {
       process.exitCode = 0;
     });
   });
+});
 
+describe('cli json output', () => {
   test('diff command emits machine-readable payload', async () => {
     await withProject(PROJECT_FILES, async ({ cwd }) => {
       const output = (await captureJson(async () => {
@@ -123,7 +125,9 @@ describe('cli json output', () => {
       process.exitCode = 0;
     });
   });
+});
 
+describe('cli json output', () => {
   test('diff --quiet omits the timing section', async () => {
     await withProject(PROJECT_FILES, async ({ cwd }) => {
       try {
@@ -149,7 +153,9 @@ describe('cli json output', () => {
       }
     });
   });
+});
 
+describe('cli json output', () => {
   test('init --dry-run --format json implies quiet and keeps stdout machine-readable', async () => {
     await withProject(PROJECT_FILES, async ({ cwd }) => {
       const previousCi = process.env.CI;

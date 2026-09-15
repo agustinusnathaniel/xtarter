@@ -102,7 +102,9 @@ describe('sync command', () => {
       }
     );
   }, 60_000);
+});
 
+describe('sync command', () => {
   test('dry-run exits 1 when pending changes exist', async () => {
     await withProject(
       { ...MINIMAL_FILES, ...OUTDATED_LINT_FILES },
@@ -284,7 +286,9 @@ describe('add command', () => {
       }
     });
   });
+});
 
+describe('add command', () => {
   test('reports conflict tasks as not applied and exits 1', async () => {
     await withProject(MINIMAL_FILES, async ({ cwd, readText }) => {
       process.exitCode = 0;
@@ -307,7 +311,9 @@ describe('add command', () => {
       }
     });
   }, 60_000);
+});
 
+describe('add command', () => {
   test('applies conflicting tasks when --include-conflicts is passed with --all', async () => {
     // A TS-only fixture trims `add --all` to a smaller task set than
     // the react+vite fixture (no vite-plugin tasks), but release/
@@ -358,7 +364,9 @@ describe('add command', () => {
     // push this past 120s; 240s matches the suite's heavy-test pattern
     // (mirrors the init --yes --include-conflicts test above).
   }, 240_000);
+});
 
+describe('add command', () => {
   test('adds a conflicting task with --include-conflicts on a specific task ID', async () => {
     await withProject(
       {
@@ -411,7 +419,9 @@ describe('add command', () => {
       expect(pkgAfter.scripts).toEqual(pkgBefore.scripts);
     });
   }, 60_000);
+});
 
+describe('add command', () => {
   test('reports failed task checks in JSON ok field instead of claiming success', async () => {
     await withProject(MINIMAL_FILES, async ({ cwd }) => {
       process.exitCode = 0;

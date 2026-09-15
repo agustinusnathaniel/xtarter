@@ -138,15 +138,15 @@ describe('suggestSimilar', () => {
   });
 });
 
-describe('validateInvocation', () => {
-  const mainDef = { cwd: { type: 'string' }, json: { type: 'boolean' } };
-  const subcommands = {
-    list: async () => ({
-      json: { type: 'boolean' },
-      quiet: { type: 'boolean' },
-    }),
-  };
+const mainDef = { cwd: { type: 'string' }, json: { type: 'boolean' } };
+const subcommands = {
+  list: async () => ({
+    json: { type: 'boolean' },
+    quiet: { type: 'boolean' },
+  }),
+};
 
+describe('validateInvocation', () => {
   test('passes a valid subcommand invocation', async () => {
     const issues = await validateInvocation({
       argsDef: mainDef,
@@ -168,7 +168,9 @@ describe('validateInvocation', () => {
     });
     expect(issues).toEqual([]);
   });
+});
 
+describe('validateInvocation', () => {
   test('rejects unknown options on a subcommand with a suggestion', async () => {
     const issues = await validateInvocation({
       argsDef: mainDef,
@@ -195,7 +197,9 @@ describe('validateInvocation', () => {
       'Unknown option --jsn for "cli". Did you mean --json?'
     );
   });
+});
 
+describe('validateInvocation', () => {
   test('rejects unknown commands and suggests names', async () => {
     const issues = await validateInvocation({
       argsDef: mainDef,
