@@ -7,6 +7,16 @@ import { Badge, Card, CardGrid, Tabs, TabItem } from '@astrojs/starlight/compone
 
 Latest updates and feature releases for xtarterize. Entries since v1.0.0 are curated below; see the [full changelog](https://github.com/agustinusnathaniel/xtarter/blob/main/apps/xtarterize/CHANGELOG.md) for complete notes and every patch version.
 
+## v2.0.2 - 2026-09-15 <Badge text="Patch" variant="default" />
+
+### Updated workflow actions
+
+Newly applied CI and release workflows install pnpm with `pnpm/setup@v2` instead of `v1`. Re-running `apply` picks up the bump on the shared setup step; workflow behavior is otherwise unchanged.
+
+### Stricter scaffolded test files
+
+Generated `biome.json` no longer disables the function line limit for test files, so `*.test.*` and `*.spec.*` follow the same 60-line function limit as source (v1.24.0 had exempted them). Split long `describe` callbacks or hoist shared fixtures to module scope if `check` flags existing specs.
+
 ## v2.0.1 - 2026-09-14 <Badge text="Patch" variant="default" />
 
 ### Related-word search restored
