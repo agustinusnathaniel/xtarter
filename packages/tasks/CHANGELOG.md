@@ -1,5 +1,27 @@
 # @xtarterize/tasks
 
+## 2.0.2
+
+### Patch Changes
+
+- [#213](https://github.com/agustinusnathaniel/xtarter/pull/213) [`5304a97`](https://github.com/agustinusnathaniel/xtarter/commit/5304a97dfea81fca852011d47aa8ecc0309d530f) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Generate workflows with pnpm/setup@v2
+  
+  Newly applied CI and release workflows now install pnpm with `pnpm/setup@v2`
+  instead of `v1`. Existing projects pick up the bump on the shared setup step
+  when re-running `apply`; workflow behavior is otherwise unchanged.
+
+- [#213](https://github.com/agustinusnathaniel/xtarter/pull/213) [`5304a97`](https://github.com/agustinusnathaniel/xtarter/commit/5304a97dfea81fca852011d47aa8ecc0309d530f) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Enforce function line limits in scaffolded test files
+  
+  The generated `biome.json` no longer disables
+  `complexity/noExcessiveLinesPerFunction` for test globs, so `*.test.*` and
+  `*.spec.*` files in newly conformed projects follow the same 60-line function
+  limit as source. Split long `describe` callbacks into sequential same-name
+  blocks or hoist shared fixtures to module scope if `check` flags existing
+  specs.
+- Updated dependencies []:
+  - @xtarterize/core@2.0.2
+  - @xtarterize/patchers@2.0.2
+
 ## 2.0.1
 
 ### Patch Changes
