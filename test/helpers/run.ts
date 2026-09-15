@@ -4,6 +4,7 @@ import type {
   CommandResult,
   ProcessError,
   ProcessRunOptions,
+  TaskDep,
 } from '@xtarterize/core';
 import { DepsInstaller, ProcessRunner } from '@xtarterize/core';
 import { Effect, Layer } from 'effect';
@@ -100,6 +101,58 @@ export function recordingProcessRunner(): RecordingProcessRunner {
     },
     setResult(next) {
       result = next;
+    },
+  };
+}
+
+/** A stub `DepsInstaller.install` implementation for verification seams. */
+export type DepsInstallerStub = (
+  cwd: string,
+  deps: ReadonlyArray<TaskDep>,
+  options?: { silent?: boolean }
+) => Effect.Effect<void, never>;
+
+/** Layer that replaces `DepsInstaller` with a stub. */
+export function depsInstallerLayer(
+  stub: DepsInstallerStub
+): Layer.Layer<DepsInstaller> {
+  return Layer.succeed(DepsInstaller, { install: stub });
+}
+
+/** One recorded `DepsInstaller.install` invocation (one batched install). */
+export type DepsInstallerCall = [
+  cwd: string,
+  deps: ReadonlyArray<TaskDep>,
+  options: { silent?: boolean } | undefined,
+];
+
+/** A recording `DepsInstaller` stub that performs no spawn or network. */
+export interface RecordingDepsInstaller {
+  /** Recorded batches, in call order (one entry per `install` call). */
+  readonly calls: ReadonlyArray<DepsInstallerCall>;
+  /** Layer that replaces `DepsInstaller` with this stub. */
+  readonly layer: Layer.Layer<DepsInstaller>;
+  /** Clear recorded batches. */
+  reset: () => void;
+}
+
+/**
+ * Create a recording `DepsInstaller` stub: records requested batches so the
+ * getDeps batching contract stays observable, but skips nypm/pnpm spawn and
+ * network. File writes still run, so apply outcomes stay identical.
+ */
+export function recordingDepsInstaller(): RecordingDepsInstaller {
+  const calls: Array<DepsInstallerCall> = [];
+
+  return {
+    calls,
+    layer: depsInstallerLayer((cwd, deps, options) =>
+      Effect.sync(() => {
+        calls.push([cwd, [...deps], options]);
+      })
+    ),
+    reset() {
+      calls.length = 0;
     },
   };
 }
