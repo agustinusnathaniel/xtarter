@@ -36,8 +36,6 @@ jobs:
 
       - uses: ./.github/actions/setup
 
-      # Fresh build is intentional: release never reuses artifacts from
-      # other runs, so each publish reflects the exact checked-out tree.
       - name: Build
         run: pnpm build:ci
 

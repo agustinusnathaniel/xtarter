@@ -417,8 +417,7 @@ describe('add command', () => {
       process.exitCode = 0;
       try {
         // A misbehaving task whose check() dies must surface as ok:false in the
-        // emitted JSON, agreeing with the exit code. getAllTasks is
-        // synchronous, so the mock returns the task array directly.
+        // emitted JSON, agreeing with the exit code.
         mockGetAllTasks.mockImplementationOnce(() => [
           {
             applicable: () => true,

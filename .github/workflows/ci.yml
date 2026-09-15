@@ -31,13 +31,9 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          # Shallow clone: typecheck/build/test hash file contents, not history.
           fetch-depth: 1
 
       - uses: ./.github/actions/setup
 
-      # Single runner shares the filesystem, so no dist artifacts are needed:
-      # turbo orders test after the app builds via dependsOn, then runs the
-      # full suite (including the bin-spawn integration files) in one pass.
       - name: Check and test
         run: pnpm check:ci
