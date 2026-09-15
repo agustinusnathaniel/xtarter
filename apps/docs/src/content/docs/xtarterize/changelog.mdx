@@ -11,11 +11,11 @@ Latest updates and feature releases for xtarterize. Entries since v1.0.0 are cur
 
 ### Updated workflow actions
 
-Newly applied CI and release workflows install pnpm with `pnpm/setup@v2` instead of `v1`. Re-running `apply` picks up the bump on the shared setup step; workflow behavior is otherwise unchanged.
+Generated CI and release workflows now install pnpm with `pnpm/setup@v2` instead of `v1`. Re-run `apply` to update an existing project; nothing else about the workflows changes.
 
-### Stricter scaffolded test files
+### Test files follow the same size limits as source
 
-Generated `biome.json` no longer disables the function line limit for test files, so `*.test.*` and `*.spec.*` follow the same 60-line function limit as source (v1.24.0 had exempted them). Split long `describe` callbacks or hoist shared fixtures to module scope if `check` flags existing specs.
+Generated `biome.json` no longer exempts test files from the 60-line function limit (v1.24.0 had left them out). After updating, keep test blocks short: split a long `describe` into smaller ones or move shared setup out of it, otherwise `check` will flag them.
 
 ## v2.0.1 - 2026-09-14 <Badge text="Patch" variant="default" />
 
