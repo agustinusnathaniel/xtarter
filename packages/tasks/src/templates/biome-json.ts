@@ -75,9 +75,6 @@ function buildBiomeOverrides(): Array<Record<string, unknown>> {
       includes: ['*.test.ts', '*.test.tsx', '*.spec.ts', '*.spec.tsx'],
       linter: {
         rules: {
-          complexity: {
-            noExcessiveLinesPerFunction: 'off',
-          },
           nursery: {
             useConsistentTestIt: {
               level: 'error',
