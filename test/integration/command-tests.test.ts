@@ -1,12 +1,3 @@
-/**
- * Integration coverage for init/sync/add/undo/restore command pipelines.
- *
- * Fast-leg note: when `XTARTERIZE_SKIP_REAL_INSTALL=1` is set (PR fast leg),
- * the app runtime (`apps/xtarterize/src/runtime.ts`) swaps the real
- * `DepsInstaller` for a no-op so these suites exercise planning and file
- * writes without real network installs. The integration matrix leg
- * leaves the env unset to keep real-install fidelity.
- */
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { addCommand } from '@xtarterize/app/commands/add/index.js';
@@ -421,49 +412,41 @@ describe('add command', () => {
     });
   }, 60_000);
 
-  // Requires real installs: under XTARTERIZE_SKIP_REAL_INSTALL the registry
-  // mock below does not intercept the app's task resolution (real tasks
-  // execute; observed live skills installs), so stubbed runs apply cleanly
-  // and exit 0. Covered by the integration-matrix leg instead.
-  test.skipIf(process.env.XTARTERIZE_SKIP_REAL_INSTALL === '1')(
-    'reports failed task checks in JSON ok field instead of claiming success',
-    async () => {
-      await withProject(MINIMAL_FILES, async ({ cwd }) => {
+  test('reports failed task checks in JSON ok field instead of claiming success', async () => {
+    await withProject(MINIMAL_FILES, async ({ cwd }) => {
+      process.exitCode = 0;
+      try {
+        // A misbehaving task whose check() dies must surface as ok:false in the
+        // emitted JSON, agreeing with the exit code. getAllTasks is
+        // synchronous, so the mock returns the task array directly.
+        mockGetAllTasks.mockImplementationOnce(() => [
+          {
+            applicable: () => true,
+            apply: () => Effect.void,
+            check: () => Effect.die(new Error('kaboom')),
+            dryRun: () => Effect.succeed([]),
+            group: 'test',
+            id: 'boom/failing',
+            label: 'Boom failing',
+          } as never,
+        ]);
+
+        const { logs } = await captureConsole(async () => {
+          await addCommand.run?.({
+            args: { all: true, cwd, format: 'json', quiet: true },
+          } as never);
+        });
+
+        expect(process.exitCode).toBe(1);
+        const jsonLine = logs.find((line) => line.startsWith('{'));
+        expect(jsonLine).toBeDefined();
+        const parsed = JSON.parse(jsonLine as string) as { ok: boolean };
+        expect(parsed.ok).toBe(false);
+      } finally {
         process.exitCode = 0;
-        try {
-          // A misbehaving task whose check() dies must surface as ok:false in the
-          // emitted JSON, agreeing with the exit code. getAllTasks is
-          // synchronous, so the mock returns the task array directly.
-          mockGetAllTasks.mockImplementationOnce(() => [
-            {
-              applicable: () => true,
-              apply: () => Effect.void,
-              check: () => Effect.die(new Error('kaboom')),
-              dryRun: () => Effect.succeed([]),
-              group: 'test',
-              id: 'boom/failing',
-              label: 'Boom failing',
-            } as never,
-          ]);
-
-          const { logs } = await captureConsole(async () => {
-            await addCommand.run?.({
-              args: { all: true, cwd, format: 'json', quiet: true },
-            } as never);
-          });
-
-          expect(process.exitCode).toBe(1);
-          const jsonLine = logs.find((line) => line.startsWith('{'));
-          expect(jsonLine).toBeDefined();
-          const parsed = JSON.parse(jsonLine as string) as { ok: boolean };
-          expect(parsed.ok).toBe(false);
-        } finally {
-          process.exitCode = 0;
-        }
-      });
-    },
-    60_000
-  );
+      }
+    });
+  }, 60_000);
 });
 
 describe('undo command', () => {

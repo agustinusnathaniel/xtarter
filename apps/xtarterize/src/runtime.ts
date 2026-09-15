@@ -15,29 +15,6 @@ export const AppLayer = Layer.mergeAll(
   Prompter.layer
 );
 
-/**
- * No-op installer used when `XTARTERIZE_SKIP_REAL_INSTALL=1` is set.
- * The PR fast leg sets this to avoid real network installs; the
- * integration matrix leg leaves it unset to keep real-install fidelity.
- */
-const SkipInstallLayer = Layer.succeed(DepsInstaller, {
-  install: () => Effect.void,
-});
-
-/** App layer honoring the fast-leg install gate. */
-function currentAppLayer(): Layer.Layer<
-  DepsInstaller | ProcessRunner | Prompter
-> {
-  if (process.env.XTARTERIZE_SKIP_REAL_INSTALL === '1') {
-    return Layer.mergeAll(
-      SkipInstallLayer,
-      ProcessRunner.layer,
-      Prompter.layer
-    );
-  }
-  return AppLayer;
-}
-
 const cliAbortController = new AbortController();
 
 /** Abort the in-flight command program (SIGINT/SIGTERM). */
@@ -57,12 +34,9 @@ export async function runCliProgram<A, E>(
   program: Effect.Effect<A, E, DepsInstaller | ProcessRunner | Prompter>,
   options: { signal?: AbortSignal } = {}
 ): Promise<A | undefined> {
-  const exit = await Effect.runPromiseExit(
-    Effect.provide(program, currentAppLayer()),
-    {
-      signal: options.signal ?? cliAbortController.signal,
-    }
-  );
+  const exit = await Effect.runPromiseExit(Effect.provide(program, AppLayer), {
+    signal: options.signal ?? cliAbortController.signal,
+  });
   if (Exit.isSuccess(exit)) {
     return exit.value;
   }

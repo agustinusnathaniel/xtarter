@@ -20,7 +20,6 @@
     "prepare": "vp config",
     "release": "changeset publish",
     "test": "vp test",
-    "test:bin": "vp test test/integration/create-xtarter-app-cli.test.ts",
     "typecheck": "turbo run typecheck",
     "ultracite:check": "ultracite check",
     "ultracite:fix": "ultracite fix",
