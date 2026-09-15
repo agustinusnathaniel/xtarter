@@ -50,7 +50,9 @@ describe('formatCheckAnnotations', () => {
     expect(output).toContain('file=tsconfig.json');
     expect(output).not.toContain('package.json');
   });
+});
 
+describe('formatCheckAnnotations', () => {
   test('omits file when no configTargets', () => {
     const tasks = [annotationTask('ts/strict', 'Strict TypeScript')];
     const statuses = makeStatuses([['ts/strict', 'patch']]);
@@ -73,7 +75,9 @@ describe('formatCheckAnnotations', () => {
     expect(output).toContain('::warning title=Tools::missing');
     expect(output).not.toContain('Passing');
   });
+});
 
+describe('formatCheckAnnotations', () => {
   test('escapes property and data values', () => {
     const tasks = [annotationTask('ts/strict', 'A:B, C%', ['tsconfig.json'])];
     const statuses = makeStatuses([['ts/strict', 'patch']]);

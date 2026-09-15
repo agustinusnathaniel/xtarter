@@ -67,7 +67,9 @@ describe('undo and restore json output', () => {
       }
     });
   });
+});
 
+describe('undo and restore json output', () => {
   test('undo command exits 1 when there is nothing to undo', async () => {
     await withProject(MINIMAL_FILES, async ({ cwd }) => {
       try {
@@ -82,7 +84,9 @@ describe('undo and restore json output', () => {
       }
     });
   });
+});
 
+describe('undo and restore json output', () => {
   test('restore command emits machine-readable payload', async () => {
     await withProject(MINIMAL_FILES, async ({ cwd }) => {
       try {
@@ -127,7 +131,9 @@ describe('undo and restore json output', () => {
       }
     });
   });
+});
 
+describe('undo and restore json output', () => {
   test('restore command exits 1 when no backup exists', async () => {
     await withProject(MINIMAL_FILES, async ({ cwd }) => {
       try {

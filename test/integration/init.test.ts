@@ -5,9 +5,9 @@ import { describe, expect } from 'vite-plus/test';
 import { fixtureDir, fixtureProfile } from '../helpers/project.js';
 import { run } from '../helpers/run.js';
 
-describe('init integration', () => {
-  const allTasks = getAllTasks();
+const allTasks = getAllTasks();
 
+describe('init integration', () => {
   test('runs full init on react-vite-tailwind (biome baseline)', async () => {
     const testDir = fixtureDir('react-vite-tailwind');
     const profile = await fixtureProfile('react-vite-tailwind');
@@ -38,7 +38,9 @@ describe('init integration', () => {
     expect(tasks.some((t) => t.id === 'lint/oxlint')).toBe(true);
     expect(tasks.some((t) => t.id === 'lint/oxfmt')).toBe(true);
   });
+});
 
+describe('init integration', () => {
   test('skips oxlint/oxfmt on vite-plus-biome, applies biome', async () => {
     const profile = await fixtureProfile('vite-plus-biome');
     expect(profile.vitePlus).toBe(true);

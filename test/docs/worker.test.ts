@@ -201,7 +201,9 @@ describe('worker fetch handler', () => {
       'text/markdown; charset=utf-8'
     );
   });
+});
 
+describe('worker fetch handler', () => {
   test('no twin -> fallback to HTML 200 with Vary', async () => {
     const htmlBody = '<html>hello</html>';
     const htmlResponse = new Response(htmlBody, {
@@ -255,7 +257,9 @@ describe('worker fetch handler', () => {
     expect(body).toContain('/llms.txt');
     expect(body).toContain('404');
   });
+});
 
+describe('worker fetch handler', () => {
   test('404 + browser Accept => 404 HTML with Vary', async () => {
     const html404 = '<html>custom 404</html>';
     const fallback404 = new Response(html404, {
@@ -296,7 +300,9 @@ describe('worker fetch handler', () => {
     expect(await res.text()).toBe('<html>404 page</html>');
     expect(fetchMock).toHaveBeenCalled();
   });
+});
 
+describe('worker fetch handler', () => {
   test('non-GET (POST) passthrough without markdown lookup', async () => {
     const ok = new Response('posted', {
       headers: { 'content-type': 'text/html' },

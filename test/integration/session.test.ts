@@ -148,7 +148,9 @@ describe('command session', () => {
       expect(coreMocks.runPreflight).toHaveBeenCalledTimes(2);
     });
   });
+});
 
+describe('command session', () => {
   test('reports cancellation as an outcome with no writes', async () => {
     await withProject(PROJECT_FILES, async ({ cwd }) => {
       const previousCi = process.env.CI;
@@ -172,7 +174,9 @@ describe('command session', () => {
       }
     });
   });
+});
 
+describe('command session', () => {
   test('runs a scripted interactive add as one plan with one manifest', async () => {
     await withProject(PROJECT_FILES, async ({ cwd, readJson }) => {
       const previousCi = process.env.CI;
