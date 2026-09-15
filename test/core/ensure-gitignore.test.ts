@@ -53,7 +53,9 @@ describe('ensureXtarterizeGitignore', () => {
       expect(result).toEqual({ action: 'noop' });
     });
   });
+});
 
+describe('ensureXtarterizeGitignore', () => {
   test('appends header and entry to existing .gitignore missing the entry', async () => {
     await withTempDir('xtarterize-', async (tmpDir) => {
       await fs.writeFile(
@@ -93,7 +95,9 @@ describe('ensureXtarterizeGitignore', () => {
       expect(content).toBe(`\n${HEADER}\n${ENTRY}\n`);
     });
   });
+});
 
+describe('ensureXtarterizeGitignore', () => {
   test('preserves existing content when appending', async () => {
     await withTempDir('xtarterize-', async (tmpDir) => {
       await fs.writeFile(

@@ -49,7 +49,9 @@ describe('loadSelectionConfig', () => {
       expect(selection).toEqual({ only: [], skip: ['ts/incremental'] });
     });
   });
+});
 
+describe('loadSelectionConfig', () => {
   test('standalone file takes precedence over package.json key', async () => {
     await withTempDir('xtarter-selection-prio-', async (tmpDir) => {
       await fs.writeFile(

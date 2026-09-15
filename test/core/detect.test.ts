@@ -132,7 +132,9 @@ describe('detectProject', () => {
     expect(profile.vitePlus).toBe(false);
     expect(profile.hasGit).toBe(false);
   });
+});
 
+describe('detectProject', () => {
   test('detects nextjs correctly', async () => {
     const profile = await fixtureProfile('nextjs');
     expect(profile.framework).toBe('react');
@@ -173,7 +175,9 @@ describe('detectProject', () => {
     expect(profile.vitePlus).toBe(false);
     expect(profile.hasGit).toBe(false);
   });
+});
 
+describe('detectProject', () => {
   test('detects monorepo-turbo correctly', async () => {
     const profile = await fixtureProfile('monorepo-turbo');
     expect(profile.monorepo).toBe(true);
@@ -213,7 +217,9 @@ describe('detectProject', () => {
       expect(profile.monorepoTool).toBeNull();
     });
   });
+});
 
+describe('detectProject', () => {
   test('detects bundlers from config files when dependencies are absent', async () => {
     const cases = [
       ['vite.config.mjs', 'vite'],
@@ -246,7 +252,9 @@ describe('detectProject', () => {
       }
     );
   });
+});
 
+describe('detectProject', () => {
   for (const [name, files, expected] of nodeVersionCases) {
     test(name, async () => {
       await withProject(files, async ({ profile }) => {
@@ -283,7 +291,9 @@ describe('detectProject', () => {
     expect(profile.vitePlus).toBe(true);
     expect(profile.existing.biome).toBe(true);
   });
+});
 
+describe('detectProject', () => {
   for (const [name, files] of eslintCases) {
     test(name, async () => {
       await withProject(files, async ({ profile }) => {
@@ -329,7 +339,9 @@ describe('detectProject', () => {
     expect(profile.existing.biome).toBe(false);
     expect(profile.existing.eslint).toBe(false);
   });
+});
 
+describe('detectProject', () => {
   test('detects .eslintrc.mjs consistently with the doctor legacy check', async () => {
     await withProject(
       {

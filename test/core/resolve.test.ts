@@ -46,35 +46,35 @@ describe('resolveTaskStatuses', () => {
   });
 });
 
-describe('resolveTasks - scope filtering', () => {
-  const rootTask = makeTask({
-    check: 'skip',
-    group: 'test',
-    id: 'test/root',
-    label: 'test/root',
-    scope: 'root',
-  });
-  const packageTask = makeTask({
-    check: 'skip',
-    group: 'test',
-    id: 'test/package',
-    label: 'test/package',
-    scope: 'package',
-  });
-  const bothTask = makeTask({
-    check: 'skip',
-    group: 'test',
-    id: 'test/both',
-    label: 'test/both',
-    scope: 'both',
-  });
-  const noScopeTask = makeTask({
-    check: 'skip',
-    group: 'test',
-    id: 'test/noscope',
-    label: 'test/noscope',
-  });
+const rootTask = makeTask({
+  check: 'skip',
+  group: 'test',
+  id: 'test/root',
+  label: 'test/root',
+  scope: 'root',
+});
+const packageTask = makeTask({
+  check: 'skip',
+  group: 'test',
+  id: 'test/package',
+  label: 'test/package',
+  scope: 'package',
+});
+const bothTask = makeTask({
+  check: 'skip',
+  group: 'test',
+  id: 'test/both',
+  label: 'test/both',
+  scope: 'both',
+});
+const noScopeTask = makeTask({
+  check: 'skip',
+  group: 'test',
+  id: 'test/noscope',
+  label: 'test/noscope',
+});
 
+describe('resolveTasks - scope filtering', () => {
   test('includes all tasks regardless of scope in non-monorepo', () => {
     const profile = makeProfile({ monorepo: false });
     const tasks = resolveTasks(profile, [
@@ -107,7 +107,9 @@ describe('resolveTasks - scope filtering', () => {
       'test/noscope',
     ]);
   });
+});
 
+describe('resolveTasks - scope filtering', () => {
   test('excludes root-scoped tasks inside workspace package', () => {
     const profile = makeProfile({ monorepo: true, workspaceRoot: false });
     const tasks = resolveTasks(profile, [
@@ -134,7 +136,9 @@ describe('resolveTasks - scope filtering', () => {
     // nonApplicableTask excluded by applicable(), rootTask excluded by scope
     expect(tasks).toHaveLength(0);
   });
+});
 
+describe('resolveTasks - scope filtering', () => {
   test('tasks without explicit scope are included everywhere', () => {
     const rootProfile = makeProfile({ monorepo: true, workspaceRoot: true });
     const packageProfile = makeProfile({
