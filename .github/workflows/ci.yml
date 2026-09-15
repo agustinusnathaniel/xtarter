@@ -3,6 +3,11 @@ name: CI
 on:
   push:
     branches: [main]
+    paths-ignore:
+      - "apps/docs/**"
+      - "docs/**"
+      - '.changeset/**'
+      - '.maestria/**'
   pull_request:
     branches: [main]
     paths-ignore:
@@ -26,7 +31,10 @@ jobs:
     steps:
       - uses: actions/checkout@v7
         with:
-          fetch-depth: 0
+          # Shallow clone: check:ci runs every task without git comparison,
+          # so full history is unnecessary. Release keeps fetch-depth 0
+          # because changesets and tags need history.
+          fetch-depth: 1
 
       - uses: ./.github/actions/setup
 
