@@ -1,8 +1,9 @@
 import fs from 'node:fs/promises';
-import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { detectProject, type ProjectProfile } from '@xtarterize/core';
+
+import { withTempDir } from './temp.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -71,14 +72,14 @@ function readProjectFile(cwd: string, relativePath: string): Promise<string> {
 /**
  * Run `fn` against a fresh temp project: an empty `.git` directory plus
  * `files` (objects serialized as compact JSON), profiled via `detectProject`.
- * The directory is removed in `finally`, so failing assertions cannot leak it.
+ * Directory lifetime is owned by `withTempDir`, so failing assertions cannot
+ * leak it.
  */
 export async function withProject<Result>(
   files: ProjectFileMap,
   fn: (context: ProjectContext) => Promise<Result>
 ): Promise<Result> {
-  const cwd = await fs.mkdtemp(path.join(os.tmpdir(), 'xtarterize-project-'));
-  try {
+  return withTempDir('xtarterize-project-', async (cwd) => {
     await fs.mkdir(path.join(cwd, '.git'), { recursive: true });
     for (const [relativePath, content] of Object.entries(files)) {
       const target = path.join(cwd, relativePath);
@@ -89,14 +90,12 @@ export async function withProject<Result>(
       );
     }
 
-    return await fn({
+    return fn({
       cwd,
       profile: await detectProject(cwd),
       readJson: async <Value = unknown>(relativePath: string) =>
         JSON.parse(await readProjectFile(cwd, relativePath)) as Value,
       readText: (relativePath) => readProjectFile(cwd, relativePath),
     });
-  } finally {
-    await fs.rm(cwd, { force: true, recursive: true });
-  }
+  });
 }
