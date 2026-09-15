@@ -59,7 +59,9 @@ describe('defineTask status projection', () => {
       expect(await run(task.dryRun(cwd, profile))).toEqual([]);
     });
   });
+});
 
+describe('defineTask status projection', () => {
   test('jsonMerge: absent is new, changed is patch, unchanged is skip', async () => {
     await withProject({}, async ({ cwd, profile }) => {
       const task = defineTask({
@@ -94,7 +96,9 @@ describe('defineTask status projection', () => {
       expect(await run(task.dryRun(cwd, profile))).toEqual([]);
     });
   });
+});
 
+describe('defineTask status projection', () => {
   test('packageJson: absent is new, changed is patch, unchanged is skip', async () => {
     await withProject({}, async ({ cwd, profile }) => {
       const task = defineTask({
@@ -127,7 +131,9 @@ describe('defineTask status projection', () => {
       expect(await run(task.dryRun(cwd, profile))).toEqual([]);
     });
   });
+});
 
+describe('defineTask status projection', () => {
   test('transform: absent is new, changed is patch, unchanged is skip', async () => {
     await withProject({}, async ({ cwd, profile }) => {
       const task = defineTask({
@@ -264,7 +270,9 @@ describe('defineTask dependencies', () => {
       expect(satisfied).toEqual([]);
     });
   });
+});
 
+describe('defineTask dependencies', () => {
   test('an existing matching file with a missing dependency is patch', async () => {
     await withProject({ 'acme.json': '{}\n' }, async ({ cwd, profile }) => {
       const task = defineTask({
@@ -310,7 +318,9 @@ describe('defineTask dependencies', () => {
       }
     );
   });
+});
 
+describe('defineTask dependencies', () => {
   test('an absent target stays new when a declared dependency is missing', async () => {
     await withProject({}, async ({ cwd, profile }) => {
       const task = defineTask({

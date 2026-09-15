@@ -63,7 +63,9 @@ describe('vscodeTask', () => {
     expect(settings['tailwindCSS.experimental.classRegex']).toBeDefined();
     expect(extensions.recommendations).toContain('bradlc.vscode-tailwindcss');
   });
+});
 
+describe('vscodeTask', () => {
   test('renders byte-identical settings and extensions', async () => {
     const profile = await fixtureProfile('react-vite-tailwind');
     const diffs = await run(
@@ -119,7 +121,9 @@ describe('vscodeTask', () => {
       )
     );
   });
+});
 
+describe('vscodeTask', () => {
   test('additively merges extensions into existing list', async () => {
     await withProject(
       {
@@ -176,7 +180,9 @@ describe('vscodeTask', () => {
       expect(status).toBe('skip');
     });
   });
+});
 
+describe('vscodeTask', () => {
   test('apply writes the expected file', async () => {
     await withProject(
       {

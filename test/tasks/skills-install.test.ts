@@ -74,7 +74,9 @@ describe('skillsInstallTask', () => {
     );
     expect(plan.files).toEqual([]);
   });
+});
 
+describe('skillsInstallTask', () => {
   test('installs react and frontend skills for react projects', async () => {
     const commands = await fixtureInstallOutput('react-vite-tailwind');
     // React skills
@@ -116,7 +118,9 @@ describe('skillsInstallTask', () => {
     expect(commands).not.toContain('react-dev');
     expect(commands).not.toContain('react-useeffect');
   });
+});
 
+describe('skillsInstallTask', () => {
   test('installs nextjs skills for nextjs projects', async () => {
     const commands = await fixtureInstallOutput('nextjs');
     // Next.js skills
@@ -151,7 +155,9 @@ describe('skillsInstallTask', () => {
     expect(commands).toContain('antd');
     expect(commands).toContain('ant-design/ant-design-cli');
   });
+});
 
+describe('skillsInstallTask', () => {
   test('installs heroui-react skill for projects with @heroui/react', async () => {
     const commands = await fixtureInstallOutput('react-ui-libraries');
     expect(commands).toContain('heroui-react');
@@ -179,7 +185,9 @@ describe('skillsInstallTask', () => {
     expect(commands).not.toContain('chakra-ui-builder');
     expect(commands).not.toContain('chakra-ui-refactor');
   });
+});
 
+describe('skillsInstallTask', () => {
   test('returns new for node-only projects with general skills', async () => {
     const profile = await fixtureProfile('node-only');
     if (!skillsInstallTask.applicable(profile)) {
@@ -210,7 +218,9 @@ describe('skillsInstallTask', () => {
       expect(status).toBe('patch');
     });
   });
+});
 
+describe('skillsInstallTask', () => {
   test('batches skills from the same source into a single command', async () => {
     const commands = await fixtureInstallOutput('react-native-expo');
     // expo/skills has 10 skills - they should appear in a single command

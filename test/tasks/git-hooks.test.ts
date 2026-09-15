@@ -57,7 +57,9 @@ describe('gitHooksTask', () => {
     const prePush = diffs.find((d) => d.filepath.includes('pre-push'));
     expect(prePush?.after).toContain('pnpm run check:turbo');
   });
+});
 
+describe('gitHooksTask', () => {
   test('returns patch when hooks exist but prepare script is missing', async () => {
     await withProject(
       {
@@ -101,7 +103,9 @@ describe('gitHooksTask', () => {
       }
     );
   });
+});
 
+describe('gitHooksTask', () => {
   for (const [name, dep, version] of prepareCommitMsgCases) {
     test(name, async () => {
       await withProject(

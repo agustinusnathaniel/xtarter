@@ -166,7 +166,9 @@ describe('releaseWorkflowTask', () => {
     );
     expect(status).toBe('new');
   });
+});
 
+describe('releaseWorkflowTask', () => {
   test('returns skip when existing workflow matches rendered template', async () => {
     await withProject(
       { 'package.json': JSON.stringify({ name: 'test-pkg', private: true }) },
@@ -218,7 +220,9 @@ jobs:
       }
     );
   });
+});
 
+describe('releaseWorkflowTask', () => {
   test('returns conflict when changeset project has non-changeset release job', async () => {
     const existing = `name: Release
 

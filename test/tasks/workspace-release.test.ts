@@ -110,7 +110,9 @@ describe('pnpmWorkspaceTask', () => {
       }
     );
   });
+});
 
+describe('pnpmWorkspaceTask', () => {
   test('generates packages definition for monorepo pnpm project', async () => {
     await withTempDir('xtarterize-pnpm-monorepo-', async (tmpDir) => {
       await fs.writeFile(
@@ -147,7 +149,9 @@ describe('pnpmWorkspaceTask', () => {
       }
     );
   });
+});
 
+describe('pnpmWorkspaceTask', () => {
   test('apply writes packages definition for monorepo', async () => {
     await withTempDir('xtarterize-pnpm-apply-monorepo-', async (tmpDir) => {
       await fs.writeFile(
@@ -193,7 +197,9 @@ describe('pnpmWorkspaceTask', () => {
       }, content);
     });
   }
+});
 
+describe('pnpmWorkspaceTask', () => {
   test('inserts missing globs and preserves the rest of the file', async () => {
     const content = [
       '# workspace configuration',
@@ -229,7 +235,9 @@ describe('pnpmWorkspaceTask', () => {
       expect(await run(pnpmWorkspaceTask.dryRun(cwd, profile))).toEqual([]);
     }, content);
   });
+});
 
+describe('pnpmWorkspaceTask', () => {
   test('inserts both globs into an empty packages list', async () => {
     const content = [
       'packages:',
@@ -278,7 +286,9 @@ describe('pnpmWorkspaceTask', () => {
       await expect(readWorkspace(cwd)).resolves.toBe(unquotedExpected);
     }, unquoted);
   });
+});
 
+describe('pnpmWorkspaceTask', () => {
   for (const [name, content] of conflictWorkspaceCases) {
     test(name, async () => {
       await withPnpmProject(async ({ cwd, profile }) => {
@@ -319,7 +329,9 @@ describe('pnpmWorkspaceTask', () => {
       expect(await run(pnpmWorkspaceTask.dryRun(cwd, profile))).toEqual([]);
     }, content);
   });
+});
 
+describe('pnpmWorkspaceTask', () => {
   test('inserts both globs when the packages key ends the file', async () => {
     const content = 'packages:';
     const expected = ['packages:', "  - 'apps/*'", "  - 'packages/*'", ''].join(
