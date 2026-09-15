@@ -21,8 +21,6 @@ permissions:
   packages: write
   id-token: write
   pull-requests: write
-  # Read CI runs and their dist artifacts for build reuse.
-  actions: read
 
 jobs:
   release:
@@ -38,34 +36,10 @@ jobs:
 
       - uses: ./.github/actions/setup
 
-      # Reuse the dist CI already built for this SHA when available;
-      # otherwise fall back to a local build. Restored paths (dist/,
-      # .tsbuildinfo) are gitignored, so the changesets tree is unaffected.
-      - name: Find CI run for this SHA
-        id: ci-run
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          run_id="$(gh run list --workflow ci.yml --commit "$GITHUB_SHA" --status success --limit 1 --json databaseId --jq '.[0].databaseId // empty')"
-          echo "run-id=$run_id" >> "$GITHUB_OUTPUT"
-
-      - name: Download dist artifact from CI
-        if: steps.ci-run.outputs.run-id != ''
-        continue-on-error: true
-        uses: actions/download-artifact@v4
-        with:
-          name: dist
-          path: .
-          run-id: ${{ steps.ci-run.outputs.run-id }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Build (fallback when no CI artifact)
-        run: |
-          if [ -f apps/xtarterize/dist/index.mjs ] && [ -f apps/create-xtarter-app/dist/cli.mjs ]; then
-            echo "Reusing dist from CI artifact"
-          else
-            pnpm build:ci
-          fi
+      # Fresh build is intentional: release never reuses artifacts from
+      # other runs, so each publish reflects the exact checked-out tree.
+      - name: Build
+        run: pnpm build:ci
 
       - name: Create Release Pull Request or Publish
         if: github.ref == 'refs/heads/main'

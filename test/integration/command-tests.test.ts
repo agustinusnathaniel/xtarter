@@ -4,8 +4,8 @@
  * Fast-leg note: when `XTARTERIZE_SKIP_REAL_INSTALL=1` is set (PR fast leg),
  * the app runtime (`apps/xtarterize/src/runtime.ts`) swaps the real
  * `DepsInstaller` for a no-op so these suites exercise planning and file
- * writes without real network installs. The nightly and integration matrix
- * legs leave the env unset to keep real-install fidelity.
+ * writes without real network installs. The integration matrix leg
+ * leaves the env unset to keep real-install fidelity.
  */
 import fs from 'node:fs/promises';
 import path from 'node:path';
@@ -424,7 +424,7 @@ describe('add command', () => {
   // Requires real installs: under XTARTERIZE_SKIP_REAL_INSTALL the registry
   // mock below does not intercept the app's task resolution (real tasks
   // execute; observed live skills installs), so stubbed runs apply cleanly
-  // and exit 0. Covered by the integration-matrix and nightly legs instead.
+  // and exit 0. Covered by the integration-matrix leg instead.
   test.skipIf(process.env.XTARTERIZE_SKIP_REAL_INSTALL === '1')(
     'reports failed task checks in JSON ok field instead of claiming success',
     async () => {

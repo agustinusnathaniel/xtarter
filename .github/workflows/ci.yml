@@ -64,6 +64,9 @@ jobs:
       - name: Typecheck and build
         run: pnpm build:ci
 
+      # Intra-CI only: separate runners cannot share the filesystem, so the
+      # bin-spawn integration leg downloads this dist. Release does its own
+      # fresh build and never reads this artifact.
       - name: Upload dist artifact
         uses: actions/upload-artifact@v4
         with:

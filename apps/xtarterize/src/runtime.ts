@@ -17,8 +17,8 @@ export const AppLayer = Layer.mergeAll(
 
 /**
  * No-op installer used when `XTARTERIZE_SKIP_REAL_INSTALL=1` is set.
- * The PR fast leg sets this to avoid real network installs; the nightly and
- * integration matrix legs leave it unset to keep real-install fidelity.
+ * The PR fast leg sets this to avoid real network installs; the
+ * integration matrix leg leaves it unset to keep real-install fidelity.
  */
 const SkipInstallLayer = Layer.succeed(DepsInstaller, {
   install: () => Effect.void,
