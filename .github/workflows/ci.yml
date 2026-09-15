@@ -23,20 +23,103 @@ concurrency:
 permissions:
   contents: read
 
+# Runner note (follow-up): staying on ubuntu-latest by default. If the
+# integration shards stay slow after this split, trial a 4-core larger
+# runner for the test-integration job only and compare wall-clock times.
 jobs:
-  check-and-test:
-    name: Check and Test
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # Full history: --changed compares against the base branch.
+          fetch-depth: 0
+
+      - uses: ./.github/actions/setup
+
+      - name: Lint changed files (PR)
+        if: github.event_name == 'pull_request'
+        run: pnpm ultracite check --changed
+
+      - name: Lint all files (main push)
+        if: github.event_name != 'pull_request'
+        run: pnpm ultracite:check
+
+  build-typecheck:
+    name: Build + Typecheck
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
         with:
-          # Shallow clone: check:ci runs every task without git comparison,
-          # so full history is unnecessary. Release keeps fetch-depth 0
-          # because changesets and tags need history.
+          # Shallow clone: typecheck/build hash file contents, not history.
           fetch-depth: 1
 
       - uses: ./.github/actions/setup
 
-      - name: Check (lint + typecheck + build + test + verify:shebangs)
-        run: pnpm check:ci
+      # Runs turbo typecheck then build (build dependsOn typecheck);
+      # postbuild:ci also runs verify:shebangs on the fresh dist output.
+      - name: Typecheck and build
+        run: pnpm build:ci
+
+      - name: Upload dist artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: |
+            packages/core/dist
+            packages/patchers/dist
+            packages/tasks/dist
+            apps/xtarterize/dist
+            apps/create-xtarter-app/dist
+          if-no-files-found: error
+          retention-days: 7
+
+  test-unit:
+    name: Unit tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      # Fast leg: stub real package installs (see apps/xtarterize/src/runtime.ts).
+      XTARTERIZE_SKIP_REAL_INSTALL: '1'
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 1
+
+      - uses: ./.github/actions/setup
+
+      # Fast suites only; integration (real installs, bin spawn) has its own job.
+      - name: Unit suites (core, tasks, patchers, ui, docs)
+        run: pnpm exec vp test test/core test/tasks test/patchers test/ui test/docs
+
+  test-integration:
+    name: Integration tests (shard ${{ matrix.shard }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: [build-typecheck]
+    # Heavy real-install leg: skip on draft PRs, run on ready PRs and main.
+    if: github.event_name != 'pull_request' || github.event.pull_request.draft == false
+    strategy:
+      fail-fast: true
+      matrix:
+        shard: ['1/2', '2/2']
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 1
+
+      - uses: ./.github/actions/setup
+
+      # Reuse the dist built once in build-typecheck (bin-spawn suite needs it).
+      - name: Download dist artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
+          path: .
+
+      # No XTARTERIZE_SKIP_REAL_INSTALL here: real-install fidelity.
+      - name: Integration suite shard ${{ matrix.shard }}
+        run: pnpm exec vp test test/integration --shard=${{ matrix.shard }}
