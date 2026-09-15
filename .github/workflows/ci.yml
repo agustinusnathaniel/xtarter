@@ -25,18 +25,15 @@ permissions:
 
 jobs:
   check-and-test:
-    name: Check and Test
+    name: Check and test
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
         with:
-          # Shallow clone: check:ci runs every task without git comparison,
-          # so full history is unnecessary. Release keeps fetch-depth 0
-          # because changesets and tags need history.
           fetch-depth: 1
 
       - uses: ./.github/actions/setup
 
-      - name: Check (lint + typecheck + build + test + verify:shebangs)
+      - name: Check and test
         run: pnpm check:ci

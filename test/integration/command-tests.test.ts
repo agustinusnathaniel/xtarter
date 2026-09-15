@@ -418,19 +418,17 @@ describe('add command', () => {
       try {
         // A misbehaving task whose check() dies must surface as ok:false in the
         // emitted JSON, agreeing with the exit code.
-        mockGetAllTasks.mockImplementationOnce(() =>
-          Effect.succeed([
-            {
-              applicable: () => true,
-              apply: () => Effect.void,
-              check: () => Effect.die(new Error('kaboom')),
-              dryRun: () => Effect.succeed([]),
-              group: 'test',
-              id: 'boom/failing',
-              label: 'Boom failing',
-            } as never,
-          ])
-        );
+        mockGetAllTasks.mockImplementationOnce(() => [
+          {
+            applicable: () => true,
+            apply: () => Effect.void,
+            check: () => Effect.die(new Error('kaboom')),
+            dryRun: () => Effect.succeed([]),
+            group: 'test',
+            id: 'boom/failing',
+            label: 'Boom failing',
+          } as never,
+        ]);
 
         const { logs } = await captureConsole(async () => {
           await addCommand.run?.({

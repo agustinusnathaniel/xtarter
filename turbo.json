@@ -3,18 +3,24 @@
   "tasks": {
     "build": {
       "dependsOn": ["^build", "typecheck"],
+      "inputs": ["src/**", "tsconfig.json", "package.json", "vite.config.ts"],
       "outputs": ["dist/**"]
     },
     "@xtarter/create#build": {
       "outputs": [],
       "cache": false
     },
+    "@xtarter/docs#typecheck": {
+      "outputs": []
+    },
     "dev": {
       "persistent": true,
       "cache": false
     },
     "typecheck": {
-      "dependsOn": ["^build"]
+      "dependsOn": ["^build"],
+      "inputs": ["src/**", "tsconfig.json", "package.json"],
+      "outputs": [".tsbuildinfo"]
     },
     "//#ultracite:check": {
       "cache": false
@@ -26,15 +32,14 @@
       "dependsOn": ["^build"]
     },
     "//#test": {
-      "dependsOn": [
-        "^build",
-        "@xtarterize/core#build",
-        "@xtarterize/patchers#build",
-        "@xtarterize/tasks#build",
-        "create-xtarter-app#build",
-        "xtarterize#build"
+      "dependsOn": ["xtarterize#build", "create-xtarter-app#build"],
+      "inputs": [
+        "vite.config.ts",
+        "test/",
+        "packages/*/src/**",
+        "apps/*/src/**",
+        "!test/fixtures/**/.xtarterize/**"
       ],
-      "inputs": ["vite.config.ts", "test/", "!test/fixtures/**/.xtarterize/**"],
       "outputs": ["node_modules/.vite/vitest/*"]
     }
   }
