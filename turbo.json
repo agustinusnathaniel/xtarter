@@ -32,12 +32,6 @@
       "dependsOn": ["^build"]
     },
     "//#test": {
-      // Single-job correctness (option A over a decoupled test/test:bin
-      // split): the bin-spawn suites execute dist output (sigint needs
-      // xtarterize dist, create-xtarter-app-cli needs its dist), so test
-      // waits for both app builds. Decoupling would race the build on one
-      // runner and double-run the bin files. Lib dists arrive transitively
-      // via each app build's ^build edge.
       "dependsOn": ["xtarterize#build", "create-xtarter-app#build"],
       "inputs": [
         "vite.config.ts",
