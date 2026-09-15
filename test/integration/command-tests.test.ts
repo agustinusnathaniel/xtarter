@@ -1,20 +1,26 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { addCommand } from '@xtarterize/app/commands/add/index.js';
-import { initCommand } from '@xtarterize/app/commands/init.js';
+import { addCommand, addProgram } from '@xtarterize/app/commands/add/index.js';
+import { initCommand, initProgram } from '@xtarterize/app/commands/init.js';
 import { restoreCommand } from '@xtarterize/app/commands/restore.js';
 import { syncCommand } from '@xtarterize/app/commands/sync.js';
 import { undoCommand } from '@xtarterize/app/commands/undo.js';
+import { Prompter } from '@xtarterize/app/ui/prompter.js';
 import {
   backupFile,
   readRunManifest,
   writeRunManifest,
 } from '@xtarterize/core';
-import { Effect } from 'effect';
+import { Effect, Layer } from 'effect';
 import { describe, expect, vi } from 'vite-plus/test';
 
 import { captureConsole } from '../helpers/console.js';
 import { type ProjectFileMap, withProject } from '../helpers/project.js';
+import {
+  recordingDepsInstaller,
+  recordingProcessRunner,
+  runWith,
+} from '../helpers/run.js';
 
 const { mockGetAllTasks } = vi.hoisted(() => ({
   mockGetAllTasks: vi.fn(),
@@ -227,11 +233,21 @@ describe('init command', () => {
         'tsconfig.json': '{"compilerOptions":{"strict":false}}\n',
       },
       async ({ cwd, readJson }) => {
+        // Stub installs: conflict file writes still run, only the nypm
+        // batch and skills dlx spawns are skipped.
+        const installer = recordingDepsInstaller();
+        const runner = recordingProcessRunner();
+        const layer = Layer.mergeAll(
+          installer.layer,
+          runner.layer,
+          Prompter.layer
+        );
         process.exitCode = 0;
         try {
-          await initCommand.run?.({
-            args: { cwd, includeConflicts: true, yes: true },
-          } as never);
+          await runWith(
+            layer,
+            initProgram({ cwd, includeConflicts: true, yes: true } as never)
+          );
 
           // Applying the conflict must add the missing strict options.
           // defu preserves the user's `strict: false`, so assert on a key
@@ -240,6 +256,7 @@ describe('init command', () => {
             compilerOptions: { noUnusedLocals?: boolean };
           }>('tsconfig.json');
           expect(tsconfig.compilerOptions.noUnusedLocals).toBe(true);
+          expect(installer.calls.length).toBe(1);
         } finally {
           process.exitCode = 0;
         }
@@ -317,8 +334,8 @@ describe('add command', () => {
   test('applies conflicting tasks when --include-conflicts is passed with --all', async () => {
     // A TS-only fixture trims `add --all` to a smaller task set than
     // the react+vite fixture (no vite-plugin tasks), but release/
-    // quality tasks (czg, knip, ...) still install dev deps, so the
-    // test carries a 180s timeout below for cold-cache installs.
+    // quality tasks (czg, knip, ...) still request dev deps. Installs are
+    // stubbed, so the test asserts file outcomes plus the batched request.
     await withProject(
       {
         'package.json': {
@@ -330,16 +347,24 @@ describe('add command', () => {
         'tsconfig.json': '{"compilerOptions":{"strict":false}}\n',
       },
       async ({ cwd, readJson }) => {
+        const installer = recordingDepsInstaller();
+        const runner = recordingProcessRunner();
+        const layer = Layer.mergeAll(
+          installer.layer,
+          runner.layer,
+          Prompter.layer
+        );
         process.exitCode = 0;
         try {
-          await addCommand.run?.({
-            args: {
+          await runWith(
+            layer,
+            addProgram({
               all: true,
               cwd,
               includeConflicts: true,
               quiet: true,
-            },
-          } as never);
+            } as never)
+          );
 
           // Do not assert exitCode: `add --all` applies every applicable
           // task, and unrelated tasks may fail on a minimal fixture (e.g.
@@ -353,16 +378,17 @@ describe('add command', () => {
             compilerOptions: { noUnusedLocals?: boolean };
           }>('tsconfig.json');
           expect(tsconfig.compilerOptions.noUnusedLocals).toBe(true);
+          expect(installer.calls.length).toBe(1);
+          expect(installer.calls[0]?.[1].length).toBeGreaterThan(0);
         } finally {
           process.exitCode = 0;
         }
       }
     );
     // add --all applies every applicable task, including release/quality
-    // tasks that install dev dependencies (czg, commit-and-tag-version,
-    // knip, ...). Cold-cache installs and shared pnpm-store contention
-    // push this past 120s; 240s matches the suite's heavy-test pattern
-    // (mirrors the init --yes --include-conflicts test above).
+    // tasks that request dev dependencies (czg, commit-and-tag-version,
+    // knip, ...). Installs are stubbed here; the live nypm flow stays
+    // covered by the single-task `add release/czg` idempotency test below.
   }, 240_000);
 });
 

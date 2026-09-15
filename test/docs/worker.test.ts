@@ -3,7 +3,7 @@ import worker, {
   mergeVary,
   wantsMarkdown,
 } from '@docs/worker/index.js';
-import { describe, expect, vi } from 'vitest';
+import { describe, expect, vi } from 'vite-plus/test';
 
 function createEnv(entries: Array<[string, Response]>, fallback?: Response) {
   const map = new Map(entries);

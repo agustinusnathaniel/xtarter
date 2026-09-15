@@ -41,6 +41,34 @@
         "!test/fixtures/**/.xtarterize/**"
       ],
       "outputs": ["node_modules/.vite/vitest/*"]
+    },
+    "//#test:integration": {
+      "dependsOn": ["xtarterize#build", "create-xtarter-app#build"],
+      "inputs": [
+        "vite.config.ts",
+        "test/integration/**",
+        "test/helpers/**",
+        "packages/*/src/**",
+        "apps/*/src/**",
+        "!test/fixtures/**/.xtarterize/**"
+      ],
+      "outputs": ["node_modules/.vite/vitest/*"]
+    },
+    "//#test:unit": {
+      "dependsOn": ["xtarterize#build", "create-xtarter-app#build"],
+      "inputs": [
+        "vite.config.ts",
+        "test/core/**",
+        "test/patchers/**",
+        "test/tasks/**",
+        "test/docs/**",
+        "test/ui/**",
+        "test/helpers/**",
+        "packages/*/src/**",
+        "apps/*/src/**",
+        "!test/fixtures/**/.xtarterize/**"
+      ],
+      "outputs": ["node_modules/.vite/vitest/*"]
     }
   }
 }

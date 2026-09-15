@@ -1,10 +1,17 @@
-import { addCommand } from '@xtarterize/app/commands/add/index.js';
-import { initCommand } from '@xtarterize/app/commands/init.js';
+import { addCommand, addProgram } from '@xtarterize/app/commands/add/index.js';
+import { initCommand, initProgram } from '@xtarterize/app/commands/init.js';
 import { syncCommand } from '@xtarterize/app/commands/sync.js';
+import { Prompter } from '@xtarterize/app/ui/prompter.js';
+import { Layer } from 'effect';
 import { describe, expect } from 'vite-plus/test';
 
 import { captureConsole, captureJson } from '../../helpers/console.js';
 import { type ProjectFileMap, withProject } from '../../helpers/project.js';
+import {
+  recordingDepsInstaller,
+  recordingProcessRunner,
+  runWith,
+} from '../../helpers/run.js';
 
 const PROJECT_FILES: ProjectFileMap = {
   'package.json': {
@@ -77,11 +84,23 @@ describe('init/sync/add json output', () => {
 describe('init/sync/add json output', () => {
   test('init --yes --json emits an apply result payload', async () => {
     await withProject(PROJECT_FILES, async ({ cwd }) => {
+      // Stub installs: file writes still run, so the payload shape stays
+      // identical, but no nypm/pnpm spawn, dlx, or network happens. Both
+      // DepsInstaller (nypm batch) and ProcessRunner (skills dlx) are
+      // stubbed; the live nypm flow stays covered by single-task add tests.
+      const installer = recordingDepsInstaller();
+      const runner = recordingProcessRunner();
+      const layer = Layer.mergeAll(
+        installer.layer,
+        runner.layer,
+        Prompter.layer
+      );
       try {
         const output = (await captureJson(async () => {
-          await initCommand.run?.({
-            args: { cwd, json: true, yes: true },
-          } as never);
+          await runWith(
+            layer,
+            initProgram({ cwd, json: true, yes: true } as never)
+          );
         })) as {
           ok: boolean;
           applied: number;
@@ -95,6 +114,10 @@ describe('init/sync/add json output', () => {
         expect(typeof output.applied).toBe('number');
         expect(typeof output.skipped).toBe('number');
         expect(Array.isArray(output.errors)).toBe(true);
+        // Batching contract: one install call carrying the collected deps.
+        expect(installer.calls.length).toBe(1);
+        expect(installer.calls[0]?.[0]).toBe(cwd);
+        expect(installer.calls[0]?.[1].length).toBeGreaterThan(0);
       } finally {
         process.exitCode = 0;
       }
@@ -255,11 +278,19 @@ describe('init/sync/add json output', () => {
 describe('init/sync/add json output', () => {
   test('add --all --format json emits a summary payload', async () => {
     await withProject(PROJECT_FILES, async ({ cwd }) => {
+      const installer = recordingDepsInstaller();
+      const runner = recordingProcessRunner();
+      const layer = Layer.mergeAll(
+        installer.layer,
+        runner.layer,
+        Prompter.layer
+      );
       try {
         const output = (await captureJson(async () => {
-          await addCommand.run?.({
-            args: { all: true, cwd, format: 'json', quiet: true },
-          } as never);
+          await runWith(
+            layer,
+            addProgram({ all: true, cwd, format: 'json', quiet: true } as never)
+          );
         })) as {
           ok: boolean;
           applied: number;
@@ -271,6 +302,8 @@ describe('init/sync/add json output', () => {
         expect(typeof output.applied).toBe('number');
         expect(typeof output.skipped).toBe('number');
         expect(Array.isArray(output.errors)).toBe(true);
+        expect(installer.calls.length).toBe(1);
+        expect(installer.calls[0]?.[1].length).toBeGreaterThan(0);
       } finally {
         process.exitCode = 0;
       }
