@@ -1,5 +1,12 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { captureConsole } from '@test/helpers/console.js';
+import { type ProjectFileMap, withProject } from '@test/helpers/project.js';
+import {
+  recordingDepsInstaller,
+  recordingProcessRunner,
+  runWith,
+} from '@test/helpers/run.js';
 import { addCommand, addProgram } from '@xtarterize/app/commands/add/index.js';
 import { initCommand, initProgram } from '@xtarterize/app/commands/init.js';
 import { restoreCommand } from '@xtarterize/app/commands/restore.js';
@@ -13,14 +20,6 @@ import {
 } from '@xtarterize/core';
 import { Effect, Layer } from 'effect';
 import { describe, expect, vi } from 'vite-plus/test';
-
-import { captureConsole } from '../helpers/console.js';
-import { type ProjectFileMap, withProject } from '../helpers/project.js';
-import {
-  recordingDepsInstaller,
-  recordingProcessRunner,
-  runWith,
-} from '../helpers/run.js';
 
 const { mockGetAllTasks } = vi.hoisted(() => ({
   mockGetAllTasks: vi.fn(),

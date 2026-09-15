@@ -1,5 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { captureJson } from '@test/helpers/console.js';
+import { type ProjectFileMap, withProject } from '@test/helpers/project.js';
 import { checkCommand } from '@xtarterize/app/commands/check.js';
 import { listCommand } from '@xtarterize/app/commands/list.js';
 import { queryCommand } from '@xtarterize/app/commands/query.js';
@@ -7,9 +9,6 @@ import { restoreCommand } from '@xtarterize/app/commands/restore.js';
 import { undoCommand } from '@xtarterize/app/commands/undo.js';
 import { backupFile, writeRunManifest } from '@xtarterize/core';
 import { describe, expect } from 'vite-plus/test';
-
-import { captureJson } from '../../helpers/console.js';
-import { type ProjectFileMap, withProject } from '../../helpers/project.js';
 
 const MINIMAL_FILES: ProjectFileMap = {
   'package.json': {

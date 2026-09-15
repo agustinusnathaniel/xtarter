@@ -1,12 +1,11 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { fixtureDir } from '@test/helpers/project.js';
+import { processRunnerLayer, runWith } from '@test/helpers/run.js';
+import { withTempDir } from '@test/helpers/temp.js';
 import { ProcessError, runDiagnostics } from '@xtarterize/core';
 import { Effect } from 'effect';
 import { describe, expect } from 'vite-plus/test';
-
-import { fixtureDir } from '../helpers/project.js';
-import { processRunnerLayer, runWith } from '../helpers/run.js';
-import { withTempDir } from '../helpers/temp.js';
 
 type DiagnosticGroupId = 'configuration' | 'environment' | 'project' | 'tools';
 

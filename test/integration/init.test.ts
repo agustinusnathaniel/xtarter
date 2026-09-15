@@ -1,9 +1,8 @@
+import { fixtureDir, fixtureProfile } from '@test/helpers/project.js';
+import { run } from '@test/helpers/run.js';
 import { resolveTaskStatuses, resolveTasks } from '@xtarterize/core';
 import { getAllTasks } from '@xtarterize/tasks';
 import { describe, expect } from 'vite-plus/test';
-
-import { fixtureDir, fixtureProfile } from '../helpers/project.js';
-import { run } from '../helpers/run.js';
 
 const allTasks = getAllTasks();
 

@@ -1,5 +1,8 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { makeTask } from '@test/helpers/factories.js';
+import { withProject } from '@test/helpers/project.js';
+import { runWith } from '@test/helpers/run.js';
 import type {
   ApplyPlan,
   ApplyResult,
@@ -17,10 +20,6 @@ import {
 } from '@xtarterize/core';
 import { Effect, Layer } from 'effect';
 import { describe, expect, vi } from 'vite-plus/test';
-
-import { makeTask } from '../helpers/factories.js';
-import { withProject } from '../helpers/project.js';
-import { runWith } from '../helpers/run.js';
 
 const mockInstall = vi.fn<
   (

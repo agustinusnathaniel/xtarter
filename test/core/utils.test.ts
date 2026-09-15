@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
+import { withTempDir } from '@test/helpers/temp.js';
 import {
   backupFile,
   findConfigFile,
@@ -14,8 +15,6 @@ import {
   validateInvocation,
 } from '@xtarterize/core';
 import { describe, expect } from 'vite-plus/test';
-
-import { withTempDir } from '../helpers/temp.js';
 
 const cliArgsDef = {
   cwd: { type: 'string' },

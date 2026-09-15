@@ -1,10 +1,9 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { run } from '@test/helpers/run.js';
+import { withTempDir } from '@test/helpers/temp.js';
 import { applyTaskSelection, loadSelectionConfig } from '@xtarterize/core';
 import { describe, expect } from 'vite-plus/test';
-
-import { run } from '../helpers/run.js';
-import { withTempDir } from '../helpers/temp.js';
 
 describe('loadSelectionConfig', () => {
   test('returns empty selection when no config file exists', async () => {

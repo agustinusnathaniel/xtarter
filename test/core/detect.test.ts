@@ -1,5 +1,12 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import {
+  fixtureProfile,
+  type ProjectFileMap,
+  withProject,
+} from '@test/helpers/project.js';
+import { run } from '@test/helpers/run.js';
+import { withTempDir } from '@test/helpers/temp.js';
 import { detectProject, runDiagnostics } from '@xtarterize/core';
 import { describe, expect } from 'vite-plus/test';
 
@@ -13,13 +20,6 @@ import {
   rootFileInputByBasename,
   workspacePackageDirs,
 } from '../../packages/core/src/detect/registry/index.js';
-import {
-  fixtureProfile,
-  type ProjectFileMap,
-  withProject,
-} from '../helpers/project.js';
-import { run } from '../helpers/run.js';
-import { withTempDir } from '../helpers/temp.js';
 
 const nodeVersionCases: Array<
   [name: string, files: ProjectFileMap, expected: string]

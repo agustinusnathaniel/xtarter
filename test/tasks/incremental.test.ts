@@ -1,9 +1,9 @@
+import { fixtureDir, fixtureProfile } from '@test/helpers/project.js';
+import { run } from '@test/helpers/run.js';
 import { getAllTasks } from '@xtarterize/tasks';
 import { describe, expect } from 'vite-plus/test';
 
 import { incrementalTask } from '../../packages/tasks/src/ts/incremental.js';
-import { fixtureDir, fixtureProfile } from '../helpers/project.js';
-import { run } from '../helpers/run.js';
 
 describe('incrementalTask', () => {
   test('is applicable to TS projects only', async () => {

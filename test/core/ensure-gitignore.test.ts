@@ -1,9 +1,8 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { withTempDir } from '@test/helpers/temp.js';
 import { ensureXtarterizeGitignore } from '@xtarterize/core';
 import { describe, expect } from 'vite-plus/test';
-
-import { withTempDir } from '../helpers/temp.js';
 
 const HEADER = '# xtarterize internal artifacts';
 const ENTRY = '/.xtarterize/';

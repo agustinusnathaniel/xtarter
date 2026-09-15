@@ -1,11 +1,11 @@
+import { fixtureDir, fixtureProfile } from '@test/helpers/project.js';
+import { run } from '@test/helpers/run.js';
 import { describe, expect } from 'vite-plus/test';
 
 import { autoUpdateWorkflowTask } from '../../packages/tasks/src/ci/auto-update.js';
 import { ciWorkflowTask } from '../../packages/tasks/src/ci/ci.js';
 import { releaseWorkflowTask } from '../../packages/tasks/src/ci/release.js';
 import { renovateTask } from '../../packages/tasks/src/deps/renovate.js';
-import { fixtureDir, fixtureProfile } from '../helpers/project.js';
-import { run } from '../helpers/run.js';
 
 describe('ciWorkflowTask', () => {
   test('renders package-manager-aware quality steps', async () => {

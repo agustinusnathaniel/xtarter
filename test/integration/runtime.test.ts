@@ -1,5 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { withTempDir } from '@test/helpers/temp.js';
 import { queryCommand } from '@xtarterize/app/commands/query.js';
 import { abortCliProgram, runCliProgram } from '@xtarterize/app/runtime.js';
 import { Effect } from 'effect';
@@ -11,8 +12,6 @@ import {
   test,
   vi,
 } from 'vite-plus/test';
-
-import { withTempDir } from '../helpers/temp.js';
 
 const coreMocks = vi.hoisted(() => ({
   logError: vi.fn(),

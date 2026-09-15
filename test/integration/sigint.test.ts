@@ -22,9 +22,8 @@ import path from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
+import { withTempDir } from '@test/helpers/temp.js';
 import { describe, expect, test } from 'vite-plus/test';
-
-import { withTempDir } from '../helpers/temp.js';
 
 const execFileAsync = promisify(execFile);
 

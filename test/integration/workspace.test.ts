@@ -1,7 +1,6 @@
+import { withProject } from '@test/helpers/project.js';
+import { run } from '@test/helpers/run.js';
 import { describe, expect } from 'vite-plus/test';
-
-import { withProject } from '../helpers/project.js';
-import { run } from '../helpers/run.js';
 
 describe('pnpm workspace root', () => {
   test('detects workspace root and handles task apply correctly', async () => {

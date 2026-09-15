@@ -1,12 +1,16 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import {
+  fixtureDir,
+  fixtureProfile,
+  withProject,
+} from '@test/helpers/project.js';
+import { run } from '@test/helpers/run.js';
 import { planTasks } from '@xtarterize/core';
 import { describe, expect } from 'vite-plus/test';
 
 import { viteCheckerTask } from '../../packages/tasks/src/vite/checker.js';
 import { viteVisualizerTask } from '../../packages/tasks/src/vite/visualizer.js';
-import { fixtureDir, fixtureProfile, withProject } from '../helpers/project.js';
-import { run } from '../helpers/run.js';
 
 describe('viteCheckerTask', () => {
   test('is applicable to vite projects only', async () => {

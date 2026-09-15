@@ -1,5 +1,11 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import {
+  fixtureDir,
+  fixtureProfile,
+  withProject,
+} from '@test/helpers/project.js';
+import { run } from '@test/helpers/run.js';
 import { describe, expect } from 'vite-plus/test';
 
 import { releaseWorkflowTask } from '../../packages/tasks/src/ci/release.js';
@@ -7,8 +13,6 @@ import { catVersionTask } from '../../packages/tasks/src/release/cat-version.js'
 import { commitlintTask } from '../../packages/tasks/src/release/commitlint.js';
 import { czgTask } from '../../packages/tasks/src/release/czg.js';
 import { renderReleaseWorkflow } from '../../packages/tasks/src/templates/workflows/release-yml.js';
-import { fixtureDir, fixtureProfile, withProject } from '../helpers/project.js';
-import { run } from '../helpers/run.js';
 
 describe('commitlintTask', () => {
   test('is applicable to all projects', async () => {

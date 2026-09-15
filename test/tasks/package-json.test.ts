@@ -1,12 +1,12 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { withTempDir } from '@test/helpers/temp.js';
 import { describe, expect } from 'vite-plus/test';
 
 import {
   applyPackageJsonChange,
   computePackageJsonChange,
 } from '../../packages/tasks/src/factory/package-json.js';
-import { withTempDir } from '../helpers/temp.js';
 
 const packageJsonPath = (cwd: string): string => path.join(cwd, 'package.json');
 

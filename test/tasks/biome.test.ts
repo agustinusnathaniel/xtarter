@@ -1,9 +1,13 @@
+import {
+  fixtureDir,
+  fixtureProfile,
+  withProject,
+} from '@test/helpers/project.js';
+import { run } from '@test/helpers/run.js';
 import { describe, expect } from 'vite-plus/test';
 
 import { biomeTask } from '../../packages/tasks/src/lint/biome.js';
 import { oxfmtTask, oxlintTask } from '../../packages/tasks/src/lint/oxlint.js';
-import { fixtureDir, fixtureProfile, withProject } from '../helpers/project.js';
-import { run } from '../helpers/run.js';
 
 describe('biomeTask', () => {
   test('is applicable to project with biome dep', async () => {

@@ -1,5 +1,13 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import {
+  captureConsole,
+  captureJson,
+  captureStreams,
+} from '@test/helpers/console.js';
+import { type ProjectFileMap, withProject } from '@test/helpers/project.js';
+import { runCli } from '@test/helpers/run.js';
+import { withTempDir } from '@test/helpers/temp.js';
 import { checkCommand } from '@xtarterize/app/commands/check.js';
 import { diffCommand } from '@xtarterize/app/commands/diff.js';
 import { initProgram } from '@xtarterize/app/commands/init.js';
@@ -7,15 +15,6 @@ import { listCommand } from '@xtarterize/app/commands/list.js';
 import type { PrompterShape } from '@xtarterize/app/ui/prompter.js';
 import { Effect } from 'effect';
 import { describe, expect, it, vi } from 'vite-plus/test';
-
-import {
-  captureConsole,
-  captureJson,
-  captureStreams,
-} from '../../helpers/console.js';
-import { type ProjectFileMap, withProject } from '../../helpers/project.js';
-import { runCli } from '../../helpers/run.js';
-import { withTempDir } from '../../helpers/temp.js';
 
 const CONFORMANCE_SUMMARY_REGEX = /conformant|Conformance audit/;
 

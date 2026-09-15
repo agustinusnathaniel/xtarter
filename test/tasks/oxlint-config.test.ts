@@ -1,8 +1,12 @@
+import {
+  fixtureDir,
+  fixtureProfile,
+  withProject,
+} from '@test/helpers/project.js';
+import { run } from '@test/helpers/run.js';
 import { describe, expect } from 'vite-plus/test';
 
 import { oxfmtTask, oxlintTask } from '../../packages/tasks/src/lint/oxlint.js';
-import { fixtureDir, fixtureProfile, withProject } from '../helpers/project.js';
-import { run } from '../helpers/run.js';
 
 describe('oxlint config validation', () => {
   test('generated oxlint.config.ts has expected imports and rules', async () => {

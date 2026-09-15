@@ -1,13 +1,17 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import {
+  fixtureDir,
+  fixtureProfile,
+  withProject,
+} from '@test/helpers/project.js';
+import { run } from '@test/helpers/run.js';
 import { describe, expect } from 'vite-plus/test';
 
 import { agentsMdTask } from '../../packages/tasks/src/agent/agents-md.js';
 import { vscodeTask } from '../../packages/tasks/src/editor/vscode.js';
 import { turboTask } from '../../packages/tasks/src/monorepo/turbo.js';
 import { knipTask } from '../../packages/tasks/src/quality/knip.js';
-import { fixtureDir, fixtureProfile, withProject } from '../helpers/project.js';
-import { run } from '../helpers/run.js';
 
 describe('knipTask', () => {
   test('is applicable to all projects (JSON format if no TS)', async () => {

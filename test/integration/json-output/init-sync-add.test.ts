@@ -1,17 +1,16 @@
+import { captureConsole, captureJson } from '@test/helpers/console.js';
+import { type ProjectFileMap, withProject } from '@test/helpers/project.js';
+import {
+  recordingDepsInstaller,
+  recordingProcessRunner,
+  runWith,
+} from '@test/helpers/run.js';
 import { addCommand, addProgram } from '@xtarterize/app/commands/add/index.js';
 import { initCommand, initProgram } from '@xtarterize/app/commands/init.js';
 import { syncCommand } from '@xtarterize/app/commands/sync.js';
 import { Prompter } from '@xtarterize/app/ui/prompter.js';
 import { Layer } from 'effect';
 import { describe, expect } from 'vite-plus/test';
-
-import { captureConsole, captureJson } from '../../helpers/console.js';
-import { type ProjectFileMap, withProject } from '../../helpers/project.js';
-import {
-  recordingDepsInstaller,
-  recordingProcessRunner,
-  runWith,
-} from '../../helpers/run.js';
 
 const PROJECT_FILES: ProjectFileMap = {
   'package.json': {
