@@ -13,7 +13,7 @@ Preflight requires:
 - A `name` field in `package.json` (`INVALID_PACKAGE_JSON` when absent)
 - A git repository (`MISSING_GIT` when absent)
 
-Covered commands are `init`, `sync`, `diff`, `check`, `add`, `list`, `query`, `restore`, `undo`, and `doctor`. When a check fails, the CLI prints every error with a hint and exits with code `1`, and conformance tasks do not run. `doctor` continues so it can still report diagnostics. The CLI can maintain `.gitignore` so the internal `.xtarterize/` directory stays out of version control even when preflight fails.
+Covered commands are `init`, `sync`, `diff`, `check`, `add`, `list`, `query`, `restore`, `undo`, and `doctor`. When a check fails, the CLI prints every error with a hint and exits with code `1`, and conformance tasks do not run. `doctor` continues so it can still report diagnostics. The CLI attempts to add `/.xtarterize/` to `.gitignore` when filesystem access succeeds, so internal artifacts stay out of version control when possible.
 
 ## Diagnostics
 

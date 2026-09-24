@@ -1,0 +1,28 @@
+---
+interface Decision {
+  body: string
+  label: string
+}
+
+interface Props {
+  items: Decision[]
+}
+
+const { items } = Astro.props
+---
+
+<ol class="xt-decision-list">
+  {
+    items.map((item, index) => (
+      <li class="xt-decision">
+        <span class="xt-decision-marker" aria-hidden="true">
+          {String(index + 1).padStart(2, '0')}
+        </span>
+        <div class="xt-decision-copy">
+          <h3 class="xt-decision-title">{item.label}</h3>
+          <p class="xt-decision-body">{item.body}</p>
+        </div>
+      </li>
+    ))
+  }
+</ol>

@@ -1,62 +1,57 @@
 ---
-// Homepage two-tool split panel. Product facts are intentionally baked in -
-// this is stable positioning copy, not data-driven content, so the two cards
-// live in one place and page builders consume `<ToolSplit />` verbatim.
-//
-// Structure: each card is a SINGLE link (`.xt-tool-card`); its accessible
-// name is the product name via aria-label, so the inner eyebrow/role/body/
-// cmd/action text stays presentational for AT while remaining visible.
-// Styling lives in apps/docs/src/styles/global.css (no scoped styles).
-// Umami analytics ride data-* attributes, matching the hero button pattern.
-const cards = [
+interface ToolCard {
+  action: string
+  body: string
+  cmd: string
+  context: string
+  href: string
+  product: string
+  role: string
+}
+
+const cards: ToolCard[] = [
   {
-    product: 'create-xtarter-app',
+    action: 'Scaffold a project',
+    body: 'Choose a documented stack, install dependencies, and start with a repository you can extend.',
+    cmd: 'pnpm create xtarter-app@latest',
+    context: 'New repository',
     href: '/create-xtarter-app/',
-    eyebrow: 'scaffolding CLI',
-    role: 'New project, fully configured, in one command.',
-    body: 'Pick a stack and start from the baseline.',
-    cmd: '$ pnpm create xtarter-app@latest',
-    action: 'Start with a template',
+    product: 'create-xtarter-app',
+    role: 'Start from a template.',
   },
   {
-    product: 'xtarterize',
+    action: 'Preview a repository',
+    body: 'Detect the stack, read the plan, and apply the changes that belong in your project.',
+    cmd: 'pnpx xtarterize@latest init --dry-run',
+    context: 'Existing repository',
     href: '/xtarterize/',
-    eyebrow: 'conformance CLI',
-    role: 'Bring any project up to standard without overwriting your files.',
-    body: 'It detects the stack, plans the fixes, and writes nothing until you approve.',
-    cmd: '$ pnpx xtarterize@latest init',
-    action: 'Conform your project',
+    product: 'xtarterize',
+    role: 'Make the current state inspectable.',
   },
-] as const
+]
 ---
 
-<div class="xt-split">
+<ul class="xt-split">
   {
     cards.map((card) => (
-      <a
-        class="xt-tool-card"
-        href={card.href}
-        aria-label={card.product}
-        data-umami-event="tool_card_click"
-        data-umami-event-product={card.product}
-      >
-        <p class="xt-section-eyebrow">{card.eyebrow}</p>
-        <span class="xt-tool-name">
-          {card.product}
-          <span class="xt-tool-arrow" aria-hidden="true">
-            &rarr;
+      <li class="xt-tool-item">
+        <a
+          class="xt-tool-card"
+          href={card.href}
+          data-umami-event="tool_card_click"
+          data-umami-event-product={card.product}
+        >
+          <span class="xt-tool-context">{card.context}</span>
+          <h3 class="xt-tool-name">{card.product}</h3>
+          <p class="xt-tool-role">{card.role}</p>
+          <p class="xt-tool-body">{card.body}</p>
+          <code class="xt-tool-cmd">{card.cmd}</code>
+          <span class="xt-tool-action">
+            {card.action}
+            <span class="xt-tool-arrow" aria-hidden="true">↗</span>
           </span>
-        </span>
-        <p class="xt-tool-role">{card.role}</p>
-        <p class="xt-tool-body">{card.body}</p>
-        <span class="xt-tool-cmd" aria-hidden="true">
-          {card.cmd}
-        </span>
-        <span class="xt-tool-action">
-          {card.action}
-          <span aria-hidden="true">&rarr;</span>
-        </span>
-      </a>
+        </a>
+      </li>
     ))
   }
-</div>
+</ul>

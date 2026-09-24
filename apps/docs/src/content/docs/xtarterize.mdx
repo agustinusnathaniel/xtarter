@@ -1,6 +1,6 @@
 ---
 title: xtarterize
-description: The conformance CLI for JavaScript/TypeScript projects.
+description: A conformance CLI that turns an existing JavaScript or TypeScript repository into an inspectable plan.
 template: splash
 editUrl: false
 lastUpdated: false
@@ -12,52 +12,99 @@ import SectionHead from '@/components/SectionHead.astro'
 import FeatureGrid from '@/components/FeatureGrid.astro'
 import CtaBand from '@/components/CtaBand.astro'
 
-<div class="xt-section"><SectionHead index="01" id="how-it-works" title="How a run works" lead="Every run follows the same five steps." />
-<ol class="xt-pipeline">
-  <li class="xt-pipe"><span class="xt-pipe-name">Detect</span><p class="xt-pipe-desc">Profile the project: framework, bundler, package manager, existing configs.</p></li>
-  <li class="xt-pipe"><span class="xt-pipe-name">Resolve</span><p class="xt-pipe-desc">Map the profile to the conformance tasks that apply.</p></li>
-  <li class="xt-pipe"><span class="xt-pipe-name">Check</span><p class="xt-pipe-desc">Compare each file against the standard: new, patch, skip, or conflict.</p></li>
-  <li class="xt-pipe"><span class="xt-pipe-name">Plan</span><p class="xt-pipe-desc">Review the plan before anything is written.</p></li>
-  <li class="xt-pipe"><span class="xt-pipe-name">Apply</span><p class="xt-pipe-desc">Back up originals, then merge or rewrite configs.</p></li>
-</ol>
+<div class="xt-section">
+  <SectionHead
+    context="run loop"
+    id="how-it-works"
+    title="One run, five decisions."
+    lead="xtarterize turns an unfamiliar repository into a sequence you can inspect before the executor touches project files."
+  />
+  <ol class="xt-pipeline">
+    <li class="xt-pipe">
+      <span class="xt-pipe-name">Detect</span>
+      <p class="xt-pipe-desc">Profile the project: framework, bundler, package manager, monorepo status, and existing configs.</p>
+    </li>
+    <li class="xt-pipe">
+      <span class="xt-pipe-name">Resolve</span>
+      <p class="xt-pipe-desc">Map that profile to the conformance tasks that apply here.</p>
+    </li>
+    <li class="xt-pipe">
+      <span class="xt-pipe-name">Check</span>
+      <p class="xt-pipe-desc">Classify each task as new, patch, skip, or conflict.</p>
+    </li>
+    <li class="xt-pipe">
+      <span class="xt-pipe-name">Plan</span>
+      <p class="xt-pipe-desc">Render the proposed changes and the next action. A dry run does not create backups.</p>
+    </li>
+    <li class="xt-pipe">
+      <span class="xt-pipe-name">Apply</span>
+      <p class="xt-pipe-desc">Back up modified files, install declared dependencies, then merge or rewrite the selected configs.</p>
+    </li>
+  </ol>
 </div>
 
-:::caution[Current focus: Vite + React + TypeScript]
-Task coverage is deepest for Vite, React, and TypeScript projects. Other stacks such as Vue, Svelte, Solid, Node CLIs, and Bun work but stay experimental with fewer tasks. Contributions to expand coverage are welcome.
+:::caution[Coverage follows the stack]
+Coverage is deepest for Vite, React, and TypeScript. Other JavaScript and TypeScript stacks can use the CLI, but task coverage may be narrower or experimental.
 :::
 
-<div class="xt-section"><SectionHead index="02" eyebrow="safety model" id="safety" title="Nothing moves without you" lead="Preview every change, back up originals, and write only after you approve." />
-<FeatureGrid items={[
-  { title: 'Preview the plan', body: 'Run init or sync with --dry-run to preview every planned change; `.gitignore` may be created or updated, but no conformance files are written.' },
-  { title: 'Backups by default', body: 'Modified files are copied to .xtarterize/backups/ first. Undo and restore are built in.' },
-  { title: 'You approve writes', body: 'init asks before it applies, and conflicts surface instead of overwriting your configs.' },
-]} />
+<div class="xt-section">
+  <SectionHead
+    context="preview, apply, recover"
+    id="safety"
+    title="The plan is the product."
+    lead="A useful conformance tool makes the boundary between inspection and execution unmistakable."
+  />
+  <FeatureGrid items={[
+    { title: 'Preview', body: 'init with a dry run and diff show proposed changes without writing conformance files or creating backups. The session may still create or update the project .gitignore with /.xtarterize/.' },
+    { title: 'Apply', body: 'Interactive runs ask before applying. Use --yes to skip the confirmation, or --quiet for the explicit non-interactive apply path. Apply creates backups before modifying files.' },
+    { title: 'Recover', body: 'undo restores the last recorded run. restore selects one file from its backup history. Both paths use the run evidence created during apply.' },
+  ]} />
 </div>
 
-<div class="xt-section"><SectionHead index="03" eyebrow="task catalog" id="task-groups" title="What it can manage" lead="Task groups cover linting, types, CI, editor setup, agent skills, and Vite plugins." />
-<ul class="xt-link-cluster" aria-label="Task groups">
-  <li>Linting &amp; Formatting</li>
-  <li>TypeScript</li>
-  <li>Vite Plugins</li>
-  <li>CI/CD</li>
-  <li>Editor</li>
-  <li>Agent</li>
-  <li>Release</li>
-  <li><a class="xt-link" href="/xtarterize/guide/tasks/overview/">Conformance tasks</a></li>
-</ul>
+<div class="xt-section">
+  <SectionHead
+    context="task catalog"
+    id="task-groups"
+    title="Coverage follows the project."
+    lead="The catalog is a set of focused tasks, not a promise that every stack receives every tool."
+  />
+  <p class="xt-group-label">Task groups</p>
+  <ul class="xt-link-cluster">
+    <li>Linting and formatting</li>
+    <li>TypeScript</li>
+    <li>Vite plugins</li>
+    <li>CI/CD</li>
+    <li>Editor</li>
+    <li>Agent skills</li>
+    <li>Release</li>
+    <li><a class="xt-link" href="/xtarterize/guide/tasks/overview/">Browse the conformance tasks <span aria-hidden="true">→</span></a></li>
+  </ul>
 </div>
 
-<div class="xt-section"><SectionHead index="04" id="quick-start" title="Quick start" lead="Three commands cover the loop." />
-<AllPackageManagers type="dlx" pkg="xtarterize@latest" args="init" title="Initialize conformance" />
-<AllPackageManagers type="dlx" pkg="xtarterize@latest" args="check" title="Check conformance" />
-<AllPackageManagers type="dlx" pkg="xtarterize@latest" args="diff" title="Preview changes" />
-<ul class="xt-link-cluster" aria-label="Related documentation">
-  <li><a class="xt-link" href="/xtarterize/getting-started/installation/">Getting Started</a></li>
-  <li><a class="xt-link" href="/xtarterize/guide/cli/overview/">CLI Reference</a></li>
-</ul>
+<div class="xt-section" id="quick-start">
+  <SectionHead
+    context="quick start loop"
+    title="Preview, apply, repeat."
+    lead="Three commands cover the loop from an unknown repository to a maintained baseline."
+  />
+  <div class="xt-command-loop">
+    <AllPackageManagers type="dlx" pkg="xtarterize@latest" args="init --dry-run" title="Preview the plan" />
+    <AllPackageManagers type="dlx" pkg="xtarterize@latest" args="init" title="Apply interactively" />
+    <AllPackageManagers type="dlx" pkg="xtarterize@latest" args="sync" title="Maintain existing configs" />
+  </div>
+  <ul class="xt-link-cluster">
+    <li><a class="xt-link" href="/xtarterize/getting-started/installation/">Installation</a></li>
+    <li><a class="xt-link" href="/xtarterize/guide/cli/overview/">CLI reference</a></li>
+    <li><a class="xt-link" href="/xtarterize/guide/cli/overview/#undo">Recovery commands</a></li>
+  </ul>
 </div>
 
-<div class="xt-section"><CtaBand title="Starting from scratch?" note="create-xtarter-app scaffolds new projects on this same baseline.">
-  <a class="xt-btn xt-btn-invert" href="/create-xtarter-app/">Start with a template</a>
-  <a class="xt-btn xt-btn-ghost-dark" href="https://github.com/agustinusnathaniel/xtarter" target="_blank" rel="noopener noreferrer" data-umami-event="band_cta_github">Star on GitHub</a>
-</CtaBand></div>
+<div class="xt-section">
+  <CtaBand
+    title="Starting from a blank directory?"
+    note="Use create-xtarter-app for a documented starting point, then return here when the baseline changes."
+  >
+    <a class="xt-btn xt-btn-invert" href="/create-xtarter-app/">Compare templates</a>
+    <a class="xt-btn xt-btn-ghost-dark" href="/xtarterize/getting-started/initialization/" data-umami-event="band_cta_github" data-umami-event-intent="preview" data-umami-event-product="xtarterize">Preview a plan</a>
+  </CtaBand>
+</div>

@@ -1,42 +1,35 @@
 ---
-// Static template gallery. Renders records from the manually maintained
-// template catalog in src/data/template-catalog.ts - no network, no GitHub
-// API, no star counts. Ownership of the catalog is documented in that file.
-//
-// Round 2: card grid instead of a divided list. Each record is ONE link
-// (`.xt-tpl-card`) so the whole card is clickable; its accessible name is
-// the repo slug via aria-label (matching the previous list pattern). Shows
-// name, catalog description, up to four mono stack chips, and a pinned
-// "View repository ->" footer. All styling lives in global.css under the
-// `.xt-gallery` / `.xt-tpl-*` classes - no Tailwind utilities here.
 import { TEMPLATE_CATALOG } from '@/data/template-catalog'
 ---
 
 <ul class="xt-gallery">
   {
-    TEMPLATE_CATALOG.map((t) => (
+    TEMPLATE_CATALOG.map((template) => (
       <li class="xt-tpl">
         <a
           class="xt-tpl-card"
-          href={`https://github.com/${t.repo}`}
+          href={`https://github.com/${template.repo}`}
           target="_blank"
           rel="noopener noreferrer"
-          aria-label={`View ${t.repo} repository`}
           data-umami-event="template_click"
-          data-umami-event-template_name={t.name}
+          data-umami-event-template_name={template.name}
+          data-template-id={template.id}
         >
-          <span class="xt-tpl-name">{t.name}</span>
-          <span class="xt-tpl-desc">{t.description}</span>
-          <span class="xt-tpl-stack" aria-label={`Stack: ${t.stack.slice(0, 4).join(', ')}`}>
-            {t.stack.slice(0, 4).map((s) => (
-              <span class="xt-tpl-chip">{s}</span>
+          <span class="xt-tpl-context">
+            {template.id.startsWith('next') ? 'Next.js' : 'Vite+'}
+          </span>
+          <span class="xt-tpl-name">{template.name}</span>
+          <span class="xt-tpl-desc">{template.description}</span>
+          <span class="xt-tpl-stack">
+            <span class="xt-tpl-stack-label">Stack</span>
+            {template.stack.map((item) => (
+              <span class="xt-tpl-chip">{item}</span>
             ))}
           </span>
           <span class="xt-tpl-action">
-            View repository
-            <span class="xt-tpl-arrow" aria-hidden="true">
-              &rarr;
-            </span>
+            Open repository
+            <span class="xt-visually-hidden">(opens in a new tab)</span>
+            <span class="xt-tpl-arrow" aria-hidden="true">↗</span>
           </span>
         </a>
       </li>

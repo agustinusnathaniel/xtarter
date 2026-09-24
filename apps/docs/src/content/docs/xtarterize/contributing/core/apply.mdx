@@ -25,7 +25,7 @@ Execution replays the plan:
 
 ## Backups
 
-Before any file is modified, the engine writes a timestamped copy under `.xtarterize/backups/` and indexes it in `.xtarterize/backups/.index.json` for `restore`. Each unique file path is backed up once per run, even when several tasks modify it. The `.xtarterize/` directory is added to `.gitignore` automatically.
+Before any file is modified, the engine writes a timestamped copy under `.xtarterize/backups/` and indexes it in `.xtarterize/backups/.index.json` for `restore`. Each unique file path is backed up once per run, even when several tasks modify it. The session may add `/.xtarterize/` to `.gitignore` when filesystem access succeeds.
 
 ## Error handling
 

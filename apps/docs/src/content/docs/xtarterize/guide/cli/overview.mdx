@@ -15,7 +15,7 @@ Flags follow the command name: `xtarterize check --json` works, `xtarterize --js
 | --- | --- | --- |
 | `--cwd <path>` | all | Target directory (default: current directory) |
 | `--json` | all | Output machine-readable JSON |
-| `--quiet` | all except `query` | Suppress prompts and verbose output; `restore` still prompts for a backup unless `--yes` |
+| `--quiet` | all except `query` | Suppress prompts and verbose output; `init` and `sync` use the explicit non-interactive apply path, while `restore` still prompts for a backup unless `--yes` |
 | `--help` | all | Show help for a command |
 | `--version` | entry | Show the version number |
 
@@ -63,7 +63,7 @@ Detect the project stack, show a plan, and apply changes.
 
 | Option | Description |
 | --- | --- |
-| `--dry-run` | Preview changes without applying |
+| `--dry-run` | Preview changes without applying or creating backups; the project `.gitignore` may still be updated |
 | `--yes` | Skip confirmations |
 | `--compose <query>` | Rank tasks by relevance to a query |
 | `--threshold <n>` | Minimum score for `--compose` (0-1, default `0.1`) |
@@ -83,7 +83,7 @@ Update existing configs to match the latest templates. Unlike `init`, only tasks
 
 ## `diff`
 
-Preview changes for `new`, `patch`, and `conflict` tasks without writing any conformance files; the project `.gitignore` may still be created or updated. New files are shown in full; patched files use unified diffs. Changes to the same JSON file are merged into one diff.
+Preview changes for `new`, `patch`, and `conflict` tasks without writing conformance files or creating backups; the project `.gitignore` may still be created or updated. New files are shown in full; patched files use unified diffs. Changes to the same JSON file are merged into one diff.
 
 Options: `--format <terminal|json>`.
 
@@ -147,6 +147,6 @@ Search tasks by natural language query. Options: `--limit <n>` (default `20`), `
 
 ## Backups
 
-Before modifying a file, xtarterize writes a timestamped backup under `.xtarterize/backups/` and records the run in `last-run.json`. The `.xtarterize/` directory is added to `.gitignore`. Use `undo` to revert a whole run, or `restore <file>` for one file.
+Before modifying a file, xtarterize writes a timestamped backup under `.xtarterize/backups/` and records the run in `last-run.json`. The session may add `/.xtarterize/` to `.gitignore` when filesystem access succeeds. Use `undo` to revert a whole run, or `restore <file>` for one file.
 
 See the [conformance tasks](/xtarterize/guide/tasks/overview/) and the [configuration guide](/xtarterize/guide/config/overview/).

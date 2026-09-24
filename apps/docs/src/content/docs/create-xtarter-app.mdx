@@ -1,6 +1,6 @@
 ---
 title: create-xtarter-app
-description: Scaffold a new JavaScript/TypeScript project from a curated template.
+description: Scaffold a new JavaScript or TypeScript project from a curated, documented template.
 template: splash
 editUrl: false
 lastUpdated: false
@@ -10,22 +10,64 @@ hero: {}
 import TemplateGallery from '@/components/TemplateGallery.astro'
 import AllPackageManagers from '@/components/AllPackageManagers.astro'
 import SectionHead from '@/components/SectionHead.astro'
-import Checklist from '@/components/Checklist.astro'
+import DecisionList from '@/components/DecisionList.astro'
+import FeatureGrid from '@/components/FeatureGrid.astro'
 import CtaBand from '@/components/CtaBand.astro'
 
-<div class="xt-section"><SectionHead index="01" id="whats-included" eyebrow="included in every scaffold" title="One baseline, five ways" lead="Every template starts from the same production baseline." />
-<Checklist items={['Biome lint + format', 'TypeScript strict mode', 'GitHub Actions CI', 'VS Code settings + recommended extensions', 'Agent skills for AI editors']} />
+<div class="xt-section">
+  <SectionHead
+    context="first run"
+    id="first-run"
+    title="Make the first decisions explicit."
+    lead="The scaffold asks for a small set of choices before it downloads anything. Use the prompts or pass flags when you want the run to be scriptable."
+  />
+  <DecisionList items={[
+    { label: 'Project name', body: 'Choose the directory and package name for the new repository.' },
+    { label: 'Template', body: 'Select one of five documented Next.js or Vite+ starting points.' },
+    { label: 'Package manager', body: 'Choose pnpm, npm, yarn, or bun for install and project scripts.' },
+    { label: 'Git initialization', body: 'Start a repository with the scaffold or bring your own Git setup.' },
+    { label: 'CI cleanup', body: 'Choose whether starter CI configuration should be removed for your own workflow.' },
+  ]} />
 </div>
 
-<div class="xt-section"><SectionHead index="02" id="templates" title="The templates" lead="Next.js or Vite with React, styled with Chakra UI, Tailwind, or Hero UI." />
-<TemplateGallery />
+<div class="xt-section" id="templates">
+  <SectionHead
+    context="template catalog"
+    title="Compare documented stack summaries."
+    lead="Five maintained templates span Next.js and Vite+. Each card shows selected stack highlights rather than a complete feature list."
+  />
+  <TemplateGallery />
 </div>
 
-<div class="xt-section"><SectionHead index="03" id="quick-start" title="Quick start" lead="Scaffold a new project in one command." />
-<AllPackageManagers type="create" pkg="xtarter-app@latest" />
+<div class="xt-section" id="quick-start">
+  <SectionHead
+    context="quick start"
+    title="Scaffold the first commit."
+    lead="Run the create command with a project name, then answer the prompts or pass the choices as flags."
+  />
+  <AllPackageManagers type="create" pkg="xtarter-app@latest" args="my-app" title="Scaffold a project" />
+  <p class="xt-note">Use a template flag such as <code>{'--template vite-tailwind'}</code> when you want to make the choice visible in the command itself.</p>
 </div>
 
-<div class="xt-section"><CtaBand title="Start conformant. Stay conformant." note="Hand the fresh scaffold to xtarterize whenever standards move.">
-  <a class="xt-btn xt-btn-invert" href="/xtarterize/getting-started/installation/" data-umami-event="band_cta_init">Run xtarterize init</a>
-  <a class="xt-btn xt-btn-ghost-dark" href="/xtarterize/" data-umami-event="band_cta_about_xtz">About xtarterize</a>
-</CtaBand></div>
+<div class="xt-section">
+  <SectionHead
+    context="after the first commit"
+    title="Keep the baseline current."
+    lead="A starter is a starting point, not a permanent promise. Bring the repository back to xtarterize when the standard moves."
+  />
+  <FeatureGrid items={[
+    { title: 'Stack highlights, visible', body: 'The catalog shows selected stack highlights rather than a complete feature list. Check the card before choosing a framework or UI library.' },
+    { title: 'Preview before apply', body: 'Use xtarterize diff or init with a dry run to inspect proposed changes. Those paths do not create conformance backups.' },
+    { title: 'A recoverable apply', body: 'Apply backs up modified files under .xtarterize/backups/ and records the run. The session may add the .xtarterize directory to .gitignore.' },
+  ]} />
+</div>
+
+<div class="xt-section">
+  <CtaBand
+    title="Make the first commit useful."
+    note="Scaffold a documented starting point, then keep it inspectable as the project grows."
+  >
+    <a class="xt-btn xt-btn-invert" href="/create-xtarter-app/getting-started/" data-umami-event="band_cta_init" data-umami-event-intent="scaffold" data-umami-event-product="create-xtarter-app">Scaffold a project</a>
+    <a class="xt-btn xt-btn-ghost-dark" href="/xtarterize/" data-umami-event="band_cta_about_xtz" data-umami-event-intent="preview" data-umami-event-product="xtarterize">Preview an existing repo</a>
+  </CtaBand>
+</div>

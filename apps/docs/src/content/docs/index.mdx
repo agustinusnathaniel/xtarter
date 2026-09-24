@@ -1,17 +1,10 @@
 ---
-title: xtarter
-description: Production-grade starter templates for JavaScript and TypeScript projects. Scaffold your next project in one command.
+title: Make the repo legible.
+description: "Two CLI tools for moving JavaScript and TypeScript repositories from unknown to known-good: scaffold with create-xtarter-app, inspect with xtarterize."
 template: splash
 editUrl: false
 lastUpdated: false
-hero:
-  # Presence flag only. This route's hero is rendered by
-  # src/components/LandingHero.astro (wired in astro.config.mjs), which
-  # hardcodes the composition; no hero data is read from this file. Keep
-  # the key present and empty: Starlight sets data-has-hero on the page
-  # root from its presence, activating the splash paper backdrop in
-  # global.css.
-  {}
+hero: {}
 ---
 
 import SectionHead from '@/components/SectionHead.astro'
@@ -21,40 +14,64 @@ import TemplateGallery from '@/components/TemplateGallery.astro'
 import CtaBand from '@/components/CtaBand.astro'
 
 <div class="xt-section">
-  <SectionHead index="01" eyebrow="the xtarter ecosystem" id="two-tools" title="Two tools, one standard" lead="Start from a template, or bring an existing repo up to standard. Both land on the same conformance baseline." />
+  <SectionHead
+    context="entry paths"
+    id="two-tools"
+    title="Choose the state you are in."
+    lead="Start from a documented template, or bring an existing repository under the same operating baseline."
+  />
   <ToolSplit />
 </div>
 
 <div class="xt-section">
-  <SectionHead index="02" eyebrow="why conformant" id="why-conformant" title="Standards that hold their shape" lead="Configs drift when enforcement lives in someone's head. This baseline lives in the repo instead." />
+  <SectionHead
+    context="shared baseline"
+    id="why-conformant"
+    title="Make the standard visible."
+    lead="Conformance is useful when the repository can show what changed, what remains, and what to do next."
+  />
   <FeatureGrid items={[
-    { title: 'Reviews that read themselves', body: 'Biome and strict TypeScript run from the first commit. Reviews cover features, not formatting.' },
-    { title: 'CI that stays green', body: 'GitHub Actions runs the same configs your editor enforces, so local and CI cannot disagree.' },
-    { title: 'Agent-ready by default', body: 'Agent skills ship with every config, so AI assistants follow the same standard you do.' },
+    { title: 'Configuration in the repository', body: 'Conformance tasks manage the files your editor, scripts, and CI read. The result is inspectable in the project instead of living in tribal knowledge.' },
+    { title: 'Statuses before writes', body: 'xtarterize reports new, patch, skip, and conflict. A dry run or diff previews the plan; apply creates backups before modifying files.' },
+    { title: 'Maintenance with a receipt', body: 'Each file-changing apply records a run manifest. Use undo for the last run or restore for one file. The session may add the .xtarterize directory to .gitignore.' },
   ]} />
+  <p class="xt-note">The exact task set follows the detected stack. Coverage is deepest for Vite, React, and TypeScript.</p>
 </div>
 
-<div class="xt-section">
-  <SectionHead index="03" id="starter-templates" title="Starter templates" lead="Five starters. Each ships Biome, strict TypeScript, CI, VS Code settings, and agent skills before your first commit." />
+<div class="xt-section" id="starter-templates">
+  <SectionHead
+    context="template catalog"
+    title="Choose a starting point."
+    lead="Five maintained templates span Next.js and Vite+. Each card shows selected stack highlights rather than a complete feature list."
+  />
   <TemplateGallery />
-  <p class="xt-note">Ready to use one? <a class="xt-link" href="/create-xtarter-app/">Scaffold with create-xtarter-app &rarr;</a></p>
+  <p class="xt-note">Ready to use one? <a class="xt-link" href="/create-xtarter-app/">Scaffold with create-xtarter-app <span aria-hidden="true">→</span></a></p>
 </div>
 
-<a class="xt-link" href="https://github.com/agustinusnathaniel?tab=repositories&q=&type=source" target="_blank" rel="noopener noreferrer" data-umami-event="github_browse_click">All source repositories on GitHub</a>
+<a class="xt-link xt-source-link" href="https://github.com/agustinusnathaniel?tab=repositories&q=&type=source" target="_blank" rel="noopener noreferrer" data-umami-event="github_browse_click">All source repositories on GitHub <span class="xt-visually-hidden">(opens in a new tab)</span> <span aria-hidden="true">↗</span></a>
 
 <div class="xt-section">
-  <SectionHead index="04" id="lifecycle" title="The project lifecycle" lead="One path from first commit to shipped project." />
+  <SectionHead
+    context="sequence"
+    id="lifecycle"
+    title="Keep the repository moving."
+    lead="Creation and maintenance are two parts of the same loop."
+  />
   <ol class="xt-lifecycle">
     <li><a href="#starter-templates">Choose</a></li>
     <li><a href="/create-xtarter-app/">Scaffold</a></li>
-    <li><a href="/xtarterize/">Conform</a></li>
-    <li class="xt-lifecycle-done"><a href="#get-started">Ship</a></li>
+    <li><a href="/xtarterize/getting-started/initialization/">Preview</a></li>
+    <li><a href="/xtarterize/guide/cli/overview/">Maintain</a></li>
   </ol>
+  <p class="xt-note">When xtarterize creates or reads its internal state, it may add <code>/.xtarterize/</code> to the project <code>.gitignore</code> when filesystem access succeeds.</p>
 </div>
 
 <div class="xt-section" id="get-started">
-  <CtaBand title="Pick your door." note="Scaffold something new, or conform code you already have.">
-    <a class="xt-btn xt-btn-invert" href="/create-xtarter-app/" data-umami-event="band_cta_browse">Start with a template</a>
-    <a class="xt-btn xt-btn-ghost-dark" href="/xtarterize/" data-umami-event="band_cta_conform">Conform an existing project</a>
+  <CtaBand
+    title="Choose the next repository state."
+    note="Start fresh, or make an existing repository inspectable first."
+  >
+    <a class="xt-btn xt-btn-invert" href="/create-xtarter-app/" data-umami-event="band_cta_browse">Scaffold a new repo</a>
+    <a class="xt-btn xt-btn-ghost-dark" href="/xtarterize/" data-umami-event="band_cta_conform">Preview an existing repo</a>
   </CtaBand>
 </div>

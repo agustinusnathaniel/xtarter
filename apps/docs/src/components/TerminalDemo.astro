@@ -1,74 +1,63 @@
----
-// Static terminal evidence panel illustrating an `xtarterize init --dry-run`
-// session. Decorative by design: the panel is aria-hidden and a plain-text
-// caption next to it carries the same information for assistive tech.
-// No typing, spinner, or blinking cursor - the output is present on load.
-// This is the sole charcoal artifact on the xtarterize landing page.
----
+<div class="xt-terminal-wrap">
+  <figure class="xt-terminal xt-plan-receipt">
+    <figcaption class="xt-terminal-bar">
+      <span>xtarterize / plan receipt</span>
+      <span class="xt-terminal-mode">preview</span>
+    </figcaption>
 
-<div class="xt-terminal">
-	<div class="xt-terminal-bar">
-		<span class="xt-terminal-title">xtarterize &middot; dry run</span>
-	</div>
-	<div class="xt-terminal-body" aria-hidden="true" role="presentation">
-		<div class="xt-term-line">
-			<span class="xt-term-prompt">$</span>
-			<span class="xt-term-cmd">pnpx xtarterize@latest init --dry-run</span>
-		</div>
-		<div class="xt-term-line xt-term-out">
-			<span class="xt-tag xt-tag-detect">detected</span>
-			<!-- Stacked so long records wrap onto a second line that stays
-			     flush under the first segment's text column, keeping every
-			     line short enough to fit the artifact at mobile widths. -->
-			<span class="xt-term-stack">
-				<span class="xt-term-dim">react 19 · vite 8</span>
-				<span class="xt-term-dim">typescript 5.8 · pnpm 10</span>
-			</span>
-		</div>
-		<div class="xt-term-line xt-term-out">
-			<span class="xt-tag xt-tag-plan">plan</span>
-			<span class="xt-term-dim">12 tasks · 8 files</span>
-		</div>
-		<div class="xt-term-line xt-term-out">
-			<span class="xt-term-accent">Conformance plan</span>
-		</div>
-		<div class="xt-term-line xt-term-table-head">
-			<span class="xt-term-dim">Status  Task                    Group</span>
-		</div>
-		<div class="xt-term-line">
-			<span class="xt-term-dim">────────────────────────────────────</span>
-		</div>
-		<div class="xt-term-line xt-term-row">
-			<span class="xt-term-add">+</span>  Biome (lint + format)      <span class="xt-term-dim">Linting</span>
-		</div>
-		<div class="xt-term-line xt-term-row">
-			<span class="xt-term-edit">~</span>  tsconfig - strict: true     <span class="xt-term-dim">TypeScript</span>
-		</div>
-		<div class="xt-term-line xt-term-row">
-			<span class="xt-term-add">+</span>  GitHub Actions CI          <span class="xt-term-dim">CI/CD</span>
-		</div>
-		<div class="xt-term-line xt-term-row">
-			<span class="xt-term-add">+</span>  VS Code settings + ext.     <span class="xt-term-dim">Editor</span>
-		</div>
-		<div class="xt-term-line xt-term-row">
-			<span class="xt-term-add">+</span>  Agent skills                <span class="xt-term-dim">AI</span>
-		</div>
-		<div class="xt-term-line xt-term-row">
-			<span class="xt-term-add">+</span>  vite-plugin-checker         <span class="xt-term-dim">Vite</span>
-		</div>
-		<div class="xt-term-line xt-term-spacer"></div>
-		<div class="xt-term-line xt-term-out">
-			<span class="xt-tag xt-tag-safe">backup</span>
-			<span class="xt-term-stack">
-				<span class="xt-term-dim">Originals saved to</span>
-				<span class="xt-term-dim xt-term-accent">.xtarterize/backups/</span>
-			</span>
-		</div>
-	</div>
+    <div class="xt-terminal-body" aria-hidden="true">
+      <div class="xt-receipt-command">
+        <span class="xt-term-prompt">$</span>
+        <code>pnpx xtarterize@latest init --dry-run</code>
+      </div>
+
+      <div class="xt-receipt-record">
+        <span class="xt-receipt-label">profile</span>
+        <span class="xt-receipt-value">Vite + React + TypeScript / pnpm</span>
+      </div>
+
+      <div class="xt-receipt-rule"></div>
+      <p class="xt-receipt-heading">Proposed changes</p>
+
+      <ul class="xt-receipt-list">
+        <li class="xt-receipt-row">
+          <span class="xt-receipt-status is-new">new</span>
+          <code>lint/biome</code>
+          <span class="xt-receipt-change">add lint + format config</span>
+        </li>
+        <li class="xt-receipt-row">
+          <span class="xt-receipt-status is-patch">patch</span>
+          <code>ts/strict</code>
+          <span class="xt-receipt-change">tighten compiler options</span>
+        </li>
+        <li class="xt-receipt-row">
+          <span class="xt-receipt-status is-new">new</span>
+          <code>ci/ci</code>
+          <span class="xt-receipt-change">add GitHub Actions</span>
+        </li>
+        <li class="xt-receipt-row">
+          <span class="xt-receipt-status is-new">new</span>
+          <code>editor/vscode</code>
+          <span class="xt-receipt-change">add editor settings</span>
+        </li>
+        <li class="xt-receipt-row">
+          <span class="xt-receipt-status is-skip">skip</span>
+          <code>release/commitlint</code>
+          <span class="xt-receipt-change">already conformant</span>
+        </li>
+      </ul>
+
+      <div class="xt-receipt-next">
+        <span class="xt-receipt-label">next</span>
+        <strong>run init to apply</strong>
+      </div>
+      <p class="xt-receipt-footnote">preview only, no backups created</p>
+    </div>
+  </figure>
+
+  <p class="xt-terminal-summary">
+    Example receipt for a Vite + React + TypeScript project. <code>--dry-run</code> plans changes without
+    writing conformance files or creating backups. The session may add <code>/.xtarterize/</code> to
+    <code>.gitignore</code>; apply creates backups before modifying files.
+  </p>
 </div>
-<p class="xt-terminal-caption">
-	Example output: <code>pnpx xtarterize@latest init --dry-run</code> detects the stack
-	(react 19, vite 8, typescript 5.8, pnpm 10), plans 12 conformance tasks
-	across 8 files, and previews each change before anything is written.
-	Originals are backed up to <code>.xtarterize/backups/</code>.
-</p>

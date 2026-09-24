@@ -1,8 +1,4 @@
 ---
-// Type Starlight's App.Locals augmentation (starlightRoute) locally: the docs
-// tsconfig does not include astro.config.mjs, so the integration's own d.ts
-// files are not part of the program during `astro check`. The declaration
-// merges with Starlight's when it is loaded.
 declare global {
   namespace App {
     interface Locals {
@@ -10,133 +6,200 @@ declare global {
     }
   }
 }
-// Targeted Starlight Hero override for the three docs landing routes.
-// For every other page it renders Starlight's default Hero unchanged, so
-// hero frontmatter on non-target routes (404, future splash pages) keeps
-// working. The `.hero` class and `<h1 id="_top" data-page-title>` are
-// preserved so the existing tracking and page-title behavior stay intact.
-//
-// Each route owns one dominant charcoal artifact, with a different shape:
-//   home   -> forked command strip (both entry commands)
-//   xtz    -> the conformance-plan terminal output (TerminalDemo)
-//   CXA    -> a narrow template-selection prompt (static markup)
-// The artifacts are decorative by design and aria-hidden; their content is
-// restated in visible page copy so assistive tech gets the same information.
-//
-// Round 2 ("terminal takeover"): every splash hero carries `.xt-hero-dark`,
-// inverting the whole hero canvas onto the term-token charcoal family
-// (styling lives in global.css). Ghost actions use `.xt-btn-ghost-dark`
-// because paper-token ghost colors fail contrast on charcoal. Home's h1 is
-// split into two explicit lines with the second sentence wrapped in
-// `.xt-h1-accent`. Command lines end in a `.xt-cursor` blinking block
-// (aria-hidden; frozen by the prefers-reduced-motion kill switch).
+
 import DefaultHero from '@astrojs/starlight/components/Hero.astro'
+import LandingRouteNav from './LandingRouteNav.astro'
 import TerminalDemo from './TerminalDemo.astro'
 import { TEMPLATE_CATALOG } from '@/data/template-catalog'
+
+type LandingRoute = 'home' | 'create' | 'xtarterize'
+type HeroProduct = 'create-xtarter-app' | 'xtarterize'
+type HeroEvent = 'hero_lane_click' | 'hero_cta_browse' | 'hero_cta_get_started' | 'hero_cta_cli_reference'
+
+interface HeroAction {
+  event: HeroEvent
+  href: string
+  intent: string
+  label: string
+  product: HeroProduct
+}
+
+interface HeroContent {
+  context: string
+  lede: string
+  next: string
+  primary: HeroAction
+  secondary: HeroAction
+  title: string
+}
 
 const { entry } = Astro.locals.starlightRoute
 const path = Astro.url.pathname.replace(/\/+$/, '') || '/'
 
 const isHome = entry.id === 'index' || path === '/'
+const isCreate = entry.id === 'create-xtarter-app' || path === '/create-xtarter-app'
 const isXtz = entry.id === 'xtarterize' || path === '/xtarterize'
-const isCxa = entry.id === 'create-xtarter-app' || path === '/create-xtarter-app'
+const isLanding = isHome || isCreate || isXtz
+const route: LandingRoute = isHome ? 'home' : isCreate ? 'create' : 'xtarterize'
+
+const heroByRoute: Record<LandingRoute, HeroContent> = {
+  home: {
+    context: 'Two tools. One known-good baseline.',
+    lede: 'Start a JavaScript or TypeScript repository with create-xtarter-app, or inspect an existing repository with xtarterize. See the plan, choose the next action, and keep the result maintainable.',
+    next: 'Start with a template or inspect an existing repository.',
+    primary: {
+      event: 'hero_lane_click',
+      href: '/create-xtarter-app/',
+      intent: 'scaffold',
+      label: 'Scaffold a new repo',
+      product: 'create-xtarter-app',
+    },
+    secondary: {
+      event: 'hero_lane_click',
+      href: '/xtarterize/',
+      intent: 'preview',
+      label: 'Preview an existing repo',
+      product: 'xtarterize',
+    },
+    title: 'Make the repo legible.',
+  },
+  create: {
+    context: 'A deliberate first commit starts with a choice.',
+    lede: 'create-xtarter-app asks for a project name, template, package manager, and Git preference before it downloads a documented starter. A documented stack summary is visible before you commit to it.',
+    next: 'Choose a template, then review the first-run decisions.',
+    primary: {
+      event: 'hero_cta_get_started',
+      href: '/create-xtarter-app/getting-started/',
+      intent: 'scaffold',
+      label: 'Scaffold a project',
+      product: 'create-xtarter-app',
+    },
+    secondary: {
+      event: 'hero_cta_browse',
+      href: '/create-xtarter-app/guide/templates/',
+      intent: 'templates',
+      label: 'Compare templates',
+      product: 'create-xtarter-app',
+    },
+    title: 'Choose a baseline.',
+  },
+  xtarterize: {
+    context: 'Existing repository? Start with a receipt, not a rewrite.',
+    lede: 'xtarterize detects the project, selects applicable conformance tasks, and shows a plan with explicit statuses. Preview first, then apply the changes that belong in your repository.',
+    next: 'Run a dry run before an apply run.',
+    primary: {
+      event: 'hero_cta_get_started',
+      href: '/xtarterize/getting-started/initialization/',
+      intent: 'preview',
+      label: 'Preview a plan',
+      product: 'xtarterize',
+    },
+    secondary: {
+      event: 'hero_cta_cli_reference',
+      href: '/xtarterize/guide/cli/overview/',
+      intent: 'cli',
+      label: 'Read the CLI',
+      product: 'xtarterize',
+    },
+    title: 'Inspect before you change.',
+  },
+}
+
+const hero = heroByRoute[route]
 ---
 
 {
-  !isHome && !isXtz && !isCxa ? (
+  !isLanding ? (
     <DefaultHero />
-  ) : isHome ? (
-    <div class="hero xt-hero xt-hero-dark xt-hero-home">
-      <div class="xt-hero-grid">
-        <div class="xt-hero-copy">
-          <p class="xt-eyebrow">xtarter &middot; two tools, one standard</p>
-          <h1 id="_top" data-page-title
-            ><span class="xt-h1-line">Start conformant.</span>
-            <span class="xt-h1-line xt-h1-accent">Stay conformant.</span></h1
-          >
-          <p class="xt-hero-lede">
-            Scaffold new JavaScript and TypeScript projects with
-            create-xtarter-app, or bring existing repos up to standard with
-            xtarterize. Both give you Biome, strict TypeScript, CI, and editor
-            configs.
-          </p>
-          <div class="xt-hero-actions">
-            <a
-              class="xt-btn xt-btn-primary"
-              href="/create-xtarter-app/"
-              data-umami-event="hero_lane_click"
-              data-umami-event-product="create-xtarter-app"
-              >Start with a template</a
-            >
-            <a
-              class="xt-btn xt-btn-ghost-dark"
-              href="/xtarterize/"
-              data-umami-event="hero_lane_click"
-              data-umami-event-product="xtarterize"
-              >Get Started with xtarterize</a
-            >
-          </div>
-        </div>
-        <div class="xt-fork" aria-hidden="true" role="presentation">
-          <div class="xt-fork-row">
-            <span class="xt-fork-branch">├─</span>
-            <span class="xt-fork-prompt">$</span>
-            <code class="xt-fork-cmd">pnpm create xtarter-app@latest</code>
-            <span class="xt-cursor" aria-hidden="true"></span>
-          </div>
-          <div class="xt-fork-row">
-            <span class="xt-fork-branch">└─</span>
-            <span class="xt-fork-prompt">$</span>
-            <code class="xt-fork-cmd">pnpx xtarterize@latest init</code>
-            <span class="xt-cursor" aria-hidden="true"></span>
-          </div>
-        </div>
-      </div>
-    </div>
-  ) : isXtz ? (
-    <div class="hero xt-hero xt-hero-dark xt-hero-xtz">
-      <div class="xt-hero-grid">
-        <div class="xt-hero-copy">
-          <p class="xt-eyebrow">xtarterize &middot; conformance CLI</p>
-          <h1 id="_top" data-page-title>The conformance CLI for JavaScript &amp; TypeScript</h1>
-          <p class="xt-hero-lede">
-            Detects your stack, validates your configs, and writes nothing
-            without your approval.
-          </p>
-          <div class="xt-hero-actions">
-            <a class="xt-btn xt-btn-primary" href="/xtarterize/getting-started/installation/">Get Started</a>
-            <a class="xt-btn xt-btn-ghost-dark" href="/xtarterize/guide/cli/overview/">View CLI Reference</a>
-          </div>
-        </div>
-        <TerminalDemo />
-      </div>
-    </div>
   ) : (
-    <div class="hero xt-hero xt-hero-dark xt-hero-cxa">
-      <div class="xt-hero-grid">
-        <div class="xt-hero-copy">
-          <p class="xt-eyebrow">create-xtarter-app &middot; scaffolding CLI</p>
-          <h1 id="_top" data-page-title>Scaffold projects in seconds</h1>
-          <p class="xt-hero-lede">
-            Pick a template, run one command, and get linting, type checking,
-            CI, and editor settings.
-          </p>
-          <div class="xt-hero-actions">
-            <a class="xt-btn xt-btn-primary" href="/create-xtarter-app/getting-started/">Get Started</a>
-            <a class="xt-btn xt-btn-ghost-dark" href="/create-xtarter-app/guide/templates/">Browse Templates</a>
+    <div class:list={['hero', 'xt-hero', 'xt-landing-hero', `xt-hero-${route}`]}>
+      <div class="xt-hero-shell">
+        <LandingRouteNav current={route} />
+        <div class="xt-hero-grid">
+          <div class="xt-hero-copy">
+            <h1 id="_top" data-page-title>{hero.title}</h1>
+            <p class="xt-hero-context">
+              <span class="xt-signal" aria-hidden="true" />
+              {hero.context}
+            </p>
+            <p class="xt-hero-lede">{hero.lede}</p>
+            <div class="xt-hero-actions">
+              <a
+                class="xt-btn xt-btn-primary"
+                href={hero.primary.href}
+                data-umami-event={hero.primary.event}
+                data-umami-event-intent={hero.primary.intent}
+                data-umami-event-product={hero.primary.product}
+              >
+                {hero.primary.label}
+              </a>
+              <a
+                class="xt-btn xt-btn-secondary"
+                href={hero.secondary.href}
+                data-umami-event={hero.secondary.event}
+                data-umami-event-intent={hero.secondary.intent}
+                data-umami-event-product={hero.secondary.product}
+              >
+                {hero.secondary.label}
+              </a>
+            </div>
+            <p class="xt-hero-next">
+              <span>Next</span>
+              {hero.next}
+            </p>
           </div>
-        </div>
-        <div class="xt-prompt" aria-hidden="true" role="presentation">
-          <code class="xt-prompt-line">$ pnpm create xtarter-app@latest<span class="xt-cursor" aria-hidden="true"></span></code>
-          <span class="xt-prompt-q">?? Which template?</span>
-          <ol class="xt-prompt-list">
-            {TEMPLATE_CATALOG.map((t, i) => (
-              <li class:list={{ 'xt-prompt-item': true, 'is-selected': i === 0 }}>
-                <span class="xt-prompt-caret" aria-hidden="true">&rsaquo;</span>
-                <span>{t.name}</span>
-              </li>
-            ))}
-          </ol>
+
+          {route === 'home' ? (
+            <figure class="xt-artifact xt-home-rail">
+              <figcaption class="xt-artifact-bar">
+                <span>repository paths</span>
+                <span>choose one</span>
+              </figcaption>
+              <div class="xt-home-rail-body" aria-hidden="true">
+                <div class="xt-home-rail-row">
+                  <span class="xt-rail-state">new</span>
+                  <div class="xt-rail-copy">
+                    <code>create-xtarter-app</code>
+                    <span>choose a template</span>
+                  </div>
+                </div>
+                <div class="xt-home-rail-row">
+                  <span class="xt-rail-state">existing</span>
+                  <div class="xt-rail-copy">
+                    <code>xtarterize init</code>
+                    <span>inspect the plan</span>
+                  </div>
+                </div>
+              </div>
+              <p class="xt-artifact-summary">
+                New repository or existing repository, both paths end at a visible baseline.
+              </p>
+            </figure>
+          ) : route === 'create' ? (
+            <figure class="xt-artifact xt-template-manifest">
+              <figcaption class="xt-artifact-bar">
+                <span>template manifest</span>
+                <span>catalog / 05</span>
+              </figcaption>
+              <div class="xt-template-manifest-body" aria-hidden="true">
+                <code class="xt-manifest-command">pnpm create xtarter-app@latest</code>
+                <p class="xt-manifest-question">select a starting point</p>
+                <ol class="xt-manifest-list">
+                  {TEMPLATE_CATALOG.map((template, index) => (
+                    <li class:list={{ 'xt-manifest-item': true, 'is-selected': index === 0 }}>
+                      <span class="xt-manifest-caret" aria-hidden="true">›</span>
+                      <span>{template.name}</span>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+              <p class="xt-artifact-summary">
+                Five documented starting points. Each catalog card shows selected stack highlights.
+              </p>
+            </figure>
+          ) : (
+            <TerminalDemo />
+          )}
         </div>
       </div>
     </div>

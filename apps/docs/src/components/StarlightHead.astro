@@ -10,3 +10,271 @@ import Tracking from './Tracking.astro'
 <StarlightHead />
 <Analytics />
 <Tracking />
+
+<script>
+  const packageManagerTabsSelector =
+    'starlight-tabs[data-sync-key="starlight-package-managers-pkg"]'
+  let enhancedBody: HTMLElement | null = null
+  let runEnhancement = () => {}
+
+  type TableState = {
+    appliedLabel: string
+    previousLabel: string | null
+    previousTabIndex: string | null
+  }
+
+  const normalizeText = (value: string | null | undefined) =>
+    value?.replace(/\s+/g, ' ').trim() ?? ''
+
+  const setAttributeIfChanged = (
+    element: Element,
+    name: string,
+    value: string
+  ) => {
+    if (element.getAttribute(name) !== value) {
+      element.setAttribute(name, value)
+    }
+  }
+
+  const removeAttributeIfPresent = (element: Element, name: string) => {
+    if (element.hasAttribute(name)) {
+      element.removeAttribute(name)
+    }
+  }
+
+  const truncateText = (value: string, maximumLength: number) =>
+    value.length > maximumLength
+      ? `${value.slice(0, maximumLength - 3).trimEnd()}...`
+      : value
+
+  const getNearestHeading = (element: Element) => {
+    let nearestHeading: HTMLHeadingElement | null = null
+    const headings = document.querySelectorAll<HTMLHeadingElement>(
+      'main h1, main h2, main h3, main h4, main h5, main h6'
+    )
+
+    for (const heading of headings) {
+      if (
+        heading.compareDocumentPosition(element) &
+        Node.DOCUMENT_POSITION_FOLLOWING
+      ) {
+        nearestHeading = heading
+      }
+    }
+
+    return (
+      normalizeText(nearestHeading?.textContent) || normalizeText(document.title)
+    )
+  }
+
+  const getPackageTabLabel = (region: HTMLElement) => {
+    const panel = region.closest<HTMLElement>('[role="tabpanel"]')
+    const tabId = panel?.getAttribute('aria-labelledby')
+    const tab = tabId ? document.getElementById(tabId) : null
+    return normalizeText(tab?.textContent) || 'Package manager'
+  }
+
+  const getPackageCodeLabel = (region: HTMLElement) => {
+    const tabLabel = getPackageTabLabel(region)
+    const heading = getNearestHeading(region)
+    const code = normalizeText(region.querySelector('code')?.textContent)
+    return truncateText(
+      `${tabLabel} command for ${heading}: ${code || 'code example'}`,
+      140
+    )
+  }
+
+  const getTableLabel = (table: HTMLTableElement) => {
+    const caption = normalizeText(table.querySelector('caption')?.textContent)
+    if (caption) return truncateText(caption, 120)
+
+    const headers = [...table.querySelectorAll('thead th')]
+      .map((header) => normalizeText(header.textContent))
+      .filter(Boolean)
+    const heading =
+      getNearestHeading(table) || normalizeText(document.title) || 'Documentation'
+
+    return truncateText(
+      headers.length > 0 ? `${heading}: ${headers.join(', ')}` : `${heading} table`,
+      120
+    )
+  }
+
+  const getUniqueLabels = <T extends HTMLElement>(
+    elements: T[],
+    getLabel: (element: T) => string
+  ) => {
+    const counts = new Map<string, number>()
+    const labels = new Map<T, string>()
+
+    for (const element of elements) {
+      const baseLabel = getLabel(element)
+      const count = (counts.get(baseLabel) ?? 0) + 1
+      counts.set(baseLabel, count)
+      labels.set(
+        element,
+        count === 1 ? baseLabel : `${baseLabel}, example ${count}`
+      )
+    }
+
+    return labels
+  }
+
+  const restoreTable = (table: HTMLTableElement, state: TableState) => {
+    if (table.getAttribute('tabindex') === '0') {
+      if (state.previousTabIndex === null) {
+        removeAttributeIfPresent(table, 'tabindex')
+      } else {
+        setAttributeIfChanged(table, 'tabindex', state.previousTabIndex)
+      }
+    }
+
+    if (table.getAttribute('aria-label') === state.appliedLabel) {
+      if (state.previousLabel === null) {
+        removeAttributeIfPresent(table, 'aria-label')
+      } else {
+        setAttributeIfChanged(table, 'aria-label', state.previousLabel)
+      }
+    }
+  }
+
+  const startDocsEnhancement = () => {
+    const body = document.body
+    if (!body) return
+    if (enhancedBody === body) {
+      runEnhancement()
+      return
+    }
+
+    enhancedBody = body
+    const controller = new AbortController()
+    const observedTablists = new WeakSet<HTMLElement>()
+    const codeLabels = new Map<HTMLElement, string>()
+    const tableStates = new Map<HTMLTableElement, TableState>()
+    let animationFrame: number | null = null
+
+    const scheduleEnhancement = () => {
+      if (animationFrame !== null) return
+      animationFrame = window.requestAnimationFrame(() => {
+        animationFrame = null
+        enhanceDocumentation()
+      })
+    }
+
+    const resizeObserver = new ResizeObserver(scheduleEnhancement)
+    const mutationObserver = new MutationObserver(scheduleEnhancement)
+    runEnhancement = scheduleEnhancement
+
+    function enhanceDocumentation() {
+      const tablists = body.querySelectorAll<HTMLElement>(
+        `${packageManagerTabsSelector} .tablist-wrapper`
+      )
+      for (const tablist of tablists) {
+        resizeObserver.observe(tablist)
+        if (!observedTablists.has(tablist)) {
+          observedTablists.add(tablist)
+          tablist.addEventListener('scroll', scheduleEnhancement, {
+            passive: true,
+            signal: controller.signal,
+          })
+        }
+
+        const overflowsEnd =
+          tablist.scrollWidth - tablist.scrollLeft - tablist.clientWidth > 1
+        if (overflowsEnd) {
+          setAttributeIfChanged(tablist, 'data-overflow-end', '')
+        } else {
+          removeAttributeIfPresent(tablist, 'data-overflow-end')
+        }
+      }
+
+      const regions = [
+        ...body.querySelectorAll<HTMLElement>(
+          `${packageManagerTabsSelector} pre[role="region"]`
+        ),
+      ]
+      const activeRegions = new Set(regions)
+      for (const [region, appliedLabel] of codeLabels) {
+        if (
+          !activeRegions.has(region) &&
+          region.getAttribute('aria-label') === appliedLabel
+        ) {
+          removeAttributeIfPresent(region, 'aria-label')
+        }
+      }
+
+      const regionLabels = getUniqueLabels(regions, getPackageCodeLabel)
+      codeLabels.clear()
+      for (const region of regions) {
+        const label = regionLabels.get(region)
+        if (!label) continue
+        setAttributeIfChanged(region, 'aria-label', label)
+        codeLabels.set(region, label)
+      }
+
+      const tables = [...body.querySelectorAll<HTMLTableElement>('main table')]
+      const activeTables = new Set(tables)
+      for (const [table, state] of tableStates) {
+        if (!activeTables.has(table)) {
+          restoreTable(table, state)
+          tableStates.delete(table)
+        }
+      }
+
+      const tableLabels = getUniqueLabels(tables, getTableLabel)
+      for (const table of tables) {
+        const label = tableLabels.get(table)
+        if (!label) continue
+
+        if (table.scrollWidth > table.clientWidth) {
+          const state = tableStates.get(table) ?? {
+            appliedLabel: label,
+            previousLabel: table.getAttribute('aria-label'),
+            previousTabIndex: table.getAttribute('tabindex'),
+          }
+          state.appliedLabel = label
+          tableStates.set(table, state)
+          setAttributeIfChanged(table, 'tabindex', '0')
+          setAttributeIfChanged(table, 'aria-label', label)
+        } else {
+          const state = tableStates.get(table)
+          if (state) {
+            restoreTable(table, state)
+            tableStates.delete(table)
+          }
+        }
+      }
+    }
+
+    mutationObserver.observe(body, {
+      attributeFilter: [
+        'aria-label',
+        'aria-labelledby',
+        'aria-orientation',
+        'data-overflow-end',
+        'role',
+        'tabindex',
+      ],
+      attributes: true,
+      characterData: true,
+      childList: true,
+      subtree: true,
+    })
+    window.addEventListener('resize', scheduleEnhancement, {
+      signal: controller.signal,
+    })
+    document.fonts?.ready.then(() => {
+      if (enhancedBody === body) scheduleEnhancement()
+    })
+    scheduleEnhancement()
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', startDocsEnhancement, {
+      once: true,
+    })
+  } else {
+    startDocsEnhancement()
+  }
+  document.addEventListener('astro:page-load', startDocsEnhancement)
+</script>

@@ -8,7 +8,8 @@ Both CLIs require Node.js 24 or later. `xtarterize` also requires a `package.jso
 
 - Start a new JavaScript/TypeScript project with `create-xtarter-app`.
 - Conform an existing JavaScript/TypeScript repository with `xtarterize`.
-- Preview changes before writing with `xtarterize diff` or `xtarterize init --dry-run`.
+- Preview changes before writing with `xtarterize diff` or `xtarterize init --dry-run`; those paths do not create backups, although they may update `.gitignore` with `/.xtarterize/`.
+- Interactive `init` and `sync` runs ask before applying. Use `--yes` or `--quiet` for an explicit non-interactive apply path; apply creates backups under `.xtarterize/backups/` before modifying files.
 - Keep an existing repository's current standard when it already works.
 
 ## How to call the tools

@@ -26,13 +26,13 @@ const JSON_LD = serializeJsonLd({
     buildFounderPersonJsonLd(),
     buildSoftwareApplicationJsonLd(
       'xtarterize',
-      'Conformance CLI that brings existing JavaScript/TypeScript projects up to a production-grade baseline (linting, strict TypeScript, CI, editor configs) with dry-run previews and approval before writing.',
+      'Conformance CLI that detects an existing JavaScript/TypeScript project, previews a plan, and applies selected configuration changes with backups during apply.',
       `${SITE_URL}/xtarterize/`,
       'https://github.com/agustinusnathaniel/xtarterize'
     ),
     buildSoftwareApplicationJsonLd(
       'create-xtarter-app',
-      'Scaffolding CLI that creates new JavaScript/TypeScript projects from five production-grade starter templates with Biome, strict TypeScript, CI, editor configs, and agent skills preconfigured.',
+      'Scaffolding CLI that creates new JavaScript/TypeScript projects from five documented starter templates, installs dependencies, and can initialize Git.',
       `${SITE_URL}/create-xtarter-app/`,
       'https://github.com/agustinusnathaniel/xtarterize'
     ),
@@ -40,9 +40,9 @@ const JSON_LD = serializeJsonLd({
 });
 
 const LLMS_DETAILS = `**When to use xtarter:**
-- Scaffold new JS/TS projects with \`pnpm create xtarter-app@latest\` (or \`npx create-xtarter-app@latest\`) — create-xtarter-app templates include Biome, strict TypeScript, CI, and editor configs.
-- Bring existing repos to standard with \`pnpx xtarterize@latest\` — tasks for linting/typecheck/CI/editor, idempotent with dry-run preview before writing.
-- Use \`check\` / \`dryRun\` to preview without writing; tasks are idempotent so running twice is safe.
+- Scaffold new JS/TS projects with \`pnpm create xtarter-app@latest\` (or \`npx create-xtarter-app@latest\`). Each template has a documented stack, so inspect the catalog before choosing one.
+- Bring existing repos to standard with \`pnpx xtarterize@latest\`. Dry-run and diff previews do not create backups; apply creates them before modifying files. Interactive runs ask before applying, while \`--yes\` and \`--quiet\` are explicit non-interactive paths.
+- Use \`check\` / \`diff\` to inspect conformance without writing conformance files; commands may create or update the project \`.gitignore\` with \`/.xtarterize/\`.
 - When NOT to use: not a runtime library/framework; JavaScript/TypeScript projects only.
 - Full instructions in [xtarter agent instructions](${SITE_URL}/agents.md); discover routes via [sitemap](${SITE_URL}/sitemap-index.xml) and per-page \`.md\` twins (e.g. \`/xtarterize/guide/cli/overview.md\`).
 
@@ -102,29 +102,9 @@ export default defineConfig({
         {
           attrs: {
             content:
-              'xtarter - Production-grade JS/TS starters & conformance tooling',
-            property: 'og:title',
-          },
-          tag: 'meta',
-        },
-        {
-          attrs: {
-            content:
-              'Scaffold new projects or bring conformance to existing ones. Biome, TypeScript strict, CI, editor configs - ready in seconds.',
-            property: 'og:description',
-          },
-          tag: 'meta',
-        },
-        {
-          attrs: {
-            content:
               'https://og.sznm.dev/api/generate?heading=xtarter&text=Production-grade%20JS/TS%20starters%20%26%20conformance%20tooling&template=color',
             property: 'og:image',
           },
-          tag: 'meta',
-        },
-        {
-          attrs: { content: 'https://xtarter.sznm.dev', property: 'og:url' },
           tag: 'meta',
         },
         {

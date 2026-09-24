@@ -1,0 +1,49 @@
+---
+type RouteKey = 'home' | 'create' | 'xtarterize'
+
+interface Props {
+  current: RouteKey
+}
+
+const { current } = Astro.props
+
+const routes = [
+  { hint: 'Start here', key: 'home', label: 'Overview', path: '/' },
+  {
+    hint: 'New repository',
+    key: 'create',
+    label: 'Create',
+    path: '/create-xtarter-app/',
+  },
+  {
+    hint: 'Existing repository',
+    key: 'xtarterize',
+    label: 'Conform',
+    path: '/xtarterize/',
+  },
+] as const
+---
+
+<nav class="xt-route-nav" aria-label="Product routes">
+  <p class="xt-route-nav-title">Product routes</p>
+  <ul class="xt-route-nav-list">
+    {
+      routes.map((route) => (
+        <li>
+          <a
+            class:list={[
+              'xt-route-nav-link',
+              current === route.key && 'is-current',
+            ]}
+            href={route.path}
+            aria-current={current === route.key ? 'page' : undefined}
+            data-route={route.key}
+          >
+            <span class="xt-route-nav-label">{route.label}</span>
+            <span class="xt-route-nav-hint">{route.hint}</span>
+          </a>
+        </li>
+      ))
+    }
+  </ul>
+</nav>
