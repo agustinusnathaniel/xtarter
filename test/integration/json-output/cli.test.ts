@@ -293,6 +293,34 @@ it('check --badge <file> --json writes the badge and keeps stdout a valid JSON p
 
       const svg = await fs.readFile(badgePath, 'utf-8');
       expect(svg).toContain('<svg');
+
+      // Badge contract, derived from the reported summary so the test
+      // tracks behavior rather than hardcoded task counts.
+      const summary = (
+        output as { summary: { conformant: number; total: number } }
+      ).summary;
+      const percentage =
+        summary.total === 0
+          ? 100
+          : Math.round((summary.conformant / summary.total) * 100);
+      const expectedStatus =
+        percentage >= 90
+          ? 'excellent'
+          : percentage >= 70
+            ? 'good'
+            : percentage >= 50
+              ? 'fair'
+              : 'needs work';
+      const expectedWidth = Math.max(4, Math.round((percentage / 100) * 80));
+      expect(svg.startsWith('<svg')).toBe(true);
+      expect(svg.endsWith('</svg>')).toBe(true);
+      expect(svg).toContain(`${summary.conformant}/${summary.total}`);
+      expect(svg).toContain(`${percentage}%`);
+      expect(svg).toContain(
+        `aria-label="conformance: ${summary.conformant}/${summary.total} (${percentage}%)"`
+      );
+      expect(svg).toContain(`${percentage}% - ${expectedStatus}`);
+      expect(svg).toContain(`width="${expectedWidth}"`);
     } finally {
       process.exitCode = 0;
     }

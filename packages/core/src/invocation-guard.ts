@@ -15,7 +15,6 @@ interface PluginContext {
 }
 
 interface InvocationGuardOptions {
-  /** Display name used in error lines, e.g. `xtarterize` */
   commandLabel: string;
   /**
    * When true, the first positional must be a known subcommand (the entry
@@ -34,17 +33,6 @@ async function toArgsDefinition(argsDef: unknown): Promise<CliArgsDefinition> {
   return (resolved ?? {}) as CliArgsDefinition;
 }
 
-function toArgsDefinitionLoaders(
-  subcommands: SubcommandLoaders
-): Record<string, () => Promise<CliArgsDefinition>> {
-  return Object.fromEntries(
-    Object.entries(subcommands).map(([name, load]) => [
-      name,
-      async () => toArgsDefinition((await load()).args),
-    ])
-  );
-}
-
 /**
  * Fail fast on invalid invocations (unknown commands or options, with
  * suggestions) before citty dispatches them. Citty ignores undeclared
@@ -57,12 +45,18 @@ export function createInvocationGuard(
   return defineCittyPlugin({
     name: 'invocation-guard',
     async setup(context: PluginContext) {
+      const subcommands = Object.fromEntries(
+        Object.entries(options.subcommands).map(([name, load]) => [
+          name,
+          async () => toArgsDefinition((await load()).args),
+        ])
+      );
       const issues = await validateInvocation({
         argsDef: await toArgsDefinition(context.cmd.args),
         commandLabel: options.commandLabel,
         rawArgs: context.rawArgs,
         requireKnownSubcommand: options.requireKnownSubcommand,
-        subcommands: toArgsDefinitionLoaders(options.subcommands),
+        subcommands,
       });
       if (issues.length === 0) {
         return;

@@ -28,7 +28,10 @@ const { mockGetAllTasks } = vi.hoisted(() => ({
 // Module-global mock: spread the real tasks module and default getAllTasks to
 // the real one so un-mocked tests are unaffected. Individual tests override
 // with mockImplementationOnce.
-vi.mock('@xtarterize/tasks', async (importOriginal) => {
+// App sources resolve the workspace package through apps/xtarterize/node_modules
+// to the built entry, so the mock must target that resolved id (the root
+// tsconfig path mapping only covers root-level test imports).
+vi.mock('/packages/tasks/dist/index.mjs', async (importOriginal) => {
   const actual = await importOriginal<typeof import('@xtarterize/tasks')>();
   mockGetAllTasks.mockImplementation(actual.getAllTasks);
   return { ...actual, getAllTasks: mockGetAllTasks };

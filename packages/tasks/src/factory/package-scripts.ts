@@ -6,11 +6,7 @@ import {
 import type { PackageJson } from 'pkg-types';
 
 import { defineTask, type TaskDep } from './define-task.js';
-import {
-  areEquivalent,
-  extractTool,
-  findEquivalentScriptKey,
-} from './equivalence.js';
+import { areEquivalent, extractTool } from './equivalence.js';
 import {
   filterMissingScripts,
   hasInstalledDependency,
@@ -116,7 +112,6 @@ export function lintToolScripts(
   }
 }
 
-/** Command tools that satisfy a task whose script key may differ. */
 const TOOL_TASK_NAMES: Record<string, string> = {
   jest: 'test',
   mocha: 'test',
@@ -185,21 +180,6 @@ function getUpgradeCommand(pm: string): string {
   }
 }
 
-function pushIfMissing(
-  scripts: Array<ScriptEntry>,
-  existing: ScriptsMap,
-  entry: ScriptEntry
-): void {
-  if (
-    !(
-      Object.hasOwn(existing, entry.script) ||
-      findEquivalentScriptKey(existing, entry.value)
-    )
-  ) {
-    scripts.push(entry);
-  }
-}
-
 function collectScriptCandidates(params: {
   existingScripts: ScriptsMap;
   lintTool: LintTool | null;
@@ -228,9 +208,7 @@ function collectScriptCandidates(params: {
         ]
       : []),
   ];
-  for (const entry of candidates) {
-    pushIfMissing(scripts, existingScripts, entry);
-  }
+  scripts.push(...filterMissingScripts(existingScripts, candidates));
 
   const hasTurbo =
     profile.monorepoTool === 'turbo' ||

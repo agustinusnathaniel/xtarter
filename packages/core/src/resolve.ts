@@ -9,7 +9,7 @@ import type { ResolveTiming } from '@/timing.js';
 import { describeCause } from '@/utils/errors.js';
 import { logWarn } from '@/utils/logger.js';
 
-const TASK_CONCURRENCY = 8;
+export const TASK_CONCURRENCY = 8;
 
 export interface TaskCheckResult {
   checkError?: string;
@@ -27,7 +27,6 @@ export function resolveTasks(
       return false;
     }
 
-    // Scope filtering for monorepos
     if (profile.monorepo) {
       const scope = task.scope ?? 'both';
       if (profile.workspaceRoot && scope === 'package') {
@@ -47,7 +46,6 @@ interface CheckOutcome {
   status: TaskStatus;
 }
 
-/** Message text the pre-Effect engine extracted from a failed task call. */
 export function failureDetail(cause: Cause.Cause<unknown>): string {
   const error = Cause.findErrorOption(cause);
   if (Option.isSome(error)) {

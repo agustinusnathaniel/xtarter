@@ -10,7 +10,7 @@ import {
  * the package-scripts cases that lived in `plop.test.ts`. Fixture rows run
  * against the on-disk fixture, everything else against `withProject`.
  */
-export const packageScriptsCases = defineScriptCases(20, [
+export const packageScriptsCases = defineScriptCases([
   {
     applicable: true,
     fixture: 'react-vite-tailwind',
@@ -251,7 +251,7 @@ export const packageScriptsCases = defineScriptCases(20, [
  * package-scripts cases that lived in `plop.test.ts`, kept under their
  * original `plopTask` describe chain by the suite.
  */
-export const packageScriptsPlopCases = defineScriptCases(4, [
+export const packageScriptsPlopCases = defineScriptCases([
   {
     afterContains: [
       '"lint": "vp lint"',
