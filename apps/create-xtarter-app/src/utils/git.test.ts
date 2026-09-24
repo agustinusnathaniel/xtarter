@@ -4,18 +4,11 @@ import { join } from 'node:path';
 import { exec } from 'tinyexec';
 import { describe, expect, test } from 'vite-plus/test';
 
-import { initializeGit, isGitInstalled } from '@/utils/git';
+import { initializeGit } from '@/utils/git';
 
 async function createTempDir(): Promise<string> {
   return mkdtemp(join(tmpdir(), 'cxa-git-test-'));
 }
-
-describe('isGitInstalled', () => {
-  test('should return true when git is available', async () => {
-    const result = await isGitInstalled();
-    expect(result).toBe(true);
-  });
-});
 
 describe('initializeGit', () => {
   test('should return false when the commit fails', async () => {

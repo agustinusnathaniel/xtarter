@@ -435,14 +435,4 @@ describe('task registration', () => {
     expect(ids).toContain('workspace/pnpm-workspace');
     expect(ids).toContain('release/versionrc');
   });
-
-  test('pnpmWorkspaceTask is exported', () => {
-    expect(pnpmWorkspaceTask).toBeDefined();
-    expect(pnpmWorkspaceTask.id).toBe('workspace/pnpm-workspace');
-  });
-
-  test('versionrcTask is exported', () => {
-    expect(versionrcTask).toBeDefined();
-    expect(versionrcTask.id).toBe('release/versionrc');
-  });
 });

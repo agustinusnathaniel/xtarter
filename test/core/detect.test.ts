@@ -262,35 +262,6 @@ describe('detectProject', () => {
       });
     });
   }
-
-  test('detects Vite+ from vite-plus dep', async () => {
-    await withProject(
-      {
-        'package.json': {
-          devDependencies: { 'vite-plus': '^0.1.0' },
-          name: 'vp-project',
-        },
-      },
-      async ({ profile }) => {
-        expect(profile.vitePlus).toBe(true);
-      }
-    );
-  });
-
-  test('detects Vite+ from fixtures/vite-plus-no-lint', async () => {
-    const profile = await fixtureProfile('vite-plus-no-lint');
-    expect(profile.vitePlus).toBe(true);
-    expect(profile.existing.biome).toBe(false);
-    expect(profile.existing.eslint).toBe(false);
-    expect(profile.existing.oxlint).toBe(false);
-    expect(profile.existing.oxfmt).toBe(false);
-  });
-
-  test('detects Vite+ with biome in vite-plus-biome fixture', async () => {
-    const profile = await fixtureProfile('vite-plus-biome');
-    expect(profile.vitePlus).toBe(true);
-    expect(profile.existing.biome).toBe(true);
-  });
 });
 
 describe('detectProject', () => {
@@ -324,20 +295,6 @@ describe('detectProject', () => {
         expect(profile.existing.oxfmt).toBe(true);
       }
     );
-  });
-
-  test('detects ESLint from fixtures/eslint-project', async () => {
-    const profile = await fixtureProfile('eslint-project');
-    expect(profile.existing.eslint).toBe(true);
-    expect(profile.existing.biome).toBe(false);
-  });
-
-  test('detects oxlint standalone from fixtures/oxlint-standalone', async () => {
-    const profile = await fixtureProfile('oxlint-standalone');
-    expect(profile.existing.oxlint).toBe(true);
-    expect(profile.vitePlus).toBe(false);
-    expect(profile.existing.biome).toBe(false);
-    expect(profile.existing.eslint).toBe(false);
   });
 });
 

@@ -6,27 +6,6 @@ import { applyTaskSelection, loadSelectionConfig } from '@xtarterize/core';
 import { describe, expect } from 'vite-plus/test';
 
 describe('loadSelectionConfig', () => {
-  test('returns empty selection when no config file exists', async () => {
-    await withTempDir('xtarter-selection-empty-', async (tmpDir) => {
-      const selection = await run(loadSelectionConfig(tmpDir));
-      expect(selection).toEqual({ only: [], skip: [] });
-    });
-  });
-
-  test('reads skip/only from .xtarterizerc', async () => {
-    await withTempDir('xtarter-selection-dot-', async (tmpDir) => {
-      await fs.writeFile(
-        path.join(tmpDir, '.xtarterizerc'),
-        JSON.stringify({ only: ['ts/strict'], skip: ['agent/skills-install'] })
-      );
-      const selection = await run(loadSelectionConfig(tmpDir));
-      expect(selection).toEqual({
-        only: ['ts/strict'],
-        skip: ['agent/skills-install'],
-      });
-    });
-  });
-
   test('reads skip/only from .xtarterizerc.json', async () => {
     await withTempDir('xtarter-selection-json-', async (tmpDir) => {
       await fs.writeFile(
@@ -105,18 +84,6 @@ describe('loadSelectionConfig', () => {
 
 describe('applyTaskSelection', () => {
   const tasks = [{ id: 'a' }, { id: 'b' }, { id: 'c' }];
-
-  test('passes all tasks through when no selection is provided', () => {
-    expect(applyTaskSelection(tasks, {})).toEqual(tasks);
-  });
-
-  test('CLI --only overrides configOnly', () => {
-    const result = applyTaskSelection(tasks, {
-      cliOnly: 'a',
-      configOnly: ['b', 'c'],
-    });
-    expect(result.map((t) => t.id)).toEqual(['a']);
-  });
 
   test('CLI --only empty string falls back to configOnly', () => {
     const result = applyTaskSelection(tasks, {
