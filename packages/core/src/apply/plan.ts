@@ -12,13 +12,12 @@ import type { TaskError } from '@/errors.js';
 import {
   collectTaskChecks,
   failureDetail,
+  TASK_CONCURRENCY,
   type TaskCheckResult,
 } from '@/resolve.js';
 import { toTaskEffect } from '@/task-effect.js';
 import { logInfo } from '@/utils/logger.js';
 import type { DepToInstall } from '@/utils/pkg.js';
-
-const TASK_CONCURRENCY = 8;
 
 export interface PlanTasksOptions {
   cwd: string;
@@ -54,26 +53,16 @@ interface ClassifiedCheck {
   skipped: boolean;
 }
 
-function shouldSkip(status: TaskStatus, includeConflicts: boolean): boolean {
-  if (status === 'skip') {
-    return true;
-  }
-  if (status === 'conflict' && !includeConflicts) {
-    return true;
-  }
-  return false;
-}
-
 function classifyChecks(
   checkResults: Array<TaskCheckResult>,
   includeConflicts: boolean,
   quiet: boolean
 ): Array<ClassifiedCheck> {
-  const classifications = checkResults.map((result) => ({
-    result,
-    skipped: shouldSkip(result.status, includeConflicts),
-  }));
-  for (const { result, skipped } of classifications) {
+  const classifications: Array<ClassifiedCheck> = [];
+  for (const result of checkResults) {
+    const skipped =
+      result.status === 'skip' ||
+      (result.status === 'conflict' && !includeConflicts);
     if (
       skipped &&
       result.status === 'conflict' &&
@@ -82,6 +71,7 @@ function classifyChecks(
     ) {
       logInfo(`Skipping conflict: ${result.task.label} (${result.task.id})`);
     }
+    classifications.push({ result, skipped });
   }
   return classifications;
 }

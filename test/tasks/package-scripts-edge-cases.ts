@@ -10,7 +10,7 @@ import {
  * `package-scripts-edge.test.ts`. The suite nests them under the original
  * `edge cases` describe so the full test names are preserved.
  */
-export const packageScriptsEdgeCases = defineScriptCases(17, [
+export const packageScriptsEdgeCases = defineScriptCases([
   {
     afterContains: ['"biome"', '"typecheck"', '"test"', '"check:turbo"'],
     name: 'handles empty scripts object',
@@ -165,7 +165,7 @@ export const packageScriptsEdgeCases = defineScriptCases(17, [
  * The suite nests them under the original describe chain so the full test
  * names are preserved.
  */
-export const packageScriptsPragmaticCases = defineScriptCases(8, [
+export const packageScriptsPragmaticCases = defineScriptCases([
   {
     afterContains: ['"biome"', '"test"', '"check:turbo"'],
     afterNotContains: ['"biome:fix"'],

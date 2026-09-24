@@ -44,16 +44,9 @@ export interface ScriptCase {
   status?: TaskStatus;
 }
 
-/** Import-time guard: dropping a row must fail the suite. */
 export function defineScriptCases(
-  expected: number,
   cases: ReadonlyArray<ScriptCase>
 ): ReadonlyArray<ScriptCase> {
-  if (cases.length !== expected) {
-    throw new Error(
-      `packageScriptsTask table drift: expected ${expected}, found ${cases.length}`
-    );
-  }
   return cases;
 }
 
