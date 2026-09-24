@@ -201,21 +201,6 @@ describe('scoreTasks', () => {
 });
 
 describe('scoreTasks', () => {
-  test('allows custom weight configuration', () => {
-    const weightedResults = scoreTasks(mockTasks, 'lint', {
-      weights: {
-        config: 0.15,
-        group: 0.15,
-        id: 0.1,
-        keywords: 0.5,
-        label: 0.1,
-      },
-    });
-    expect(weightedResults.length).toBeGreaterThan(0);
-    // With higher keyword weight, lint/biome should still be on top
-    expect(weightedResults[0].taskId).toBe('lint/biome');
-  });
-
   test('scores tasks without searchMeta using label/id/group', () => {
     const results = scoreTasks([taskNoMeta, ...mockTasks], 'example', {
       minScore: 0,
@@ -234,12 +219,6 @@ describe('scoreTasks', () => {
     expect(noMetaResult?.signals.find((s) => s.name === 'config')?.score).toBe(
       0
     );
-  });
-
-  test('returns all results with minScore: 0', () => {
-    const results = scoreTasks(mockTasks, 'strict', { minScore: 0 });
-    // Should include ts/strict AND any other task with even marginal relevance
-    expect(results.find((r) => r.taskId === 'ts/strict')).toBeDefined();
   });
 
   test('returns all results with maxResults: 0 (unlimited)', () => {

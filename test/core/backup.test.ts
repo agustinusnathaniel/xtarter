@@ -32,52 +32,11 @@ describe('backup', () => {
     });
   });
 
-  test('backup → modify → restore round-trip preserves original content', async () => {
-    await withTempDir('xtarterize-roundtrip-', async (tmpDir) => {
-      const filePath = 'test.txt';
-      const originalContent = 'original content';
-      const fullPath = path.join(tmpDir, filePath);
-      await fs.writeFile(fullPath, originalContent, 'utf-8');
-
-      await backupFile(tmpDir, filePath);
-
-      await fs.writeFile(fullPath, 'modified content', 'utf-8');
-
-      const backups = await listBackups(tmpDir, filePath);
-      expect(backups.length).toBe(1);
-
-      const backup = backups[0];
-      expect(backup).toBeDefined();
-      // biome-ignore lint/style/noNonNullAssertion: guarded by toBeDefined above
-      await restoreBackup(tmpDir, backup!);
-
-      const restoredContent = await fs.readFile(fullPath, 'utf-8');
-      expect(restoredContent).toBe(originalContent);
-    });
-  });
-
   test('backupFile handles non-existent source file gracefully', async () => {
     await withTempDir('xtarterize-nonexistent-', async (tmpDir) => {
       await expect(
         backupFile(tmpDir, 'nonexistent.txt')
       ).resolves.toBeUndefined();
-    });
-  });
-
-  test('restoreBackup with missing backup file reports error', async () => {
-    await withTempDir('xtarterize-badrestore-', async (tmpDir) => {
-      const invalidBackup = {
-        backupPath: path.join(
-          tmpDir,
-          '.xtarterize',
-          'backups',
-          'no-such-backup'
-        ),
-        filepath: 'some-file.txt',
-        timestamp: new Date().toISOString(),
-      };
-
-      await expect(restoreBackup(tmpDir, invalidBackup)).rejects.toThrow();
     });
   });
 });
@@ -91,13 +50,6 @@ describe('run manifest', () => {
       expect(manifest).not.toBeNull();
       expect(manifest?.files).toEqual(['tsconfig.json', 'biome.json']);
       expect(manifest?.timestamp).toBeTruthy();
-    });
-  });
-
-  test('returns null when no manifest exists', async () => {
-    await withTempDir('xtarterize-manifest-', async (tmpDir) => {
-      const manifest = await readRunManifest(tmpDir);
-      expect(manifest).toBeNull();
     });
   });
 

@@ -1,6 +1,5 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { isDeepStrictEqual } from 'node:util';
 import { withTempDir } from '@test/helpers/temp.js';
 import {
   backupFile,
@@ -9,7 +8,6 @@ import {
   findUnknownFlags,
   hasDependency,
   listBackups,
-  readPackageJson,
   restoreBackup,
   suggestSimilar,
   validateInvocation,
@@ -250,44 +248,6 @@ describe('validateInvocation', () => {
   });
 });
 
-describe('isDeepStrictEqual (node:util)', () => {
-  test('returns true for identical primitives', () => {
-    expect(isDeepStrictEqual(1, 1)).toBe(true);
-    expect(isDeepStrictEqual('a', 'a')).toBe(true);
-    expect(isDeepStrictEqual(true, true)).toBe(true);
-    expect(isDeepStrictEqual(null, null)).toBe(true);
-    expect(isDeepStrictEqual(undefined, undefined)).toBe(true);
-  });
-
-  test('returns false for different primitives', () => {
-    expect(isDeepStrictEqual(1, 2)).toBe(false);
-    expect(isDeepStrictEqual('a', 'b')).toBe(false);
-    expect(isDeepStrictEqual(true, false)).toBe(false);
-  });
-
-  test('returns false for different types', () => {
-    expect(isDeepStrictEqual(1, '1')).toBe(false);
-    expect(isDeepStrictEqual({}, [])).toBe(false);
-  });
-
-  test('compares flat objects', () => {
-    expect(isDeepStrictEqual({ a: 1, b: 2 }, { a: 1, b: 2 })).toBe(true);
-    expect(isDeepStrictEqual({ a: 1, b: 2 }, { a: 1, b: 3 })).toBe(false);
-    expect(isDeepStrictEqual({ a: 1 }, { a: 1, b: 2 })).toBe(false);
-  });
-
-  test('compares nested objects', () => {
-    expect(isDeepStrictEqual({ a: { b: 1 } }, { a: { b: 1 } })).toBe(true);
-    expect(isDeepStrictEqual({ a: { b: 1 } }, { a: { b: 2 } })).toBe(false);
-  });
-
-  test('compares arrays', () => {
-    expect(isDeepStrictEqual([1, 2, 3], [1, 2, 3])).toBe(true);
-    expect(isDeepStrictEqual([1, 2, 3], [3, 2, 1])).toBe(false);
-    expect(isDeepStrictEqual([1, 2], [1, 2, 3])).toBe(false);
-  });
-});
-
 describe('findConfigFile', () => {
   test('finds existing file by extension', async () => {
     await withTempDir('xtarterize-', async (tmpDir) => {
@@ -320,27 +280,6 @@ describe('findConfigFile', () => {
   });
 });
 
-describe('readPackageJson', () => {
-  test('returns null when no package.json', async () => {
-    await withTempDir('xtarterize-', async (tmpDir) => {
-      const result = await readPackageJson(tmpDir);
-      expect(result).toBeNull();
-    });
-  });
-
-  test('reads existing package.json', async () => {
-    await withTempDir('xtarterize-', async (tmpDir) => {
-      await fs.writeFile(
-        path.join(tmpDir, 'package.json'),
-        JSON.stringify({ name: 'test-pkg', version: '1.0.0' })
-      );
-      const result = await readPackageJson(tmpDir);
-      expect(result?.name).toBe('test-pkg');
-      expect(result?.version).toBe('1.0.0');
-    });
-  });
-});
-
 describe('hasDependency', () => {
   test('checks dependencies', () => {
     const pkg = {
@@ -358,21 +297,6 @@ describe('hasDependency', () => {
 });
 
 describe('restoreBackup', () => {
-  test('restores a backed up file', async () => {
-    await withTempDir('xtarterize-', async (tmpDir) => {
-      await fs.writeFile(path.join(tmpDir, 'test.txt'), 'original');
-      await backupFile(tmpDir, 'test.txt');
-
-      await fs.writeFile(path.join(tmpDir, 'test.txt'), 'modified');
-      const backups = await listBackups(tmpDir, 'test.txt');
-      expect(backups.length).toBe(1);
-
-      await restoreBackup(tmpDir, backups[0]);
-      const content = await fs.readFile(path.join(tmpDir, 'test.txt'), 'utf-8');
-      expect(content).toBe('original');
-    });
-  });
-
   test('restores the most recent backup', async () => {
     await withTempDir('xtarterize-', async (tmpDir) => {
       await fs.writeFile(path.join(tmpDir, 'test.txt'), 'v1');

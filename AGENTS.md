@@ -200,6 +200,12 @@ Write code that is **accessible, performant, type-safe, and maintainable**. Focu
 - Keep external tools and process-global state isolated, await async work, clean temporary resources in `finally`, and never hide command failures.
 - Read [`docs/TESTING.md`](docs/TESTING.md) for the detailed repository testing policy.
 
+### Future-Agent Testing Rules
+
+- Never write unit tests after you write code.
+- Highly prefer E2E tests as the sole testing mechanism. Use them to verify complex features work. At the end of E2E tests, produce a verifiable and repeatable artifact.
+- If you must test a system in isolation, first write down all the ways it could fail, then write the code.
+
 ## Testing
 
 - Write assertions inside `it()` or `test()` blocks

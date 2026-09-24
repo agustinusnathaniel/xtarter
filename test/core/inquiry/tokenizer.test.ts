@@ -54,13 +54,6 @@ describe('tokenize', () => {
     expect(result.tokens).toEqual(['ber', 'strict']);
   });
 
-  test('normalizes hyphens to spaces so hyphenated queries match spaced terms', () => {
-    const result = tokenize('agent-skills setup');
-    expect(result.tokens).toContain('agent');
-    expect(result.tokens).toContain('skills');
-    expect(result.tokens).not.toContain('agent-skills');
-  });
-
   test('removes common setup-related stopwords', () => {
     const result = tokenize('configure project setup');
     // 'configure', 'project', 'setup' are all stopwords

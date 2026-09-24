@@ -8,10 +8,6 @@ import {
 
 describe('Template Registry', () => {
   describe('TEMPLATES', () => {
-    test('should have at least one template', () => {
-      expect(TEMPLATES.length).toBeGreaterThan(0);
-    });
-
     test('should have valid template structure', () => {
       for (const template of TEMPLATES) {
         expect(template.id).toBeDefined();

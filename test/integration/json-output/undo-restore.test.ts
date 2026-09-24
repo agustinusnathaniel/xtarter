@@ -7,7 +7,7 @@ import { listCommand } from '@xtarterize/app/commands/list.js';
 import { queryCommand } from '@xtarterize/app/commands/query.js';
 import { restoreCommand } from '@xtarterize/app/commands/restore.js';
 import { undoCommand } from '@xtarterize/app/commands/undo.js';
-import { backupFile, writeRunManifest } from '@xtarterize/core';
+import { backupFile, listBackups, writeRunManifest } from '@xtarterize/core';
 import { describe, expect } from 'vite-plus/test';
 
 const MINIMAL_FILES: ProjectFileMap = {
@@ -151,6 +151,48 @@ describe('undo and restore json output', () => {
         expect(output.filepath).toBe('vite.config.ts');
         expect(output.error).toBe('No backups found');
         expect(process.exitCode).toBe(1);
+      } finally {
+        process.exitCode = 0;
+      }
+    });
+  });
+});
+
+describe('undo and restore json output', () => {
+  test('restore command reports failure when indexed backup is missing', async () => {
+    await withProject(MINIMAL_FILES, async ({ cwd }) => {
+      try {
+        await fs.writeFile(
+          path.join(cwd, 'vite.config.ts'),
+          'export default {}\n'
+        );
+        await fs.mkdir(path.join(cwd, '.xtarterize', 'backups'), {
+          recursive: true,
+        });
+        await backupFile(cwd, 'vite.config.ts');
+        const backup = (await listBackups(cwd, 'vite.config.ts'))[0];
+        expect(backup).toBeDefined();
+        await fs.unlink(backup.backupPath);
+        await fs.writeFile(
+          path.join(cwd, 'vite.config.ts'),
+          'export default { changed: true }\n'
+        );
+
+        const output = (await captureJson(async () => {
+          await restoreCommand.run?.({
+            args: { cwd, filepath: 'vite.config.ts', json: true },
+          } as never);
+        })) as { error: string; ok: boolean };
+
+        expect(output.ok).toBe(false);
+        expect(typeof output.error).toBe('string');
+        expect(process.exitCode).toBe(1);
+
+        const destination = await fs.readFile(
+          path.join(cwd, 'vite.config.ts'),
+          'utf-8'
+        );
+        expect(destination).toBe('export default { changed: true }\n');
       } finally {
         process.exitCode = 0;
       }

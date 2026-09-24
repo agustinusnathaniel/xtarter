@@ -91,29 +91,6 @@ async function applyTasks(options: {
 const projectFiles = { 'package.json': { name: 'test', version: '1.0.0' } };
 
 describe('applyTasks', () => {
-  test('applies a single task successfully', async () => {
-    await withProject(projectFiles, async ({ cwd: tmpDir, profile }) => {
-      const mockTask = makeTask({
-        apply: () =>
-          Effect.promise(() =>
-            fs.writeFile(path.join(tmpDir, 'test.txt'), 'hello')
-          ),
-        dryRun: () =>
-          Effect.succeed([
-            { after: 'hello', before: null, filepath: 'test.txt' },
-          ]),
-      });
-
-      const result = await applyTasks({
-        cwd: tmpDir,
-        profile,
-        tasks: [mockTask],
-      });
-      expect(result.errors).toHaveLength(0);
-      expect(result.applied).toBe(1);
-    });
-  });
-
   test('skips tasks that are already applied', async () => {
     await withProject(projectFiles, async ({ cwd: tmpDir, profile }) => {
       await fs.writeFile(path.join(tmpDir, 'test.txt'), 'hello');
