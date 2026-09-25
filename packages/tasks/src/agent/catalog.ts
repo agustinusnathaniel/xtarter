@@ -10,9 +10,13 @@
 export interface SkillProfile {
   bundler: string | null;
   existing: {
+    agentsMd: boolean;
+    githubWorkflows: Array<string>;
     turbo: boolean;
   };
   framework: string | null;
+  hasGit: boolean;
+  hasGitHub: boolean;
   monorepoTool: string | null;
   runtime: string;
   typescript: boolean;
@@ -54,6 +58,55 @@ const browser: SkillCondition = (p) =>
 const react: SkillCondition = (p) => p.framework === 'react';
 const expoNative: SkillCondition = (p) =>
   p.bundler === 'expo' || p.framework === 'react-native';
+const webUi: SkillCondition = (p) =>
+  ['react', 'vue', 'svelte', 'solid'].includes(p.framework ?? '') &&
+  (p.runtime === 'browser' || p.runtime === 'edge');
+const testRunner: SkillCondition = (_p, d) =>
+  hasAnyDep(d, [
+    'vitest',
+    'jest',
+    '@jest/globals',
+    'mocha',
+    'uvu',
+    'ava',
+    'tap',
+    '@playwright/test',
+    'playwright',
+    'cypress',
+  ]);
+const apiServer: SkillCondition = (_p, d) =>
+  hasAnyDep(d, [
+    'express',
+    'fastify',
+    'hono',
+    'koa',
+    '@nestjs/core',
+    '@trpc/server',
+    'graphql',
+    '@apollo/server',
+  ]);
+const securitySurface: SkillCondition = (p, d) =>
+  apiServer(p, d) ||
+  hasAnyDep(d, [
+    'better-auth',
+    'next-auth',
+    '@auth/core',
+    '@clerk/nextjs',
+    '@clerk/clerk-react',
+    '@supabase/supabase-js',
+    'supabase',
+    'firebase',
+    'firebase-admin',
+    'pg',
+    'postgres',
+    'drizzle-orm',
+    '@prisma/client',
+    'mongoose',
+    'mongodb',
+    'mysql2',
+    '@neondatabase/serverless',
+    '@libsql/client',
+  ]);
 
 /** Expand one condition + source + skill names into catalog entries. */
 function skillsFor(
@@ -87,6 +140,8 @@ export const SKILL_CATALOG: Array<SkillDefinition> = [
     'grill-with-docs',
     'handoff',
     'improve-codebase-architecture',
+    'grilling',
+    'codebase-design',
   ]),
   ...alwaysSkills('shadcn/improve', ['improve']),
   ...alwaysSkills('mattpocock/skills', ['writing-for-agents']),
@@ -220,6 +275,62 @@ export const SKILL_CATALOG: Array<SkillDefinition> = [
     'remotion-dev/skills',
     ['remotion-best-practices']
   ),
+
+  // Test strategy follows projects with an existing test runner.
+  ...skillsFor(testRunner, 'agustinusnathaniel/skills', ['test-strategy']),
+
+  // Design and motion
+  ...skillsFor(webUi, 'emilkowalski/skills', [
+    'emil-design-eng',
+    'animate',
+    'apple-design',
+    'find-animation-opportunities',
+    'improve-animations',
+  ]),
+  ...skillsFor(expoNative, 'emilkowalski/skills', ['animate-expo']),
+  ...skillsFor((_p, d) => hasDep(d, 'sonner'), 'emilkowalski/skills', [
+    'ask-sonner',
+  ]),
+  ...skillsFor(webUi, 'jakubkrehel/skills', [
+    'better-accessibility',
+    'better-colors',
+    'better-interface',
+    'better-layout',
+    'better-typography',
+    'better-ui',
+    'better-writing',
+  ]),
+
+  // Security guidance is selected for projects with API, auth, or data access.
+  ...skillsFor(securitySurface, 'cloudflare/security-audit-skill', [
+    'security-audit',
+  ]),
+  ...skillsFor(securitySurface, 'addyosmani/agent-skills', [
+    'security-and-hardening',
+  ]),
+  ...skillsFor(apiServer, 'addyosmani/agent-skills', [
+    'api-and-interface-design',
+  ]),
+
+  // Existing tooling signals for development workflows
+  ...skillsFor(webUi, 'addyosmani/agent-skills', ['frontend-ui-engineering']),
+  ...skillsFor(testRunner, 'addyosmani/agent-skills', [
+    'test-driven-development',
+  ]),
+  ...skillsFor((p) => p.hasGit, 'addyosmani/agent-skills', [
+    'git-workflow-and-versioning',
+  ]),
+  ...skillsFor((p) => p.hasGitHub, 'addyosmani/agent-skills', [
+    'code-review-and-quality',
+  ]),
+  ...skillsFor(
+    (p) => p.existing.githubWorkflows.length > 0,
+    'addyosmani/agent-skills',
+    ['ci-cd-and-automation']
+  ),
+  ...skillsFor((p) => p.existing.agentsMd, 'addyosmani/agent-skills', [
+    'context-engineering',
+  ]),
 ];
 
 /**

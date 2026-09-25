@@ -13,7 +13,7 @@ import {
 import { Duration } from 'effect';
 import { beforeEach, describe, expect } from 'vite-plus/test';
 
-import { SKILL_CATALOG } from '../../packages/tasks/src/agent/catalog.js';
+import { getSkillsToInstall } from '../../packages/tasks/src/agent/catalog.js';
 import {
   resolveSkillsExecutor,
   skillsInstallTask,
@@ -94,6 +94,13 @@ describe('skillsInstallTask', () => {
     expect(commands).toContain('fixing-accessibility');
     expect(commands).toContain('fixing-metadata');
     expect(commands).toContain('fixing-motion-performance');
+    expect(commands).toContain('emilkowalski/skills');
+    expect(commands).toContain('--skill animate');
+    expect(commands).toContain('jakubkrehel/skills');
+    expect(commands).toContain('--skill better-accessibility');
+    expect(commands).toContain('addyosmani/agent-skills');
+    expect(commands).toContain('--skill frontend-ui-engineering');
+    expect(commands).not.toContain('--skill animate-expo');
     // Build tool skills
     expect(commands).toContain('vite');
     // General skills
@@ -151,6 +158,8 @@ describe('skillsInstallTask', () => {
     expect(commands).toContain('expo-module');
     expect(commands).toContain('expo-upgrade');
     expect(commands).toContain('vercel-react-native-skills');
+    expect(commands).toContain('--skill animate-expo');
+    expect(commands).not.toContain('--skill frontend-ui-engineering');
   });
 
   test('installs antd skill for projects with antd', async () => {
@@ -314,69 +323,61 @@ describe('skillsInstallTask apply', () => {
   });
 });
 
-// The catalog groups entries behind condition helpers, so the expansion is
-// only pinned by the install command order. Pin the full ordered catalog
-// once; per-profile selection is covered by the fixture tests above.
-describe('SKILL_CATALOG expansion', () => {
-  const expectedCatalog = [
-    'vercel-labs/opensrc:opensrc',
-    'mattpocock/skills:grill-me',
-    'mattpocock/skills:grill-with-docs',
-    'mattpocock/skills:handoff',
-    'mattpocock/skills:improve-codebase-architecture',
-    'shadcn/improve:improve',
-    'mattpocock/skills:writing-for-agents',
-    'anthropics/skills:frontend-design',
-    'vercel-labs/agent-skills:web-design-guidelines',
-    'ibelick/ui-skills:baseline-ui',
-    'ibelick/ui-skills:fixing-accessibility',
-    'ibelick/ui-skills:fixing-metadata',
-    'ibelick/ui-skills:fixing-motion-performance',
-    'vercel-labs/agent-skills:vercel-react-best-practices',
-    'vercel-labs/agent-skills:vercel-composition-patterns',
-    'softaworks/agent-toolkit:react-dev',
-    'softaworks/agent-toolkit:react-useeffect',
-    'vercel/next.js:next-dev-loop',
-    'vercel/next.js:next-cache-components-optimizer',
-    'vercel/next.js:next-cache-components-adoption',
-    'antfu/skills:vue',
-    'antfu/skills:vue-best-practices',
-    'antfu/skills:nuxt',
-    'shadcn-ui/ui:shadcn',
-    'haydenbleasel/ultracite:ultracite',
-    'ant-design/ant-design-cli:antd',
-    'heroui-inc/heroui:heroui-react',
-    'chakra-ui/chakra-ui:chakra-ui-builder',
-    'chakra-ui/chakra-ui:chakra-ui-refactor',
-    'expo/skills:expo-overview',
-    'expo/skills:expo-router',
-    'expo/skills:eas-workflows',
-    'expo/skills:eas-app-stores',
-    'expo/skills:eas-update',
-    'expo/skills:expo-dev-client',
-    'expo/skills:expo-native-ui',
-    'expo/skills:expo-data-fetching',
-    'expo/skills:expo-module',
-    'expo/skills:expo-upgrade',
-    'vercel-labs/agent-skills:vercel-react-native-skills',
-    'heroui-inc/heroui:heroui-native',
-    'antfu/skills:vite',
-    'antfu/skills:vitest',
-    'antfu/skills:tsdown',
-    'vercel/turborepo:turborepo',
-    'supabase/agent-skills:supabase-postgres-best-practices',
-    'ccheney/robust-skills:postgres-drizzle',
-    'mindrally/skills:redis-best-practices',
-    'better-auth/skills:better-auth-best-practices',
-    'better-auth/skills:create-auth',
-    'vercel/ai:ai-sdk',
-    'remotion-dev/skills:remotion-best-practices',
-  ];
+describe('skill selection by project signals', () => {
+  test('keeps web UI skills out of native and Node projects', async () => {
+    const web = await fixtureProfile('react-vite-tailwind');
+    const native = await fixtureProfile('react-native-expo');
+    const node = await fixtureProfile('node-only');
+    const names = (profile: ProjectProfile) =>
+      getSkillsToInstall(profile, {}).map(({ skill }) => skill);
 
-  test('expands to the same skills, sources, and order', () => {
-    expect(
-      SKILL_CATALOG.map(({ source, skill }) => `${source}:${skill}`)
-    ).toEqual(expectedCatalog);
+    expect(names(web)).toContain('better-interface');
+    expect(names(web)).toContain('frontend-ui-engineering');
+    expect(names(web)).not.toContain('browser-testing-with-devtools');
+    expect(names(web)).not.toContain('break');
+    expect(names(web)).not.toContain('wait-what');
+    expect(names(native)).toContain('animate-expo');
+    expect(names(native)).not.toContain('better-interface');
+    expect(names(node)).not.toContain('frontend-ui-engineering');
+  });
+
+  test('selects test and security skills only with matching dependencies', async () => {
+    const profile = await fixtureProfile('node-only');
+    const names = (deps: Record<string, string>) =>
+      getSkillsToInstall(profile, deps).map(({ skill }) => skill);
+
+    expect(names({})).not.toContain('security-audit');
+    expect(names({})).not.toContain('test-strategy');
+    expect(names({})).not.toContain('ask-sonner');
+    expect(names({ vitest: '^4.0.0' })).toContain('test-strategy');
+    expect(names({ vitest: '^4.0.0' })).toContain('test-driven-development');
+    expect(names({ 'better-auth': '^1.0.0' })).toContain('security-audit');
+    expect(names({ 'better-auth': '^1.0.0' })).toContain(
+      'security-and-hardening'
+    );
+    expect(names({ sonner: '^2.0.0' })).toContain('ask-sonner');
+    expect(names({ hono: '^4.0.0' })).toContain('api-and-interface-design');
+  });
+
+  test('selects repository workflow skills from detected project files', async () => {
+    const base = await fixtureProfile('node-only');
+    const profile = {
+      ...base,
+      existing: {
+        ...base.existing,
+        agentsMd: true,
+        githubWorkflows: ['ci.yml'],
+      },
+      hasGit: true,
+      hasGitHub: true,
+    };
+    const names = getSkillsToInstall(profile, {}).map(({ skill }) => skill);
+
+    expect(names).toContain('git-workflow-and-versioning');
+    expect(names).toContain('ci-cd-and-automation');
+    expect(names).toContain('code-review-and-quality');
+    expect(names).toContain('context-engineering');
+    expect(names).not.toContain('using-agent-skills');
   });
 });
 
