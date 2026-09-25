@@ -1,5 +1,5 @@
 <div class="xt-terminal-wrap">
-  <figure class="xt-terminal xt-plan-receipt">
+  <figure class="xt-terminal xt-plan-receipt" aria-details="xt-receipt-details">
     <figcaption class="xt-terminal-bar">
       <span>xtarterize / plan receipt</span>
       <span class="xt-terminal-mode">preview</span>
@@ -31,21 +31,12 @@
           <span class="xt-receipt-change">tighten compiler options</span>
         </li>
         <li class="xt-receipt-row">
-          <span class="xt-receipt-status is-new">new</span>
-          <code>ci/ci</code>
-          <span class="xt-receipt-change">add GitHub Actions</span>
-        </li>
-        <li class="xt-receipt-row">
-          <span class="xt-receipt-status is-new">new</span>
-          <code>editor/vscode</code>
-          <span class="xt-receipt-change">add editor settings</span>
-        </li>
-        <li class="xt-receipt-row">
           <span class="xt-receipt-status is-skip">skip</span>
           <code>release/commitlint</code>
           <span class="xt-receipt-change">already conformant</span>
         </li>
       </ul>
+      <p class="xt-receipt-omitted">2 more new changes in the full plan</p>
 
       <div class="xt-receipt-next">
         <span class="xt-receipt-label">next</span>
@@ -53,11 +44,14 @@
       </div>
       <p class="xt-receipt-footnote">preview only, no backups created</p>
     </div>
+
+    <p id="xt-receipt-details" class="xt-visually-hidden">
+      Example receipt for a Vite + React + TypeScript project. Command: <code>pnpx xtarterize@latest init --dry-run</code>.
+      Status counts: 3 new, 1 patch, 1 skip. Task IDs: <code>lint/biome</code> (new), <code>ts/strict</code> (patch), <code>ci/ci</code> (new), <code>editor/vscode</code> (new), <code>release/commitlint</code> (skip). The visible receipt shows three representative rows and notes 2 more new changes in the full plan. Preview creates no conformance files or backups. Apply creates backups before modifying files. The session may add <code>/.xtarterize/</code> to <code>.gitignore</code>.
+    </p>
   </figure>
 
   <p class="xt-terminal-summary">
-    Example receipt for a Vite + React + TypeScript project. <code>--dry-run</code> plans changes without
-    writing conformance files or creating backups. The session may add <code>/.xtarterize/</code> to
-    <code>.gitignore</code>; apply creates backups before modifying files.
+    Preview creates no conformance files or backups. Apply creates backups before modifying files. Session may add <code>/.xtarterize/</code> to <code>.gitignore</code>.
   </p>
 </div>

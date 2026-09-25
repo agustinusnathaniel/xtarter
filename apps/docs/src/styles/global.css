@@ -162,8 +162,21 @@ html[data-has-hero]:not([data-has-sidebar])
   margin-inline: 0;
 }
 
+html[data-has-hero]:not([data-has-sidebar])
+  .page:has(.xt-landing-hero)
+  > header.header {
+  position: relative;
+  inset: auto;
+}
+
+html[data-has-hero]:not([data-has-sidebar])
+  .page:has(.xt-landing-hero)
+  > .main-frame {
+  padding-top: 0;
+}
+
 .xt-landing-hero {
-  --xt-landing-header-clearance: 3.25rem;
+  --xt-landing-header-clearance: 2.25rem;
   position: relative;
   isolation: isolate;
   width: 100%;
@@ -624,6 +637,14 @@ html[data-has-hero]:not([data-has-sidebar])
   list-style: none;
 }
 
+.xt-hero-xtarterize .xt-receipt-omitted {
+  margin: 0.6rem 0 0;
+  color: var(--xt-charcoal-muted);
+  font-family: var(--font-sans);
+  font-size: 0.76rem;
+  line-height: 1.4;
+}
+
 .xt-receipt-row {
   display: grid;
   grid-template-columns: 3.4rem minmax(0, 1fr);
@@ -701,20 +722,20 @@ html[data-has-hero]:not([data-has-sidebar])
 }
 
 .xt-hero-xtarterize .xt-receipt-row {
-  padding-block: 0.15rem;
+  padding-block: 0.14rem;
 }
 
 .xt-hero-xtarterize .xt-receipt-rule {
-  margin: 0.5rem 0 0.4rem;
+  margin: 0.45rem 0 0.4rem;
 }
 
 .xt-hero-xtarterize .xt-receipt-next {
   margin-top: 0.6rem;
-  padding-top: 0.5rem;
+  padding-top: 0.45rem;
 }
 
 .xt-hero-xtarterize .xt-terminal-summary {
-  padding-block: 0.55rem 0.65rem;
+  padding-block: 0.5rem 0.6rem;
 }
 
 .xt-landing-hero .xt-hero-copy,
@@ -1484,7 +1505,7 @@ html[data-has-hero]:not([data-has-sidebar])
   }
 
   .xt-landing-hero {
-    --xt-landing-header-clearance: 3.625rem;
+    --xt-landing-header-clearance: 2.5rem;
   }
 }
 
