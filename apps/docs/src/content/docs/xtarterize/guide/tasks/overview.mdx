@@ -93,6 +93,8 @@ In monorepos, tasks are filtered by scope: root tasks appear only at the monorep
 | `agent/agents-md` | Write `AGENTS.md` with project description and commands |
 | `agent/skills-install` | Install agent skills for the detected stack |
 
+The skills task selects skills using detected project capabilities. Web UI projects receive interface and motion guidance from `emilkowalski/skills`, `jakubkrehel/skills`, and `addyosmani/agent-skills`; Expo and React Native projects receive `animate-expo`, and Sonner projects receive `ask-sonner`. Test runner dependencies select testing skills, while API, auth, or database dependencies select security guidance from `cloudflare/security-audit-skill` and `addyosmani/agent-skills`. Detected Git, GitHub workflows, and agent instructions select matching development workflow skills. New candidates that require an explicit user request or an undetected tool are left for manual installation. Installing `security-audit` does not start an audit; that workflow still requires an explicit request.
+
 ## Scripts
 
 | Task | What it does |
