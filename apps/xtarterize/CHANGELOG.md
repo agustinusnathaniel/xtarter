@@ -1,5 +1,11 @@
 # xtarterize
 
+## 2.0.3
+
+### Patch Changes
+
+- [#222](https://github.com/agustinusnathaniel/xtarter/pull/222) [`81fd81a`](https://github.com/agustinusnathaniel/xtarter/commit/81fd81ae3081921f55d737851ad7f3354a11f485) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Select new agent skills by detected project capabilities, including web UI, React Native, Sonner, test runners, API and security dependencies, Git workflows, and agent instructions.
+
 ## 2.0.2
 
 ## 2.0.1
