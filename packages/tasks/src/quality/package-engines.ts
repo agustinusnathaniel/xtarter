@@ -7,6 +7,13 @@ import { defineSingleTargetTask } from '@/factory/define-task.js';
 const TASK_ID = 'quality/package-engines';
 
 /**
+ * pnpm/setup rejects pnpm below v11 because it relies on pnpm's
+ * self-contained release binaries and the `pnpm runtime` command, so a floor
+ * lower than that makes generated CI fail at setup instead of at install.
+ */
+const MIN_PNPM_VERSION = '11';
+
+/**
  * The change patch merges the existing package.json first so authored
  * devEngines values win over the recommended ones.
  */
@@ -17,7 +24,7 @@ async function resolveDevEngines(
   const pkg = await readPackageJson(cwd);
   const pm = profile.packageManager;
   const pmField = pkg?.packageManager as string | undefined;
-  let pmVersion = pm === 'pnpm' ? '>=9' : '>=10';
+  let pmVersion = pm === 'pnpm' ? `>=${MIN_PNPM_VERSION}` : '>=10';
 
   if (pmField) {
     // format: "pnpm@11.8.0" or "npm@10.8.0"

@@ -7,6 +7,20 @@ import { Badge, Card, CardGrid, Tabs, TabItem } from '@astrojs/starlight/compone
 
 Latest updates and feature releases for xtarterize. Entries since v1.0.0 are curated below; see the [full changelog](https://github.com/agustinusnathaniel/xtarter/blob/main/apps/xtarterize/CHANGELOG.md) for complete notes and every patch version.
 
+## v2.0.4 - 2026-09-28 <Badge text="Patch" variant="default" />
+
+### pnpm CI runs one install, not two
+
+Generated CI, release, and auto-update workflows now install pnpm with `pnpm/setup@v3` instead of `v2`. Because the action already runs `pnpm install`, xtarterize no longer emits a second install step for pnpm projects, so every pnpm job installs once. npm, yarn, and bun workflows are unchanged and keep their explicit install step.
+
+`v3` also keys the store cache per run and restores the closest lockfile match, which removes stale-cache restores, and reads a Node.js version from `.node-version`, `.nvmrc`, or `.tool-versions` when the project does not declare one in `devEngines.runtime`.
+
+### pnpm CI requires a lockfile
+
+The pnpm setup step sets `require-lockfile: 'true'`. A pnpm project with no `pnpm-lock.yaml` now fails CI instead of letting pnpm resolve from the registry, write a lockfile, and pass. The recommended pnpm floor in `devEngines` moves from `>=9` to `>=11` to match what `pnpm/setup` can install.
+
+Re-run `sync` to update an existing project's workflows.
+
 ## v2.0.2 - 2026-09-15 <Badge text="Patch" variant="default" />
 
 ### Updated workflow actions
