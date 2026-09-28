@@ -9,17 +9,13 @@ Latest updates and feature releases for xtarterize. Entries since v1.0.0 are cur
 
 ## v2.0.4 - 2026-09-28 <Badge text="Patch" variant="default" />
 
-### pnpm CI runs one install, not two
+### pnpm workflows install dependencies once
 
-Generated CI, release, and auto-update workflows now install pnpm with `pnpm/setup@v3` instead of `v2`. Because the action already runs `pnpm install`, xtarterize no longer emits a second install step for pnpm projects, so every pnpm job installs once. npm, yarn, and bun workflows are unchanged and keep their explicit install step.
+Generated CI, release, and auto-update workflows for pnpm projects installed dependencies twice: once inside the `pnpm/setup` action, and again as a separate step. There is now a single install.
 
-`v3` also keys the store cache per run and restores the closest lockfile match, which removes stale-cache restores, and reads a Node.js version from `.node-version`, `.nvmrc`, or `.tool-versions` when the project does not declare one in `devEngines.runtime`.
+Generated pnpm CI also fails when a project has no `pnpm-lock.yaml`, instead of resolving from the registry and writing one on the fly.
 
-### pnpm CI requires a lockfile
-
-The pnpm setup step sets `require-lockfile: 'true'`. A pnpm project with no `pnpm-lock.yaml` now fails CI instead of letting pnpm resolve from the registry, write a lockfile, and pass. The recommended pnpm floor in `devEngines` moves from `>=9` to `>=11` to match what `pnpm/setup` can install.
-
-Re-run `sync` to update an existing project's workflows.
+Re-run `sync` to update an existing project.
 
 ## v2.0.2 - 2026-09-15 <Badge text="Patch" variant="default" />
 
