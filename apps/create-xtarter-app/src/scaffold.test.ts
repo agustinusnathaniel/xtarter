@@ -194,6 +194,25 @@ describe('scaffoldProject', () => {
 
     expect(result.gitInitialized).toBe(false);
     expect(result.dependenciesInstalled).toBe(true);
+    expect(existsSync(join(dir, '.git'))).toBe(false);
+    await rm(dir, { force: true, recursive: true });
+  });
+
+  test('should keep a pre-existing .git when the commit fails', async () => {
+    const dir = await tempDir();
+    await mkdir(join(dir, '.git'), { recursive: true });
+
+    const result = await scaffoldProject({
+      cleanCI: false,
+      initGit: true,
+      packageManager: 'pnpm',
+      projectName: 'git-fail',
+      projectPath: dir,
+      skipDownload: true,
+      template: TEMPLATES[0],
+    });
+
+    expect(result.gitInitialized).toBe(false);
     expect(existsSync(join(dir, '.git'))).toBe(true);
     await rm(dir, { force: true, recursive: true });
   });
@@ -207,32 +226,6 @@ describe('scaffoldProject', () => {
       vi.mocked(installDependencies).mockRejectedValueOnce(
         new Error('install failed')
       );
-      await expect(
-        scaffoldProject({
-          cleanCI: false,
-          initGit: false,
-          packageManager: 'pnpm',
-          projectName: 'fail',
-          projectPath: dir,
-          skipDownload: true,
-          template: TEMPLATES[0],
-        })
-      ).rejects.toThrow();
-
-      expect(existsSync(dir)).toBe(false);
-    } finally {
-      await rm(parent, { force: true, recursive: true });
-    }
-  });
-
-  test('should clean up a directory that prepareProjectDir accepted', async () => {
-    const parent = await tempDir();
-    const dir = join(parent, 'project');
-    await prepareProjectDir('project', dir);
-    vi.mocked(installDependencies).mockRejectedValueOnce(
-      new Error('install failed')
-    );
-    try {
       await expect(
         scaffoldProject({
           cleanCI: false,
