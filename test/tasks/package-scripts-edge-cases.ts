@@ -140,7 +140,7 @@ export const packageScriptsEdgeCases = defineScriptCases([
     pkg: scriptPkg('trailing-spaces', { biome: 'biome check .   ' }),
   },
   {
-    afterContains: ['check:turbo'],
+    afterContains: ['"check:turbo": "turbo run biome typecheck test"'],
     name: 'respects existing check:turbo with same tasks',
     pkg: scriptPkg('check-turbo-same', {
       biome: 'biome check .',
@@ -151,8 +151,9 @@ export const packageScriptsEdgeCases = defineScriptCases([
     status: 'patch',
   },
   {
-    afterContains: ['"check:turbo"', '"biome"'],
-    name: 'overwrites existing check:turbo with different tasks',
+    afterContains: ['"check:turbo": "turbo run lint build"'],
+    afterNotContains: ['turbo run biome typecheck test'],
+    name: 'preserves existing check:turbo with different tasks',
     pkg: scriptPkg('check-turbo-diff', {
       'check:turbo': 'turbo run lint build',
     }),

@@ -52,12 +52,6 @@ describe('skillsInstallTask', () => {
     expect(skillsInstallTask.applicable(profile)).toBe(true);
   });
 
-  test('is not applicable to non-TypeScript projects', async () => {
-    const profile = await fixtureProfile('node-only');
-    // node-only fixture might still have tsconfig, check actual profile
-    expect(skillsInstallTask.applicable(profile)).toBe(profile.typescript);
-  });
-
   test('returns new on clean react fixture with react skills', async () => {
     const profile = await fixtureProfile('react-vite-tailwind');
     const status = await run(
@@ -202,9 +196,7 @@ describe('skillsInstallTask', () => {
 describe('skillsInstallTask', () => {
   test('returns new for node-only projects with general skills', async () => {
     const profile = await fixtureProfile('node-only');
-    if (!skillsInstallTask.applicable(profile)) {
-      return;
-    }
+    expect(skillsInstallTask.applicable(profile)).toBe(true);
     const status = await run(
       skillsInstallTask.check(fixtureDir('node-only'), profile)
     );
@@ -214,9 +206,7 @@ describe('skillsInstallTask', () => {
   test('installs general skills for node-only projects', async () => {
     const cwd = fixtureDir('node-only');
     const profile = await fixtureProfile('node-only');
-    if (!skillsInstallTask.applicable(profile)) {
-      return;
-    }
+    expect(skillsInstallTask.applicable(profile)).toBe(true);
     const commands = await installOutput(cwd, profile);
     expect(commands).toContain('opensrc');
     expect(commands).toContain('writing-for-agents');

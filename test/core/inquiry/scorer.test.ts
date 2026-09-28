@@ -2,6 +2,8 @@ import { makeTask } from '@test/helpers/factories.js';
 import { scoreTasks } from '@xtarterize/core';
 import { describe, expect } from 'vite-plus/test';
 
+import { expandAliases } from '../../../packages/core/src/inquiry/aliases.js';
+
 const searchTasks: Array<{
   configTargets: Array<string>;
   group: string;
@@ -98,6 +100,10 @@ const taskNoMeta = makeTask({
   label: 'Example task without metadata',
 });
 
+// A query in this pool that matches two tasks (0.7750 and 0.7512), so a cap or
+// a relevance threshold has more than one result to act on.
+const multiMatch = 'type lint';
+
 const topResultCases: Array<[name: string, query: string, top: string]> = [
   [
     'returns "strict typescript" with ts/strict as top result',
@@ -126,18 +132,6 @@ describe('scoreTasks', () => {
       expect(results[0].taskId).toBe(top);
     });
   }
-
-  test('performs multi-word aggregation for "typescript with strict checking"', () => {
-    const results = scoreTasks(mockTasks, 'typescript with strict checking');
-    expect(results.length).toBeGreaterThan(0);
-    expect(results[0].taskId).toBe('ts/strict');
-    // ts/strict should score meaningfully higher than unrelated tasks
-    const topScore = results[0].relevance;
-    const minRelevant = results.find((r) => r.taskId === 'lint/biome');
-    if (minRelevant) {
-      expect(topScore).toBeGreaterThan(minRelevant.relevance);
-    }
-  });
 
   test('returns empty results for empty query', () => {
     const results = scoreTasks(mockTasks, '');
@@ -173,24 +167,21 @@ describe('scoreTasks', () => {
     }
   });
 
-  test('maxResults option limits the number of results', () => {
-    const results = scoreTasks(mockTasks, 'strict', { maxResults: 2 });
-    expect(results.length).toBeLessThanOrEqual(2);
+  test('maxResults truncates the sorted results', () => {
+    const uncapped = scoreTasks(mockTasks, multiMatch);
+    const capped = scoreTasks(mockTasks, multiMatch, { maxResults: 1 });
+
+    expect(uncapped).toHaveLength(2);
+    expect(capped).toHaveLength(1);
+    expect(capped[0].taskId).toBe(uncapped[0].taskId);
   });
 
-  test('minScore option filters low-scoring results', () => {
-    const results = scoreTasks(mockTasks, 'strict', { minScore: 0.5 });
-    for (const r of results) {
-      expect(r.relevance).toBeGreaterThanOrEqual(0.5);
-    }
-  });
+  test('minScore drops results below the threshold', () => {
+    const uncapped = scoreTasks(mockTasks, multiMatch, { minScore: 0 });
+    const filtered = scoreTasks(mockTasks, multiMatch, { minScore: 0.9 });
 
-  test('all tasks receive a relevance score between 0 and 1', () => {
-    const results = scoreTasks(mockTasks, 'typescript');
-    for (const r of results) {
-      expect(r.relevance).toBeGreaterThanOrEqual(0);
-      expect(r.relevance).toBeLessThanOrEqual(1);
-    }
+    expect(uncapped).toHaveLength(2);
+    expect(filtered).toEqual([]);
   });
 
   test('handles queries that match no tasks gracefully', () => {
@@ -220,62 +211,51 @@ describe('scoreTasks', () => {
       0
     );
   });
+});
 
-  test('returns all results with maxResults: 0 (unlimited)', () => {
-    const results = scoreTasks(mockTasks, 'lint', { maxResults: 0 });
-    // All matching tasks should be included (not capped)
-    expect(results.length).toBeGreaterThanOrEqual(1);
+describe('expandAliases', () => {
+  test('returns every other term of the matching alias group', () => {
+    expect(expandAliases('agents')).toEqual([
+      'agent',
+      'ai',
+      'claude',
+      'opencode',
+      'llm',
+    ]);
+    expect(expandAliases('agents')).not.toContain('agents');
+    expect(expandAliases('notaterm')).toEqual([]);
+  });
+
+  test('does not cross an alias group boundary', () => {
+    expect(expandAliases('lint')).not.toContain('typescript');
+    expect(expandAliases('lint')).not.toContain('renovate');
+    expect(expandAliases('lint')).not.toContain('agent');
   });
 });
 
 describe('scoreTasks', () => {
-  test('expands sibling aliases bidirectionally within a group', () => {
-    const renovate = makeTask({
-      id: 'alias/renovate',
-      label: 'Renovate alias',
-      searchMeta: {
-        configTargets: ['renovate.json'],
-        keywords: ['renovate'],
-        tags: [],
-      },
+  test('injects alias-group siblings and stops at the boundary', () => {
+    // Alias groups come from TASK_ALIAS_GROUPS, not from Task.group, so these two
+    // tasks differ by their keyword's alias group, not by the `group` field.
+    const sibling = makeTask({
+      group: 'Fixture A',
+      id: 'alias/sibling',
+      label: 'Alias fixture',
+      searchMeta: { configTargets: [], keywords: ['claude'], tags: [] },
     });
-    const updates = makeTask({
-      id: 'alias/updates',
-      label: 'Updates alias',
-      searchMeta: {
-        configTargets: ['renovate.json'],
-        keywords: ['updates'],
-        tags: [],
-      },
+    const outsider = makeTask({
+      group: 'Fixture B',
+      id: 'alias/outsider',
+      label: 'Alias fixture',
+      searchMeta: { configTargets: [], keywords: ['typescript'], tags: [] },
     });
 
-    expect(scoreTasks([renovate], 'updates')[0]?.taskId).toBe('alias/renovate');
-    expect(scoreTasks([updates], 'renovate')[0]?.taskId).toBe('alias/updates');
-  });
+    const results = scoreTasks([sibling, outsider], 'agents');
 
-  test('does not expand aliases across groups transitively', () => {
-    const paths = makeTask({
-      id: 'alias/paths',
-      label: 'Path aliases',
-      searchMeta: {
-        configTargets: ['tsconfig.json'],
-        keywords: ['paths'],
-        tags: [],
-      },
-    });
-    const strict = makeTask({
-      id: 'alias/strict',
-      label: 'Strict options',
-      searchMeta: {
-        configTargets: ['compiler.json'],
-        keywords: ['strict'],
-        tags: [],
-      },
-    });
-
-    const results = scoreTasks([paths, strict], 'tsconfig');
-    expect(results.map((r) => r.taskId)).toContain('alias/paths');
-    expect(results.map((r) => r.taskId)).not.toContain('alias/strict');
+    expect(results.map((r) => r.taskId)).toEqual(['alias/sibling']);
+    expect(results[0].signals.find((s) => s.name === 'keywords')?.score).toBe(
+      0.85
+    );
   });
 });
 

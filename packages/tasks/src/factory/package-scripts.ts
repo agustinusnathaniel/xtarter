@@ -6,7 +6,7 @@ import {
 import type { PackageJson } from 'pkg-types';
 
 import { defineTask, type TaskDep } from './define-task.js';
-import { areEquivalent, extractTool } from './equivalence.js';
+import { extractTool } from './equivalence.js';
 import {
   filterMissingScripts,
   hasInstalledDependency,
@@ -223,15 +223,9 @@ function collectScriptCandidates(params: {
     existingScripts,
     profile.typescript
   ).join(' ')}`;
-  const existingCheckTurbo = existingScripts['check:turbo'];
-  if (
-    !(
-      existingCheckTurbo &&
-      areEquivalent(existingCheckTurbo, newCheckTurboValue)
-    )
-  ) {
-    scripts.push({ script: 'check:turbo', value: newCheckTurboValue });
-  }
+  // An existing `check:turbo` is preserved: `filterMissingScripts` drops any
+  // candidate whose key already exists, so this push can never overwrite it.
+  scripts.push({ script: 'check:turbo', value: newCheckTurboValue });
 }
 
 interface PackageScriptsResolution extends ScriptsState {

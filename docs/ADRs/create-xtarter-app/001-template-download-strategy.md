@@ -20,7 +20,7 @@ Use giget for template downloads.
 
 ## Alternatives Considered
 
-- **degit:** simple and widely used, but unmaintained since 2021 and dependent on local git/tar commands.
+- **degit:** simple and widely used, but its download path depends on local git and tar commands.
 - **Direct git clone:** slower, includes a `.git` folder that must be cleaned up, and requires git.
 - **GitHub API:** official and supports private repositories, but has rate limits and needs token setup.
 

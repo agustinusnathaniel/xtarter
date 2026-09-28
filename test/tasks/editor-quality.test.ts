@@ -70,7 +70,7 @@ describe('vscodeTask', () => {
 });
 
 describe('vscodeTask', () => {
-  test('renders byte-identical settings and extensions', async () => {
+  test('renders the expected settings and extension recommendations', async () => {
     const profile = await fixtureProfile('react-vite-tailwind');
     const diffs = await run(
       vscodeTask.dryRun(fixtureDir('react-vite-tailwind'), profile)
@@ -80,50 +80,37 @@ describe('vscodeTask', () => {
       d.filepath.includes('extensions.json')
     );
 
-    expect(settings?.after).toBe(
-      JSON.stringify(
-        // biome-ignore assist/source/useSortedKeys: key order defines the rendered bytes
-        {
-          '[javascript]': { 'editor.defaultFormatter': 'biomejs.biome' },
-          '[json]': { 'editor.defaultFormatter': 'biomejs.biome' },
-          '[jsonc]': { 'editor.defaultFormatter': 'biomejs.biome' },
-          '[typescript]': { 'editor.defaultFormatter': 'biomejs.biome' },
-          '[typescriptreact]': { 'editor.defaultFormatter': 'biomejs.biome' },
-          'editor.codeActionsOnSave': {
-            'source.fixAll.biome': 'explicit',
-            'source.organizeImports.biome': 'explicit',
-          },
-          'editor.defaultFormatter': 'biomejs.biome',
-          'editor.formatOnPaste': false,
-          'editor.formatOnSave': true,
-          'javascript.updateImportsOnFileMove.enabled': 'always',
-          'typescript.preferences.importModuleSpecifier': 'non-relative',
-          'typescript.updateImportsOnFileMove.enabled': 'always',
-          'files.associations': { '*.css': 'tailwindcss' },
-          'tailwindCSS.experimental.classRegex': [
-            ['cva\\(([^)]*)\\)', '["\'`]([^"\'`]*).*?["\'`]'],
-            ['cn\\(([^)]*)\\)', '["\'`]([^"\'`]*).*?["\'`]'],
-          ],
-          'typescript.disableAutomaticTypeAcquisition': true,
-          'typescript.enablePromptUseWorkspaceTsdk': true,
-        },
-        null,
-        2
-      )
-    );
-    expect(extensions?.after).toBe(
-      JSON.stringify(
-        {
-          recommendations: [
-            'biomejs.biome',
-            'ms-vscode.vscode-typescript-next',
-            'bradlc.vscode-tailwindcss',
-          ],
-        },
-        null,
-        2
-      )
-    );
+    expect(JSON.parse(settings?.after ?? '{}')).toEqual({
+      '[javascript]': { 'editor.defaultFormatter': 'biomejs.biome' },
+      '[json]': { 'editor.defaultFormatter': 'biomejs.biome' },
+      '[jsonc]': { 'editor.defaultFormatter': 'biomejs.biome' },
+      '[typescript]': { 'editor.defaultFormatter': 'biomejs.biome' },
+      '[typescriptreact]': { 'editor.defaultFormatter': 'biomejs.biome' },
+      'editor.codeActionsOnSave': {
+        'source.fixAll.biome': 'explicit',
+        'source.organizeImports.biome': 'explicit',
+      },
+      'editor.defaultFormatter': 'biomejs.biome',
+      'editor.formatOnPaste': false,
+      'editor.formatOnSave': true,
+      'files.associations': { '*.css': 'tailwindcss' },
+      'javascript.updateImportsOnFileMove.enabled': 'always',
+      'tailwindCSS.experimental.classRegex': [
+        ['cva\\(([^)]*)\\)', '["\'`]([^"\'`]*).*?["\'`]'],
+        ['cn\\(([^)]*)\\)', '["\'`]([^"\'`]*).*?["\'`]'],
+      ],
+      'typescript.disableAutomaticTypeAcquisition': true,
+      'typescript.enablePromptUseWorkspaceTsdk': true,
+      'typescript.preferences.importModuleSpecifier': 'non-relative',
+      'typescript.updateImportsOnFileMove.enabled': 'always',
+    });
+    expect(JSON.parse(extensions?.after ?? '{}')).toEqual({
+      recommendations: [
+        'biomejs.biome',
+        'ms-vscode.vscode-typescript-next',
+        'bradlc.vscode-tailwindcss',
+      ],
+    });
   });
 });
 

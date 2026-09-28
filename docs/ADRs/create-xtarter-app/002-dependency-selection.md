@@ -7,7 +7,7 @@ Accepted
 
 The CLI needs a small dependency set for process execution, prompts, template download, build, argument parsing, and logging.
 
-## Decisions
+## Decision
 
 - **Process execution: tinyexec over execa.** Lighter footprint and a simpler API, sufficient for CLI needs.
 - **Prompts: `@clack/prompts`.** The standard choice for interactive CLI UI and actively maintained.

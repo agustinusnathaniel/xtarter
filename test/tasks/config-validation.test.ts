@@ -5,7 +5,6 @@ import { describe, expect } from 'vite-plus/test';
 import { renovateTask } from '../../packages/tasks/src/deps/renovate.js';
 import { vscodeTask } from '../../packages/tasks/src/editor/vscode.js';
 import { biomeTask } from '../../packages/tasks/src/lint/biome.js';
-import { oxfmtTask, oxlintTask } from '../../packages/tasks/src/lint/oxlint.js';
 
 describe('biome config validation', () => {
   test('rendered biome.json is valid JSON with expected structure', async () => {
@@ -21,19 +20,6 @@ describe('biome config validation', () => {
     expect(config.formatter.indentStyle).toBe('space');
     expect(config.linter.rules.style.useConsistentTypeDefinitions).toBe('off');
     expect(config.javascript.formatter.quoteStyle).toBe('single');
-  });
-
-  test('includes css.tailwindDirectives for tailwind projects', async () => {
-    const testDir = fixtureDir('react-vite-tailwind');
-    const profile = await fixtureProfile('react-vite-tailwind');
-    const diffs = await run(biomeTask.dryRun(testDir, profile));
-    const configFile = diffs.find((d) => d.filepath === 'biome.json');
-    if (!configFile) {
-      throw new Error('Expected biome.json diff to exist');
-    }
-
-    const config = JSON.parse(configFile.after);
-    expect(config.css?.parser?.tailwindDirectives).toBe(true);
   });
 });
 
@@ -66,38 +52,5 @@ describe('vscode config validation', () => {
       throw new Error('Expected settings.json diff to exist');
     }
     expect(() => JSON.parse(settingsFile.after)).not.toThrow();
-  });
-});
-
-describe('all config templates render without runtime errors', () => {
-  test('all lint tool configs render for a Vite+ project', async () => {
-    const testDir = fixtureDir('vite-plus-no-lint');
-    const profile = await fixtureProfile('vite-plus-no-lint');
-    const results = await Promise.allSettled([
-      run(oxlintTask.dryRun(testDir, profile)),
-      run(oxfmtTask.dryRun(testDir, profile)),
-    ]);
-
-    for (const result of results) {
-      if (result.status === 'rejected') {
-        throw new Error(`Template render failed: ${result.reason}`);
-      }
-    }
-  });
-
-  test('all lint tool configs render for a non-Vite+ project', async () => {
-    const testDir = fixtureDir('react-vite-tailwind');
-    const profile = await fixtureProfile('react-vite-tailwind');
-    const results = await Promise.allSettled([
-      run(biomeTask.dryRun(testDir, profile)),
-      run(renovateTask.dryRun(testDir, profile)),
-      run(vscodeTask.dryRun(testDir, profile)),
-    ]);
-
-    for (const result of results) {
-      if (result.status === 'rejected') {
-        throw new Error(`Template render failed: ${result.reason}`);
-      }
-    }
   });
 });

@@ -10,7 +10,7 @@ Accepted
 
 ## Context
 
-Template metadata lives in three hand-maintained data sources (the CLI's typed registry, the docs template catalog, and the Vite+ organization manifest), plus prose copies in the CLI README and two docs guides. The values diverge on purpose: descriptions are curated per surface, ordering differs between the CLI and the Vite+ picker, and the docs catalog carries stack chips the registry cannot derive. Single-sourcing is blocked by app isolation (ADR-001, ADR-002), by Vite+ reading its manifest from published package metadata (ADR-005), and by the docs app running outside CI; a sync guard was already tried and reverted.
+Template metadata lives in three hand-maintained data sources (the CLI's typed registry, the docs template catalog, and the Vite+ organization manifest), plus prose copies in the CLI README and two docs guides. The values diverge on purpose: descriptions are curated per surface, ordering differs between the CLI and the Vite+ picker, and the docs catalog carries stack chips the registry cannot derive. Single-sourcing is blocked by app isolation (the top-level ADR-001 and ADR-002), by Vite+ reading its manifest from published package metadata (this directory's ADR-005), and by the docs app running outside CI; a sync guard was already tried and reverted.
 
 ## Decision
 

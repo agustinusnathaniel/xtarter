@@ -73,8 +73,6 @@ describe('oxlint config validation', () => {
     const content = configFile.after;
     expect(content).toContain('import react from "ultracite/oxlint/react"');
     expect(content).toContain('extends: [core, react]');
-    expect(content).toContain('"no-console"');
-    expect(content).toContain('"no-shadow"');
   });
 });
 

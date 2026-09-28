@@ -4,7 +4,7 @@
 
 Superseded
 
-Superseded by [ADR 034](034-direct-project-detection.md).
+Superseded by [ADR-034](034-direct-project-detection.md).
 
 ## Date
 

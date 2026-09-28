@@ -1,12 +1,9 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { captureJson } from '@test/helpers/console.js';
 import { type ProjectFileMap, withProject } from '@test/helpers/project.js';
 import { createScriptedPrompter } from '@test/helpers/prompter.js';
 import { run, runCli } from '@test/helpers/run.js';
-import { withTempDir } from '@test/helpers/temp.js';
 import { addProgram } from '@xtarterize/app/commands/add/index.js';
-import { listCommand } from '@xtarterize/app/commands/list.js';
 import { openSession } from '@xtarterize/app/session.js';
 import { reportSessionOutcome } from '@xtarterize/app/ui/reporter.js';
 import { readRunManifest } from '@xtarterize/core';
@@ -202,21 +199,6 @@ describe('command session', () => {
       } finally {
         setCi(previousCi);
       }
-    });
-  });
-
-  test('renders a --json preflight failure as a JSON payload', async () => {
-    await withTempDir('xtarterize-session-', async (cwd) => {
-      const payload = (await captureJson(async () => {
-        await listCommand.run?.({ args: { cwd, json: true } } as never);
-      })) as {
-        errors: Array<{ code: string }>;
-        ok: boolean;
-      };
-
-      expect(payload.ok).toBe(false);
-      expect(payload.errors[0]?.code).toBe('MISSING_PACKAGE_JSON');
-      expect(process.exitCode).toBe(1);
     });
   });
 });

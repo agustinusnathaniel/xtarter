@@ -2,7 +2,7 @@
 
 ## Status
 
-Superseded by [ADR 039](039-restore-compact-alias-expansion.md).
+Superseded by [ADR-039](039-restore-compact-alias-expansion.md).
 
 ADR 039 later restored a compact, discounted, single-hop alias expansion; the removal of the transitive synonym map stands.
 

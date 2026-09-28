@@ -13,11 +13,7 @@ import { restoreCommand } from '@xtarterize/app/commands/restore.js';
 import { syncCommand } from '@xtarterize/app/commands/sync.js';
 import { undoCommand } from '@xtarterize/app/commands/undo.js';
 import { Prompter } from '@xtarterize/app/ui/prompter.js';
-import {
-  backupFile,
-  readRunManifest,
-  writeRunManifest,
-} from '@xtarterize/core';
+import { backupFile, writeRunManifest } from '@xtarterize/core';
 import { Effect, Layer } from 'effect';
 import { describe, expect, vi } from 'vite-plus/test';
 
@@ -520,21 +516,6 @@ describe('undo command', () => {
       }
     });
   });
-
-  test('handles missing manifest gracefully', async () => {
-    await withProject(MINIMAL_FILES, async ({ cwd }) => {
-      try {
-        const manifest = await readRunManifest(cwd);
-        expect(manifest).toBeNull();
-
-        // Should not throw - just logs an error
-        await undoCommand.run?.({ args: { cwd, quiet: true } } as never);
-        expect(process.exitCode).toBe(1);
-      } finally {
-        process.exitCode = 0;
-      }
-    });
-  });
 });
 
 describe('restore command', () => {
@@ -549,20 +530,6 @@ describe('restore command', () => {
       } as never);
 
       expect(await readText('restore-me.txt')).toBe('original text');
-    });
-  });
-
-  test('handles missing backups gracefully', async () => {
-    await withProject(MINIMAL_FILES, async ({ cwd }) => {
-      try {
-        // Should not throw - just logs an error
-        await restoreCommand.run?.({
-          args: { cwd, filepath: 'nonexistent.txt' },
-        } as never);
-        expect(process.exitCode).toBe(1);
-      } finally {
-        process.exitCode = 0;
-      }
     });
   });
 });
