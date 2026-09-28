@@ -12,4 +12,4 @@ This directory holds the architecture decision records for xtarterize. Each file
 
 ## Fields
 
-New records have a Status, a Date, and the sections Context, Decision, Rationale, Consequences, and Alternatives when other options were considered. Status is one of `Proposed`, `Accepted`, `Rejected`, or `Superseded by ADR NNN`, where NNN links to the replacing record. Earlier records may predate this convention: some omit the Date or Context, and some use forms like bare `Superseded` or `Accepted (Supersedes ...)`.
+New records have a Status, a Date, and the sections Context, Decision, Rationale, Consequences, and Alternatives when other options were considered. Status is one of `Proposed`, `Accepted`, `Rejected`, or `Superseded by ADR-NNN`, where NNN links to the replacing record. Earlier records may predate this convention: some omit the Date or Context, and some use forms like bare `Superseded` or `Accepted (Supersedes ...)`.

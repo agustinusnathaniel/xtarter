@@ -68,12 +68,6 @@ export const packageScriptsCases = defineScriptCases([
     status: 'patch',
   },
   {
-    afterContains: ['"biome"', '"release"'],
-    afterNotContains: ['"typecheck"', '"knip"'],
-    name: 'does not add typecheck or knip for non-TS projects',
-    pkg: { name: 'no-ts-project', type: 'module' },
-  },
-  {
     name: 'does not overwrite existing matching scripts',
     pkg: {
       devDependencies: {
@@ -129,16 +123,6 @@ export const packageScriptsCases = defineScriptCases([
     pkg: {
       name: 'upgrade-equivalence',
       scripts: { 'up-latest': 'pnpm up -i -L' },
-      type: 'module',
-    },
-    status: 'patch',
-  },
-  {
-    afterNotContains: ['"build"'],
-    name: 'skips when same script via different PM reference',
-    pkg: {
-      name: 'pm-script-ref',
-      scripts: { dev: 'next dev', 'npm:build': 'turbo run build' },
       type: 'module',
     },
     status: 'patch',

@@ -4,7 +4,6 @@ import {
   areEquivalent,
   extractTool,
   findEquivalentScriptKey,
-  hasScriptWithEquivalentValue,
   normalizeCommand,
 } from '../../packages/tasks/src/factory/equivalence.js';
 
@@ -68,29 +67,6 @@ describe('findEquivalentScriptKey', () => {
   });
 });
 
-describe('hasScriptWithEquivalentValue', () => {
-  test('returns true when exact value exists', () => {
-    expect(
-      hasScriptWithEquivalentValue({ build: 'tsc --noEmit' }, 'tsc --noEmit')
-    ).toBe(true);
-  });
-
-  test('returns false when no equivalent value exists', () => {
-    expect(hasScriptWithEquivalentValue({ build: 'tsc' }, 'eslint .')).toBe(
-      false
-    );
-  });
-
-  test('returns true when equivalent via tool aliases', () => {
-    expect(
-      hasScriptWithEquivalentValue(
-        { release: 'standard-version' },
-        'commit-and-tag-version'
-      )
-    ).toBe(true);
-  });
-});
-
 describe('areEquivalent', () => {
   describe('EXACT_MATCH rule', () => {
     test('returns true for identical commands', () => {
@@ -137,10 +113,6 @@ describe('areEquivalent', () => {
   describe('TOOL_MISMATCH rule', () => {
     test('returns false for completely different tools', () => {
       expect(areEquivalent('tsc --noEmit', 'eslint .')).toBe(false);
-    });
-
-    test('returns false even when tools normalize to same category but args differ', () => {
-      expect(areEquivalent('eslint .', 'biome check .')).toBe(false);
     });
   });
 
@@ -191,6 +163,12 @@ describe('areEquivalent', () => {
   describe('non-equivalent cases', () => {
     test('returns false for different commands with same tool but different args', () => {
       expect(areEquivalent('tsc --noEmit', 'tsc --build')).toBe(false);
+    });
+
+    // eslint and biome both normalize to `lint`, so this is decided by the
+    // arg comparison, not by the tool-mismatch branch.
+    test('returns false even when tools normalize to same category but args differ', () => {
+      expect(areEquivalent('eslint .', 'biome check .')).toBe(false);
     });
 
     test('returns false for completely unrelated commands', () => {

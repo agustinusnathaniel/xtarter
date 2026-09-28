@@ -5,7 +5,7 @@
 
 ## Context
 
-Multiple workspace packages often depend on the same libraries. Without centralized version pinning, each package declares its own range, which causes version drift across packages, makes dependency updates repetitive, and produces inconsistent resolved versions in the lockfile. pnpm's [catalog](https://pnpm.io/catalogs) feature defines shared version ranges once in `pnpm-workspace.yaml`.
+Multiple workspace packages often depend on the same libraries. Without centralized version pinning, each package declares its own range, which causes version drift across packages, makes dependency updates repetitive, and produces inconsistent resolved versions in the lockfile. pnpm's [catalog](https://pnpm.io/catalogs) feature defines shared version ranges once for the workspace.
 
 ## Decision
 

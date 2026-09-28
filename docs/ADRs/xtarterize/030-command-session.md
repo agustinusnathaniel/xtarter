@@ -26,7 +26,6 @@ A command session owns open, plan, execute, and report. Commands declare selecti
 
 ## Rationale
 
-- One lifecycle removes four apply and report paths and two flag resolvers.
 - Injected prompts make interactive flows testable and remove prompt and exit calls from core.
 - One manifest per `add` makes `undo` restore the whole operation.
 - Terminal and JSON render from the same outcome, including preflight failures under `--json`.

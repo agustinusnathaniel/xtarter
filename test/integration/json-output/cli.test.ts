@@ -12,6 +12,7 @@ import { checkCommand } from '@xtarterize/app/commands/check.js';
 import { diffCommand } from '@xtarterize/app/commands/diff.js';
 import { initProgram } from '@xtarterize/app/commands/init.js';
 import { listCommand } from '@xtarterize/app/commands/list.js';
+import { queryCommand } from '@xtarterize/app/commands/query.js';
 import type { PrompterShape } from '@xtarterize/app/ui/prompter.js';
 import { Effect } from 'effect';
 import { describe, expect, it, vi } from 'vite-plus/test';
@@ -30,6 +31,25 @@ const PROJECT_FILES: ProjectFileMap = {
   'vite.config.ts': 'export default {}\n',
 };
 
+interface QueryJson {
+  count: number;
+  query: string;
+  results: Array<{ relevance: number; taskId: string }>;
+  type: string;
+}
+
+/** `query` takes `--json` (not `--format json`), which is what sets `ctx.json`. */
+async function runQueryJson(args: {
+  cwd: string;
+  limit?: string;
+  query: string;
+  threshold?: string;
+}): Promise<QueryJson> {
+  return (await captureJson(async () => {
+    await queryCommand.run?.({ args: { ...args, json: true } } as never);
+  })) as QueryJson;
+}
+
 describe('cli json output', () => {
   test('list command emits machine-readable payload', async () => {
     await withProject(PROJECT_FILES, async ({ cwd }) => {
@@ -43,7 +63,6 @@ describe('cli json output', () => {
 
       expect(output.ok).toBe(true);
       expect(output.profile).toBeTruthy();
-      expect(Array.isArray(output.tasks)).toBe(true);
       expect(output.tasks.length).toBeGreaterThan(0);
       expect(typeof output.tasks[0]?.id).toBe('string');
       expect(typeof output.tasks[0]?.status).toBe('string');
@@ -62,10 +81,13 @@ describe('cli json output', () => {
       };
 
       expect(output.ok).toBe(false);
-      // 22 tasks with no `skip` statuses: conformant counts only skips, so a
-      // predicate flip to `!== 'skip'` would report 22 conformant instead of 0.
+      // conformant counts only skips, so a predicate flip to `!== 'skip'`
+      // would report every applicable task as conformant instead of 0.
       expect(output.summary.conformant).toBe(0);
-      expect(output.summary.total).toBe(22);
+      // The exact applicable count is not pinned: the registry grows, and a
+      // new task applicable to this fixture would break a `toBe(N)` without
+      // any behavior change. A non-zero total is all this test needs.
+      expect(output.summary.total).toBeGreaterThan(0);
       expect(Array.isArray(output.tasks)).toBe(true);
       expect(Array.isArray(output.diagnostics)).toBe(true);
 
@@ -94,7 +116,6 @@ describe('cli json output', () => {
       };
 
       expect(output.ok).toBe(false);
-      expect(output.summary.total).toBeGreaterThanOrEqual(0);
       expect(Array.isArray(output.files)).toBe(true);
       if (output.files.length > 0) {
         expect(typeof output.files[0]?.filepath).toBe('string');
@@ -294,33 +315,20 @@ it('check --badge <file> --json writes the badge and keeps stdout a valid JSON p
       const svg = await fs.readFile(badgePath, 'utf-8');
       expect(svg).toContain('<svg');
 
-      // Badge contract, derived from the reported summary so the test
-      // tracks behavior rather than hardcoded task counts.
+      // The badge must carry the numbers the run actually reported. The
+      // percentage math and the counts it renders as `N/M` plus the aria-label
+      // are covered against fixed expectations in test/ui/badge.test.ts, so this
+      // journey only pins the reported counts and the 0% they render to for a
+      // fixture with no skipped tasks.
       const summary = (
         output as { summary: { conformant: number; total: number } }
       ).summary;
-      const percentage =
-        summary.total === 0
-          ? 100
-          : Math.round((summary.conformant / summary.total) * 100);
-      const expectedStatus =
-        percentage >= 90
-          ? 'excellent'
-          : percentage >= 70
-            ? 'good'
-            : percentage >= 50
-              ? 'fair'
-              : 'needs work';
-      const expectedWidth = Math.max(4, Math.round((percentage / 100) * 80));
       expect(svg.startsWith('<svg')).toBe(true);
       expect(svg.endsWith('</svg>')).toBe(true);
       expect(svg).toContain(`${summary.conformant}/${summary.total}`);
-      expect(svg).toContain(`${percentage}%`);
       expect(svg).toContain(
-        `aria-label="conformance: ${summary.conformant}/${summary.total} (${percentage}%)"`
+        `aria-label="conformance: ${summary.conformant}/${summary.total} (0%)"`
       );
-      expect(svg).toContain(`${percentage}% - ${expectedStatus}`);
-      expect(svg).toContain(`width="${expectedWidth}"`);
     } finally {
       process.exitCode = 0;
     }
@@ -350,4 +358,58 @@ it('check --badge - keeps stdout a clean SVG and routes the audit to stderr', as
       process.exitCode = 0;
     }
   });
+});
+
+describe('query command json output', () => {
+  test('query --limit returns at most N results', async () => {
+    await withProject(PROJECT_FILES, async ({ cwd }) => {
+      try {
+        const unfiltered = await runQueryJson({
+          cwd,
+          query: 'ci with linting',
+        });
+        const limited = await runQueryJson({
+          cwd,
+          limit: '3',
+          query: 'ci with linting',
+        });
+
+        expect(limited.type).toBe('query');
+        expect(limited.query).toBe('ci with linting');
+        // The query scores more tasks than the limit, so capping is binding
+        // and --limit keeps the highest-relevance ones.
+        expect(unfiltered.count).toBeGreaterThan(3);
+        expect(limited.count).toBe(3);
+        expect(limited.results.map((result) => result.taskId)).toEqual(
+          unfiltered.results.slice(0, 3).map((result) => result.taskId)
+        );
+      } finally {
+        process.exitCode = 0;
+      }
+    });
+  }, 60_000);
+
+  test('query --threshold drops low-relevance results', async () => {
+    await withProject(PROJECT_FILES, async ({ cwd }) => {
+      try {
+        const unfiltered = await runQueryJson({
+          cwd,
+          query: 'ci with linting',
+        });
+        const filtered = await runQueryJson({
+          cwd,
+          query: 'ci with linting',
+          threshold: '0.5',
+        });
+
+        expect(unfiltered.count).toBeGreaterThan(filtered.count);
+        expect(filtered.count).toBeGreaterThan(0);
+        for (const result of filtered.results) {
+          expect(result.relevance).toBeGreaterThan(0.5);
+        }
+      } finally {
+        process.exitCode = 0;
+      }
+    });
+  }, 60_000);
 });

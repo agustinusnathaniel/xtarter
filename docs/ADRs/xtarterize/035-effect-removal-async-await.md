@@ -2,7 +2,7 @@
 
 ## Status
 
-Superseded by [ADR 036](036-effect-orchestration-layer.md).
+Superseded by [ADR-036](036-effect-orchestration-layer.md).
 
 ## Date
 
