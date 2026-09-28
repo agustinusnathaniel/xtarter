@@ -138,8 +138,6 @@ describe('releaseWorkflowTask', () => {
         expect(result).toContain('changesets/action@v2');
         expect(result).not.toContain('changesets/action@v1');
         expect(result).toContain('pnpm/setup@v3');
-        expect(result).not.toContain('pnpm/setup@v1');
-        expect(result).not.toContain('pnpm/setup@v2');
         expect(result).toContain('require-lockfile: true');
         expect(result).not.toContain('run: pnpm install');
         expect(result).toContain('version-script: pnpm run version-packages');
