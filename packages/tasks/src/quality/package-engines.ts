@@ -6,11 +6,7 @@ import { defineSingleTargetTask } from '@/factory/define-task.js';
 
 const TASK_ID = 'quality/package-engines';
 
-/**
- * pnpm/setup rejects pnpm below v11 because it relies on pnpm's
- * self-contained release binaries and the `pnpm runtime` command, so a floor
- * lower than that makes generated CI fail at setup instead of at install.
- */
+// pnpm/setup cannot install pnpm below v11
 const MIN_PNPM_VERSION = '11';
 
 /**

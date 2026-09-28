@@ -72,13 +72,6 @@ export function renderSteps(steps: Array<YamlStep>, indent: number): string {
     .join('\n');
 }
 
-/**
- * Prepares the workspace so later steps can run scripts: checks out the repo,
- * installs the toolchain, and installs dependencies.
- *
- * pnpm/setup installs dependencies itself, so only the other package managers
- * get an explicit install step here.
- */
 export function createSetupSteps(
   profile: ProjectProfile,
   options?: {
