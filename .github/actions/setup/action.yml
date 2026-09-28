@@ -3,9 +3,10 @@ description: 'Install dependencies with pnpm and restore Turborepo cache'
 runs:
   using: 'composite'
   steps:
-    - uses: pnpm/setup@v2
+    - uses: pnpm/setup@v3
       with:
         cache: true
+        require-lockfile: true
     - name: Restore Turborepo cache
       uses: actions/cache@v6
       with:

@@ -1,5 +1,5 @@
 import type { ProjectProfile } from '@xtarterize/core';
-import { installDependenciesCommand, runScriptCommand } from 'nypm';
+import { runScriptCommand } from 'nypm';
 
 import { ACTION_VERSIONS } from './shared/versions.js';
 import {
@@ -10,7 +10,6 @@ import {
 
 export function renderAutoUpdateWorkflow(profile: ProjectProfile): string {
   const pm = profile.packageManager;
-  const installCmd = installDependenciesCommand(pm);
   const updateCmd = pm === 'npm' ? 'npx npm-check-updates -u' : `${pm} update`;
   const dedupeCmd = `${pm} dedupe`;
   const runLint = runScriptCommand(pm, 'lint');
@@ -22,7 +21,7 @@ export function renderAutoUpdateWorkflow(profile: ProjectProfile): string {
   steps.push(
     {
       name: 'Update dependencies',
-      run: `${installCmd}\n${updateCmd}\n${dedupeCmd}`,
+      run: `${updateCmd}\n${dedupeCmd}`,
     },
     { run: runLint }
   );

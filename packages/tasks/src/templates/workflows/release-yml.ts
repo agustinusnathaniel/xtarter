@@ -1,5 +1,5 @@
 import type { ProjectProfile } from '@xtarterize/core';
-import { installDependenciesCommand, runScriptCommand } from 'nypm';
+import { runScriptCommand } from 'nypm';
 
 import type { YamlStep } from './shared/workflow.js';
 import {
@@ -10,7 +10,6 @@ import {
 
 function renderTagPushWorkflow(profile: ProjectProfile): string {
   const pm = profile.packageManager;
-  const installCmd = installDependenciesCommand(pm);
   const runLint = runScriptCommand(pm, 'lint');
   const runTypecheck = runScriptCommand(pm, 'typecheck');
   const runTest = runScriptCommand(pm, 'test');
@@ -18,7 +17,7 @@ function renderTagPushWorkflow(profile: ProjectProfile): string {
 
   const steps = createSetupSteps(profile);
 
-  steps.push({ run: installCmd }, { run: runLint });
+  steps.push({ run: runLint });
 
   if (profile.typescript) {
     steps.push({ run: runTypecheck });
@@ -44,7 +43,6 @@ ${renderSteps(steps, 6)}
 
 function renderChangesetWorkflow(profile: ProjectProfile): string {
   const pm = profile.packageManager;
-  const installCmd = installDependenciesCommand(pm);
   const runBuild = runScriptCommand(pm, 'build');
 
   const steps = createSetupSteps(profile, {
@@ -52,10 +50,7 @@ function renderChangesetWorkflow(profile: ProjectProfile): string {
     useBunAction: true,
   });
 
-  steps.push(
-    { run: installCmd },
-    conditionalScriptStep('Build', runBuild, 'build')
-  );
+  steps.push(conditionalScriptStep('Build', runBuild, 'build'));
 
   const versionScript = runScriptCommand(pm, 'version-packages');
   const publishScript = runScriptCommand(pm, 'release');

@@ -7,6 +7,16 @@ import { Badge, Card, CardGrid, Tabs, TabItem } from '@astrojs/starlight/compone
 
 Latest updates and feature releases for xtarterize. Entries since v1.0.0 are curated below; see the [full changelog](https://github.com/agustinusnathaniel/xtarter/blob/main/apps/xtarterize/CHANGELOG.md) for complete notes and every patch version.
 
+## v2.0.4 - 2026-09-28 <Badge text="Patch" variant="default" />
+
+### pnpm workflows install dependencies once
+
+Generated CI, release, and auto-update workflows for pnpm projects installed dependencies twice: once inside the `pnpm/setup` action, and again as a separate step. There is now a single install.
+
+Generated pnpm CI also fails when a project has no `pnpm-lock.yaml`, instead of resolving from the registry and writing one on the fly.
+
+Re-run `sync` to update an existing project.
+
 ## v2.0.2 - 2026-09-15 <Badge text="Patch" variant="default" />
 
 ### Updated workflow actions

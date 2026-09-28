@@ -1,4 +1,5 @@
 import type { ProjectProfile } from '@xtarterize/core';
+import { installDependenciesCommand } from 'nypm';
 
 import { ACTION_VERSIONS } from './versions.js';
 
@@ -91,9 +92,12 @@ export function createSetupSteps(
   if (pm === 'pnpm') {
     steps.push({
       uses: ACTION_VERSIONS.PNPM_SETUP,
-      with: { cache: 'true' },
+      with: { cache: 'true', 'require-lockfile': 'true' },
     });
-  } else if (pm === 'bun' && options?.useBunAction) {
+    return steps;
+  }
+
+  if (pm === 'bun' && options?.useBunAction) {
     steps.push({ uses: 'oven-sh/setup-bun@v2' });
   } else {
     steps.push({
@@ -104,6 +108,8 @@ export function createSetupSteps(
       },
     });
   }
+
+  steps.push({ run: installDependenciesCommand(pm) });
 
   return steps;
 }

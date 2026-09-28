@@ -11,7 +11,7 @@ import { describe, expect } from 'vite-plus/test';
 import { packageEnginesTask } from '../../packages/tasks/src/quality/package-engines.js';
 
 const EXPECTED_DEV_ENGINES = {
-  packageManager: { name: 'pnpm', version: '>=9' },
+  packageManager: { name: 'pnpm', version: '>=11' },
   runtime: { name: 'node', version: '>=18' },
 };
 
@@ -62,7 +62,7 @@ const devEnginesCases: Array<DevEnginesCase> = [
       const diffs = await run(packageEnginesTask.dryRun(cwd, profile));
       expect(diffs.length).toBe(1);
       expect(JSON.parse(diffs[0].after).devEngines).toEqual({
-        packageManager: { name: 'pnpm', version: '>=9' },
+        packageManager: { name: 'pnpm', version: '>=11' },
         runtime: { name: 'node', version: '>=20' },
       });
     },
@@ -79,7 +79,7 @@ const devEnginesCases: Array<DevEnginesCase> = [
       const diffs = await run(packageEnginesTask.dryRun(cwd, profile));
       expect(diffs.length).toBe(1);
       expect(JSON.parse(diffs[0].after).devEngines).toEqual({
-        packageManager: { name: 'pnpm', version: '>=9' },
+        packageManager: { name: 'pnpm', version: '>=11' },
         runtime: { name: 'node', version: '>=22' },
       });
     },
