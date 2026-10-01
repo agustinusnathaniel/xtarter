@@ -20,3 +20,4 @@ plans
 .env
 .env.local
 .env.*.local
+.vitest/
