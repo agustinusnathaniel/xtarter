@@ -14,6 +14,7 @@ export default defineConfig({
     entry: ['src/index.ts'],
     exports: {
       bin: './src/index.ts',
+      inlinedDependencies: false,
     },
     minify: true,
     target: 'node20',

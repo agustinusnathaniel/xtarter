@@ -7,6 +7,7 @@ export default defineConfig({
     entry: ['src/cli.ts', 'src/index.ts'],
     exports: {
       bin: './src/cli.ts',
+      inlinedDependencies: false,
     },
     format: ['esm'],
     minify: true,
