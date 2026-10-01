@@ -42,7 +42,7 @@
     "vite": "catalog:",
     "vite-plus": "catalog:"
   },
-  "packageManager": "pnpm@12.4.1",
+  "packageManager": "pnpm@12.8.1",
   "devEngines": {
     "runtime": {
       "name": "node",
