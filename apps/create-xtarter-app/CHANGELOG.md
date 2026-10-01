@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.17.2
+
+### Patch Changes
+
+- [#227](https://github.com/agustinusnathaniel/xtarter/pull/227) [`1eb20df`](https://github.com/agustinusnathaniel/xtarter/commit/1eb20df28ea89150bec8afe84c7f9376994ccf96) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Scaffolding no longer leaves a half-initialized `.git` behind when the initial
+  commit fails. The repository directory is removed when scaffolding created it,
+  and a pre-existing `.git` is never touched.
+
 ## 1.17.1
 
 ### Patch Changes
