@@ -137,9 +137,20 @@ Options: `--quiet`, `--json`.
 
 ## `query`
 
-Search tasks by natural language query. Options: `--limit <n>` (default `20`), `--threshold <n>` (default `0.1`), `--json`. See the [query command page](/xtarterize/guide/cli/query/).
+Search tasks by natural language query — pass the query as a quoted positional — so you do not need exact task IDs. Scoring runs locally, with no AI or network calls. Results are grouped by category, and each group prints a ready-to-run `xtarterize add` command.
+
+| Option | Description | Default |
+| --- | --- | --- |
+| `--limit <n>` | Maximum number of results | `20` |
+| `--threshold <n>` | Minimum relevance score (0-1) | `0.1` |
+
+`--cwd` and `--json` are shared global options; `--quiet` and `--format` are not supported.
 
 <AllPackageManagers type="dlx" pkg="xtarterize@latest" args='query "strict typescript"' />
+
+`init --compose "<query>"` reorders the `init` plan by relevance to a query without excluding any applicable task; `--threshold` sets its minimum score.
+
+<AllPackageManagers type="dlx" pkg="xtarterize@latest" args='init --compose "react project with ci and linting"' title="Rank an init plan" />
 
 ## Task statuses
 
