@@ -35,7 +35,7 @@ Preview first, or apply without prompts:
 
 <AllPackageManagers type="dlx" pkg="xtarterize@latest" args="init --yes" title="Apply all" />
 
-A task that is already conformant is skipped, so a second `init` makes no changes. Which tasks are offered also depends on where you run in a monorepo — see [monorepo support](/xtarterize/guide/monorepo/). Every flag, including `--only` and `--skip`, is in the [CLI reference](/xtarterize/guide/cli/overview/#init).
+A task that is already conformant is skipped, so a second `init` makes no changes. Lint tasks install [Ultracite](https://ultracite.ai/) alongside Biome, Oxlint, or Oxfmt, and generated configs extend its presets; xtarterize overlays its own conventions, such as kebab-case filenames and single quotes. Customize by editing the generated config files. Which tasks are offered also depends on where you run in a monorepo — see [monorepo support](/xtarterize/guide/monorepo/). Every flag, including `--only` and `--skip`, is in the [CLI reference](/xtarterize/guide/cli/overview/#init).
 
 ## What it will not do
 
@@ -56,7 +56,7 @@ A task that is already conformant is skipped, so a second `init` makes no change
 
 ## Agent skills
 
-The xtarterize skill teaches AI tools how to drive the CLI: commands, flags, `--json` output shapes, task statuses, and conformance workflows. It activates when you ask about conformance, linting, CI, or any xtarterize task.
+The xtarterize skill teaches AI tools how to drive the CLI: commands, flags, `--json` output shapes, task statuses, and conformance workflows. It activates when you ask about conformance, linting, CI, or any xtarterize task. Install it through the [skills.sh](https://skills.sh) ecosystem:
 
 <AllPackageManagers type="dlx" pkg="skills@latest" args="add agustinusnathaniel/xtarter" />
 
