@@ -1,5 +1,14 @@
 # @xtarterize/tasks
 
+## 2.0.5
+
+### Patch Changes
+
+- [#235](https://github.com/agustinusnathaniel/xtarter/pull/235) [`c3ab7c2`](https://github.com/agustinusnathaniel/xtarter/commit/c3ab7c25b29bba50db3e5dd6d4e0a9f26497812d) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Add the new `emilkowalski/skills` entries to the skills catalog: `animation-vocabulary` and `break-ui` for web UI projects, and `mobile-native` for browser-runtime projects. Skills that only run on explicit request (`pick-ui-library`, `prototype`, `review-animations`) and `write-swift` (Swift toolchain is not a detected signal) stay out of the catalog.
+- Updated dependencies []:
+  - @xtarterize/core@2.0.5
+  - @xtarterize/patchers@2.0.5
+
 ## 2.0.4
 
 ### Patch Changes
