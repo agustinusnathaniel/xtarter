@@ -4,7 +4,7 @@
 
 Accepted
 
-External task plugins were later removed by ADR 037, and synonym expansion by ADR 038; ADR 039 restored a compact alias expansion. The scoring signals and the search metadata contract below remain as decided.
+External task plugins were later removed by ADR 037, and the original transitive synonym map was replaced by the compact alias expansion of ADR 039. The scoring signals and the search metadata contract below remain as decided.
 
 ## Date
 

@@ -26,6 +26,7 @@ Restore query expansion in a compact, precision-preserving shape inspired by the
 ## Rationale
 
 - The discount keeps alias matches below same-tier direct matches, recovering recall without letting synonyms outrank literal terms.
+- Stemming stays: a broader cut that also removed stemming was measured to invert a documented ranking and empty a documented threshold example.
 - Sibling closure keeps expansion one hop from the typed term, and containment keeps short aliases out of unrelated fields.
 - Phrase promotion ports Astryx's reserved tier, which sits above observed alias-stacked results but below the strongest all-direct result.
 
