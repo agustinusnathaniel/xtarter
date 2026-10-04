@@ -9,9 +9,9 @@ Adds a `devEngines` field to `package.json` with the expected Node.js version an
 {
   "devEngines": {
     "runtime": { "name": "node", "version": ">=22" },
-    "packageManager": { "name": "pnpm", "version": ">=9" }
+    "packageManager": { "name": "pnpm", "version": ">=11" }
   }
 }
 ```
 
-The Node version comes from `.nvmrc`, `engines.node`, or a default of `22` (written as `>=22`). `packageManager.version` defaults to `>=9` for pnpm and `>=10` for npm, yarn, or bun, and uses an existing `packageManager` field when present. Existing `devEngines` values take precedence during the merge.
+The Node version comes from `.nvmrc`, `engines.node`, or a default of `22` (written as `>=22`). `packageManager.version` defaults to `>=11` for pnpm (the minimum `pnpm/setup` can install) and `>=10` for npm, yarn, or bun, and uses an existing `packageManager` field when present. Existing `devEngines` values take precedence during the merge.

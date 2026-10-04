@@ -3,7 +3,7 @@ title: Getting Started with create-xtarter-app
 description: Scaffold a new project from a curated template.
 ---
 
-import { LinkButton } from '@astrojs/starlight/components'
+import { LinkButton, Steps } from '@astrojs/starlight/components'
 import AllPackageManagers from '@/components/AllPackageManagers.astro'
 
 `create-xtarter-app` scaffolds a new project from a curated template, installs its dependencies, and can initialize Git.
@@ -16,13 +16,60 @@ The CLI prompts for a project name, template, package manager, Git init, and CI/
 
 <AllPackageManagers type="create" pkg="xtarter-app@latest" args="my-app --yes" title="Scaffold with defaults" />
 
-<AllPackageManagers type="create" pkg="xtarter-app@latest" args="my-app -t vite-tailwind" title="Pick a template" />
-
 <LinkButton href="/create-xtarter-app/guide/templates/" size="lg">Browse all templates</LinkButton>
+
+## Step by step
+
+<Steps>
+
+1. ### Enter a project name
+
+   Names allow letters, numbers, hyphens, and underscores, up to 214 characters. You can pass the name as a positional argument instead:
+
+   <AllPackageManagers type="create" pkg="xtarter-app@latest" args="my-app" />
+
+2. ### Pick a template
+
+   The picker lists the five templates: `next-chakra`, `next-tailwind`, `vite-chakra`, `vite-tailwind`, and `vite-hero`. See [Templates](/create-xtarter-app/guide/templates/) for details, or skip the prompt with `--template` / `-t`:
+
+   <AllPackageManagers type="create" pkg="xtarter-app@latest" args="my-app --template vite-tailwind" />
+
+3. ### Choose a package manager
+
+   Choose pnpm (recommended), npm, bun, or yarn, or skip the prompt with `--pm` / `-p`:
+
+   <AllPackageManagers type="create" pkg="xtarter-app@latest" args="my-app --pm bun" />
+
+4. ### Decide on git init
+
+   Git init is on by default and creates a repository with an initial commit. It requires `git` on your system and is skipped automatically when `git` is not installed; use `--no-git` to skip it explicitly.
+
+5. ### Clean CI/CD configs (optional)
+
+   When enabled, it removes pre-configured CI/CD files such as GitHub Actions workflows, `.gitlab-ci.yml`, `.travis.yml`, CircleCI, Vercel, Netlify, Railway, and Fly configs. Use `--clean` to enable it directly.
+
+6. ### Wait for download and install
+
+   The CLI downloads the template, updates the `package.json` name, installs dependencies, and initializes Git when enabled.
+
+7. ### You're ready
+
+   The CLI prints the next commands (`cd <project>` and `<package-manager> dev`) and the chosen template name.
+
+</Steps>
+
+## When installation fails
+
+The CLI runs `<package-manager> install` after download. If installation fails, the process exits with an error and removes the target directory when the CLI created it. Files downloaded into an existing empty directory are kept, so you can run the install manually.
+
+## What gets modified after download
+
+- **`package.json` name** - lowercased, with unsupported characters replaced by hyphens
+- **Workspace references** - `workspace:` entries in `pnpm.overrides` are removed
+- **CI/CD files** - removed when `--clean` is enabled
 
 ## Next steps
 
-- [Usage guide](/create-xtarter-app/getting-started/usage/) - Walk through each prompt
 - [CLI reference](/create-xtarter-app/guide/cli/) - Commands, arguments, and flags
-- [Template catalog](/create-xtarter-app/guide/templates/) - Every template
+- [Template catalog](/create-xtarter-app/guide/templates/) - Every template, plus `preview` to inspect one before scaffolding
 - [Keep in sync](/xtarterize/) - Maintain configs after scaffolding
