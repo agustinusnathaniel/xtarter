@@ -188,37 +188,20 @@ export default defineConfig({
               link: '/xtarterize/',
             },
             {
-              items: [
-                { autogenerate: { directory: 'xtarterize/getting-started' } },
-              ],
               label: 'Getting Started',
+              link: '/xtarterize/getting-started/',
             },
             {
-              collapsed: false,
-              items: [
-                { label: 'Overview', link: '/xtarterize/guide/cli/overview/' },
-                { label: 'Query', link: '/xtarterize/guide/cli/query/' },
-              ],
               label: 'CLI Reference',
+              link: '/xtarterize/guide/cli/overview/',
             },
             {
-              collapsed: false,
-              items: [
-                {
-                  autogenerate: {
-                    directory: 'xtarterize/guide/tasks',
-                  },
-                },
-              ],
               label: 'Conformance Tasks',
+              link: '/xtarterize/guide/tasks/overview/',
             },
             {
               label: 'Configuration',
               link: '/xtarterize/guide/config/overview/',
-            },
-            {
-              label: 'AI Agent Skills',
-              link: '/xtarterize/guide/agent-skills/',
             },
             {
               label: 'Changelog',
@@ -236,40 +219,12 @@ export default defineConfig({
                   link: '/xtarterize/contributing/architecture/overview/',
                 },
                 {
-                  label: 'Project Detection',
-                  link: '/xtarterize/contributing/core/detect/',
+                  label: 'Pipeline',
+                  link: '/xtarterize/contributing/core/pipeline/',
                 },
                 {
-                  label: 'Preflight & Diagnostics',
-                  link: '/xtarterize/contributing/core/preflight/',
-                },
-                {
-                  label: 'Task Resolution',
-                  link: '/xtarterize/contributing/core/resolve/',
-                },
-                {
-                  label: 'Apply Engine',
-                  link: '/xtarterize/contributing/core/apply/',
-                },
-                {
-                  items: [
-                    {
-                      autogenerate: {
-                        directory: 'xtarterize/contributing/tasks',
-                      },
-                    },
-                  ],
-                  label: 'Tasks',
-                },
-                {
-                  items: [
-                    {
-                      autogenerate: {
-                        directory: 'xtarterize/contributing/patchers',
-                      },
-                    },
-                  ],
-                  label: 'Patchers',
+                  label: 'Task Architecture',
+                  link: '/xtarterize/contributing/tasks/overview/',
                 },
               ],
               label: 'Contributing',
@@ -285,14 +240,8 @@ export default defineConfig({
               link: '/create-xtarter-app/',
             },
             {
-              items: [
-                {
-                  autogenerate: {
-                    directory: 'create-xtarter-app/getting-started',
-                  },
-                },
-              ],
               label: 'Getting Started',
+              link: '/create-xtarter-app/getting-started/',
             },
             {
               label: 'CLI Reference',
@@ -305,10 +254,6 @@ export default defineConfig({
             {
               label: 'Vite+ Org Templates',
               link: '/create-xtarter-app/guide/org-templates/',
-            },
-            {
-              label: 'AI Agent Skills',
-              link: '/create-xtarter-app/guide/agent-skills/',
             },
           ],
           label: 'create-xtarter-app',

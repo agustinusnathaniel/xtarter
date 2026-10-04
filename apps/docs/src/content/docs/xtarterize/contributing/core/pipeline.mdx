@@ -1,0 +1,107 @@
+---
+title: The Pipeline
+description: How xtarterize detects, resolves, validates, patches, and applies conformance changes.
+---
+
+The CLI runs every command through one pipeline. Each stage is a plain, testable unit; the runtime edge composes them.
+
+## Detection
+
+Detection is the first step in every command. It reads the project directory and builds a profile that drives which conformance tasks apply.
+
+The profile contains:
+
+- Framework and framework version, bundler, router, and styling
+- TypeScript usage, runtime target, and Node version
+- Package manager and whether the project uses Vite+
+- Monorepo status, monorepo tool, and whether the current directory is the workspace root
+- Git and GitHub presence
+- Existing configuration files, such as Biome, ESLint, tsconfig, Renovate, commitlint, knip, Vite config, and GitHub workflows
+
+Detection runs on every invocation; there is no profile cache. Each run inspects `package.json`, root config files, lockfiles, config directories, and ancestor markers, then computes a fresh profile. Signals come from two sources:
+
+- **Dependencies**: framework, bundler, router, and styling packages in `package.json`
+- **Filesystem**: TypeScript config presence, lockfiles, monorepo markers, bundler config files, and a `.github/` directory
+
+Framework, router, styling, runtime, and Vite+ detection run inline. Bundler, monorepo, and package manager detection consume shared declarations from the detection registry, which also supplies lockfile checks for diagnostics. New keyed detectors belong in the registry.
+
+When both `react` and `react-native` (or `expo`) are present in dependencies, detection reports `react-native`; there is no prompt to disambiguate. The framework is `null` only when the project has no `package.json`. `workspaceRoot` is true when the current directory contains monorepo markers such as `pnpm-workspace.yaml` or `turbo.json`, false inside a workspace package discovered by walking up parent directories, and equal to `monorepo` in non-monorepos.
+
+Detection stays a plain async function and does not compose Effects; the engine lifts it at the nearest orchestration seam. See the [configuration guide](/xtarterize/guide/config/overview/) for the user-facing summary.
+
+## Resolution
+
+Resolution keeps the tasks whose applicability check accepts the profile — a pure filter with no I/O. In a monorepo, it also filters tasks by scope (`root`, `package`, or both); non-monorepo projects skip scope filtering.
+
+Status checks run in parallel. Each task inspects the filesystem and reports one of four statuses:
+
+| Status | Meaning | `init` acts | `sync` acts |
+| ------ | ------- | ----------- | ----------- |
+| `new` | Config does not exist yet | Yes | No |
+| `patch` | Config exists and can be updated | Yes | Yes |
+| `skip` | Already conformant | No | No |
+| `conflict` | Changes need explicit approval | Only when selected | Only when selected |
+
+A check that throws is reported as a `conflict` with its error detail instead of failing the whole resolution.
+
+## Preflight and diagnostics
+
+Every project command runs preflight before doing work. Preflight requires:
+
+- A `package.json` in the project root (`MISSING_PACKAGE_JSON` when absent)
+- A `name` field in `package.json` (`INVALID_PACKAGE_JSON` when absent)
+- A git repository (`MISSING_GIT` when absent)
+
+Covered commands are `init`, `sync`, `diff`, `check`, `add`, `list`, `query`, `restore`, `undo`, and `doctor`. When a check fails, the CLI prints every error with a hint and exits with code `1`, and conformance tasks do not run. `doctor` continues so it can still report diagnostics. The CLI can maintain `.gitignore` so the internal `.xtarterize/` directory stays out of version control even when preflight fails.
+
+`check` and `doctor` additionally run tooling diagnostics:
+
+- **Conflicting tools**: Biome alongside ESLint or Prettier, and legacy `.eslintrc` files, are reported as warnings.
+- **Tool installation**: for each tool declared in `package.json` (Biome, ESLint, TypeScript, Commitlint, Knip), the tool's version command confirms it is installed.
+
+`check` runs the tools and configuration groups. `doctor` runs every group (environment, tools, project, and configuration), and `--verbose` adds a system group with host platform information. Checks report `pass`, `warn`, or `fail` with a message; a check that throws becomes a single failure entry, so one broken check never hides the others, and a failing diagnostic sets exit code `1`.
+
+In CI (`CI=true` or `CI=1`), xtarterize enables quiet mode for all commands. Quiet mode is also enabled by `--quiet`, `--json`, and `--format json`.
+
+## Patching
+
+`@xtarterize/patchers` provides the write mechanics. Patchers return new content, and the caller decides whether to write it.
+
+- **JSON merge**: deep merges objects with [`defu`](https://github.com/unjs/defu) — existing keys win, incoming values fill gaps, nested objects merge recursively, and arrays are replaced entirely, never concatenated. Used for `tsconfig.json`, `biome.json`, VS Code settings, and other JSON configuration.
+- **Vite plugin injection**: inserts an import and a plugin call into Vite config source with [`magicast`](https://github.com/unjs/magicast). Idempotent: an already-imported plugin is not added again. When the config structure is non-standard, such as a factory function or a conditional export, the patcher returns manual instructions instead of rewriting the file.
+
+Object merging alone would discard comments and formatting, so JSON file writes use a second patcher that edits the JSON text directly, preserving comments, key order, whitespace and indentation, and trailing commas in JSONC. JSON merge targets combine both steps: the object merge computes the target state, then the text patch applies it to the original file.
+
+## Plan and apply
+
+The apply engine is the final stage. It plans a task set, backs up modified files, installs dependencies in one batch, runs the tasks, and reports errors.
+
+Planning is side-effect free, so a preview is exact and execution replays the plan unchanged. The plan collects, for the selected tasks:
+
+- Each task's status, reusing statuses computed while the session opened
+- The diffs for tasks that are not skipped or conflicting
+- The dependencies each runnable task declares
+- The unique file paths in the diffs, which are also the backup set
+
+Execution replays the plan:
+
+1. Back up every affected file once and write a run manifest for the `undo` command.
+2. Install the collected dependencies in one batch.
+3. Run each task's apply in sequence, collecting per-task errors instead of aborting.
+4. Return the applied count, skipped count, collected errors, and timing.
+
+Before any file is modified, the engine writes a timestamped copy under `.xtarterize/backups/` and indexes it in `.xtarterize/backups/.index.json` for `restore`. Each unique file path is backed up once per run, even when several tasks modify it. The `.xtarterize/` directory is added to `.gitignore` automatically.
+
+Errors are collected and reported without aborting the run:
+
+- A check that throws becomes a `conflict` with the error message, and the task is skipped.
+- A dry-run failure is reported and the task is skipped without a backup.
+- A failed dependency install is recorded in the result. Tasks that need the missing packages fail individually, while file-only tasks still run.
+- A failed apply is logged with the task id and message, and later tasks continue.
+
+Backup or manifest failures stop execution before any task runs. Tasks declared from a synchronous or Promise-returning spec follow the same rules as Effect-based tasks.
+
+## References
+
+- [Task architecture](/xtarterize/contributing/tasks/overview/)
+- [Architecture overview](/xtarterize/contributing/architecture/overview/)

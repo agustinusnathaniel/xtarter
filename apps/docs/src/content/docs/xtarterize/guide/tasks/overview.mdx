@@ -1,6 +1,6 @@
 ---
 title: Conformance Tasks
-description: Task IDs and one-line descriptions for every xtarterize task.
+description: Every xtarterize task — ID, what it does, and behavior details for the non-obvious ones.
 sidebar:
   order: 1
 ---
@@ -23,7 +23,7 @@ In monorepos, tasks are filtered by scope: root tasks appear only at the monorep
 
 | Task | What it does |
 | --- | --- |
-| [`ts/strict`](/xtarterize/guide/tasks/ts-strict/) | Enable strict compiler options in `tsconfig.json` |
+| `ts/strict` | Enable strict compiler options in `tsconfig.json` |
 | `ts/paths` | Add the `@/*` path alias to `tsconfig.json`, plus `baseUrl` outside Next.js |
 | `ts/incremental` | Enable `incremental` and `tsBuildInfoFile` |
 | `gitignore/tsbuildinfo` | Ignore `*.tsbuildinfo` in `.gitignore` |
@@ -56,8 +56,8 @@ In monorepos, tasks are filtered by scope: root tasks appear only at the monorep
 | `release/commitlint` | Write `commitlint.config.ts`; the git hook runs commitlint via dlx |
 | `release/czg` | Install czg and add a `commit` script |
 | `release/cat-version` | Install commit-and-tag-version and write `.versionrc` |
-| [`release/git-hooks`](/xtarterize/guide/tasks/release-git-hooks/) | Install husky and wire the commit-msg, prepare-commit-msg, pre-commit, and pre-push hooks |
-| [`release/versionrc`](/xtarterize/guide/tasks/versionrc/) | Write `.versionrc.json` with changelog sections |
+| `release/git-hooks` | Install husky and wire the commit-msg, prepare-commit-msg, pre-commit, and pre-push hooks |
+| `release/versionrc` | Write `.versionrc.json` with changelog sections |
 
 ## Code quality
 
@@ -65,7 +65,7 @@ In monorepos, tasks are filtered by scope: root tasks appear only at the monorep
 | --- | --- |
 | `quality/knip` | Write `knip.config.ts`; Knip is installed by `scripts/package-scripts` when it adds the `knip` script |
 | `quality/lint-staged` | Install lint-staged and write `.lintstagedrc.json` |
-| [`quality/package-engines`](/xtarterize/guide/tasks/package-engines/) | Add `devEngines` to `package.json` |
+| `quality/package-engines` | Add `devEngines` to `package.json` |
 
 ## Code generation
 
@@ -78,13 +78,13 @@ In monorepos, tasks are filtered by scope: root tasks appear only at the monorep
 | Task | What it does |
 | --- | --- |
 | `monorepo/turbo` | Install Turborepo and write `turbo.json` |
-| [`workspace/pnpm-workspace`](/xtarterize/guide/tasks/pnpm-workspace/) | Add workspace globs to `pnpm-workspace.yaml` |
+| `workspace/pnpm-workspace` | Add workspace globs to `pnpm-workspace.yaml` |
 
 ## Editor
 
 | Task | What it does |
 | --- | --- |
-| [`editor/vscode`](/xtarterize/guide/tasks/editor-vscode/) | Write or merge `.vscode/settings.json` and `.vscode/extensions.json` |
+| `editor/vscode` | Write or merge `.vscode/settings.json` and `.vscode/extensions.json` |
 
 ## Agent
 
@@ -103,5 +103,90 @@ The skills task selects skills using detected project capabilities. Web UI proje
 | `scripts/npmrc` | Write `.npmrc` with `save-exact` and peer dependency settings |
 
 All tasks are idempotent: a second run makes no changes. Each task reports one of `new`, `patch`, `skip`, or `conflict`.
+
+## Task details
+
+### `ts/strict`
+
+Patches `tsconfig.json` with four options:
+
+| Option | Purpose |
+| --- | --- |
+| `strict` | Enable all strict type-checking options |
+| `noUnusedLocals` | Error on unused local variables |
+| `noUnusedParameters` | Error on unused function parameters |
+| `verbatimModuleSyntax` | Require `import type` for type-only imports |
+
+Each option is checked independently. An existing option with a different value is reported as a conflict instead of being overwritten, so intentional settings are never loosened. Use `--skip ts/strict` to leave this task out; the other TypeScript tasks still apply.
+
+### `editor/vscode`
+
+Writes or merges `.vscode/settings.json` and `.vscode/extensions.json`.
+
+Base settings: Biome formats TS, JS, JSON, and JSONC, with format on save enabled and format on paste disabled; Biome fix and organize imports run as explicit code actions on save; non-relative import specifiers (`@/` paths) with update imports on file move for TS and JS.
+
+Detected tools add settings:
+
+| Detected | Added |
+| --- | --- |
+| Monorepo | `typescript.tsdk` from the workspace; `search.exclude` for `node_modules`, `.turbo`, `dist` |
+| Vite | `files.associations` maps `.css` to Tailwind CSS |
+| Vue | `vue.server.hybridMode`; Vue formatter |
+| React Native | `typescript.tsserver.watchOptions` for fs events |
+| Next.js | `typescript.tsdk`; Emmet JSX languages |
+| TanStack Router | `files.exclude` hides `routeTree.gen.ts` |
+| Tailwind CSS | CVA/CN class regex patterns for IntelliSense |
+| TypeScript | `typescript.disableAutomaticTypeAcquisition`; `typescript.enablePromptUseWorkspaceTsdk` |
+
+Extensions: recommends `biomejs.biome` and `ms-vscode.vscode-typescript-next`, plus framework-specific extensions for Tailwind CSS, Vue, or React Native. Existing recommendations are kept and merged, never removed.
+
+### `quality/package-engines`
+
+Adds a `devEngines` field to `package.json` with the expected Node.js version and package manager, for example:
+
+```json
+{
+  "devEngines": {
+    "runtime": { "name": "node", "version": ">=22" },
+    "packageManager": { "name": "pnpm", "version": ">=11" }
+  }
+}
+```
+
+The Node version comes from `.nvmrc`, `engines.node`, or a default of `22` (written as `>=22`). `packageManager.version` defaults to `>=11` for pnpm (the minimum `pnpm/setup` can install) and `>=10` for npm, yarn, or bun, and uses an existing `packageManager` field when present. Existing `devEngines` values take precedence during the merge.
+
+### `workspace/pnpm-workspace`
+
+Ensures `pnpm-workspace.yaml` declares the workspace globs pnpm needs; in a single-package project it creates the file with only a comment placeholder:
+
+```yaml
+packages:
+  - 'apps/*'
+  - 'packages/*'
+```
+
+When the file exists with a `packages:` list, only missing globs are inserted. Comments, other keys such as `catalog:` and `overrides:`, key order, indentation, quote style, and line endings stay untouched. A file without a `packages:` key is left alone. Layouts that cannot be edited safely, such as a flow-style `packages:` list missing a glob, are reported as a conflict. The task applies only when pnpm is the detected package manager.
+
+### `release/git-hooks`
+
+Installs husky and wires four Git hooks:
+
+| Hook | Action |
+| --- | --- |
+| `commit-msg` | Run `commitlint --edit` on the commit message |
+| `prepare-commit-msg` | Run `cz --hook` when `czg` or `commitizen` is installed; otherwise a no-op |
+| `pre-commit` | Run `lint-staged`, or `biome check --write` when lint-staged is not installed |
+| `pre-push` | Run `typecheck` and `test`, or `check:turbo` in Turborepo projects |
+
+Hooks are written to `.husky/`. In Vite+ projects they go to `.vite-hooks/` instead, and `vp staged` replaces the pre-commit hook without installing husky.
+
+### `release/versionrc`
+
+Writes `.versionrc.json` for [commit-and-tag-version](https://github.com/absolute-version/commit-and-tag-version) and compatible tools. The file maps conventional commit types to changelog sections and sets `bumpFiles` to `package.json`.
+
+- Visible: `feat`, `fix`, `refactor`, `perf`
+- Hidden: `docs`, `style`, `test`, `chore`, `ci`, `build`, `revert`
+
+The separate `release/cat-version` task installs the `commit-and-tag-version` dependency and writes the legacy `.versionrc` file. Use both together, or `versionrc` alone if you install the tool yourself.
 
 <LinkButton href="/xtarterize/contributing/tasks/overview/">Learn how to contribute a task</LinkButton>

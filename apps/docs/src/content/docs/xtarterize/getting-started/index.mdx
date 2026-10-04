@@ -1,0 +1,71 @@
+---
+title: Getting Started
+description: Install xtarterize, run your first conformance pass, and keep your project conformant.
+---
+
+import { Steps } from '@astrojs/starlight/components'
+import AllPackageManagers from '@/components/AllPackageManagers.astro'
+
+xtarterize scans JavaScript and TypeScript projects, selects the conformance tasks that apply, previews the changes, and applies approved updates. It writes configuration, never application code. Coverage is deepest for Vite, React, and TypeScript; other stacks such as Vue, Svelte, Solid, Node CLIs, and Bun work but stay experimental with fewer tasks.
+
+## Prerequisites
+
+- Node.js 24 or later
+- A JavaScript or TypeScript project with a `package.json` that has a `name` field, and an initialized Git repository (preflight checks validate both before making changes)
+
+## Your first run
+
+<AllPackageManagers type="dlx" pkg="xtarterize@latest" args="init" />
+
+No global install needed; the runner fetches the published CLI directly. Verify it works with `--version` or `--help`.
+
+<Steps>
+
+1. **Scan** the project for framework, bundler, package manager, monorepo status, and existing configs
+2. **Resolve** which tasks apply to the detected stack
+3. **Check** each task's status: `new`, `patch`, `skip`, or `conflict`
+4. **Plan** the changes in a conformance table
+5. **Prompt** to apply all, select tasks, dry-run, or quit
+
+</Steps>
+
+Preview first, or apply without prompts:
+
+<AllPackageManagers type="dlx" pkg="xtarterize@latest" args="init --dry-run" title="Preview" />
+
+<AllPackageManagers type="dlx" pkg="xtarterize@latest" args="init --yes" title="Apply all" />
+
+A task that is already conformant is skipped, so a second `init` makes no changes. Which tasks are offered also depends on where you run in a monorepo — see [monorepo support](/xtarterize/guide/monorepo/). Every flag, including `--only` and `--skip`, is in the [CLI reference](/xtarterize/guide/cli/overview/#init).
+
+## What it will not do
+
+- **Overwrite your values.** A config key you set deliberately is preserved; xtarterize only fills gaps.
+- **Hide a conflict.** Incompatible values are reported for your decision instead of being silently replaced.
+- **Leave you stuck.** Modified files are backed up under `.xtarterize/`; `undo` reverts a whole run and `restore` brings back one file.
+- **Touch your source code.** Only configuration files, CI workflows, editor settings, and agent instructions are written.
+
+## Which command next
+
+| Command | Reach for it when |
+| --- | --- |
+| `sync` | Templates have moved on and you want the updates |
+| `check` | Auditing conformance, or gating CI |
+| `diff` | Reviewing pending changes before applying |
+| `add <task-id>` | Applying one specific task |
+| `query "<words>"` | Finding the right task by description |
+
+## Agent skills
+
+The xtarterize skill teaches AI tools how to drive the CLI: commands, flags, `--json` output shapes, task statuses, and conformance workflows. It activates when you ask about conformance, linting, CI, or any xtarterize task.
+
+<AllPackageManagers type="dlx" pkg="skills@latest" args="add agustinusnathaniel/xtarter" />
+
+## Starting from a template
+
+[create-xtarter-app](/create-xtarter-app/) scaffolds new projects on the same baseline — run `xtarterize init` inside a fresh scaffold to keep it conformant.
+
+## Next steps
+
+- [Conformance tasks](/xtarterize/guide/tasks/overview/) — every task ID and what it writes
+- [CLI reference](/xtarterize/guide/cli/overview/) — commands, flags, exit codes
+- [Configuration](/xtarterize/guide/config/overview/) — detection behavior and task selection
