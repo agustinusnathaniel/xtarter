@@ -1,6 +1,6 @@
 # ADR-020: Include Ultracite as a First-Class Conformance Dependency
 
-**Status:** Accepted (Supersedes [ADR-004](004-exclude-ultracite-integration.md))
+**Status:** Accepted (Supersedes ADR-004)
 **Date:** 2026-05-21
 
 ## Context
