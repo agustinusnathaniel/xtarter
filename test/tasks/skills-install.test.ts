@@ -90,6 +90,9 @@ describe('skillsInstallTask', () => {
     expect(commands).toContain('fixing-motion-performance');
     expect(commands).toContain('emilkowalski/skills');
     expect(commands).toContain('--skill animate');
+    expect(commands).toContain('--skill animation-vocabulary');
+    expect(commands).toContain('--skill break-ui');
+    expect(commands).toContain('--skill mobile-native');
     expect(commands).toContain('jakubkrehel/skills');
     expect(commands).toContain('--skill better-accessibility');
     expect(commands).toContain('addyosmani/agent-skills');
@@ -137,6 +140,7 @@ describe('skillsInstallTask', () => {
     expect(commands).toContain('react-useeffect');
     // Frontend / UI skills
     expect(commands).toContain('baseline-ui');
+    expect(commands).toContain('--skill mobile-native');
   });
 
   test('installs expo skills for expo projects', async () => {
@@ -328,7 +332,9 @@ describe('skill selection by project signals', () => {
     expect(names(web)).not.toContain('wait-what');
     expect(names(native)).toContain('animate-expo');
     expect(names(native)).not.toContain('better-interface');
+    expect(names(native)).not.toContain('mobile-native');
     expect(names(node)).not.toContain('frontend-ui-engineering');
+    expect(names(node)).not.toContain('mobile-native');
   });
 
   test('selects test and security skills only with matching dependencies', async () => {

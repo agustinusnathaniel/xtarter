@@ -286,6 +286,8 @@ export const SKILL_CATALOG: Array<SkillDefinition> = [
     'apple-design',
     'find-animation-opportunities',
     'improve-animations',
+    'animation-vocabulary',
+    'break-ui',
   ]),
   ...skillsFor(expoNative, 'emilkowalski/skills', ['animate-expo']),
   ...skillsFor((_p, d) => hasDep(d, 'sonner'), 'emilkowalski/skills', [
@@ -331,6 +333,10 @@ export const SKILL_CATALOG: Array<SkillDefinition> = [
   ...skillsFor((p) => p.existing.agentsMd, 'addyosmani/agent-skills', [
     'context-engineering',
   ]),
+
+  // Mobile web polish is framework-agnostic, so it follows the browser runtime
+  // rather than a specific UI framework.
+  ...skillsFor(browser, 'emilkowalski/skills', ['mobile-native']),
 ];
 
 /**
