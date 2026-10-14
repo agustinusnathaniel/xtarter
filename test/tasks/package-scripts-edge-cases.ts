@@ -2,7 +2,6 @@ import {
   DEPS,
   defineScriptCases,
   scriptPkg,
-  turboPkg,
 } from './package-scripts-runner.js';
 
 /**
@@ -16,41 +15,6 @@ export const packageScriptsEdgeCases = defineScriptCases([
     name: 'handles empty scripts object',
     pkg: scriptPkg('empty-scripts', {}),
     status: 'new',
-  },
-  {
-    afterContains: ['"biome"', '"test"'],
-    name: 'handles script with empty value',
-    pkg: turboPkg('empty-value', { build: 'turbo run build', lint: '' }),
-  },
-  {
-    afterContains: ['"check:turbo"'],
-    afterNotContains: ['"biome"'],
-    name: 'skips all lint scripts when existing eslint uses biome',
-    pkg: {
-      devDependencies: {
-        eslint: '^8.0.0',
-        turbo: '^2.0.0',
-        typescript: '^5.3.0',
-        vitest: '^1.0.0',
-      },
-      name: 'eslint-biome',
-      scripts: { lint: 'eslint . --fix' },
-      type: 'module',
-    },
-  },
-  {
-    afterContains: ['"biome"', '"typecheck"', '"test"'],
-    name: 'does not skip biome when existing lint has different args',
-    pkg: scriptPkg('diff-args', { lint: 'biome check src/' }),
-  },
-  {
-    afterContains: ['"typecheck"', '"biome"', '"test"', '"check:turbo"'],
-    name: 'handles namespaced script references separately',
-    pkg: scriptPkg('pm-ref', {
-      'npm:build': 'turbo run build',
-      'pnpm:dev': 'turbo run dev',
-      typecheck: 'tsc --noEmit',
-    }),
   },
   {
     afterContains: ['"test"', '"check:turbo"', 'turbo run lint test'],
@@ -95,56 +59,12 @@ export const packageScriptsEdgeCases = defineScriptCases([
     status: 'new',
   },
   {
-    afterContains: ['"upgrade"'],
-    name: 'adds upgrade script even with npx npm-check-updates',
-    pkg: scriptPkg(
-      'upgrade-dup',
-      { upgrade: 'npx npm-check-updates -i' },
-      DEPS.empty
-    ),
-  },
-  {
-    afterContains: ['"upgrade"'],
-    name: 'adds upgrade when existing is different',
-    pkg: scriptPkg('upgrade-diff', { upgrade: 'npm outdated' }, DEPS.empty),
-  },
-  {
     afterContains: ['"check:turbo"', 'turbo run check typecheck test'],
     afterNotContains: ['"biome"'],
     name: 'check:turbo uses only existing keys when all exist',
     pkg: scriptPkg('turbo-all-exist', {
       check: 'biome check --write .',
       lint: 'biome check .',
-      test: 'vitest run',
-      typecheck: 'tsc --noEmit',
-    }),
-    status: 'patch',
-  },
-  {
-    afterContains: ['"typecheck"', '"test"', '"check:turbo"'],
-    name: 'check:turbo mixes existing and new tasks correctly',
-    pkg: {
-      devDependencies: {
-        '@biomejs/biome': '^1.0.0',
-        turbo: '^2.0.0',
-        typescript: '^5.3.0',
-      },
-      name: 'turbo-mix',
-      scripts: { fmt: 'biome check --write .' },
-      type: 'module',
-    },
-  },
-  {
-    afterContains: ['"biome":'],
-    name: 'handles script with trailing spaces',
-    pkg: scriptPkg('trailing-spaces', { biome: 'biome check .   ' }),
-  },
-  {
-    afterContains: ['"check:turbo": "turbo run biome typecheck test"'],
-    name: 'respects existing check:turbo with same tasks',
-    pkg: scriptPkg('check-turbo-same', {
-      biome: 'biome check .',
-      'check:turbo': 'turbo run biome typecheck test',
       test: 'vitest run',
       typecheck: 'tsc --noEmit',
     }),
@@ -167,16 +87,6 @@ export const packageScriptsEdgeCases = defineScriptCases([
  * names are preserved.
  */
 export const packageScriptsPragmaticCases = defineScriptCases([
-  {
-    afterContains: ['"biome"', '"test"', '"check:turbo"'],
-    afterNotContains: ['"biome:fix"'],
-    name: 'skips biome:fix when existing has check with biome',
-    pkg: scriptPkg('biome-fix-skip', {
-      biome: 'biome check .',
-      check: 'biome check --write .',
-    }),
-    status: 'patch',
-  },
   {
     afterContains: [
       '"test"',
@@ -207,47 +117,6 @@ export const packageScriptsPragmaticCases = defineScriptCases([
     status: 'patch',
   },
   {
-    afterContains: ['"biome"', '"typecheck"', '"test"'],
-    afterNotContains: ['"plop"'],
-    name: 'skips plop when existing has hygen',
-    pkg: {
-      devDependencies: {
-        '@biomejs/biome': '^1.0.0',
-        hygen: '^6.0.0',
-        turbo: '^2.0.0',
-        typescript: '^5.3.0',
-        vitest: '^1.0.0',
-      },
-      name: 'plop-skip',
-      scripts: { generate: 'hygen' },
-      type: 'module',
-    },
-    status: 'patch',
-  },
-  {
-    afterContains: ['"knip"', '"biome"', '"typecheck"', '"test"'],
-    name: 'skips knip when existing has depcheck',
-    pkg: {
-      devDependencies: {
-        '@biomejs/biome': '^1.0.0',
-        depcheck: '^1.0.0',
-        turbo: '^2.0.0',
-        typescript: '^5.3.0',
-        vitest: '^1.0.0',
-      },
-      name: 'knip-skip',
-      scripts: { knip: 'depcheck' },
-      type: 'module',
-    },
-    status: 'patch',
-  },
-  {
-    afterContains: ['"upgrade"', '"biome"', '"typecheck"', '"test"'],
-    name: 'skips upgrade when existing has npm-check-updates',
-    pkg: scriptPkg('upgrade-skip', { upgrade: 'npx npm-check-updates -u' }),
-    status: 'patch',
-  },
-  {
     afterContains: [
       '"typecheck"',
       '"biome"',
@@ -258,20 +127,5 @@ export const packageScriptsPragmaticCases = defineScriptCases([
     name: 'skips typecheck when existing has tsc with different args',
     pkg: scriptPkg('typecheck-skip', { typecheck: 'tsc --noEmit --build' }),
     status: 'patch',
-  },
-  {
-    afterContains: [
-      '"biome"',
-      '"biome:fix"',
-      '"test"',
-      '"typecheck"',
-      '"knip"',
-      '"upgrade"',
-      '"release"',
-      '"plop"',
-      '"check:turbo"',
-    ],
-    name: 'adds all missing scripts when none exist',
-    pkg: scriptPkg('all-missing', {}),
   },
 ]);

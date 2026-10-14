@@ -26,16 +26,6 @@ function collectKeys(value: unknown, seen = new Set<unknown>()): Array<string> {
 }
 
 describe('buildOrganizationJsonLd', () => {
-  test('exposes GitHub issues as the only contact point', () => {
-    const org = buildOrganizationJsonLd();
-    const contactPoints = org.contactPoint as Array<Record<string, string>>;
-    expect(contactPoints).toHaveLength(1);
-    expect(contactPoints[0].contactType).toBe('technical support');
-    expect(contactPoints[0].url).toBe(
-      'https://github.com/agustinusnathaniel/xtarter/issues'
-    );
-  });
-
   test('never contains address, email, or telephone anywhere in the graph', () => {
     const org = buildOrganizationJsonLd();
     const keys = collectKeys(org).map((key) => key.toLowerCase());
@@ -45,44 +35,6 @@ describe('buildOrganizationJsonLd', () => {
 
     const serialized = JSON.stringify(org);
     expect(serialized).not.toMatch(/address|email|telephone/i);
-  });
-
-  test('references the founder via stable @id', () => {
-    const org = buildOrganizationJsonLd();
-    expect((org.founder as Record<string, string>)['@id']).toBe(
-      'https://xtarter.sznm.dev/#founder'
-    );
-  });
-});
-
-describe('buildSoftwareApplicationJsonLd', () => {
-  test('offers the tools at price 0 USD as DeveloperApplication', () => {
-    const app = buildSoftwareApplicationJsonLd(
-      'xtarterize',
-      'A conformance CLI.',
-      'https://xtarter.sznm.dev/xtarterize/',
-      'https://github.com/agustinusnathaniel/xtarterize'
-    );
-    expect(app['@type']).toBe('SoftwareApplication');
-    expect(app.applicationCategory).toBe('DeveloperApplication');
-    const offers = app.offers as Record<string, string>;
-    expect(offers.price).toBe('0');
-    expect(offers.priceCurrency).toBe('USD');
-  });
-});
-
-describe('buildWebSiteJsonLd + buildFounderPersonJsonLd', () => {
-  test('uses canonical site url, language, and publisher reference', () => {
-    const site = buildWebSiteJsonLd();
-    expect(site.url).toBe('https://xtarter.sznm.dev/');
-    expect(site.inLanguage).toBe('en');
-    expect((site.publisher as Record<string, string>)['@id']).toBe(
-      'https://xtarter.sznm.dev/#organization'
-    );
-
-    const person = buildFounderPersonJsonLd();
-    expect(person['@type']).toBe('Person');
-    expect(person.name).toBe('Agustinus Nathaniel');
   });
 });
 

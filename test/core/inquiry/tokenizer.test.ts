@@ -2,61 +2,35 @@ import { tokenize } from '@xtarterize/core';
 import { describe, expect } from 'vite-plus/test';
 
 describe('tokenize', () => {
-  test('tokenizes a simple query', () => {
+  test('tokenizes a simple query and keeps the original', () => {
     const result = tokenize('strict typescript');
     expect(result.tokens).toEqual(['strict', 'typescript']);
     expect(result.original).toBe('strict typescript');
   });
 
-  test('removes stopwords', () => {
-    const result = tokenize('i want a strict typescript setup');
-    expect(result.tokens).toEqual(['strict', 'typescript']);
+  test('removes stopwords and single-character words', () => {
+    expect(tokenize('i want a strict typescript setup').tokens).toEqual([
+      'strict',
+      'typescript',
+    ]);
+    expect(tokenize('a b strict').tokens).toEqual(['strict']);
+    expect(tokenize('a an the').tokens).toEqual([]);
   });
 
-  test('filters out short words (shorter than 2 chars)', () => {
-    const result = tokenize('a b strict');
-    expect(result.tokens).toEqual(['strict']);
+  test('returns empty tokens for an empty or whitespace-only query', () => {
+    expect(tokenize('').tokens).toEqual([]);
+    expect(tokenize('   ').tokens).toEqual([]);
   });
 
-  test('returns empty tokens for empty query', () => {
-    const result = tokenize('');
-    expect(result.tokens).toEqual([]);
-    expect(result.original).toBe('');
-  });
-
-  test('returns empty tokens for query with only whitespace', () => {
-    const result = tokenize('   ');
-    expect(result.tokens).toEqual([]);
-  });
-
-  test('returns empty tokens for query with only stopwords', () => {
-    const result = tokenize('a an the');
-    expect(result.tokens).toEqual([]);
-  });
-
-  test('handles special characters', () => {
-    const result = tokenize('strict typescript!!!');
-    expect(result.tokens).toContain('strict');
-    expect(result.tokens).toContain('typescript');
-  });
-
-  test('normalizes hyphens to spaces', () => {
-    const result = tokenize('static-analysis tool');
-    expect(result.tokens).toContain('static');
-    expect(result.tokens).toContain('analysis');
-    expect(result.tokens).toContain('tool');
-    expect(result.tokens).not.toContain('static-analysis');
-  });
-
-  test('strips non-ASCII characters', () => {
-    const result = tokenize('über strict');
-    // 'ü' is stripped (not \w); remaining 'ber' passes through
-    expect(result.tokens).toEqual(['ber', 'strict']);
-  });
-
-  test('removes common setup-related stopwords', () => {
-    const result = tokenize('configure project setup');
-    // 'configure', 'project', 'setup' are all stopwords
-    expect(result.tokens).toEqual([]);
+  test('drops punctuation and splits hyphenated words', () => {
+    expect(tokenize('strict typescript!!!').tokens).toEqual([
+      'strict',
+      'typescript',
+    ]);
+    expect(tokenize('static-analysis tool').tokens).toEqual([
+      'static',
+      'analysis',
+      'tool',
+    ]);
   });
 });

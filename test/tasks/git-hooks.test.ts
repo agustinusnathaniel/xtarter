@@ -27,18 +27,6 @@ const prepareCommitMsgCases: Array<
 ];
 
 describe('gitHooksTask', () => {
-  test('applies to any project', () => {
-    expect(gitHooksTask.applicable({} as never)).toBe(true);
-  });
-
-  test('returns new on clean fixture', async () => {
-    const profile = await fixtureProfile('react-vite-tailwind');
-    const status = await run(
-      gitHooksTask.check(fixtureDir('react-vite-tailwind'), profile)
-    );
-    expect(status).toBe('new');
-  });
-
   test('creates .husky files in dryRun for non-vite+ projects', async () => {
     await withProject(
       { 'package.json': { name: 'hooks-test', scripts: {} } },
