@@ -17,7 +17,6 @@ import {
 } from '@/resolve.js';
 import { toTaskEffect } from '@/task-effect.js';
 import { logInfo } from '@/utils/logger.js';
-import type { DepToInstall } from '@/utils/pkg.js';
 
 export interface PlanTasksOptions {
   cwd: string;
@@ -43,7 +42,7 @@ export interface ApplyPlanEntry {
 }
 
 export interface ApplyPlan {
-  dependencies: Array<DepToInstall>;
+  dependencies: Array<TaskDep>;
   entries: Array<ApplyPlanEntry>;
   files: Array<string>;
 }
@@ -159,7 +158,7 @@ function collectDependencies(options: {
   cwd: string;
   entries: Array<ApplyPlanEntry>;
   profile: ProjectProfile;
-}): Effect.Effect<Array<DepToInstall>, TaskError, TaskServices> {
+}): Effect.Effect<Array<TaskDep>, TaskError, TaskServices> {
   const { cwd, entries, profile } = options;
   const runnable = entries.filter(
     (entry) => !(entry.skipped || entry.dryRunError)

@@ -5,15 +5,9 @@ import { TaskError } from '@/errors.js';
 import { describeCause } from '@/utils/errors.js';
 
 /**
- * Normalize a synchronous, Promise-, or Effect-returning invocation into a
- * single Effect.
- *
- * Task methods return Effects, so callers lift them untouched; the Promise and
- * synchronous branches remain for first-party spec functions and plain async
- * helpers. The invocation is lazy (`Effect.suspend`), synchronous throws and
- * promise rejections are mapped to `TaskError` with the same message text the
- * engine used before the Effect migration, and an already-Effect result passes
- * through untouched.
+ * Normalize a synchronous, Promise-, or Effect-returning invocation into one
+ * lazy Effect. Throws and rejections become a `TaskError` carrying the cause's
+ * message; an Effect result passes through untouched.
  */
 export function toTaskEffect<A>(
   taskId: string,

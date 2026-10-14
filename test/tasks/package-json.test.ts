@@ -1,104 +1,91 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { withTempDir } from '@test/helpers/temp.js';
+import { withProject } from '@test/helpers/project.js';
+import { run } from '@test/helpers/run.js';
 import { describe, expect } from 'vite-plus/test';
 
-import {
-  applyPackageJsonChange,
-  computePackageJsonChange,
-} from '../../packages/tasks/src/factory/package-json.js';
-
-const packageJsonPath = (cwd: string): string => path.join(cwd, 'package.json');
+import { defineTask } from '../../packages/tasks/src/factory/define-task.js';
 
 const readPackageJson = (cwd: string): Promise<string> =>
-  fs.readFile(packageJsonPath(cwd), 'utf-8');
+  fs.readFile(path.join(cwd, 'package.json'), 'utf-8');
 
 const writePackageJson = (cwd: string, content: string): Promise<void> =>
-  fs.writeFile(packageJsonPath(cwd), content);
+  fs.writeFile(path.join(cwd, 'package.json'), content);
+
+const scriptsTask = defineTask({
+  applicable: () => true,
+  group: 'Test',
+  id: 'test/package-json',
+  label: 'package.json owner test',
+  targets: [
+    {
+      change: () => ({ scripts: { test: 'vitest run' } }),
+      kind: 'packageJson',
+    },
+  ],
+});
 
 describe('package.json owner', () => {
-  test('computed change equals the bytes written by apply', async () => {
-    await withTempDir('xtarterize-package-json-', async (cwd) => {
-      await writePackageJson(
-        cwd,
-        `${JSON.stringify({ name: 'example' }, null, 2)}\n`
-      );
-      const patch = { scripts: { test: 'vitest run' } };
+  test('the previewed change equals the bytes written by apply', async () => {
+    await withProject({}, async ({ cwd, profile }) => {
+      await writePackageJson(cwd, '{\n  "name": "example"\n}\n');
+      const [diff] = await run(scriptsTask.dryRun(cwd, profile));
 
-      const change = await computePackageJsonChange(cwd, patch);
-      expect(change).not.toBeNull();
-
-      await applyPackageJsonChange(cwd, patch);
-      await expect(readPackageJson(cwd)).resolves.toBe(change?.after);
+      await run(scriptsTask.apply(cwd, profile));
+      await expect(readPackageJson(cwd)).resolves.toBe(diff?.after);
     });
   });
 
   test('comments and indentation survive a change', async () => {
-    await withTempDir('xtarterize-package-json-', async (cwd) => {
-      const original = [
-        '{',
-        '    // keep this comment',
-        '    "name": "example",',
-        '    "devDependencies": {',
-        '        "left-pad": "^1.0.0"',
-        '    }',
-        '}',
-        '',
-      ].join('\n');
-      await writePackageJson(cwd, original);
-
-      const change = await computePackageJsonChange(cwd, {
-        scripts: { test: 'vitest run' },
-      });
-
-      expect(change).not.toBeNull();
-      expect(change?.after).toContain('// keep this comment');
-      expect(change?.after).toContain('\n    "name": "example"');
-      expect(change?.after).toContain('\n        "left-pad": "^1.0.0"');
-      expect(change?.after).toContain('\n    "scripts": {');
-      expect(change?.after).toContain('\n        "test": "vitest run"');
-    });
-  });
-});
-
-describe('package.json owner', () => {
-  test('applying an already-present change writes nothing', async () => {
-    await withTempDir('xtarterize-package-json-', async (cwd) => {
+    await withProject({}, async ({ cwd, profile }) => {
       await writePackageJson(
         cwd,
-        `${JSON.stringify({ name: 'example' }, null, 2)}\n`
+        [
+          '{',
+          '    // keep this comment',
+          '    "name": "example",',
+          '    "devDependencies": {',
+          '        "left-pad": "^1.0.0"',
+          '    }',
+          '}',
+          '',
+        ].join('\n')
       );
-      const patch = { scripts: { test: 'vitest run' } };
+      await run(scriptsTask.apply(cwd, profile));
 
-      await applyPackageJsonChange(cwd, patch);
+      const written = await readPackageJson(cwd);
+      expect(written).toContain('// keep this comment');
+      expect(written).toContain('\n    "name": "example"');
+      expect(written).toContain('\n        "left-pad": "^1.0.0"');
+      expect(written).toContain('\n        "test": "vitest run"');
+    });
+  });
+
+  test('applying an already-present change writes nothing new', async () => {
+    await withProject({}, async ({ cwd, profile }) => {
+      await writePackageJson(cwd, '{\n  "name": "example"\n}\n');
+      await run(scriptsTask.apply(cwd, profile));
       const afterFirst = await readPackageJson(cwd);
 
-      await applyPackageJsonChange(cwd, patch);
+      expect(await run(scriptsTask.check(cwd, profile))).toBe('skip');
+      await run(scriptsTask.apply(cwd, profile));
       await expect(readPackageJson(cwd)).resolves.toBe(afterFirst);
     });
   });
 
-  test('an external write between compute and apply survives', async () => {
-    await withTempDir('xtarterize-package-json-', async (cwd) => {
+  test('an external write between preview and apply survives', async () => {
+    await withProject({}, async ({ cwd, profile }) => {
+      await writePackageJson(cwd, '{\n  "name": "example"\n}\n');
+      await run(scriptsTask.dryRun(cwd, profile));
       await writePackageJson(
         cwd,
-        `${JSON.stringify({ devDependencies: {}, name: 'example' }, null, 2)}\n`
+        '{\n  "name": "example",\n  "devDependencies": { "new-dep": "^1.0.0" }\n}\n'
       );
-      const patch = { scripts: { test: 'vitest run' } };
 
-      const external = JSON.parse(await readPackageJson(cwd)) as {
-        devDependencies: Record<string, string>;
-      };
-      external.devDependencies['new-dep'] = '^1.0.0';
-      await writePackageJson(cwd, `${JSON.stringify(external, null, 2)}\n`);
-
-      const expected = await computePackageJsonChange(cwd, patch);
-      await applyPackageJsonChange(cwd, patch);
-
+      await run(scriptsTask.apply(cwd, profile));
       const written = await readPackageJson(cwd);
       expect(written).toContain('"new-dep": "^1.0.0"');
       expect(written).toContain('"test": "vitest run"');
-      expect(written).toBe(expected?.after);
     });
   });
 });

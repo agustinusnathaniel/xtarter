@@ -28,6 +28,3 @@ _Avoid_: output, destination.
 A task effect that is not file content, declared in a Task spec and reported without a file diff.
 _Avoid_: command, hook.
 
-**Detection registry**:
-The single module that declares what detection reads (files, directories, lockfiles, markers) and which detectors consume it; detection, diagnostics, and the `existing` profile keys derive from it.
-_Avoid_: detector list, input list.

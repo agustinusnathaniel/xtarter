@@ -1,55 +1,24 @@
 import pc from 'picocolors';
 
-export type TagColor =
-  | 'green'
-  | 'yellow'
-  | 'red'
-  | 'blue'
-  | 'cyan'
-  | 'magenta'
-  | 'white'
-  | 'dim';
-
-export function tag(text: string, color: TagColor): string {
-  const padded = ` ${text} `;
-  switch (color) {
-    case 'green':
-      return pc.bgGreen(pc.black(padded));
-    case 'yellow':
-      return pc.bgYellow(pc.black(padded));
-    case 'red':
-      return pc.bgRed(pc.white(padded));
-    case 'blue':
-      return pc.bgBlue(pc.white(padded));
-    case 'cyan':
-      return pc.bgCyan(pc.black(padded));
-    case 'magenta':
-      return pc.bgMagenta(pc.white(padded));
-    case 'white':
-      return pc.bgWhite(pc.black(padded));
-    case 'dim':
-      return pc.dim(padded);
-  }
-}
-
-const STATUS_COLORS: Record<string, TagColor> = {
-  conflict: 'red',
-  new: 'green',
-  patch: 'yellow',
-  skip: 'dim',
+const STATUS_TAGS: Record<string, (text: string) => string> = {
+  conflict: (text) => pc.bgRed(pc.white(text)),
+  new: (text) => pc.bgGreen(pc.black(text)),
+  patch: (text) => pc.bgYellow(pc.black(text)),
+  skip: (text) => pc.dim(text),
 };
 
 export function statusTag(status: string): string {
-  const color = STATUS_COLORS[status];
-  return color ? tag(status, color) : ` ${status} `;
+  const padded = ` ${status} `;
+  return STATUS_TAGS[status]?.(padded) ?? padded;
 }
 
-const ACTION_COLORS: Record<string, TagColor> = {
-  create: 'green',
-  modify: 'yellow',
+/** Diff actions reuse the status colors: create as new, modify as patch. */
+const ACTION_STATUSES: Record<string, string> = {
+  create: 'new',
+  modify: 'patch',
 };
 
 export function actionTag(action: string): string {
-  const color = ACTION_COLORS[action];
-  return color ? tag(action, color) : ` ${action} `;
+  const padded = ` ${action} `;
+  return STATUS_TAGS[ACTION_STATUSES[action] ?? '']?.(padded) ?? padded;
 }

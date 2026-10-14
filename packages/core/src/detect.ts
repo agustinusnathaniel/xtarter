@@ -1,3 +1,4 @@
+import { readdir } from 'node:fs/promises';
 import type { PackageJson } from 'pkg-types';
 
 import {
@@ -10,26 +11,10 @@ import { collectDependencyVersions, readPackageJson } from '@/utils/pkg.js';
 
 import { detectBundler } from './detect/bundler.js';
 import { detectMonorepo } from './detect/monorepo.js';
-import {
-  detectFrameworkVersion,
-  detectPackageManager,
-} from './detect/package-manager.js';
-import {
-  type ConfigDirInput,
-  type CustomDetectorEntry,
-  completeExistingConfig,
-  configDirInputsFor,
-  EXISTING_ENTRIES,
-  type ExistingConfig,
-  type ExistingEntry,
-  type ExistingValue,
-  isFileDetectorEntry,
-  type RootFileInput,
-  rootFileInputFor,
-  rootFileInputsFor,
-} from './detect/registry/index.js';
+import { detectPackageManager } from './detect/package-manager.js';
 import type {
   Bundler,
+  ExistingConfig,
   Framework,
   PackageManager,
   ProjectProfile,
@@ -39,8 +24,6 @@ import type {
 
 export type { Framework, PackageManager, ProjectProfile };
 export { detectPackageManager };
-
-// ── Inline framework detection (was detect/framework.ts) ──
 
 export function detectFramework(deps: Record<string, string>): Framework {
   const hasReactNative = !!(deps['react-native'] || deps.expo);
@@ -94,8 +77,6 @@ function detectVitePlus(deps: Record<string, string>): boolean {
   return 'vite-plus' in deps || 'vp' in deps;
 }
 
-// ── Inline router detection (was detect/router.ts) ──
-
 function detectRouter(deps: Record<string, string>, bundler: Bundler): Router {
   if (bundler === 'nextjs') {
     return 'next';
@@ -114,8 +95,6 @@ function detectRouter(deps: Record<string, string>, bundler: Bundler): Router {
   }
   return null;
 }
-
-// ── Inline styling detection (was detect/styling.ts) ──
 
 function detectStyling(deps: Record<string, string>): Array<Styling> {
   const result: Array<Styling> = [];
@@ -137,155 +116,74 @@ function detectStyling(deps: Record<string, string>): Array<Styling> {
   return result;
 }
 
-// ── Custom detectors ──
+const JSON_EXTENSIONS = ['.json', '.jsonc'];
+const SCRIPT_EXTENSIONS = ['.ts', '.js', '.mjs'];
 
-interface CustomDetectorContext {
-  cwd: string;
-  deps: Record<string, string>;
-  dirs: Array<ConfigDirInput>;
-  files: Array<RootFileInput>;
-}
-
-type CustomDetectorMap = {
-  [E in CustomDetectorEntry as E['id']]: (
-    context: CustomDetectorContext
-  ) => Promise<ExistingValue<E>>;
-};
-
-function detectRootFile(cwd: string, input: RootFileInput): Promise<boolean> {
-  if (input.extensions.length === 0) {
-    return fileExists(resolvePath(cwd, input.basename));
-  }
-  return findConfigFile(cwd, input.basename, [...input.extensions]).then(
-    Boolean
-  );
-}
-
-async function anyRootFileExists(
+async function hasConfig(
   cwd: string,
-  inputs: Array<RootFileInput>
+  baseName: string,
+  extensions: Array<string>
 ): Promise<boolean> {
-  const results = await Promise.all(
-    inputs.map((input) => detectRootFile(cwd, input))
-  );
-  return results.some(Boolean);
+  return Boolean(await findConfigFile(cwd, baseName, extensions));
 }
 
-function detectAnyRootFile(context: CustomDetectorContext): Promise<boolean> {
-  return anyRootFileExists(context.cwd, context.files);
-}
-
-async function detectEslint({
-  cwd,
-  deps,
-  files,
-}: CustomDetectorContext): Promise<boolean> {
-  if (await anyRootFileExists(cwd, files)) {
-    return true;
-  }
-  return Boolean(deps.eslint);
-}
-
-async function detectGitHubWorkflows({
-  cwd,
-  dirs,
-}: CustomDetectorContext): Promise<Array<string>> {
-  const githubDir = dirs[0];
-  if (!githubDir) {
-    return [];
-  }
-
-  const workflowsDir = resolvePath(cwd, githubDir.dir, 'workflows');
+async function detectGitHubWorkflows(cwd: string): Promise<Array<string>> {
+  const workflowsDir = resolvePath(cwd, '.github', 'workflows');
   if (!(await fileExists(workflowsDir))) {
     return [];
   }
-
-  const { readdir } = await import('node:fs/promises');
   const entries = await readdir(workflowsDir);
   return entries
-    .filter(
-      (e): e is string =>
-        typeof e === 'string' && (e.endsWith('.yml') || e.endsWith('.yaml'))
-    )
+    .filter((e) => e.endsWith('.yml') || e.endsWith('.yaml'))
     .map((e) => e.replace(/\.(yml|yaml)$/, ''));
-}
-
-async function detectChangeset({
-  cwd,
-  deps,
-  dirs,
-}: CustomDetectorContext): Promise<boolean> {
-  const hasConfig = await Promise.all(
-    dirs.map((dir) => fileExists(resolvePath(cwd, dir.dir, 'config.json')))
-  ).then((results) => results.some(Boolean));
-  if (hasConfig) {
-    return true;
-  }
-  return Boolean(deps['@changesets/cli']);
-}
-
-const CUSTOM_DETECTORS: CustomDetectorMap = {
-  agentsMd: detectAnyRootFile,
-  changeset: detectChangeset,
-  eslint: detectEslint,
-  githubWorkflows: detectGitHubWorkflows,
-  oxfmt: detectAnyRootFile,
-  oxlint: detectAnyRootFile,
-};
-
-// ── Existing config assembly (registry-driven) ──
-
-type ResolvedExisting = {
-  key: ExistingEntry['key'];
-  value: boolean | Array<string>;
-};
-
-function customDetectorContext(
-  entry: CustomDetectorEntry,
-  cwd: string,
-  deps: Record<string, string>
-): CustomDetectorContext {
-  return {
-    cwd,
-    deps,
-    dirs: configDirInputsFor(entry),
-    files: rootFileInputsFor(entry),
-  };
-}
-
-async function resolveExistingEntry(
-  entry: ExistingEntry,
-  cwd: string,
-  deps: Record<string, string>
-): Promise<ResolvedExisting> {
-  if (isFileDetectorEntry(entry)) {
-    return {
-      key: entry.key,
-      value: await detectRootFile(cwd, rootFileInputFor(entry)),
-    };
-  }
-
-  return {
-    key: entry.key,
-    value: await CUSTOM_DETECTORS[entry.id](
-      customDetectorContext(entry, cwd, deps)
-    ),
-  };
 }
 
 async function detectExistingConfigs(
   cwd: string,
   deps: Record<string, string>
 ): Promise<ExistingConfig> {
-  const resolved = await Promise.all(
-    EXISTING_ENTRIES.map((entry) => resolveExistingEntry(entry, cwd, deps))
-  );
-
-  const partial = Object.fromEntries(
-    resolved.map((entry) => [entry.key, entry.value])
-  ) as Partial<ExistingConfig>;
-
-  return completeExistingConfig(partial);
+  const has = (baseName: string, extensions: Array<string>) =>
+    hasConfig(cwd, baseName, extensions);
+  const [
+    biome,
+    tsconfig,
+    turbo,
+    eslintrc,
+    eslintConfig,
+    oxlintrc,
+    oxlintConfig,
+    oxfmtrc,
+    oxfmtConfig,
+    agentsMd,
+    claudeMd,
+    changesetConfig,
+    githubWorkflows,
+  ] = await Promise.all([
+    has('biome', JSON_EXTENSIONS),
+    has('tsconfig', JSON_EXTENSIONS),
+    has('turbo', ['.json']),
+    has('.eslintrc', ['.js', '.cjs', '.mjs', '.json', '.yaml', '.yml']),
+    has('eslint.config', ['.js', '.mjs', '.cjs', '.ts', '.mts', '.cts']),
+    has('.oxlintrc', JSON_EXTENSIONS),
+    has('oxlint.config', SCRIPT_EXTENSIONS),
+    has('.oxfmtrc', JSON_EXTENSIONS),
+    has('oxfmt.config', SCRIPT_EXTENSIONS),
+    has('AGENTS', ['.md']),
+    has('CLAUDE', ['.md']),
+    fileExists(resolvePath(cwd, '.changeset', 'config.json')),
+    detectGitHubWorkflows(cwd),
+  ]);
+  return {
+    agentsMd: agentsMd || claudeMd,
+    biome,
+    changeset: changesetConfig || Boolean(deps['@changesets/cli']),
+    eslint: eslintrc || eslintConfig || Boolean(deps.eslint),
+    githubWorkflows,
+    oxfmt: oxfmtrc || oxfmtConfig,
+    oxlint: oxlintrc || oxlintConfig,
+    tsconfig,
+    turbo,
+  };
 }
 
 async function detectNodeVersion(
@@ -348,7 +246,6 @@ export async function detectProject(cwd: string): Promise<ProjectProfile> {
     return {
       bundler: null,
       framework: null,
-      frameworkVersion: null,
       router: null,
       runtime: 'node',
       styling: ['vanilla'],
@@ -365,7 +262,6 @@ export async function detectProject(cwd: string): Promise<ProjectProfile> {
   return {
     bundler,
     framework,
-    frameworkVersion: detectFrameworkVersion(deps, framework),
     router: detectRouter(deps, bundler),
     runtime: detectRuntime(framework, bundler),
     styling: detectStyling(deps),

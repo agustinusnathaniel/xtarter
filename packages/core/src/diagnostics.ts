@@ -9,7 +9,7 @@ import {
   readPackageJsonOrNull,
 } from '@/utils/pkg.js';
 
-import { lockfileInputs } from './detect/registry/index.js';
+import { LOCKFILES } from './detect/package-manager.js';
 
 export interface DiagnosticCheck {
   message: string;
@@ -119,8 +119,9 @@ function runEnvironmentChecks(
 function checkLockfile(cwd: string): Effect.Effect<DiagnosticCheck> {
   return Effect.gen(function* () {
     const results = yield* Effect.forEach(
-      lockfileInputs(),
-      (input) => Effect.promise(() => fileExists(resolvePath(cwd, input.name))),
+      LOCKFILES,
+      ([lockfile]) =>
+        Effect.promise(() => fileExists(resolvePath(cwd, lockfile))),
       { concurrency: 'unbounded' }
     );
     const detected = results.some(Boolean);

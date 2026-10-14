@@ -4,11 +4,6 @@ import { mergeJson, parseJsonc, patchJson } from '@xtarterize/patchers';
 import { relative } from 'pathe';
 
 import {
-  computePackageJsonChange,
-  PACKAGE_JSON_FILENAME,
-  readPackageJsonText,
-} from './package-json.js';
-import {
   getDefaultFilepath,
   normalizeLineEndings,
   resolveTaskFile,
@@ -49,6 +44,7 @@ export interface JsonMergeTarget extends TargetBase {
   merge?: (existing: object, incoming: object) => object;
 }
 
+/** A JSON merge patch applied to `package.json`; the patch's values win. */
 export interface PackageJsonTarget {
   change: (cwd: string, profile: ProjectProfile) => object | Promise<object>;
   kind: 'packageJson';
@@ -66,18 +62,10 @@ export type TaskTarget =
   | PackageJsonTarget
   | TransformTarget;
 
-export type ResolvedTarget =
-  | {
-      diff: FileDiff | null;
-      kind: 'text' | 'jsonMerge' | 'transform';
-      status: TaskStatus;
-    }
-  | {
-      diff: FileDiff | null;
-      kind: 'packageJson';
-      patch: object;
-      status: TaskStatus;
-    };
+export interface ResolvedTarget {
+  diff: FileDiff | null;
+  status: TaskStatus;
+}
 
 /** A resolved target plus the existence fact the dependency projection needs. */
 export interface TargetDraft {
@@ -91,20 +79,10 @@ export interface ResolveContext {
   profile: ProjectProfile;
 }
 
-/**
- * Targets may depend on project state and profile, such as profile-specific
- * hook paths or content derived from the current package.json.
- */
-export type TargetResolver = (
-  cwd: string,
-  profile: ProjectProfile
-) => Array<TaskTarget> | Promise<Array<TaskTarget>>;
-
 interface FileState {
   before: string | null;
   exists: boolean;
   filepath: string;
-  kind: 'text' | 'jsonMerge' | 'transform';
 }
 
 async function resolveFileState(
@@ -123,7 +101,6 @@ async function resolveFileState(
     filepath: exists
       ? relative(cwd, fullPath)
       : getDefaultFilepath(target.filepath, target.extensions),
-    kind: target.kind,
   };
 }
 
@@ -133,9 +110,9 @@ function buildDraft(
   after: string,
   status: TaskStatus
 ): TargetDraft {
-  const { before, exists, filepath, kind } = state;
+  const { before, exists, filepath } = state;
   const diff = status === 'skip' ? null : { after, before, filepath };
-  return { exists, target: { diff, kind, status } };
+  return { exists, target: { diff, status } };
 }
 
 async function resolveTextTarget(
@@ -187,35 +164,14 @@ async function resolveJsonMergeTarget(
   return buildDraft(state, after, status);
 }
 
-async function resolvePackageJsonTarget(
-  target: PackageJsonTarget,
-  context: ResolveContext
-): Promise<TargetDraft> {
-  const { cwd, profile } = context;
-  const patch = await target.change(cwd, profile);
-  const change = await computePackageJsonChange(cwd, patch);
-  const before = change ? change.before : await readPackageJsonText(cwd);
-  const after = change ? change.after : (before ?? '');
-  const fallback: TaskStatus = change
-    ? change.before === null
-      ? 'new'
-      : 'patch'
-    : 'skip';
-  const status = target.policy?.({ after, before }, profile) ?? fallback;
-  const resolved: ResolvedTarget = {
-    diff:
-      status === 'skip'
-        ? null
-        : {
-            after,
-            before,
-            filepath: change?.filepath ?? PACKAGE_JSON_FILENAME,
-          },
-    kind: 'packageJson',
-    patch,
-    status,
+function packageJsonAsJsonMerge(target: PackageJsonTarget): JsonMergeTarget {
+  return {
+    filepath: 'package.json',
+    incoming: target.change,
+    kind: 'jsonMerge',
+    merge: (_existing, incoming) => incoming,
+    policy: target.policy,
   };
-  return { exists: before !== null, target: resolved };
 }
 
 async function resolveTransformTarget(
@@ -228,7 +184,7 @@ async function resolveTransformTarget(
     // A transform cannot create content, so an absent file has no diff.
     return {
       exists: false,
-      target: { diff: null, kind: 'transform', status: 'new' },
+      target: { diff: null, status: 'new' },
     };
   }
   const before = state.before ?? '';
@@ -250,7 +206,7 @@ export function resolveTarget(
     case 'jsonMerge':
       return resolveJsonMergeTarget(target, context);
     case 'packageJson':
-      return resolvePackageJsonTarget(target, context);
+      return resolveJsonMergeTarget(packageJsonAsJsonMerge(target), context);
     case 'transform':
       return resolveTransformTarget(target, context);
   }
@@ -278,16 +234,11 @@ function expandFilepath(
  * it carries no extension, otherwise every extension variant. Resolver targets
  * are profile-dependent, so their authors declare `configTargets` explicitly.
  */
-export function deriveConfigTargets(
-  targets: Array<TaskTarget> | TargetResolver | undefined
-): Array<string> {
-  if (targets === undefined || typeof targets === 'function') {
-    return [];
-  }
+export function deriveConfigTargets(targets: Array<TaskTarget>): Array<string> {
   const derived: Array<string> = [];
   for (const target of targets) {
     if (target.kind === 'packageJson') {
-      derived.push(PACKAGE_JSON_FILENAME);
+      derived.push('package.json');
     } else {
       derived.push(...expandFilepath(target.filepath, target.extensions));
     }

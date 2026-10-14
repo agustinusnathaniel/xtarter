@@ -10,17 +10,6 @@ import { withTempDir } from '@test/helpers/temp.js';
 import { detectProject, runDiagnostics } from '@xtarterize/core';
 import { describe, expect } from 'vite-plus/test';
 
-import {
-  DETECTOR_ENTRIES,
-  DETECTOR_INPUTS,
-  EXISTING_ENTRIES,
-  existingKeys,
-  inputById,
-  lockfileInputs,
-  rootFileInputByBasename,
-  workspacePackageDirs,
-} from '../../packages/core/src/detect/registry/index.js';
-
 const nodeVersionCases: Array<
   [name: string, files: ProjectFileMap, expected: string]
 > = [
@@ -86,7 +75,6 @@ describe('detectProject', () => {
   test('detects react-vite-tailwind correctly', async () => {
     const profile = await fixtureProfile('react-vite-tailwind');
     expect(profile.framework).toBe('react');
-    expect(profile.frameworkVersion).toBe('18.2.0');
     expect(profile.bundler).toBe('vite');
     expect(profile.router).toBeNull();
     expect(profile.styling).toContain('tailwind');
@@ -101,9 +89,7 @@ describe('detectProject', () => {
     expect(profile.hasGit).toBe(false);
     expect(profile.nodeVersion).toBe('18');
     expect(profile.existing.tsconfig).toBe(true);
-    expect(profile.existing.viteConfig).toBe(true);
     expect(profile.existing.biome).toBe(false);
-    expect(profile.existing.gitignore).toBe(false);
   });
 
   test('detects react-vite-no-styling correctly', async () => {
@@ -123,7 +109,6 @@ describe('detectProject', () => {
   test('detects vue-vite correctly', async () => {
     const profile = await fixtureProfile('vue-vite');
     expect(profile.framework).toBe('vue');
-    expect(profile.frameworkVersion).toBe('3.4.0');
     expect(profile.bundler).toBe('vite');
     expect(profile.router).toBeNull();
     expect(profile.runtime).toBe('browser');
@@ -138,7 +123,6 @@ describe('detectProject', () => {
   test('detects nextjs correctly', async () => {
     const profile = await fixtureProfile('nextjs');
     expect(profile.framework).toBe('react');
-    expect(profile.frameworkVersion).toBe('18.2.0');
     expect(profile.bundler).toBe('nextjs');
     expect(profile.router).toBe('next');
     expect(profile.runtime).toBe('edge');
@@ -166,7 +150,6 @@ describe('detectProject', () => {
   test('detects node-only correctly', async () => {
     const profile = await fixtureProfile('node-only');
     expect(profile.framework).toBe('node');
-    expect(profile.frameworkVersion).toBeNull();
     expect(profile.bundler).toBe('none');
     expect(profile.router).toBeNull();
     expect(profile.runtime).toBe('node');
@@ -350,49 +333,5 @@ describe('detectProject', () => {
       expect(profile.workspaceRoot).toBe(false);
       expect(profile.monorepoTool).toBeNull();
     });
-  });
-});
-
-describe('detection registry integrity', () => {
-  test('declares unique input and entry ids', () => {
-    const inputIds = DETECTOR_INPUTS.map((input) => input.id);
-    expect(new Set(inputIds).size).toBe(inputIds.length);
-
-    const entryIds = DETECTOR_ENTRIES.map((entry) => entry.id);
-    expect(new Set(entryIds).size).toBe(entryIds.length);
-  });
-
-  test('every entry declares at least one registered input', () => {
-    for (const entry of DETECTOR_ENTRIES) {
-      expect(entry.inputs.length).toBeGreaterThan(0);
-      for (const inputId of entry.inputs) {
-        expect(() => inputById(inputId)).not.toThrow();
-      }
-    }
-  });
-
-  test('declares the drift-prone inputs used by detection', () => {
-    const lockfileNames = lockfileInputs().map((input) => input.name);
-    expect(lockfileNames).toContain('bun.lock');
-    expect(lockfileNames).toContain('bun.lockb');
-    expect(workspacePackageDirs()).toContain('services');
-    expect(rootFileInputByBasename('.eslintrc')?.extensions).toContain('.mjs');
-    expect(rootFileInputByBasename('tsconfig')?.extensions).toContain('.jsonc');
-  });
-
-  test('detection produces every derived existing key with the declared kind', async () => {
-    const profile = await fixtureProfile('react-vite-tailwind');
-    expect(Object.keys(profile.existing).sort()).toEqual(
-      [...existingKeys()].sort()
-    );
-
-    for (const entry of EXISTING_ENTRIES) {
-      const value = profile.existing[entry.key];
-      if (entry.existing === 'list') {
-        expect(Array.isArray(value)).toBe(true);
-      } else {
-        expect(typeof value).toBe('boolean');
-      }
-    }
   });
 });
