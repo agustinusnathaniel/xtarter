@@ -1,0 +1,189 @@
+---
+// The landing heroes' terminal: one or more recorded CLI sessions from
+// src/data/terminal-transcripts.ts. With several sessions it uses
+// Starlight's own Tabs (keyboard + ARIA handled there) and replays them once,
+// in order, line by line: the page's single orchestrated motion moment.
+//
+// Playback rules:
+// - Progressive enhancement: every line is visible without JS; the script
+//   only hides lines while it is actively replaying (`data-playing`).
+// - Any user interaction with the tabs stops playback and reveals everything.
+// - Timers pause while the terminal is off-screen.
+// - prefers-reduced-motion: no playback at all; the static transcript shows.
+import { TabItem, Tabs } from '@astrojs/starlight/components'
+import { TERMINAL_TRANSCRIPTS } from '@/data/terminal-transcripts'
+import TerminalTranscript from './TerminalTranscript.astro'
+
+interface Props {
+  /** Transcript ids, in tab order. */
+  ids: Array<string>
+  /** Plain-language note under the terminal saying where the output is from. */
+  caption: string
+}
+
+const { ids, caption } = Astro.props
+const transcripts = ids.map((id) => {
+  const transcript = TERMINAL_TRANSCRIPTS.find((t) => t.id === id)
+  if (!transcript) {
+    throw new Error(`Unknown terminal transcript "${id}"`)
+  }
+  return transcript
+})
+// Reserve the tallest transcript's height so switching tabs never shifts
+// the page below the terminal.
+const maxLines = Math.max(...transcripts.map((t) => t.lines.length))
+const isTabbed = transcripts.length > 1
+---
+
+<figure class="xt-terminal-figure">
+  <xt-terminal
+    class="xt-terminal"
+    style={`--xt-tx-lines: ${maxLines}`}
+    data-autoplay={isTabbed ? '' : undefined}
+  >
+    {
+      isTabbed ? (
+        <Tabs>
+          {transcripts.map((t) => (
+            <TabItem label={t.label}>
+              <TerminalTranscript transcript={t} />
+            </TabItem>
+          ))}
+        </Tabs>
+      ) : (
+        <TerminalTranscript transcript={transcripts[0]} />
+      )
+    }
+  </xt-terminal>
+  <figcaption class="xt-terminal-caption">{caption}</figcaption>
+</figure>
+
+<script>
+  const LINE_MS = 140
+  const HOLD_MS = 2400
+
+  type TabsElement = HTMLElement & {
+    switchTab?: (tab: Element, index: number, shouldSync?: boolean) => void
+  }
+
+  class XtTerminal extends HTMLElement {
+    #timer: ReturnType<typeof setTimeout> | undefined
+    #observer: IntersectionObserver | undefined
+    #tabs: TabsElement | null = null
+    #tabEls: Array<Element> = []
+    #panels: Array<HTMLElement> = []
+    #panel = 0
+    #line = 0
+    #visible = false
+    #pending: (() => void) | undefined
+
+    connectedCallback() {
+      if (!this.hasAttribute('data-autoplay')) {
+        return
+      }
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        return
+      }
+      this.#tabs = this.querySelector('starlight-tabs')
+      if (!this.#tabs) {
+        return
+      }
+      this.#tabEls = [...this.#tabs.querySelectorAll('[role="tab"]')]
+      this.#panels = [...this.#tabs.querySelectorAll<HTMLElement>(':scope > [role="tabpanel"]')]
+      if (this.#panels.length === 0) {
+        return
+      }
+
+      const tablist = this.#tabs.querySelector('[role="tablist"]')
+      const stopOnUser = (event: Event) => {
+        if (event.isTrusted) {
+          this.#stop()
+        }
+      }
+      tablist?.addEventListener('click', stopOnUser)
+      tablist?.addEventListener('keydown', stopOnUser)
+
+      this.dataset.playing = ''
+      this.#pending = () => this.#tick()
+      this.#observer = new IntersectionObserver(([entry]) => {
+        this.#visible = entry?.isIntersecting ?? false
+        if (this.#visible) {
+          this.#resume()
+        } else {
+          clearTimeout(this.#timer)
+        }
+      })
+      this.#observer.observe(this)
+      // Start right away when already on screen; don't wait for the first
+      // observer callback, which some browsers deliver late or not at all
+      // until the next scroll.
+      const { top, bottom } = this.getBoundingClientRect()
+      if (bottom > 0 && top < window.innerHeight) {
+        this.#visible = true
+        this.#resume()
+      }
+    }
+
+    disconnectedCallback() {
+      this.#stop()
+    }
+
+    #schedule(step: () => void, ms: number) {
+      this.#pending = step
+      clearTimeout(this.#timer)
+      if (this.#visible) {
+        this.#timer = setTimeout(() => {
+          this.#pending = undefined
+          step()
+        }, ms)
+      }
+    }
+
+    #resume() {
+      if (this.#pending) {
+        this.#schedule(this.#pending, LINE_MS)
+      }
+    }
+
+    #tick() {
+      const lines = this.#panels[this.#panel]?.querySelectorAll('.xt-tl') ?? []
+      const line = lines[this.#line]
+      if (line) {
+        line.classList.add('is-shown')
+        this.#line += 1
+        this.#schedule(() => this.#tick(), LINE_MS)
+        return
+      }
+      const next = this.#panel + 1
+      if (next >= this.#panels.length) {
+        this.#stop()
+        return
+      }
+      this.#schedule(() => this.#advance(next), HOLD_MS)
+    }
+
+    #advance(next: number) {
+      const tab = this.#tabEls[next]
+      if (!(tab && typeof this.#tabs?.switchTab === 'function')) {
+        this.#stop()
+        return
+      }
+      // shouldSync=false: switch without stealing focus or scrolling.
+      this.#tabs.switchTab(tab, next, false)
+      this.#panel = next
+      this.#line = 0
+      this.#schedule(() => this.#tick(), LINE_MS * 2)
+    }
+
+    #stop() {
+      clearTimeout(this.#timer)
+      this.#pending = undefined
+      this.#observer?.disconnect()
+      delete this.dataset.playing
+    }
+  }
+
+  if (!customElements.get('xt-terminal')) {
+    customElements.define('xt-terminal', XtTerminal)
+  }
+</script>

@@ -1,45 +1,48 @@
 ---
-// Static template gallery. Renders records from the manually maintained
+// Static template table. Renders records from the manually maintained
 // template catalog in src/data/template-catalog.ts - no network, no GitHub
 // API, no star counts. Ownership of the catalog is documented in that file.
 //
-// Round 2: card grid instead of a divided list. Each record is ONE link
-// (`.xt-tpl-card`) so the whole card is clickable; its accessible name is
-// the repo slug via aria-label (matching the previous list pattern). Shows
-// name, catalog description, up to four mono stack chips, and a pinned
-// "View repository ->" footer. All styling lives in global.css under the
-// `.xt-gallery` / `.xt-tpl-*` classes - no Tailwind utilities here.
+// A ruled table rather than a card grid: the templates differ only by stack,
+// so rows let readers compare them in one scan. The name links to the
+// repository; the last column is the flag that skips the template prompt.
+// Styling lives in global.css under `.xt-templates`.
 import { TEMPLATE_CATALOG } from '@/data/template-catalog'
 ---
 
-<ul class="xt-gallery">
-  {
-    TEMPLATE_CATALOG.map((t) => (
-      <li class="xt-tpl">
-        <a
-          class="xt-tpl-card"
-          href={`https://github.com/${t.repo}`}
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label={`View ${t.repo} repository`}
-          data-umami-event="template_click"
-          data-umami-event-template_name={t.name}
-        >
-          <span class="xt-tpl-name">{t.name}</span>
-          <span class="xt-tpl-desc">{t.description}</span>
-          <span class="xt-tpl-stack" aria-label={`Stack: ${t.stack.slice(0, 4).join(', ')}`}>
-            {t.stack.slice(0, 4).map((s) => (
-              <span class="xt-tpl-chip">{s}</span>
-            ))}
-          </span>
-          <span class="xt-tpl-action">
-            View repository
-            <span class="xt-tpl-arrow" aria-hidden="true">
-              &rarr;
-            </span>
-          </span>
-        </a>
-      </li>
-    ))
-  }
-</ul>
+<div class="xt-templates-wrap not-content">
+  <table class="xt-templates">
+    <thead>
+      <tr>
+        <th scope="col">Template</th>
+        <th scope="col">Stack</th>
+        <th scope="col">Flag</th>
+      </tr>
+    </thead>
+    <tbody>
+      {
+        TEMPLATE_CATALOG.map((t) => (
+          <tr>
+            <th scope="row">
+              <a
+                class="xt-templates-name"
+                href={`https://github.com/${t.repo}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                data-umami-event="template_click"
+                data-umami-event-template_name={t.name}
+              >
+                {t.name}
+              </a>
+              <span class="xt-templates-desc">{t.description}</span>
+            </th>
+            <td class="xt-templates-stack">{t.stack.join(', ')}</td>
+            <td>
+              <code class="xt-templates-flag">-t {t.id}</code>
+            </td>
+          </tr>
+        ))
+      }
+    </tbody>
+  </table>
+</div>

@@ -18,9 +18,13 @@ export const FOUNDER_JSONLD_ID = `${SITE_URL}/#founder`;
 export const SITE_DESCRIPTION =
   'Production-grade starter templates and conformance tooling for JavaScript/TypeScript projects.';
 
-/** Existing og:image URL reused as the organization logo. */
-const ORG_LOGO_URL =
-  'https://og.sznm.dev/api/generate?heading=xtarter&text=Production-grade%20JS/TS%20starters%20%26%20conformance%20tooling&template=color';
+/**
+ * Social preview image (og:image), also reused as the organization logo.
+ * og.sznm.dev's color template with a near-black to deep brand-green
+ * gradient; its text is fixed light gray, so the gradient must stay dark.
+ */
+export const OG_IMAGE_URL =
+  'https://og.sznm.dev/api/generate?heading=xtarter&text=Production-grade%20JS/TS%20starters%20%26%20conformance%20tooling&template=color&gradientFrom=%230c0c0e&gradientTo=%23166534&gradientDegree=135';
 
 /** Verified public channels only: no email, phone, or postal address exists. */
 export const GITHUB_ISSUES_URL =
@@ -63,7 +67,7 @@ export function buildOrganizationJsonLd(): Record<string, unknown> {
       },
     ],
     founder: { '@id': FOUNDER_JSONLD_ID },
-    logo: ORG_LOGO_URL,
+    logo: OG_IMAGE_URL,
     name: 'xtarter',
     sameAs: [
       'https://github.com/agustinusnathaniel/xtarterize',

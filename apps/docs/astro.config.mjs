@@ -14,6 +14,7 @@ import {
   buildOrganizationJsonLd,
   buildSoftwareApplicationJsonLd,
   buildWebSiteJsonLd,
+  OG_IMAGE_URL,
   SITE_URL,
   serializeJsonLd,
 } from '@/lib/jsonld.ts';
@@ -91,6 +92,7 @@ export default defineConfig({
     astroMermaid(),
     starlight({
       components: {
+        Footer: './src/components/StarlightFooter.astro',
         Head: './src/components/StarlightHead.astro',
         Hero: './src/components/LandingHero.astro',
       },
@@ -110,15 +112,14 @@ export default defineConfig({
         {
           attrs: {
             content:
-              'Scaffold new projects or bring conformance to existing ones. Biome, TypeScript strict, CI, editor configs - ready in seconds.',
+              'Start conformant, stay conformant. Scaffold a new JS/TS project or bring an existing repo up to one strict baseline: Biome, strict TypeScript, Git hooks, CI, and editor settings.',
             property: 'og:description',
           },
           tag: 'meta',
         },
         {
           attrs: {
-            content:
-              'https://og.sznm.dev/api/generate?heading=xtarter&text=Production-grade%20JS/TS%20starters%20%26%20conformance%20tooling&template=color',
+            content: OG_IMAGE_URL,
             property: 'og:image',
           },
           tag: 'meta',
@@ -145,10 +146,11 @@ export default defineConfig({
           tag: 'script',
         },
       ],
+      // Mark only: the wordmark is the site title as live text, so it
+      // renders in the site's own typeface (styled via .site-title).
       logo: {
-        dark: './src/assets/logo-dark.svg',
-        light: './src/assets/logo-light.svg',
-        replacesTitle: true,
+        alt: '',
+        src: './src/assets/logo-mark.svg',
       },
       plugins: [
         starlightLinksValidator({

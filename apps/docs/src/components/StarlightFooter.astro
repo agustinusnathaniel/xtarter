@@ -1,0 +1,79 @@
+---
+// Starlight Footer override. Every page keeps Starlight's default footer
+// (edit link, last updated, pagination); the splash landing pages also get
+// the site footer, the only place the trust pages and package links are
+// listed for people (agents find them through llms.txt).
+// Styling lives in global.css (`.xt-footer*`).
+import DefaultFooter from '@astrojs/starlight/components/Footer.astro'
+
+const REPO_URL = 'https://github.com/agustinusnathaniel/xtarterize'
+
+const COLUMNS = [
+  {
+    heading: 'Docs',
+    links: [
+      { label: 'xtarterize', href: '/xtarterize/' },
+      { label: 'create-xtarter-app', href: '/create-xtarter-app/' },
+      { label: 'Changelog', href: '/xtarterize/changelog/' },
+      { label: 'Blog', href: '/blog/' },
+    ],
+  },
+  {
+    heading: 'Packages',
+    links: [
+      { label: 'GitHub', href: REPO_URL },
+      { label: 'xtarterize on npm', href: 'https://www.npmjs.com/package/xtarterize' },
+      { label: 'create-xtarter-app on npm', href: 'https://www.npmjs.com/package/create-xtarter-app' },
+    ],
+  },
+  {
+    heading: 'Project',
+    links: [
+      { label: 'About', href: '/about/' },
+      { label: 'Contact', href: '/contact/' },
+      { label: 'Privacy', href: '/privacy/' },
+      { label: 'Agent instructions', href: '/agents.md' },
+    ],
+  },
+]
+
+const isSplash = Astro.locals.starlightRoute.entry.data.template === 'splash'
+const isExternal = (href: string) => href.startsWith('http')
+---
+
+<DefaultFooter />
+
+{
+  isSplash && (
+    <footer class="xt-footer not-content">
+      <div class="xt-footer-brand">
+        <a class="xt-footer-name" href="/">
+          xtarter
+        </a>
+        <p class="xt-footer-tagline">Production-grade starters and conformance tooling for JavaScript and TypeScript.</p>
+      </div>
+      <nav class="xt-footer-nav" aria-label="Site">
+        {COLUMNS.map((column) => (
+          <div class="xt-footer-col">
+            <h2 class="xt-footer-heading">{column.heading}</h2>
+            <ul>
+              {column.links.map((link) => (
+                <li>
+                  <a
+                    href={link.href}
+                    {...(isExternal(link.href) ? { target: '_blank', rel: 'noopener noreferrer' } : {})}
+                  >
+                    {link.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))}
+      </nav>
+      <p class="xt-footer-legal">
+        MIT licensed. Built by <a href="https://agustinusnathaniel.com/" target="_blank" rel="noopener noreferrer">Agustinus Nathaniel</a>.
+      </p>
+    </footer>
+  )
+}

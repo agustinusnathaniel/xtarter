@@ -68,6 +68,23 @@ const canonicalUrl = new URL(Astro.url.pathname, Astro.site ?? Astro.url.origin)
 		line-height: 1.6;
 	}
 
+	/* The landing display scale is sized for a 67.5rem hero; this column is
+	   44rem, so step the headline size down. */
+	.xt-trust-page .xt-hero {
+		padding-top: 0;
+	}
+
+	.xt-trust-page .xt-hero h1 {
+		font-size: clamp(2rem, 5vw, 3rem);
+		font-stretch: var(--xt-heading-stretch);
+		line-height: 1.05;
+		letter-spacing: -0.025em;
+	}
+
+	.xt-trust-page .xt-hero-lede {
+		margin-top: 1rem;
+	}
+
 	.xt-trust-page footer {
 		margin-top: 3rem;
 	}
