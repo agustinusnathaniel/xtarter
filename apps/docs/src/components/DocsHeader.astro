@@ -1,0 +1,129 @@
+---
+import DefaultHeader from '@astrojs/starlight/components/Header.astro'
+import Search from '@astrojs/starlight/components/Search.astro'
+import SiteTitle from '@astrojs/starlight/components/SiteTitle.astro'
+import ThemeSelect from '@astrojs/starlight/components/ThemeSelect.astro'
+
+const { hasSidebar } = Astro.locals.starlightRoute
+---
+
+{
+  hasSidebar ? <DefaultHeader /> : (
+    <div class="xt-site-header">
+      <div class="xt-site-title"><SiteTitle /></div>
+      <nav aria-label="Main navigation" class="xt-site-nav print:hidden">
+        <a class="xt-nav-secondary" href="/create-xtarter-app/guide/templates/">Templates</a>
+        <a href="/xtarterize/getting-started/">Docs</a>
+        <a class="xt-nav-secondary" href="https://github.com/agustinusnathaniel/xtarterize">GitHub</a>
+      </nav>
+      <div class="xt-site-controls print:hidden">
+        <Search />
+        <ThemeSelect />
+      </div>
+    </div>
+  )
+}
+
+<style>
+  .xt-site-header {
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    height: 100%;
+    max-width: 70rem;
+    margin-inline: auto;
+  }
+
+  .xt-site-title {
+    min-width: 0;
+    margin-inline-end: auto;
+  }
+
+  .xt-site-title :global(a) {
+    min-height: 2.75rem;
+  }
+
+  .xt-site-title :global(img) {
+    height: 1.65rem;
+    width: auto;
+  }
+
+  .xt-site-nav,
+  .xt-site-controls {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    flex-shrink: 0;
+  }
+
+  .xt-site-nav a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.75rem;
+    color: var(--xt-muted);
+    font-size: 0.9rem;
+    text-decoration: none;
+  }
+
+  .xt-site-nav a:hover {
+    color: var(--xt-ink);
+  }
+
+  .xt-site-controls {
+    gap: 0.75rem;
+  }
+
+  .xt-site-controls :global(button[data-open-modal]) {
+    width: 2.75rem;
+    height: 2.75rem;
+    justify-content: center;
+    padding: 0;
+    border: 1px solid var(--xt-line);
+    border-radius: var(--xt-radius-sm);
+    background: var(--xt-panel);
+    color: var(--xt-muted);
+    font-size: 1.1rem;
+  }
+
+  .xt-site-controls :global(button[data-open-modal] > span),
+  .xt-site-controls :global(button[data-open-modal] > kbd) {
+    display: none;
+  }
+
+  .xt-site-controls :global(starlight-theme-select select) {
+    min-height: 2.75rem;
+  }
+
+  @media (max-width: 40rem) {
+    .xt-site-header {
+      gap: 0.75rem;
+    }
+
+    .xt-site-nav .xt-nav-secondary {
+      display: none;
+    }
+
+    .xt-site-controls {
+      gap: 0.5rem;
+    }
+
+    .xt-site-controls :global(starlight-theme-select select) {
+      width: 2.75rem;
+      padding-inline: 0;
+      color: transparent;
+    }
+
+    .xt-site-controls :global(starlight-theme-select option) {
+      color: var(--xt-ink);
+      background: var(--xt-panel);
+    }
+
+    .xt-site-controls :global(starlight-theme-select .caret) {
+      display: none;
+    }
+
+    .xt-site-controls :global(starlight-theme-select .label-icon) {
+      inset-inline-start: 0.5rem;
+    }
+  }
+</style>

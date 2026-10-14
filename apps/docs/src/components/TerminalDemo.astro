@@ -3,9 +3,10 @@
 // session. Decorative by design: the panel is aria-hidden and a plain-text
 // caption next to it carries the same information for assistive tech.
 // No typing, spinner, or blinking cursor - the output is present on load.
-// This is the sole charcoal artifact on the xtarterize landing page.
+// The caption stays with the panel in the hero's second column.
 ---
 
+<figure class="xt-terminal-demo">
 <div class="xt-terminal">
 	<div class="xt-terminal-bar">
 		<span class="xt-terminal-title">xtarterize &middot; dry run</span>
@@ -56,19 +57,12 @@
 		<div class="xt-term-line xt-term-row">
 			<span class="xt-term-add">+</span>  vite-plugin-checker         <span class="xt-term-dim">Vite</span>
 		</div>
-		<div class="xt-term-line xt-term-spacer"></div>
-		<div class="xt-term-line xt-term-out">
-			<span class="xt-tag xt-tag-safe">backup</span>
-			<span class="xt-term-stack">
-				<span class="xt-term-dim">Originals saved to</span>
-				<span class="xt-term-dim xt-term-accent">.xtarterize/backups/</span>
-			</span>
-		</div>
 	</div>
 </div>
-<p class="xt-terminal-caption">
+<figcaption class="xt-terminal-caption">
 	Example output: <code>pnpx xtarterize@latest init --dry-run</code> detects the stack
 	(react 19, vite 8, typescript 5.8, pnpm 10), plans 12 conformance tasks
-	across 8 files, and previews each change before anything is written.
-	Originals are backed up to <code>.xtarterize/backups/</code>.
-</p>
+	across 8 files, and previews conformance changes.
+	When approved changes are applied, originals are backed up to <code>.xtarterize/backups/</code>.
+</figcaption>
+</figure>

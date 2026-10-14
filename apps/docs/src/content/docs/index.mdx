@@ -1,60 +1,12 @@
 ---
 title: xtarter
-description: Production-grade starter templates for JavaScript and TypeScript projects. Scaffold your next project in one command.
+description: Starter templates and configuration tooling for JavaScript and TypeScript. Start a new project or bring linting, strict types, CI, and editor settings to an existing repo.
 template: splash
 editUrl: false
 lastUpdated: false
-hero:
-  # Presence flag only. This route's hero is rendered by
-  # src/components/LandingHero.astro (wired in astro.config.mjs), which
-  # hardcodes the composition; no hero data is read from this file. Keep
-  # the key present and empty: Starlight sets data-has-hero on the page
-  # root from its presence, activating the splash paper backdrop in
-  # global.css.
-  {}
+hero: {}
 ---
 
-import SectionHead from '@/components/SectionHead.astro'
-import ToolSplit from '@/components/ToolSplit.astro'
-import FeatureGrid from '@/components/FeatureGrid.astro'
-import TemplateGallery from '@/components/TemplateGallery.astro'
-import CtaBand from '@/components/CtaBand.astro'
+import HomeContent from '@/components/HomeContent.astro'
 
-<div class="xt-section">
-  <SectionHead index="01" eyebrow="the xtarter ecosystem" id="two-tools" title="Two tools, one standard" lead="Start from a template, or bring an existing repo up to standard. Both land on the same conformance baseline." />
-  <ToolSplit />
-</div>
-
-<div class="xt-section">
-  <SectionHead index="02" eyebrow="why conformant" id="why-conformant" title="Standards that hold their shape" lead="Configs drift when enforcement lives in someone's head. This baseline lives in the repo instead." />
-  <FeatureGrid items={[
-    { title: 'Reviews that read themselves', body: 'Biome and strict TypeScript run from the first commit. Reviews cover features, not formatting.' },
-    { title: 'CI that stays green', body: 'GitHub Actions runs the same configs your editor enforces, so local and CI cannot disagree.' },
-    { title: 'Agent-ready by default', body: 'Agent skills ship with every config, so AI assistants follow the same standard you do.' },
-  ]} />
-</div>
-
-<div class="xt-section">
-  <SectionHead index="03" id="starter-templates" title="Starter templates" lead="Five starters. Each ships Biome, strict TypeScript, CI, VS Code settings, and agent skills before your first commit." />
-  <TemplateGallery />
-  <p class="xt-note">Ready to use one? <a class="xt-link" href="/create-xtarter-app/">Scaffold with create-xtarter-app &rarr;</a></p>
-</div>
-
-<a class="xt-link" href="https://github.com/agustinusnathaniel?tab=repositories&q=&type=source" target="_blank" rel="noopener noreferrer" data-umami-event="github_browse_click">All source repositories on GitHub</a>
-
-<div class="xt-section">
-  <SectionHead index="04" id="lifecycle" title="The project lifecycle" lead="One path from first commit to shipped project." />
-  <ol class="xt-lifecycle">
-    <li><a href="#starter-templates">Choose</a></li>
-    <li><a href="/create-xtarter-app/">Scaffold</a></li>
-    <li><a href="/xtarterize/">Conform</a></li>
-    <li class="xt-lifecycle-done"><a href="#get-started">Ship</a></li>
-  </ol>
-</div>
-
-<div class="xt-section" id="get-started">
-  <CtaBand title="Pick your door." note="Scaffold something new, or conform code you already have.">
-    <a class="xt-btn xt-btn-invert" href="/create-xtarter-app/" data-umami-event="band_cta_browse">Start with a template</a>
-    <a class="xt-btn xt-btn-ghost-dark" href="/xtarterize/" data-umami-event="band_cta_conform">Conform an existing project</a>
-  </CtaBand>
-</div>
+<HomeContent />
