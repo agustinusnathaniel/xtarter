@@ -1,7 +1,3 @@
-// Centralized detection types
-
-import type { ExistingConfig } from './registry/index.js';
-
 export type Framework =
   | 'react'
   | 'react-native'
@@ -45,11 +41,24 @@ export interface MonorepoDetection {
   workspaceRoot: boolean;
 }
 
+/** Tooling the project already carries, as seen by detection. */
+export interface ExistingConfig {
+  agentsMd: boolean;
+  biome: boolean;
+  changeset: boolean;
+  eslint: boolean;
+  /** Workflow file names under `.github/workflows`, without extension. */
+  githubWorkflows: Array<string>;
+  oxfmt: boolean;
+  oxlint: boolean;
+  tsconfig: boolean;
+  turbo: boolean;
+}
+
 export interface ProjectProfile {
   bundler: Bundler;
   existing: ExistingConfig;
   framework: Framework;
-  frameworkVersion: string | null;
   hasGit: boolean;
   hasGitHub: boolean;
   monorepo: boolean;

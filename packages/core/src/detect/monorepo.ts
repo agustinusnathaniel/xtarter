@@ -3,11 +3,15 @@ import { dirname, relative } from 'pathe';
 import { fileExists, resolvePath } from '@/utils/fs.js';
 import { isPnpmWorkspace } from '@/utils/pkg.js';
 
-import { monorepoMarkerFiles, workspacePackageDirs } from './registry/index.js';
 import type { MonorepoDetection } from './types.js';
 
-const MONOREPO_MARKERS = monorepoMarkerFiles();
-const WORKSPACE_DIR_NAMES = workspacePackageDirs();
+const MONOREPO_MARKERS = [
+  'pnpm-workspace.yaml',
+  'turbo.json',
+  'nx.json',
+  'lerna.json',
+];
+const WORKSPACE_DIR_NAMES = ['packages', 'apps', 'services'];
 const WORKSPACE_PACKAGE_DIRS = WORKSPACE_DIR_NAMES.map((dir) => `${dir}/`);
 
 /** A directory must contain at least two workspace dirs to count as a root. */

@@ -16,27 +16,14 @@ const CONFIG_BASENAMES = [
 ];
 
 /**
- * Result of reading the raw xtarterize config. Separates "no config" from
- * "config exists but is invalid" so each caller can map it to its own
- * fallback behavior.
+ * Read the xtarterize configuration object from the first config file found,
+ * else the `"xtarterize"` key in `package.json`. Returns null when there is no
+ * config or it cannot be parsed.
  */
-type RawConfigResult =
-  | { config: Record<string, unknown>; status: 'found' }
-  | { status: 'missing' }
-  | { status: 'parse-error' };
-
-/**
- * Read the xtarterize configuration object.
- *
- * Searches for:
- *   1. `.xtarterizerc` / `.xtarterizerc.json` / `.xtarterizerc.json5`
- *   2. `"xtarterize"` key in `package.json`
- *
- * Reports whether a config was found, missing, or present but unparsable.
- */
-function readRawXtarterizeConfig(cwd: string): Effect.Effect<RawConfigResult> {
+function readXtarterizeConfig(
+  cwd: string
+): Effect.Effect<Record<string, unknown> | null> {
   return Effect.gen(function* () {
-    // 1. Standalone config file
     for (const basename of CONFIG_BASENAMES) {
       const path = yield* Effect.promise(() =>
         findConfigFile(cwd, basename, [''])
@@ -46,52 +33,16 @@ function readRawXtarterizeConfig(cwd: string): Effect.Effect<RawConfigResult> {
       }
       return yield* Effect.promise(() =>
         readJson(path).then(
-          (parsed): RawConfigResult =>
-            parsed && typeof parsed === 'object'
-              ? { config: parsed, status: 'found' }
-              : { status: 'parse-error' },
-          (): RawConfigResult => {
+          (parsed) => (isRecord(parsed) ? parsed : null),
+          () => {
             logWarn('Failed to parse .xtarterizerc');
-            return { status: 'parse-error' };
+            return null;
           }
         )
       );
     }
-
-    // 2. package.json under "xtarterize" key
     const pkg = yield* Effect.promise(() => readPackageJsonOrNull(cwd));
-    const config = pkg?.xtarterize;
-    if (isRecord(config)) {
-      return { config, status: 'found' };
-    }
-
-    return { status: 'missing' };
-  });
-}
-
-/**
- * Per-process memo for the raw config read, keyed by cwd, so selection reads in
- * the same session consume one parse instead of one per call.
- *
- * Each entry is an `Effect.cached` memo; the map only addresses the memo per
- * cwd, preserving the pre-Effect behavior of sharing one read across every
- * Effect run in the process.
- */
-const rawConfigCache = new Map<string, Effect.Effect<RawConfigResult>>();
-
-function loadRawXtarterizeConfig(cwd: string): Effect.Effect<RawConfigResult> {
-  return Effect.suspend(() => {
-    const cached = rawConfigCache.get(cwd);
-    if (cached) {
-      return cached;
-    }
-    return Effect.flatMap(
-      Effect.cached(readRawXtarterizeConfig(cwd)),
-      (memoized) => {
-        rawConfigCache.set(cwd, memoized);
-        return memoized;
-      }
-    );
+    return isRecord(pkg?.xtarterize) ? pkg.xtarterize : null;
   });
 }
 
@@ -123,21 +74,15 @@ function sanitizeStringArray(value: unknown): Array<string> {
 export function loadSelectionConfig(
   cwd: string
 ): Effect.Effect<TaskSelectionConfig> {
-  const empty = (): TaskSelectionConfig => ({ only: [], skip: [] });
   return Effect.catchCause(
-    Effect.map(loadRawXtarterizeConfig(cwd), (result) => {
-      if (result.status !== 'found') {
-        return empty();
-      }
-      return {
-        only: sanitizeStringArray(result.config.only),
-        skip: sanitizeStringArray(result.config.skip),
-      };
-    }),
+    Effect.map(readXtarterizeConfig(cwd), (config) => ({
+      only: sanitizeStringArray(config?.only),
+      skip: sanitizeStringArray(config?.skip),
+    })),
     (cause) =>
       Cause.hasInterruptsOnly(cause)
         ? Effect.interrupt
-        : Effect.succeed(empty())
+        : Effect.succeed({ only: [], skip: [] })
   );
 }
 

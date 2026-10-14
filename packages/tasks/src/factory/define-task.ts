@@ -15,7 +15,6 @@ import { Effect } from 'effect';
 export type { TaskDep } from '@xtarterize/core';
 
 import { checkMissingDeps, writeTaskDiffs } from './ops.js';
-import { applyPackageJsonChange } from './package-json.js';
 import {
   deriveConfigTargets,
   type ResolveContext,
@@ -136,16 +135,10 @@ function resolveDeps(
 }
 
 /**
- * Reapply the dependency signal the factories produced before comparing
- * content: an existing target whose declared dependency is not installed
- * projects as `patch`, so the apply plan still installs it when the content
- * already matches. Conflict still wins, and an absent target stays `new`.
- *
- * An explicit `new` status (a policy projecting content the project does not
- * have yet) is also preserved: the packageJson factory reported `new` when
- * every configured script and file was missing and the dependency was not
- * installed, and `patch` once the dependency was present. The per-task policy
- * supplies the dependency-visible half of that decision.
+ * An existing target whose declared dependency is not installed projects as
+ * `patch`, so the apply plan still installs the dependency when the content
+ * already matches. Conflict still wins, and `new` (absent target, or a policy
+ * projecting content the project does not have yet) is kept.
  */
 async function applyDependencyStatus(
   drafts: Array<TargetDraft>,
@@ -231,19 +224,9 @@ function applySpec(
 ): Effect.Effect<void, TaskError, TaskServices> {
   return Effect.gen(function* () {
     const { cwd, profile } = context;
-    const { targets } = yield* resolveSpec(spec, context);
-    const diffs: Array<FileDiff> = [];
-    for (const target of targets) {
-      if (target.kind === 'packageJson') {
-        yield* toTaskEffect(spec.id, () =>
-          applyPackageJsonChange(cwd, target.patch)
-        );
-        continue;
-      }
-      if (target.diff) {
-        diffs.push(target.diff);
-      }
-    }
+    // Resolving again at apply time reads files fresh, so writes since the
+    // plan (such as the dependency install touching package.json) survive.
+    const { diffs } = yield* resolveSpec(spec, context);
     yield* toTaskEffect(spec.id, () => writeTaskDiffs(cwd, diffs));
     for (const action of spec.actions ?? []) {
       yield* toTaskEffect(spec.id, () => action.run(cwd, profile));
@@ -252,10 +235,9 @@ function applySpec(
 }
 
 /**
- * Label a method failure the way the removed `wrapTask` did:
- * `<method> failed: <String(cause)>`, with the raw cause preserved. Internal
- * lifts carry their raw cause (even `undefined`) as an own `cause` property;
- * an Effect the spec authored passes its own failure through unchanged.
+ * Label a method failure `<method> failed: <String(cause)>`, keeping the raw
+ * cause. Internal lifts carry their raw cause (even `undefined`) as an own
+ * `cause` property; a failure the spec authored passes its own value through.
  */
 function labelFailure<A>(
   specId: string,
@@ -272,12 +254,7 @@ function labelFailure<A>(
   });
 }
 
-/**
- * Assemble search metadata from the top-level fields. Keywords and tags stay
- * authored; only targets the spec declares statically can be derived. An
- * authored `configTargets` keeps its leading key position, a derived one is
- * appended last, matching the historical shape.
- */
+/** Search metadata; `configTargets` is derived from static targets unless authored. */
 function resolveSearchMeta(spec: TaskSpec): TaskSearchMeta | undefined {
   const { configTargets, keywords, tags } = spec;
   if (
@@ -287,18 +264,12 @@ function resolveSearchMeta(spec: TaskSpec): TaskSearchMeta | undefined {
   ) {
     return undefined;
   }
-  const authored = {
+  return {
+    configTargets:
+      configTargets ??
+      (Array.isArray(spec.targets) ? deriveConfigTargets(spec.targets) : []),
     keywords: keywords ?? [],
     tags: tags ?? [],
-  };
-  if (configTargets !== undefined) {
-    return { configTargets, ...authored };
-  }
-  return {
-    ...authored,
-    configTargets: deriveConfigTargets(
-      Array.isArray(spec.targets) ? spec.targets : undefined
-    ),
   };
 }
 

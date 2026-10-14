@@ -1,33 +1,14 @@
 import { findConfigFile } from '@/utils/fs.js';
 
-import { rootFileInputByBasename } from './registry/index.js';
 import type { Bundler } from './types.js';
 
-function defaultConfigExtensions(baseName: string): Array<string> {
-  const input = rootFileInputByBasename(baseName);
-  if (!input) {
-    throw new Error(
-      `No detection registry root file input declares "${baseName}"`
-    );
-  }
-  return [...input.extensions];
-}
+const CONFIG_EXTENSIONS = ['.ts', '.js', '.mts', '.mjs', '.cts', '.cjs'];
 
-/**
- * Checks if a bundler config file exists
- * @param cwd - Current working directory
- * @param baseName - Base name of config file (e.g., 'vite.config')
- * @param extensions - File extensions to check; defaults to the extensions
- * declared by the matching registry root file input
- * @returns Promise resolving to true if config file exists
- */
-export async function hasBundlerConfig(
+async function hasBundlerConfig(
   cwd: string,
-  baseName: string,
-  extensions?: Array<string>
+  baseName: string
 ): Promise<boolean> {
-  const resolved = extensions ?? defaultConfigExtensions(baseName);
-  return Boolean(await findConfigFile(cwd, baseName, resolved));
+  return Boolean(await findConfigFile(cwd, baseName, CONFIG_EXTENSIONS));
 }
 
 /**
@@ -64,10 +45,7 @@ export async function detectBundler(
   if (await hasBundlerConfig(cwd, 'vite.config')) {
     return 'vite';
   }
-
-  // Check once and cache - avoids redundant hasBundlerConfig calls
-  const hasRspackConfig = await hasBundlerConfig(cwd, 'rspack.config');
-  if (hasRspackConfig) {
+  if (await hasBundlerConfig(cwd, 'rspack.config')) {
     return 'rspack';
   }
   if (await hasBundlerConfig(cwd, 'webpack.config')) {

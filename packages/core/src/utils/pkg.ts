@@ -1,6 +1,7 @@
 import { addDependency } from 'nypm';
 import { readPackageJSON } from 'pkg-types';
 
+import type { TaskDep } from '@/_base.js';
 import {
   detectPackageManager,
   isStringRecord,
@@ -61,20 +62,6 @@ export function hasDependency(
 }
 
 /**
- * Install a dependency via the project's package manager.
- *
- * Skips installation if the dependency already exists in package.json.
- * Throws if the `nypm` addDependency call fails (network error, resolution
- * failure, permissions, etc.).
- *
- * @throws {Error} With a message including the dependency name and underlying error.
- */
-export interface DepToInstall {
-  depName: string;
-  dev: boolean;
-}
-
-/**
  * Install multiple dependencies in batches.
  *
  * Groups dependencies by dev/prod and installs each group in a single
@@ -85,7 +72,7 @@ export interface DepToInstall {
  */
 export async function installDependenciesBatch(
   cwd: string,
-  deps: Array<DepToInstall>,
+  deps: Array<TaskDep>,
   options?: { silent?: boolean }
 ): Promise<void> {
   if (deps.length === 0) {

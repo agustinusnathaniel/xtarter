@@ -2,8 +2,7 @@ import { detectPackageManager as detectPM } from 'nypm';
 
 import { fileExists, resolvePath } from '@/utils/fs.js';
 
-import { inputById, type LockfileInput } from './registry/index.js';
-import type { Framework, PackageManager } from './types.js';
+import type { PackageManager } from './types.js';
 
 /**
  * Type guard to check if a value is a Record
@@ -28,16 +27,13 @@ export function isStringRecord(
   return Object.values(value).every((v): v is string => typeof v === 'string');
 }
 
-/**
- * Lockfile fallback order when nypm cannot detect the package manager. The
- * names and package manager mappings come from the detection registry.
- */
-const FALLBACK_LOCKFILE_IDS: ReadonlyArray<LockfileInput['id']> = [
-  'bun-lockb',
-  'bun-lock',
-  'pnpm-lock',
-  'yarn-lock',
-  'npm-lock',
+/** Lockfiles in the order the fallback checks them when nypm finds nothing. */
+export const LOCKFILES: ReadonlyArray<readonly [string, PackageManager]> = [
+  ['bun.lockb', 'bun'],
+  ['bun.lock', 'bun'],
+  ['pnpm-lock.yaml', 'pnpm'],
+  ['yarn.lock', 'yarn'],
+  ['package-lock.json', 'npm'],
 ];
 
 /**
@@ -58,43 +54,11 @@ export async function detectPackageManager(
     return detected.name;
   }
 
-  // Fallback to lockfile detection if nypm fails
-  for (const id of FALLBACK_LOCKFILE_IDS) {
-    const input = inputById(id);
-    if (input.kind !== 'lockfile') {
-      continue;
-    }
-    if (await fileExists(resolvePath(cwd, input.name))) {
-      return input.packageManager;
+  for (const [lockfile, packageManager] of LOCKFILES) {
+    if (await fileExists(resolvePath(cwd, lockfile))) {
+      return packageManager;
     }
   }
 
   return 'npm';
-}
-
-/**
- * Detects framework version from the merged dependency map.
- * @param deps - Dependency versions collected from package.json
- * @param framework - Detected framework
- * @returns Framework version string or null if not found
- */
-export function detectFrameworkVersion(
-  deps: Record<string, string>,
-  framework: Framework
-): string | null {
-  const frameworkPkg =
-    framework === 'react-native'
-      ? (deps['react-native'] ?? deps.expo)
-      : framework === 'node'
-        ? null
-        : framework
-          ? deps[framework === 'solid' ? 'solid-js' : framework]
-          : null;
-
-  if (!frameworkPkg) {
-    return null;
-  }
-
-  const cleaned = frameworkPkg.replace(/^[^0-9]*/, '');
-  return cleaned || null;
 }
