@@ -3,9 +3,9 @@ import { cancel, isCancel, spinner } from '@clack/prompts';
 export { isCI } from '@clack/prompts';
 
 export function abortIfCancelled<T>(
-  result: T | symbol,
+  result: T,
   message = 'Operation cancelled'
-): asserts result is T {
+): asserts result is Exclude<T, symbol> {
   if (isCancel(result)) {
     cancel(message);
     process.exit(0);
