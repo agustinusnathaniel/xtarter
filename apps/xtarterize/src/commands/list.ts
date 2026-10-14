@@ -19,7 +19,7 @@ export const listCommand = cliCommand({
     }
     const { profile, runtime, statuses, tasks, timing } = session;
 
-    if (runtime.json) {
+    if (runtime.format === 'json') {
       console.log(formatListResult({ profile, statuses, tasks, timing }));
       return;
     }

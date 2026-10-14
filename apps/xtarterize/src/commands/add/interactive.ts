@@ -1,37 +1,22 @@
-import type { TaskStatus } from '@xtarterize/core';
 import { logWarn } from '@xtarterize/core';
 import { Effect } from 'effect';
 
+import type { CliError, CliServices } from '@/runtime.js';
 import type { CommandSession } from '@/session.js';
 import { displayDiffs } from '@/ui/diff-display.js';
 import { Prompter } from '@/ui/prompter.js';
+import { selectTasksGrouped } from '@/ui/select-menu.js';
 import { refineTaskChoices } from '@/ui/task-choices.js';
+import { isActionableStatus } from '@/utils/display.js';
 
-import { selectTasksGrouped } from './selection.js';
-import type {
-  AddCommandError,
-  AddCommandServices,
-  RunInteractiveOptions,
-  TaskWithStatus,
-} from './types.js';
-
-function isActionable(status: TaskStatus, includeConflicts: boolean): boolean {
-  if (status === 'new' || status === 'patch') {
-    return true;
-  }
-  return includeConflicts && status === 'conflict';
-}
+import type { RunInteractiveOptions, TaskWithStatus } from './types.js';
 
 function confirmSelected(options: {
   includeConflicts: boolean;
   jsonMode: boolean;
   selected: Array<TaskWithStatus>;
   session: CommandSession;
-}): Effect.Effect<
-  Array<TaskWithStatus> | null,
-  AddCommandError,
-  AddCommandServices
-> {
+}): Effect.Effect<Array<TaskWithStatus> | null, CliError, CliServices> {
   return Effect.gen(function* () {
     const { includeConflicts, jsonMode, selected, session } = options;
     const prompter = yield* Prompter;
@@ -75,7 +60,7 @@ function executeConfirmed(options: {
   recordTiming: boolean;
   selected: Array<TaskWithStatus>;
   session: CommandSession;
-}): Effect.Effect<void, AddCommandError, AddCommandServices> {
+}): Effect.Effect<void, CliError, CliServices> {
   return Effect.gen(function* () {
     const { confirmed, includeConflicts, recordTiming, selected, session } =
       options;
@@ -103,11 +88,7 @@ function selectTasksToApply(options: {
   includeConflicts: boolean;
   jsonMode: boolean;
   session: CommandSession;
-}): Effect.Effect<
-  Array<TaskWithStatus> | null,
-  AddCommandError,
-  AddCommandServices
-> {
+}): Effect.Effect<Array<TaskWithStatus> | null, CliError, CliServices> {
   return Effect.gen(function* () {
     const { allFlag, includeConflicts, jsonMode, session } = options;
     const { runtime } = session;
@@ -129,7 +110,7 @@ function selectTasksToApply(options: {
     let selected: Array<TaskWithStatus> | null;
     if (allFlag) {
       selected = tasksWithStatus.filter((entry) =>
-        isActionable(entry.status, includeConflicts)
+        isActionableStatus(entry.status, includeConflicts)
       );
     } else {
       const selectedIds = yield* selectTasksGrouped(tasksWithStatus);
@@ -167,11 +148,7 @@ function selectTasksToApply(options: {
 function narrowConfirmed(options: {
   confirmed: Array<TaskWithStatus>;
   session: CommandSession;
-}): Effect.Effect<
-  Array<TaskWithStatus> | null,
-  AddCommandError,
-  AddCommandServices
-> {
+}): Effect.Effect<Array<TaskWithStatus> | null, CliError, CliServices> {
   return Effect.gen(function* () {
     const { confirmed, session } = options;
     const refined = yield* refineTaskChoices(
@@ -193,7 +170,7 @@ function narrowConfirmed(options: {
 /** The interactive `add` flow as one program: select, confirm, apply. */
 export function runInteractive(
   options: RunInteractiveOptions
-): Effect.Effect<void, AddCommandError, AddCommandServices> {
+): Effect.Effect<void, CliError, CliServices> {
   return Effect.gen(function* () {
     const { all: allFlag, includeConflicts, recordTiming, session } = options;
     const { runtime, tasks } = session;

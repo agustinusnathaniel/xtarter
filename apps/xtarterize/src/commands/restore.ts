@@ -1,20 +1,17 @@
-import type {
-  Backup,
-  DepsInstaller,
-  ProcessRunner,
-  TaskError,
-} from '@xtarterize/core';
+import type { Backup } from '@xtarterize/core';
 import {
   createSpinner,
   listBackups,
   logError,
+  logInfo,
   logSuccess,
   restoreBackup,
 } from '@xtarterize/core';
 import { Effect } from 'effect';
 
 import { cliCommand } from '@/commands/command.js';
-import { openSession } from '@/session.js';
+import type { CliError, CliServices } from '@/runtime.js';
+import { openRuntime } from '@/session.js';
 import { type PromptError, Prompter } from '@/ui/prompter.js';
 import { reportCommandFailure } from '@/ui/reporter.js';
 import { reportArgs, yesArg } from '@/utils/args.js';
@@ -24,10 +21,6 @@ export interface RestoreCommandArgs extends RuntimeArgs {
   filepath?: string;
   yes?: boolean;
 }
-
-type RestoreError = TaskError | PromptError;
-
-type RestoreServices = DepsInstaller | ProcessRunner | Prompter;
 
 function validateRestoreArgs(filepath: unknown, jsonMode: boolean): boolean {
   if (filepath) {
@@ -109,17 +102,16 @@ async function executeRestore(options: {
 /** The `restore` command as one program: open once, prompt, restore. */
 export function restoreProgram(
   args: RestoreCommandArgs
-): Effect.Effect<void, RestoreError, RestoreServices> {
+): Effect.Effect<void, CliError, CliServices> {
   return Effect.gen(function* () {
-    const session = yield* openSession(args, { resolveTasks: false });
-    if (!session) {
+    const runtime = yield* openRuntime(args);
+    if (!runtime) {
       return;
     }
-    const { runtime } = session;
     const cwd = runtime.cwd;
     const filepath = args.filepath;
     const jsonMode = runtime.format === 'json';
-    const quiet = jsonMode || runtime.quiet;
+    const quiet = runtime.quiet;
     const yes = args.yes === true || jsonMode;
     if (!validateRestoreArgs(filepath, jsonMode)) {
       return;
@@ -137,7 +129,7 @@ export function restoreProgram(
     }
     const selected = yield* promptRestoreConfirm(backups, yes);
     if (selected === null) {
-      session.reportOutcome(session.cancelled());
+      logInfo('Cancelled');
       return;
     }
     yield* Effect.promise(() =>

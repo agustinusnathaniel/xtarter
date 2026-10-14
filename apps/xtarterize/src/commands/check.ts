@@ -116,7 +116,7 @@ async function handleBadgeOutput(options: {
   const svg = generateBadgeSvg({ conformant, total });
   let badgePath = badge;
   if (badgePath === '-') {
-    if (ctx.json) {
+    if (ctx.format === 'json') {
       process.stderr.write(`${svg}\n`);
     } else {
       process.stdout.write(svg);
@@ -128,7 +128,7 @@ async function handleBadgeOutput(options: {
     badgePath = path.join(badgePath, 'conformance.svg');
   }
   await fs.writeFile(badgePath, svg, 'utf-8');
-  if (!ctx.json) {
+  if (ctx.format !== 'json') {
     logSuccess(`Badge written to ${badgePath}`);
   }
 }
@@ -153,7 +153,7 @@ function renderCheckSummary(options: {
     total,
     badgeToStdout,
   } = options;
-  if (ctx.json) {
+  if (ctx.format === 'json') {
     console.log(formatCheckResult({ diagnostics, statuses, tasks, timing }));
     return;
   }

@@ -3,6 +3,7 @@ import { Effect } from 'effect';
 
 import { cliCommand } from '@/commands/command.js';
 import type { RunCommandArgs } from '@/commands/run-command.js';
+import type { CliError, CliServices } from '@/runtime.js';
 import { openSession } from '@/session.js';
 import {
   commonArgs,
@@ -13,7 +14,6 @@ import {
 
 import { runInteractive } from './interactive.js';
 import { runSingleTask } from './single-task.js';
-import type { AddCommandError, AddCommandServices } from './types.js';
 
 export const addCommand = cliCommand({
   args: {
@@ -45,7 +45,7 @@ export type AddCommandArgs = RunCommandArgs & {
 /** The `add` command as one program: open once, then pick or apply tasks. */
 export function addProgram(
   args: AddCommandArgs
-): Effect.Effect<void, AddCommandError, AddCommandServices> {
+): Effect.Effect<void, CliError, CliServices> {
   return Effect.gen(function* () {
     const session = yield* openSession(args);
     if (!session) {

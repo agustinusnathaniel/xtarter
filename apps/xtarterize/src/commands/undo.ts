@@ -1,5 +1,4 @@
 import fs from 'node:fs/promises';
-import type { DepsInstaller, ProcessRunner, TaskError } from '@xtarterize/core';
 import {
   assertPathWithin,
   createSpinner,
@@ -13,15 +12,12 @@ import {
 import { Effect } from 'effect';
 
 import { cliCommand } from '@/commands/command.js';
-import { openSession } from '@/session.js';
+import type { CliError, CliServices } from '@/runtime.js';
+import { openRuntime } from '@/session.js';
 import { type PromptError, Prompter } from '@/ui/prompter.js';
 import { reportCommandFailure } from '@/ui/reporter.js';
 import { reportArgs } from '@/utils/args.js';
 import type { RuntimeArgs } from '@/utils/runtime.js';
-
-type UndoError = TaskError | PromptError;
-
-type UndoServices = DepsInstaller | ProcessRunner | Prompter;
 
 async function loadAndValidateManifest(
   cwd: string,
@@ -151,16 +147,15 @@ async function removeCreatedFile(cwd: string, filepath: string): Promise<void> {
 /** The `undo` command as one program: open once, preview, confirm, restore. */
 export function undoProgram(
   args: RuntimeArgs
-): Effect.Effect<void, UndoError, UndoServices> {
+): Effect.Effect<void, CliError, CliServices> {
   return Effect.gen(function* () {
-    const session = yield* openSession(args, { resolveTasks: false });
-    if (!session) {
+    const runtime = yield* openRuntime(args);
+    if (!runtime) {
       return;
     }
-    const { runtime } = session;
     const cwd = runtime.cwd;
     const jsonMode = runtime.format === 'json';
-    const quiet = jsonMode || runtime.quiet;
+    const quiet = runtime.quiet;
     const manifest = yield* Effect.promise(() =>
       loadAndValidateManifest(cwd, jsonMode, quiet)
     );
@@ -170,7 +165,7 @@ export function undoProgram(
     displayManifestPreview(manifest, jsonMode);
     const proceed = yield* promptRestoreConfirm(manifest, quiet);
     if (!proceed) {
-      session.reportOutcome(session.cancelled());
+      logInfo('Cancelled');
       return;
     }
     const { restored, removedCount, errors } = yield* Effect.promise(() =>

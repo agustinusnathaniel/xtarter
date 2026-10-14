@@ -11,11 +11,8 @@ export interface RuntimeArgs {
 }
 
 export interface RuntimeContext {
-  /** True when the process runs in a CI environment. */
-  ci: boolean;
   cwd: string;
   format: DisplayFormat;
-  json: boolean;
   quiet: boolean;
 }
 
@@ -35,10 +32,8 @@ function resolveFormat(
  * `--format json`), or in CI.
  */
 export function resolveRuntimeContext(args: RuntimeArgs): RuntimeContext {
-  const json = args.json === true;
-  const ci = isCI();
-  const format = resolveFormat(args.format, json);
-  const quiet = args.quiet === true || ci || format === 'json';
+  const format = resolveFormat(args.format, args.json === true);
+  const quiet = args.quiet === true || isCI() || format === 'json';
   const cwd = typeof args.cwd === 'string' ? args.cwd : process.cwd();
-  return { ci, cwd, format, json, quiet };
+  return { cwd, format, quiet };
 }

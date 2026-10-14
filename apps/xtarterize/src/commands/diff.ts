@@ -2,6 +2,7 @@ import { cliCommand } from '@/commands/command.js';
 import { runCliProgram } from '@/runtime.js';
 import { openSession } from '@/session.js';
 import { reportArgs } from '@/utils/args.js';
+import { isActionableStatus } from '@/utils/display.js';
 
 export const diffCommand = cliCommand({
   args: reportArgs,
@@ -13,10 +14,9 @@ export const diffCommand = cliCommand({
       return;
     }
 
-    const actionableTasks = session.tasks.filter((task) => {
-      const status = session.statuses.get(task.id);
-      return status === 'new' || status === 'patch' || status === 'conflict';
-    });
+    const actionableTasks = session.tasks.filter((task) =>
+      isActionableStatus(session.statuses.get(task.id), true)
+    );
     const outcome = await runCliProgram(session.dryRun(actionableTasks));
     if (!outcome) {
       return;

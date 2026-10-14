@@ -2,16 +2,13 @@ import type { Task, TaskStatus } from '@xtarterize/core';
 import { logInfo, statusTag } from '@xtarterize/core';
 import { Effect } from 'effect';
 
+import type { CliError, CliServices } from '@/runtime.js';
 import type { CommandSession, SessionTaskOutcome } from '@/session.js';
 import { displayDiffs } from '@/ui/diff-display.js';
 import { type PromptError, Prompter } from '@/ui/prompter.js';
 import { refineTaskChoices } from '@/ui/task-choices.js';
 
-import type {
-  AddCommandError,
-  AddCommandServices,
-  RunSingleTaskOptions,
-} from './types.js';
+import type { RunSingleTaskOptions } from './types.js';
 
 function reportMissingTask(options: {
   allTasks: Array<Task>;
@@ -21,9 +18,7 @@ function reportMissingTask(options: {
 }): void {
   const { allTasks, jsonMode, session, taskId } = options;
   const message = `Task "${taskId}" not found`;
-  session.reportOutcome(
-    session.blocked(message, { errors: [message], taskId })
-  );
+  session.reportOutcome(session.blocked(message, { taskId }));
   if (!jsonMode) {
     logInfo('Available tasks:');
     for (const task of allTasks) {
@@ -47,9 +42,7 @@ function reportCheckError(
   detail: string
 ): void {
   const message = `Failed to check ${taskId}: ${detail}`;
-  session.reportOutcome(
-    session.blocked(message, { errors: [message], taskId })
-  );
+  session.reportOutcome(session.blocked(message, { taskId }));
 }
 
 function reportSkip(
@@ -87,14 +80,13 @@ function executeTask(options: {
   session: CommandSession;
   status: TaskStatus;
   task: Task;
-}): Effect.Effect<void, AddCommandError, AddCommandServices> {
+}): Effect.Effect<void, CliError, CliServices> {
   return Effect.gen(function* () {
     const { includeConflicts, recordTiming, session, status, task } = options;
     const { runtime } = session;
-    const jsonMode = runtime.format === 'json';
 
     let effective = task;
-    if (!(runtime.quiet || jsonMode)) {
+    if (!runtime.quiet) {
       const refined = yield* refineTaskChoices(
         [task],
         session.runtime.cwd,
@@ -112,7 +104,7 @@ function executeTask(options: {
     }
 
     const plan = yield* session.plan({ includeConflicts, tasks: [effective] });
-    if (!(runtime.quiet || jsonMode)) {
+    if (!runtime.quiet) {
       displayDiffs(plan.entries[0]?.diffs ?? [], runtime.format);
       const proceed = yield* confirmApply();
       if (proceed === null) {
@@ -142,7 +134,7 @@ function executeTask(options: {
 /** Add one named task as one program: plan, confirm, execute. */
 export function runSingleTask(
   options: RunSingleTaskOptions
-): Effect.Effect<void, AddCommandError, AddCommandServices> {
+): Effect.Effect<void, CliError, CliServices> {
   return Effect.gen(function* () {
     const { includeConflicts, recordTiming, session, taskId } = options;
     const { allTasks, runtime, statuses } = session;

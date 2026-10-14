@@ -9,9 +9,10 @@ import type {
 import { applyTaskSelection, logInfo, logWarn, pc } from '@xtarterize/core';
 import { Effect } from 'effect';
 
+import type { CliError, CliServices } from '@/runtime.js';
 import { type CommandSession, openSession } from '@/session.js';
 import { displayPlan } from '@/ui/plan-display.js';
-import { type PromptError, Prompter } from '@/ui/prompter.js';
+import { Prompter } from '@/ui/prompter.js';
 import { selectTasks } from '@/ui/select-menu.js';
 import { refineTaskChoices } from '@/ui/task-choices.js';
 import type { RuntimeContext } from '@/utils/runtime.js';
@@ -44,12 +45,6 @@ interface ResolveActionableTasksOptions {
   only?: string;
   skip?: string;
 }
-
-/** Error channel of an init/sync/add program. */
-export type RunCommandError = TaskError | BackupError | PromptError;
-
-/** Services a run-command program (init/sync) may require. */
-export type RunCommandServices = DepsInstaller | ProcessRunner | Prompter;
 
 function resolveActionableTasks(
   tasks: Array<Task>,
@@ -105,7 +100,7 @@ function refineAndApply(
   session: CommandSession,
   tasks: Array<Task>,
   args: RunCommandArgs
-): Effect.Effect<void, RunCommandError, RunCommandServices> {
+): Effect.Effect<void, CliError, CliServices> {
   return Effect.gen(function* () {
     const refined = yield* refineTaskChoices(
       tasks,
@@ -128,7 +123,7 @@ function promptAndApply(
   session: CommandSession,
   tasks: Array<Task>,
   { args, confirmMessage }: { args: RunCommandArgs; confirmMessage: string }
-): Effect.Effect<void, RunCommandError, RunCommandServices> {
+): Effect.Effect<void, CliError, CliServices> {
   return Effect.gen(function* () {
     const prompter = yield* Prompter;
     const action = yield* prompter.select({
@@ -175,7 +170,7 @@ function runSession(
   session: CommandSession,
   args: RunCommandArgs,
   options: RunCommandOptions
-): Effect.Effect<void, RunCommandError, RunCommandServices> {
+): Effect.Effect<void, CliError, CliServices> {
   return Effect.gen(function* () {
     const { profile, runtime, selection, statuses, tasks } = session;
     if (!runtime.quiet) {
@@ -220,7 +215,7 @@ function runSession(
 export function runCommand(
   args: RunCommandArgs,
   options: RunCommandOptions
-): Effect.Effect<void, RunCommandError, RunCommandServices> {
+): Effect.Effect<void, CliError, CliServices> {
   return Effect.gen(function* () {
     const session = yield* openSession(args, {
       orderTasks: options.orderTasks,

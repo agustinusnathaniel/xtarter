@@ -3,12 +3,8 @@ import { scoreTasks } from '@xtarterize/core';
 import type { Effect } from 'effect';
 
 import { cliCommand } from '@/commands/command.js';
-import {
-  type RunCommandArgs,
-  type RunCommandError,
-  type RunCommandServices,
-  runCommand,
-} from '@/commands/run-command.js';
+import { type RunCommandArgs, runCommand } from '@/commands/run-command.js';
+import type { CliError, CliServices } from '@/runtime.js';
 import { sharedRunArgs } from '@/utils/args.js';
 import type { RuntimeContext } from '@/utils/runtime.js';
 
@@ -69,7 +65,7 @@ function orderTasksByCompose(
 /** The `init` run pipeline as one program (open, compose, select, apply). */
 export function initProgram(
   args: InitCommandArgs
-): Effect.Effect<void, RunCommandError, RunCommandServices> {
+): Effect.Effect<void, CliError, CliServices> {
   return runCommand(args, {
     actionableStatuses: ['new', 'patch', 'conflict'],
     confirmMessage: 'How would you like to proceed?',
