@@ -48,7 +48,7 @@ export const releaseWorkflowTask = defineTask({
       filepath: '.github/workflows/release.yml',
       kind: 'text',
       policy: releaseWorkflowPolicy,
-      render: (profile, existing) => renderReleaseWorkflow(profile, existing),
+      render: (profile) => renderReleaseWorkflow(profile),
     },
   ],
 });

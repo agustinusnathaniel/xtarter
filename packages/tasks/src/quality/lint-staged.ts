@@ -42,8 +42,6 @@ export const lintStagedTask = defineTask({
       {
         filepath: '.lintstagedrc.json',
         kind: 'text',
-        // A missing config reported `patch`; an existing config was never
-        // compared or overwritten.
         policy: ({ before }) => (before === null ? 'patch' : 'skip'),
         render: () => content,
       },

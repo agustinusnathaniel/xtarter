@@ -29,8 +29,6 @@ export const czgTask = defineTask({
       CANDIDATES
     );
     const hasDep = hasInstalledDependency(pkg, 'czg');
-    // The packageJson factory reported `new` when the whole script was absent
-    // and the dependency was not installed, and `patch` once it was.
     const policy: TargetPolicy = () =>
       missingScripts.length > 0 && !hasDep ? 'new' : undefined;
     return [

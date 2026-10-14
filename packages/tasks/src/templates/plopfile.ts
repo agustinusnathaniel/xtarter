@@ -1,8 +1,70 @@
 import type { ProjectProfile } from '@xtarterize/core';
 
-import { type PlopTemplateKey, plopTemplates } from './plop/index.js';
+export const plopTemplates = {
+  'component.tsx.hbs': `export interface {{pascalCase name}}Props {
+  title: string
+}
 
-export { plopTemplates };
+export function {{pascalCase name}}({ title }: {{pascalCase name}}Props) {
+  return (
+    <section className="{{kebabCase name}}">
+      <h2>{title}</h2>
+    </section>
+  )
+}
+`,
+  'component.vue.hbs': `<script setup lang="ts">
+defineProps<{
+  title: string
+}>()
+</script>
+
+<template>
+  <section class="{{kebabCase name}}">
+    <h2>{{ title }}</h2>
+  </section>
+</template>
+`,
+  'hook.ts.hbs': `import { useMemo } from 'react'
+
+export function use{{pascalCase name}}() {
+  return useMemo(() => ({ ready: true }), [])
+}
+`,
+  'module.ts.hbs': `export async function {{camelCase name}}() {
+  return { ok: true }
+}
+`,
+  'page.tsx.hbs': `export default function {{pascalCase name}}Page() {
+  return <main>{{titleCase name}}</main>
+}
+`,
+  'screen.tsx.hbs': `import { Text, View } from 'react-native'
+
+export default function {{pascalCase name}}Screen() {
+  return (
+    <View>
+      <Text>{{titleCase name}}</Text>
+    </View>
+  )
+}
+`,
+  'util.test.ts.hbs': `import { describe, expect, it } from 'vitest'
+import { {{camelCase name}} } from './{{kebabCase name}}'
+
+describe('{{camelCase name}}', () => {
+  it('returns null by default', () => {
+    expect({{camelCase name}}()).toBeNull()
+  })
+})
+`,
+  'util.ts.hbs': `export function {{camelCase name}}() {
+  return null
+}
+`,
+};
+
+export type PlopTemplateKey = keyof typeof plopTemplates;
 
 interface PlopAction {
   path: string;
@@ -130,28 +192,17 @@ ${actions}
 export function getPlopTemplateFiles(
   profile: ProjectProfile
 ): Array<PlopTemplateKey> {
+  const seen = new Set<string>();
   const files: Array<PlopTemplateKey> = [];
-
-  if (profile.framework === 'vue') {
-    files.push('component.vue.hbs');
-  } else {
-    files.push('component.tsx.hbs');
+  for (const generator of buildGenerators(profile)) {
+    for (const item of generator.actions) {
+      const key = item.templateFile.replace(/^plop\//, '');
+      if (!seen.has(key)) {
+        seen.add(key);
+        files.push(key as PlopTemplateKey);
+      }
+    }
   }
-
-  files.push('util.ts.hbs', 'util.test.ts.hbs');
-
-  if (profile.framework === 'node') {
-    files.push('module.ts.hbs');
-  }
-
-  if (profile.framework === 'react-native') {
-    files.push('screen.tsx.hbs', 'hook.ts.hbs');
-  }
-
-  if (profile.framework === 'react') {
-    files.push('page.tsx.hbs', 'hook.ts.hbs');
-  }
-
   return files;
 }
 

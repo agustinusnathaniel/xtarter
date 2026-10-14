@@ -3,13 +3,10 @@ import { abortIfCancelled } from '@xtarterize/core/plain';
 
 const PROJECT_NAME_REGEX = /^[a-zA-Z0-9-_]+$/;
 
-export async function promptProjectName(
-  defaultValue?: string
-): Promise<string> {
+export async function promptProjectName(): Promise<string> {
   const result = await text({
-    defaultValue,
     message: 'What is your project named?',
-    placeholder: defaultValue || 'my-app',
+    placeholder: 'my-app',
     validate: (value) => {
       if (!value || value.trim().length === 0) {
         return 'Project name is required';

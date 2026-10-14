@@ -44,7 +44,6 @@ function isCompositeCommand(cmd: string): boolean {
   return extractCompositeTasks(cmd) !== null;
 }
 
-// Tool aliases - canonical tool name maps to known aliases
 const TOOL_ALIASES: Record<string, Array<string>> = {
   cleanup: ['knip', 'depcheck', 'npm-check-updates', 'ncu'],
   format: ['oxfmt', 'prettier'],
@@ -55,7 +54,6 @@ const TOOL_ALIASES: Record<string, Array<string>> = {
   typecheck: ['tsc'],
 };
 
-// For tools like biome/ultracite, these subcommands are equivalent
 const EQUIVALENT_SUBCOMMANDS: Record<string, Array<string>> = {
   biome: ['check', 'lint', 'format'],
   ultracite: ['check', 'fix'],

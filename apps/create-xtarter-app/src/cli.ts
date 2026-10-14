@@ -28,6 +28,7 @@ import {
   scaffoldProject,
 } from '@/scaffold';
 import type { PackageManager } from '@/types';
+import { PACKAGE_MANAGERS } from '@/types';
 
 // ── Argument definitions ──
 
@@ -66,7 +67,7 @@ const scaffoldArgs = {
   }),
   json: flag('Output scaffold result as JSON', { default: false }),
   name: positional('Project name (use "." for current directory)'),
-  pm: value('Package manager (pnpm|npm|bun|yarn)', { alias: 'p' }),
+  pm: value(`Package manager (${PACKAGE_MANAGERS.join('|')})`, { alias: 'p' }),
   quiet: flag('Suppress banners, progress output, and decorative text', {
     default: false,
   }),

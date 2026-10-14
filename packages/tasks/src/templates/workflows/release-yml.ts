@@ -116,10 +116,7 @@ ${renderSteps(steps, 6)}
 `;
 }
 
-export function renderReleaseWorkflow(
-  profile: ProjectProfile,
-  _existing: string | null
-): string {
+export function renderReleaseWorkflow(profile: ProjectProfile): string {
   if (profile.existing.changeset) {
     return renderChangesetWorkflow(profile);
   }

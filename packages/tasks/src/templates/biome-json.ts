@@ -16,7 +16,7 @@ function buildBiomeFilesConfig(): Record<string, unknown> {
   };
 }
 
-// Biome 2.5.9: only skipBlankLines is supported (skipComments not in schema); Oxlint supports both
+// Only skipBlankLines is supported (skipComments not in schema); Oxlint supports both
 function buildBiomeLinterRules(): Record<string, unknown> {
   return {
     complexity: {

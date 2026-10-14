@@ -1,14 +1,11 @@
 import { exec } from 'tinyexec';
 
-import type { PackageManager } from '@/types';
+import { PACKAGE_MANAGERS, type PackageManager } from '@/types';
 import { runStep } from '@/utils/run-step';
 
-const VALID_PACKAGE_MANAGERS: ReadonlySet<string> = new Set([
-  'pnpm',
-  'npm',
-  'bun',
-  'yarn',
-]);
+const VALID_PACKAGE_MANAGERS: ReadonlySet<PackageManager> = new Set(
+  PACKAGE_MANAGERS
+);
 
 export interface InstallOptions {
   packageManager: PackageManager;

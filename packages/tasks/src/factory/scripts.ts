@@ -38,7 +38,7 @@ export function filterMissingScripts(
   });
 }
 
-/** package.json scripts plus the facts the old packageJson status used. */
+/** package.json scripts plus the facts status needs. */
 export interface ScriptsState {
   existingScripts: ScriptsMap;
   hasExistingScripts: boolean;

@@ -20,17 +20,13 @@ export function renderOxlintTsConfig(profile: ProjectProfile): string {
     (p) => `import ${p} from "ultracite/oxlint/${p}"`
   );
 
-  const extendsArray = presets;
+  const envLine = getOxlintEnv(profile).node ? '\n  env: { node: true },' : '';
 
-  const env = getOxlintEnv(profile);
-  const envLine = env.node ? '\n  env: { node: true },' : '';
-
-  // Biome 2.5.9: only skipBlankLines is supported (skipComments not in schema); Oxlint supports both
   return `import { defineConfig } from "oxlint";
 ${importLines.join('\n')}
 
 export default defineConfig({
-  extends: [${extendsArray.join(', ')}],${envLine}
+  extends: [${presets.join(', ')}],${envLine}
   rules: {
     "no-console": ["error", { allow: ["info", "warn", "error"] }],
     "no-shadow": "warn",
@@ -53,7 +49,6 @@ export default defineConfig({
 }
 
 function buildOxlintBaseRules(): Record<string, unknown> {
-  // Biome 2.5.9: only skipBlankLines is supported (skipComments not in schema); Oxlint supports both
   return {
     '@typescript-eslint/array-type': ['error', { default: 'generic' }],
     '@typescript-eslint/consistent-type-imports': [

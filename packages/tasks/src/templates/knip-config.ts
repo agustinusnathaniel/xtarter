@@ -20,7 +20,7 @@ function getProjectGlob(profile: ProjectProfile): Array<string> {
 
 export function renderKnipConfig(
   profile: ProjectProfile,
-  format: 'ts' | 'js' = 'ts'
+  format: 'ts' | 'js'
 ): string {
   const entry = getEntryFiles(profile);
   const project = getProjectGlob(profile);

@@ -50,12 +50,8 @@ export const catVersionTask = defineTask({
     const hasVersionrc = await fileExists(resolvePath(cwd, VERSIONRC_FILEPATH));
     const allMissing =
       missingScripts.length === CANDIDATES.length && !hasVersionrc;
-    // The packageJson factory reported `new` only when every script and side
-    // file was missing and the dependency was not installed.
     const scriptsPolicy: TargetPolicy = () =>
       allMissing && !hasDep ? 'new' : undefined;
-    // Existing side files were never overwritten: content was never compared
-    // and only missing files were written.
     const filePolicy: TargetPolicy = ({ before }) => {
       if (before !== null) {
         return 'skip';

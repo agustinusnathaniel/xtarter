@@ -87,7 +87,7 @@ export const oxfmtTask = defineTask({
           return existing;
         }
 
-        return renderOxfmtTsConfig(_profile);
+        return renderOxfmtTsConfig();
       },
     },
   ],

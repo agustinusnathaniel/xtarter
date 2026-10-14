@@ -1,23 +1,30 @@
 import { select } from '@clack/prompts';
 import { abortIfCancelled } from '@xtarterize/core/plain';
 
-import type { PackageManager } from '@/types';
+import { PACKAGE_MANAGERS, type PackageManager } from '@/types';
 
-const packageManagerOptions = [
-  { hint: 'Fast, disk-efficient', label: 'pnpm (recommended)', value: 'pnpm' },
-  { hint: 'Bundled with Node.js', label: 'npm', value: 'npm' },
-  { hint: 'Ultra-fast', label: 'bun', value: 'bun' },
-  { hint: 'Classic choice', label: 'yarn', value: 'yarn' },
-];
+const PACKAGE_MANAGER_META: Record<
+  PackageManager,
+  { hint: string; label: string }
+> = {
+  bun: { hint: 'Ultra-fast', label: 'bun' },
+  npm: { hint: 'Bundled with Node.js', label: 'npm' },
+  pnpm: { hint: 'Fast, disk-efficient', label: 'pnpm (recommended)' },
+  yarn: { hint: 'Classic choice', label: 'yarn' },
+};
+
+const packageManagerOptions = PACKAGE_MANAGERS.map((value) => ({
+  ...PACKAGE_MANAGER_META[value],
+  value,
+}));
 
 export async function promptPackageManager(
   selectedPm?: PackageManager
 ): Promise<PackageManager> {
   if (selectedPm) {
-    const validPms = packageManagerOptions.map((o) => o.value);
-    if (!validPms.includes(selectedPm)) {
+    if (!(PACKAGE_MANAGERS as ReadonlyArray<string>).includes(selectedPm)) {
       throw new Error(
-        `Unknown package manager "${selectedPm}". Valid options: ${validPms.join(', ')}`
+        `Unknown package manager "${selectedPm}". Valid options: ${PACKAGE_MANAGERS.join(', ')}`
       );
     }
     return selectedPm;
