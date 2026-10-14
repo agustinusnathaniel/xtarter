@@ -4,6 +4,7 @@ import { Effect } from 'effect';
 import type { CliError, CliServices } from '@/runtime.js';
 import type { CommandSession } from '@/session.js';
 import { displayDiffs } from '@/ui/diff-display.js';
+import { mergeFileDiffs } from '@/ui/merge-file-diffs.js';
 import { Prompter } from '@/ui/prompter.js';
 import { selectTasksGrouped } from '@/ui/select-menu.js';
 import { refineTaskChoices } from '@/ui/task-choices.js';
@@ -28,7 +29,10 @@ function confirmSelected(options: {
         tasks: [entry.task],
       });
       if (!jsonMode) {
-        displayDiffs(plan.entries[0]?.diffs ?? [], session.runtime.format);
+        displayDiffs(
+          mergeFileDiffs(plan.entries[0]?.diffs ?? []),
+          session.runtime.format
+        );
       }
       const proceed = yield* prompter.confirm({
         message: `Apply ${entry.task.label}?`,

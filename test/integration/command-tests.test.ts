@@ -53,6 +53,22 @@ const OUTDATED_LINT_FILES: ProjectFileMap = {
   'tsconfig.json': '{"compilerOptions":{"strict":false}}\n',
 };
 
+/** Run `fn` as an interactive (non-CI) terminal, restoring env and exit code. */
+async function asInteractive(fn: () => Promise<void>): Promise<void> {
+  const previousCi = process.env.CI;
+  process.env.CI = 'false';
+  try {
+    await fn();
+  } finally {
+    if (previousCi === undefined) {
+      delete process.env.CI;
+    } else {
+      process.env.CI = previousCi;
+    }
+    process.exitCode = 0;
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Tests
 // ---------------------------------------------------------------------------
@@ -290,22 +306,20 @@ describe('add command', () => {
   }, 60_000);
 
   test('interactive single-task add installs only the chosen skill', async () => {
-    await withProject(MINIMAL_FILES, async ({ cwd }) => {
-      const previousCi = process.env.CI;
-      process.env.CI = 'false';
-      const installer = recordingDepsInstaller();
-      const runner = recordingProcessRunner();
-      const prompter = createScriptedPrompter({
-        confirms: [true],
-        groupMultiselects: [['opensrc']],
-        selects: ['choose'],
-      });
-      const layer = Layer.mergeAll(
-        installer.layer,
-        runner.layer,
-        Layer.succeed(Prompter, prompter)
-      );
-      try {
+    await withProject(MINIMAL_FILES, ({ cwd }) =>
+      asInteractive(async () => {
+        const installer = recordingDepsInstaller();
+        const runner = recordingProcessRunner();
+        const prompter = createScriptedPrompter({
+          confirms: [true],
+          groupMultiselects: [['opensrc']],
+          selects: ['choose'],
+        });
+        const layer = Layer.mergeAll(
+          installer.layer,
+          runner.layer,
+          Layer.succeed(Prompter, prompter)
+        );
         await runWith(
           layer,
           addProgram({ cwd, taskId: 'agent/skills-install' } as never)
@@ -317,15 +331,8 @@ describe('add command', () => {
           .join('\n');
         expect(joined).toContain('--skill opensrc');
         expect(joined).not.toContain('grill-me');
-      } finally {
-        if (previousCi === undefined) {
-          delete process.env.CI;
-        } else {
-          process.env.CI = previousCi;
-        }
-        process.exitCode = 0;
-      }
-    });
+      })
+    );
   }, 60_000);
 
   test('handles invalid task ID gracefully', async () => {
@@ -340,6 +347,35 @@ describe('add command', () => {
         process.exitCode = 0;
       }
     });
+  });
+});
+
+describe('add command', () => {
+  test('single-task add previews the hunk it asks to apply', async () => {
+    const tsconfig = '{\n  "compilerOptions": {\n    "strict": true\n  }\n}\n';
+    await withProject(
+      { ...MINIMAL_FILES, 'tsconfig.json': tsconfig },
+      ({ cwd }) =>
+        asInteractive(async () => {
+          // Decline, so the preview is the only thing the user sees.
+          const prompter = createScriptedPrompter({ confirms: [false] });
+          const { logs } = await captureConsole(() =>
+            runWith(
+              Layer.succeed(Prompter, prompter),
+              addProgram({ cwd, taskId: 'ts/incremental' } as never)
+            )
+          );
+          const output = logs.join('\n');
+
+          expect(output).toContain('--- a/tsconfig.json');
+          expect(output).toMatch(/@@ .* @@/);
+          expect(output).toContain('"incremental": true');
+          expect(output).toContain('+3');
+          await expect(
+            fs.readFile(path.join(cwd, 'tsconfig.json'), 'utf-8')
+          ).resolves.toBe(tsconfig);
+        })
+    );
   });
 });
 
