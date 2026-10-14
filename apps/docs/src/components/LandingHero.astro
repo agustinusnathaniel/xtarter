@@ -10,10 +10,27 @@ declare global {
     }
   }
 }
-// The three product entry routes use custom heroes. Other splash pages
-// keep Starlight's default hero and frontmatter behavior.
+// Targeted Starlight Hero override for the three docs landing routes.
+// For every other page it renders Starlight's default Hero unchanged, so
+// hero frontmatter on non-target routes (404, future splash pages) keeps
+// working. The `.hero` class and `<h1 id="_top" data-page-title>` are
+// preserved so the existing tracking and page-title behavior stay intact.
+//
+// Each route owns one dominant charcoal artifact, with a different shape:
+//   home   -> forked command strip (both entry commands)
+//   xtz    -> the conformance-plan terminal output (TerminalDemo)
+//   CXA    -> a narrow template-selection prompt (static markup)
+// The artifacts are decorative by design and aria-hidden; their content is
+// restated in visible page copy so assistive tech gets the same information.
+//
+// Round 2 ("terminal takeover"): every splash hero carries `.xt-hero-dark`,
+// inverting the whole hero canvas onto the term-token charcoal family
+// (styling lives in global.css). Ghost actions use `.xt-btn-ghost-dark`
+// because paper-token ghost colors fail contrast on charcoal. Home's h1 is
+// split into two explicit lines with the second sentence wrapped in
+// `.xt-h1-accent`. Command lines end in a `.xt-cursor` blinking block
+// (aria-hidden; frozen by the prefers-reduced-motion kill switch).
 import DefaultHero from '@astrojs/starlight/components/Hero.astro'
-import HomeHero from './HomeHero.astro'
 import TerminalDemo from './TerminalDemo.astro'
 import { TEMPLATE_CATALOG } from '@/data/template-catalog'
 
@@ -29,16 +46,62 @@ const isCxa = entry.id === 'create-xtarter-app' || path === '/create-xtarter-app
   !isHome && !isXtz && !isCxa ? (
     <DefaultHero />
   ) : isHome ? (
-    <HomeHero />
+    <div class="hero xt-hero xt-hero-dark xt-hero-home">
+      <div class="xt-hero-grid">
+        <div class="xt-hero-copy">
+          <p class="xt-eyebrow">xtarter &middot; two tools, one standard</p>
+          <h1 id="_top" data-page-title
+            ><span class="xt-h1-line">Start conformant.</span>
+            <span class="xt-h1-line xt-h1-accent">Stay conformant.</span></h1
+          >
+          <p class="xt-hero-lede">
+            Scaffold new JavaScript and TypeScript projects with
+            create-xtarter-app, or bring existing repos up to standard with
+            xtarterize. Both give you Biome, strict TypeScript, CI, and editor
+            configs.
+          </p>
+          <div class="xt-hero-actions">
+            <a
+              class="xt-btn xt-btn-primary"
+              href="/create-xtarter-app/"
+              data-umami-event="hero_lane_click"
+              data-umami-event-product="create-xtarter-app"
+              >Start with a template</a
+            >
+            <a
+              class="xt-btn xt-btn-ghost-dark"
+              href="/xtarterize/"
+              data-umami-event="hero_lane_click"
+              data-umami-event-product="xtarterize"
+              >Conform an existing repo</a
+            >
+          </div>
+        </div>
+        <div class="xt-fork" aria-hidden="true" role="presentation">
+          <div class="xt-fork-row">
+            <span class="xt-fork-branch">├─</span>
+            <span class="xt-fork-prompt">$</span>
+            <code class="xt-fork-cmd">pnpm create xtarter-app@latest</code>
+            <span class="xt-cursor" aria-hidden="true"></span>
+          </div>
+          <div class="xt-fork-row">
+            <span class="xt-fork-branch">└─</span>
+            <span class="xt-fork-prompt">$</span>
+            <code class="xt-fork-cmd">pnpx xtarterize@latest init</code>
+            <span class="xt-cursor" aria-hidden="true"></span>
+          </div>
+        </div>
+      </div>
+    </div>
   ) : isXtz ? (
     <div class="hero xt-hero xt-hero-dark xt-hero-xtz">
       <div class="xt-hero-grid">
         <div class="xt-hero-copy">
-          <p class="xt-eyebrow">xtarterize</p>
-          <h1 id="_top" data-page-title>Bring your project up to standard.</h1>
+          <p class="xt-eyebrow">xtarterize &middot; conformance CLI</p>
+          <h1 id="_top" data-page-title>The conformance CLI for JavaScript &amp; TypeScript</h1>
           <p class="xt-hero-lede">
-            Detects your JavaScript or TypeScript stack, previews configuration changes, and asks
-            before applying them.
+            Detects your stack, validates your configs, and writes nothing
+            without your approval.
           </p>
           <div class="xt-hero-actions">
             <a class="xt-btn xt-btn-primary" href="/xtarterize/getting-started/">Conform your project</a>
@@ -52,7 +115,7 @@ const isCxa = entry.id === 'create-xtarter-app' || path === '/create-xtarter-app
     <div class="hero xt-hero xt-hero-dark xt-hero-cxa">
       <div class="xt-hero-grid">
         <div class="xt-hero-copy">
-          <p class="xt-eyebrow">create-xtarter-app</p>
+          <p class="xt-eyebrow">create-xtarter-app &middot; scaffolding CLI</p>
           <h1 id="_top" data-page-title>New project, fully configured</h1>
           <p class="xt-hero-lede">
             Pick a template, run one command, and get linting, type checking,

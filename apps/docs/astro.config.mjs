@@ -92,7 +92,6 @@ export default defineConfig({
     starlight({
       components: {
         Head: './src/components/StarlightHead.astro',
-        Header: './src/components/DocsHeader.astro',
         Hero: './src/components/LandingHero.astro',
       },
       // favicon: '/favicon.svg',
