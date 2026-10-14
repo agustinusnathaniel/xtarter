@@ -31,22 +31,22 @@
     "version-packages": "changeset version"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.5.9",
-    "@changesets/changelog-github": "^1.0.0",
-    "@changesets/cli": "^3.0.1",
+    "@biomejs/biome": "2.5.15",
+    "@changesets/changelog-github": "^1.0.1",
+    "@changesets/cli": "^3.0.3",
     "@types/node": "catalog:",
     "all-contributors-cli": "^6.26.1",
     "effect": "catalog:",
-    "turbo": "^2.10.11",
-    "ultracite": "7.10.7",
+    "turbo": "^2.11.7",
+    "ultracite": "8.0.0",
     "vite": "catalog:",
     "vite-plus": "catalog:"
   },
-  "packageManager": "pnpm@12.8.1",
+  "packageManager": "pnpm@12.11.2",
   "devEngines": {
     "runtime": {
       "name": "node",
-      "version": "24.16.0",
+      "version": "24.21.0",
       "onFail": "download"
     }
   }

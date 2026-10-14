@@ -63,28 +63,26 @@ function asPromptError(cause: unknown): PromptError {
   });
 }
 
-async function unwrapCancel<T>(answer: Promise<T | symbol>): Promise<T | null> {
-  const result = await answer;
-  return isCancel(result) ? null : result;
-}
-
 function toEffect<T>(
-  answer: Promise<T | symbol>
-): Effect.Effect<T | null, PromptError> {
+  prompt: () => Promise<T>
+): Effect.Effect<Exclude<T, symbol> | null, PromptError> {
   return Effect.tryPromise({
     catch: asPromptError,
-    try: () => unwrapCancel(answer),
+    try: async () => {
+      const result = await prompt();
+      return isCancel(result) ? null : (result as Exclude<T, symbol>);
+    },
   });
 }
 
 function clackPrompter(): PrompterShape {
   return {
-    confirm: ({ message }) => toEffect(confirm({ message })),
-    groupMultiselect: (options) => toEffect(groupMultiselect(options)),
+    confirm: ({ message }) => toEffect(() => confirm({ message })),
+    groupMultiselect: (options) => toEffect(() => groupMultiselect(options)),
     multiselect: <Value>(options: MultiSelectPromptOptions<Value>) =>
-      toEffect(multiselect<Value>(options)),
+      toEffect(() => multiselect<Value>(options)),
     select: <Value>(options: SelectPromptOptions<Value>) =>
-      toEffect(select<Value>(options)),
+      toEffect(() => select<Value>(options)),
   };
 }
 
