@@ -1,16 +1,13 @@
+import fs from 'node:fs/promises';
 import { dirname, relative } from 'pathe';
 
 import { fileExists, resolvePath } from '@/utils/fs.js';
-import { isPnpmWorkspace } from '@/utils/pkg.js';
 
 import type { MonorepoDetection } from './types.js';
 
-const MONOREPO_MARKERS = [
-  'pnpm-workspace.yaml',
-  'turbo.json',
-  'nx.json',
-  'lerna.json',
-];
+const MONOREPO_MARKERS = ['turbo.json', 'nx.json', 'lerna.json'];
+/** A top-level `packages:` key, optionally quoted. */
+const PNPM_PACKAGES_KEY = /^(?:packages|'packages'|"packages")[ \t]*:/m;
 const WORKSPACE_DIR_NAMES = ['packages', 'apps', 'services'];
 const WORKSPACE_PACKAGE_DIRS = WORKSPACE_DIR_NAMES.map((dir) => `${dir}/`);
 
@@ -24,10 +21,30 @@ async function hasWorkspaceDirs(dir: string): Promise<boolean> {
   return results.filter(Boolean).length >= MIN_WORKSPACE_DIRS;
 }
 
+/**
+ * pnpm 10 keeps settings such as `onlyBuiltDependencies` in
+ * pnpm-workspace.yaml, so single-package projects often have one (and the
+ * `workspace/pnpm-workspace` task creates a placeholder). Only a file that
+ * declares `packages:` marks a workspace; counting any file would flip the
+ * profile to a monorepo after the first run and break idempotency.
+ */
+async function declaresPnpmPackages(dir: string): Promise<boolean> {
+  try {
+    const content = await fs.readFile(
+      resolvePath(dir, 'pnpm-workspace.yaml'),
+      'utf-8'
+    );
+    return PNPM_PACKAGES_KEY.test(content);
+  } catch {
+    return false;
+  }
+}
+
 async function hasMonorepoMarkers(dir: string): Promise<boolean> {
-  const results = await Promise.all(
-    MONOREPO_MARKERS.map((m) => fileExists(resolvePath(dir, m)))
-  );
+  const results = await Promise.all([
+    declaresPnpmPackages(dir),
+    ...MONOREPO_MARKERS.map((m) => fileExists(resolvePath(dir, m))),
+  ]);
   if (results.some(Boolean)) {
     return true;
   }
@@ -99,7 +116,7 @@ export async function detectMonorepo(cwd: string): Promise<MonorepoDetection> {
     hasLernaJson,
     hasWorkspaceDirsAtRoot,
   ] = await Promise.all([
-    isPnpmWorkspace(cwd),
+    declaresPnpmPackages(cwd),
     fileExists(resolvePath(cwd, 'turbo.json')),
     fileExists(resolvePath(cwd, 'nx.json')),
     fileExists(resolvePath(cwd, 'lerna.json')),

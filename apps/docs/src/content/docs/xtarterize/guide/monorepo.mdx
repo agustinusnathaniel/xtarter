@@ -9,7 +9,7 @@ xtarterize detects monorepos and filters tasks by scope, so the offered list mat
 
 xtarterize looks for these markers at or above the current directory:
 
-- `pnpm-workspace.yaml`
+- `pnpm-workspace.yaml` with a `packages:` key (a settings-only file, such as one holding `onlyBuiltDependencies`, does not count)
 - `turbo.json`
 - `nx.json`
 - `lerna.json`

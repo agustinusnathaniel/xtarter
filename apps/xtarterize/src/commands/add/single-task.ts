@@ -5,6 +5,7 @@ import { Effect } from 'effect';
 import type { CliError, CliServices } from '@/runtime.js';
 import type { CommandSession, SessionTaskOutcome } from '@/session.js';
 import { displayDiffs } from '@/ui/diff-display.js';
+import { mergeFileDiffs } from '@/ui/merge-file-diffs.js';
 import { type PromptError, Prompter } from '@/ui/prompter.js';
 import { refineTaskChoices } from '@/ui/task-choices.js';
 
@@ -105,7 +106,12 @@ function executeTask(options: {
 
     const plan = yield* session.plan({ includeConflicts, tasks: [effective] });
     if (!runtime.quiet) {
-      displayDiffs(plan.entries[0]?.diffs ?? [], runtime.format);
+      // Plan diffs are raw before/after pairs; merging adds the stats and
+      // hunks the preview renders, matching `diff` and `--dry-run`.
+      displayDiffs(
+        mergeFileDiffs(plan.entries[0]?.diffs ?? []),
+        runtime.format
+      );
       const proceed = yield* confirmApply();
       if (proceed === null) {
         session.reportOutcome(session.cancelled());
