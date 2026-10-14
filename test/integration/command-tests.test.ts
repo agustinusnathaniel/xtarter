@@ -2,6 +2,7 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { captureConsole } from '@test/helpers/console.js';
 import { type ProjectFileMap, withProject } from '@test/helpers/project.js';
+import { createScriptedPrompter } from '@test/helpers/prompter.js';
 import {
   recordingDepsInstaller,
   recordingProcessRunner,
@@ -283,6 +284,45 @@ describe('add command', () => {
         // invalid-task-ID test below.
         expect(pkg.scripts?.commit).toBe('czg');
       } finally {
+        process.exitCode = 0;
+      }
+    });
+  }, 60_000);
+
+  test('interactive single-task add installs only the chosen skill', async () => {
+    await withProject(MINIMAL_FILES, async ({ cwd }) => {
+      const previousCi = process.env.CI;
+      process.env.CI = 'false';
+      const installer = recordingDepsInstaller();
+      const runner = recordingProcessRunner();
+      const prompter = createScriptedPrompter({
+        confirms: [true],
+        groupMultiselects: [['opensrc']],
+        selects: ['choose'],
+      });
+      const layer = Layer.mergeAll(
+        installer.layer,
+        runner.layer,
+        Layer.succeed(Prompter, prompter)
+      );
+      try {
+        await runWith(
+          layer,
+          addProgram({ cwd, taskId: 'agent/skills-install' } as never)
+        );
+
+        expect(runner.calls.length).toBe(1);
+        const joined = runner.calls
+          .map(([command, args]) => [command, ...(args ?? [])].join(' '))
+          .join('\n');
+        expect(joined).toContain('--skill opensrc');
+        expect(joined).not.toContain('grill-me');
+      } finally {
+        if (previousCi === undefined) {
+          delete process.env.CI;
+        } else {
+          process.env.CI = previousCi;
+        }
         process.exitCode = 0;
       }
     });

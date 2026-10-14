@@ -2,6 +2,8 @@ export type {
   DiffHunk,
   FileDiff,
   Task,
+  TaskChoiceOption,
+  TaskChoices,
   TaskDep,
   TaskScope,
   TaskSearchMeta,

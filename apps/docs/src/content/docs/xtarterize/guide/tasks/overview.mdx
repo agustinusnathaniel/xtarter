@@ -95,6 +95,8 @@ In monorepos, tasks are filtered by scope: root tasks appear only at the monorep
 
 The skills task selects skills using detected project capabilities. Web UI projects receive interface and motion guidance from `emilkowalski/skills`, `jakubkrehel/skills`, and `addyosmani/agent-skills`; Expo and React Native projects receive `animate-expo`, and Sonner projects receive `ask-sonner`. Test runner dependencies select testing skills, while API, auth, or database dependencies select security guidance from `cloudflare/security-audit-skill` and `addyosmani/agent-skills`. Detected Git, GitHub workflows, and agent instructions select matching development workflow skills. New candidates that require an explicit user request or an undetected tool are left for manual installation. Installing `security-audit` does not start an audit; that workflow still requires an explicit request.
 
+In interactive runs, the skills task asks how to proceed: **Install all** installs every missing applicable skill, **Choose…** shows the missing skills grouped by category so individual skills can be picked (selecting a group header toggles the whole group), and **Skip** leaves the task out. Runs with `--yes`, JSON output, or without a terminal install all applicable skills.
+
 ## Scripts
 
 | Task | What it does |

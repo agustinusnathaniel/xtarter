@@ -461,6 +461,33 @@ describe('resolveSkillsExecutor', () => {
   });
 });
 
+describe('skillsInstallTask choices', () => {
+  test('groups missing skills and restricts apply to the chosen skill', async () => {
+    const cwd = fixtureDir('react-vite-tailwind');
+    const profile = await fixtureProfile('react-vite-tailwind');
+    const choices = skillsInstallTask.choices;
+    if (!choices) {
+      throw new Error('expected skillsInstallTask to offer choices');
+    }
+
+    const grouped = await run(choices.options(cwd, profile));
+    const reactValues = (grouped.React ?? []).map((option) => option.value);
+    expect(reactValues).toContain('vercel-react-best-practices');
+
+    const restricted = choices.restrict(['vercel-react-best-practices']);
+    await expect(run(restricted.check(cwd, profile))).resolves.toBe('new');
+
+    runner.reset();
+    await runWith(runner.layer, restricted.apply(cwd, profile));
+    const commands = runner.calls
+      .map(([command, args]) => [command, ...(args ?? [])].join(' '))
+      .join('\n');
+    expect(commands).toContain('--skill vercel-react-best-practices');
+    expect(commands).not.toContain('vercel-composition-patterns');
+    expect(commands).not.toContain('--skill react-dev');
+  });
+});
+
 describe('skillsInstallTask executor selection', () => {
   for (const executorCase of executorCases) {
     test(`runs the skills CLI through ${executorCase.name}`, async () => {
