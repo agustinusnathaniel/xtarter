@@ -4,7 +4,7 @@ import { Effect } from 'effect';
 
 import { cliCommand } from '@/commands/command.js';
 import { runCliProgram } from '@/runtime.js';
-import { openSession } from '@/session.js';
+import { openRuntime } from '@/session.js';
 import { formatDoctorResult } from '@/ui/json-formatter.js';
 import { commonArgs } from '@/utils/args.js';
 import { diagnosticIcon } from '@/utils/display.js';
@@ -23,16 +23,15 @@ export const doctorCommand = cliCommand({
   program: async (args) => {
     // Doctor opts out of fail-fast: an invalid project still gets diagnosed
     // instead of exiting before the checks run.
-    const session = await runCliProgram(
-      openSession(args, {
+    const runtime = await runCliProgram(
+      openRuntime(args, {
         allowInvalidProject: true,
-        resolveTasks: false,
       })
     );
-    if (!session) {
+    if (!runtime) {
       return;
     }
-    const { cwd, json, quiet } = session.runtime;
+    const { cwd, format, quiet } = runtime;
     const verbose = args.verbose === true;
     const s = createSpinner(quiet);
     s.start('Running diagnostics...');
@@ -54,7 +53,7 @@ export const doctorCommand = cliCommand({
     if (
       formatDoctorOutput({
         allDiagnostics,
-        flags: { json, quiet, verbose },
+        flags: { json: format === 'json', quiet, verbose },
         summary,
       })
     ) {

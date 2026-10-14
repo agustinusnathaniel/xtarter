@@ -38,7 +38,7 @@ interface QueryJson {
   type: string;
 }
 
-/** `query` takes `--json` (not `--format json`), which is what sets `ctx.json`. */
+/** `query` takes `--json` (not `--format json`), which is what selects the JSON runtime format. */
 async function runQueryJson(args: {
   cwd: string;
   limit?: string;

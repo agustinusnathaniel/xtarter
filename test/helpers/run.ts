@@ -1,3 +1,4 @@
+import type { CliServices } from '@xtarterize/app/runtime.js';
 import { runCliProgram } from '@xtarterize/app/runtime.js';
 import { Prompter, type PrompterShape } from '@xtarterize/app/ui/prompter.js';
 import type {
@@ -10,7 +11,7 @@ import { DepsInstaller, ProcessRunner } from '@xtarterize/core';
 import { Effect, Layer } from 'effect';
 
 /** Services every app program may require at the CLI edge. */
-export type TestServices = DepsInstaller | ProcessRunner | Prompter;
+export type TestServices = CliServices;
 
 /** Real services wired the way the app runtime provides them. */
 export const TestLayer = Layer.mergeAll(

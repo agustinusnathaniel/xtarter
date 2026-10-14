@@ -5,7 +5,6 @@ import type {
   BackupError,
   DepsInstaller,
   FileDiff,
-  PreflightError,
   ProcessRunner,
   ProjectProfile,
   ResolveTiming,
@@ -27,7 +26,6 @@ import { getAllTasks } from '@xtarterize/tasks';
 import { Effect } from 'effect';
 
 import { mergeFileDiffs } from '@/ui/merge-file-diffs.js';
-import type { PromptError, Prompter } from '@/ui/prompter.js';
 import { reportPreflightFailure, reportSessionOutcome } from '@/ui/reporter.js';
 import {
   type RuntimeArgs,
@@ -69,23 +67,11 @@ export interface SessionIdleDetails {
   taskStatus?: SessionTaskOutcome;
 }
 
-export interface SessionOpenFailure {
-  errors: Array<PreflightError>;
-  ok: false;
-  runtime: RuntimeContext;
-}
-
-export type SessionOpenResult =
-  | { ok: true; session: CommandSession }
-  | SessionOpenFailure;
-
 export interface SessionOpenOptions {
   /** Keep the session usable when preflight fails (`doctor` opts out). */
   allowInvalidProject?: boolean;
   /** Transform the discovered tasks before status resolution (compose order). */
   orderTasks?: (tasks: Array<Task>, runtime: RuntimeContext) => Array<Task>;
-  /** Skip task discovery and resolution for runtime-only commands. */
-  resolveTasks?: boolean;
 }
 
 export interface SessionPlanOptions {
@@ -109,8 +95,7 @@ export interface SessionOutcomeOptions extends SessionApplyOptions {
 interface SessionContext {
   allTasks: Array<Task>;
   checkErrors: Map<string, string>;
-  /** Null only for runtime-only sessions (`resolveTasks: false`). */
-  profile: ProjectProfile | null;
+  profile: ProjectProfile;
   runtime: RuntimeContext;
   selection: TaskSelectionConfig;
   statuses: Map<string, TaskStatus>;
@@ -151,17 +136,17 @@ export class CommandSession {
   readonly allTasks: Array<Task>;
   /** Per-task check failures collected during status resolution. */
   readonly checkErrors: Map<string, string>;
+  readonly profile: ProjectProfile;
   readonly runtime: RuntimeContext;
   readonly selection: TaskSelectionConfig;
   readonly statuses: Map<string, TaskStatus>;
   readonly tasks: Array<Task>;
   readonly timing: ResolveTiming;
-  private readonly profileValue: ProjectProfile | null;
 
   private constructor(context: SessionContext) {
     this.allTasks = context.allTasks;
     this.checkErrors = context.checkErrors;
-    this.profileValue = context.profile;
+    this.profile = context.profile;
     this.runtime = context.runtime;
     this.selection = context.selection;
     this.statuses = context.statuses;
@@ -169,68 +154,26 @@ export class CommandSession {
     this.timing = context.timing;
   }
 
-  static open(
-    args: RuntimeArgs,
-    options: SessionOpenOptions = {}
-  ): Effect.Effect<
-    SessionOpenResult,
-    TaskError | PromptError,
-    DepsInstaller | ProcessRunner | Prompter
-  > {
+  /** Discover and resolve tasks for an already opened runtime. */
+  static resolve(
+    runtime: RuntimeContext,
+    orderTasks: SessionOpenOptions['orderTasks']
+  ): Effect.Effect<CommandSession, TaskError, ProcessRunner> {
     return Effect.gen(function* () {
-      const runtime = resolveRuntimeContext(args);
-      yield* toTaskEffect('ensure-gitignore', () =>
-        ensureXtarterizeGitignore(runtime.cwd)
-      );
-      const preflight = yield* toTaskEffect('preflight', () =>
-        runPreflight(runtime.cwd)
-      );
-      if (!(preflight.valid || options.allowInvalidProject)) {
-        return { errors: preflight.errors, ok: false as const, runtime };
-      }
-
-      if (options.resolveTasks === false) {
-        return {
-          ok: true as const,
-          session: new CommandSession({
-            allTasks: [],
-            checkErrors: new Map(),
-            profile: null,
-            runtime,
-            selection: { only: [], skip: [] },
-            statuses: new Map(),
-            tasks: [],
-            timing: { detectionMs: 0, resolutionMs: 0, resolutionSumMs: 0 },
-          }),
-        };
-      }
-
       const discovered = getAllTasks();
-      const tasks = options.orderTasks
-        ? options.orderTasks(discovered, runtime)
-        : discovered;
-      const {
-        checkErrors,
-        profile,
-        tasks: resolvedTasks,
-        statuses,
-        timing,
-      } = yield* resolveProjectTasks(runtime.cwd, tasks);
+      const tasks = orderTasks ? orderTasks(discovered, runtime) : discovered;
+      const resolved = yield* resolveProjectTasks(runtime.cwd, tasks);
       const selection = yield* loadSelectionConfig(runtime.cwd);
-
-      return {
-        ok: true as const,
-        session: new CommandSession({
-          allTasks: tasks,
-          checkErrors,
-          profile,
-          runtime,
-          selection,
-          statuses,
-          tasks: resolvedTasks,
-          timing,
-        }),
-      };
+      return new CommandSession({
+        allTasks: tasks,
+        checkErrors: resolved.checkErrors,
+        profile: resolved.profile,
+        runtime,
+        selection,
+        statuses: resolved.statuses,
+        tasks: resolved.tasks,
+        timing: resolved.timing,
+      });
     });
   }
 
@@ -239,13 +182,6 @@ export class CommandSession {
     return [...this.checkErrors].map(
       ([taskId, detail]) => `Failed to check ${taskId}: ${detail}`
     );
-  }
-
-  get profile(): ProjectProfile {
-    if (!this.profileValue) {
-      throw new Error('Session was opened without task resolution');
-    }
-    return this.profileValue;
   }
 
   plan(
@@ -373,27 +309,46 @@ export class CommandSession {
 }
 
 /**
- * Open a session for a command, rendering a structured preflight failure as
- * terminal or JSON text and marking the process as failed when it is invalid.
+ * Open a session for a command: the runtime (see `openRuntime`), then task
+ * discovery and status resolution. Returns null after a reported preflight
+ * failure.
  */
 export function openSession(
   args: RuntimeArgs,
   options: SessionOpenOptions = {}
-): Effect.Effect<
-  CommandSession | null,
-  TaskError | PromptError,
-  DepsInstaller | ProcessRunner | Prompter
-> {
+): Effect.Effect<CommandSession | null, TaskError, ProcessRunner> {
   return Effect.gen(function* () {
-    const opened = yield* CommandSession.open(args, options);
-    if (opened.ok) {
-      return opened.session;
-    }
+    const runtime = yield* openRuntime(args, options);
+    return runtime
+      ? yield* CommandSession.resolve(runtime, options.orderTasks)
+      : null;
+  });
+}
 
-    yield* Effect.sync(() => {
-      reportPreflightFailure(opened.errors, opened.runtime.format);
-      process.exitCode = 1;
-    });
-    return null;
+/**
+ * Open the runtime context: ensure the gitignore entry and run preflight,
+ * rendering a failure as terminal or JSON text and failing the process.
+ * Commands that need no task state (`restore`, `undo`, `doctor`) stop here.
+ */
+export function openRuntime(
+  args: RuntimeArgs,
+  options: Pick<SessionOpenOptions, 'allowInvalidProject'> = {}
+): Effect.Effect<RuntimeContext | null, TaskError, ProcessRunner> {
+  return Effect.gen(function* () {
+    const runtime = resolveRuntimeContext(args);
+    yield* toTaskEffect('ensure-gitignore', () =>
+      ensureXtarterizeGitignore(runtime.cwd)
+    );
+    const preflight = yield* toTaskEffect('preflight', () =>
+      runPreflight(runtime.cwd)
+    );
+    if (!(preflight.valid || options.allowInvalidProject)) {
+      yield* Effect.sync(() => {
+        reportPreflightFailure(preflight.errors, runtime.format);
+        process.exitCode = 1;
+      });
+      return null;
+    }
+    return runtime;
   });
 }

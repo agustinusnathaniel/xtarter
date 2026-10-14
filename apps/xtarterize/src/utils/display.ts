@@ -30,8 +30,22 @@ export function defaultSelectedIds(
   entries: Array<{ status?: TaskStatus; task: { id: string } }>
 ): Array<string> {
   return entries
-    .filter((entry) => entry.status === 'new' || entry.status === 'patch')
+    .filter((entry) => isActionableStatus(entry.status, false))
     .map((entry) => entry.task.id);
+}
+
+/**
+ * Whether a task status selects the task for an apply run: new files and
+ * updates always apply, conflicts apply only when opted in.
+ */
+export function isActionableStatus(
+  status: TaskStatus | undefined,
+  includeConflicts: boolean
+): boolean {
+  if (status === 'new' || status === 'patch') {
+    return true;
+  }
+  return includeConflicts && status === 'conflict';
 }
 
 export function statusHint(status?: TaskStatus): string {

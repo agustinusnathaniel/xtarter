@@ -1,3 +1,4 @@
+import type { BackupError, TaskError } from '@xtarterize/core';
 import {
   DepsInstaller,
   failureDetail,
@@ -6,7 +7,7 @@ import {
 } from '@xtarterize/core';
 import { Cause, Effect, Exit, Layer } from 'effect';
 
-import { Prompter } from '@/ui/prompter.js';
+import { type PromptError, Prompter } from '@/ui/prompter.js';
 
 /** The production wiring for every CLI command program. */
 export const AppLayer = Layer.mergeAll(
@@ -14,6 +15,12 @@ export const AppLayer = Layer.mergeAll(
   ProcessRunner.layer,
   Prompter.layer
 );
+
+/** Error channel shared by every CLI command program. */
+export type CliError = TaskError | BackupError | PromptError;
+
+/** Services every CLI command program may require at the edge. */
+export type CliServices = DepsInstaller | ProcessRunner | Prompter;
 
 const cliAbortController = new AbortController();
 
@@ -31,7 +38,7 @@ export function abortCliProgram(): void {
  * process exit code at 0 (Ctrl+C behavior).
  */
 export async function runCliProgram<A, E>(
-  program: Effect.Effect<A, E, DepsInstaller | ProcessRunner | Prompter>,
+  program: Effect.Effect<A, E, CliServices>,
   options: { signal?: AbortSignal } = {}
 ): Promise<A | undefined> {
   const exit = await Effect.runPromiseExit(Effect.provide(program, AppLayer), {

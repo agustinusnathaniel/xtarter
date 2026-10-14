@@ -34,11 +34,7 @@ function reportRunOutcome(
       }
       return;
     case 'empty':
-      if (outcome.ok) {
-        logSuccess(outcome.message ?? '');
-      } else {
-        logError(outcome.message ?? '');
-      }
+      logSuccess(outcome.message ?? '');
       if (!runtime.quiet) {
         printTiming(outcome.timing);
       }

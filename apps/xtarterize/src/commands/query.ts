@@ -121,7 +121,7 @@ export const queryCommand = cliCommand({
       return;
     }
 
-    if (ctx.json) {
+    if (ctx.format === 'json') {
       console.log(formatQueryResult({ query: queryStr, results, statuses }));
       return;
     }
