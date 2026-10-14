@@ -14,7 +14,6 @@ export const plopTask = defineTask({
   id: 'codegen/plop',
   keywords: ['plop', 'code generator', 'scaffold', 'templates', 'codegen'],
   label: 'Plop (code generator)',
-  tags: ['codegen', 'scaffold', 'generator', 'templates'],
   targets: (_cwd, profile): Array<TaskTarget> => [
     {
       filepath: 'plopfile.ts',

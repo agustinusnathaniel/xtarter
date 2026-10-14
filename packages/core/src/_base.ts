@@ -40,8 +40,6 @@ export interface TaskSearchMeta {
   configTargets: Array<string>;
   /** Extra keywords for search not obvious from label/id, e.g. ["types", "type-safe", "strict"] */
   keywords: Array<string>;
-  /** Descriptive tags/categories for search, e.g. ["type-safe", "compiler-options"] */
-  tags: Array<string>;
 }
 
 /** A dependency the apply plan installs before tasks run. */

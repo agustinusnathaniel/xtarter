@@ -425,7 +425,6 @@ describe('defineTask searchMeta configTargets', () => {
     const task = defineTask({
       ...metadata,
       keywords: ['derived'],
-      tags: ['derived'],
       targets: [
         {
           extensions: ['.ts', '.js'],
@@ -456,7 +455,6 @@ describe('defineTask searchMeta configTargets', () => {
     const task = defineTask({
       ...metadata,
       keywords: ['derived'],
-      tags: ['derived'],
       targets: [{ change: () => ({}), kind: 'packageJson' }],
     });
 

@@ -7,7 +7,6 @@ export const agentsMdTask = defineSingleTargetTask({
   id: 'agent/agents-md',
   keywords: ['agents', 'ai', 'claude', 'opencode', 'agent config', 'llm'],
   label: 'AGENTS.md',
-  tags: ['ai', 'agent', 'documentation', 'setup'],
   target: {
     filepath: 'AGENTS.md',
     kind: 'text',

@@ -15,7 +15,6 @@ export const versionrcTask = defineSingleTargetTask({
   ],
   label: '.versionrc.json - changelog configuration',
   scope: 'root',
-  tags: ['release', 'version', 'changelog', 'semver', 'conventional-commits'],
   target: {
     filepath: '.versionrc.json',
     incoming: () => ({

@@ -313,7 +313,6 @@ export const packageScriptsTask = defineTask({
   ],
   label: 'package.json scripts',
   scope: 'root',
-  tags: ['scripts', 'package.json', 'commands'],
   targets: async (cwd, profile) => {
     const { hasExistingScripts, missingScripts, patch } =
       await resolvePackageScripts(cwd, profile);

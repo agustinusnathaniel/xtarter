@@ -22,7 +22,6 @@ export const czgTask = defineTask({
   ],
   label: 'czg (commitizen)',
   scope: 'root',
-  tags: ['commit', 'cli', 'conventional-commits', 'interactive'],
   targets: async (cwd) => {
     const { missingScripts, pkg } = await resolveScriptsResolution(
       cwd,

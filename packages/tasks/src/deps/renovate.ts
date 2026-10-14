@@ -36,7 +36,6 @@ export const renovateTask = defineSingleTargetTask({
   ],
   label: 'Renovate config',
   scope: 'root',
-  tags: ['dependencies', 'updates', 'maintenance', 'automation'],
   target: {
     extensions: ['.json', '.json5'],
     filepath: 'renovate.json',

@@ -15,7 +15,6 @@ export const viteCheckerTask = defineTask({
   ],
   label: 'vite-plugin-checker',
   scope: 'package',
-  tags: ['vite', 'plugin', 'type-checking', 'linting'],
   targets: [
     createVitePluginTarget({
       depName: 'vite-plugin-checker',

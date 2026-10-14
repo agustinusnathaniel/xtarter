@@ -68,7 +68,6 @@ export const pathsTask = defineTask({
   ],
   label: 'tsconfig - path aliases',
   scope: 'package',
-  tags: ['typescript', 'paths', 'aliases', 'imports'],
   targets: [
     {
       filepath: 'tsconfig.json',

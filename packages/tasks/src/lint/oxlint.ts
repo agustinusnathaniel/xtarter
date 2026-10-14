@@ -38,7 +38,6 @@ export const oxlintTask = defineTask({
   id: 'lint/oxlint',
   keywords: ['oxlint', 'linter', 'rust', 'static analysis', 'fast'],
   label: 'Oxlint config',
-  tags: ['linting', 'rust', 'performance', 'quality'],
   targets: [
     {
       extensions: ['.ts', '.js', '.mjs', '.json'],
@@ -76,7 +75,6 @@ export const oxfmtTask = defineTask({
   id: 'lint/oxfmt',
   keywords: ['oxfmt', 'formatter', 'rust', 'format', 'style'],
   label: 'Oxfmt config',
-  tags: ['formatting', 'rust', 'style'],
   targets: [
     {
       extensions: ['.ts', '.js', '.mjs', '.json'],

@@ -10,7 +10,6 @@ const searchTasks: Array<{
   id: string;
   keywords: Array<string>;
   label: string;
-  tags: Array<string>;
 }> = [
   {
     configTargets: ['biome.json'],
@@ -18,7 +17,6 @@ const searchTasks: Array<{
     id: 'lint/biome',
     keywords: ['biome', 'linter', 'formatter', 'lint', 'format', 'all-in-one'],
     label: 'Biome (lint + format)',
-    tags: ['linting', 'formatting', 'all-in-one', 'quality'],
   },
   {
     configTargets: ['tsconfig.json'],
@@ -32,7 +30,6 @@ const searchTasks: Array<{
       'type safety',
     ],
     label: 'tsconfig - strict: true',
-    tags: ['typescript', 'strict', 'type-checking', 'quality'],
   },
   {
     configTargets: ['.github/workflows/ci.yml'],
@@ -47,7 +44,6 @@ const searchTasks: Array<{
       'build',
     ],
     label: 'GitHub CI workflow',
-    tags: ['ci', 'testing', 'github-actions', 'quality'],
   },
   {
     configTargets: ['.vscode/settings.json', '.vscode/extensions.json'],
@@ -61,7 +57,6 @@ const searchTasks: Array<{
       'extensions',
     ],
     label: 'VSCode settings + extensions',
-    tags: ['editor', 'ide', 'settings', 'extensions'],
   },
   {
     configTargets: ['renovate.json'],
@@ -75,7 +70,6 @@ const searchTasks: Array<{
       'auto',
     ],
     label: 'Renovate config',
-    tags: ['dependencies', 'updates', 'maintenance', 'automation'],
   },
 ];
 
@@ -88,7 +82,6 @@ const mockTasks = searchTasks.map((task) =>
     searchMeta: {
       configTargets: task.configTargets,
       keywords: task.keywords,
-      tags: task.tags,
     },
   })
 );
@@ -241,13 +234,13 @@ describe('scoreTasks', () => {
       group: 'Fixture A',
       id: 'alias/sibling',
       label: 'Alias fixture',
-      searchMeta: { configTargets: [], keywords: ['claude'], tags: [] },
+      searchMeta: { configTargets: [], keywords: ['claude'] },
     });
     const outsider = makeTask({
       group: 'Fixture B',
       id: 'alias/outsider',
       label: 'Alias fixture',
-      searchMeta: { configTargets: [], keywords: ['typescript'], tags: [] },
+      searchMeta: { configTargets: [], keywords: ['typescript'] },
     });
 
     const results = scoreTasks([sibling, outsider], 'agents');
@@ -264,12 +257,12 @@ describe('scoreTasks', () => {
     const direct = makeTask({
       id: 'alias/direct',
       label: 'Shared label',
-      searchMeta: { configTargets: [], keywords: ['updates'], tags: [] },
+      searchMeta: { configTargets: [], keywords: ['updates'] },
     });
     const alias = makeTask({
       id: 'alias/alias',
       label: 'Shared label',
-      searchMeta: { configTargets: [], keywords: ['renovate'], tags: [] },
+      searchMeta: { configTargets: [], keywords: ['renovate'] },
     });
 
     const results = scoreTasks([alias, direct], 'updates');
@@ -280,16 +273,16 @@ describe('scoreTasks', () => {
   test('enforces the alias containment threshold', () => {
     const long = makeTask({
       id: 'containment/long',
-      searchMeta: { configTargets: ['oxlintrc.json'], keywords: [], tags: [] },
+      searchMeta: { configTargets: ['oxlintrc.json'], keywords: [] },
     });
     const short = makeTask({
       id: 'containment/short',
-      searchMeta: { configTargets: [], keywords: ['maid'], tags: [] },
+      searchMeta: { configTargets: [], keywords: ['maid'] },
     });
     const ok = makeTask({
       id: 'containment/ok',
       label: 'Pre-commit hook',
-      searchMeta: { configTargets: [], keywords: ['pre-commit'], tags: [] },
+      searchMeta: { configTargets: [], keywords: ['pre-commit'] },
     });
 
     expect(scoreTasks([long], 'linting')).toHaveLength(0);
@@ -300,7 +293,7 @@ describe('scoreTasks', () => {
   test('keeps direct substring matching free of containment', () => {
     const task = makeTask({
       id: 'containment/direct',
-      searchMeta: { configTargets: ['oxlintrc.json'], keywords: [], tags: [] },
+      searchMeta: { configTargets: ['oxlintrc.json'], keywords: [] },
     });
 
     const results = scoreTasks([task], 'lint');
@@ -316,7 +309,7 @@ describe('scoreTasks', () => {
     const authored = makeTask({
       id: 'phrase/authored',
       label: 'Auto-update workflow',
-      searchMeta: { configTargets: [], keywords: ['auto update'], tags: [] },
+      searchMeta: { configTargets: [], keywords: ['auto update'] },
     });
     const aliasStacked = makeTask({
       id: 'phrase/alias',
@@ -324,13 +317,12 @@ describe('scoreTasks', () => {
       searchMeta: {
         configTargets: ['renovate.json'],
         keywords: ['renovate', 'dependencies'],
-        tags: [],
       },
     });
     const single = makeTask({
       id: 'phrase/single',
       label: 'Lint options',
-      searchMeta: { configTargets: [], keywords: ['lint'], tags: [] },
+      searchMeta: { configTargets: [], keywords: ['lint'] },
     });
 
     const results = scoreTasks([aliasStacked, authored], 'auto update');

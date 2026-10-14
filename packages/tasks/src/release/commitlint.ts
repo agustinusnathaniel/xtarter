@@ -22,7 +22,6 @@ export const commitlintTask = defineTask({
   ],
   label: 'Commitlint config',
   scope: 'root',
-  tags: ['commit', 'linting', 'conventional-commits'],
   targets: [
     {
       extensions: ['.ts', '.js', '.mjs', '.mts', '.cts'],

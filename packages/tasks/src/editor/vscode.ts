@@ -26,7 +26,6 @@ export const vscodeTask = defineTask({
   ],
   label: 'VSCode settings + extensions',
   scope: 'root',
-  tags: ['editor', 'ide', 'settings', 'extensions'],
   targets: [
     {
       extensions: ['.json'],
