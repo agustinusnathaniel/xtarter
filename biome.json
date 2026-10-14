@@ -20,7 +20,6 @@
       "!**/node_modules",
       "!**/.astro",
       "!test/fixtures",
-      "!**/*.generated.d.ts",
       "!.agents",
       "!.claude",
       "!**/*.svg",
