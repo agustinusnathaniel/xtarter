@@ -144,8 +144,7 @@ function lintTurboTasks(
   const tasks: Array<string> = [];
   for (const task of baseTasks) {
     const mapped = firstScriptKey(existingScripts, task) ?? task;
-    // The old composite filter dropped a mapped `typecheck` for non-TS
-    // projects and the literal `ultracite` key, which no generated script uses.
+    // Skip mapped `typecheck` for non-TS projects and the unused `ultracite` key.
     if (mapped === 'typecheck' && !typescript) {
       continue;
     }
@@ -171,8 +170,6 @@ function getUpgradeCommand(pm: string): string {
       return 'pnpm up -i -L';
     case 'yarn':
       return 'yarn upgrade-interactive --latest';
-    case 'npm':
-      return 'npx npm-check-updates -i';
     case 'bun':
       return 'bun update';
     default:
@@ -186,9 +183,8 @@ function collectScriptCandidates(params: {
   oxlintPlugins: string;
   pkg: PackageJson | null;
   profile: ProjectProfile;
-  scripts: Array<ScriptEntry>;
-}): void {
-  const { existingScripts, pkg, profile, scripts } = params;
+}): Array<ScriptEntry> {
+  const { existingScripts, pkg, profile } = params;
   const candidates: Array<ScriptEntry> = [
     ...lintToolScripts(params.lintTool, params.oxlintPlugins),
     { script: 'test', value: 'vitest run' },
@@ -208,7 +204,6 @@ function collectScriptCandidates(params: {
         ]
       : []),
   ];
-  scripts.push(...filterMissingScripts(existingScripts, candidates));
 
   const hasTurbo =
     profile.monorepoTool === 'turbo' ||
@@ -216,16 +211,14 @@ function collectScriptCandidates(params: {
     hasInstalledDependency(pkg, 'turborepo') ||
     hasInstalledDependency(pkg, 'turbo');
   if (!hasTurbo) {
-    return;
+    return candidates;
   }
   const newCheckTurboValue = `turbo run ${lintTurboTasks(
     params.lintTool,
     existingScripts,
     profile.typescript
   ).join(' ')}`;
-  // An existing `check:turbo` is preserved: `filterMissingScripts` drops any
-  // candidate whose key already exists, so this push can never overwrite it.
-  scripts.push({ script: 'check:turbo', value: newCheckTurboValue });
+  return [...candidates, { script: 'check:turbo', value: newCheckTurboValue }];
 }
 
 interface PackageScriptsResolution extends ScriptsState {
@@ -237,7 +230,7 @@ interface PackageScriptsResolution extends ScriptsState {
 /**
  * Dependencies are gated by the same missing-script resolution that produces
  * the diff: a script-linked dependency is only needed while its script is
- * missing. This matches the old `filterDepsByMissingScripts` behaviour.
+ * missing.
  */
 function resolvePackageScriptsDeps(
   pkg: PackageJson | null,
@@ -278,8 +271,7 @@ function resolvePackageScriptsDeps(
 
 /**
  * The single scripts resolution: status, diffs and dependencies all derive
- * from this result. The old `checkFn` only covered the core script groups, so
- * `check` could report `skip` while `getScripts` still had scripts to add.
+ * from this result.
  */
 async function resolvePackageScripts(
   cwd: string,
@@ -288,18 +280,15 @@ async function resolvePackageScripts(
   const state = await readScriptsState(cwd);
   const { existingScripts, pkg } = state;
   const { lintTool, oxlintPlugins } = resolveProjectLintConfig(pkg, profile);
-  const scripts: Array<ScriptEntry> = [];
-
-  collectScriptCandidates({
+  const candidates = collectScriptCandidates({
     existingScripts,
     lintTool,
     oxlintPlugins,
     pkg,
     profile,
-    scripts,
   });
 
-  const missingScripts = filterMissingScripts(existingScripts, scripts);
+  const missingScripts = filterMissingScripts(existingScripts, candidates);
   return {
     ...state,
     deps: resolvePackageScriptsDeps(pkg, profile, missingScripts),
@@ -332,8 +321,6 @@ export const packageScriptsTask = defineTask({
       {
         change: () => patch,
         kind: 'packageJson',
-        // Old checkFn: with no existing scripts the whole change projected
-        // `new`, otherwise `patch`.
         policy: () =>
           missingScripts.length > 0 && !hasExistingScripts ? 'new' : undefined,
       },

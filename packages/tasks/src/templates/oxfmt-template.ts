@@ -1,6 +1,4 @@
-import type { ProjectProfile } from '@xtarterize/core';
-
-export function renderOxfmtTsConfig(_profile: ProjectProfile): string {
+export function renderOxfmtTsConfig(): string {
   return `import { defineConfig } from "oxfmt";
 import ultracite from "ultracite/oxfmt";
 

@@ -7,14 +7,12 @@ on:
       - "apps/docs/**"
       - "docs/**"
       - '.changeset/**'
-      - '.maestria/**'
   pull_request:
     branches: [main]
     paths-ignore:
       - "apps/docs/**"
       - "docs/**"
       - '.changeset/**'
-      - '.maestria/**'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}

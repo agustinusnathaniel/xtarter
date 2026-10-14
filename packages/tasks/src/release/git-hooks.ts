@@ -152,7 +152,6 @@ export const gitHooksTask = defineTask({
       !hasInstalledDependency(pkg, 'husky');
     const filePolicy: TargetPolicy = ({ before }) => {
       if (before !== null) {
-        // Existing hook scripts were never compared or overwritten.
         return 'skip';
       }
       return forceNew ? undefined : 'patch';

@@ -27,10 +27,5 @@ export async function promptTemplate(
 
   abortIfCancelled(result);
 
-  const template = getTemplateById(result);
-  if (!template) {
-    throw new Error(`Failed to get template info for "${result}"`);
-  }
-
-  return template;
+  return getTemplateById(result) as TemplateConfig;
 }

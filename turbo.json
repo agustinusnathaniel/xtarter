@@ -7,10 +7,6 @@
       "inputs": ["src/**", "tsconfig.json", "package.json", "vite.config.ts"],
       "outputs": ["dist/**"]
     },
-    "@xtarter/create#build": {
-      "outputs": [],
-      "cache": false
-    },
     "@xtarter/docs#typecheck": {
       "outputs": []
     },
