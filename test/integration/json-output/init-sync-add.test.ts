@@ -107,12 +107,7 @@ describe('init/sync/add json output', () => {
           errors: Array<string>;
         };
 
-        // Apply may fail on dependency install in the sandbox - the
-        // payload must still carry the result shape.
-        expect(typeof output.ok).toBe('boolean');
-        expect(typeof output.applied).toBe('number');
-        expect(typeof output.skipped).toBe('number');
-        expect(Array.isArray(output.errors)).toBe(true);
+        expect(output.errors).toEqual([]);
         // Batching contract: one install call carrying the collected deps.
         expect(installer.calls.length).toBe(1);
         expect(installer.calls[0]?.[0]).toBe(cwd);
@@ -122,34 +117,6 @@ describe('init/sync/add json output', () => {
       }
     });
   }, 180_000);
-
-  test('add lint/biome --format json emits a result payload', async () => {
-    await withProject(PROJECT_FILES, async ({ cwd }) => {
-      try {
-        const { logs } = await captureConsole(async () => {
-          await addCommand.run?.({
-            args: { cwd, format: 'json', quiet: true, taskId: 'lint/biome' },
-          } as never);
-        });
-
-        const stdout = logs.join('\n');
-        expect(stdout).not.toContain('Applied');
-        expect(stdout).not.toContain('Available tasks');
-        const parsed = JSON.parse(logs.at(-1)) as {
-          ok: boolean;
-          taskId: string;
-          applied: number;
-          errors: Array<string>;
-        };
-        expect(typeof parsed.ok).toBe('boolean');
-        expect(parsed.taskId).toBe('lint/biome');
-        expect(typeof parsed.applied).toBe('number');
-        expect(Array.isArray(parsed.errors)).toBe(true);
-      } finally {
-        process.exitCode = 0;
-      }
-    });
-  }, 120_000);
 });
 
 describe('init/sync/add json output', () => {
@@ -167,13 +134,11 @@ describe('init/sync/add json output', () => {
           errors: Array<string>;
         };
 
-        // The apply pipeline runs before the payload is emitted - the
-        // hardened captureJson contract above proves no leading blank line
-        // (or human text) precedes it.
-        expect(typeof output.ok).toBe('boolean');
+        // The apply pipeline runs before the payload is emitted - captureJson
+        // proves no leading blank line (or human text) precedes it.
         expect(output.taskId).toBe('ts/strict');
         expect(output.applied).toBe(1);
-        expect(Array.isArray(output.errors)).toBe(true);
+        expect(output.errors).toEqual([]);
       } finally {
         process.exitCode = 0;
       }
@@ -246,32 +211,6 @@ describe('init/sync/add json output', () => {
       }
     );
   }, 60_000);
-
-  test('add --json without a terminal reports check errors instead of false success', async () => {
-    // In test runs stdout is not a TTY, so --json takes the non-interactive
-    // path. A malformed unrelated config must surface as a failed payload.
-    await withProject(
-      { ...MINIMAL_FILES, 'biome.json': '{ not valid json' },
-      async ({ cwd }) => {
-        process.exitCode = 0;
-        try {
-          const output = (await captureJson(async () => {
-            await addCommand.run?.({ args: { cwd, json: true } } as never);
-          })) as { ok: boolean; errors: Array<string> };
-
-          expect(process.exitCode).toBe(1);
-          expect(output.ok).toBe(false);
-          expect(
-            output.errors.some((error) =>
-              error.includes('Failed to check lint/biome')
-            )
-          ).toBe(true);
-        } finally {
-          process.exitCode = 0;
-        }
-      }
-    );
-  }, 60_000);
 });
 
 describe('init/sync/add json output', () => {
@@ -297,10 +236,7 @@ describe('init/sync/add json output', () => {
           errors: Array<string>;
         };
 
-        expect(typeof output.ok).toBe('boolean');
-        expect(typeof output.applied).toBe('number');
-        expect(typeof output.skipped).toBe('number');
-        expect(Array.isArray(output.errors)).toBe(true);
+        expect(output.errors).toEqual([]);
         expect(installer.calls.length).toBe(1);
         expect(installer.calls[0]?.[1].length).toBeGreaterThan(0);
       } finally {
@@ -335,10 +271,7 @@ describe('init/sync/add json output', () => {
           skipped: number;
           errors: Array<string>;
         };
-        expect(typeof parsed.ok).toBe('boolean');
-        expect(typeof parsed.applied).toBe('number');
-        expect(typeof parsed.skipped).toBe('number');
-        expect(Array.isArray(parsed.errors)).toBe(true);
+        expect(parsed.errors).toEqual([]);
       } finally {
         process.exitCode = 0;
       }

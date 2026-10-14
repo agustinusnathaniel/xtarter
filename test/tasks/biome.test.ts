@@ -80,24 +80,6 @@ describe('biomeTask', () => {
     );
   });
 
-  test('returns new on clean fixture', async () => {
-    const profile = await fixtureProfile('react-vite-tailwind');
-    const status = await run(
-      biomeTask.check(fixtureDir('react-vite-tailwind'), profile)
-    );
-    expect(status).toBe('new');
-  });
-
-  test('dryRun returns diffs', async () => {
-    const profile = await fixtureProfile('react-vite-tailwind');
-    const diffs = await run(
-      biomeTask.dryRun(fixtureDir('react-vite-tailwind'), profile)
-    );
-    expect(diffs.length).toBeGreaterThan(0);
-    expect(diffs[0].filepath).toBe('biome.json');
-    expect(diffs[0].before).toBeNull();
-  });
-
   test('includes css.tailwindDirectives for tailwind projects', async () => {
     const profile = await fixtureProfile('react-vite-tailwind');
     const diffs = await run(

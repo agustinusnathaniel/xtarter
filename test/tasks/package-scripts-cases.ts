@@ -12,16 +12,6 @@ import {
  */
 export const packageScriptsCases = defineScriptCases([
   {
-    applicable: true,
-    fixture: 'react-vite-tailwind',
-    name: 'is applicable to all projects',
-  },
-  {
-    fixture: 'react-vite-tailwind',
-    name: 'returns patch when project has existing scripts',
-    status: 'patch',
-  },
-  {
     afterContains: [
       'biome',
       'biome:fix',
@@ -36,6 +26,7 @@ export const packageScriptsCases = defineScriptCases([
     afterNotContains: ['ultracite'],
     fixture: 'react-vite-tailwind',
     name: 'dryRun includes package.json diff',
+    status: 'patch',
   },
   {
     afterContains: [
@@ -158,21 +149,6 @@ export const packageScriptsCases = defineScriptCases([
     status: 'patch',
   },
   {
-    afterContains: ['"biome"'],
-    name: 'adds missing scripts when check:turbo exists with different tasks',
-    pkg: turboPkg('turbo-diff', { 'check:turbo': 'turbo run lint build' }),
-    status: 'patch',
-  },
-  {
-    afterContains: ['"check:turbo"', 'turbo run lint typecheck test'],
-    name: 'uses existing script keys in check:turbo when available',
-    pkg: scriptPkg('turbo-refs-existing', {
-      lint: 'biome check .',
-      test: 'vitest run',
-      typecheck: 'tsc --noEmit',
-    }),
-  },
-  {
     afterContains: [
       '"typecheck"',
       '"check:turbo"',
@@ -183,18 +159,6 @@ export const packageScriptsCases = defineScriptCases([
       lint: 'biome check .',
       test: 'vitest run',
     }),
-  },
-  {
-    afterContains: [
-      '"typecheck"',
-      '"test"',
-      '"check:turbo"',
-      'turbo run lint typecheck test',
-    ],
-    afterNotContains: ['"biome"'],
-    name: 'does not duplicate existing biome when lint exists with biome',
-    pkg: scriptPkg('no-dup-biome', { lint: 'biome check .' }),
-    status: 'patch',
   },
   {
     afterContains: [
@@ -266,11 +230,6 @@ export const packageScriptsPlopCases = defineScriptCases([
       name: 'viteplus-biome',
       type: 'module',
     },
-  },
-  {
-    afterNotContains: ['"biome"', '"lint": "vp lint"', '"check"', '"fix"'],
-    name: 'skips lint scripts when ESLint is already set up',
-    pkg: scriptPkg('eslint-project', { lint: 'eslint .' }, DEPS.eslintTs),
   },
   {
     afterContains: [

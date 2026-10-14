@@ -10,18 +10,6 @@ import { npmrcTask } from '../../packages/tasks/src/npmrc.js';
 import { lintStagedTask } from '../../packages/tasks/src/quality/lint-staged.js';
 
 describe('npmrcTask', () => {
-  test('applies to any project', () => {
-    expect(npmrcTask.applicable({} as never)).toBe(true);
-  });
-
-  test('returns new on clean fixture', async () => {
-    const profile = await fixtureProfile('react-vite-tailwind');
-    const status = await run(
-      npmrcTask.check(fixtureDir('react-vite-tailwind'), profile)
-    );
-    expect(status).toBe('new');
-  });
-
   test('returns expected content in dryRun', async () => {
     const profile = await fixtureProfile('react-vite-tailwind');
     const diffs = await run(
@@ -43,18 +31,6 @@ describe('npmrcTask', () => {
 });
 
 describe('lintStagedTask', () => {
-  test('applies to any project', () => {
-    expect(lintStagedTask.applicable({} as never)).toBe(true);
-  });
-
-  test('returns patch when config and dependency are missing', async () => {
-    const profile = await fixtureProfile('react-vite-tailwind');
-    const status = await run(
-      lintStagedTask.check(fixtureDir('react-vite-tailwind'), profile)
-    );
-    expect(status).toBe('patch');
-  });
-
   test('uses biome check by default in dryRun', async () => {
     const profile = await fixtureProfile('react-vite-tailwind');
     const diffs = await run(

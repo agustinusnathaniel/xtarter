@@ -36,7 +36,6 @@ export interface ScriptCase {
   afterDefined?: true;
   afterFilepath?: string;
   afterNotContains?: ReadonlyArray<string>;
-  applicable?: true;
   extraFiles?: ProjectFileMap;
   fixture?: FixtureName;
   name: string;
@@ -72,9 +71,6 @@ async function runProjectCase(
   cwd: string,
   profile: ProjectProfile
 ): Promise<void> {
-  if (testCase.applicable === true) {
-    expect(packageScriptsTask.applicable(profile)).toBe(true);
-  }
   if (testCase.status !== undefined) {
     expect(await run(packageScriptsTask.check(cwd, profile))).toBe(
       testCase.status

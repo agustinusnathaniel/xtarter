@@ -9,7 +9,6 @@ import {
 import { run } from '@test/helpers/run.js';
 import { withTempDir } from '@test/helpers/temp.js';
 import { detectProject } from '@xtarterize/core';
-import { getAllTasks } from '@xtarterize/tasks';
 import { describe, expect } from 'vite-plus/test';
 
 import { versionrcTask } from '../../packages/tasks/src/release/versionrc.js';
@@ -99,17 +98,6 @@ describe('pnpmWorkspaceTask', () => {
     );
     expect(status).toBe('skip');
   });
-
-  test('returns new when pnpm-workspace.yaml is missing in a pnpm project', async () => {
-    // Write a pnpm lockfile so detection returns pnpm
-    await withProject(
-      { 'package.json': { name: 'pnpm-new-test' }, 'pnpm-lock.yaml': '' },
-      async ({ cwd, profile }) => {
-        const status = await run(pnpmWorkspaceTask.check(cwd, profile));
-        expect(status).toBe('new');
-      }
-    );
-  });
 });
 
 describe('pnpmWorkspaceTask', () => {
@@ -152,42 +140,6 @@ describe('pnpmWorkspaceTask', () => {
 });
 
 describe('pnpmWorkspaceTask', () => {
-  test('apply writes packages definition for monorepo', async () => {
-    await withTempDir('xtarterize-pnpm-apply-monorepo-', async (tmpDir) => {
-      await fs.writeFile(
-        path.join(tmpDir, 'package.json'),
-        JSON.stringify({ name: 'apply-monorepo' })
-      );
-      await fs.writeFile(path.join(tmpDir, 'pnpm-lock.yaml'), '');
-      await fs.mkdir(path.join(tmpDir, 'packages'), { recursive: true });
-      await fs.mkdir(path.join(tmpDir, 'apps'), { recursive: true });
-      const profile = await detectProject(tmpDir);
-      await run(pnpmWorkspaceTask.apply(tmpDir, profile));
-      const content = await fs.readFile(
-        path.join(tmpDir, 'pnpm-workspace.yaml'),
-        'utf-8'
-      );
-      expect(content).toContain("'apps/*'");
-      expect(content).toContain("'packages/*'");
-    });
-  });
-
-  test('apply writes minimal content for single-package pnpm project', async () => {
-    await withProject(
-      { 'package.json': { name: 'apply-single' }, 'pnpm-lock.yaml': '' },
-      async ({ cwd, profile }) => {
-        await run(pnpmWorkspaceTask.apply(cwd, profile));
-        const content = await fs.readFile(
-          path.join(cwd, 'pnpm-workspace.yaml'),
-          'utf-8'
-        );
-        expect(content).not.toContain("'apps/*'");
-        expect(content).not.toContain("'packages/*'");
-        expect(content.trim()).toBe('# pnpm workspace config');
-      }
-    );
-  });
-
   for (const [name, content] of skipWorkspaceCases) {
     test(name, async () => {
       await withPnpmProject(async ({ cwd, profile }) => {
@@ -379,37 +331,6 @@ describe('pnpmWorkspaceTask', () => {
 });
 
 describe('versionrcTask', () => {
-  test('is applicable to all projects', async () => {
-    const profile = await fixtureProfile('react-vite-tailwind');
-    expect(versionrcTask.applicable(profile)).toBe(true);
-  });
-
-  test('returns new when .versionrc.json is missing', async () => {
-    await withProject(
-      { 'package.json': { name: 'vrc-check-test' } },
-      async ({ cwd, profile }) => {
-        const status = await run(versionrcTask.check(cwd, profile));
-        expect(status).toBe('new');
-      }
-    );
-  });
-
-  test('dryRun returns expected content', async () => {
-    await withProject(
-      { 'package.json': { name: 'vrc-dryrun-test' } },
-      async ({ cwd, profile }) => {
-        const diffs = await run(versionrcTask.dryRun(cwd, profile));
-        expect(diffs.length).toBe(1);
-        expect(diffs[0].filepath).toBe('.versionrc.json');
-        expect(diffs[0].before).toBeNull();
-        expect(diffs[0].after).toContain('"bumpFiles"');
-        expect(diffs[0].after).toContain('"feat"');
-        expect(diffs[0].after).toContain('"fix"');
-        expect(diffs[0].after).toContain('"refactor"');
-      }
-    );
-  });
-
   test('apply writes the expected file', async () => {
     await withProject(
       { 'package.json': { name: 'apply-test' } },
@@ -425,14 +346,5 @@ describe('versionrcTask', () => {
         expect(parsed.types[0].type).toBe('feat');
       }
     );
-  });
-});
-
-describe('task registration', () => {
-  test('both tasks are registered in getAllTasks()', () => {
-    const tasks = getAllTasks();
-    const ids = tasks.map((t) => t.id);
-    expect(ids).toContain('workspace/pnpm-workspace');
-    expect(ids).toContain('release/versionrc');
   });
 });

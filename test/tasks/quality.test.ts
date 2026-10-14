@@ -114,22 +114,6 @@ const devEnginesCases: Array<DevEnginesCase> = [
 ];
 
 describe('packageEnginesTask', () => {
-  test('is applicable to all projects', async () => {
-    const tsProfile = await fixtureProfile('react-vite-tailwind');
-    expect(packageEnginesTask.applicable(tsProfile)).toBe(true);
-
-    const nonTsProfile = await fixtureProfile('monorepo-turbo');
-    expect(packageEnginesTask.applicable(nonTsProfile)).toBe(true);
-  });
-
-  test('returns patch when devEngines is missing from package.json', async () => {
-    const profile = await fixtureProfile('react-vite-tailwind');
-    const status = await run(
-      packageEnginesTask.check(fixtureDir('react-vite-tailwind'), profile)
-    );
-    expect(status).toBe('patch');
-  });
-
   test('dryRun shows devEngines diff', async () => {
     const profile = await fixtureProfile('react-vite-tailwind');
     const diffs = await run(

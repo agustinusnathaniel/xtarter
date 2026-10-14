@@ -9,7 +9,6 @@ import type {
   ProjectProfile,
   Task,
   TaskDep,
-  TaskStatus,
 } from '@xtarterize/core';
 import {
   DepsInstallError,
@@ -51,192 +50,7 @@ function runExecute(
   return runWith(TestApplyLayer, executePlan({ cwd, plan, profile }));
 }
 
-/** Apply a selected task set the way the removed `applyTasks` helper did. */
-async function applyTasks(options: {
-  cwd: string;
-  includeConflicts?: boolean;
-  profile: ProjectProfile;
-  quiet?: boolean;
-  selectedIds?: Array<string>;
-  statuses?: ReadonlyMap<string, TaskStatus>;
-  tasks: Array<Task>;
-}) {
-  const { selectedIds } = options;
-  const tasks = selectedIds
-    ? options.tasks.filter((t) => selectedIds.includes(t.id))
-    : options.tasks;
-  const quiet = options.quiet ?? false;
-  const plan = await runWith(
-    TestApplyLayer,
-    planTasks({
-      cwd: options.cwd,
-      includeConflicts: options.includeConflicts ?? false,
-      profile: options.profile,
-      quiet,
-      statuses: options.statuses,
-      tasks,
-    })
-  );
-  return runWith(
-    TestApplyLayer,
-    executePlan({
-      cwd: options.cwd,
-      plan,
-      profile: options.profile,
-      quiet,
-    })
-  );
-}
-
 const projectFiles = { 'package.json': { name: 'test', version: '1.0.0' } };
-
-describe('applyTasks', () => {
-  test('skips tasks that are already applied', async () => {
-    await withProject(projectFiles, async ({ cwd: tmpDir, profile }) => {
-      await fs.writeFile(path.join(tmpDir, 'test.txt'), 'hello');
-
-      const mockTask = makeTask({
-        check: 'skip',
-        dryRun: () =>
-          Effect.succeed([
-            { after: 'hello', before: 'hello', filepath: 'test.txt' },
-          ]),
-      });
-
-      const result = await applyTasks({
-        cwd: tmpDir,
-        profile,
-        tasks: [mockTask],
-      });
-      expect(result.skipped).toBe(1);
-      expect(result.applied).toBe(0);
-    });
-  });
-});
-
-describe('applyTasks', () => {
-  test('backs up existing files before applying selected tasks', async () => {
-    await withProject(projectFiles, async ({ cwd: tmpDir, profile }) => {
-      await fs.writeFile(path.join(tmpDir, 'test.txt'), 'before');
-
-      const mockTask = makeTask({
-        apply: () =>
-          Effect.promise(() =>
-            fs.writeFile(path.join(tmpDir, 'test.txt'), 'after')
-          ),
-        check: 'patch',
-        dryRun: () =>
-          Effect.succeed([
-            { after: 'after', before: 'before', filepath: 'test.txt' },
-          ]),
-      });
-
-      const result = await applyTasks({
-        cwd: tmpDir,
-        profile,
-        selectedIds: [mockTask.id],
-        tasks: [mockTask],
-      });
-      expect(result.errors).toHaveLength(0);
-      expect(result.applied).toBe(1);
-
-      const backupIndex = JSON.parse(
-        await fs.readFile(
-          path.join(tmpDir, '.xtarterize/backups/.index.json'),
-          'utf-8'
-        )
-      );
-      expect(backupIndex['test.txt']).toHaveLength(1);
-      const backupPath = backupIndex['test.txt'][0].backupPath;
-      await expect(fs.readFile(backupPath, 'utf-8')).resolves.toBe('before');
-      await expect(
-        fs.readFile(path.join(tmpDir, 'test.txt'), 'utf-8')
-      ).resolves.toBe('after');
-    });
-  });
-});
-
-describe('applyTasks', () => {
-  test('skips conflict tasks unless includeConflicts is set', async () => {
-    await withProject(projectFiles, async ({ cwd: tmpDir, profile }) => {
-      let applied = false;
-      const mockTask = makeTask({
-        apply: () =>
-          Effect.sync(() => {
-            applied = true;
-          }),
-        check: 'conflict',
-        dryRun: () =>
-          Effect.succeed([
-            { after: 'after', before: 'before', filepath: 'test.txt' },
-          ]),
-        id: 'mock/conflict',
-        label: 'Mock Conflict',
-      });
-
-      const skipped = await applyTasks({
-        cwd: tmpDir,
-        profile,
-        tasks: [mockTask],
-      });
-      expect(skipped.skipped).toBe(1);
-      expect(skipped.applied).toBe(0);
-      expect(applied).toBe(false);
-
-      const withSelectedIds = await applyTasks({
-        cwd: tmpDir,
-        profile,
-        selectedIds: [mockTask.id],
-        tasks: [mockTask],
-      });
-      expect(withSelectedIds.skipped).toBe(1);
-      expect(withSelectedIds.applied).toBe(0);
-      expect(applied).toBe(false);
-
-      const withIncludeConflicts = await applyTasks({
-        cwd: tmpDir,
-        includeConflicts: true,
-        profile,
-        selectedIds: [mockTask.id],
-        tasks: [mockTask],
-      });
-      expect(withIncludeConflicts.skipped).toBe(0);
-      expect(withIncludeConflicts.applied).toBe(1);
-      expect(applied).toBe(true);
-    });
-  });
-});
-
-describe('applyTasks', () => {
-  test('continues applying remaining tasks after one fails', async () => {
-    await withProject(projectFiles, async ({ cwd: tmpDir, profile }) => {
-      const failingTask = makeTask({
-        apply: () => Effect.die(new Error('intentional failure')),
-        id: 'mock/fail',
-        label: 'Failing Task',
-      });
-      let goodApplied = false;
-      const goodTask = makeTask({
-        apply: () =>
-          Effect.sync(() => {
-            goodApplied = true;
-          }),
-        id: 'mock/good',
-        label: 'Good Task',
-      });
-
-      const result = await applyTasks({
-        cwd: tmpDir,
-        profile,
-        tasks: [failingTask, goodTask],
-      });
-      expect(result.applied).toBe(1);
-      expect(result.errors).toHaveLength(1);
-      expect(result.errors[0]).toContain('intentional failure');
-      expect(goodApplied).toBe(true);
-    });
-  });
-});
 
 describe('planTasks', () => {
   test('plans diffs without writing, backing up, or installing', async () => {
@@ -296,6 +110,51 @@ describe('planTasks', () => {
       expect(plan.entries[0]?.diffs).toEqual([]);
       expect(plan.files).toEqual([]);
       expect(plan.dependencies).toEqual([]);
+
+      const result = await runExecute(tmpDir, plan, profile);
+      expect(result.skipped).toBe(1);
+      expect(result.applied).toBe(0);
+    });
+  });
+});
+
+describe('planTasks', () => {
+  test('skips conflict tasks unless includeConflicts is set', async () => {
+    await withProject(projectFiles, async ({ cwd: tmpDir, profile }) => {
+      let applied = false;
+      const conflictTask = makeTask({
+        apply: () =>
+          Effect.sync(() => {
+            applied = true;
+          }),
+        check: 'conflict',
+        dryRun: () =>
+          Effect.succeed([
+            { after: 'after', before: 'before', filepath: 'test.txt' },
+          ]),
+        id: 'mock/conflict',
+        label: 'Mock Conflict',
+      });
+
+      const skippedPlan = await runPlan(tmpDir, profile, [conflictTask]);
+      const skipped = await runExecute(tmpDir, skippedPlan, profile);
+      expect(skipped.skipped).toBe(1);
+      expect(skipped.applied).toBe(0);
+      expect(applied).toBe(false);
+
+      const includedPlan = await runWith(
+        TestApplyLayer,
+        planTasks({
+          cwd: tmpDir,
+          includeConflicts: true,
+          profile,
+          tasks: [conflictTask],
+        })
+      );
+      const included = await runExecute(tmpDir, includedPlan, profile);
+      expect(included.skipped).toBe(0);
+      expect(included.applied).toBe(1);
+      expect(applied).toBe(true);
     });
   });
 });

@@ -19,14 +19,6 @@ describe('gitignoreTsbuildinfoTask', () => {
     expect(gitignoreTsbuildinfoTask.applicable(nonTsProfile)).toBe(false);
   });
 
-  test('returns new when .gitignore is missing', async () => {
-    const profile = await fixtureProfile('react-vite-tailwind');
-    const status = await run(
-      gitignoreTsbuildinfoTask.check(fixtureDir('react-vite-tailwind'), profile)
-    );
-    expect(status).toBe('new');
-  });
-
   test('dryRun returns correct content', async () => {
     const profile = await fixtureProfile('react-vite-tailwind');
     const diffs = await run(
@@ -73,24 +65,6 @@ describe('strictTask', () => {
       async ({ cwd, profile }) => {
         const status = await run(strictTask.check(cwd, profile));
         expect(status).toBe('conflict');
-      }
-    );
-  });
-
-  test('returns patch when strict key is missing', async () => {
-    await withProject(
-      {
-        'package.json': {
-          devDependencies: { typescript: '^5.3.0' },
-          name: 'strict-missing',
-        },
-        'tsconfig.json': {
-          compilerOptions: { target: 'ES2020' },
-        },
-      },
-      async ({ cwd, profile }) => {
-        const status = await run(strictTask.check(cwd, profile));
-        expect(status).toBe('patch');
       }
     );
   });

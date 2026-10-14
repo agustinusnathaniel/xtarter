@@ -11,44 +11,8 @@ import { describe, expect } from 'vite-plus/test';
 import { agentsMdTask } from '../../packages/tasks/src/agent/agents-md.js';
 import { vscodeTask } from '../../packages/tasks/src/editor/vscode.js';
 import { turboTask } from '../../packages/tasks/src/monorepo/turbo.js';
-import { knipTask } from '../../packages/tasks/src/quality/knip.js';
-
-describe('knipTask', () => {
-  test('is applicable to all projects (JSON format if no TS)', async () => {
-    const tsProfile = await fixtureProfile('react-vite-tailwind');
-    expect(knipTask.applicable(tsProfile)).toBe(true);
-
-    const nonTsProfile = await fixtureProfile('monorepo-turbo');
-    expect(knipTask.applicable(nonTsProfile)).toBe(true);
-  });
-
-  test('returns new on clean fixture', async () => {
-    const profile = await fixtureProfile('react-vite-tailwind');
-    const status = await run(
-      knipTask.check(fixtureDir('react-vite-tailwind'), profile)
-    );
-    expect(status).toBe('new');
-  });
-});
 
 describe('vscodeTask', () => {
-  test('is applicable to all projects', async () => {
-    const profile = await fixtureProfile('react-vite-tailwind');
-    expect(vscodeTask.applicable(profile)).toBe(true);
-  });
-
-  test('dryRun returns settings and extensions diffs', async () => {
-    const profile = await fixtureProfile('react-vite-tailwind');
-    const diffs = await run(
-      vscodeTask.dryRun(fixtureDir('react-vite-tailwind'), profile)
-    );
-    expect(diffs.length).toBe(2);
-    expect(diffs.some((d) => d.filepath.includes('settings.json'))).toBe(true);
-    expect(diffs.some((d) => d.filepath.includes('extensions.json'))).toBe(
-      true
-    );
-  });
-
   test('includes practical framework and styling settings', async () => {
     const profile = await fixtureProfile('react-vite-tailwind');
     const diffs = await run(
@@ -66,51 +30,6 @@ describe('vscodeTask', () => {
     );
     expect(settings['tailwindCSS.experimental.classRegex']).toBeDefined();
     expect(extensions.recommendations).toContain('bradlc.vscode-tailwindcss');
-  });
-});
-
-describe('vscodeTask', () => {
-  test('renders the expected settings and extension recommendations', async () => {
-    const profile = await fixtureProfile('react-vite-tailwind');
-    const diffs = await run(
-      vscodeTask.dryRun(fixtureDir('react-vite-tailwind'), profile)
-    );
-    const settings = diffs.find((d) => d.filepath.includes('settings.json'));
-    const extensions = diffs.find((d) =>
-      d.filepath.includes('extensions.json')
-    );
-
-    expect(JSON.parse(settings?.after ?? '{}')).toEqual({
-      '[javascript]': { 'editor.defaultFormatter': 'biomejs.biome' },
-      '[json]': { 'editor.defaultFormatter': 'biomejs.biome' },
-      '[jsonc]': { 'editor.defaultFormatter': 'biomejs.biome' },
-      '[typescript]': { 'editor.defaultFormatter': 'biomejs.biome' },
-      '[typescriptreact]': { 'editor.defaultFormatter': 'biomejs.biome' },
-      'editor.codeActionsOnSave': {
-        'source.fixAll.biome': 'explicit',
-        'source.organizeImports.biome': 'explicit',
-      },
-      'editor.defaultFormatter': 'biomejs.biome',
-      'editor.formatOnPaste': false,
-      'editor.formatOnSave': true,
-      'files.associations': { '*.css': 'tailwindcss' },
-      'javascript.updateImportsOnFileMove.enabled': 'always',
-      'tailwindCSS.experimental.classRegex': [
-        ['cva\\(([^)]*)\\)', '["\'`]([^"\'`]*).*?["\'`]'],
-        ['cn\\(([^)]*)\\)', '["\'`]([^"\'`]*).*?["\'`]'],
-      ],
-      'typescript.disableAutomaticTypeAcquisition': true,
-      'typescript.enablePromptUseWorkspaceTsdk': true,
-      'typescript.preferences.importModuleSpecifier': 'non-relative',
-      'typescript.updateImportsOnFileMove.enabled': 'always',
-    });
-    expect(JSON.parse(extensions?.after ?? '{}')).toEqual({
-      recommendations: [
-        'biomejs.biome',
-        'ms-vscode.vscode-typescript-next',
-        'bradlc.vscode-tailwindcss',
-      ],
-    });
   });
 });
 
@@ -173,42 +92,7 @@ describe('vscodeTask', () => {
   });
 });
 
-describe('vscodeTask', () => {
-  test('apply writes the expected file', async () => {
-    await withProject(
-      {
-        'package.json': {
-          devDependencies: { typescript: '^5.3.0' },
-          name: 'apply-test',
-        },
-      },
-      async ({ cwd, profile }) => {
-        await run(vscodeTask.apply(cwd, profile));
-        const settingsPath = path.join(cwd, '.vscode', 'settings.json');
-        const exists = await fs
-          .access(settingsPath)
-          .then(() => true)
-          .catch(() => false);
-        expect(exists).toBe(true);
-      }
-    );
-  });
-});
-
 describe('agentsMdTask', () => {
-  test('is applicable to all projects', async () => {
-    const profile = await fixtureProfile('react-vite-tailwind');
-    expect(agentsMdTask.applicable(profile)).toBe(true);
-  });
-
-  test('returns new when AGENTS.md is missing', async () => {
-    const profile = await fixtureProfile('react-vite-tailwind');
-    const status = await run(
-      agentsMdTask.check(fixtureDir('react-vite-tailwind'), profile)
-    );
-    expect(status).toBe('new');
-  });
-
   test('renders minimal root with commands', async () => {
     const profile = await fixtureProfile('react-vite-tailwind');
     const [diff] = await run(

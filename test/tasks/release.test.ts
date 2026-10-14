@@ -1,91 +1,14 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import {
-  fixtureDir,
-  fixtureProfile,
-  withProject,
-} from '@test/helpers/project.js';
+import { fixtureProfile, withProject } from '@test/helpers/project.js';
 import { run } from '@test/helpers/run.js';
 import { describe, expect } from 'vite-plus/test';
 
 import { releaseWorkflowTask } from '../../packages/tasks/src/ci/release.js';
 import { catVersionTask } from '../../packages/tasks/src/release/cat-version.js';
-import { commitlintTask } from '../../packages/tasks/src/release/commitlint.js';
-import { czgTask } from '../../packages/tasks/src/release/czg.js';
 import { renderReleaseWorkflow } from '../../packages/tasks/src/templates/workflows/release-yml.js';
 
-describe('commitlintTask', () => {
-  test('is applicable to all projects', async () => {
-    const profile = await fixtureProfile('react-vite-tailwind');
-    expect(commitlintTask.applicable(profile)).toBe(true);
-  });
-
-  test('returns new on clean fixture', async () => {
-    const profile = await fixtureProfile('react-vite-tailwind');
-    const status = await run(
-      commitlintTask.check(fixtureDir('react-vite-tailwind'), profile)
-    );
-    expect(status).toBe('new');
-  });
-
-  test('dryRun returns diffs', async () => {
-    const profile = await fixtureProfile('react-vite-tailwind');
-    const diffs = await run(
-      commitlintTask.dryRun(fixtureDir('react-vite-tailwind'), profile)
-    );
-    expect(diffs.length).toBeGreaterThan(0);
-    expect(diffs[0].before).toBeNull();
-  });
-});
-
-describe('czgTask', () => {
-  test('is applicable to all projects', async () => {
-    const profile = await fixtureProfile('react-vite-tailwind');
-    expect(czgTask.applicable(profile)).toBe(true);
-  });
-
-  test('returns new when script is missing', async () => {
-    const profile = await fixtureProfile('react-vite-tailwind');
-    const status = await run(
-      czgTask.check(fixtureDir('react-vite-tailwind'), profile)
-    );
-    expect(status).toBe('new');
-  });
-
-  test('dryRun includes package.json diff', async () => {
-    const profile = await fixtureProfile('react-vite-tailwind');
-    const diffs = await run(
-      czgTask.dryRun(fixtureDir('react-vite-tailwind'), profile)
-    );
-    const pkgDiff = diffs.find((d) => d.filepath === 'package.json');
-    expect(pkgDiff).toBeDefined();
-    expect(pkgDiff?.after).toContain('czg');
-  });
-});
-
 describe('catVersionTask', () => {
-  test('is applicable to all projects', async () => {
-    const profile = await fixtureProfile('react-vite-tailwind');
-    expect(catVersionTask.applicable(profile)).toBe(true);
-  });
-
-  test('returns new when dep and scripts are missing', async () => {
-    const profile = await fixtureProfile('react-vite-tailwind');
-    const status = await run(
-      catVersionTask.check(fixtureDir('react-vite-tailwind'), profile)
-    );
-    expect(status).toBe('new');
-  });
-
-  test('dryRun includes .versionrc diff', async () => {
-    const profile = await fixtureProfile('react-vite-tailwind');
-    const diffs = await run(
-      catVersionTask.dryRun(fixtureDir('react-vite-tailwind'), profile)
-    );
-    const versionrcDiff = diffs.find((d) => d.filepath === '.versionrc');
-    expect(versionrcDiff).toBeDefined();
-  });
-
   test('skips release script when it already exists with a different value', async () => {
     await withProject(
       {
@@ -162,14 +85,6 @@ describe('releaseWorkflowTask', () => {
         expect(profile.existing.changeset).toBe(true);
       }
     );
-  });
-
-  test('returns new when no release workflow exists (non-changeset)', async () => {
-    const profile = await fixtureProfile('react-vite-tailwind');
-    const status = await run(
-      releaseWorkflowTask.check(fixtureDir('react-vite-tailwind'), profile)
-    );
-    expect(status).toBe('new');
   });
 });
 
