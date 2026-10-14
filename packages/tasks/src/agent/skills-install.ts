@@ -1,5 +1,11 @@
 import { readdir } from 'node:fs/promises';
-import type { PackageManager, ProjectProfile } from '@xtarterize/core';
+import type {
+  PackageManager,
+  ProjectProfile,
+  Task,
+  TaskChoices,
+  TaskStatus,
+} from '@xtarterize/core';
 import {
   collectDependencyVersions,
   fileExists,
@@ -97,19 +103,24 @@ async function getInstalledSkills(cwd: string): Promise<Set<string>> {
 /** Read package.json once and project which catalog skills are still missing. */
 async function resolveMissingSkills(
   cwd: string,
-  profile: ProjectProfile
+  profile: ProjectProfile,
+  selected?: ReadonlySet<string>
 ): Promise<{ missing: Array<SkillEntry>; total: number }> {
   const pkg = await readPackageJson(cwd);
   const deps = collectDependencyVersions(pkg);
-  const skills = getSkillsToInstall(profile, deps);
-  if (skills.length === 0) {
+  const applicable = getSkillsToInstall(profile, deps);
+  const scoped =
+    selected === undefined
+      ? applicable
+      : applicable.filter((s) => selected.has(s.skill));
+  if (scoped.length === 0) {
     return { missing: [], total: 0 };
   }
 
   const installed = await getInstalledSkills(cwd);
   return {
-    missing: skills.filter((s) => !installed.has(s.skill)),
-    total: skills.length,
+    missing: scoped.filter((s) => !installed.has(s.skill)),
+    total: scoped.length,
   };
 }
 
@@ -125,76 +136,117 @@ function groupBySource(skills: Array<SkillEntry>): Map<string, Array<string>> {
   return grouped;
 }
 
-export const skillsInstallTask = defineTask({
-  actions: [
-    {
-      async check(cwd, profile) {
-        const { missing, total } = await resolveMissingSkills(cwd, profile);
-        if (missing.length === 0) {
-          return 'skip';
-        }
-        return missing.length === total ? 'new' : 'patch';
-      },
-      run: (cwd, profile) =>
-        Effect.gen(function* () {
-          const { missing } = yield* toTaskEffect('skillsInstallTask.run', () =>
-            resolveMissingSkills(cwd, profile)
-          );
-          const runner = yield* ProcessRunner;
-          const yarnBerry =
-            profile.packageManager === 'yarn' &&
-            (yield* toTaskEffect('skillsInstallTask.run', () =>
-              isYarnBerry(cwd)
-            ));
-          const executor = resolveSkillsExecutor(profile.packageManager, {
-            yarnBerry,
-          });
-          const grouped = groupBySource(missing);
-          for (const [source, skillNames] of grouped) {
-            const args = [
-              ...executor.prefixArgs,
-              'add',
-              source,
-              ...skillNames.flatMap((s) => ['--skill', s]),
-              '-y',
-            ];
-            const result = yield* Effect.mapError(
-              runner.run(executor.command, args, {
-                cwd,
-                stdio: 'inherit',
-                timeout: Duration.millis(60_000),
-              }),
-              (cause) =>
-                new TaskError({
-                  cause: cause.cause ?? cause,
-                  message: cause.message,
-                  taskId: 'skillsInstallTask.run',
-                })
-            );
-            if (result.exitCode !== 0) {
-              return yield* Effect.fail(
-                new TaskError({
-                  message: `Failed to install skills from ${source}: ${skillNames.join(', ')}`,
-                  taskId: 'skillsInstallTask.run',
-                })
-              );
-            }
-          }
+async function checkSkills(
+  cwd: string,
+  profile: ProjectProfile,
+  selected?: ReadonlySet<string>
+): Promise<TaskStatus> {
+  const { missing, total } = await resolveMissingSkills(cwd, profile, selected);
+  if (missing.length === 0) {
+    return 'skip';
+  }
+  return missing.length === total ? 'new' : 'patch';
+}
+
+function runSkills(
+  cwd: string,
+  profile: ProjectProfile,
+  selected?: ReadonlySet<string>
+) {
+  return Effect.gen(function* () {
+    const { missing } = yield* toTaskEffect('skillsInstallTask.run', () =>
+      resolveMissingSkills(cwd, profile, selected)
+    );
+    const runner = yield* ProcessRunner;
+    const yarnBerry =
+      profile.packageManager === 'yarn' &&
+      (yield* toTaskEffect('skillsInstallTask.run', () => isYarnBerry(cwd)));
+    const executor = resolveSkillsExecutor(profile.packageManager, {
+      yarnBerry,
+    });
+    const grouped = groupBySource(missing);
+    for (const [source, skillNames] of grouped) {
+      const args = [
+        ...executor.prefixArgs,
+        'add',
+        source,
+        ...skillNames.flatMap((s) => ['--skill', s]),
+        '-y',
+      ];
+      const result = yield* Effect.mapError(
+        runner.run(executor.command, args, {
+          cwd,
+          stdio: 'inherit',
+          timeout: Duration.millis(60_000),
         }),
-    },
-  ],
-  applicable: (profile) => profile.typescript,
-  configTargets: [],
-  group: 'Agent',
-  id: 'agent/skills-install',
-  keywords: [
-    'skills',
-    'agent skills',
-    'ai tools',
-    'opencode skills',
-    'install',
-  ],
-  label: 'Install agent skills',
-  scope: 'both',
-  tags: ['ai', 'agent', 'skills', 'setup', 'tools'],
-});
+        (cause) =>
+          new TaskError({
+            cause: cause.cause ?? cause,
+            message: cause.message,
+            taskId: 'skillsInstallTask.run',
+          })
+      );
+      if (result.exitCode !== 0) {
+        return yield* Effect.fail(
+          new TaskError({
+            message: `Failed to install skills from ${source}: ${skillNames.join(', ')}`,
+            taskId: 'skillsInstallTask.run',
+          })
+        );
+      }
+    }
+  });
+}
+
+function skillsChoices(selected?: ReadonlySet<string>): TaskChoices {
+  return {
+    message: 'Select agent skills to install:',
+    options: (cwd, profile) =>
+      toTaskEffect('skillsInstallTask.choices', async () => {
+        const { missing } = await resolveMissingSkills(cwd, profile, selected);
+        const grouped: Record<
+          string,
+          Array<{ label: string; value: string }>
+        > = {};
+        for (const entry of missing) {
+          const options = grouped[entry.group] ?? [];
+          options.push({
+            label: `${entry.skill} (${entry.source})`,
+            value: entry.skill,
+          });
+          grouped[entry.group] = options;
+        }
+        return grouped;
+      }),
+    restrict: (values) => createSkillsInstallTask(new Set(values)),
+  };
+}
+
+/** The skills task, optionally restricted to a chosen skill subset. */
+export function createSkillsInstallTask(selected?: ReadonlySet<string>): Task {
+  const base = defineTask({
+    actions: [
+      {
+        check: (cwd, profile) => checkSkills(cwd, profile, selected),
+        run: (cwd, profile) => runSkills(cwd, profile, selected),
+      },
+    ],
+    applicable: (profile) => profile.typescript,
+    configTargets: [],
+    group: 'Agent',
+    id: 'agent/skills-install',
+    keywords: [
+      'skills',
+      'agent skills',
+      'ai tools',
+      'opencode skills',
+      'install',
+    ],
+    label: 'Install agent skills',
+    scope: 'both',
+    tags: ['ai', 'agent', 'skills', 'setup', 'tools'],
+  });
+  return { ...base, choices: skillsChoices(selected) };
+}
+
+export const skillsInstallTask = createSkillsInstallTask();

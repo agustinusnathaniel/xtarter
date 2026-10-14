@@ -5,6 +5,7 @@ import { Effect } from 'effect';
 import type { CommandSession } from '@/session.js';
 import { displayDiffs } from '@/ui/diff-display.js';
 import { Prompter } from '@/ui/prompter.js';
+import { refineTaskChoices } from '@/ui/task-choices.js';
 
 import { selectTasksGrouped } from './selection.js';
 import type {
@@ -163,6 +164,32 @@ function selectTasksToApply(options: {
   });
 }
 
+function narrowConfirmed(options: {
+  confirmed: Array<TaskWithStatus>;
+  session: CommandSession;
+}): Effect.Effect<
+  Array<TaskWithStatus> | null,
+  AddCommandError,
+  AddCommandServices
+> {
+  return Effect.gen(function* () {
+    const { confirmed, session } = options;
+    const refined = yield* refineTaskChoices(
+      confirmed.map((entry) => entry.task),
+      session.runtime.cwd,
+      session.profile
+    );
+    if (refined === null) {
+      return null;
+    }
+    const byId = new Map(refined.map((task) => [task.id, task] as const));
+    return confirmed.flatMap((entry) => {
+      const task = byId.get(entry.task.id);
+      return task === undefined ? [] : [{ ...entry, task }];
+    });
+  });
+}
+
 /** The interactive `add` flow as one program: select, confirm, apply. */
 export function runInteractive(
   options: RunInteractiveOptions
@@ -203,8 +230,22 @@ export function runInteractive(
       return;
     }
 
+    let narrowed = confirmed;
+    if (!allFlag) {
+      const refined = yield* narrowConfirmed({ confirmed, session });
+      if (refined === null) {
+        session.reportOutcome(session.cancelled());
+        return;
+      }
+      if (refined.length === 0) {
+        reportEmptyOutcome(session, 'No tasks selected');
+        return;
+      }
+      narrowed = refined;
+    }
+
     yield* executeConfirmed({
-      confirmed,
+      confirmed: narrowed,
       includeConflicts,
       recordTiming,
       selected,

@@ -13,6 +13,7 @@ import { type CommandSession, openSession } from '@/session.js';
 import { displayPlan } from '@/ui/plan-display.js';
 import { type PromptError, Prompter } from '@/ui/prompter.js';
 import { selectTasks } from '@/ui/select-menu.js';
+import { refineTaskChoices } from '@/ui/task-choices.js';
 import type { RuntimeContext } from '@/utils/runtime.js';
 
 export interface RunCommandArgs {
@@ -100,6 +101,29 @@ function applyTasks(
   });
 }
 
+function refineAndApply(
+  session: CommandSession,
+  tasks: Array<Task>,
+  args: RunCommandArgs
+): Effect.Effect<void, RunCommandError, RunCommandServices> {
+  return Effect.gen(function* () {
+    const refined = yield* refineTaskChoices(
+      tasks,
+      session.runtime.cwd,
+      session.profile
+    );
+    if (refined === null) {
+      session.reportOutcome(session.cancelled());
+      return;
+    }
+    if (refined.length === 0) {
+      logInfo('No tasks selected');
+      return;
+    }
+    yield* applyTasks(session, refined, args);
+  });
+}
+
 function promptAndApply(
   session: CommandSession,
   tasks: Array<Task>,
@@ -126,7 +150,7 @@ function promptAndApply(
       return;
     }
     if (action !== 'select') {
-      yield* applyTasks(session, tasks, args);
+      yield* refineAndApply(session, tasks, args);
       return;
     }
     const selected = yield* selectTasks(tasks, session.statuses);
@@ -139,7 +163,7 @@ function promptAndApply(
       return;
     }
     const selectedIds = new Set(selected);
-    yield* applyTasks(
+    yield* refineAndApply(
       session,
       tasks.filter((task) => selectedIds.has(task.id)),
       args

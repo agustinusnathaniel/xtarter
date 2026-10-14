@@ -5,6 +5,7 @@ import { Effect } from 'effect';
 import type { CommandSession, SessionTaskOutcome } from '@/session.js';
 import { displayDiffs } from '@/ui/diff-display.js';
 import { type PromptError, Prompter } from '@/ui/prompter.js';
+import { refineTaskChoices } from '@/ui/task-choices.js';
 
 import type {
   AddCommandError,
@@ -92,7 +93,25 @@ function executeTask(options: {
     const { runtime } = session;
     const jsonMode = runtime.format === 'json';
 
-    const plan = yield* session.plan({ includeConflicts, tasks: [task] });
+    let effective = task;
+    if (!(runtime.quiet || jsonMode)) {
+      const refined = yield* refineTaskChoices(
+        [task],
+        session.runtime.cwd,
+        session.profile
+      );
+      if (refined === null) {
+        session.reportOutcome(session.cancelled());
+        return;
+      }
+      const [first] = refined;
+      if (first === undefined) {
+        return;
+      }
+      effective = first;
+    }
+
+    const plan = yield* session.plan({ includeConflicts, tasks: [effective] });
     if (!(runtime.quiet || jsonMode)) {
       displayDiffs(plan.entries[0]?.diffs ?? [], runtime.format);
       const proceed = yield* confirmApply();

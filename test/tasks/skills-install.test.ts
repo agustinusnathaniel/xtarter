@@ -377,6 +377,49 @@ describe('skill selection by project signals', () => {
   });
 });
 
+describe('skill selection by project signals', () => {
+  test('selects engineering skills from stack and dependency signals', async () => {
+    const node = await fixtureProfile('node-only');
+    const web = await fixtureProfile('react-vite-tailwind');
+    const native = await fixtureProfile('react-native-expo');
+    const names = (
+      profile: ProjectProfile,
+      deps: Record<string, string> = {}
+    ) => getSkillsToInstall(profile, deps).map(({ skill }) => skill);
+
+    expect(names(node)).not.toContain('webhook-integration');
+    expect(names(node, { stripe: '^18.0.0' })).toEqual(
+      expect.arrayContaining(['webhook-integration', 'calculation-correctness'])
+    );
+    expect(names(node, { 'decimal.js': '^10.0.0' })).not.toContain(
+      'webhook-integration'
+    );
+    expect(names(node, { papaparse: '^5.0.0' })).toContain(
+      'bulk-import-engineering'
+    );
+    expect(names(node, { 'semantic-release': '^24.0.0' })).toContain(
+      'release-notes'
+    );
+    expect(names({ ...node, hasGitHub: true })).toContain(
+      'github-actions-authoring'
+    );
+    expect(names(web)).not.toContain('url-state');
+    expect(names({ ...web, router: 'react-router' })).toContain('url-state');
+    expect(names({ ...web, bundler: 'nextjs' })).toContain(
+      'hydration-safe-state'
+    );
+    expect(names(web, { firebase: '^11.0.0' })).toContain(
+      'client-trust-boundary'
+    );
+    expect(names(node, { firebase: '^11.0.0' })).not.toContain(
+      'client-trust-boundary'
+    );
+    expect(names(web, { antd: '^5.0.0' })).toContain('admin-panel-engineering');
+    expect(names(native)).toContain('mobile-app-shell');
+    expect(names(web)).not.toContain('codebase-dossier');
+  });
+});
+
 // ---------------------------------------------------------------------------
 // Executor selection (merged from skills-install-executor.test.ts): npm 11
 // rejects `npx` when `devEngines.packageManager` names another package
@@ -458,6 +501,33 @@ describe('resolveSkillsExecutor', () => {
       command: 'bunx',
       prefixArgs: ['skills@latest'],
     });
+  });
+});
+
+describe('skillsInstallTask choices', () => {
+  test('groups missing skills and restricts apply to the chosen skill', async () => {
+    const cwd = fixtureDir('react-vite-tailwind');
+    const profile = await fixtureProfile('react-vite-tailwind');
+    const choices = skillsInstallTask.choices;
+    if (!choices) {
+      throw new Error('expected skillsInstallTask to offer choices');
+    }
+
+    const grouped = await run(choices.options(cwd, profile));
+    const reactValues = (grouped.React ?? []).map((option) => option.value);
+    expect(reactValues).toContain('vercel-react-best-practices');
+
+    const restricted = choices.restrict(['vercel-react-best-practices']);
+    await expect(run(restricted.check(cwd, profile))).resolves.toBe('new');
+
+    runner.reset();
+    await runWith(runner.layer, restricted.apply(cwd, profile));
+    const commands = runner.calls
+      .map(([command, args]) => [command, ...(args ?? [])].join(' '))
+      .join('\n');
+    expect(commands).toContain('--skill vercel-react-best-practices');
+    expect(commands).not.toContain('vercel-composition-patterns');
+    expect(commands).not.toContain('--skill react-dev');
   });
 });
 

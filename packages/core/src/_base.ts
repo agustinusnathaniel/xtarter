@@ -62,6 +62,27 @@ interface TaskBase {
   searchMeta?: TaskSearchMeta;
 }
 
+/** A choice the user can narrow before an interactive apply. */
+export interface TaskChoiceOption {
+  label: string;
+  value: string;
+}
+
+export interface TaskChoices {
+  message: string;
+  /** Choices grouped by heading, in display order; every option starts selected. */
+  options: (
+    cwd: string,
+    profile: ProjectProfile
+  ) => Effect.Effect<
+    Record<string, Array<TaskChoiceOption>>,
+    TaskError,
+    TaskServices
+  >;
+  /** The same task restricted to the chosen values. */
+  restrict: (values: Array<string>) => Task;
+}
+
 /** A task whose methods return effects requiring `TaskServices`. */
 export interface Task extends TaskBase {
   apply: (
@@ -72,6 +93,8 @@ export interface Task extends TaskBase {
     cwd: string,
     profile: ProjectProfile
   ) => Effect.Effect<TaskStatus, TaskError, TaskServices>;
+  /** Optional: let interactive runs narrow what `apply` does. */
+  choices?: TaskChoices;
   dryRun: (
     cwd: string,
     profile: ProjectProfile
