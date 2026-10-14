@@ -1,0 +1,31 @@
+---
+// One recorded CLI session: the command (copyable) followed by its output
+// lines. Lines render as real text so assistive tech reads the transcript;
+// HeroTerminal only animates their reveal. Styling lives in global.css.
+import type { TerminalTranscript } from '@/data/terminal-transcripts'
+import CopyButton from './CopyButton.astro'
+
+interface Props {
+  transcript: TerminalTranscript
+}
+
+const { transcript } = Astro.props
+---
+
+<div class="xt-tx">
+  <div class="xt-tx-cmd">
+    <code><span class="xt-tx-prompt" aria-hidden="true">$ </span>{transcript.command}</code>
+    <CopyButton text={transcript.command} />
+  </div>
+  <div class="xt-tx-out">
+    {
+      transcript.lines.map((line) => (
+        <div class="xt-tl">
+          {line.map((segment) => (
+            <span class:list={[segment.tone && `xt-tone-${segment.tone}`]}>{segment.text}</span>
+          ))}
+        </div>
+      ))
+    }
+  </div>
+</div>

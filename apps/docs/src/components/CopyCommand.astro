@@ -1,0 +1,17 @@
+---
+// A single shell command with a copy button. Landing surfaces show one
+// canonical command (see AGENTS.md); mention alternatives in nearby prose.
+// Styling lives in global.css (`.xt-cmd`).
+import CopyButton from './CopyButton.astro'
+
+interface Props {
+  command: string
+}
+
+const { command } = Astro.props
+---
+
+<div class="xt-cmd not-content">
+  <code class="xt-cmd-text"><span class="xt-cmd-prompt" aria-hidden="true">$ </span>{command}</code>
+  <CopyButton text={command} />
+</div>

@@ -1,0 +1,60 @@
+---
+// Icon-only button that copies `text` to the clipboard. The icon swaps to a
+// check for 1.6s as confirmation and a polite live region announces it, so
+// the feedback reaches pointer, keyboard, and screen-reader users alike.
+// Styling lives in global.css (`.xt-copy`).
+interface Props {
+  text: string
+}
+
+const { text } = Astro.props
+---
+
+<xt-copy class="xt-copy" data-text={text}>
+  <button type="button" class="xt-copy-btn" aria-label={`Copy command: ${text}`}>
+    <svg class="xt-copy-icon xt-copy-idle" viewBox="0 0 16 16" aria-hidden="true">
+      <rect x="5.5" y="5.5" width="8" height="8" rx="1.5" />
+      <path d="M10.5 3.5v-.5A1.5 1.5 0 0 0 9 1.5H4A1.5 1.5 0 0 0 2.5 3v5A1.5 1.5 0 0 0 4 9.5h.5" />
+    </svg>
+    <svg class="xt-copy-icon xt-copy-done" viewBox="0 0 16 16" aria-hidden="true">
+      <path d="m3.5 8.5 3 3 6-7" />
+    </svg>
+  </button>
+  <span class="sr-only" aria-live="polite"></span>
+</xt-copy>
+
+<script>
+  const CONFIRM_MS = 1600
+
+  class XtCopy extends HTMLElement {
+    #timer: ReturnType<typeof setTimeout> | undefined
+
+    connectedCallback() {
+      const button = this.querySelector('button')
+      const live = this.querySelector('[aria-live]')
+      const text = this.dataset.text
+      if (!(button && live && text)) {
+        return
+      }
+      button.addEventListener('click', async () => {
+        try {
+          await navigator.clipboard.writeText(text)
+        } catch {
+          live.textContent = 'Copy failed. Select the command and copy it manually.'
+          return
+        }
+        this.dataset.copied = ''
+        live.textContent = 'Copied to clipboard'
+        clearTimeout(this.#timer)
+        this.#timer = setTimeout(() => {
+          delete this.dataset.copied
+          live.textContent = ''
+        }, CONFIRM_MS)
+      })
+    }
+  }
+
+  if (!customElements.get('xt-copy')) {
+    customElements.define('xt-copy', XtCopy)
+  }
+</script>

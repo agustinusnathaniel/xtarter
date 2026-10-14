@@ -12,7 +12,7 @@ import SectionHead from '@/components/SectionHead.astro'
 import FeatureGrid from '@/components/FeatureGrid.astro'
 import CtaBand from '@/components/CtaBand.astro'
 
-<div class="xt-section"><SectionHead index="01" id="how-it-works" title="How a run works" lead="Every run follows the same five steps." />
+<div class="xt-section"><SectionHead id="how-it-works" title="How a run works" lead="Every run follows the same five steps." />
 <ol class="xt-pipeline">
   <li class="xt-pipe"><span class="xt-pipe-name">Detect</span><p class="xt-pipe-desc">Profile the project: framework, bundler, package manager, existing configs.</p></li>
   <li class="xt-pipe"><span class="xt-pipe-name">Resolve</span><p class="xt-pipe-desc">Map the profile to the conformance tasks that apply.</p></li>
@@ -26,7 +26,7 @@ import CtaBand from '@/components/CtaBand.astro'
 Task coverage is deepest for Vite, React, and TypeScript projects. Other stacks such as Vue, Svelte, Solid, Node CLIs, and Bun work but stay experimental with fewer tasks. Contributions to expand coverage are welcome.
 :::
 
-<div class="xt-section"><SectionHead index="02" eyebrow="safety model" id="safety" title="Nothing moves without you" lead="Preview every change, back up originals, and write only after you approve." />
+<div class="xt-section"><SectionHead id="safety" title="Nothing moves without you" lead="Preview every change, back up originals, and write only after you approve." />
 <FeatureGrid items={[
   { title: 'Preview the plan', body: 'Run init or sync with --dry-run to preview every planned change; `.gitignore` may be created or updated, but no conformance files are written.' },
   { title: 'Backups by default', body: 'Modified files are copied to .xtarterize/backups/ first. Undo and restore are built in.' },
@@ -34,7 +34,7 @@ Task coverage is deepest for Vite, React, and TypeScript projects. Other stacks 
 ]} />
 </div>
 
-<div class="xt-section"><SectionHead index="03" eyebrow="task catalog" id="task-groups" title="What it can manage" lead="Apply the whole set with init, or exactly one task with add. Everything else stays untouched." />
+<div class="xt-section"><SectionHead id="task-groups" title="What it can manage" lead="Apply the whole set with init, or exactly one task with add. Everything else stays untouched." />
 <ul class="xt-link-cluster" aria-label="Task groups">
   <li>Linting &amp; Formatting</li>
   <li>TypeScript</li>
@@ -47,7 +47,7 @@ Task coverage is deepest for Vite, React, and TypeScript projects. Other stacks 
 </ul>
 </div>
 
-<div class="xt-section"><SectionHead index="04" id="quick-start" title="Quick start" lead="Three commands cover the loop." />
+<div class="xt-section"><SectionHead id="quick-start" title="Quick start" lead="Three commands cover the loop." />
 <AllPackageManagers type="dlx" pkg="xtarterize@latest" args="init" title="Initialize conformance" />
 <AllPackageManagers type="dlx" pkg="xtarterize@latest" args="check" title="Check conformance" />
 <AllPackageManagers type="dlx" pkg="xtarterize@latest" args="diff" title="Preview changes" />
@@ -58,6 +58,6 @@ Task coverage is deepest for Vite, React, and TypeScript projects. Other stacks 
 </div>
 
 <div class="xt-section"><CtaBand title="Starting from scratch?" note="create-xtarter-app scaffolds new projects on this same baseline.">
-  <a class="xt-btn xt-btn-invert" href="/create-xtarter-app/">Start with a template</a>
-  <a class="xt-btn xt-btn-ghost-dark" href="https://github.com/agustinusnathaniel/xtarter" target="_blank" rel="noopener noreferrer" data-umami-event="band_cta_github">Star on GitHub</a>
+  <a class="xt-btn xt-btn-primary" href="/create-xtarter-app/">Start with a template</a>
+  <a class="xt-btn xt-btn-ghost" href="https://github.com/agustinusnathaniel/xtarter" target="_blank" rel="noopener noreferrer" data-umami-event="band_cta_github">Star on GitHub</a>
 </CtaBand></div>

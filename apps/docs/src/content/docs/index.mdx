@@ -1,6 +1,6 @@
 ---
 title: xtarter
-description: Production-grade starter templates for JavaScript and TypeScript projects. Scaffold your next project in one command.
+description: Start conformant, stay conformant. Scaffold a JavaScript or TypeScript project on a strict baseline, or bring an existing repo up to it, with every change previewed first.
 template: splash
 editUrl: false
 lastUpdated: false
@@ -9,52 +9,55 @@ hero:
   # src/components/LandingHero.astro (wired in astro.config.mjs), which
   # hardcodes the composition; no hero data is read from this file. Keep
   # the key present and empty: Starlight sets data-has-hero on the page
-  # root from its presence, activating the splash paper backdrop in
-  # global.css.
+  # root from its presence, activating the splash canvas in global.css.
   {}
 ---
 
 import SectionHead from '@/components/SectionHead.astro'
 import ToolSplit from '@/components/ToolSplit.astro'
+import PlanFiles from '@/components/PlanFiles.astro'
 import FeatureGrid from '@/components/FeatureGrid.astro'
 import TemplateGallery from '@/components/TemplateGallery.astro'
+import CopyCommand from '@/components/CopyCommand.astro'
 import CtaBand from '@/components/CtaBand.astro'
 
 <div class="xt-section">
-  <SectionHead index="01" eyebrow="the xtarter ecosystem" id="two-tools" title="Two tools, one standard" lead="Start from a template, or bring an existing repo up to standard. Both land on the same conformance baseline." />
+  <SectionHead id="two-tools" title="Two ways to get conformant" lead="A new project and a five-year-old repo end up on the same baseline, so every project you open is set up the same way." />
   <ToolSplit />
 </div>
 
+<div class="xt-section xt-section-split">
+  <SectionHead id="what-lands" title="What lands in your repo" lead="A dry run on a fresh Vite + React app plans 22 tasks across 25 files. Each one settles a question your team would otherwise argue about in review." />
+  <PlanFiles />
+</div>
+
 <div class="xt-section">
-  <SectionHead index="02" eyebrow="why conformant" id="why-conformant" title="Standards that hold their shape" lead="Configs drift when enforcement lives in someone's head. This baseline lives in the repo instead." />
+  <SectionHead id="safety" title="Nothing is written until you approve it" />
   <FeatureGrid items={[
-    { title: 'Reviews that read themselves', body: 'Biome and strict TypeScript run from the first commit. Reviews cover features, not formatting.' },
-    { title: 'CI that stays green', body: 'GitHub Actions runs the same configs your editor enforces, so local and CI cannot disagree.' },
-    { title: 'Agent-ready by default', body: 'Agent skills ship with every config, so AI assistants follow the same standard you do.' },
+    { title: 'Preview the whole plan', body: 'init --dry-run prints every task and per-file diff without writing any config files.' },
+    { title: 'You approve every write', body: 'init asks before it applies, and conflicts surface instead of overwriting your configs.' },
+    { title: 'Backups before every change', body: 'Originals are copied to .xtarterize/backups/ first, and undo restores the last run.' },
   ]} />
 </div>
 
 <div class="xt-section">
-  <SectionHead index="03" id="starter-templates" title="Starter templates" lead="Five starters. Each ships Biome, strict TypeScript, CI, VS Code settings, and agent skills before your first commit." />
-  <TemplateGallery />
-  <p class="xt-note">Ready to use one? <a class="xt-link" href="/create-xtarter-app/">Scaffold with create-xtarter-app &rarr;</a></p>
+  <SectionHead id="stay-conformant" title="Stay conformant" lead="Configs drift as tools upgrade and teammates come and go. Catch it before it merges, then pull the repo back to the baseline." />
+  <FeatureGrid items={[
+    { title: 'Fail the build on drift', body: 'check exits non-zero when a repo falls out of conformance, so a CI step fails the pull request that introduced the drift.' },
+    { title: 'Bring it back with sync', body: 'sync offers only the tasks that drifted, with the same dry run, approval, and undo as init.' },
+    { title: 'Only what drifted changes', body: 'Tasks that already conform are skipped, so a run touches only the files that fell out of line.' },
+  ]} />
 </div>
 
-<a class="xt-link" href="https://github.com/agustinusnathaniel?tab=repositories&q=&type=source" target="_blank" rel="noopener noreferrer" data-umami-event="github_browse_click">All source repositories on GitHub</a>
-
 <div class="xt-section">
-  <SectionHead index="04" id="lifecycle" title="The project lifecycle" lead="One path from first commit to shipped project." />
-  <ol class="xt-lifecycle">
-    <li><a href="#starter-templates">Choose</a></li>
-    <li><a href="/create-xtarter-app/">Scaffold</a></li>
-    <li><a href="/xtarterize/">Conform</a></li>
-    <li class="xt-lifecycle-done"><a href="#get-started">Ship</a></li>
-  </ol>
+  <SectionHead id="starter-templates" title="Five templates that start conformant" lead="Next.js or Vite with React, styled with Chakra UI, Tailwind CSS, or HeroUI. Each one ships Biome, strict TypeScript, CI, VS Code settings, and agent skills before your first commit." />
+  <TemplateGallery />
+  <p class="xt-note">Pass the flag to skip the template prompt, or browse <a class="xt-link" href="https://github.com/agustinusnathaniel?tab=repositories&q=&type=source" target="_blank" rel="noopener noreferrer" data-umami-event="github_browse_click">all source repositories on GitHub</a>.</p>
 </div>
 
 <div class="xt-section" id="get-started">
-  <CtaBand title="Pick your door." note="Scaffold something new, or conform code you already have.">
-    <a class="xt-btn xt-btn-invert" href="/create-xtarter-app/" data-umami-event="band_cta_browse">Start with a template</a>
-    <a class="xt-btn xt-btn-ghost-dark" href="/xtarterize/" data-umami-event="band_cta_conform">Conform an existing project</a>
+  <CtaBand title="How conformant is your repo?" note="check scores your repo against the baseline and changes nothing. Use npx, yarn dlx, or bunx if you prefer.">
+    <CopyCommand command="pnpx xtarterize@latest check" />
+    <a class="xt-link" href="/create-xtarter-app/" data-umami-event="band_cta_browse">Or start a new project from a template</a>
   </CtaBand>
 </div>

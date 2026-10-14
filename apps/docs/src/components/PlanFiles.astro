@@ -1,0 +1,77 @@
+---
+// "What lands in your repo": the file list from a real
+// `xtarterize init --dry-run` against test/fixtures/react-vite-tailwind
+// (xtarterize v2.0.4), with GitHub-style diffstat blocks. Counts are copied
+// from the run's "Files to change" table; re-run and update when tasks
+// change. Styling lives in global.css (`.xt-plan*`).
+interface PlanFile {
+  path: string
+  action: 'create' | 'modify'
+  added: number
+  removed: number
+  what: string
+}
+
+const FILES: Array<PlanFile> = [
+  { path: 'biome.json', action: 'create', added: 125, removed: 0, what: 'Lint and format rules from the Ultracite preset' },
+  { path: 'tsconfig.json', action: 'modify', added: 3, removed: 1, what: 'Incremental builds on top of your strict settings' },
+  { path: 'vite.config.ts', action: 'modify', added: 9, removed: 5, what: 'Type and lint errors in the dev overlay, bundle visualizer' },
+  { path: 'package.json', action: 'modify', added: 21, removed: 1, what: 'Standard scripts and devEngines' },
+  { path: '.husky/pre-commit', action: 'create', added: 1, removed: 0, what: 'Checks staged files before every commit' },
+  { path: 'commitlint.config.ts', action: 'create', added: 15, removed: 0, what: 'Conventional Commits, enforced on every commit' },
+  { path: 'knip.config.ts', action: 'create', added: 8, removed: 0, what: 'Finds unused files, exports, and dependencies' },
+  { path: '.vscode/settings.json', action: 'create', added: 42, removed: 0, what: 'Format and fix on save with Biome' },
+  { path: 'AGENTS.md', action: 'create', added: 12, removed: 0, what: 'Project rules for AI coding agents' },
+]
+
+const TOTAL = { files: 25, added: 428, removed: 7 }
+const shownFiles = FILES.length
+const BLOCKS = 5
+
+// GitHub-style diffstat: five blocks split by the added/removed ratio.
+const blocks = (file: PlanFile) => {
+  const total = file.added + file.removed
+  const add = Math.round((file.added / total) * BLOCKS)
+  const del = Math.min(BLOCKS - add, Math.max(file.removed > 0 ? 1 : 0, Math.round((file.removed / total) * BLOCKS)))
+  return [
+    ...Array.from({ length: add }, () => 'add'),
+    ...Array.from({ length: del }, () => 'del'),
+    ...Array.from({ length: BLOCKS - add - del }, () => 'none'),
+  ]
+}
+---
+
+<div class="xt-plan not-content">
+  <ul class="xt-plan-list" aria-label="Files planned by xtarterize init --dry-run">
+    {
+      FILES.map((file) => (
+        <li class="xt-plan-row">
+          <span class:list={['xt-plan-glyph', `is-${file.action}`]} aria-hidden="true">
+            {file.action === 'create' ? '+' : '~'}
+          </span>
+          <span class="xt-plan-file">
+            <code class="xt-plan-path">{file.path}</code>
+            <span class="sr-only">{file.action === 'create' ? '(new file)' : '(modified)'}</span>
+            <span class="xt-plan-what">{file.what}</span>
+          </span>
+          <span class="xt-plan-stat">
+            <span class="xt-plan-num">
+              <span class="is-add">+{file.added}</span> <span class="is-del">-{file.removed}</span>
+            </span>
+            <span class="xt-plan-blocks" aria-hidden="true">
+              {blocks(file).map((kind) => (
+                <span class={`is-${kind}`} />
+              ))}
+            </span>
+          </span>
+        </li>
+      ))
+    }
+  </ul>
+  <p class="xt-plan-total">
+    <span>…and {TOTAL.files - shownFiles} more files</span>
+    <span class="xt-plan-num">
+      <span class="is-add">+{TOTAL.added}</span> <span class="is-del">-{TOTAL.removed}</span> across {TOTAL.files} files
+    </span>
+  </p>
+</div>

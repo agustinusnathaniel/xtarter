@@ -3,46 +3,47 @@
 @import "@astrojs/starlight-tailwind";
 @import "tailwindcss/theme.css" layer(theme);
 @import "tailwindcss/utilities.css" layer(utilities);
-@import "@fontsource-variable/rem";
-@import "@fontsource-variable/atkinson-hyperlegible-next";
-@import "@fontsource-variable/geist-mono";
+@import "@fontsource-variable/mona-sans/wdth.css";
+@import "@fontsource/monaspace-neon/400.css";
+@import "@fontsource/monaspace-neon/500.css";
+@import "@fontsource/monaspace-neon/700.css";
 
 @theme {
-  --font-heading: "REM Variable", sans-serif;
-  --font-sans: "Atkinson Hyperlegible Next Variable", sans-serif;
-  --font-mono: "Geist Mono Variable", monospace;
+  /* One type family: Mona Sans for every heading and all body text, and
+     Monaspace Neon, its metric-matched companion from the same foundry
+     (GitHub Next), only where text is literally code, terminal, or file
+     content. */
+  --font-heading: "Mona Sans Variable", system-ui, sans-serif;
+  --font-sans: "Mona Sans Variable", system-ui, sans-serif;
+  --font-mono: "Monaspace Neon", ui-monospace, monospace;
 
-  /* https://starlight.astro.build/guides/css-and-tailwind/#color-theme-editor */
-  /* Generated accent color palettes. */
-  --color-accent-200: #e9beac;
-  --color-accent-600: #8c3400;
-  --color-accent-900: #532109;
-  --color-accent-950: #391a0c;
-  /* Generated gray color palettes. */
-  --color-gray-100: #f9f5f5;
-  --color-gray-200: #f3ecea;
-  --color-gray-300: #c8c0be;
-  --color-gray-400: #978784;
-  --color-gray-500: #635451;
-  --color-gray-700: #423432;
-  --color-gray-800: #302321;
-  --color-gray-900: #1d1715;
+  /* Starlight palette (starlight-tailwind maps these to --sl-color-*).
+     Accent: brand green; 600 is the light-mode text accent (#15803d,
+     5.0:1 on white), 200 the dark-mode one. Gray: Tailwind zinc, with 900
+     pushed one step darker to serve as the dark-mode canvas. */
+  --color-accent-200: #86efac;
+  --color-accent-600: #15803d;
+  --color-accent-900: #14532d;
+  --color-accent-950: #052e16;
+  --color-gray-100: #f4f4f5;
+  --color-gray-200: #e4e4e7;
+  --color-gray-300: #d4d4d8;
+  --color-gray-400: #a1a1aa;
+  --color-gray-500: #71717a;
+  --color-gray-600: #52525b;
+  --color-gray-700: #3f3f46;
+  --color-gray-800: #27272a;
+  --color-gray-900: #0c0c0e;
 }
 
 :root {
   --sl-font: var(--font-sans);
   --sl-font-mono: var(--font-mono);
-  --sl-color-accent: #f97316;
-  --sl-color-accent-high: #fb923c;
-  --sl-color-accent-low: #ea580c;
 }
 
-:root[data-theme="dark"] {
-  --sl-color-accent: #fb923c;
-  --sl-color-accent-high: #fdba74;
-  --sl-color-accent-low: #f97316;
-}
-
+/* Every heading on the site (landing, docs, wordmark, footer) uses one
+   Mona Sans width, --xt-heading-stretch; only size and weight change.
+   Body text stays at the normal 100% width. */
 h1,
 h2,
 h3,
@@ -50,95 +51,127 @@ h4,
 h5,
 h6 {
   font-family: var(--font-heading);
+  font-stretch: var(--xt-heading-stretch);
+  letter-spacing: -0.01em;
+}
+
+/* Wordmark: the site title is live text (the logo is mark-only), set like
+   the display headline. */
+.site-title {
+  gap: 0.6rem;
+  font-family: var(--font-heading);
+  font-stretch: var(--xt-heading-stretch);
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  color: var(--sl-color-white);
+}
+
+.site-title img {
+  height: 1.75rem;
 }
 
 /* ============================================
-   TOKENS - warm paper + charcoal + orange
+   TOKENS - neutral zinc canvas, brand green, one dark terminal surface.
    Light-first: defaults are light, dark overrides follow.
    ============================================ */
 
 :root {
   /* Surfaces */
-  --xt-paper: #faf6f1;
-  --xt-panel: #ffffff;
-  --xt-panel-2: #f6efe7;
-  /* Tool-card hover surface: panel tinted toward the accent. Text keeps
-     its panel ratios on this tint (ink ~15.9:1, muted ~5.8:1 vs white
-     panel; the 6% tint shifts them by <0.2). */
-  --xt-panel-hover: color-mix(in srgb, var(--xt-accent) 6%, var(--xt-panel));
-  /* Ink */
-  --xt-ink: #241c15;
-  --xt-muted: #6f6157;
+  --xt-paper: #ffffff;
+  --xt-panel: #fafafa;
+  --xt-panel-2: #f4f4f5;
+  /* Ink: ink 17.7:1, muted 7.7:1 on paper */
+  --xt-ink: #18181b;
+  --xt-muted: #52525b;
   /* Lines */
-  --xt-line: #e7ddd1;
-  --xt-line-strong: #d2c3b2;
-  /* Accent (brand orange) */
-  --xt-accent: #f97316;
-  --xt-accent-deep: #c2410c;
-  /* Ghost hover ink on light surfaces: deeper than --xt-accent-deep so it
-     clears 4.5:1 (5.35:1 on the soft tint over paper, 5.72:1 over panel). */
-  --xt-accent-hover: #a83c0a;
-  --xt-accent-soft: rgba(249, 115, 22, 0.1);
-  /* Status */
-  --xt-ok: #15803d;
-  --xt-warn: #b45309;
-  /* Code / terminal (charcoal in both themes) */
-  --xt-code-bg: #f4ede4;
-  --xt-term-bg: #1b1512;
-  --xt-term-ink: #e9e1d8;
-  --xt-term-dim: #9d9085;
-  --xt-term-line: #302720;
-  /* Blueprint hairlines painted on charcoal canvases (inverted hero, CTA
-     band): term ink at 3% alpha - decorative texture, no contrast duty. */
-  --xt-grid-line: color-mix(in srgb, var(--xt-term-ink) 3%, transparent);
-  /* Terminal status markers: fixed light-on-charcoal values because the
-     terminal keeps its charcoal background in both themes. The theme-scoped
-     --xt-ok/--xt-warn drop to ~3.6:1 on charcoal in light mode, so these
-     share the dark-theme-safe hues instead (10.4:1 and 10.8:1 on charcoal). */
-  --xt-term-ok: #4ade80;
-  --xt-term-warn: #fbbf24;
+  --xt-line: #e4e4e7;
+  --xt-line-strong: #d4d4d8;
+  /* Brand green (#16a34a) as a mark/indicator fill. White text on it is
+     only 3.3:1, so filled buttons use the deeper --xt-accent-strong
+     (white 5.0:1, hover 7.1:1). --xt-accent-ink is the text-safe shade
+     (5.0:1 on paper). The brand shares its hue with the "passing" status
+     on purpose: green means conformant. */
+  --xt-accent: #16a34a;
+  --xt-accent-strong: #15803d;
+  --xt-accent-strong-hover: #166534;
+  --xt-accent-ink: #15803d;
+  --xt-on-accent: #ffffff;
+  /* Diff status on page surfaces (>=4.5:1 on panel) */
+  --xt-add: #15803d;
+  --xt-patch: #b45309;
+  --xt-del: #b91c1c;
+  /* Terminal: dark in both themes. Dim text 7.4:1, ink 15:1 on term bg. */
+  --xt-term-bg: #111113;
+  --xt-term-line: #27272a;
+  --xt-term-border: #18181b;
+  --xt-term-ink: #e4e4e7;
+  --xt-term-dim: #a1a1aa;
+  --xt-term-accent: #86efac;
+  --xt-term-add: #4ade80;
+  --xt-term-patch: #fbbf24;
+  --xt-term-fail: #f87171;
+  --xt-term-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
   /* UI */
-  --xt-focus: #ea580c;
-  --xt-btn-ink: #ffffff;
-  --xt-radius: 10px;
-  --xt-radius-sm: 6px;
+  --xt-focus: #16a34a;
+  --xt-radius: 14px;
+  --xt-radius-sm: 8px;
   /* Motion */
   --xt-ease: ease-out;
   --xt-dur-hover: 160ms;
   --xt-dur-press: 100ms;
+  /* The single heading width (Mona Sans width axis). */
+  --xt-heading-stretch: 112%;
+  /* Layout scale (landing pages). One gutter for header and content, one
+     section beat, one panel padding: every page edge and every panel
+     interior comes from these four values. */
+  --xt-container: 67.5rem;
+  --xt-gutter: clamp(1.25rem, 5vw, 3rem);
+  --xt-section-space: clamp(5rem, 11vw, 8.5rem);
+  --xt-head-space: clamp(1.75rem, 3.5vw, 2.75rem);
+  --xt-panel-pad: clamp(1.5rem, 3.5vw, 2.5rem);
+  --xt-row-pad: 1rem clamp(1.1rem, 2.5vw, 1.5rem);
 }
 
 :root[data-theme="dark"] {
-  --xt-paper: #171310;
-  --xt-panel: #1f1915;
-  --xt-panel-2: #27201a;
-  /* Dark hover surface: same derivation as light, ~8% accent into panel.
-     Ink (~13:1) and muted (~6.3:1) keep comfortable ratios on the tint. */
-  --xt-panel-hover: color-mix(in srgb, var(--xt-accent) 8%, var(--xt-panel));
-  --xt-ink: #f2ece4;
-  --xt-muted: #b1a396;
-  --xt-line: #352c24;
-  --xt-line-strong: #4b3d31;
-  --xt-accent: #fb923c;
-  --xt-accent-deep: #f97316;
-  --xt-accent-soft: rgba(251, 146, 60, 0.14);
-  --xt-ok: #4ade80;
-  --xt-warn: #fbbf24;
-  --xt-code-bg: #241d18;
-  --xt-focus: #fdba74;
-  --xt-btn-ink: #1b1512;
+  --xt-paper: #0c0c0e;
+  --xt-panel: #131316;
+  --xt-panel-2: #1a1a1e;
+  --xt-ink: #f4f4f5;
+  --xt-muted: #a1a1aa;
+  --xt-line: #232327;
+  --xt-line-strong: #34343a;
+  --xt-accent-ink: #4ade80;
+  --xt-add: #4ade80;
+  --xt-patch: #fbbf24;
+  --xt-del: #f87171;
+  /* The terminal lifts one step off the dark canvas instead of sinking. */
+  --xt-term-bg: #151518;
+  --xt-term-border: #2a2a2f;
+  --xt-term-line: #26262b;
+  --xt-term-shadow: 0 0 0 1px rgb(255 255 255 / 0.02);
+  --xt-focus: #4ade80;
 }
 
-/* Landing (splash) pages get the warm paper backdrop; docs pages keep
-   Starlight's default surfaces. */
+/* Landing (splash) pages get the canvas token; docs pages keep Starlight's
+   own surfaces (which resolve to the same zinc values). */
 html[data-has-hero]:not([data-has-sidebar]) main {
   background: var(--xt-paper);
 }
 
+/* Splash gutters: content panels use the shared gutter, and the header's
+   inline padding grows with the viewport so the logo and actions sit on
+   the same edges as the centered content column at every width. */
+html[data-has-hero]:not([data-has-sidebar]) .content-panel {
+  padding-inline: var(--xt-gutter);
+}
+
+html[data-has-hero]:not([data-has-sidebar]) header.header {
+  padding-inline: max(var(--xt-gutter), calc((100% - var(--xt-container)) / 2));
+}
+
 /* Splash routes hide Starlight's prev/next pagination footer: the three
    landing pages are top-level entries, so the links only ever point at
-   /blog/ and read as noise. Scoped to the same splash signature used for
-   the paper backdrop above; docs pages with sidebars keep their pager. */
+   /blog/ and read as noise. */
 html[data-has-hero]:not([data-has-sidebar]) .pagination-links {
   display: none;
 }
@@ -160,15 +193,12 @@ body {
 
 /* ============================================
    LANDING TYPOGRAPHY
-   Display: REM. Body/UI: Atkinson. Labels/artifacts: Geist Mono.
    ============================================ */
 
 .xt-hero h1,
 .xt-section-title,
-.xt-lifecycle li,
-.xt-pipe-name {
+.xt-band-title {
   text-wrap: balance;
-  overflow-wrap: anywhere;
   min-width: 0;
 }
 
@@ -180,98 +210,48 @@ body {
   text-wrap: pretty;
 }
 
-/* Section headings on landing pages. The h2s are written as JSX in the
-   landing MDX (not markdown headings), so they render as plain block
-   headings without Starlight's anchor-link wrapper. */
+/* Section titles are JSX in the landing MDX, so they render without
+   Starlight's anchor-link wrapper. */
 h2.xt-section-title {
   font-family: var(--font-heading);
-  font-weight: 600;
-  font-size: clamp(1.75rem, 3.5vw, 2.5rem);
-  line-height: 1.15;
-  letter-spacing: -0.015em;
+  font-stretch: var(--xt-heading-stretch);
+  font-weight: 650;
+  font-size: clamp(1.75rem, 3.4vw, 2.5rem);
+  line-height: 1.08;
+  letter-spacing: -0.02em;
   color: var(--xt-ink);
-  margin: 0 0 0.9rem;
+  margin: 0;
 }
 
 .xt-section-lead {
-  font-size: 1.05rem;
+  font-size: 1.0625rem;
   line-height: 1.6;
   color: var(--xt-muted);
-  max-width: 60ch;
-  margin: 0 0 1.5rem;
+  max-width: 58ch;
+  margin: 0.9rem 0 0;
 }
 
-/* Composed section head (SectionHead component): optional mono eyebrow +
-   title + lead as one unit. It composes with - never duplicates - the
-   .xt-section-title / .xt-section-lead classes above; children keep their
-   own type rules and margins. Because the title is nested inside this
-   wrapper, it is no longer a direct child of .sl-markdown-content and the
-   legacy direct-child rhythm rules below simply don't fire for wrapped
-   sections (no double beats). */
 .xt-section-head {
   min-width: 0;
+  margin-bottom: var(--xt-head-space);
 }
 
-/* ---- Status layer (SectionHead `index` prop) ----
-   Numbered sections get a mono `// 01` eyebrow line plus a giant ghost
-   numeral right-aligned beside the head. Both artifacts are aria-hidden
-   decoration; the numeral drops below the ink at opacity .08 on purpose.
-   Omitting `index` keeps the plain stacked head - no grid, no artifacts. */
-.xt-section-head.has-index {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  column-gap: 1.5rem;
-  align-items: start;
-}
-
-.xt-section-head.has-index .xt-section-head-body {
-  grid-column: 1;
-  min-width: 0;
-}
-
-/* Same voice as .xt-section-eyebrow; accent-deep on paper ~5.7:1 light /
-   accent ~8.6:1 dark (matches eyebrow ledger). */
-.xt-section-index {
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  font-weight: 500;
-  letter-spacing: 0.12em;
-  color: var(--xt-accent-deep);
-  margin: 0 0 0.9rem;
-}
-
-:root[data-theme="dark"] .xt-section-index {
-  color: var(--xt-accent);
-}
-
-/* Ghost numeral: mono, display-scale, faded to a whisper. Decorative only
-   (aria-hidden in the component) - contrast does not apply. */
-.xt-section-num {
-  grid-column: 2;
-  justify-self: end;
-  font-family: var(--font-mono);
-  font-size: clamp(3.5rem, 7vw, 6rem);
+/* Small label above a heading. Only the standalone trust pages still use
+   it, as a page-kind marker; sentence case, no tracking. */
+.xt-eyebrow,
+.xt-section-eyebrow {
+  font-size: 0.875rem;
   font-weight: 600;
-  line-height: 0.85;
-  letter-spacing: -0.04em;
-  color: var(--xt-ink);
-  opacity: 0.08;
-  user-select: none;
-}
-
-@media (max-width: 640px) {
-  .xt-section-num {
-    display: none;
-  }
+  color: var(--xt-accent-ink);
+  margin: 0 0 0.75rem;
 }
 
 .xt-note {
-  font-size: 0.92rem;
+  font-size: 0.9375rem;
   line-height: 1.6;
   color: var(--xt-muted);
   max-width: 70ch;
-  /* Standalone footer lines sit below the gallery / code block, not on it. */
-  margin: 1.5rem 0 0;
+  margin: 1.25rem 0 0;
 }
 
 .xt-note code {
@@ -279,180 +259,136 @@ h2.xt-section-title {
   font-size: 0.85em;
 }
 
-/* Inline text links (quick-start clusters, next-step lines). */
+/* Inline text links. */
 .xt-link {
-  color: var(--xt-accent-deep);
+  color: var(--xt-accent-ink);
+  font-weight: 550;
   text-decoration: underline;
-  text-underline-offset: 2px;
-  text-decoration-color: color-mix(in srgb, var(--xt-accent-deep) 45%, transparent);
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+  text-decoration-color: color-mix(in srgb, var(--xt-accent-ink) 40%, transparent);
+  transition: text-decoration-color var(--xt-dur-hover) var(--xt-ease);
 }
 
 .xt-link:hover {
-  text-decoration-color: var(--xt-accent-deep);
-}
-
-:root[data-theme="dark"] .xt-link {
-  color: var(--xt-accent);
-  text-decoration-color: color-mix(in srgb, var(--xt-accent) 45%, transparent);
-}
-
-:root[data-theme="dark"] .xt-link:hover {
-  text-decoration-color: var(--xt-accent);
+  text-decoration-color: var(--xt-accent-ink);
 }
 
 /* ============================================
    SECTION RHYTHM (landing pages)
-   Landing content lives in Starlight's markdown container; sections are
-   separated by a clear vertical beat, while the first section keeps its
-   existing hero gap (hero bottom padding + Starlight container margin).
-   Heading-to-content spacing stays tight (see h2.xt-section-title's
-   margin-bottom) so the section beat reads as section-to-section only.
-
-   Two authoring styles share these values:
-   - rebuilt pages wrap each section in .xt-section (owns the beat);
-   - a standalone SectionHead (direct child of the markdown container)
-     carries the same beat itself.
-   Titles nested in either wrapper escape the legacy direct-child rules
-   below, which keep working for unwrapped MDX until pages migrate.
+   Sections are wrapped in .xt-section, which owns the vertical beat.
    ============================================ */
 
 .xt-section {
-  margin-top: clamp(3rem, 7vw, 5rem);
+  margin-top: var(--xt-section-space);
 }
 
 .xt-section:first-child {
-  margin-top: 0;
+  margin-top: clamp(4rem, 9vw, 6.5rem);
 }
 
-.sl-markdown-content > .xt-section-head {
-  margin-top: clamp(3rem, 7vw, 5rem);
-}
+/* Head beside content on wide screens: the head sticks while the list
+   scrolls past it. */
+@media (min-width: 64rem) {
+  .xt-section-split {
+    display: grid;
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.5fr);
+    column-gap: clamp(2.5rem, 5vw, 4.5rem);
+    align-items: start;
+  }
 
-.sl-markdown-content > .xt-section-head:first-child {
-  margin-top: 0;
-}
-
-.sl-markdown-content > .xt-section-title {
-  margin-top: clamp(2.5rem, 4.5vw, 3.5rem);
-}
-
-.sl-markdown-content > .xt-section-title:first-of-type {
-  margin-top: 0;
-}
-
-/* Standalone contextual links (e.g. "All source repositories on GitHub")
-   become their own block with rhythm so they stop colliding with the
-   gallery / section above. Inline .xt-link usage inside paragraphs and
-   link clusters is untouched by this direct-child rule. */
-.sl-markdown-content > a.xt-link {
-  display: block;
-  width: fit-content;
-  margin-top: 1.5rem;
+  .xt-section-split > .xt-section-head {
+    position: sticky;
+    top: calc(var(--sl-nav-height, 3.5rem) + 2rem);
+    margin-bottom: 0;
+  }
 }
 
 /* ============================================
    HERO
+   Headline on its own row (display width), lede + actions beneath, then
+   the terminal at full container width.
    ============================================ */
 
 .xt-hero {
-  padding: 2.5rem 0 1rem;
-}
-
-.xt-hero-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 2.5rem;
-  align-items: start;
-}
-
-.xt-hero-copy {
-  min-width: 0;
-}
-
-/* One mono eyebrow per hero or section head - labels, not section
-   numbering. .xt-section-eyebrow is the same treatment aliased for the
-   SectionHead component so both share this single source of truth. */
-.xt-eyebrow,
-.xt-section-eyebrow {
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  font-weight: 500;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: var(--xt-accent-deep);
-  margin: 0 0 0.9rem;
-}
-
-:root[data-theme="dark"] .xt-eyebrow,
-:root[data-theme="dark"] .xt-section-eyebrow {
-  color: var(--xt-accent);
+  padding: clamp(3rem, 9vw, 7rem) 0 0;
 }
 
 .xt-hero h1 {
   font-family: var(--font-heading);
-  /* Type jump (round 2): display-scale headline, tighter leading. */
-  font-size: clamp(2.75rem, 7vw, 4.5rem);
-  line-height: 1.04;
-  letter-spacing: -0.02em;
-  font-weight: 650;
+  font-stretch: var(--xt-heading-stretch);
+  font-weight: 700;
+  font-size: clamp(2.25rem, 8.2vw, 5.5rem);
+  line-height: 0.98;
+  letter-spacing: -0.035em;
   color: var(--xt-ink);
-  margin: 0 0 1.25rem;
-  max-width: 22ch;
+  margin: 0;
 }
 
-/* Home renders its h1 as two explicit lines; the second sentence carries
-   the accent. On charcoal (--xt-hero-dark) this is --xt-accent: ~6.5:1 in
-   light / ~8:1 in dark on term-bg (AA, and large text besides). */
 .xt-h1-line {
   display: block;
 }
 
-.xt-h1-accent {
-  color: var(--xt-accent);
+/* Single-sentence product titles run longer; keep them a size down so
+   they hold two or three lines instead of five. */
+.xt-hero-xtz h1,
+.xt-hero-cxa h1 {
+  font-size: clamp(2.1rem, 6vw, 4rem);
+  line-height: 1.02;
+  max-width: 18ch;
+}
+
+.xt-hero-aside {
+  display: grid;
+  gap: 1.75rem;
+  margin-top: clamp(1.75rem, 3.5vw, 2.5rem);
+}
+
+@media (min-width: 56rem) {
+  .xt-hero-aside {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: end;
+    column-gap: 3rem;
+  }
 }
 
 .xt-hero-lede {
-  font-size: clamp(1.05rem, 1.6vw, 1.2rem);
+  font-size: clamp(1.0625rem, 1.5vw, 1.1875rem);
   line-height: 1.6;
   color: var(--xt-muted);
-  max-width: 58ch;
+  max-width: 56ch;
   margin: 0;
 }
-
-/* ---- Hero action buttons ---- */
 
 .xt-hero-actions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: 0.85rem;
-  margin-top: 1.75rem;
+  gap: 0.75rem;
 }
+
+/* ============================================
+   BUTTONS
+   Primary: brand fill with near-black ink (6.8:1). Ghost: hairline.
+   ============================================ */
 
 .xt-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   min-height: 44px;
-  padding: 0.55rem 1.3rem;
+  padding: 0.6rem 1.15rem;
   border-radius: var(--xt-radius-sm);
   border: 1px solid transparent;
   font-family: var(--font-sans);
-  font-size: 0.95rem;
+  font-size: 0.9375rem;
   font-weight: 600;
   line-height: 1.3;
   text-decoration: none;
-  color: var(--xt-btn-ink);
-  background: var(--xt-accent-deep);
   transition:
     transform var(--xt-dur-hover) var(--xt-ease),
     background-color var(--xt-dur-hover) var(--xt-ease),
-    border-color var(--xt-dur-hover) var(--xt-ease),
-    color var(--xt-dur-hover) var(--xt-ease);
-}
-
-:root[data-theme="dark"] .xt-btn {
-  background: var(--xt-accent);
+    border-color var(--xt-dur-hover) var(--xt-ease);
 }
 
 .xt-btn:hover {
@@ -460,721 +396,645 @@ h2.xt-section-title {
 }
 
 .xt-btn:active {
-  transform: translateY(1px);
+  transform: scale(0.97);
   transition-duration: var(--xt-dur-press);
 }
 
-.xt-btn-primary {
-  border-color: var(--xt-accent-deep);
+.xt-btn-primary,
+.xt-btn-primary:hover {
+  color: var(--xt-on-accent);
 }
 
-:root[data-theme="dark"] .xt-btn-primary {
-  border-color: var(--xt-accent);
+.xt-btn-primary {
+  background: var(--xt-accent-strong);
+  border-color: var(--xt-accent-strong);
+}
+
+.xt-btn-primary:hover {
+  background: var(--xt-accent-strong-hover);
+  border-color: var(--xt-accent-strong-hover);
+}
+
+.xt-btn-ghost,
+.xt-btn-ghost:hover {
+  color: var(--xt-ink);
 }
 
 .xt-btn-ghost {
   background: transparent;
-  color: var(--xt-ink);
   border-color: var(--xt-line-strong);
 }
 
-/* The dark base button rule (:root[data-theme="dark"] .xt-btn, 0,3,0)
-   would paint every button - including ghosts - with the accent background.
-   Keep ghost buttons transparent in dark mode; the dark hover rule below
-   restores the soft tint on hover. */
-:root[data-theme="dark"] .xt-btn-ghost {
-  background: transparent;
-}
-
 .xt-btn-ghost:hover {
-  border-color: var(--xt-accent-deep);
-  color: var(--xt-accent-hover);
-  background: var(--xt-accent-soft);
+  background: var(--xt-panel-2);
 }
 
-:root[data-theme="dark"] .xt-btn-ghost:hover {
-  border-color: var(--xt-accent);
-  color: var(--xt-accent);
-  background: var(--xt-accent-soft);
-}
-
-/* ---- Buttons on charcoal surfaces (.xt-band) ----
-   The band keeps fixed term tokens in both themes, so these modifiers pin
-   their own colors and re-declare them dark-scoped to beat the dark base
-   .xt-btn accent paint (same specificity trick as the ghost fix above).
-   Color-only hovers stay ungated; the shared transform lift lives in the
-   @media (hover:hover) block and is neutralized by prefers-reduced-motion. */
-
-/* Light button on charcoal: term-bg ink on a term-ink fill ~13.9:1 (fixed
-   pairing, identical in both themes); the hover shade keeps >=11:1. */
-.xt-btn-invert,
-:root[data-theme="dark"] .xt-btn-invert {
-  background: var(--xt-term-ink);
-  border-color: var(--xt-term-ink);
-  color: var(--xt-term-bg);
-}
-
-.xt-btn-invert:hover {
-  border-color: color-mix(in srgb, var(--xt-term-bg) 10%, var(--xt-term-ink));
-  background: color-mix(in srgb, var(--xt-term-bg) 10%, var(--xt-term-ink));
-  color: var(--xt-term-bg);
-}
-
-:root[data-theme="dark"] .xt-btn-invert:hover {
-  border-color: color-mix(in srgb, var(--xt-term-bg) 10%, var(--xt-term-ink));
-  background: color-mix(in srgb, var(--xt-term-bg) 10%, var(--xt-term-ink));
-}
-
-/* Ghost on charcoal: term-ink label on the charcoal surface ~13.9:1; the
-   <=8% ink-tint hover fill keeps it >=13:1. The hairline border is a
-   quiet affordance (~2.2:1 at rest, term-dim ~5.8:1 on hover) - the label
-   carries identification, matching the artifact aesthetic. */
-.xt-btn-ghost-dark,
-:root[data-theme="dark"] .xt-btn-ghost-dark {
-  background: transparent;
-  border-color: color-mix(in srgb, var(--xt-term-dim) 45%, transparent);
-  color: var(--xt-term-ink);
-}
-
-.xt-btn-ghost-dark:hover {
-  border-color: var(--xt-term-dim);
-  background: color-mix(in srgb, var(--xt-term-ink) 8%, transparent);
-  color: var(--xt-term-ink);
-}
-
-:root[data-theme="dark"] .xt-btn-ghost-dark:hover {
-  border-color: var(--xt-term-dim);
-  background: color-mix(in srgb, var(--xt-term-ink) 8%, transparent);
-  color: var(--xt-term-ink);
-}
-
-/* ============================================
-   HERO INVERSION ("terminal takeover")
-   The three splash heroes invert onto the term-token charcoal family via
-   `.xt-hero-dark` (added in LandingHero.astro): a full-bleed charcoal
-   canvas behind display-scale copy, with the artifact panel elevated one
-   step. Paper resumes below the band.
-
-   Contrast ledger (fixed term-token pairings, identical in both themes):
-   - h1 / term ink on term bg ......... ~13.9:1 (AAA)
-   - lede / term dim on term bg ....... ~5.8:1 (AA)
-   - eyebrow & cursor / accent ........ ~6.5:1 light, ~8:1 dark (AA)
-   - ghost actions .................... see .xt-btn-ghost-dark above
-   The full-bleed breakout centers the canvas on the Starlight container:
-   negative margins extend it to the viewport edges while equal padding
-   keeps every child exactly where it was. html/body overflow-x: clip
-   absorbs the 100vw scrollbar overhang.
-   ============================================ */
-
-.xt-hero-dark {
-  position: relative;
-  isolation: isolate;
-  margin-inline: calc(50% - 50vw);
-  padding-inline: calc(50vw - 50%);
-  padding-block: clamp(3rem, 6vw, 4.5rem) clamp(2.5rem, 5vw, 3.75rem);
-  background: var(--xt-term-bg);
-  /* Copy tokens flip to the charcoal family; ratios documented above. */
-  color: var(--xt-term-ink);
-}
-
-/* Blueprint hairline grid, ~3% alpha / 1px lines / 48px pitch. Shared by
-   the inverted hero and the CTA band (.xt-band v2). Purely decorative:
-   z-index -1 under an isolated parent paints above that parent's own
-   background but below all content. */
-.xt-hero-dark::before,
-.xt-band::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background-image:
-    linear-gradient(to right, var(--xt-grid-line) 1px, transparent 1px),
-    linear-gradient(to bottom, var(--xt-grid-line) 1px, transparent 1px);
-  background-size: 48px 48px;
-}
-
-.xt-hero-dark h1 {
-  color: var(--xt-term-ink);
-}
-
-.xt-hero-dark .xt-hero-lede {
-  color: var(--xt-term-dim);
-}
-
-.xt-hero-dark .xt-eyebrow,
-.xt-hero-dark .xt-section-eyebrow {
-  color: var(--xt-accent);
-}
-
-/* ---- Artifact panel elevation ----
-   On the now-charcoal hero the artifacts would melt into the canvas, so
-   they lift one step: background mixed ~4% toward term ink, border ~14%
-   (a lighter charcoal hairline). Flat by design - no shadows. Ink/dim
-   text sits on the lifted surface instead of raw term-bg; at 4% mix the
-   shift costs ~1.1 contrast-ratio points absolute (ink 13.96 -> 12.86,
-   dim 5.82 -> 5.36), so the ledger above still holds. */
-.xt-hero-dark .xt-fork,
-.xt-hero-dark .xt-prompt,
-.xt-hero-dark .xt-terminal {
-  background: color-mix(in srgb, var(--xt-term-ink) 4%, var(--xt-term-bg));
-  border-color: color-mix(in srgb, var(--xt-term-ink) 14%, var(--xt-term-bg));
-}
-
-/* The dry-run caption lives inside the inverted hero (TerminalDemo renders
-   it as a sibling of the panel), so it must leave its paper-scoped default:
-   --xt-muted is #6f6157 and drops to ~3:1 on the fixed charcoal canvas.
-   Term dim restores the lede's pairing - ~5.8:1 on term bg, identical in
-   both themes; inline code inherits it. */
-.xt-hero-dark .xt-terminal-caption {
-  color: var(--xt-term-dim);
-}
-
-/* ============================================
-   MICRO-LIFE - blinking cursors + staggered hero entrance
-   Both effects are decorative and double-covered for reduced motion:
-   gated behind prefers-reduced-motion: no-preference here AND neutralized
-   by the global reduce kill switch at the bottom of this file.
-   ============================================ */
-
-/* Block cursor appended after command lines (fork strip rows, CXA prompt).
-   Sized 1ch x 1.05em, accent fill (decorative, aria-hidden), hard-stepped
-   blink. As an empty inline-block/flex item its baseline is its bottom
-   edge, so it sits on the text baseline like a real caret. */
-.xt-cursor {
-  display: inline-block;
-  flex-shrink: 0;
-  width: 1ch;
-  height: 1.05em;
-  background: var(--xt-accent);
-  animation: xt-cursor-blink 1.1s steps(1) infinite;
-}
-
-@keyframes xt-cursor-blink {
-  0%,
-  100% {
-    opacity: 1;
-  }
-
-  50% {
-    opacity: 0;
-  }
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  /* Entrance: children of the hero grid fade up 12px over 320ms, staggered
-     0 / 70 / 140ms. `backwards` keeps pre-delay children hidden on their
-     first frame only. */
-  .xt-hero-dark .xt-hero-grid > * {
-    animation: xt-rise-in 320ms var(--xt-ease) backwards;
-  }
-
-  .xt-hero-dark .xt-hero-grid > :nth-child(2) {
-    animation-delay: 70ms;
-  }
-
-  .xt-hero-dark .xt-hero-grid > :nth-child(3) {
-    animation-delay: 140ms;
-  }
-}
-
-@keyframes xt-rise-in {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-}
-
-/* Starlight LinkButton primary - light mode only. Starlight paints it
-   white-on-var(--sl-color-text-accent), which resolves to the brand
-   orange #f97316 in light mode (~2.8:1). Use the deep accent so white
-   text clears 4.5:1 (5.18:1). Dark mode keeps Starlight's own
-   accent-high background (10.5:1) untouched. */
+/* Starlight LinkButton primary in light mode: white text on the brand
+   green would be ~3.3:1, so use the deeper button shade (5.0:1). */
 :root[data-theme="light"] .sl-link-button.primary {
-  background: var(--xt-accent-deep);
-  border-color: var(--xt-accent-deep);
-  color: var(--xt-btn-ink);
-}
-
-:root[data-theme="light"] .sl-link-button.primary:hover {
-  color: var(--xt-btn-ink);
+  background: var(--xt-accent-strong);
+  border-color: var(--xt-accent-strong);
+  color: #fff;
 }
 
 /* ============================================
-   CHARCOAL ARTIFACTS
-   One dominant charcoal artifact per route, distinct shapes:
-   home = forked command strip, xtz = terminal output,
-   CXA = template-selection prompt.
+   TERMINAL (HeroTerminal / TerminalTranscript)
+   The one dark object on the page, in both themes.
    ============================================ */
 
-.xt-fork,
-.xt-prompt,
+.xt-terminal-figure {
+  margin: clamp(3rem, 6vw, 4.5rem) 0 0;
+}
+
 .xt-terminal {
+  display: block;
+  overflow: hidden;
+  border: 1px solid var(--xt-term-border);
   border-radius: var(--xt-radius);
-  border: 1px solid var(--xt-term-line);
   background: var(--xt-term-bg);
   color: var(--xt-term-ink);
   font-family: var(--font-mono);
-  min-width: 0;
+  box-shadow: var(--xt-term-shadow);
 }
 
-/* ---- Home: forked command strip ---- */
-
-.xt-fork {
-  padding: 1.35rem 1.4rem 1.25rem;
-}
-
-.xt-fork-row {
-  display: flex;
-  align-items: baseline;
-  gap: 0.65rem;
-  font-size: 0.92rem;
-  line-height: 2.1;
-  min-width: 0;
-}
-
-.xt-fork-branch {
-  color: var(--xt-term-dim);
-  flex-shrink: 0;
-  font-size: 0.82rem;
-}
-
-.xt-fork-prompt {
-  color: var(--xt-accent);
-  font-weight: 700;
-  flex-shrink: 0;
-}
-
-.xt-fork-cmd {
-  overflow-wrap: anywhere;
-}
-
-/* ---- create-xtarter-app: template-selection prompt ---- */
-
-.xt-prompt {
-  padding: 1.35rem 1.4rem 1.3rem;
-  max-width: 26rem;
-}
-
-.xt-prompt-line {
-  display: block;
-  font-size: 0.9rem;
-  overflow-wrap: anywhere;
-  margin-bottom: 1.1rem;
-}
-
-.xt-prompt-q {
-  display: block;
-  font-size: 0.82rem;
-  color: var(--xt-accent);
-  border-top: 1px solid var(--xt-term-line);
-  padding-top: 1.1rem;
-  margin-bottom: 0.7rem;
-}
-
-.xt-prompt-list {
-  list-style: none;
-  margin: 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.4rem;
-  font-size: 0.85rem;
-}
-
-.xt-prompt-item {
-  display: flex;
-  align-items: baseline;
-  gap: 0.5rem;
-  color: var(--xt-term-dim);
-  overflow-wrap: anywhere;
-}
-
-.xt-prompt-item .xt-prompt-caret {
-  color: var(--xt-accent);
-  flex-shrink: 0;
-  opacity: 0;
-}
-
-.xt-prompt-item.is-selected {
-  color: var(--xt-term-ink);
-}
-
-.xt-prompt-item.is-selected .xt-prompt-caret {
-  opacity: 1;
-}
-
-/* ---- xtarterize: terminal output ---- */
-
-.xt-terminal {
-  overflow: hidden;
-}
-
-.xt-terminal-bar {
-  padding: 0.7rem 1.1rem;
+/* Starlight Tabs restyled as the terminal's title bar. Starlight's rules
+   live in a cascade layer, so these unlayered rules win without !important. */
+.xt-terminal .tablist-wrapper {
+  overflow-y: hidden;
   border-bottom: 1px solid var(--xt-term-line);
+  padding-inline: 0.5rem;
 }
 
-.xt-terminal-title {
-  font-size: 0.72rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
+.xt-terminal [role="tablist"] {
+  gap: 0.25rem;
+  margin: 0;
+  border-bottom: 0;
+}
+
+.xt-terminal .tab > [role="tab"] {
+  position: relative;
+  white-space: nowrap;
+  padding: 0.85rem 0.75rem;
+  box-shadow: none;
+  font-size: 0.8125rem;
+  font-weight: 450;
   color: var(--xt-term-dim);
+  transition: color var(--xt-dur-hover) var(--xt-ease);
 }
 
-.xt-terminal-body {
-  padding: 1.25rem 1.3rem;
-  font-size: 0.84rem;
-  line-height: 1.75;
-  overflow-x: auto;
-  white-space: pre;
-}
-
-.xt-term-line {
-  display: flex;
-  align-items: baseline;
-  gap: 0.5rem;
-  min-width: max-content;
-}
-
-.xt-term-prompt {
-  color: var(--xt-accent);
-  font-weight: 700;
-}
-
-.xt-term-cmd {
+.xt-terminal .tab > [role="tab"]:hover,
+.xt-terminal .tab > [role="tab"][aria-selected="true"] {
   color: var(--xt-term-ink);
 }
 
-.xt-term-out {
-  padding-left: 1.5ch;
+.xt-terminal .tab > [role="tab"][aria-selected="true"] {
+  font-weight: 500;
 }
 
-.xt-term-row {
-  padding-left: 3.5ch;
+/* Active marker: a 2px brand bar sitting on the title-bar rule. */
+.xt-terminal .tab > [role="tab"][aria-selected="true"]::after {
+  content: "";
+  position: absolute;
+  inset: auto 0.75rem 0;
+  height: 2px;
+  background: var(--xt-accent);
 }
 
-/* Wrapped continuation segments for a tagged record (detected stack,
-   backup path): a column nested in the baseline-aligned line keeps each
-   segment flush under the first one's text column at any font size, so
-   long records split instead of overflowing the artifact on phones. */
-.xt-term-stack {
+.xt-terminal .tablist-wrapper ~ [role="tabpanel"] {
+  margin-top: 0;
+}
+
+.xt-tx {
+  padding: 1.1rem 1.25rem 1.5rem;
+  font-size: 0.8125rem;
+  line-height: 1.7;
+}
+
+.xt-tx-cmd {
   display: flex;
-  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
 }
 
-.xt-term-spacer {
-  height: 0.6rem;
+.xt-tx-cmd code {
+  overflow-wrap: break-word;
+  font-size: 0.875rem;
+  color: var(--xt-term-ink);
+  background: none;
+  padding: 0;
 }
 
-.xt-term-dim {
+.xt-tx-prompt {
+  color: var(--xt-term-accent);
+}
+
+/* Reserve the tallest transcript (HeroTerminal sets --xt-tx-lines) so tab
+   switches never shift the page. Wide lines scroll inside the terminal. */
+.xt-tx-out {
+  min-height: calc(var(--xt-tx-lines, 12) * 1.7em);
+  overflow-x: auto;
+  /* Hidden lines sit 4px low mid-replay; never let that become a scrollbar. */
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: var(--xt-term-line) transparent;
+}
+
+.xt-tl {
+  min-height: 1.7em;
+  white-space: pre;
+  transition:
+    opacity 200ms var(--xt-ease),
+    transform 200ms var(--xt-ease);
+}
+
+/* Playback: HeroTerminal sets data-playing only while it replays, so with
+   no JS (or reduced motion) every line is simply visible. */
+.xt-terminal[data-playing] .xt-tl:not(.is-shown) {
+  opacity: 0;
+  transform: translateY(4px);
+}
+
+.xt-tone-muted {
   color: var(--xt-term-dim);
 }
 
-.xt-term-accent {
-  color: var(--xt-accent);
+.xt-tone-accent {
+  color: var(--xt-term-accent);
 }
 
-.xt-term-add {
-  color: var(--xt-term-ok);
-  font-weight: 700;
+.xt-tone-add {
+  color: var(--xt-term-add);
 }
 
-.xt-term-edit {
-  color: var(--xt-term-warn);
-  font-weight: 700;
+.xt-tone-patch {
+  color: var(--xt-term-patch);
+}
+
+.xt-tone-fail {
+  color: var(--xt-term-fail);
 }
 
 .xt-terminal-caption {
-  font-size: 0.88rem;
-  line-height: 1.6;
-  color: var(--xt-muted);
-  max-width: 70ch;
-  margin: 0.9rem 0 0;
-}
-
-.xt-terminal-caption code {
-  font-family: var(--font-mono);
-  font-size: 0.85em;
-}
-
-/* ---- Status tags (used on charcoal panels) ---- */
-
-.xt-tag {
-  display: inline-flex;
-  align-items: center;
-  flex-shrink: 0;
-  padding: 0 0.45rem;
-  border-radius: 4px;
-  font-size: 0.68rem;
-  font-weight: 600;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
+  margin: 0.85rem 0 0;
+  font-size: 0.875rem;
   line-height: 1.5;
+  color: var(--xt-muted);
 }
 
-.xt-tag-detect {
-  background: rgba(249, 115, 22, 0.18);
-  color: #fdba74;
-}
-
-.xt-tag-plan {
-  background: rgba(251, 191, 36, 0.16);
-  color: #fcd34d;
-}
-
-.xt-tag-safe {
-  background: rgba(74, 222, 128, 0.16);
-  color: #86efac;
+@media (max-width: 40rem) {
+  .xt-tx {
+    padding: 1rem;
+    font-size: 0.75rem;
+  }
 }
 
 /* ============================================
-   LANDING SECTIONS - split panels, feature grid,
-   checklist, closing CTA band
-   Vocabulary for the rebuilt landing pages; tokens only, no new deps.
+   COPY BUTTON + COMMAND CHIP
    ============================================ */
 
-/* ---- Two-tool split panel (home) ---- */
-
-.xt-split {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 1.25rem;
-  margin: 0 0 1.75rem;
-}
-
-/* Whole card is one <a class="xt-tool-card"> link; its accessible name is
-   the product name (aria-label). Keyboard focus shows the global
-   :focus-visible outline (--xt-focus); hover lift is pointer-only (see
-   MOTION below) and neutralized under prefers-reduced-motion. */
-.xt-tool-card {
-  display: flex;
-  flex-direction: column;
-  gap: 0.55rem;
-  min-width: 0;
-  padding: 1.6rem 1.7rem 1.5rem;
-  background: var(--xt-panel);
-  border: 1px solid var(--xt-line);
-  border-radius: var(--xt-radius);
-  color: inherit;
-  text-decoration: none;
-  transition:
-    transform var(--xt-dur-hover) var(--xt-ease),
-    border-color var(--xt-dur-hover) var(--xt-ease),
-    background-color var(--xt-dur-hover) var(--xt-ease);
-}
-
-.xt-tool-card .xt-eyebrow,
-.xt-tool-card .xt-section-eyebrow {
-  margin-bottom: 0.15rem;
-}
-
-.xt-tool-name {
-  display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 0.75rem;
-  font-family: var(--font-heading);
-  font-size: 1.18rem;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  line-height: 1.25;
-  color: var(--xt-ink);
-}
-
-.xt-tool-arrow {
+.xt-copy {
+  display: inline-flex;
   flex-shrink: 0;
-  color: var(--xt-accent-deep);
 }
 
-:root[data-theme="dark"] .xt-tool-arrow {
-  color: var(--xt-accent);
-}
-
-.xt-tool-role {
-  margin: 0;
-  font-family: var(--font-mono);
-  font-size: 0.78rem;
-  letter-spacing: 0.02em;
-  /* Muted on panel ~5.8:1 light / ~6.3:1 dark (AA small text). */
-  color: var(--xt-muted);
-}
-
-.xt-tool-body {
-  margin: 0;
-  font-size: 0.92rem;
-  line-height: 1.55;
-  text-wrap: pretty;
-  color: var(--xt-muted);
-}
-
-/* Mono artifact cue on a thin charcoal chip - echoes the hero terminal
-   without competing with it. Term dim on term bg ~5.8:1 (fixed pairing,
-   identical in both themes). */
-.xt-tool-cmd {
-  align-self: flex-start;
-  max-width: 100%;
-  margin-top: 0.4rem;
-  padding: 0.35rem 0.7rem;
-  overflow-wrap: anywhere;
-  font-family: var(--font-mono);
-  font-size: 0.78rem;
+.xt-copy-btn {
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
   color: var(--xt-term-dim);
-  background: var(--xt-term-bg);
-  border: 1px solid var(--xt-term-line);
-  border-radius: var(--xt-radius-sm);
+  cursor: pointer;
+  transition:
+    color var(--xt-dur-hover) var(--xt-ease),
+    background-color var(--xt-dur-hover) var(--xt-ease),
+    transform var(--xt-dur-hover) var(--xt-ease);
 }
 
-/* Footer action pinned to the card bottom so unequal copy still yields
-   equal-height cards. Accent deep on panel ~5.7:1 light / accent on panel
-   ~8.6:1 dark (AA large/bold UI text). */
-.xt-tool-action {
-  margin-top: auto;
-  padding-top: 1rem;
-  font-size: 0.95rem;
-  font-weight: 600;
-  color: var(--xt-accent-deep);
+.xt-copy-btn:hover {
+  color: var(--xt-term-ink);
+  background: rgb(255 255 255 / 0.08);
 }
 
-:root[data-theme="dark"] .xt-tool-action {
-  color: var(--xt-accent);
-}
-
-.xt-tool-card:active {
-  transform: translateY(1px);
+.xt-copy-btn:active {
+  transform: scale(0.92);
   transition-duration: var(--xt-dur-press);
 }
 
-/* ---- Template gallery (home + CXA) ----
-   Card grid replacing the v1 divided list; markup is semantic-only in
-   TemplateGallery.astro (no Tailwind utilities). Whole card is one link
-   with the accessible name carried by aria-label, matching .xt-tool-card.
-   1 / 2 / 3 columns at 40 / 64rem. */
+.xt-copy-icon {
+  grid-area: 1 / 1;
+  width: 1rem;
+  height: 1rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.4;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  transition:
+    opacity 150ms var(--xt-ease),
+    transform 150ms var(--xt-ease);
+}
 
-.xt-gallery {
-  list-style: none;
-  margin: 0 0 1.75rem;
+.xt-copy-done {
+  opacity: 0;
+  transform: scale(0.6);
+  color: var(--xt-term-add);
+}
+
+.xt-copy[data-copied] .xt-copy-idle {
+  opacity: 0;
+  transform: scale(0.6);
+}
+
+.xt-copy[data-copied] .xt-copy-done {
+  opacity: 1;
+  transform: none;
+}
+
+/* A command chip on page surfaces shares the terminal's material, so a
+   copyable command always looks the same wherever it appears. */
+.xt-cmd {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  max-width: 100%;
+  padding: 0.35rem 0.35rem 0.35rem 1rem;
+  border: 1px solid var(--xt-term-border);
+  border-radius: 10px;
+  background: var(--xt-term-bg);
+}
+
+.xt-cmd-text {
+  min-width: 0;
+  overflow-wrap: break-word;
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  color: var(--xt-term-ink);
+  background: none;
   padding: 0;
+}
+
+.xt-cmd-prompt {
+  color: var(--xt-term-accent);
+}
+
+/* ============================================
+   TWO-TOOL SPLIT (home)
+   One ruled panel, two cells; the outer frame carries the radius.
+   ============================================ */
+
+.xt-split {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 1.25rem;
-}
-
-@media (min-width: 40rem) {
-  .xt-gallery {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (min-width: 64rem) {
-  .xt-gallery {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-  }
-}
-
-.xt-tpl {
-  min-width: 0;
-  display: flex;
-}
-
-.xt-tpl-card {
-  display: flex;
-  flex-direction: column;
-  gap: 0.55rem;
-  width: 100%;
-  min-width: 0;
-  padding: 1.5rem 1.55rem 1.35rem;
-  background: var(--xt-panel);
+  overflow: hidden;
   border: 1px solid var(--xt-line);
   border-radius: var(--xt-radius);
-  color: inherit;
-  text-decoration: none;
-  transition:
-    transform var(--xt-dur-hover) var(--xt-ease),
-    border-color var(--xt-dur-hover) var(--xt-ease),
-    background-color var(--xt-dur-hover) var(--xt-ease);
+  background: var(--xt-panel);
 }
 
-.xt-tpl-name {
-  font-family: var(--font-heading);
-  font-size: 1.12rem;
-  font-weight: 600;
-  letter-spacing: -0.01em;
-  line-height: 1.25;
-  /* Ink on panel ~15.9:1 light / ~13:1 dark. */
+.xt-split-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+  min-width: 0;
+  padding: var(--xt-panel-pad);
+}
+
+.xt-split-cell + .xt-split-cell {
+  border-top: 1px solid var(--xt-line);
+}
+
+@media (min-width: 56rem) {
+  .xt-split {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .xt-split-cell + .xt-split-cell {
+    border-top: 0;
+    border-left: 1px solid var(--xt-line);
+  }
+}
+
+.xt-split-title {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin: 0;
+  font-stretch: var(--xt-heading-stretch);
+  font-size: 1.625rem;
+  font-weight: 650;
+  line-height: 1.1;
+  letter-spacing: -0.015em;
   color: var(--xt-ink);
 }
 
-.xt-tpl-desc {
-  min-width: 0;
-  font-size: 0.9rem;
-  line-height: 1.55;
-  text-wrap: pretty;
-  overflow-wrap: anywhere;
-  /* Muted on panel ~5.8:1 light / ~6.3:1 dark (AA small text). */
+.xt-split-product {
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  font-weight: 400;
+  letter-spacing: 0;
   color: var(--xt-muted);
 }
 
-.xt-tpl-stack {
+.xt-split-body {
+  margin: 0;
+  max-width: 46ch;
+  font-size: 0.9875rem;
+  line-height: 1.6;
+  color: var(--xt-muted);
+}
+
+.xt-split-cell .xt-cmd {
+  margin-top: auto;
+}
+
+.xt-split-link {
+  width: fit-content;
+  font-size: 0.9375rem;
+}
+
+/* ============================================
+   PLAN FILES (home) - dry-run file list with diffstat
+   ============================================ */
+
+.xt-plan {
+  overflow: hidden;
+  border: 1px solid var(--xt-line);
+  border-radius: var(--xt-radius);
+  background: var(--xt-panel);
+}
+
+.xt-plan-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.xt-plan-row {
+  display: grid;
+  grid-template-columns: 1rem minmax(0, 1fr) auto;
+  align-items: baseline;
+  column-gap: 0.85rem;
+  padding: var(--xt-row-pad);
+}
+
+.xt-plan-row + .xt-plan-row {
+  border-top: 1px solid var(--xt-line);
+}
+
+.xt-plan-glyph {
+  font-family: var(--font-mono);
+  font-weight: 700;
+}
+
+.xt-plan-glyph.is-create {
+  color: var(--xt-add);
+}
+
+.xt-plan-glyph.is-modify {
+  color: var(--xt-patch);
+}
+
+.xt-plan-file {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.xt-plan-path {
+  overflow-wrap: anywhere;
+  padding: 0;
+  background: none;
+  font-family: var(--font-mono);
+  font-size: 0.875rem;
+  color: var(--xt-ink);
+}
+
+.xt-plan-what {
+  font-size: 0.875rem;
+  line-height: 1.45;
+  color: var(--xt-muted);
+}
+
+.xt-plan-stat {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.xt-plan-num {
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.xt-plan-num .is-add {
+  color: var(--xt-add);
+}
+
+.xt-plan-num .is-del {
+  color: var(--xt-del);
+}
+
+.xt-plan-blocks {
+  display: flex;
+  gap: 2px;
+}
+
+.xt-plan-blocks > span {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  background: var(--xt-line-strong);
+}
+
+.xt-plan-blocks > .is-add {
+  background: #22c55e;
+}
+
+.xt-plan-blocks > .is-del {
+  background: #ef4444;
+}
+
+.xt-plan-total {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.35rem;
-  margin-top: 0.25rem;
-}
-
-/* Hairline mono pill, .72rem - quiet stack cue; same muted pairing as the
-   description line. */
-.xt-tpl-chip {
-  padding: 0.14rem 0.6rem;
-  border: 1px solid var(--xt-line-strong);
-  border-radius: 999px;
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  line-height: 1.4;
-  white-space: nowrap;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  margin: 0;
+  padding: var(--xt-row-pad);
+  border-top: 1px solid var(--xt-line);
+  background: var(--xt-panel-2);
+  font-size: 0.875rem;
   color: var(--xt-muted);
 }
 
-/* Footer action pinned bottom so unequal copy still yields equal-height
-   cards. Accent deep on panel ~5.7:1 light / accent on panel ~8.6:1 dark
-   (AA large/bold UI text). Arrow nudge lives in the hover:hover block. */
-.xt-tpl-action {
-  margin-top: auto;
-  padding-top: 1rem;
-  font-size: 0.92rem;
-  font-weight: 600;
-  color: var(--xt-accent-deep);
-}
+/* Wide: path and description share one line as columns. */
+@media (min-width: 48rem) {
+  .xt-plan-row {
+    grid-template-columns: 1rem 12.5rem minmax(0, 1fr) auto;
+  }
 
-:root[data-theme="dark"] .xt-tpl-action {
-  color: var(--xt-accent);
-}
-
-.xt-tpl-arrow {
-  display: inline-block;
-  transition: transform var(--xt-dur-hover) var(--xt-ease);
-}
-
-/* ---- Feature/value grid ----
-   Quiet surfaces: a top hairline per item (same beat as the lifecycle /
-   pipeline rules), no per-cell boxes. */
-
-.xt-feature-grid {
-  list-style: none;
-  margin: 0 0 1.75rem;
-  padding: 0;
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 1.4rem 2.5rem;
-}
-
-@media (min-width: 40rem) {
-  .xt-feature-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .xt-plan-file {
+    display: contents;
   }
 }
 
-@media (min-width: 48rem) {
+@media (max-width: 30rem) {
+  .xt-plan-blocks {
+    display: none;
+  }
+}
+
+/* ============================================
+   TEMPLATE TABLE (home + CXA)
+   ============================================ */
+
+.xt-templates-wrap {
+  overflow: hidden;
+  border: 1px solid var(--xt-line);
+  border-radius: var(--xt-radius);
+  background: var(--xt-panel);
+}
+
+.xt-templates {
+  display: table;
+  width: 100%;
+  margin: 0;
+  border-collapse: collapse;
+  font-size: 0.9375rem;
+}
+
+.xt-templates th,
+.xt-templates td {
+  padding: var(--xt-row-pad);
+  padding-block: 1.1rem;
+  border: 0;
+  text-align: left;
+  vertical-align: top;
+}
+
+.xt-templates thead th {
+  padding-block: 0.7rem;
+  border-bottom: 1px solid var(--xt-line);
+  background: var(--xt-panel-2);
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--xt-muted);
+}
+
+.xt-templates tbody tr + tr > * {
+  border-top: 1px solid var(--xt-line);
+}
+
+.xt-templates tbody th {
+  font-weight: 400;
+}
+
+.xt-templates-name {
+  font-weight: 600;
+  color: var(--xt-ink);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+  text-decoration-color: var(--xt-line-strong);
+  transition: text-decoration-color var(--xt-dur-hover) var(--xt-ease);
+}
+
+.xt-templates-name:hover {
+  color: var(--xt-ink);
+  text-decoration-color: var(--xt-ink);
+}
+
+.xt-templates-desc {
+  display: block;
+  max-width: 46ch;
+  margin-top: 0.25rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--xt-muted);
+}
+
+.xt-templates-stack {
+  min-width: 13rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--xt-muted);
+}
+
+.xt-templates-flag {
+  padding: 0.15rem 0.45rem;
+  border: 1px solid var(--xt-line);
+  border-radius: 6px;
+  background: var(--xt-paper);
+  font-family: var(--font-mono);
+  font-size: 0.8125rem;
+  white-space: nowrap;
+  color: var(--xt-ink);
+}
+
+/* Narrow: each template becomes a stacked block; the column headers are
+   kept for assistive tech only. */
+@media (max-width: 44rem) {
+  .xt-templates thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .xt-templates,
+  .xt-templates tbody,
+  .xt-templates tr,
+  .xt-templates th,
+  .xt-templates td {
+    display: block;
+  }
+
+  .xt-templates tbody tr + tr > * {
+    border-top: 0;
+  }
+
+  .xt-templates tbody tr + tr {
+    border-top: 1px solid var(--xt-line);
+  }
+
+  .xt-templates tbody th {
+    padding-bottom: 0.5rem;
+  }
+
+  .xt-templates td {
+    padding-block: 0 0.5rem;
+  }
+
+  .xt-templates td:last-child {
+    padding-bottom: 1rem;
+  }
+}
+
+/* ============================================
+   FEATURE GRID - ruled columns, no per-item boxes
+   ============================================ */
+
+.xt-feature-grid {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.75rem 2.5rem;
+}
+
+@media (min-width: 56rem) {
   .xt-feature-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
   }
@@ -1182,14 +1042,15 @@ h2.xt-section-title {
 
 .xt-feature {
   min-width: 0;
-  border-top: 1px solid var(--xt-line);
-  padding-top: 1.05rem;
+  border-top: 1px solid var(--xt-line-strong);
+  padding-top: 1.1rem;
 }
 
 .xt-feature-title {
-  margin: 0 0 0.45rem;
+  margin: 0 0 0.5rem;
   font-family: var(--font-heading);
-  font-size: 1.05rem;
+  font-stretch: var(--xt-heading-stretch);
+  font-size: 1.125rem;
   font-weight: 600;
   line-height: 1.3;
   color: var(--xt-ink);
@@ -1197,10 +1058,9 @@ h2.xt-section-title {
 
 .xt-feature-body {
   margin: 0;
-  font-size: 0.92rem;
-  line-height: 1.55;
+  font-size: 0.9375rem;
+  line-height: 1.6;
   text-wrap: pretty;
-  /* Muted on paper ~5.5:1 light / ~7.5:1 dark (AA small text). */
   color: var(--xt-muted);
 }
 
@@ -1208,7 +1068,7 @@ h2.xt-section-title {
 
 .xt-checklist {
   list-style: none;
-  margin: 0 0 1.75rem;
+  margin: 0;
   padding: 0;
   display: grid;
   grid-template-columns: 1fr;
@@ -1224,14 +1084,14 @@ h2.xt-section-title {
 .xt-checklist li {
   position: relative;
   min-width: 0;
+  margin: 0;
   padding-left: 1.55rem;
-  font-size: 0.95rem;
+  font-size: 0.9875rem;
   line-height: 1.55;
   color: var(--xt-ink);
 }
 
-/* Pure-CSS check marker. Decorative glyph: --xt-ok on paper is ~4.7:1 in
-   light / ~10.6:1 in dark; the adjacent ink text carries the meaning. */
+/* Decorative check; the adjacent text carries the meaning. */
 .xt-checklist li::before {
   content: "✓";
   position: absolute;
@@ -1239,231 +1099,138 @@ h2.xt-section-title {
   top: 0;
   font-size: 0.85em;
   font-weight: 700;
-  color: var(--xt-ok);
+  color: var(--xt-add);
 }
 
-/* ---- Closing CTA band ----
-   Charcoal surface echoing the hero artifacts (term token family), which
-   keep their fixed values in both themes. V2: bigger padding, blueprint
-   hairline texture (shared ::before rule in the HERO INVERSION block),
-   display-adjacent title. isolation + z-index:-1 keep the texture between
-   the band's background and its content; overflow clips it to the radius. */
+/* ============================================
+   CLOSING CTA - left-aligned, ruled, no dark slab
+   ============================================ */
 
 .xt-band {
-  position: relative;
-  isolation: isolate;
-  overflow: hidden;
-  padding: clamp(3rem, 7vw, 4.5rem) clamp(1.25rem, 4vw, 2.75rem);
-  border: 1px solid var(--xt-term-line);
-  border-radius: var(--xt-radius);
-  background: var(--xt-term-bg);
-  color: var(--xt-term-ink);
-  text-align: center;
+  padding-top: clamp(3rem, 7vw, 5rem);
+  border-top: 1px solid var(--xt-line);
 }
 
 .xt-band-title {
-  margin: 0 auto 0.75rem;
-  max-width: 24ch;
+  margin: 0;
+  max-width: 20ch;
   font-family: var(--font-heading);
-  font-size: clamp(1.75rem, 3vw, 2.25rem);
-  font-weight: 600;
-  line-height: 1.15;
-  letter-spacing: -0.01em;
-  text-wrap: balance;
-  overflow-wrap: anywhere;
-  /* Term ink on term bg ~13.9:1 (fixed pairing). */
-  color: var(--xt-term-ink);
+  font-stretch: var(--xt-heading-stretch);
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  font-weight: 700;
+  line-height: 1.02;
+  letter-spacing: -0.03em;
+  color: var(--xt-ink);
 }
 
 .xt-band-note {
-  margin: 0 auto 1.6rem;
-  max-width: 46ch;
-  font-size: 0.95rem;
+  margin: 1rem 0 0;
+  max-width: 52ch;
+  font-size: 1.0625rem;
   line-height: 1.6;
   text-wrap: pretty;
-  /* Term dim on term bg ~5.8:1 (fixed pairing, AA small text). */
-  color: var(--xt-term-dim);
+  color: var(--xt-muted);
 }
 
 .xt-band-actions {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  justify-content: center;
-  gap: 0.85rem;
+  gap: 1rem 1.5rem;
+  margin-top: 1.75rem;
+}
+
+.xt-band-actions .xt-cmd {
+  flex: 0 1 30rem;
 }
 
 /* ============================================
-   LIFECYCLE STEPPER (home) - Choose -> Scaffold -> Conform -> Ship
-   Pure CSS over the existing MDX markup (ol.xt-lifecycle > li > a).
-   Desktop (>640px): horizontal rail - a 1px hairline threaded through
-   10px accent node dots, mono step numbers above the labels. Mobile
-   (<=640px): the same anatomy rotated into a vertical left rail.
-   The home page has exactly four steps; the grid below is written for it.
+   SITE FOOTER (splash pages, StarlightFooter.astro)
    ============================================ */
 
-.xt-lifecycle {
-  list-style: none;
-  margin: 0 0 1.75rem;
-  padding: 0;
-  counter-reset: xt-step;
+.xt-footer {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  column-gap: 1.5rem;
+  gap: 2.5rem;
+  margin-top: var(--xt-section-space);
+  padding: clamp(2.5rem, 5vw, 3.5rem) 0 1.5rem;
+  border-top: 1px solid var(--xt-line);
+  font-size: 0.9375rem;
 }
 
-.xt-lifecycle li {
-  counter-increment: xt-step;
-  position: relative;
-  min-width: 0;
-  /* Right padding gives the connector room to reach the next node. */
-  padding-right: 0.25rem;
+@media (min-width: 56rem) {
+  .xt-footer {
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.6fr);
+    column-gap: 3rem;
+  }
 }
 
-/* Mono step number (01-04) above each label. Muted on paper ~5.5:1 light /
-   ~7.5:1 dark (AA small text). Fixed line-height + margin reserve the dot
-   row so the absolutely-positioned node lands in predictable space. */
-.xt-lifecycle li::before {
-  content: "0" counter(xt-step);
-  display: block;
-  margin-bottom: 1.15rem;
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  line-height: 1;
-  letter-spacing: 0.08em;
+.xt-footer-name {
+  font-family: var(--font-heading);
+  font-stretch: var(--xt-heading-stretch);
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  text-decoration: none;
+  color: var(--xt-ink);
+}
+
+.xt-footer-tagline {
+  max-width: 34ch;
+  margin: 0.6rem 0 0;
+  line-height: 1.55;
   color: var(--xt-muted);
 }
 
-/* Node dot + connector, drawn as layered backgrounds on one pseudo so the
-   hairline and the 10px accent dot always stay registered. Decorative:
-   the accent dot carries no text; step order is conveyed by the numbers. */
-.xt-lifecycle li::after {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 1.05rem;
-  width: 10px;
-  height: 10px;
-  background-image:
-    radial-gradient(circle at 5px 5px, var(--xt-accent) 4px, transparent 4.5px),
-    linear-gradient(var(--xt-line-strong) 0 0);
-  background-repeat: no-repeat;
+.xt-footer-nav {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  gap: 2rem;
 }
 
-/* Horizontal run: line starts at this dot's right edge and stops exactly
-   at the next list item's left edge (its own dot). */
-.xt-lifecycle li:not(:last-child)::after {
-  right: -1.5rem;
-  background-size:
-    10px 10px,
-    calc(100% - 10px + 1.5rem) 1px;
-  background-position:
-    0 0,
-    10px 5px;
-}
-
-/* Last node: dot only, no trailing hairline. */
-.xt-lifecycle li:last-child::after {
-  background-size:
-    10px 10px,
-    0 0;
-  background-position:
-    0 0,
-    0 0;
-}
-
-/* Reached/available end state ("Ship"): accent-numbered node plus full-ink
-   semibold label (~15.6:1 light / ~13.9:1 dark on paper), so the final
-   step reads as reached, not pending. Links keep the shared affordance. */
-.xt-lifecycle li.xt-lifecycle-done {
-  padding-right: 0;
-}
-
-.xt-lifecycle li.xt-lifecycle-done::before {
-  font-weight: 700;
-  color: var(--xt-accent-deep);
-}
-
-:root[data-theme="dark"] .xt-lifecycle li.xt-lifecycle-done::before {
-  color: var(--xt-accent);
-}
-
-.xt-lifecycle li.xt-lifecycle-done a {
+.xt-footer-heading {
+  margin: 0 0 0.75rem;
+  font-size: 0.875rem;
   font-weight: 600;
-}
-
-/* Lifecycle links need a resting affordance: a 1px dotted hairline mixed
-   from ink and line-strong (~5.8:1 on paper light, ~7.7:1 on paper dark)
-   that reads as quiet structure under mono text. Hover strengthens it to
-   the solid accent pair used by the ghost buttons (accent-hover ~5.4:1
-   light / accent ~8.1:1 dark on paper). The Ship step keeps its
-   .xt-lifecycle-done emphasis; this only changes link decoration. */
-.xt-lifecycle a {
-  display: inline-block;
-  margin-top: 0.65rem;
   color: var(--xt-ink);
+}
+
+.xt-footer-col ul {
+  display: grid;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.xt-footer-col a,
+.xt-footer-legal a {
+  color: var(--xt-muted);
+  text-decoration: none;
+  transition: color var(--xt-dur-hover) var(--xt-ease);
+}
+
+.xt-footer-col a:hover,
+.xt-footer-legal a:hover {
+  color: var(--xt-ink);
+}
+
+.xt-footer-legal {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--xt-line);
+  font-size: 0.875rem;
+  color: var(--xt-muted);
+}
+
+.xt-footer-legal a {
   text-decoration: underline;
-  text-decoration-style: dotted;
-  text-decoration-thickness: 1px;
-  text-underline-offset: 0.25em;
-  text-decoration-color: color-mix(in srgb, var(--xt-ink) 60%, var(--xt-line-strong));
-  transition:
-    color var(--xt-dur-hover) var(--xt-ease),
-    text-decoration-color var(--xt-dur-hover) var(--xt-ease);
-}
-
-.xt-lifecycle a:hover {
-  color: var(--xt-accent-hover);
-  text-decoration-style: solid;
-  text-decoration-color: var(--xt-accent-hover);
-}
-
-:root[data-theme="dark"] .xt-lifecycle a:hover {
-  color: var(--xt-accent);
-  text-decoration-color: var(--xt-accent);
-}
-
-@media (max-width: 640px) {
-  /* Vertical left-rail variant: numbers still sit above their labels,
-     nodes strung down a left spine that runs from each dot to the next
-     one's top edge (-3px bridges the inter-item boundary). */
-  .xt-lifecycle {
-    display: flex;
-    flex-direction: column;
-  }
-
-  .xt-lifecycle li {
-    padding-right: 0;
-    padding-left: 1.9rem;
-    padding-bottom: 1.25rem;
-  }
-
-  .xt-lifecycle li:last-child {
-    padding-bottom: 0;
-  }
-
-  .xt-lifecycle li::before {
-    margin-bottom: 0.3rem;
-  }
-
-  .xt-lifecycle li::after {
-    top: 0.11rem;
-    height: auto;
-  }
-
-  .xt-lifecycle li:not(:last-child)::after {
-    bottom: -3px;
-    background-size:
-      10px 10px,
-      1px calc(100% - 10px);
-    background-position:
-      0 0,
-      5px 10px;
-  }
+  text-underline-offset: 3px;
 }
 
 /* ============================================
    PIPELINE (xtarterize) - Detect / Resolve / Check / Plan / Apply
+   A real sequence, so it keeps its step numbers.
    ============================================ */
 
 .xt-pipeline {
@@ -1478,21 +1245,19 @@ h2.xt-section-title {
 }
 
 .xt-pipe {
+  margin: 0;
   padding: 1.35rem 0.25rem;
   min-width: 0;
   counter-increment: xt-pipe;
 }
 
-/* Mono step number (01, 02, ...) via counter - MDX markup stays clean and
-   the sequence survives reordering or a different step count. */
 .xt-pipe::before {
-  content: "0" counter(xt-pipe);
+  content: counter(xt-pipe);
   display: block;
   margin-bottom: 0.5rem;
   font-family: var(--font-mono);
-  font-size: 0.72rem;
-  letter-spacing: 0.08em;
-  /* Muted on paper ~5.5:1 light / ~7.5:1 dark (AA small text). */
+  font-size: 0.8125rem;
+  font-variant-numeric: tabular-nums;
   color: var(--xt-muted);
 }
 
@@ -1503,24 +1268,18 @@ h2.xt-section-title {
 .xt-pipe-name {
   display: block;
   margin: 0 0 0.4rem;
-  font-family: var(--font-mono);
-  font-size: 0.82rem;
-  font-weight: 500;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: var(--xt-accent-deep);
-}
-
-:root[data-theme="dark"] .xt-pipe-name {
-  color: var(--xt-accent);
+  font-stretch: var(--xt-heading-stretch);
+  font-size: 1.0625rem;
+  font-weight: 650;
+  color: var(--xt-ink);
 }
 
 .xt-pipe-desc {
   margin: 0;
-  font-size: 0.9rem;
+  font-size: 0.9375rem;
   line-height: 1.55;
   color: var(--xt-muted);
-  max-width: 26ch;
+  max-width: 28ch;
 }
 
 @media (min-width: 64rem) {
@@ -1549,162 +1308,24 @@ h2.xt-section-title {
   padding: 0;
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem 0.9rem;
-  font-size: 0.92rem;
+  gap: 0.4rem 1.5rem;
+  font-size: 0.9375rem;
 }
 
-.xt-link-cluster li + li::before {
-  content: "·";
-  margin-right: 0.9rem;
-  color: var(--xt-line-strong);
-}
-
-/* ============================================
-   MOTION - restrained, compositor-safe only
-   Hover lifts are pointer-only; touch devices get no transform.
-   Entrance/cursor animations are gated behind no-preference and covered
-   by the reduce kill switch at the bottom of this file.
-   ============================================ */
-
-@media (hover: hover) {
-  .xt-btn:hover {
-    transform: translateY(-2px);
-  }
-
-  /* Pointer-only card lift; color shifts (border, surface, name) stay
-     ungated above, matching the ghost-button pattern. */
-  .xt-tool-card:hover {
-    border-color: var(--xt-line-strong);
-    background-color: var(--xt-panel-hover);
-    transform: translateY(-2px);
-  }
-
-  .xt-tool-card:hover .xt-tool-name {
-    color: var(--xt-accent-hover);
-  }
-
-  :root[data-theme="dark"] .xt-tool-card:hover .xt-tool-name {
-    /* No --xt-accent-hover in dark; mirrors the dark ghost hover. */
-    color: var(--xt-accent);
-  }
-
-  /* Gallery card: same pointer-only lift vocabulary as .xt-tool-card. */
-  .xt-tpl-card:hover {
-    border-color: var(--xt-line-strong);
-    background-color: var(--xt-panel-hover);
-    transform: translateY(-2px);
-  }
-
-  .xt-tpl-card:hover .xt-tpl-name {
-    color: var(--xt-accent-hover);
-  }
-
-  :root[data-theme="dark"] .xt-tpl-card:hover .xt-tpl-name {
-    color: var(--xt-accent);
-  }
-
-  .xt-tpl-card:hover .xt-tpl-arrow {
-    transform: translateX(2px);
-  }
+.xt-link-cluster li {
+  margin: 0;
 }
 
 /* ============================================
    PACKAGE-MANAGER TABS (starlight-package-managers)
-   The plugin renders Starlight's Tabs; on phones its tablist overflows
-   its scroll wrapper and bun/deno/ni sit offscreen with only a silent
-   swipe to find them. A fading alpha mask on the plugin's own scroll
-   wrapper ghosts the cut edge as an explicit "keeps going" cue.
-   Scoped by the plugin's unique sync-key so plain Starlight Tabs
-   elsewhere are untouched, and theme-agnostic: an alpha mask reveals
-   whatever surface is behind the wrapper in both light and dark.
+   On phones the tablist overflows its scroll wrapper; a fading mask on
+   the cut edge signals that it keeps going.
    ============================================ */
 
 @media (max-width: 30rem) {
   starlight-tabs[data-sync-key="starlight-package-managers-pkg"] .tablist-wrapper {
     -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 1.75rem), transparent);
     mask-image: linear-gradient(to right, #000 calc(100% - 1.75rem), transparent);
-  }
-}
-
-/* ============================================
-   RESPONSIVE
-   ============================================ */
-
-@media (min-width: 40rem) {
-  .xt-hero-grid {
-    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
-    gap: 3rem;
-  }
-
-  /* Home's display-scale h1 renders as two explicit sentences; the copy
-     column takes a little extra room (and a tighter gap) so each sentence
-     holds one line at the 4.5rem cap - the fork strip needs ~23rem and
-     still clears it. */
-  .xt-hero-home .xt-hero-grid {
-    grid-template-columns: minmax(0, 1.22fr) minmax(0, 0.78fr);
-    gap: 2.5rem;
-  }
-
-  /* CXA's prompt artifact is a narrow panel; keep the copy column dominant. */
-  .xt-hero-cxa .xt-hero-grid {
-    grid-template-columns: minmax(0, 1.2fr) minmax(0, 0.8fr);
-  }
-
-  .xt-prompt {
-    max-width: 24rem;
-    justify-self: end;
-  }
-}
-
-@media (max-width: 640px) {
-  .xt-hero {
-    padding: 2rem 0 0.5rem;
-  }
-
-  /* Inverted band keeps proportionally more air than the paper hero;
-     re-asserted here so the compact .xt-hero rule above can't strip the
-     dark variant's vertical rhythm or its full-bleed inline padding. */
-  .xt-hero-dark {
-    padding-block: 2.5rem 2.25rem;
-    padding-inline: calc(50vw - 50%);
-  }
-
-  .xt-hero-actions {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .xt-hero-actions .xt-btn {
-    width: 100%;
-  }
-
-  /* Display headline: hero words are short, so space-wrapping suffices.
-     `anywhere` + `balance` lets the balancer pick mid-word cuts at this
-     width ("Start con / formant."); normal keeps breaks on spaces only. */
-  .xt-hero h1 {
-    overflow-wrap: normal;
-  }
-}
-
-/* Terminal text stays legible on small screens. */
-@media (max-width: 40rem) {
-  .xt-terminal-body {
-    font-size: 0.73rem;
-    padding: 1rem;
-  }
-}
-
-/* Tablet squeeze band: with the two-column hero grid active the artifact
-   column can be narrower than the plan-table rows, which then scroll
-   horizontally. A fading mask on the body's right edge signals the cut
-   continuation instead of a silent slice; the charcoal surface lives on
-   .xt-terminal (the parent), so only the text fades. Below 40rem the
-   single-column layout and above ~66rem the full column both fit every
-   line, so no fade shows there. */
-@media (min-width: 40rem) and (max-width: 66rem) {
-  .xt-terminal-body {
-    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 2rem), transparent);
-    mask-image: linear-gradient(to right, #000 calc(100% - 2rem), transparent);
   }
 }
 
@@ -1719,20 +1340,17 @@ h2.xt-section-title {
 }
 
 /* ============================================
-   SELECTION COLORS
+   SELECTION + SCROLLBAR
    ============================================ */
 
 ::selection {
-  background: var(--sl-color-accent-low);
-  color: var(--sl-color-white);
+  background: color-mix(in srgb, var(--xt-accent) 30%, transparent);
+  color: inherit;
 }
-
-/* ============================================
-   Subtle scrollbar styling (Webkit)
-   ============================================ */
 
 ::-webkit-scrollbar {
   width: 8px;
+  height: 8px;
 }
 
 ::-webkit-scrollbar-track {
@@ -1764,21 +1382,8 @@ h2.xt-section-title {
     scroll-behavior: auto !important;
   }
 
-  /* Covers every hover transform in this sheet (buttons, tool cards,
-     gallery cards). The cursor blink and hero entrance animations are
-     neutralized by the universal reset above; without a fill mode they
-     settle on their resting state, so nothing stays hidden or mid-flight. */
   .xt-btn,
-  .xt-tool-card,
-  .xt-tpl-card {
+  .xt-copy-btn {
     transform: none !important;
   }
-}
-
-/* ============================================
-   Reduce noise from horizontal rules on splash pages
-   ============================================ */
-
-.splash hr {
-  opacity: 0.5;
 }
