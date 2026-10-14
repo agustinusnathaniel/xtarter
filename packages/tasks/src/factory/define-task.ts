@@ -92,8 +92,6 @@ export interface TaskSpec {
   keywords?: Array<string>;
   label: string;
   scope?: TaskScope;
-  /** Descriptive search tags, assembled into `searchMeta`. */
-  tags?: Array<string>;
   targets?: Array<TaskTarget> | SpecTargetResolver;
 }
 
@@ -256,12 +254,8 @@ function labelFailure<A>(
 
 /** Search metadata; `configTargets` is derived from static targets unless authored. */
 function resolveSearchMeta(spec: TaskSpec): TaskSearchMeta | undefined {
-  const { configTargets, keywords, tags } = spec;
-  if (
-    configTargets === undefined &&
-    keywords === undefined &&
-    tags === undefined
-  ) {
+  const { configTargets, keywords } = spec;
+  if (configTargets === undefined && keywords === undefined) {
     return undefined;
   }
   return {
@@ -269,7 +263,6 @@ function resolveSearchMeta(spec: TaskSpec): TaskSearchMeta | undefined {
       configTargets ??
       (Array.isArray(spec.targets) ? deriveConfigTargets(spec.targets) : []),
     keywords: keywords ?? [],
-    tags: tags ?? [],
   };
 }
 

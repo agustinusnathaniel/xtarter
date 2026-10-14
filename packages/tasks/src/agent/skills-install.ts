@@ -244,7 +244,6 @@ export function createSkillsInstallTask(selected?: ReadonlySet<string>): Task {
     ],
     label: 'Install agent skills',
     scope: 'both',
-    tags: ['ai', 'agent', 'skills', 'setup', 'tools'],
   });
   return { ...base, choices: skillsChoices(selected) };
 }

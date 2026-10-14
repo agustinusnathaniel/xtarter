@@ -35,7 +35,6 @@ export const lintStagedTask = defineTask({
     'quality gate',
   ],
   label: 'lint-staged config',
-  tags: ['git-hooks', 'pre-commit', 'linting', 'quality'],
   targets: async (cwd) => {
     const content = renderLintStagedConfig(await lintCmd(cwd));
     return [

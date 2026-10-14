@@ -25,7 +25,6 @@ export const gitignoreTsbuildinfoTask = defineSingleTargetTask({
   ],
   label: '.gitignore - tsbuildinfo',
   scope: 'root',
-  tags: ['typescript', 'gitignore', 'build-output'],
   target: {
     filepath: '.gitignore',
     kind: 'text',

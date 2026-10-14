@@ -14,7 +14,6 @@ export const autoUpdateWorkflowTask = defineSingleTargetTask({
   ],
   label: 'GitHub auto-update workflow',
   scope: 'root',
-  tags: ['ci', 'dependencies', 'maintenance', 'github-actions'],
   target: {
     filepath: '.github/workflows/auto-update.yml',
     kind: 'text',

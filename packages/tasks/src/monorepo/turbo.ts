@@ -64,7 +64,6 @@ export const turboTask = defineTask({
   ],
   label: 'Turbo',
   scope: 'root',
-  tags: ['monorepo', 'build', 'orchestration', 'caching'],
   targets: [
     {
       filepath: 'turbo.json',

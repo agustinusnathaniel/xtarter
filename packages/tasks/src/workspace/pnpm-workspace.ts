@@ -197,7 +197,6 @@ export const pnpmWorkspaceTask = defineSingleTargetTask({
   ],
   label: 'pnpm-workspace.yaml - pnpm workspace config',
   scope: 'root',
-  tags: ['workspace', 'pnpm', 'package-manager'],
   target: {
     filepath: 'pnpm-workspace.yaml',
     kind: 'text',

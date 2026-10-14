@@ -7,7 +7,6 @@ export const knipTask = defineSingleTargetTask({
   id: 'quality/knip',
   keywords: ['knip', 'dead code', 'unused exports', 'tree shaking', 'analyze'],
   label: 'Knip (unused code detection)',
-  tags: ['dead-code', 'quality', 'analysis', 'detection'],
   target: {
     extensions: ['.ts', '.mts', '.js', '.json'],
     filepath: 'knip.config',

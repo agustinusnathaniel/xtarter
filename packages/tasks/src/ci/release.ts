@@ -42,7 +42,6 @@ export const releaseWorkflowTask = defineTask({
   ],
   label: 'GitHub release workflow',
   scope: 'root',
-  tags: ['ci', 'cd', 'release', 'github-actions'],
   targets: [
     {
       filepath: '.github/workflows/release.yml',

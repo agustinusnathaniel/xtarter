@@ -69,15 +69,6 @@ export const strictTask = defineTask({
     'typing',
   ],
   label: 'tsconfig - strict compiler options',
-  tags: [
-    'typescript',
-    'strict',
-    'no-unused-locals',
-    'no-unused-parameters',
-    'verbatim-module-syntax',
-    'type-checking',
-    'quality',
-  ],
   targets: [
     {
       filepath: 'tsconfig.json',

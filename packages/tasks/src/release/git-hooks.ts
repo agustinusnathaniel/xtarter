@@ -135,7 +135,6 @@ export const gitHooksTask = defineTask({
   ],
   label: 'Git hooks (commit-msg, prepare-commit-msg, pre-commit, pre-push)',
   scope: 'root',
-  tags: ['git', 'hooks', 'husky', 'quality'],
   targets: async (cwd, profile) => {
     const pkg = await readPackageJson(cwd);
     const [hooksExist, contents] = await Promise.all([

@@ -39,7 +39,7 @@ export function makeTask(options: MakeTaskOptions = {}): Task {
     searchMeta:
       options.searchMeta ??
       (options.configTargets
-        ? { configTargets: options.configTargets, keywords: [], tags: [] }
+        ? { configTargets: options.configTargets, keywords: [] }
         : undefined),
   };
   if (options.getDeps) {

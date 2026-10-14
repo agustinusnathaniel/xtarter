@@ -11,7 +11,6 @@ export const incrementalTask = defineSingleTargetTask({
     'watch mode',
   ],
   label: 'tsconfig - incremental: true',
-  tags: ['typescript', 'performance', 'build-speed'],
   target: {
     filepath: 'tsconfig.json',
     incoming: () => ({

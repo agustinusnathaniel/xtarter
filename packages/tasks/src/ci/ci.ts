@@ -15,7 +15,6 @@ export const ciWorkflowTask = defineSingleTargetTask({
   ],
   label: 'GitHub CI workflow',
   scope: 'root',
-  tags: ['ci', 'testing', 'github-actions', 'quality'],
   target: {
     filepath: '.github/workflows/ci.yml',
     kind: 'text',

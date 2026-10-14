@@ -40,7 +40,6 @@ export const catVersionTask = defineTask({
   ],
   label: 'commit-and-tag-version',
   scope: 'root',
-  tags: ['release', 'version', 'changelog', 'semver'],
   targets: async (cwd) => {
     const { missingScripts, pkg } = await resolveScriptsResolution(
       cwd,

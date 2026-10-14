@@ -59,7 +59,6 @@ export const packageEnginesTask = defineSingleTargetTask({
   ],
   label: 'devEngines in package.json',
   scope: 'root',
-  tags: ['quality', 'engines', 'node', 'pnpm', 'package-manager'],
   target: {
     change: resolveDevEngines,
     kind: 'packageJson',
