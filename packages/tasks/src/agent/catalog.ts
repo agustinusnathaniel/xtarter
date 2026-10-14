@@ -11,6 +11,7 @@ export interface SkillProfile {
   bundler: string | null;
   existing: {
     agentsMd: boolean;
+    changeset: boolean;
     githubWorkflows: Array<string>;
     turbo: boolean;
   };
@@ -18,6 +19,7 @@ export interface SkillProfile {
   hasGit: boolean;
   hasGitHub: boolean;
   monorepoTool: string | null;
+  router: string | null;
   runtime: string;
   typescript: boolean;
 }
@@ -108,6 +110,86 @@ const securitySurface: SkillCondition = (p, d) =>
     'mysql2',
     '@neondatabase/serverless',
     '@libsql/client',
+  ]);
+
+/** Server-rendered or prerendered web frameworks. */
+const serverRendered: SkillCondition = (p, d) =>
+  p.bundler === 'nextjs' ||
+  p.bundler === 'tanstack-start' ||
+  hasAnyDep(d, [
+    'nuxt',
+    'astro',
+    '@sveltejs/kit',
+    '@remix-run/react',
+    '@react-router/dev',
+    '@solidjs/start',
+    'vike',
+    'gatsby',
+  ]);
+/** Browser code that talks to a backend-as-a-service or auth provider. */
+const clientBackend: SkillCondition = (p, d) =>
+  browser(p, d) &&
+  hasAnyDep(d, [
+    '@supabase/supabase-js',
+    'firebase',
+    '@clerk/clerk-react',
+    '@clerk/nextjs',
+    'appwrite',
+    'pocketbase',
+    'convex',
+    'aws-amplify',
+    'next-auth',
+    'better-auth',
+  ]);
+const payments: SkillCondition = (_p, d) =>
+  hasAnyDep(d, [
+    'stripe',
+    '@paddle/paddle-node-sdk',
+    '@lemonsqueezy/lemonsqueezy.js',
+    '@polar-sh/sdk',
+    'midtrans-client',
+    'xendit-node',
+    'braintree',
+    '@paypal/paypal-server-sdk',
+    'svix',
+    'standardwebhooks',
+  ]);
+const exactValues: SkillCondition = (p, d) =>
+  payments(p, d) ||
+  hasAnyDep(d, [
+    'decimal.js',
+    'big.js',
+    'bignumber.js',
+    'dinero.js',
+    'currency.js',
+    'luxon',
+    'date-fns-tz',
+    '@date-fns/tz',
+    'moment-timezone',
+    '@js-temporal/polyfill',
+    'temporal-polyfill',
+  ]);
+const dataTransfer: SkillCondition = (_p, d) =>
+  hasAnyDep(d, [
+    'papaparse',
+    'csv-parse',
+    'csv-stringify',
+    'fast-csv',
+    'xlsx',
+    'exceljs',
+    'read-excel-file',
+    'dexie',
+    'idb',
+  ]);
+const releaseTooling: SkillCondition = (p, d) =>
+  p.existing.changeset ||
+  hasAnyDep(d, [
+    'semantic-release',
+    'release-it',
+    'release-please',
+    'commit-and-tag-version',
+    'standard-version',
+    'changelogen',
   ]);
 
 /** Expand one condition + source + skill names into catalog entries. */
@@ -367,6 +449,55 @@ export const SKILL_CATALOG: Array<SkillDefinition> = [
   // rather than a specific UI framework.
   ...inGroup('Mobile web', [
     skillsFor(browser, 'emilkowalski/skills', ['mobile-native']),
+  ]),
+
+  // Task-only skills (prune-codebase, tool-evaluation-and-adoption,
+  // architecture-decision-framework, autonomous-improvement-loop,
+  // domain-research, config-drift) and the user-invoked codebase-dossier stay
+  // out: no detected signal says the project needs them.
+  ...inGroup('Frontend / UI', [
+    skillsFor(serverRendered, 'agustinusnathaniel/skills', [
+      'hydration-safe-state',
+    ]),
+    skillsFor(
+      (p, d) => browser(p, d) && (p.router !== null || hasDep(d, 'nuqs')),
+      'agustinusnathaniel/skills',
+      ['url-state']
+    ),
+    skillsFor(
+      (_p, d) =>
+        hasAnyDep(d, [
+          'antd',
+          '@ant-design/pro-components',
+          '@refinedev/core',
+          'react-admin',
+        ]),
+      'agustinusnathaniel/skills',
+      ['admin-panel-engineering']
+    ),
+  ]),
+  ...inGroup('Security', [
+    skillsFor(clientBackend, 'agustinusnathaniel/skills', [
+      'client-trust-boundary',
+    ]),
+  ]),
+  ...inGroup('Payments & data', [
+    skillsFor(payments, 'agustinusnathaniel/skills', ['webhook-integration']),
+    skillsFor(exactValues, 'agustinusnathaniel/skills', [
+      'calculation-correctness',
+    ]),
+    skillsFor(dataTransfer, 'agustinusnathaniel/skills', [
+      'bulk-import-engineering',
+    ]),
+  ]),
+  ...inGroup('Workflow', [
+    skillsFor((p) => p.hasGitHub, 'agustinusnathaniel/skills', [
+      'github-actions-authoring',
+    ]),
+    skillsFor(releaseTooling, 'agustinusnathaniel/skills', ['release-notes']),
+  ]),
+  ...inGroup('Expo / React Native', [
+    skillsFor(expoNative, 'agustinusnathaniel/skills', ['mobile-app-shell']),
   ]),
 ];
 

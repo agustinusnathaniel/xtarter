@@ -377,6 +377,49 @@ describe('skill selection by project signals', () => {
   });
 });
 
+describe('skill selection by project signals', () => {
+  test('selects engineering skills from stack and dependency signals', async () => {
+    const node = await fixtureProfile('node-only');
+    const web = await fixtureProfile('react-vite-tailwind');
+    const native = await fixtureProfile('react-native-expo');
+    const names = (
+      profile: ProjectProfile,
+      deps: Record<string, string> = {}
+    ) => getSkillsToInstall(profile, deps).map(({ skill }) => skill);
+
+    expect(names(node)).not.toContain('webhook-integration');
+    expect(names(node, { stripe: '^18.0.0' })).toEqual(
+      expect.arrayContaining(['webhook-integration', 'calculation-correctness'])
+    );
+    expect(names(node, { 'decimal.js': '^10.0.0' })).not.toContain(
+      'webhook-integration'
+    );
+    expect(names(node, { papaparse: '^5.0.0' })).toContain(
+      'bulk-import-engineering'
+    );
+    expect(names(node, { 'semantic-release': '^24.0.0' })).toContain(
+      'release-notes'
+    );
+    expect(names({ ...node, hasGitHub: true })).toContain(
+      'github-actions-authoring'
+    );
+    expect(names(web)).not.toContain('url-state');
+    expect(names({ ...web, router: 'react-router' })).toContain('url-state');
+    expect(names({ ...web, bundler: 'nextjs' })).toContain(
+      'hydration-safe-state'
+    );
+    expect(names(web, { firebase: '^11.0.0' })).toContain(
+      'client-trust-boundary'
+    );
+    expect(names(node, { firebase: '^11.0.0' })).not.toContain(
+      'client-trust-boundary'
+    );
+    expect(names(web, { antd: '^5.0.0' })).toContain('admin-panel-engineering');
+    expect(names(native)).toContain('mobile-app-shell');
+    expect(names(web)).not.toContain('codebase-dossier');
+  });
+});
+
 // ---------------------------------------------------------------------------
 // Executor selection (merged from skills-install-executor.test.ts): npm 11
 // rejects `npx` when `devEngines.packageManager` names another package
