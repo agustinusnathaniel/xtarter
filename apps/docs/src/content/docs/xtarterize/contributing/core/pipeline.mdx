@@ -25,7 +25,7 @@ Detection runs on every invocation; there is no profile cache. Each run inspects
 
 Framework, router, styling, runtime, and Vite+ detection run inline. Bundler, monorepo, and package manager detection keep their inputs as constants next to the code that reads them; the lockfile list is shared with the doctor lockfile check. A new `existing` key is a profile field plus a probe in the existence detector.
 
-When both `react` and `react-native` (or `expo`) are present in dependencies, detection reports `react-native`; there is no prompt to disambiguate. The framework is `null` only when the project has no `package.json`. `workspaceRoot` is true when the current directory contains monorepo markers such as `pnpm-workspace.yaml` or `turbo.json`, false inside a workspace package discovered by walking up parent directories, and equal to `monorepo` in non-monorepos.
+When both `react` and `react-native` (or `expo`) are present in dependencies, detection reports `react-native`; there is no prompt to disambiguate. The framework is `null` only when the project has no `package.json`. `workspaceRoot` is true when the current directory contains monorepo markers such as a `pnpm-workspace.yaml` that declares `packages:` or `turbo.json`, false inside a workspace package discovered by walking up parent directories, and equal to `monorepo` in non-monorepos.
 
 Detection stays a plain async function and does not compose Effects; the engine lifts it at the nearest orchestration seam. See the [configuration guide](/xtarterize/guide/config/overview/) for the user-facing summary.
 

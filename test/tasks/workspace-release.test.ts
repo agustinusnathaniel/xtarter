@@ -47,8 +47,8 @@ const skipWorkspaceCases: Array<[name: string, content: string]> = [
   ],
   [
     'skips a settings-only file without a packages key',
-    // The workspace file makes detection report a monorepo, yet a keyless
-    // settings file must stay byte-identical.
+    // A keyless settings file is not a workspace marker and must stay
+    // byte-identical.
     ['onlyBuiltDependencies:', '  - esbuild', ''].join('\n'),
   ],
   ['skips an existing empty file', ''],
@@ -317,15 +317,28 @@ describe('pnpmWorkspaceTask', () => {
   });
 
   test('leaves single-package workspace content untouched', async () => {
+    // Existing content such as onlyBuiltDependencies must survive, and a
+    // settings-only file must not make detection report a monorepo.
+    const content = ['onlyBuiltDependencies:', '  - esbuild', ''].join('\n');
     await withPnpmProject(async ({ cwd, profile }) => {
-      // Detection treats any directory holding pnpm-workspace.yaml as a
-      // monorepo root, so resolve the single-package profile before the file
-      // exists. Existing content such as onlyBuiltDependencies must survive.
-      const content = ['onlyBuiltDependencies:', '  - esbuild', ''].join('\n');
-      await fs.writeFile(workspacePath(cwd), content);
+      expect(profile.monorepo).toBe(false);
       expect(await run(pnpmWorkspaceTask.check(cwd, profile))).toBe('skip');
       expect(await run(pnpmWorkspaceTask.dryRun(cwd, profile))).toEqual([]);
       await expect(readWorkspace(cwd)).resolves.toBe(content);
+    }, content);
+  });
+
+  test('the single-package placeholder keeps the project single-package', async () => {
+    await withPnpmProject(async ({ cwd, profile }) => {
+      expect(profile.monorepo).toBe(false);
+      await run(pnpmWorkspaceTask.apply(cwd, profile));
+
+      // Re-detect as a second run would: the created file must not flip the
+      // profile, or every monorepo-gated template changes on the next run.
+      const next = await detectProject(cwd);
+      expect(next.monorepo).toBe(false);
+      expect(next.workspaceRoot).toBe(false);
+      expect(await run(pnpmWorkspaceTask.check(cwd, next))).toBe('skip');
     });
   });
 });

@@ -200,6 +200,26 @@ describe('detectProject', () => {
       expect(profile.monorepoTool).toBeNull();
     });
   });
+
+  test('ignores a settings-only pnpm-workspace.yaml above the package', async () => {
+    await withTempDir('xtarterize-workspace-', async (root) => {
+      await fs.mkdir(path.join(root, '.git'), { recursive: true });
+      // pnpm 10 writes settings like this into single-package projects too.
+      await fs.writeFile(
+        path.join(root, 'pnpm-workspace.yaml'),
+        'onlyBuiltDependencies:\n  - esbuild\n'
+      );
+      const appDir = path.join(root, 'apps', 'web');
+      await fs.mkdir(appDir, { recursive: true });
+      await fs.writeFile(
+        path.join(appDir, 'package.json'),
+        JSON.stringify({ name: 'web-app', version: '1.0.0' })
+      );
+
+      const profile = await detectProject(appDir);
+      expect(profile.monorepo).toBe(false);
+    });
+  });
 });
 
 describe('detectProject', () => {
