@@ -29,19 +29,19 @@ const JSON_LD = serializeJsonLd({
       'xtarterize',
       'Conformance CLI that brings existing JavaScript/TypeScript projects up to a production-grade baseline (linting, strict TypeScript, CI, editor configs) with dry-run previews and approval before writing.',
       `${SITE_URL}/xtarterize/`,
-      'https://github.com/agustinusnathaniel/xtarterize'
+      'https://github.com/agustinusnathaniel/xtarter'
     ),
     buildSoftwareApplicationJsonLd(
       'create-xtarter-app',
-      'Scaffolding CLI that creates new JavaScript/TypeScript projects from four production-grade starter templates with Biome, strict TypeScript, CI, editor configs, and agent skills preconfigured.',
+      'Scaffolding CLI that creates new JavaScript/TypeScript projects from four production-grade starter templates with Biome, strict TypeScript, Git hooks, GitHub Actions workflows, editor configs, and agent skills preconfigured.',
       `${SITE_URL}/create-xtarter-app/`,
-      'https://github.com/agustinusnathaniel/xtarterize'
+      'https://github.com/agustinusnathaniel/xtarter'
     ),
   ],
 });
 
 const LLMS_DETAILS = `**When to use xtarter:**
-- Scaffold new JS/TS projects with \`pnpm create xtarter-app@latest\` (or \`npx create-xtarter-app@latest\`) — create-xtarter-app templates include Biome, strict TypeScript, CI, and editor configs.
+- Scaffold new JS/TS projects with \`pnpm create xtarter-app@latest\` (or \`npx create-xtarter-app@latest\`) — create-xtarter-app templates include Biome, strict TypeScript, Git hooks, GitHub Actions workflows, and editor configs.
 - Bring existing repos to standard with \`pnpx xtarterize@latest\` — tasks for linting/typecheck/CI/editor, idempotent with dry-run preview before writing.
 - Use \`check\` / \`dryRun\` to preview without writing; tasks are idempotent so running twice is safe.
 - When NOT to use: not a runtime library/framework; JavaScript/TypeScript projects only.
@@ -75,7 +75,7 @@ const LLMS_OPTIONAL_LINKS = [
   },
   {
     label: 'GitHub repository',
-    url: 'https://github.com/agustinusnathaniel/xtarterize',
+    url: 'https://github.com/agustinusnathaniel/xtarter',
   },
   {
     label: 'xtarterize on npm',
@@ -263,7 +263,7 @@ export default defineConfig({
       ],
       social: [
         {
-          href: 'https://github.com/agustinusnathaniel/xtarterize',
+          href: 'https://github.com/agustinusnathaniel/xtarter',
           icon: 'github',
           label: 'GitHub',
         },

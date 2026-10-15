@@ -72,7 +72,7 @@ for the full list.
 
 ## Create an xtarter App Templates
 
-`create-xtarter-app` ships with curated starter templates, each pre-configured with Biome, TypeScript strict mode, GitHub Actions CI, VS Code settings, and AI agent skills:
+`create-xtarter-app` ships with curated starter templates, each pre-configured with Biome, TypeScript strict mode, Git hooks, GitHub Actions workflows, VS Code settings, and AI agent skills:
 
 | Template        | Stack                                            |
 | --------------- | ------------------------------------------------ |

@@ -109,7 +109,7 @@ export const TERMINAL_TRANSCRIPTS: Array<TerminalTranscript> = [
       ],
       [
         { text: ' new    ', tone: 'add' },
-        { text: 'Git hooks (pre-commit, …)      ' },
+        { text: 'Git hooks (commit-msg, …)      ' },
         { text: 'release/git-hooks', tone: 'muted' },
       ],
       [
@@ -127,13 +127,13 @@ export const TERMINAL_TRANSCRIPTS: Array<TerminalTranscript> = [
         { text: 'AGENTS.md                      ' },
         { text: 'agent/agents-md', tone: 'muted' },
       ],
-      [{ text: '        …and 15 more tasks', tone: 'muted' }],
+      [{ text: '        …and 13 more tasks', tone: 'muted' }],
       blank,
       [
         { text: 'Total: ' },
-        { text: '+428', tone: 'add' },
+        { text: '+424', tone: 'add' },
         { text: ' ' },
-        { text: '-7', tone: 'fail' },
+        { text: '-3', tone: 'fail' },
         { text: ' across 25 files', tone: 'muted' },
       ],
     ],
@@ -172,7 +172,7 @@ export const TERMINAL_TRANSCRIPTS: Array<TerminalTranscript> = [
       ],
       [
         { text: '✗ ', tone: 'fail' },
-        { text: 'Git hooks (pre-commit, …)        ' },
+        { text: 'Git hooks (commit-msg, …)        ' },
         { text: 'new', tone: 'add' },
       ],
       [
@@ -209,9 +209,9 @@ export const TERMINAL_TRANSCRIPTS: Array<TerminalTranscript> = [
       [{ text: '         …and 22 more files', tone: 'muted' }],
       [
         { text: '  Total: ' },
-        { text: '+428', tone: 'add' },
+        { text: '+424', tone: 'add' },
         { text: ' ' },
-        { text: '-7', tone: 'fail' },
+        { text: '-3', tone: 'fail' },
         { text: ' across 25 files', tone: 'muted' },
       ],
       blank,
