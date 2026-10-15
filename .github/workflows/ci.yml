@@ -42,10 +42,11 @@ jobs:
               - '!docs/**'
               - '!.changeset/**'
 
+      # test/docs needs the docs dependencies, so it runs in the Docs job.
       - uses: ./.github/actions/setup
         if: steps.changes.outputs.code == 'true'
         with:
-          save-pnpm-cache: ${{ github.event_name == 'push' }}
+          install-filter: '!@xtarter/docs'
 
       - name: Check and test
         if: steps.changes.outputs.code == 'true'
@@ -72,6 +73,8 @@ jobs:
             docs:
               - 'apps/docs/**'
               - 'test/docs/**'
+              - 'vite.config.ts'
+              - 'tsconfig.json'
               - 'pnpm-lock.yaml'
               - 'pnpm-workspace.yaml'
               - 'turbo.json'

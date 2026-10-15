@@ -22,7 +22,7 @@
     "release:ci": "pnpm build:ci && changeset publish",
     "test": "vp test",
     "test:integration": "vp test test/integration",
-    "test:unit": "vp test test/core test/patchers test/tasks test/docs test/ui apps/create-xtarter-app/src",
+    "test:unit": "vp test test/core test/patchers test/tasks test/ui apps/create-xtarter-app/src",
     "typecheck": "turbo run typecheck",
     "ultracite:check": "ultracite check",
     "ultracite:fix": "ultracite fix",

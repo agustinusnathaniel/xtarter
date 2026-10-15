@@ -1,18 +1,49 @@
 name: 'Xstarter Setup'
 description: 'Install dependencies with pnpm and restore Turborepo cache'
 inputs:
-  save-pnpm-cache:
-    description: 'Save the pnpm store after the job. Only main-branch CI should write it; everything else restores.'
+  install-filter:
+    description: 'pnpm --filter selector for the install, e.g. "!@xtarter/docs" to skip the docs site dependencies. Empty installs everything.'
     required: false
-    default: 'false'
+    default: ''
 runs:
   using: 'composite'
   steps:
     - uses: pnpm/setup@v3
       with:
-        cache: true
-        save-cache: ${{ inputs.save-pnpm-cache }}
-        require-lockfile: true
+        install: false
+
+    # The store is cached per install scope so a filtered install restores and
+    # saves only its own packages. actions/cache saves only when the exact key
+    # missed, so an unchanged lockfile never re-uploads the store.
+    - name: Resolve pnpm store
+      id: pnpm-store
+      shell: bash
+      run: |
+        echo "path=$(pnpm store path --silent)" >> "$GITHUB_OUTPUT"
+        echo "scope=${{ inputs.install-filter && 'filtered' || 'full' }}" >> "$GITHUB_OUTPUT"
+
+    - name: Restore pnpm store
+      id: pnpm-cache
+      uses: actions/cache@v6
+      with:
+        path: ${{ steps.pnpm-store.outputs.path }}
+        key: pnpm-store-${{ runner.os }}-${{ steps.pnpm-store.outputs.scope }}-${{ hashFiles('pnpm-lock.yaml') }}
+        restore-keys: |
+          pnpm-store-${{ runner.os }}-${{ steps.pnpm-store.outputs.scope }}-
+
+    - name: Install dependencies
+      shell: bash
+      env:
+        INSTALL_FILTER: ${{ inputs.install-filter }}
+      run: pnpm install --frozen-lockfile --no-runtime ${INSTALL_FILTER:+--filter "$INSTALL_FILTER"}
+
+    # A store restored from an older lockfile is about to be saved under the
+    # new key; drop packages nothing links to so it does not grow forever.
+    - name: Prune pnpm store
+      if: steps.pnpm-cache.outputs.cache-hit != 'true'
+      shell: bash
+      run: pnpm store prune
+
     # One entry per job and commit so every run saves its task outputs; restore
     # falls back to the newest entry for the same lockfile, then to any entry.
     - name: Restore Turborepo cache

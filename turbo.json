@@ -65,7 +65,6 @@
         "test/core/**",
         "test/patchers/**",
         "test/tasks/**",
-        "test/docs/**",
         "test/ui/**",
         "test/helpers/**",
         "test/fixtures/**",

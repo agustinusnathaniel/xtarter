@@ -45,6 +45,8 @@ jobs:
           fetch-depth: 0
 
       - uses: ./.github/actions/setup
+        with:
+          install-filter: '!@xtarter/docs'
 
       # Manual runs off main only verify that the packages build.
       - name: Build
