@@ -1,5 +1,17 @@
 # xtarterize
 
+## 2.1.0
+
+### Minor Changes
+
+- [#239](https://github.com/agustinusnathaniel/xtarter/pull/239) [`4621516`](https://github.com/agustinusnathaniel/xtarter/commit/46215167d695513cb903d8f8eeb3ec7bef4821f1) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Interactive runs now let you choose which agent skills to install. Before the skills task applies, pick **Install all**, **Choose…**, or **Skip**; choosing lists the missing skills grouped by category, where selecting a group heading toggles the whole group. Runs with `--yes`, JSON output, or without a terminal still install every applicable skill.
+
+### Patch Changes
+
+- [#248](https://github.com/agustinusnathaniel/xtarter/pull/248) [`7f6dfea`](https://github.com/agustinusnathaniel/xtarter/commit/7f6dfea9f3b11d9bddfe99b38b538854a6df06ea) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - `xtarterize add` now shows the diff hunks and `+/-` stats before asking to apply a change, matching `diff` and `init --dry-run`. A `pnpm-workspace.yaml` without a `packages:` key (such as the single-package placeholder or a pnpm settings-only file) no longer marks the project as a monorepo, so a second `init` run no longer rewrites `.vscode/settings.json` or switches task scope filtering.
+
+- [#238](https://github.com/agustinusnathaniel/xtarter/pull/238) [`a24836e`](https://github.com/agustinusnathaniel/xtarter/commit/a24836e6b83de9e9e3ac8b42637f22886e70ac39) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Update runtime dependencies to their latest releases, including `@clack/prompts` 1.8 and Effect 4.0.4.
+
 ## 2.0.4
 
 ## 2.0.3

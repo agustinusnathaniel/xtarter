@@ -1,5 +1,11 @@
 # @xtarterize/core
 
+## 2.1.0
+
+### Patch Changes
+
+- [#248](https://github.com/agustinusnathaniel/xtarter/pull/248) [`7f6dfea`](https://github.com/agustinusnathaniel/xtarter/commit/7f6dfea9f3b11d9bddfe99b38b538854a6df06ea) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - `xtarterize add` now shows the diff hunks and `+/-` stats before asking to apply a change, matching `diff` and `init --dry-run`. A `pnpm-workspace.yaml` without a `packages:` key (such as the single-package placeholder or a pnpm settings-only file) no longer marks the project as a monorepo, so a second `init` run no longer rewrites `.vscode/settings.json` or switches task scope filtering.
+
 ## 2.0.4
 
 ## 2.0.3
