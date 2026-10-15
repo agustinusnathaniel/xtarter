@@ -1,18 +1,12 @@
 name: CI
 
+# No path filters: both jobs always run, so they can be required checks, and
+# the Turborepo cache skips unchanged work.
 on:
   push:
     branches: [main]
-    paths-ignore:
-      - "apps/docs/**"
-      - "docs/**"
-      - '.changeset/**'
   pull_request:
     branches: [main]
-    paths-ignore:
-      - "apps/docs/**"
-      - "docs/**"
-      - '.changeset/**'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -28,10 +22,35 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
-        with:
-          fetch-depth: 1
 
+      # test/docs needs the docs dependencies, so it runs in the Docs job.
       - uses: ./.github/actions/setup
+        with:
+          install-filter: '!@xtarter/docs'
 
       - name: Check and test
         run: pnpm check:ci
+
+      # Restored entries accumulate across runs; drop ones untouched for a week.
+      - name: Prune Turborepo cache
+        run: find .turbo/cache -type f -mtime +7 -delete
+
+  docs:
+    name: Docs
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: ./.github/actions/setup
+
+      - name: Check and build docs
+        run: pnpm turbo run typecheck build --filter=@xtarter/docs
+
+      - name: Test docs
+        env:
+          XTARTERIZE_TEST_DOCS_ARTIFACTS: '1'
+        run: pnpm exec vp test test/docs
+
+      - name: Prune Turborepo cache
+        run: find .turbo/cache -type f -mtime +7 -delete

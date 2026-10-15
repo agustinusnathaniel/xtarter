@@ -3,8 +3,11 @@
   "agentGuidance": false,
   "tasks": {
     "build": {
-      "dependsOn": ["^build", "typecheck"],
+      "dependsOn": ["^build"],
       "inputs": ["src/**", "tsconfig.json", "package.json", "vite.config.ts"],
+      "outputs": ["dist/**"]
+    },
+    "@xtarter/docs#build": {
       "outputs": ["dist/**"]
     },
     "@xtarter/docs#typecheck": {
@@ -26,13 +29,14 @@
       "cache": false
     },
     "//#verify:shebangs": {
-      "dependsOn": ["^build"]
+      "dependsOn": ["xtarterize#build", "create-xtarter-app#build"]
     },
     "//#test": {
       "dependsOn": ["xtarterize#build", "create-xtarter-app#build"],
       "inputs": [
         "vite.config.ts",
-        "test/",
+        "tsconfig.json",
+        "test/**",
         "packages/*/src/**",
         "apps/*/src/**",
         "!test/fixtures/**/.xtarterize/**"
@@ -43,8 +47,8 @@
       "dependsOn": ["xtarterize#build", "create-xtarter-app#build"],
       "inputs": [
         "vite.config.ts",
-        "test/integration/**",
-        "test/helpers/**",
+        "tsconfig.json",
+        "test/**",
         "packages/*/src/**",
         "apps/*/src/**",
         "!test/fixtures/**/.xtarterize/**"
@@ -55,12 +59,8 @@
       "dependsOn": ["xtarterize#build", "create-xtarter-app#build"],
       "inputs": [
         "vite.config.ts",
-        "test/core/**",
-        "test/patchers/**",
-        "test/tasks/**",
-        "test/docs/**",
-        "test/ui/**",
-        "test/helpers/**",
+        "tsconfig.json",
+        "test/**",
         "packages/*/src/**",
         "apps/*/src/**",
         "!test/fixtures/**/.xtarterize/**"

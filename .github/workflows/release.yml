@@ -18,7 +18,6 @@ concurrency:
 
 permissions:
   contents: write
-  packages: write
   id-token: write
   pull-requests: write
 
@@ -35,8 +34,11 @@ jobs:
           fetch-depth: 0
 
       - uses: ./.github/actions/setup
+        with:
+          install-filter: '!@xtarter/docs'
 
       - name: Build
+        if: github.ref != 'refs/heads/main'
         run: pnpm build:ci
 
       - name: Create Release Pull Request or Publish
@@ -44,7 +46,7 @@ jobs:
         uses: changesets/action@v2
         with:
           version-script: pnpm version-packages
-          publish-script: pnpm release
+          publish-script: pnpm release:ci
           pr-title: "chore: version packages"
           commit-message: "chore: version packages"
           github-token: ${{ secrets.GITHUB_TOKEN }}

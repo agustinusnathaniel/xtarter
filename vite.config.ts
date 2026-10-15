@@ -19,6 +19,25 @@ export default defineConfig({
     // unbuilt copies of the suite must not run as part of this checkout's.
     exclude: [...configDefaults.exclude, '.claude/**'],
     globals: true,
+    projects: [
+      {
+        extends: true,
+        test: {
+          include: ['test/{core,patchers,tasks,docs,ui}/**/*.test.ts'],
+          // No module mocks or leftover global state, so workers can be reused.
+          isolate: false,
+          name: 'shared',
+        },
+      },
+      {
+        extends: true,
+        test: {
+          // These spawn CLIs, mock modules, or stub process.env.
+          include: ['test/integration/**/*.test.ts', 'apps/*/src/**/*.test.ts'],
+          name: 'isolated',
+        },
+      },
+    ],
     testTimeout: 15_000,
   },
 });

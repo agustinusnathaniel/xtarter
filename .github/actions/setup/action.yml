@@ -1,16 +1,28 @@
 name: 'Xstarter Setup'
 description: 'Install dependencies with pnpm and restore Turborepo cache'
+inputs:
+  install-filter:
+    description: 'pnpm --filter selector for the install; empty installs everything'
+    required: false
+    default: ''
 runs:
   using: 'composite'
   steps:
     - uses: pnpm/setup@v3
       with:
-        cache: true
-        require-lockfile: true
+        install: false
+
+    # No store cache: fetching from npm measured faster than restoring the store.
+    - name: Install dependencies
+      shell: bash
+      env:
+        INSTALL_FILTER: ${{ inputs.install-filter }}
+      run: pnpm install --frozen-lockfile --no-runtime ${INSTALL_FILTER:+--filter "$INSTALL_FILTER"}
+
+    # Keyed per commit so every run saves its task outputs.
     - name: Restore Turborepo cache
       uses: actions/cache@v6
       with:
         path: .turbo/cache
-        key: turbo-${{ runner.os }}-${{ hashFiles('turbo.json', 'pnpm-lock.yaml') }}
-        restore-keys: |
-          turbo-${{ runner.os }}-
+        key: turbo-${{ runner.os }}-${{ github.job }}-${{ github.sha }}
+        restore-keys: turbo-${{ runner.os }}-${{ github.job }}-
