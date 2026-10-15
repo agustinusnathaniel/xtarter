@@ -1,5 +1,13 @@
 # Changelog
 
+## 1.17.3
+
+### Patch Changes
+
+- [#238](https://github.com/agustinusnathaniel/xtarter/pull/238) [`a24836e`](https://github.com/agustinusnathaniel/xtarter/commit/a24836e6b83de9e9e3ac8b42637f22886e70ac39) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Update runtime dependencies to their latest releases, including `@clack/prompts` 1.8 and Effect 4.0.4.
+
+- [#251](https://github.com/agustinusnathaniel/xtarter/pull/251) [`723b8b8`](https://github.com/agustinusnathaniel/xtarter/commit/723b8b893001df4b8e7ea855d7fcaa036624054f) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Remove the `vite-hero` template. Its source repository is no longer public, so scaffolding it failed to download. `--template vite-hero` and `vp create @xtarter:vite-hero` now report an unknown template; pick `vite-chakra` or `vite-tailwind` instead. The `next-tailwind` template no longer lists Playwright, which it does not include.
+
 ## 1.17.2
 
 ### Patch Changes

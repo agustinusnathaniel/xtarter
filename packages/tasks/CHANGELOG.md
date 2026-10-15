@@ -1,5 +1,16 @@
 # @xtarterize/tasks
 
+## 2.1.0
+
+### Patch Changes
+
+- [#235](https://github.com/agustinusnathaniel/xtarter/pull/235) [`c3ab7c2`](https://github.com/agustinusnathaniel/xtarter/commit/c3ab7c25b29bba50db3e5dd6d4e0a9f26497812d) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Add the new `emilkowalski/skills` entries to the skills catalog: `animation-vocabulary` and `break-ui` for web UI projects, and `mobile-native` for browser-runtime projects. Skills that only run on explicit request (`pick-ui-library`, `prototype`, `review-animations`) and `write-swift` (Swift toolchain is not a detected signal) stay out of the catalog.
+
+- [#239](https://github.com/agustinusnathaniel/xtarter/pull/239) [`4621516`](https://github.com/agustinusnathaniel/xtarter/commit/46215167d695513cb903d8f8eeb3ec7bef4821f1) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Add `agustinusnathaniel/skills` engineering skills to the skills catalog, each selected by a detected signal: `hydration-safe-state` for server-rendered frameworks, `url-state` for routed web apps, `client-trust-boundary` for browser code using a backend-as-a-service or auth client, `admin-panel-engineering` for admin UI libraries, `webhook-integration` for payment and webhook SDKs, `calculation-correctness` for money, decimal, and time zone libraries, `bulk-import-engineering` for CSV, spreadsheet, and IndexedDB libraries, `github-actions-authoring` for GitHub repositories, `release-notes` for release tooling, and `mobile-app-shell` for Expo and React Native. Task-only skills and the user-invoked `codebase-dossier` stay out of automatic selection.
+- Updated dependencies [[`7f6dfea`](https://github.com/agustinusnathaniel/xtarter/commit/7f6dfea9f3b11d9bddfe99b38b538854a6df06ea), [`ff6c07b`](https://github.com/agustinusnathaniel/xtarter/commit/ff6c07b69ca07018db3b96faa87acac8049ef83b)]:
+  - @xtarterize/core@2.1.0
+  - @xtarterize/patchers@2.1.0
+
 ## 2.0.4
 
 ### Patch Changes

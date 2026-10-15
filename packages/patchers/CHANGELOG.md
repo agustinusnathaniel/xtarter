@@ -1,5 +1,11 @@
 # @xtarterize/patchers
 
+## 2.1.0
+
+### Patch Changes
+
+- [#249](https://github.com/agustinusnathaniel/xtarter/pull/249) [`ff6c07b`](https://github.com/agustinusnathaniel/xtarter/commit/ff6c07b69ca07018db3b96faa87acac8049ef83b) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Preserve the existing indentation when Vite plugin tasks (such as `vite/visualizer` and `vite/checker`) patch `vite.config.*`. Tab-indented configs no longer have every indent multiplied by four, inserted plugin lines use the file's own tabs or spaces (4-space configs no longer get 6-space plugin lines), and the file's trailing newline is kept.
+
 ## 2.0.4
 
 ## 2.0.3
