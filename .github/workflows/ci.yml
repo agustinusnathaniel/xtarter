@@ -1,18 +1,12 @@
 name: CI
 
+# No workflow-level path filters: both jobs always report a status so they can
+# be required checks. Each job skips its own work when nothing relevant changed.
 on:
   push:
     branches: [main]
-    paths-ignore:
-      - "apps/docs/**"
-      - "docs/**"
-      - '.changeset/**'
   pull_request:
     branches: [main]
-    paths-ignore:
-      - "apps/docs/**"
-      - "docs/**"
-      - '.changeset/**'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -20,6 +14,7 @@ concurrency:
 
 permissions:
   contents: read
+  pull-requests: read
 
 jobs:
   check-and-test:
@@ -31,7 +26,66 @@ jobs:
         with:
           fetch-depth: 1
 
+      - uses: dorny/paths-filter@v4
+        id: changes
+        with:
+          predicate-quantifier: every
+          filters: |
+            code:
+              - '**'
+              - '!apps/docs/**'
+              - '!docs/**'
+              - '!.changeset/**'
+
       - uses: ./.github/actions/setup
+        if: steps.changes.outputs.code == 'true'
+        with:
+          save-pnpm-cache: ${{ github.event_name == 'push' }}
 
       - name: Check and test
+        if: steps.changes.outputs.code == 'true'
         run: pnpm check:ci
+
+      # Restored entries accumulate across runs; drop ones untouched for a week.
+      - name: Prune Turborepo cache
+        if: steps.changes.outputs.code == 'true'
+        run: find .turbo/cache -type f -mtime +7 -delete 2>/dev/null || true
+
+  docs:
+    name: Docs
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 1
+
+      - uses: dorny/paths-filter@v4
+        id: changes
+        with:
+          filters: |
+            docs:
+              - 'apps/docs/**'
+              - 'test/docs/**'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - 'turbo.json'
+              - '.github/actions/setup/**'
+              - '.github/workflows/ci.yml'
+
+      - uses: ./.github/actions/setup
+        if: steps.changes.outputs.docs == 'true'
+
+      - name: Check and build docs
+        if: steps.changes.outputs.docs == 'true'
+        run: pnpm turbo run typecheck build --filter=@xtarter/docs
+
+      - name: Test docs
+        if: steps.changes.outputs.docs == 'true'
+        env:
+          XTARTERIZE_TEST_DOCS_ARTIFACTS: '1'
+        run: pnpm exec vp test test/docs
+
+      - name: Prune Turborepo cache
+        if: steps.changes.outputs.docs == 'true'
+        run: find .turbo/cache -type f -mtime +7 -delete 2>/dev/null || true
