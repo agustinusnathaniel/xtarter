@@ -46,11 +46,6 @@
         "template": "github:agustinusnathaniel/vite-react-tailwind-starter"
       },
       {
-        "name": "vite-hero",
-        "description": "Vite Plus, TanStack Router, Hero UI",
-        "template": "github:agustinusnathaniel/vite-react-hero-starter"
-      },
-      {
         "name": "next-chakra",
         "description": "Next.js with Chakra UI",
         "template": "github:agustinusnathaniel/nextarter-chakra"

@@ -33,7 +33,7 @@ const JSON_LD = serializeJsonLd({
     ),
     buildSoftwareApplicationJsonLd(
       'create-xtarter-app',
-      'Scaffolding CLI that creates new JavaScript/TypeScript projects from five production-grade starter templates with Biome, strict TypeScript, CI, editor configs, and agent skills preconfigured.',
+      'Scaffolding CLI that creates new JavaScript/TypeScript projects from four production-grade starter templates with Biome, strict TypeScript, CI, editor configs, and agent skills preconfigured.',
       `${SITE_URL}/create-xtarter-app/`,
       'https://github.com/agustinusnathaniel/xtarterize'
     ),

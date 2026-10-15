@@ -80,7 +80,6 @@ for the full list.
 | `next-tailwind` | Next.js + Tailwind CSS v4                        |
 | `vite-chakra`   | Vite + React + Chakra UI v3 + TanStack Router    |
 | `vite-tailwind` | Vite + React + Tailwind CSS v4 + TanStack Router |
-| `vite-hero`     | Vite + React + Hero UI                           |
 
 ## Monorepo Structure
 
