@@ -36,7 +36,7 @@
       "inputs": [
         "vite.config.ts",
         "tsconfig.json",
-        "test/",
+        "test/**",
         "packages/*/src/**",
         "apps/*/src/**",
         "!test/fixtures/**/.xtarterize/**"
@@ -48,9 +48,7 @@
       "inputs": [
         "vite.config.ts",
         "tsconfig.json",
-        "test/integration/**",
-        "test/helpers/**",
-        "test/fixtures/**",
+        "test/**",
         "packages/*/src/**",
         "apps/*/src/**",
         "!test/fixtures/**/.xtarterize/**"
@@ -62,12 +60,7 @@
       "inputs": [
         "vite.config.ts",
         "tsconfig.json",
-        "test/core/**",
-        "test/patchers/**",
-        "test/tasks/**",
-        "test/ui/**",
-        "test/helpers/**",
-        "test/fixtures/**",
+        "test/**",
         "packages/*/src/**",
         "apps/*/src/**",
         "!test/fixtures/**/.xtarterize/**"

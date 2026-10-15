@@ -24,8 +24,7 @@ export default defineConfig({
         extends: true,
         test: {
           include: ['test/{core,patchers,tasks,docs,ui}/**/*.test.ts'],
-          // These suites mock no modules and leave no global state behind, so
-          // workers are reused and shared imports evaluate once per worker.
+          // No module mocks or leftover global state, so workers can be reused.
           isolate: false,
           name: 'shared',
         },
@@ -33,8 +32,7 @@ export default defineConfig({
       {
         extends: true,
         test: {
-          // Integration suites spawn the CLIs; the create-xtarter-app suites
-          // mock modules and stub process.env.
+          // These spawn CLIs, mock modules, or stub process.env.
           include: ['test/integration/**/*.test.ts', 'apps/*/src/**/*.test.ts'],
           name: 'isolated',
         },

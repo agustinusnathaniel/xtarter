@@ -1,7 +1,7 @@
 name: CI
 
-# Every change runs both jobs; the Turborepo cache skips work whose inputs did
-# not change. Both jobs always report a status, so they can be required checks.
+# No path filters: both jobs always run, so they can be required checks, and
+# the Turborepo cache skips unchanged work.
 on:
   push:
     branches: [main]
@@ -22,8 +22,6 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
-        with:
-          fetch-depth: 1
 
       # test/docs needs the docs dependencies, so it runs in the Docs job.
       - uses: ./.github/actions/setup
@@ -35,7 +33,7 @@ jobs:
 
       # Restored entries accumulate across runs; drop ones untouched for a week.
       - name: Prune Turborepo cache
-        run: find .turbo/cache -type f -mtime +7 -delete 2>/dev/null || true
+        run: find .turbo/cache -type f -mtime +7 -delete
 
   docs:
     name: Docs
@@ -43,8 +41,6 @@ jobs:
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
-        with:
-          fetch-depth: 1
 
       - uses: ./.github/actions/setup
 
@@ -57,4 +53,4 @@ jobs:
         run: pnpm exec vp test test/docs
 
       - name: Prune Turborepo cache
-        run: find .turbo/cache -type f -mtime +7 -delete 2>/dev/null || true
+        run: find .turbo/cache -type f -mtime +7 -delete

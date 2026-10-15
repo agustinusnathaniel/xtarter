@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "build": "turbo run typecheck build",
+    "build": "turbo run build",
     "postbuild": "pnpm verify:shebangs",
     "build:ci": "turbo run typecheck build --filter=!@xtarter/docs",
     "postbuild:ci": "pnpm verify:shebangs",
