@@ -8,6 +8,11 @@ on:
   pull_request:
     branches: [main]
 
+# TEMP(measure): force every Turbo task to run so each run is a cold run.
+# Remove before merge.
+env:
+  TURBO_FORCE: 'true'
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
