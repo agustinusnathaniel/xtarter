@@ -15,7 +15,7 @@ interface PlanFile {
 const FILES: Array<PlanFile> = [
   { path: 'biome.json', action: 'create', added: 125, removed: 0, what: 'Lint and format rules from the Ultracite preset' },
   { path: 'tsconfig.json', action: 'modify', added: 3, removed: 1, what: 'Incremental builds on top of your strict settings' },
-  { path: 'vite.config.ts', action: 'modify', added: 9, removed: 5, what: 'Type and lint errors in the dev overlay, bundle visualizer' },
+  { path: 'vite.config.ts', action: 'modify', added: 5, removed: 1, what: 'Type and lint errors in the dev overlay, bundle visualizer' },
   { path: 'package.json', action: 'modify', added: 21, removed: 1, what: 'Standard scripts and devEngines' },
   { path: '.husky/pre-commit', action: 'create', added: 1, removed: 0, what: 'Checks staged files before every commit' },
   { path: 'commitlint.config.ts', action: 'create', added: 15, removed: 0, what: 'Conventional Commits, enforced on every commit' },
@@ -24,7 +24,7 @@ const FILES: Array<PlanFile> = [
   { path: 'AGENTS.md', action: 'create', added: 12, removed: 0, what: 'Project rules for AI coding agents' },
 ]
 
-const TOTAL = { files: 25, added: 428, removed: 7 }
+const TOTAL = { files: 25, added: 424, removed: 3 }
 const shownFiles = FILES.length
 const BLOCKS = 5
 

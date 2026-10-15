@@ -70,7 +70,6 @@ export function buildOrganizationJsonLd(): Record<string, unknown> {
     logo: OG_IMAGE_URL,
     name: 'xtarter',
     sameAs: [
-      'https://github.com/agustinusnathaniel/xtarterize',
       'https://github.com/agustinusnathaniel/xtarter',
       MAINTAINER_SITE_URL,
     ],

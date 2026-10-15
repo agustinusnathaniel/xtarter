@@ -51,12 +51,4 @@ export const TEMPLATE_CATALOG: Array<TemplateRecord> = [
     repo: 'agustinusnathaniel/vite-react-tailwind-starter',
     stack: ['Vite+ (Vite 8)', 'React 19', 'Tailwind CSS v4', 'TanStack Router'],
   },
-  {
-    description:
-      'Vite+ and React 19 with HeroUI components wired through TanStack Router.',
-    id: 'vite-hero',
-    name: 'Vite + React + Hero UI',
-    repo: 'agustinusnathaniel/vite-react-hero-starter',
-    stack: ['Vite+ (Vite 8)', 'React 19', 'Hero UI', 'TanStack Router'],
-  },
 ];

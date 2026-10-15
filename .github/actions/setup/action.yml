@@ -1,4 +1,4 @@
-name: 'Xstarter Setup'
+name: 'xtarter Setup'
 description: 'Install dependencies with pnpm and restore Turborepo cache'
 inputs:
   install-filter:

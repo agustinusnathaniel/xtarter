@@ -52,7 +52,7 @@ for the complete option and error reference.
 
 ## Templates
 
-Five templates: `next-chakra` and `next-tailwind` (Next.js), plus `vite-chakra`, `vite-tailwind`, and `vite-hero` (Vite + React). All include strict TypeScript, GitHub Actions, VS Code settings, and agent skills. See the [template catalog](https://xtarter.sznm.dev/create-xtarter-app/guide/templates/) for full stacks and source repositories.
+Four templates: `next-chakra` and `next-tailwind` (Next.js), plus `vite-chakra` and `vite-tailwind` (Vite + React). All include strict TypeScript, GitHub Actions, VS Code settings, and agent skills. See the [template catalog](https://xtarter.sznm.dev/create-xtarter-app/guide/templates/) for full stacks and source repositories.
 
 ## Programmatic API
 

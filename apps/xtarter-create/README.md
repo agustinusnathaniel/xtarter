@@ -18,7 +18,6 @@ vp create @xtarter:vite-tailwind
 | --------------- | ------------------------------------------ |
 | `vite-chakra`   | Vite Plus + TanStack Router + Chakra UI    |
 | `vite-tailwind` | Vite Plus + TanStack Router + Tailwind CSS |
-| `vite-hero`     | Vite Plus + TanStack Router + Hero UI      |
 | `next-chakra`   | Next.js + Chakra UI v3                     |
 | `next-tailwind` | Next.js + Tailwind CSS v4                  |
 

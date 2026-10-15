@@ -61,6 +61,6 @@ The project name has no default. Provide `[project-name]` with `--yes` for a ful
 - Invalid template ID or package manager: prints the valid values and exits.
 - Invalid invocation: unknown options and commands exit `1` before anything runs, with a suggested correction when one is close.
 - Existing target directory: cancels unless `--force` is used. Explicit inputs are validated before the directory is created, modified, or deleted.
-- Download failure: retries up to 3 times, then exits.
+- Download failure: network errors are retried, up to 3 attempts in total; other errors exit immediately.
 - Install failure: removes the target directory when the CLI created it, then exits.
 - Git init failure: logs a warning and reports `gitInitialized: false` in `--json` output without discarding the scaffold.

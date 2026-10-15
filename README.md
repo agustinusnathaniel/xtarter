@@ -72,7 +72,7 @@ for the full list.
 
 ## Create an xtarter App Templates
 
-`create-xtarter-app` ships with curated starter templates, each pre-configured with Biome, TypeScript strict mode, GitHub Actions CI, VS Code settings, and AI agent skills:
+`create-xtarter-app` ships with curated starter templates, each pre-configured with Biome, TypeScript strict mode, Git hooks, GitHub Actions workflows, VS Code settings, and AI agent skills:
 
 | Template        | Stack                                            |
 | --------------- | ------------------------------------------------ |
@@ -80,7 +80,6 @@ for the full list.
 | `next-tailwind` | Next.js + Tailwind CSS v4                        |
 | `vite-chakra`   | Vite + React + Chakra UI v3 + TanStack Router    |
 | `vite-tailwind` | Vite + React + Tailwind CSS v4 + TanStack Router |
-| `vite-hero`     | Vite + React + Hero UI                           |
 
 ## Monorepo Structure
 

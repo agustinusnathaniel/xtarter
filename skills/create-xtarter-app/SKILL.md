@@ -1,11 +1,11 @@
 ---
 name: create-xtarter-app
-description: Scaffold new JS/TS projects from curated starter templates pre-configured with Biome, TypeScript strict mode, GitHub Actions CI, VS Code settings, and AI agent skills. Use when user wants to create a new project, scaffold an app from a template, or mentions "create-xtarter-app", "npx create-xtarter-app", "scaffold", "starter template", or a template name like "next-tailwind", "vite-chakra", "vite-tailwind", "vite-hero", or "next-chakra".
+description: Scaffold new JS/TS projects from curated starter templates pre-configured with Biome, TypeScript strict mode, Git hooks, GitHub Actions workflows, VS Code settings, and AI agent skills. Use when user wants to create a new project, scaffold an app from a template, or mentions "create-xtarter-app", "npx create-xtarter-app", "scaffold", "starter template", or a template name like "next-tailwind", "vite-chakra", "vite-tailwind", or "next-chakra".
 ---
 
 # create-xtarter-app
 
-Scaffolds production-grade JS/TS projects from curated starter templates. Every template ships with Biome, TypeScript strict mode, GitHub Actions CI, VS Code settings, and AI agent skills pre-configured.
+Scaffolds production-grade JS/TS projects from curated starter templates. Every template ships with Biome, TypeScript strict mode, Git hooks, GitHub Actions workflows, VS Code settings, and AI agent skills pre-configured.
 
 ## When this skill loads
 
@@ -39,9 +39,8 @@ Parse the user's stack description to pick a template:
 | "Next.js app" + "Tailwind" | SSR framework + utility CSS | `next-tailwind` |
 | "Vite SPA" + "Chakra UI" | Client SPA + component lib | `vite-chakra` |
 | "Vite SPA" + "Tailwind" | Client SPA + utility CSS | `vite-tailwind` |
-| "Vite SPA" + "Hero UI" | Client SPA + modern UI | `vite-hero` |
 | "Next.js" (no UI lib) | SSR framework | Ask "Chakra UI or Tailwind?" |
-| "Vite" (no UI lib) | Client SPA | Ask "Chakra UI, Tailwind, or Hero UI?" |
+| "Vite" (no UI lib) | Client SPA | Ask "Chakra UI or Tailwind?" |
 | No framework preference | - | Ask "SSR/static (Next.js) or client SPA (Vite)?" |
 | No UI lib preference | - | Prompt for a template ID with `preview` (no args) |
 

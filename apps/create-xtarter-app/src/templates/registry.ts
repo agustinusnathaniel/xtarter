@@ -36,13 +36,7 @@ export const TEMPLATES: Array<TemplateConfig> = [
   {
     branch: 'main',
     description: 'Next.js with Tailwind CSS',
-    features: [
-      'Next.js 16',
-      'Tailwind CSS v4',
-      'Biome',
-      'TypeScript',
-      'Playwright',
-    ],
+    features: ['Next.js 16', 'Tailwind CSS v4', 'Biome', 'TypeScript'],
     id: 'next-tailwind',
     name: 'Next.js + Tailwind',
     provider: 'github',
@@ -81,22 +75,6 @@ export const TEMPLATES: Array<TemplateConfig> = [
     name: 'Vite + React + Tailwind',
     provider: 'github',
     repo: 'agustinusnathaniel/vite-react-tailwind-starter',
-  },
-  {
-    branch: 'main',
-    description: 'Vite+, TanStack Router, Hero UI',
-    features: [
-      'Vite+ (Vite 8)',
-      'React 19',
-      'Hero UI',
-      'TanStack Router',
-      'Biome',
-      'Vitest',
-    ],
-    id: 'vite-hero',
-    name: 'Vite + React + Hero UI',
-    provider: 'github',
-    repo: 'agustinusnathaniel/vite-react-hero-starter',
   },
 ];
 
