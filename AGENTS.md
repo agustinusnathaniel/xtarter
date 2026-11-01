@@ -44,7 +44,7 @@
    - Only introduce a new dependency when no existing abstraction fits
 
 5. **Implementation & Testing**
-    - Run `vp test`, `pnpm typecheck`, `pnpm build`, `pnpm ultracite:check`, `pnpm check`
+   - Run `pnpm check` before pushing: it runs typecheck, build, `ultracite:check`, and the tests through the Turborepo cache, and the pre-push hook runs it too. While iterating, run only the affected suite (`vp test <path>`)
    - Ensure idempotency - running the same operation twice produces the same result
    - Tasks must follow the interface: `applicable`, `check`, `dryRun`, `apply`
    - Add or update tests only when they provide meaningful regression protection; extend the nearest existing suite when possible and follow [`docs/TESTING.md`](docs/TESTING.md)
