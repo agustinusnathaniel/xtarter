@@ -99,9 +99,9 @@ export function tokenize(query: string): TokenizedQuery {
   // Note: strips non-ASCII characters (accented, CJK, emoji).
   // The engine targets English-language tooling queries.
   // Normalize hyphens to spaces so hyphenated query terms match spaced labels.
-  const normalized = query.replace(/-/g, ' ');
-  const cleaned = normalized.replace(/[^\w\s]/g, ' ').trim();
-  const words = cleaned.split(/\s+/).filter(Boolean);
+  const normalized = query.replace(/-/gu, ' ');
+  const cleaned = normalized.replace(/[^\w\s]/gu, ' ').trim();
+  const words = cleaned.split(/\s+/u).filter(Boolean);
   const tokens = words.filter((w) => {
     const lower = w.toLowerCase();
     return lower.length >= 2 && !STOPWORDS.has(lower);

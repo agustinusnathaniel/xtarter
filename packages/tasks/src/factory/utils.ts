@@ -1,7 +1,7 @@
 import { findConfigFile, resolvePath } from '@xtarterize/core';
 
 export function normalizeLineEndings(value: string): string {
-  return value.replace(/\r\n/g, '\n');
+  return value.replace(/\r\n/gu, '\n');
 }
 
 export function getDefaultFilepath(

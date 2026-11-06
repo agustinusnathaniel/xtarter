@@ -171,8 +171,8 @@ describe('worker fetch handler', () => {
     expect(res.headers.get('content-type')).toBe(
       'text/markdown; charset=utf-8'
     );
-    expect(res.headers.get('vary')).toMatch(/Accept/);
-    expect(res.headers.get('vary')).toMatch(/Accept-Encoding/);
+    expect(res.headers.get('vary')).toMatch(/Accept/u);
+    expect(res.headers.get('vary')).toMatch(/Accept-Encoding/u);
     const text = await res.text();
     expect(text).toBe(mdBody);
     // should have tried candidate before original
@@ -252,7 +252,7 @@ describe('worker fetch handler', () => {
     expect(res.headers.get('content-type')).toBe(
       'text/markdown; charset=utf-8'
     );
-    expect(res.headers.get('vary')).toMatch(/Accept/);
+    expect(res.headers.get('vary')).toMatch(/Accept/u);
     const body = await res.text();
     expect(body).toContain('/llms.txt');
     expect(body).toContain('404');
@@ -273,7 +273,7 @@ describe('worker fetch handler', () => {
     const res = await worker.fetch(req, env as never, {} as never);
     expect(res.status).toBe(404);
     expect(res.headers.get('content-type')).toContain('text/html');
-    expect(res.headers.get('vary')).toMatch(/Accept/);
+    expect(res.headers.get('vary')).toMatch(/Accept/u);
     const body = await res.text();
     expect(body).toBe(html404);
   });

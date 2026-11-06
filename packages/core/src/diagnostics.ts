@@ -86,7 +86,7 @@ function runEnvironmentChecks(
 
     if (engineNode) {
       const nodeMajor = Number.parseInt(nodeVersion.slice(1).split('.')[0], 10);
-      const majorMatch = engineNode.match(/(\d+)/);
+      const majorMatch = engineNode.match(/(?<major>\d+)/u);
       const engineMajor = majorMatch
         ? Number.parseInt(majorMatch[1], 10)
         : Number.NaN;

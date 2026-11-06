@@ -6,9 +6,9 @@ function getConfigLabel(configPath: string): string {
   return basenameName.startsWith('vite.config.') ? 'vite.config' : basenameName;
 }
 
-const LEADING_WHITESPACE = /^[\t ]*/;
-const LEADING_TABS = /^\t+/;
-const LEADING_SPACES = /^ +/;
+const LEADING_WHITESPACE = /^[\t ]*/u;
+const LEADING_TABS = /^\t+/u;
+const LEADING_SPACES = /^ +/u;
 const DEFAULT_INDENT_WIDTH = 2;
 
 interface IndentStyle {

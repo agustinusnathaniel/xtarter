@@ -12,8 +12,6 @@ import {
 } from '@xtarterize/core';
 import { Effect } from 'effect';
 
-export type { TaskDep } from '@xtarterize/core';
-
 import { checkMissingDeps, writeTaskDiffs } from './ops.js';
 import {
   deriveConfigTargets,
@@ -23,6 +21,8 @@ import {
   type TargetDraft,
   type TaskTarget,
 } from './targets.js';
+
+export type { TaskDep } from '@xtarterize/core';
 
 export type {
   TargetPolicy,

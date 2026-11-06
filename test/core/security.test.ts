@@ -16,7 +16,7 @@ describe('security: profile value sanitization', () => {
         'package.json': { engines: { node: '>=18.0.0' }, name: 'test' },
       },
       async ({ profile }) => {
-        expect(profile.nodeVersion).toMatch(/^\d+$/);
+        expect(profile.nodeVersion).toMatch(/^\d+$/u);
       }
     );
   });
@@ -30,7 +30,7 @@ describe('security: profile value sanitization', () => {
         },
       },
       async ({ profile }) => {
-        expect(profile.nodeVersion).toMatch(/^\d+$/);
+        expect(profile.nodeVersion).toMatch(/^\d+$/u);
         expect(profile.nodeVersion).not.toContain('\n');
         expect(profile.nodeVersion).not.toContain("'");
       }
@@ -44,7 +44,7 @@ describe('security: profile value sanitization', () => {
         'package.json': { name: 'test' },
       },
       async ({ profile }) => {
-        expect(profile.nodeVersion).toMatch(/^\d+$/);
+        expect(profile.nodeVersion).toMatch(/^\d+$/u);
         expect(profile.nodeVersion).not.toContain('\n');
       }
     );

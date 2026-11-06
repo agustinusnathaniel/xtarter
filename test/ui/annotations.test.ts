@@ -59,7 +59,7 @@ describe('formatCheckAnnotations', () => {
 
     const output = formatCheckAnnotations(tasks, statuses, []);
 
-    expect(output).toMatch(/^::error title=Strict TypeScript::/);
+    expect(output).toMatch(/^::error title=Strict TypeScript::/u);
   });
 
   test('maps fail diagnostic to error and warn to warning', () => {
@@ -107,6 +107,6 @@ describe('formatCheckAnnotations', () => {
 
     const lines = output.split('\n');
     expect(lines).toHaveLength(2);
-    expect(output).not.toMatch(/\n$/);
+    expect(output).not.toMatch(/\n$/u);
   });
 });

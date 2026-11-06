@@ -43,7 +43,7 @@ describe('doctor command', () => {
 
       expect(logs.length).toBeGreaterThan(0);
       const lastLine = logs.at(-1);
-      expect(lastLine).toMatch(/\d+ passed/);
+      expect(lastLine).toMatch(/\d+ passed/u);
     });
   });
 
@@ -55,7 +55,7 @@ describe('doctor command', () => {
 
       const fullOutput = logs.join(' ');
       expect(fullOutput).toContain('System');
-      expect(fullOutput).toMatch(/(CPUs|GB RAM)/);
+      expect(fullOutput).toMatch(/(?<resource>CPUs|GB RAM)/u);
     });
   });
 });

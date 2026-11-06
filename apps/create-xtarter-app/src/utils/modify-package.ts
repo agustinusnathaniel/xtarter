@@ -30,9 +30,9 @@ export async function modifyPackageJson({
 
       packageJson.name = projectName
         .toLowerCase()
-        .replace(/[^a-z0-9-]/g, '-')
-        .replace(/-+/g, '-')
-        .replace(/^-|-$/g, '');
+        .replace(/[^a-z0-9-]/gu, '-')
+        .replace(/-+/gu, '-')
+        .replace(/^-|-$/gu, '');
 
       if (packageJson.pnpm?.overrides) {
         for (const key of Object.keys(packageJson.pnpm.overrides)) {

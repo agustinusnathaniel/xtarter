@@ -77,7 +77,7 @@ describe('enhanceDiff', () => {
       filepath: 'test.txt',
     });
     expect(enhanced.hunks?.length).toBe(1);
-    expect(enhanced.hunks?.[0]?.header).toMatch(/^@@/);
+    expect(enhanced.hunks?.[0]?.header).toMatch(/^@@/u);
   });
 
   test('tracks added and removed counts in hunks', () => {

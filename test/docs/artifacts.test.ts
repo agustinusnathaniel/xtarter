@@ -51,7 +51,7 @@ docsArtifactSuite('docs build artifacts', () => {
     expect(fs.existsSync(workerPath)).toBe(true);
     const content = fs.readFileSync(workerPath, 'utf8');
     expect(content).toContain('text/markdown');
-    expect(content).toMatch(/Vary|Accept/);
+    expect(content).toMatch(/Vary|Accept/u);
   });
 
   it('writes a markdown 404 page', () => {

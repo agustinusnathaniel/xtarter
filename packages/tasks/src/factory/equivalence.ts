@@ -1,12 +1,13 @@
 export type PackageScriptsMap = Record<string, string | undefined>;
 
-const PM_SCRIPT_REF_PATTERN = /^(?:pnpm|npm|yarn|bun)(?:\s+run)?\s+(\S+)/;
-const RUNNER_PATTERN = /^(npx|yarn|bun)(?:\s+)(.+)$/i;
+const PM_SCRIPT_REF_PATTERN =
+  /^(?:pnpm|npm|yarn|bun)(?:\s+run)?\s+(?<script>\S+)/u;
+const RUNNER_PATTERN = /^(?<runner>npx|yarn|bun)(?:\s+)(?<args>.+)$/iu;
 const TOOL_PATTERN =
-  /^(biome|eslint|oxlint|oxfmt|prettier|rome|tsc|vitest|jest|mocha|vite|webpack|rollup|astro|next|nuxt|plop|knip|commitizen|changeset|ultracite|vp|standard-version|release-it|hygen|depcheck|npm-check-updates|ncu|commit-and-tag-version)(?:\s|$)/i;
+  /^(?<tool>biome|eslint|oxlint|oxfmt|prettier|rome|tsc|vitest|jest|mocha|vite|webpack|rollup|astro|next|nuxt|plop|knip|commitizen|changeset|ultracite|vp|standard-version|release-it|hygen|depcheck|npm-check-updates|ncu|commit-and-tag-version)(?:\s|$)/iu;
 
 export function normalizeCommand(cmd: string): string {
-  return cmd.replace(/\s+/g, ' ').trim();
+  return cmd.replace(/\s+/gu, ' ').trim();
 }
 
 export function extractTool(cmd: string): string | null {
@@ -31,7 +32,7 @@ export function extractTool(cmd: string): string | null {
 
 function extractCompositeTasks(cmd: string): string | null {
   const norm = normalizeCommand(cmd).toLowerCase();
-  const match = norm.match(/turbo\s+run\s+(.+)$/);
+  const match = norm.match(/turbo\s+run\s+(?<tasks>.+)$/u);
   return match ? match[1].trim() : null;
 }
 
@@ -93,7 +94,7 @@ export function areEquivalent(a: string, b: string): boolean {
     return false;
   }
 
-  if (/[&|;]/.test(a) !== /[&|;]/.test(b)) {
+  if (/[&|;]/u.test(a) !== /[&|;]/u.test(b)) {
     return false;
   }
 
@@ -109,18 +110,21 @@ export function areEquivalent(a: string, b: string): boolean {
   const argsA = normA.slice(toolA.length).trimStart();
   const argsB = normB.slice(toolB.length).trimStart();
   const trimTrailingDot = (args: string) =>
-    args.replace(/(\s+\.)?\s*$/, '').trim();
+    args.replace(/(?<trailing>\s+\.)?\s*$/u, '').trim();
   if (trimTrailingDot(argsA) === trimTrailingDot(argsB)) {
     return true;
   }
 
   const subcommands = EQUIVALENT_SUBCOMMANDS[toolA.toLowerCase()];
   if (subcommands) {
-    const subcommandPattern = new RegExp(`^(${subcommands.join('|')})\\s*`);
+    const subcommandPattern = new RegExp(
+      `^(?<subcommand>${subcommands.join('|')})\\s*`,
+      'u'
+    );
     const trimSubcommand = (args: string) =>
       args
         .replace(subcommandPattern, '')
-        .replace(/^--write\s*/, '')
+        .replace(/^--write\s*/u, '')
         .trim();
     return trimSubcommand(argsA) === trimSubcommand(argsB);
   }

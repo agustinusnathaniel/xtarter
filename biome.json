@@ -149,7 +149,7 @@
           "correctness": {
             "noUndeclaredVariables": "off"
           },
-          "nursery": {
+          "style": {
             "useConsistentTestIt": {
               "level": "error",
               "options": {

@@ -368,7 +368,7 @@ describe('add command', () => {
           const output = logs.join('\n');
 
           expect(output).toContain('--- a/tsconfig.json');
-          expect(output).toMatch(/@@ .* @@/);
+          expect(output).toMatch(/@@ .* @@/u);
           expect(output).toContain('"incremental": true');
           expect(output).toContain('+3');
           await expect(

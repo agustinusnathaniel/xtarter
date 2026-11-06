@@ -38,7 +38,7 @@ export const gitignoreTsbuildinfoTask = defineSingleTargetTask({
       if (!existing) {
         return `${header}\n${missing.join('\n')}\n`;
       }
-      return `${existing.replace(/\n*$/, '')}\n\n${header}\n${missing.join('\n')}\n`;
+      return `${existing.replace(/\n*$/u, '')}\n\n${header}\n${missing.join('\n')}\n`;
     },
   },
 });

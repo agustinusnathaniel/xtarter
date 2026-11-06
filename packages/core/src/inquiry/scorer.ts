@@ -107,7 +107,7 @@ function matchTaskToToken(terms: Array<string>, task: Task) {
   const [config, group, id, keywords, label] = [
     task.searchMeta?.configTargets,
     task.group,
-    task.id.replace(/\//g, ' '),
+    task.id.replace(/\//gu, ' '),
     task.searchMeta?.keywords,
     task.label,
   ].map((field) => bestTermMatch(terms, field));
