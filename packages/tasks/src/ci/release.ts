@@ -2,11 +2,11 @@ import { defineTask, type TargetPolicy } from '@/factory/define-task.js';
 import { renderReleaseWorkflow } from '@/templates/workflows/release-yml.js';
 
 function hasReleaseJob(content: string): boolean {
-  return /jobs:\s*\n\s+release:/s.test(content);
+  return /jobs:\s*\n\s+release:/su.test(content);
 }
 
 function usesChangesetsAction(content: string): boolean {
-  return /changesets\/action@v\d+/.test(content);
+  return /changesets\/action@v\d+/u.test(content);
 }
 
 /**

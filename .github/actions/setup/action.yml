@@ -1,12 +1,12 @@
-name: 'xtarter Setup'
-description: 'Install dependencies with pnpm and restore Turborepo cache'
+name: "xtarter Setup"
+description: "Install dependencies with pnpm and restore Turborepo cache"
 inputs:
   install-filter:
-    description: 'pnpm --filter selector for the install; empty installs everything'
+    description: "pnpm --filter selector for the install; empty installs everything"
     required: false
-    default: ''
+    default: ""
 runs:
-  using: 'composite'
+  using: "composite"
   steps:
     - uses: pnpm/setup@v3
       with:

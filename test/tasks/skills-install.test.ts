@@ -301,7 +301,7 @@ describe('skillsInstallTask apply', () => {
         const profile = await detectProject(tmpDir);
         await expect(
           runWith(runner.layer, skillsInstallTask.apply(tmpDir, profile))
-        ).rejects.toThrow(/Failed to install skills from/);
+        ).rejects.toThrow(/Failed to install skills from/u);
       }
     );
   });

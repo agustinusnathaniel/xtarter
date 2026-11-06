@@ -7,7 +7,7 @@ import type { MonorepoDetection } from './types.js';
 
 const MONOREPO_MARKERS = ['turbo.json', 'nx.json', 'lerna.json'];
 /** A top-level `packages:` key, optionally quoted. */
-const PNPM_PACKAGES_KEY = /^(?:packages|'packages'|"packages")[ \t]*:/m;
+const PNPM_PACKAGES_KEY = /^(?:packages|'packages'|"packages")[ \t]*:/mu;
 const WORKSPACE_DIR_NAMES = ['packages', 'apps', 'services'];
 const WORKSPACE_PACKAGE_DIRS = WORKSPACE_DIR_NAMES.map((dir) => `${dir}/`);
 

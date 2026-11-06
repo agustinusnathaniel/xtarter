@@ -196,7 +196,7 @@ export function getPlopTemplateFiles(
   const files: Array<PlopTemplateKey> = [];
   for (const generator of buildGenerators(profile)) {
     for (const item of generator.actions) {
-      const key = item.templateFile.replace(/^plop\//, '');
+      const key = item.templateFile.replace(/^plop\//u, '');
       if (!seen.has(key)) {
         seen.add(key);
         files.push(key as PlopTemplateKey);

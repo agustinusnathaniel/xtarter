@@ -135,7 +135,7 @@ async function detectGitHubWorkflows(cwd: string): Promise<Array<string>> {
   const entries = await readdir(workflowsDir);
   return entries
     .filter((e) => e.endsWith('.yml') || e.endsWith('.yaml'))
-    .map((e) => e.replace(/\.(yml|yaml)$/, ''));
+    .map((e) => e.replace(/\.(?<ext>yml|yaml)$/u, ''));
 }
 
 async function detectExistingConfigs(
@@ -194,7 +194,7 @@ async function detectNodeVersion(
   const nvmrcExists = await fileExists(nvmrcPath);
   if (nvmrcExists) {
     const content = await readFile(nvmrcPath);
-    const match = content.trim().match(/^v?(\d+)/);
+    const match = content.trim().match(/^v?(?<major>\d+)/u);
     if (match) {
       return match[1];
     }
@@ -202,7 +202,7 @@ async function detectNodeVersion(
 
   const enginesNode = pkg?.engines?.node;
   if (enginesNode) {
-    const match = String(enginesNode).match(/\d+/);
+    const match = String(enginesNode).match(/\d+/u);
     if (match) {
       return match[0];
     }

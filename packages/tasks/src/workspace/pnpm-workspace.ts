@@ -45,7 +45,7 @@ function lineEndAfter(content: string, offset: number): number {
 /** Leading whitespace of the line that `offset` starts on. */
 function indentAt(content: string, offset: number): string {
   const lineStart = content.lastIndexOf('\n', offset - 1) + 1;
-  return /^[ \t]*/.exec(content.slice(lineStart, offset))?.[0] ?? '';
+  return /^[ \t]*/u.exec(content.slice(lineStart, offset))?.[0] ?? '';
 }
 
 /** Quote character an existing entry uses, or `''` for a plain entry. */

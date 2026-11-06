@@ -34,7 +34,7 @@ describe('buildOrganizationJsonLd', () => {
     expect(keys).not.toContain('telephone');
 
     const serialized = JSON.stringify(org);
-    expect(serialized).not.toMatch(/address|email|telephone/i);
+    expect(serialized).not.toMatch(/address|email|telephone/iu);
   });
 });
 

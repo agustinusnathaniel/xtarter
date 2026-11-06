@@ -14,7 +14,7 @@ export interface DownloadOptions {
 
 const MAX_RETRIES = 3;
 const RETRY_DELAY = 1000;
-const NETWORK_ERROR_PATTERN = /ENOTFOUND|ECONNREFUSED|ETIMEDOUT|network|fetch/;
+const NETWORK_ERROR_PATTERN = /ENOTFOUND|ECONNREFUSED|ETIMEDOUT|network|fetch/u;
 
 export async function downloadTemplateFiles({
   template,

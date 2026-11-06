@@ -1,7 +1,7 @@
 import { text } from '@clack/prompts';
 import { abortIfCancelled } from '@xtarterize/core/plain';
 
-const PROJECT_NAME_REGEX = /^[a-zA-Z0-9-_]+$/;
+const PROJECT_NAME_REGEX = /^[a-zA-Z0-9-_]+$/u;
 
 export async function promptProjectName(): Promise<string> {
   const result = await text({

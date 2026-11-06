@@ -34,13 +34,15 @@ const SUGGESTION_MAX_DISTANCE = 2;
 const SUGGESTION_MIN_PREFIX_LENGTH = 3;
 
 function toCamelCase(value: string): string {
-  return value.replace(/-+([a-zA-Z0-9])/g, (_, char: string) =>
+  return value.replace(/-+(?<char>[a-zA-Z0-9])/gu, (_, char: string) =>
     char.toUpperCase()
   );
 }
 
 function toKebabCase(value: string): string {
-  return value.replace(/([a-zA-Z0-9])([A-Z])/g, '$1-$2').toLowerCase();
+  return value
+    .replace(/(?<first>[a-zA-Z0-9])(?<second>[A-Z])/gu, '$<first>-$<second>')
+    .toLowerCase();
 }
 
 function toArray(value: string | Array<string> | undefined): Array<string> {
@@ -91,7 +93,7 @@ export function findFirstPositionalIndex(
     if (arg.includes('=')) {
       continue;
     }
-    if (isValueFlag(arg.replace(/^-{1,2}/, ''), argsDef)) {
+    if (isValueFlag(arg.replace(/^-{1,2}/u, ''), argsDef)) {
       index++;
     }
   }

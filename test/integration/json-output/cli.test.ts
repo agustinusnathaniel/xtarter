@@ -17,7 +17,7 @@ import type { PrompterShape } from '@xtarterize/app/ui/prompter.js';
 import { Effect } from 'effect';
 import { describe, expect, it, vi } from 'vite-plus/test';
 
-const CONFORMANCE_SUMMARY_REGEX = /conformant|Conformance audit/;
+const CONFORMANCE_SUMMARY_REGEX = /conformant|Conformance audit/u;
 
 const PROJECT_FILES: ProjectFileMap = {
   'package.json': {

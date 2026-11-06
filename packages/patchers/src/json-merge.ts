@@ -22,7 +22,7 @@ function detectIndent(text: string): {
   insertSpaces: boolean;
   tabSize: number;
 } {
-  const match = text.match(/\n([ \t]+)\S/);
+  const match = text.match(/\n(?<indent>[ \t]+)\S/u);
   if (match) {
     const indent = match[1];
     return {

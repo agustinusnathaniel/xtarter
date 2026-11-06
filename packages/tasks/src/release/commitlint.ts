@@ -1,7 +1,7 @@
 import { defineTask, type TargetPolicy } from '@/factory/define-task.js';
 import { renderCommitlintConfig } from '@/templates/commitlint-config.js';
 
-const CONFIG_CONVENTIONAL_EXTENDS = /['"]@commitlint\/config-conventional['"]/;
+const CONFIG_CONVENTIONAL_EXTENDS = /['"]@commitlint\/config-conventional['"]/u;
 
 const commitlintPolicy: TargetPolicy = ({ before }) => {
   if (before === null) {

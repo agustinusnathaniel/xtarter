@@ -62,11 +62,11 @@ export async function backupFile(cwd: string, filepath: string): Promise<void> {
     throw new BackupError({ cause, path: backupDir });
   }
 
-  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+  const timestamp = new Date().toISOString().replace(/[:.]/gu, '-');
   const safeName = normalize(filepath)
-    .replace(/_/g, '__') // escape underscore first
-    .replace(/\//g, '_s') // slash → _s
-    .replace(/\\/g, '_b'); // backslash → _b
+    .replace(/_/gu, '__') // escape underscore first
+    .replace(/\//gu, '_s') // slash → _s
+    .replace(/\\/gu, '_b'); // backslash → _b
   const backupName = `${safeName}.${timestamp}`;
   const backupPath = join(backupDir, backupName);
 

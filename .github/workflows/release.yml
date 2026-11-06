@@ -35,7 +35,7 @@ jobs:
 
       - uses: ./.github/actions/setup
         with:
-          install-filter: '!@xtarter/docs'
+          install-filter: "!@xtarter/docs"
 
       - name: Build
         if: github.ref != 'refs/heads/main'

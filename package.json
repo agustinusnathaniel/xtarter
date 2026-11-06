@@ -32,14 +32,14 @@
     "version-packages": "changeset version"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.5.15",
+    "@biomejs/biome": "2.6.5",
     "@changesets/changelog-github": "^1.0.1",
     "@changesets/cli": "^3.0.3",
     "@types/node": "catalog:",
-    "all-contributors-cli": "^6.26.1",
+    "all-contributors-cli": "^7.0.0",
     "effect": "catalog:",
-    "turbo": "^2.11.7",
-    "ultracite": "8.0.0",
+    "turbo": "^2.11.10",
+    "ultracite": "8.1.1",
     "vite": "catalog:",
     "vite-plus": "catalog:"
   },
