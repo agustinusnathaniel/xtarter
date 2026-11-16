@@ -108,3 +108,4 @@ function printDoctorSummary(
   );
   printTiming({ detectionMs: diagMs, resolutionMs: 0, resolutionSumMs: 0 });
 }
+// Probe for scoped CI timing; this PR is closed unmerged.
