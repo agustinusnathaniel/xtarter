@@ -26,6 +26,8 @@ export default defineConfig({
       '**/test/fixtures/**',
       // Templates, the lockfile, CI config: anything that is not a JS, TS or Markdown module.
       '**/!(*.@(ts|tsx|mts|cts|js|jsx|mjs|cjs|md))',
+      // Picks the tests a pull request runs, and no test imports it.
+      '**/scripts/test-changed.mjs',
     ],
     globals: true,
     projects: [

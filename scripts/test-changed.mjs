@@ -43,9 +43,13 @@ if (!base) {
   vitest(['run', ...SUITES]);
 }
 
-const changed = execFileSync('git', ['diff', '--name-only', base], {
-  encoding: 'utf8',
-})
+const changed = execFileSync(
+  'git',
+  ['diff', '--name-only', '--no-renames', base],
+  {
+    encoding: 'utf8',
+  }
+)
   .split('\n')
   .filter(Boolean)
   // The Docs job runs test/docs against the docs app in full.
