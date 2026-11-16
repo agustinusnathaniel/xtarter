@@ -6,7 +6,7 @@ on:
   push:
     branches: [ main ]
   pull_request:
-    branches: [ main ]
+    branches: [ main, ci/diff-scoped-tests ]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
