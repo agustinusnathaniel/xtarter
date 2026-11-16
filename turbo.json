@@ -43,6 +43,11 @@
       ],
       "outputs": ["node_modules/.vite/vitest/*"]
     },
+    "//#test:changed": {
+      "dependsOn": ["xtarterize#build", "create-xtarter-app#build"],
+      "cache": false,
+      "passThroughEnv": ["TEST_CHANGED_SINCE"]
+    },
     "//#test:integration": {
       "dependsOn": ["xtarterize#build", "create-xtarter-app#build"],
       "inputs": [
