@@ -222,3 +222,4 @@ export function executePlan(
     (spinnerInstance) => Effect.sync(() => spinnerInstance?.stop())
   );
 }
+// Probe for scoped CI timing; this PR is closed unmerged.
