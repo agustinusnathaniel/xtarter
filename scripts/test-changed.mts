@@ -24,16 +24,16 @@ const SUITES = [
 const WORKSPACE_ROOTS = ['apps', 'packages'];
 const DIST_REFERENCE = /(?:apps|packages)\/[^/'"]+\/dist\//u;
 
-function vitest(args) {
+function vitest(args: Array<string>): never {
   const result = spawnSync('vp', ['test', ...args], { stdio: 'inherit' });
   process.exit(result.status ?? 1);
 }
 
-function listFiles(dir) {
+function listFiles(dir: string): Array<string> {
   if (!existsSync(dir)) {
     return [];
   }
-  return readdirSync(dir, { recursive: true })
+  return readdirSync(dir, { encoding: 'utf8', recursive: true })
     .map((entry) => join(dir, entry))
     .filter((path) => statSync(path).isFile());
 }

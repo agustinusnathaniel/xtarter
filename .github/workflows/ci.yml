@@ -31,7 +31,7 @@ jobs:
         with:
           install-filter: "!@xtarter/docs"
 
-      # A pull request runs only the test files its diff can reach (scripts/test-changed.mjs);
+      # A pull request runs only the test files its diff can reach (scripts/test-changed.mts);
       # main runs them all.
       - name: Check and test
         env:

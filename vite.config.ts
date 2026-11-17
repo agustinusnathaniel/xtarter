@@ -18,7 +18,7 @@ export default defineConfig({
     // Agent worktrees live under .claude/worktrees/ inside the repo; their
     // unbuilt copies of the suite must not run as part of this checkout's.
     exclude: [...configDefaults.exclude, '.claude/**'],
-    // `vp test --changed` and scripts/test-changed.mjs run only the test files that import a
+    // `vp test --changed` and scripts/test-changed.mts run only the test files that import a
     // changed file. A changed file tests read without importing runs them all instead.
     forceRerunTriggers: [
       ...configDefaults.forceRerunTriggers,
@@ -27,7 +27,7 @@ export default defineConfig({
       // Templates, the lockfile, CI config: anything that is not a JS, TS or Markdown module.
       '**/!(*.@(ts|tsx|mts|cts|js|jsx|mjs|cjs|md))',
       // Picks the tests a pull request runs, and no test imports it.
-      '**/scripts/test-changed.mjs',
+      '**/scripts/test-changed.mts',
     ],
     globals: true,
     projects: [

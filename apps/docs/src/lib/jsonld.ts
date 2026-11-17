@@ -7,7 +7,7 @@
  * `serializeJsonLd` through Starlight’s `head` option.
  */
 
-/** Canonical site origin (matches `site` in astro.config.mjs). */
+/** Canonical site origin (matches `site` in astro.config.ts). */
 export const SITE_URL = 'https://xtarter.sznm.dev';
 
 /** Stable node identifiers shared by reference (`{@id}`) links. */

@@ -5,10 +5,14 @@ import { fileURLToPath } from 'node:url';
 const root = dirname(fileURLToPath(import.meta.url));
 let failed = false;
 
-function checkBin(pkgDir) {
+interface PackageManifest {
+  bin?: Record<string, string>;
+}
+
+function checkBin(pkgDir: string): void {
   const pkg = JSON.parse(
     readFileSync(resolve(root, '..', pkgDir, 'package.json'), 'utf8')
-  );
+  ) as PackageManifest;
   if (!pkg.bin) {
     return;
   }
