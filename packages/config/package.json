@@ -45,7 +45,7 @@
     "README.md"
   ],
   "scripts": {
-    "build": "vp pack && node scripts/generate-entries.mjs",
+    "build": "vp pack && tsc -p scripts && node scripts/generate-entries.ts",
     "dev": "vp pack --watch",
     "prepublishOnly": "pnpm build",
     "typecheck": "tsc --noEmit"
