@@ -2,11 +2,15 @@ import { logWarn } from '@xtarterize/core';
 import { Effect } from 'effect';
 
 import { cliCommand } from '@/commands/command.js';
-import type { RunCommandArgs } from '@/commands/run-command.js';
+import {
+  type RunCommandArgs,
+  warnUnsupportedTools,
+} from '@/commands/run-command.js';
 import type { CliError, CliServices } from '@/runtime.js';
 import { openSession } from '@/session.js';
 import {
   commonArgs,
+  ejectArg,
   formatArgs,
   includeConflictsArg,
   timingArg,
@@ -23,6 +27,7 @@ export const addCommand = cliCommand({
       type: 'boolean',
     },
     ...commonArgs,
+    eject: ejectArg,
     ...formatArgs,
     includeConflicts: includeConflictsArg,
     taskId: {
@@ -54,6 +59,9 @@ export function addProgram(
 
     const includeConflicts = args.includeConflicts === true;
     const recordTiming = args.timing === true;
+    if (!session.runtime.quiet) {
+      warnUnsupportedTools(session.profile);
+    }
 
     if (args.all && args.taskId) {
       logWarn(

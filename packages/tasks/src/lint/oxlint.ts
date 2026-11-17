@@ -1,92 +1,161 @@
 import { isDeepStrictEqual } from 'node:util';
-import { mergeJson, parseJsonc } from '@xtarterize/patchers';
-
-import { defineTask, type TargetPolicy } from '@/factory/define-task.js';
-import { renderOxfmtTsConfig } from '@/templates/oxfmt-template.js';
+import type { ProjectProfile } from '@xtarterize/core';
 import {
+  appendConfigArrayImports,
+  mergeJson,
+  parseJsonc,
+} from '@xtarterize/patchers';
+
+import {
+  type DefinedTask,
+  defineTask,
+  type TargetPolicy,
+} from '@/factory/define-task.js';
+import {
+  renderManagedOxfmtTsConfig,
+  renderOxfmtTsConfig,
+} from '@/templates/oxfmt-template.js';
+import {
+  managedOxlintImports,
+  renderManagedOxlintTsConfig,
   renderOxlintJsonConfig,
   renderOxlintTsConfig,
 } from '@/templates/oxlint-template.js';
 
-const OXLINT_MARKER = 'ultracite/oxlint/';
+import {
+  isManagedConfig,
+  type LintTaskOptions,
+  lintTaskDeps,
+  newConfigForm,
+} from './config-form.js';
+
+const ULTRACITE_OXLINT_MARKER = 'ultracite/oxlint/';
+const SCRIPT_EXTENSIONS = ['.ts', '.js', '.mjs', '.json'];
+const OXLINT_FILE = {
+  extensions: SCRIPT_EXTENSIONS,
+  filepath: 'oxlint.config',
+};
+const OXFMT_FILE = { extensions: SCRIPT_EXTENSIONS, filepath: 'oxfmt.config' };
+
+function isJsonConfig(text: string): boolean {
+  return text.trim().startsWith('{');
+}
 
 /**
- * JSON configs report `patch` only when the merge changes the parsed object;
- * TypeScript configs that already extend ultracite are accepted as-is.
+ * JSON configs report `patch` only when the merge changes the parsed object.
+ * Managed configs report `patch` when a detected layer is missing. Ejected
+ * TypeScript configs that already extend Ultracite are accepted as-is.
  */
 const oxlintPolicy: TargetPolicy = ({ before, after }) => {
   if (before === null) {
     return;
   }
-  if (before.trim().startsWith('{')) {
+  if (isJsonConfig(before)) {
     return isDeepStrictEqual(parseJsonc(before), parseJsonc(after))
       ? 'skip'
       : 'patch';
   }
-  return before.includes(OXLINT_MARKER) ? 'skip' : undefined;
+  if (isManagedConfig(before)) {
+    return before === after ? 'skip' : 'patch';
+  }
+  return before.includes(ULTRACITE_OXLINT_MARKER) ? 'skip' : undefined;
 };
 
-export const oxlintTask = defineTask({
-  applicable: (profile) =>
-    !(profile.existing.eslint || profile.existing.biome) &&
-    (profile.vitePlus || profile.existing.oxlint),
-  deps: [
-    { depName: 'oxlint', dev: true },
-    { depName: 'ultracite', dev: true },
-  ],
-  group: 'Linting & Formatting',
-  id: 'lint/oxlint',
-  keywords: ['oxlint', 'linter', 'rust', 'static analysis', 'fast'],
-  label: 'Oxlint config',
-  targets: [
-    {
-      extensions: ['.ts', '.js', '.mjs', '.json'],
-      filepath: 'oxlint.config',
-      kind: 'text',
-      policy: oxlintPolicy,
-      render: (profile, existing) => {
-        if (existing?.trim().startsWith('{')) {
-          const existingConfig = parseJsonc(existing) as Record<
-            string,
-            unknown
-          >;
-          const desiredConfig = JSON.parse(
-            renderOxlintJsonConfig(profile)
-          ) as Record<string, unknown>;
-          const merged = mergeJson(existingConfig, desiredConfig);
-          return JSON.stringify(merged, null, 2);
-        }
+function renderOxlint(
+  profile: ProjectProfile,
+  existing: string | null,
+  options: LintTaskOptions
+): string {
+  if (existing === null) {
+    return newConfigForm(options) === 'managed'
+      ? renderManagedOxlintTsConfig(profile)
+      : renderOxlintTsConfig(profile);
+  }
+  if (isJsonConfig(existing)) {
+    // Oxlint's JSON format cannot extend packages, so it stays ejected.
+    const merged = mergeJson(
+      parseJsonc(existing) as Record<string, unknown>,
+      JSON.parse(renderOxlintJsonConfig(profile)) as Record<string, unknown>
+    );
+    return JSON.stringify(merged, null, 2);
+  }
+  if (isManagedConfig(existing)) {
+    // An unpatchable shape keeps the file and leaves the layer to the user.
+    return (
+      appendConfigArrayImports(
+        existing,
+        'extends',
+        managedOxlintImports(profile)
+      ) ?? existing
+    );
+  }
+  return renderOxlintTsConfig(profile);
+}
 
-        return renderOxlintTsConfig(profile);
+export function createOxlintTask(options: LintTaskOptions = {}): DefinedTask {
+  return defineTask({
+    applicable: (profile) =>
+      !(profile.existing.eslint || profile.existing.biome) &&
+      (profile.vitePlus || profile.existing.oxlint),
+    deps: lintTaskDeps(
+      [
+        { depName: 'oxlint', dev: true },
+        { depName: 'ultracite', dev: true },
+      ],
+      OXLINT_FILE
+    ),
+    group: 'Linting & Formatting',
+    id: 'lint/oxlint',
+    keywords: ['oxlint', 'linter', 'rust', 'static analysis', 'fast'],
+    label: 'Oxlint config',
+    targets: [
+      {
+        ...OXLINT_FILE,
+        kind: 'text',
+        policy: oxlintPolicy,
+        render: (profile, existing) => renderOxlint(profile, existing, options),
       },
-    },
-  ],
-});
+    ],
+  });
+}
 
-export const oxfmtTask = defineTask({
-  applicable: (profile) =>
-    !(profile.existing.eslint || profile.existing.biome) &&
-    (profile.vitePlus || profile.existing.oxfmt),
-  deps: [
-    { depName: 'oxfmt', dev: true },
-    { depName: 'ultracite', dev: true },
-  ],
-  group: 'Linting & Formatting',
-  id: 'lint/oxfmt',
-  keywords: ['oxfmt', 'formatter', 'rust', 'format', 'style'],
-  label: 'Oxfmt config',
-  targets: [
-    {
-      extensions: ['.ts', '.js', '.mjs', '.json'],
-      filepath: 'oxfmt.config',
-      kind: 'text',
-      render: (_profile, existing) => {
-        if (existing?.trim().startsWith('{')) {
-          return existing;
-        }
+function renderOxfmt(existing: string | null, options: LintTaskOptions) {
+  if (existing === null) {
+    return newConfigForm(options) === 'managed'
+      ? renderManagedOxfmtTsConfig()
+      : renderOxfmtTsConfig();
+  }
+  if (isJsonConfig(existing) || isManagedConfig(existing)) {
+    return existing;
+  }
+  return renderOxfmtTsConfig();
+}
 
-        return renderOxfmtTsConfig();
+export function createOxfmtTask(options: LintTaskOptions = {}): DefinedTask {
+  return defineTask({
+    applicable: (profile) =>
+      !(profile.existing.prettier || profile.existing.biome) &&
+      (profile.vitePlus || profile.existing.oxfmt),
+    deps: lintTaskDeps(
+      [
+        { depName: 'oxfmt', dev: true },
+        { depName: 'ultracite', dev: true },
+      ],
+      OXFMT_FILE
+    ),
+    group: 'Linting & Formatting',
+    id: 'lint/oxfmt',
+    keywords: ['oxfmt', 'formatter', 'rust', 'format', 'style'],
+    label: 'Oxfmt config',
+    targets: [
+      {
+        ...OXFMT_FILE,
+        kind: 'text',
+        render: (_profile, existing) => renderOxfmt(existing, options),
       },
-    },
-  ],
-});
+    ],
+  });
+}
+
+export const oxlintTask = createOxlintTask();
+export const oxfmtTask = createOxfmtTask();

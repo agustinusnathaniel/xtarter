@@ -1,3 +1,4 @@
+import { oxlintCoreLayer, sharedConfigEntry } from '@xtarter/config';
 import type { ProjectProfile } from '@xtarterize/core';
 
 import { collectUltracitePresets } from './ultracite-presets.js';
@@ -13,37 +14,64 @@ function getOxlintEnv(profile: ProjectProfile): Record<string, boolean> {
   return env;
 }
 
+/** Indent a JSON rendering so it nests as a property value at depth one. */
+function nestJson(value: unknown): string {
+  return JSON.stringify(value, null, 2).replaceAll('\n', '\n  ');
+}
+
+function renderEnvLine(profile: ProjectProfile): string {
+  return getOxlintEnv(profile).node ? '\n  env: { node: true },' : '';
+}
+
+/** Binding name for a preset import, such as `reactNative` for `react-native`. */
+function presetBinding(preset: string): string {
+  return preset.replace(/-(?<letter>[a-z])/gu, (_match, letter: string) =>
+    letter.toUpperCase()
+  );
+}
+
+/** The full config: Ultracite presets plus the xtarter layer written inline. */
 export function renderOxlintTsConfig(profile: ProjectProfile): string {
   const presets = collectUltracitePresets(profile);
+  const layer = oxlintCoreLayer();
 
   const importLines = presets.map(
-    (p) => `import ${p} from "ultracite/oxlint/${p}"`
+    (p) => `import ${presetBinding(p)} from "ultracite/oxlint/${p}";`
   );
-
-  const envLine = getOxlintEnv(profile).node ? '\n  env: { node: true },' : '';
 
   return `import { defineConfig } from "oxlint";
 ${importLines.join('\n')}
 
 export default defineConfig({
-  extends: [${presets.join(', ')}],${envLine}
-  rules: {
-    "no-console": ["error", { allow: ["info", "warn", "error"] }],
-    "no-shadow": "warn",
-    curly: ["error", "all"],
-    "max-lines": ["error", { max: 500, skipBlankLines: true, skipComments: true }],
-    "max-lines-per-function": ["error", { max: 60, skipBlankLines: true, skipComments: true }],
-  },
-  overrides: [
-    {
-      files: ["*.test.ts", "*.test.tsx", "*.spec.ts", "*.spec.tsx"],
-      rules: {
-        "no-console": "off",
-        "max-lines-per-function": "off",
-        "@typescript-eslint/no-explicit-any": "off",
-      },
-    },
-  ],
+  extends: [${presets.map(presetBinding).join(', ')}],${renderEnvLine(profile)}
+  rules: ${nestJson(layer.rules)},
+  overrides: ${nestJson(layer.overrides)},
+});
+`;
+}
+
+/** The shared imports a managed Oxlint config extends, core first. */
+export function managedOxlintImports(
+  profile: ProjectProfile
+): Array<{ from: string; local: string }> {
+  return collectUltracitePresets(profile).map((preset) => ({
+    from: sharedConfigEntry('oxlint', preset),
+    local: presetBinding(preset),
+  }));
+}
+
+/** A short config extending `@xtarter/config`, plus the project's runtime env. */
+export function renderManagedOxlintTsConfig(profile: ProjectProfile): string {
+  const imports = managedOxlintImports(profile);
+  const importLines = imports.map(
+    ({ from, local }) => `import ${local} from "${from}";`
+  );
+
+  return `import { defineConfig } from "oxlint";
+${importLines.join('\n')}
+
+export default defineConfig({
+  extends: [${imports.map(({ local }) => local).join(', ')}],${renderEnvLine(profile)}
 });
 `;
 }

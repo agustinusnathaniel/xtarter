@@ -2,11 +2,18 @@ import type {
   BackupError,
   DepsInstaller,
   ProcessRunner,
+  ProjectProfile,
   Task,
   TaskError,
   TaskStatus,
 } from '@xtarterize/core';
-import { applyTaskSelection, logInfo, logWarn, pc } from '@xtarterize/core';
+import {
+  applyTaskSelection,
+  logInfo,
+  logWarn,
+  pc,
+  unsupportedToolsNotice,
+} from '@xtarterize/core';
 import { Effect } from 'effect';
 
 import type { CliError, CliServices } from '@/runtime.js';
@@ -19,6 +26,7 @@ import type { RuntimeContext } from '@/utils/runtime.js';
 
 export interface RunCommandArgs {
   dryRun?: boolean;
+  eject?: boolean;
   format?: string;
   includeConflicts?: boolean;
   json?: boolean;
@@ -79,6 +87,14 @@ function warnUnknownSelection(
     logWarn(
       `Selection config references unknown task IDs: ${unknown.join(', ')}`
     );
+  }
+}
+
+/** ESLint and Prettier get one explicit notice instead of quiet skips (ADR-044). */
+export function warnUnsupportedTools(profile: ProjectProfile): void {
+  const notice = unsupportedToolsNotice(profile.existing);
+  if (notice) {
+    logWarn(notice);
   }
 }
 
@@ -179,6 +195,7 @@ function runSession(
       console.log(`${pc.bold(`Bundler: ${profile.bundler ?? 'none'}`)}`);
       console.log(`${pc.bold(`Package Manager: ${profile.packageManager}`)}`);
       console.log('');
+      warnUnsupportedTools(profile);
     }
     warnUnknownSelection(selection, tasks, runtime.quiet);
     const actionableTasks = resolveActionableTasks(tasks, statuses, {

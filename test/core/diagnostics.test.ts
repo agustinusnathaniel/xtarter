@@ -194,8 +194,8 @@ describe('runDiagnostics environment group with engine edge cases', () => {
   });
 });
 
-describe('runDiagnostics configuration group conflict edge cases', () => {
-  test('warns when both Biome and ESLint are present', async () => {
+describe('runDiagnostics configuration group unsupported tools', () => {
+  test('warns once that ESLint is unsupported and linting is skipped', async () => {
     await withTempDir('xtarterize-conflict-', async (tmpDir) => {
       await createConflictPkg(
         tmpDir,
@@ -206,30 +206,23 @@ describe('runDiagnostics configuration group conflict edge cases', () => {
         }
       );
       const checks = await checksFor(tmpDir, 'configuration');
-      const biomeslint = checks.filter((c) =>
-        c.message.includes('Biome and ESLint')
-      );
-      expect(biomeslint).toHaveLength(1);
-      expect(biomeslint[0].status).toBe('warn');
+      const warnings = checks.filter((c) => c.status === 'warn');
+      expect(warnings).toHaveLength(1);
+      expect(warnings[0].name).toBe('Unsupported tools');
+      expect(warnings[0].message).toContain('ESLint found');
+      expect(warnings[0].message).toContain('skips the linting tasks');
     });
   });
 
-  test('warns when both Biome and Prettier are present', async () => {
+  test('detects Prettier from its config file alone', async () => {
     await withTempDir('xtarterize-conflict-', async (tmpDir) => {
-      await createConflictPkg(
-        tmpDir,
-        {},
-        {
-          '@biomejs/biome': '^1.0.0',
-          prettier: '^3.0.0',
-        }
-      );
+      await createConflictPkg(tmpDir, {}, { '@biomejs/biome': '^1.0.0' });
+      await fs.writeFile(path.join(tmpDir, '.prettierrc'), '{}');
       const checks = await checksFor(tmpDir, 'configuration');
-      const biomePret = checks.filter((c) =>
-        c.message.includes('Biome and Prettier')
-      );
-      expect(biomePret).toHaveLength(1);
-      expect(biomePret[0].status).toBe('warn');
+      const warnings = checks.filter((c) => c.status === 'warn');
+      expect(warnings).toHaveLength(1);
+      expect(warnings[0].message).toContain('Prettier found');
+      expect(warnings[0].message).toContain('skips the formatting tasks');
     });
   });
 });
@@ -255,7 +248,7 @@ describe('runDiagnostics configuration group no-conflict edge cases', () => {
     });
   });
 
-  test('produces 2 warnings when Biome + ESLint + Prettier are all present', async () => {
+  test('produces one warning naming both when ESLint and Prettier are present', async () => {
     await withTempDir('xtarterize-conflict-', async (tmpDir) => {
       await createConflictPkg(
         tmpDir,
@@ -268,13 +261,11 @@ describe('runDiagnostics configuration group no-conflict edge cases', () => {
       );
       const checks = await checksFor(tmpDir, 'configuration');
       const warnings = checks.filter((c) => c.status === 'warn');
-      expect(warnings).toHaveLength(2);
-      expect(warnings.some((c) => c.message.includes('Biome and ESLint'))).toBe(
-        true
+      expect(warnings).toHaveLength(1);
+      expect(warnings[0].message).toContain('ESLint and Prettier found');
+      expect(warnings[0].message).toContain(
+        'skips the linting and formatting tasks'
       );
-      expect(
-        warnings.some((c) => c.message.includes('Biome and Prettier'))
-      ).toBe(true);
     });
   });
 });

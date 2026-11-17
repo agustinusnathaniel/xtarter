@@ -1,0 +1,15 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "build": {
+      "inputs": [
+        "src/**",
+        "scripts/**",
+        "tsconfig.json",
+        "package.json",
+        "vite.config.ts"
+      ]
+    }
+  }
+}

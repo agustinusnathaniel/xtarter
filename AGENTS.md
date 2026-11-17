@@ -78,6 +78,7 @@
 | Task services          | `packages/core/src/services/`   |
 | Core utilities         | `packages/core/src/`            |
 | Patching engine        | `packages/patchers/src/`        |
+| Shared lint config     | `packages/config/src/`          |
 | Task implementations   | `packages/tasks/src/`           |
 | CLI commands           | `apps/xtarterize/src/commands/` |
 | CLI runtime edge       | `apps/xtarterize/src/runtime.ts` |

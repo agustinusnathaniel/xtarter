@@ -35,7 +35,7 @@ Preview first, or apply without prompts:
 
 <AllPackageManagers type="dlx" pkg="xtarterize@latest" args="init --yes" title="Apply all" />
 
-A task that is already conformant is skipped, so a second `init` makes no changes. Lint tasks install [Ultracite](https://ultracite.ai/) alongside Biome, Oxlint, or Oxfmt, and generated configs extend its presets; xtarterize overlays its own conventions, such as kebab-case filenames and single quotes. Customize by editing the generated config files. Which tasks are offered also depends on where you run in a monorepo — see [monorepo support](/xtarterize/guide/monorepo/). Every flag, including `--only` and `--skip`, is in the [CLI reference](/xtarterize/guide/cli/overview/#init).
+A task that is already conformant is skipped, so a second `init` makes no changes. Lint tasks write short Biome, Oxlint, or Oxfmt configs that extend [`@xtarter/config`](/config/): [Ultracite](https://ultracite.ai/)'s presets plus xtarterize's conventions, such as kebab-case filenames and single quotes. Rule updates then arrive as dependency bumps. Add your own settings next to `extends`, or pass `--eject` when a config is first created to write the whole rule set into the file instead. An existing config keeps its form. ESLint and Prettier are not supported: when xtarterize finds them it says so and skips the linting or formatting tasks. Which tasks are offered also depends on where you run in a monorepo — see [monorepo support](/xtarterize/guide/monorepo/). Every flag, including `--only` and `--skip`, is in the [CLI reference](/xtarterize/guide/cli/overview/#init).
 
 ## What it will not do
 

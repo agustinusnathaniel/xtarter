@@ -119,6 +119,22 @@ function detectStyling(deps: Record<string, string>): Array<Styling> {
 const JSON_EXTENSIONS = ['.json', '.jsonc'];
 const SCRIPT_EXTENSIONS = ['.ts', '.js', '.mjs'];
 
+// `.prettierrc` may carry no extension at all.
+const PRETTIERRC_EXTENSIONS = [
+  '',
+  '.json',
+  '.json5',
+  '.yaml',
+  '.yml',
+  '.toml',
+  '.js',
+  '.mjs',
+  '.cjs',
+  '.ts',
+  '.mts',
+  '.cts',
+];
+
 async function hasConfig(
   cwd: string,
   baseName: string,
@@ -138,7 +154,7 @@ async function detectGitHubWorkflows(cwd: string): Promise<Array<string>> {
     .map((e) => e.replace(/\.(?<ext>yml|yaml)$/u, ''));
 }
 
-async function detectExistingConfigs(
+export async function detectExistingConfigs(
   cwd: string,
   deps: Record<string, string>
 ): Promise<ExistingConfig> {
@@ -154,6 +170,8 @@ async function detectExistingConfigs(
     oxlintConfig,
     oxfmtrc,
     oxfmtConfig,
+    prettierrc,
+    prettierConfig,
     agentsMd,
     claudeMd,
     changesetConfig,
@@ -168,6 +186,8 @@ async function detectExistingConfigs(
     has('oxlint.config', SCRIPT_EXTENSIONS),
     has('.oxfmtrc', JSON_EXTENSIONS),
     has('oxfmt.config', SCRIPT_EXTENSIONS),
+    has('.prettierrc', PRETTIERRC_EXTENSIONS),
+    has('prettier.config', ['.js', '.mjs', '.cjs', '.ts', '.mts', '.cts']),
     has('AGENTS', ['.md']),
     has('CLAUDE', ['.md']),
     fileExists(resolvePath(cwd, '.changeset', 'config.json')),
@@ -181,6 +201,7 @@ async function detectExistingConfigs(
     githubWorkflows,
     oxfmt: oxfmtrc || oxfmtConfig,
     oxlint: oxlintrc || oxlintConfig,
+    prettier: prettierrc || prettierConfig || Boolean(deps.prettier),
     tsconfig,
     turbo,
   };

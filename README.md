@@ -86,6 +86,7 @@ for the full list.
 ```
 xtarterize/
 ├── packages/
+│   ├── config/        # @xtarter/config: shared Biome, Oxlint, Oxfmt configs
 │   ├── core/          # Detection engine, task interface, utils, resolve/apply/backup
 │   ├── patchers/      # JSON merge and AST patching (magicast)
 │   └── tasks/         # All task implementations + templates
@@ -103,6 +104,7 @@ xtarterize/
 
 | Package                | Description                                                                    | Publishable |
 | ---------------------- | ------------------------------------------------------------------------------ | ----------- |
+| `@xtarter/config`      | Biome, Oxlint, and Oxfmt configs: Ultracite plus the xtarter rule layer       | Yes         |
 | `@xtarterize/core`     | Project detection, task interface, file utilities, resolve/apply/backup engine | Internal    |
 | `@xtarterize/patchers` | Deep JSON merge (defu), AST patching (magicast) for config files                | Internal    |
 | `@xtarterize/tasks`    | All task implementations and template renderers                                | Internal    |

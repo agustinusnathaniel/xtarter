@@ -1,0 +1,86 @@
+{
+  "name": "@xtarter/config",
+  "version": "0.0.0",
+  "description": "Opinionated Biome, Oxlint, and Oxfmt configs: Ultracite plus the xtarter rule layer",
+  "keywords": [
+    "biome",
+    "config",
+    "lint",
+    "oxfmt",
+    "oxlint",
+    "ultracite"
+  ],
+  "homepage": "https://xtarter.sznm.dev/config",
+  "bugs": {
+    "url": "https://github.com/agustinusnathaniel/xtarter/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/agustinusnathaniel/xtarter",
+    "directory": "packages/config"
+  },
+  "license": "MIT",
+  "author": "agustinusnathaniel",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.mts",
+      "import": "./dist/index.mjs"
+    },
+    "./biome/*": "./dist/biome/*.jsonc",
+    "./oxlint/*": {
+      "types": "./dist/oxlint/*.d.mts",
+      "default": "./dist/oxlint/*.mjs"
+    },
+    "./oxfmt": {
+      "types": "./dist/oxfmt/index.d.mts",
+      "default": "./dist/oxfmt/index.mjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "main": "./dist/index.mjs",
+  "types": "./dist/index.d.mts",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "vp pack && tsc -p scripts && node scripts/generate-entries.ts",
+    "dev": "vp pack --watch",
+    "prepublishOnly": "pnpm build",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "ultracite": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "oxfmt": "^0.76.0",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vite-plus": "catalog:"
+  },
+  "peerDependencies": {
+    "@biomejs/biome": "^2.6.2",
+    "oxfmt": ">=0.71.0 <1",
+    "oxlint": "^1.90.0"
+  },
+  "peerDependenciesMeta": {
+    "@biomejs/biome": {
+      "optional": true
+    },
+    "oxfmt": {
+      "optional": true
+    },
+    "oxlint": {
+      "optional": true
+    }
+  },
+  "engines": {
+    "node": ">=22.18"
+  },
+  "publishConfig": {
+    "access": "public",
+    "provenance": true
+  }
+}

@@ -223,3 +223,62 @@ export function injectVitePluginIntoCode(
     };
   }
 }
+
+export interface ConfigArrayImport {
+  /** Module specifier of the default import. */
+  from: string;
+  /** Local binding, appended to the array as an identifier. */
+  local: string;
+}
+
+function resolveConfigObject(
+  defaultExport: unknown
+): Record<string, unknown> | null {
+  if (typeof defaultExport !== 'object' || defaultExport === null) {
+    return null;
+  }
+  const wrapped = defaultExport as {
+    $args?: Array<unknown>;
+    $type?: string;
+  };
+  const config =
+    wrapped.$type === 'function-call' ? wrapped.$args?.[0] : defaultExport;
+  return typeof config === 'object' && config !== null
+    ? (config as Record<string, unknown>)
+    : null;
+}
+
+/**
+ * Add default imports to a config module and append their bindings to one array
+ * property of the default export (a plain object or `defineConfig({...})`).
+ * Imports whose specifier the code already contains are skipped. Returns null
+ * when the module has no array at that key to extend.
+ */
+export function appendConfigArrayImports(
+  code: string,
+  key: string,
+  imports: Array<ConfigArrayImport>
+): string | null {
+  const missing = imports.filter(
+    ({ from }) => !(code.includes(`"${from}"`) || code.includes(`'${from}'`))
+  );
+  if (missing.length === 0) {
+    return code;
+  }
+  try {
+    const indent = detectIndent(code);
+    const mod = parseModuleWithIndent(code, indent);
+    const config = resolveConfigObject(mod.exports.default);
+    const target = config?.[key];
+    if (!Array.isArray(target)) {
+      return null;
+    }
+    for (const { from, local } of missing) {
+      mod.imports.$append({ from, imported: 'default', local });
+      target.push(parseExpression(local));
+    }
+    return generateCodeWithIndent(code, mod, indent);
+  } catch {
+    return null;
+  }
+}
