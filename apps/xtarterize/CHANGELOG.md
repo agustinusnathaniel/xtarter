@@ -1,5 +1,19 @@
 # xtarterize
 
+## 2.2.0
+
+### Minor Changes
+
+- [#258](https://github.com/agustinusnathaniel/xtarter/pull/258) [`33f4178`](https://github.com/agustinusnathaniel/xtarter/commit/33f41789f50a131d87363398b93297ce78a294d8) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Lint and format configs now extend `@xtarter/config` by default. New `biome.json`, `oxlint.config.ts`, and `oxfmt.config.ts` files are a few lines long, and rule updates arrive as a dependency bump. Pass `--eject` to `init`, `sync`, or `add` to write the full rule set into the file instead. Oxfmt now sorts imports into the same groups as Biome (built-ins and packages, then aliases, then relative paths), so the next format run may reorder imports in Oxfmt projects. Existing configs keep their form: a config that already extends `@xtarter/config` is checked for newly detected layers (for example after adding React), and any other config is updated as before.
+  
+  ESLint and Prettier are reported once as unsupported, by the run and by `doctor`. ESLint skips the linting tasks and Prettier skips the formatting tasks, so a Vite+ project with ESLint now gets Oxfmt, and a project with Prettier no longer gets Biome on top of it. Prettier is now detected from its config files and dependency.
+  
+  Generated Biome configs put `useConsistentTestIt` in the `style` group, where Biome 2.6 expects it. Earlier configs had it under `nursery`, which Biome 2.6 rejects; `sync` moves it.
+
+### Patch Changes
+
+- [#261](https://github.com/agustinusnathaniel/xtarter/pull/261) [`ee41e44`](https://github.com/agustinusnathaniel/xtarter/commit/ee41e4415b443ba075626a7d1afdc21e541c2d36) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Vite+ projects now get the xtarter lint and format rules. Vite+ reads Oxlint and Oxfmt settings only from the `lint` and `fmt` blocks of `vite.config.ts`, so the `oxlint.config.ts` and `oxfmt.config.ts` files xtarterize wrote there were ignored: `vp fmt` used its defaults and `vp lint` ran only the default rules. In a Vite+ project without a standalone Oxlint or Oxfmt config, `lint/oxlint` and `lint/oxfmt` now write those blocks into `vite.config.ts` (creating it when missing), in the managed form by default or the full rule set with `--eject`. Projects that already have standalone files keep them; delete `oxlint.config.ts` and `oxfmt.config.ts` and run `xtarterize sync` to move the settings into `vite.config.ts`.
+
 ## 2.1.0
 
 ### Minor Changes
