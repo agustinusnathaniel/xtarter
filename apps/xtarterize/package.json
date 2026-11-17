@@ -46,6 +46,7 @@
   },
   "devDependencies": {
     "@types/node": "catalog:",
+    "@xtarter/config": "workspace:*",
     "@xtarterize/core": "workspace:*",
     "@xtarterize/patchers": "workspace:*",
     "@xtarterize/tasks": "workspace:*",

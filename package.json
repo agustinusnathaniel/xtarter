@@ -43,7 +43,7 @@
     "effect": "catalog:",
     "turbo": "^2.11.10",
     "typescript": "catalog:",
-    "ultracite": "8.1.1",
+    "ultracite": "catalog:",
     "vite": "catalog:",
     "vite-plus": "catalog:"
   },

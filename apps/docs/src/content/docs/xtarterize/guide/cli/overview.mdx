@@ -53,7 +53,7 @@ In GitHub Actions, `check` also writes one `::error` annotation per non-conforma
 
 ## `doctor`
 
-Run diagnostics for the environment, declared tools, project files (`tsconfig.json`, `README.md`, `.gitignore`), and conflicting configurations such as Biome with ESLint or Prettier. Options: `--verbose` (adds system information), `--quiet` (summary only), `--json`.
+Run diagnostics for the environment, declared tools, project files (`tsconfig.json`, `README.md`, `.gitignore`), and unsupported tools (ESLint and Prettier, which make xtarterize skip its linting or formatting tasks). Options: `--verbose` (adds system information), `--quiet` (summary only), `--json`.
 
 <AllPackageManagers type="dlx" pkg="xtarterize@latest" args="doctor" />
 
@@ -64,6 +64,7 @@ Detect the project stack, show a plan, and apply changes.
 | Option | Description |
 | --- | --- |
 | `--dry-run` | Preview changes without applying |
+| `--eject` | Write full lint and format configs instead of extending `@xtarter/config` (only when a config is created) |
 | `--yes`, `-y` | Skip confirmations |
 | `--compose <query>` | Rank tasks by relevance to a query |
 | `--threshold <n>` | Minimum score for `--compose` (0-1, default `0.1`) |
@@ -91,7 +92,7 @@ Options: `--format <terminal|json>`.
 
 ## `check`
 
-Audit which tasks are conformant and report conflicting tools, legacy ESLint configs, and missing tool installations.
+Audit which tasks are conformant and report unsupported tools (ESLint, Prettier) and missing tool installations.
 
 | Option | Description |
 | --- | --- |
@@ -107,6 +108,7 @@ Apply one task, or show a grouped multi-select menu when no task ID is given.
 | Option | Description |
 | --- | --- |
 | `--all` | Apply all new and patch tasks without prompting |
+| `--eject` | Write full lint and format configs instead of extending `@xtarter/config` (only when a config is created) |
 | `--include-conflicts` | Apply conflicting tasks too |
 | `--format <format>` | Output format: `terminal` or `json` |
 | `--timing` | Show per-task timing |

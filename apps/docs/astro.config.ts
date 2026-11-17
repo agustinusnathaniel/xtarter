@@ -260,6 +260,16 @@ export default defineConfig({
           ],
           label: 'create-xtarter-app',
         },
+        {
+          collapsed: true,
+          items: [
+            {
+              label: 'Overview',
+              link: '/config/',
+            },
+          ],
+          label: '@xtarter/config',
+        },
       ],
       social: [
         {

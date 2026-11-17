@@ -1,0 +1,84 @@
+---
+title: '@xtarter/config'
+description: Opinionated Biome, Oxlint, and Oxfmt configs. Install, extend, done.
+---
+
+import AllPackageManagers from '@/components/AllPackageManagers.astro'
+
+`@xtarter/config` ships the same lint and format rules xtarterize applies, as a package you extend instead of a config you own. It is [Ultracite](https://ultracite.ai/)'s presets plus the xtarter layer:
+
+- 500 lines per file and 60 per function
+- block statements required (`curly` in Oxlint)
+- generic array syntax and kebab-case file names
+- single quotes, and the same import groups in Biome and Oxfmt: built-ins and packages, then aliases (`@/`, `#`, `~`, `$`, `%`), then relative paths
+- `console` limited to `info`, `warn`, and `error` (Oxlint)
+- test files get `it()` at the top level and `test()` inside `describe()`
+
+Use it directly when you want conformance without tinkering. xtarterize writes configs that extend it by default too; run `xtarterize init --eject` instead when you want the whole rule set written into your project so you can edit every rule.
+
+## Biome
+
+<AllPackageManagers pkg="@biomejs/biome @xtarter/config" dev />
+
+```json title="biome.json"
+{
+  "$schema": "./node_modules/@biomejs/biome/configuration_schema.json",
+  "extends": ["@xtarter/config/biome/core", "@xtarter/config/biome/react"]
+}
+```
+
+Add your own `files.includes`, `vcs`, or CSS parser settings alongside `extends`; the package leaves project-specific settings out.
+
+## Oxlint
+
+<AllPackageManagers pkg="oxlint @xtarter/config" dev />
+
+```ts title="oxlint.config.ts"
+import { defineConfig } from 'oxlint';
+import core from '@xtarter/config/oxlint/core';
+import react from '@xtarter/config/oxlint/react';
+
+export default defineConfig({
+  extends: [core, react],
+  env: { node: true },
+});
+```
+
+Oxlint's JSON config cannot extend npm packages, so use `oxlint.config.ts` (or `.js`/`.mjs`). TypeScript configs need Node.js 22.18 or newer.
+
+## Oxfmt
+
+<AllPackageManagers pkg="oxfmt @xtarter/config" dev />
+
+```ts title="oxfmt.config.ts"
+import { defineConfig } from 'oxfmt';
+import xtarter from '@xtarter/config/oxfmt';
+
+export default defineConfig({
+  ...xtarter,
+});
+```
+
+## Layers
+
+Every Biome and Oxlint entry extends the Ultracite preset of the same name. List `core` first, then the layers for your stack; later layers win, so framework exceptions (such as route file names in Remix or TanStack) apply.
+
+| Tool | Entries |
+| --- | --- |
+| Biome | `core`, `angular`, `astro`, `cypress`, `drizzle`, `jest`, `nestjs`, `next`, `playwright`, `qwik`, `react`, `react-native`, `remix`, `solid`, `storybook`, `svelte`, `tanstack`, `type-aware`, `vitest`, `vue` |
+| Oxlint | `core`, `angular`, `anti-slop`, `astro`, `cypress`, `drizzle`, `gdp`, `jest`, `js-plugins`, `nestjs`, `next`, `playwright`, `qwik`, `react`, `react-native`, `remix`, `shadcn`, `solid`, `storybook`, `svelte`, `tanstack`, `vitest`, `vue` |
+| Oxfmt | `@xtarter/config/oxfmt` (no layers) |
+
+## Versioning
+
+Each release pins one Ultracite version, so a given `@xtarter/config` version always means the same rules.
+
+| Change | Release |
+| --- | --- |
+| New or stricter rule, including an Ultracite upgrade | Minor |
+| Relaxed rule or fix | Patch |
+| Removed entry, or a new major version of Biome, Oxlint, or Oxfmt required | Major |
+
+Minor releases can add errors to your project; their release notes name the rules they add.
+
+ESLint and Prettier entries are not published. xtarter supports only Biome and the Oxc tools.

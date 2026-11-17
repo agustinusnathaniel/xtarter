@@ -302,7 +302,7 @@ describe('detectProject', () => {
 });
 
 describe('detectProject', () => {
-  test('detects .eslintrc.mjs consistently with the doctor legacy check', async () => {
+  test('detects .eslintrc.mjs consistently with the doctor unsupported-tools check', async () => {
     await withProject(
       {
         '.eslintrc.mjs': 'export default {}\n',
@@ -317,10 +317,11 @@ describe('detectProject', () => {
           })
         );
         const checks = groups.flatMap((group) => group.checks);
-        const legacyCheck = checks.find(
-          (check) => check.name === 'Legacy config'
+        const unsupported = checks.find(
+          (check) => check.name === 'Unsupported tools'
         );
-        expect(legacyCheck?.message).toContain('.eslintrc.mjs');
+        expect(unsupported?.status).toBe('warn');
+        expect(unsupported?.message).toContain('ESLint found');
       }
     );
   });

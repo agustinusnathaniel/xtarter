@@ -33,6 +33,12 @@ export const timingArg = {
   type: 'boolean',
 } as const;
 
+export const ejectArg = {
+  description:
+    'Write full lint and format configs instead of extending @xtarter/config',
+  type: 'boolean',
+} as const;
+
 export const yesArg = {
   alias: 'y',
   description: 'Skip all confirmations, apply all',
@@ -63,6 +69,7 @@ export const runArgs = {
     description: 'Preview changes without applying',
     type: 'boolean',
   },
+  eject: ejectArg,
   includeConflicts: includeConflictsArg,
   only: {
     description: 'Apply only a specific task',

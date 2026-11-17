@@ -4,6 +4,7 @@ export default defineConfig({
   pack: {
     deps: {
       alwaysBundle: [
+        '@xtarter/config',
         '@xtarterize/core',
         '@xtarterize/tasks',
         '@xtarterize/patchers',

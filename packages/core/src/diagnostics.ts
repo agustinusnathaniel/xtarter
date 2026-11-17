@@ -1,9 +1,10 @@
 import os from 'node:os';
 import { Cause, Effect, Exit } from 'effect';
-import { basename } from 'pathe';
 
+import { detectExistingConfigs } from '@/detect.js';
 import { ProcessRunner } from '@/services/process-runner.js';
-import { fileExists, findConfigFile, resolvePath } from '@/utils/fs.js';
+import { unsupportedToolsNotice } from '@/unsupported-tools.js';
+import { fileExists, resolvePath } from '@/utils/fs.js';
 import {
   collectDependencyVersions,
   readPackageJsonOrNull,
@@ -183,53 +184,6 @@ function runProjectHealthChecks(
   });
 }
 
-const TOOL_CONFLICTS = [
-  [
-    '@biomejs/biome',
-    'eslint',
-    'Both Biome and ESLint are configured. Consider using one as primary.',
-  ],
-  [
-    '@biomejs/biome',
-    'prettier',
-    'Both Biome and Prettier are configured. Biome includes formatting - Prettier may be redundant.',
-  ],
-] as const;
-
-function collectConflictingToolChecks(
-  deps: Record<string, unknown>
-): Array<DiagnosticCheck> {
-  return TOOL_CONFLICTS.filter(
-    ([first, second]) => deps[first] && deps[second]
-  ).map(([, , message]) => makeCheck('Conflicting tools', 'warn', message));
-}
-
-function checkLegacyEslintConfig(
-  cwd: string
-): Effect.Effect<DiagnosticCheck | null> {
-  return Effect.gen(function* () {
-    const found = yield* Effect.promise(() =>
-      findConfigFile(cwd, '.eslintrc', [
-        '',
-        '.js',
-        '.cjs',
-        '.mjs',
-        '.json',
-        '.yaml',
-        '.yml',
-      ])
-    );
-    if (!found) {
-      return null;
-    }
-    return makeCheck(
-      'Legacy config',
-      'warn',
-      `Legacy ESLint config found (${basename(found)}). Consider migrating to flat config (eslint.config.js).`
-    );
-  });
-}
-
 function runConflictChecks(cwd: string): Effect.Effect<Array<DiagnosticCheck>> {
   return Effect.gen(function* () {
     const pkg = yield* readPackage(cwd);
@@ -237,23 +191,19 @@ function runConflictChecks(cwd: string): Effect.Effect<Array<DiagnosticCheck>> {
       return [] as Array<DiagnosticCheck>;
     }
     const deps = collectDependencyVersions(pkg);
-    const checks: Array<DiagnosticCheck> = [
-      ...collectConflictingToolChecks(deps),
+    const existing = yield* Effect.promise(() =>
+      detectExistingConfigs(cwd, deps)
+    );
+    const notice = unsupportedToolsNotice(existing);
+    return [
+      notice
+        ? makeCheck('Unsupported tools', 'warn', notice)
+        : makeCheck(
+            'Unsupported tools',
+            'pass',
+            'No unsupported linting or formatting tools detected.'
+          ),
     ];
-    const legacyCheck = yield* checkLegacyEslintConfig(cwd);
-    if (legacyCheck) {
-      checks.push(legacyCheck);
-    }
-    if (checks.length === 0) {
-      checks.push(
-        makeCheck(
-          'Conflicting tools',
-          'pass',
-          'No conflicting formatting/linting tools detected.'
-        )
-      );
-    }
-    return checks;
   });
 }
 
