@@ -1,15 +1,4 @@
 ---
-// Type Starlight's App.Locals augmentation (starlightRoute) locally: the docs
-// tsconfig does not include astro.config.mjs, so the integration's own d.ts
-// files are not part of the program during `astro check`. The declaration
-// merges with Starlight's when it is loaded.
-declare global {
-  namespace App {
-    interface Locals {
-      starlightRoute: import('@astrojs/starlight/route-data').StarlightRouteData
-    }
-  }
-}
 // Targeted Starlight Hero override for the three docs landing routes.
 // For every other page it renders Starlight's default Hero unchanged, so
 // hero frontmatter on non-target routes (404, future splash pages) keeps

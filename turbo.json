@@ -28,6 +28,10 @@
     "//#ultracite:fix": {
       "cache": false
     },
+    "//#typecheck:scripts": {
+      "inputs": ["scripts/*.mts", "scripts/tsconfig.json"],
+      "outputs": []
+    },
     "//#verify:shebangs": {
       "dependsOn": ["xtarterize#build", "create-xtarter-app#build"]
     },
