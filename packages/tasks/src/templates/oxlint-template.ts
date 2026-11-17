@@ -1,6 +1,10 @@
 import { oxlintCoreLayer, sharedConfigEntry } from '@xtarter/config';
 import type { ProjectProfile } from '@xtarterize/core';
+import type { ConfigArrayImport } from '@xtarterize/patchers';
 
+import type { LintConfigForm } from '@/lint/config-form.js';
+
+import type { VitePlusBlock } from './oxfmt-template.js';
 import { collectUltracitePresets } from './ultracite-presets.js';
 
 function getOxlintEnv(profile: ProjectProfile): Record<string, boolean> {
@@ -50,14 +54,67 @@ export default defineConfig({
 `;
 }
 
-/** The shared imports a managed Oxlint config extends, core first. */
+/** Prefix a binding, such as `xtarter` and `react-native` to `xtarterReactNative`. */
+function prefixedBinding(prefix: string, preset: string): string {
+  const binding = presetBinding(preset);
+  return prefix === ''
+    ? binding
+    : `${prefix}${binding.charAt(0).toUpperCase()}${binding.slice(1)}`;
+}
+
+/**
+ * The shared imports a managed Oxlint config extends, core first. A prefix
+ * keeps the bindings apart from other imports in a shared file.
+ */
 export function managedOxlintImports(
-  profile: ProjectProfile
-): Array<{ from: string; local: string }> {
+  profile: ProjectProfile,
+  prefix = ''
+): Array<ConfigArrayImport> {
   return collectUltracitePresets(profile).map((preset) => ({
     from: sharedConfigEntry('oxlint', preset),
-    local: presetBinding(preset),
+    local: prefixedBinding(prefix, preset),
   }));
+}
+
+/** The Ultracite presets an ejected Oxlint config extends, core first. */
+function ejectedOxlintImports(
+  profile: ProjectProfile,
+  prefix: string
+): Array<ConfigArrayImport> {
+  return collectUltracitePresets(profile).map((preset) => ({
+    from: `ultracite/oxlint/${preset}`,
+    local: prefixedBinding(prefix, preset),
+  }));
+}
+
+/** Binding prefix for the shared layers in a Vite+ `vite.config` lint block. */
+export const VITE_PLUS_LINT_PREFIX = 'xtarter';
+
+/**
+ * The `lint` block of a Vite+ `vite.config`, which is where `vp lint` and
+ * `vp check` read Oxlint settings.
+ */
+export function vitePlusLintBlock(
+  profile: ProjectProfile,
+  form: LintConfigForm
+): VitePlusBlock {
+  if (form === 'managed') {
+    const imports = managedOxlintImports(profile, VITE_PLUS_LINT_PREFIX);
+    return {
+      expression: `{${renderEnvLine(profile)}\n  extends: [${imports.map(({ local }) => local).join(', ')}],\n}`,
+      imports,
+    };
+  }
+  const imports = ejectedOxlintImports(profile, 'ultracite');
+  const layer = oxlintCoreLayer();
+  return {
+    expression: `{${renderEnvLine(profile)}
+  extends: [${imports.map(({ local }) => local).join(', ')}],
+  overrides: ${nestJson(layer.overrides)},
+  rules: ${nestJson(layer.rules)},
+}`,
+    imports,
+  };
 }
 
 /** A short config extending `@xtarter/config`, plus the project's runtime env. */

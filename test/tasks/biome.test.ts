@@ -278,8 +278,10 @@ describe('oxlintTask', () => {
         const diffs = await run(oxlintTask.dryRun(cwd, profile));
 
         expect(diffs.length).toBeGreaterThan(0);
-        expect(diffs[0].filepath).toBe('oxlint.config.ts');
+        // Vite+ reads `lint` from vite.config, not oxlint.config.ts.
+        expect(diffs[0].filepath).toBe('vite.config.ts');
         expect(diffs[0].before).toBeNull();
+        expect(diffs[0].after).toContain('lint: {');
         expect(diffs[0].after).toContain('@xtarter/config/oxlint/core');
       }
     );
@@ -329,8 +331,10 @@ describe('oxfmtTask', () => {
         const diffs = await run(oxfmtTask.dryRun(cwd, profile));
 
         expect(diffs.length).toBeGreaterThan(0);
-        expect(diffs[0].filepath).toBe('oxfmt.config.ts');
+        // Vite+ reads `fmt` from vite.config, not oxfmt.config.ts.
+        expect(diffs[0].filepath).toBe('vite.config.ts');
         expect(diffs[0].before).toBeNull();
+        expect(diffs[0].after).toContain('fmt: {');
         expect(diffs[0].after).toContain('@xtarter/config/oxfmt');
       }
     );

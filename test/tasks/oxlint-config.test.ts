@@ -5,11 +5,13 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 import {
+  type FixtureName,
   fixtureDir,
   fixtureProfile,
   withProject,
 } from '@test/helpers/project.js';
 import { run } from '@test/helpers/run.js';
+import type { ProjectProfile } from '@xtarterize/core';
 import { describe, expect } from 'vite-plus/test';
 
 import {
@@ -22,6 +24,19 @@ import {
 const ejectedOxlintTask = createOxlintTask({ eject: true });
 const ejectedOxfmtTask = createOxfmtTask({ eject: true });
 
+/**
+ * The standalone config files apply when the project already has one: the
+ * generated scripts then call Oxlint and Oxfmt directly. Without one, a Vite+
+ * project gets `lint` and `fmt` blocks in vite.config instead.
+ */
+async function standaloneProfile(name: FixtureName): Promise<ProjectProfile> {
+  const profile = await fixtureProfile(name);
+  return {
+    ...profile,
+    existing: { ...profile.existing, oxfmt: true, oxlint: true },
+  };
+}
+
 const vitePlusPackage = {
   devDependencies: { 'vite-plus': '^0.1.0' },
   name: 'vp-managed',
@@ -31,7 +46,7 @@ const vitePlusPackage = {
 describe('oxlint config validation', () => {
   test('generated oxlint.config.ts extends @xtarter/config by default', async () => {
     const testDir = fixtureDir('vite-plus-no-lint');
-    const profile = await fixtureProfile('vite-plus-no-lint');
+    const profile = await standaloneProfile('vite-plus-no-lint');
     const diffs = await run(oxlintTask.dryRun(testDir, profile));
     const configFile = diffs.find((d) => d.filepath === 'oxlint.config.ts');
     if (!configFile) {
@@ -55,7 +70,7 @@ describe('oxlint config validation', () => {
 describe('oxlint ejected config', () => {
   test('ejected oxlint.config.ts has expected imports and rules', async () => {
     const testDir = fixtureDir('vite-plus-no-lint');
-    const profile = await fixtureProfile('vite-plus-no-lint');
+    const profile = await standaloneProfile('vite-plus-no-lint');
     const diffs = await run(ejectedOxlintTask.dryRun(testDir, profile));
     const configFile = diffs.find((d) => d.filepath === 'oxlint.config.ts');
     if (!configFile) {
@@ -83,7 +98,7 @@ describe('oxlint ejected config', () => {
 
   test('generated oxlint.config.json preserves existing settings', async () => {
     const testDir = fixtureDir('vite-plus-oxlint');
-    const profile = await fixtureProfile('vite-plus-oxlint');
+    const profile = await standaloneProfile('vite-plus-oxlint');
     const diffs = await run(oxlintTask.dryRun(testDir, profile));
     const configFile = diffs.find((d) => d.filepath === 'oxlint.config.json');
     if (!configFile) {
@@ -109,7 +124,7 @@ describe('oxlint ejected config', () => {
 
   test('ejected config includes ultracite react preset when framework is react', async () => {
     const testDir = fixtureDir('vite-plus-no-lint');
-    const profile = await fixtureProfile('vite-plus-no-lint');
+    const profile = await standaloneProfile('vite-plus-no-lint');
     const diffs = await run(ejectedOxlintTask.dryRun(testDir, profile));
     const configFile = diffs.find((d) => d.filepath === 'oxlint.config.ts');
 
@@ -199,7 +214,7 @@ export default defineConfig({ extends: [core] });
 describe('oxfmt config validation', () => {
   test('generated oxfmt.config.ts spreads @xtarter/config by default', async () => {
     const testDir = fixtureDir('vite-plus-no-lint');
-    const profile = await fixtureProfile('vite-plus-no-lint');
+    const profile = await standaloneProfile('vite-plus-no-lint');
     const diffs = await run(oxfmtTask.dryRun(testDir, profile));
     const configFile = diffs.find((d) => d.filepath === 'oxfmt.config.ts');
     if (!configFile) {
@@ -213,7 +228,7 @@ describe('oxfmt config validation', () => {
 
   test('ejected oxfmt.config.ts has expected imports and options', async () => {
     const testDir = fixtureDir('vite-plus-no-lint');
-    const profile = await fixtureProfile('vite-plus-no-lint');
+    const profile = await standaloneProfile('vite-plus-no-lint');
     const diffs = await run(ejectedOxfmtTask.dryRun(testDir, profile));
     const configFile = diffs.find((d) => d.filepath === 'oxfmt.config.ts');
 
@@ -253,6 +268,144 @@ export default { ...xtarter, printWidth: 100 };
           name: 'vp-oxfmt-status',
           type: 'module',
         },
+      },
+      async ({ cwd, profile }) => {
+        await expect(run(oxfmtTask.check(cwd, profile))).resolves.toBe(
+          'conflict'
+        );
+      }
+    );
+  });
+});
+
+const viteConfigWithPlugin = `import { defineConfig } from 'vite-plus';
+import react from '@vitejs/plugin-react';
+
+export default defineConfig({
+  plugins: [react()],
+});
+`;
+
+/** Read the project's vite.config.ts after the tasks applied. */
+function readViteConfig(cwd: string): Promise<string> {
+  return readFile(join(cwd, 'vite.config.ts'), 'utf8');
+}
+
+describe('Vite+ lint and fmt blocks', () => {
+  test('creates vite.config.ts with managed blocks when there is none', async () => {
+    await withProject(
+      { 'package.json': vitePlusPackage },
+      async ({ cwd, profile }) => {
+        const [lint] = await run(oxlintTask.dryRun(cwd, profile));
+        expect(lint.filepath).toBe('vite.config.ts');
+        expect(lint.before).toBeNull();
+        expect(lint.after).toContain("from 'vite-plus'");
+        expect(lint.after).toContain(
+          "import xtarterCore from '@xtarter/config/oxlint/core'"
+        );
+        expect(lint.after).toContain('extends: [xtarterCore]');
+        const deps = await run(oxlintTask.getDeps(cwd, profile));
+        expect(deps.map((dep) => dep.depName)).toContain('@xtarter/config');
+      }
+    );
+  });
+
+  test('adds both blocks to an existing config, then a second run is a no-op', async () => {
+    await withProject(
+      {
+        'package.json': {
+          ...vitePlusPackage,
+          dependencies: { react: '^19.0.0' },
+        },
+        'vite.config.ts': viteConfigWithPlugin,
+      },
+      async ({ cwd, profile }) => {
+        await expect(run(oxlintTask.check(cwd, profile))).resolves.toBe(
+          'patch'
+        );
+        await run(oxlintTask.apply(cwd, profile));
+        await run(oxfmtTask.apply(cwd, profile));
+        const config = await readViteConfig(cwd);
+        expect(config).toContain('plugins: [react()]');
+        expect(config).toContain(
+          "import xtarterReact from '@xtarter/config/oxlint/react'"
+        );
+        expect(config).toContain('extends: [xtarterCore, xtarterReact]');
+        expect(config).toContain(
+          "import xtarterFmt from '@xtarter/config/oxfmt'"
+        );
+        expect(config).toContain('...xtarterFmt');
+
+        await expect(run(oxlintTask.dryRun(cwd, profile))).resolves.toEqual([]);
+        await expect(run(oxfmtTask.dryRun(cwd, profile))).resolves.toEqual([]);
+      }
+    );
+  });
+});
+
+describe('Vite+ ejected blocks', () => {
+  test('ejected blocks inline the layer and skip the shared package', async () => {
+    await withProject(
+      {
+        'package.json': vitePlusPackage,
+        'vite.config.ts': viteConfigWithPlugin,
+      },
+      async ({ cwd, profile }) => {
+        await run(ejectedOxlintTask.apply(cwd, profile));
+        await run(ejectedOxfmtTask.apply(cwd, profile));
+        const config = await readViteConfig(cwd);
+        expect(config).toContain(
+          "import ultraciteCore from 'ultracite/oxlint/core'"
+        );
+        expect(config).toContain('"no-console"');
+        expect(config).toMatch(/import ultraciteFmt from .ultracite\/oxfmt./u);
+        expect(config).toContain('singleQuote: true');
+        expect(config).not.toContain('@xtarter/config');
+
+        // Without --eject, an ejected block stays ejected.
+        await expect(run(oxlintTask.dryRun(cwd, profile))).resolves.toEqual([]);
+        const deps = await run(oxfmtTask.getDeps(cwd, profile));
+        expect(deps.map((dep) => dep.depName)).not.toContain('@xtarter/config');
+      }
+    );
+  });
+});
+
+describe('Vite+ block upkeep', () => {
+  test('adds a newly detected layer to a managed lint block', async () => {
+    await withProject(
+      {
+        'package.json': {
+          ...vitePlusPackage,
+          dependencies: { react: '^19.0.0' },
+        },
+        'vite.config.ts': `import xtarterCore from '@xtarter/config/oxlint/core';
+import { defineConfig } from 'vite-plus';
+
+export default defineConfig({
+  lint: { extends: [xtarterCore], rules: { 'no-alert': 'off' } },
+});
+`,
+      },
+      async ({ cwd, profile }) => {
+        await expect(run(oxlintTask.check(cwd, profile))).resolves.toBe(
+          'patch'
+        );
+        const [diff] = await run(oxlintTask.dryRun(cwd, profile));
+        expect(diff.after).toContain('extends: [xtarterCore, xtarterReact]');
+        expect(diff.after).toContain("'no-alert': 'off'");
+      }
+    );
+  });
+
+  test("reports conflict for the project's own fmt block", async () => {
+    await withProject(
+      {
+        'package.json': vitePlusPackage,
+        'vite.config.ts': `import { defineConfig } from 'vite-plus';
+
+export default defineConfig({ fmt: { printWidth: 100 } });
+`,
       },
       async ({ cwd, profile }) => {
         await expect(run(oxfmtTask.check(cwd, profile))).resolves.toBe(

@@ -28,6 +28,7 @@ export type {
   TargetPolicy,
   TargetPolicyInput,
   TaskTarget,
+  TextTarget,
   TransformTarget,
 } from './targets.js';
 

@@ -89,7 +89,7 @@ export function createBiomeTask(options: LintTaskOptions = {}): DefinedTask {
         { depName: '@biomejs/biome', dev: true },
         { depName: 'ultracite', dev: true },
       ],
-      BIOME_FILE
+      () => BIOME_FILE
     ),
     group: 'Linting & Formatting',
     id: 'lint/biome',

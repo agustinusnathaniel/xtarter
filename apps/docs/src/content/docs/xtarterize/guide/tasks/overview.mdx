@@ -16,8 +16,8 @@ In monorepos, tasks are filtered by scope: root tasks appear only at the monorep
 | Task | What it does |
 | --- | --- |
 | `lint/biome` | Install Biome, Ultracite, and `@xtarter/config`; write a `biome.json` that extends `@xtarter/config` (the full rule set with `--eject`). Skipped when ESLint or Prettier is present |
-| `lint/oxlint` | Install Oxlint, Ultracite, and `@xtarter/config` when Vite+ or an existing Oxlint config is detected; write an `oxlint.config.ts` that extends `@xtarter/config` (the full rule set with `--eject`) or update an existing `oxlint.config.*`, adding newly detected layers to a managed one (legacy `.oxlintrc.json` is detected but not rewritten). Skipped when ESLint is present |
-| `lint/oxfmt` | Install Oxfmt, Ultracite, and `@xtarter/config` when Vite+ or an existing Oxfmt config is detected; write an `oxfmt.config.ts` that spreads `@xtarter/config` (the full options with `--eject`; legacy `.oxfmtrc.json` is detected but not rewritten). Skipped when Prettier is present |
+| `lint/oxlint` | Install Oxlint, Ultracite, and `@xtarter/config` when Vite+ or an existing Oxlint config is detected; write an `oxlint.config.ts` that extends `@xtarter/config` (the full rule set with `--eject`) or update an existing `oxlint.config.*`, adding newly detected layers to a managed one (legacy `.oxlintrc.json` is detected but not rewritten). In a Vite+ project without a standalone Oxlint or Oxfmt config, write the same settings as the `lint` block of `vite.config.ts` instead, where `vp lint` and `vp check` read them. Skipped when ESLint is present |
+| `lint/oxfmt` | Install Oxfmt, Ultracite, and `@xtarter/config` when Vite+ or an existing Oxfmt config is detected; write an `oxfmt.config.ts` that spreads `@xtarter/config` (the full options with `--eject`; legacy `.oxfmtrc.json` is detected but not rewritten). In a Vite+ project without a standalone Oxlint or Oxfmt config, write the `fmt` block of `vite.config.ts` instead, where `vp fmt` and `vp check` read it. Skipped when Prettier is present |
 
 ## TypeScript
 

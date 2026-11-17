@@ -10,16 +10,20 @@ import {
   type DefinedTask,
   defineTask,
   type TargetPolicy,
+  type TaskTarget,
 } from '@/factory/define-task.js';
 import {
   renderManagedOxfmtTsConfig,
   renderOxfmtTsConfig,
+  vitePlusFmtBlock,
 } from '@/templates/oxfmt-template.js';
 import {
   managedOxlintImports,
   renderManagedOxlintTsConfig,
   renderOxlintJsonConfig,
   renderOxlintTsConfig,
+  VITE_PLUS_LINT_PREFIX,
+  vitePlusLintBlock,
 } from '@/templates/oxlint-template.js';
 
 import {
@@ -28,6 +32,13 @@ import {
   lintTaskDeps,
   newConfigForm,
 } from './config-form.js';
+import {
+  classifyBlock,
+  createVitePlusConfigTarget,
+  usesVitePlusConfig,
+  VITE_CONFIG_FILE,
+  type VitePlusBlockSpec,
+} from './vite-plus-config.js';
 
 const ULTRACITE_OXLINT_MARKER = 'ultracite/oxlint/';
 const SCRIPT_EXTENSIONS = ['.ts', '.js', '.mjs', '.json'];
@@ -61,7 +72,7 @@ const oxlintPolicy: TargetPolicy = ({ before, after }) => {
   return before.includes(ULTRACITE_OXLINT_MARKER) ? 'skip' : undefined;
 };
 
-function renderOxlint(
+function renderOxlintStandalone(
   profile: ProjectProfile,
   existing: string | null,
   options: LintTaskOptions
@@ -92,29 +103,74 @@ function renderOxlint(
   return renderOxlintTsConfig(profile);
 }
 
+const VITE_LINT_BLOCK: VitePlusBlockSpec = {
+  ejectedMarker: ULTRACITE_OXLINT_MARKER,
+  id: 'lint/oxlint',
+  key: 'lint',
+  render: vitePlusLintBlock,
+  upkeep: (code, profile) =>
+    appendConfigArrayImports(
+      code,
+      'lint.extends',
+      managedOxlintImports(profile, VITE_PLUS_LINT_PREFIX)
+    ),
+};
+
+const VITE_FMT_BLOCK: VitePlusBlockSpec = {
+  ejectedMarker: 'ultracite/oxfmt',
+  id: 'lint/oxfmt',
+  key: 'fmt',
+  render: (_profile, form) => vitePlusFmtBlock(form),
+};
+
+/** The file a task's dependencies are read from: `vite.config` under Vite+. */
+function depsFile(
+  standalone: { extensions: Array<string>; filepath: string },
+  block: VitePlusBlockSpec
+) {
+  return (profile: ProjectProfile) =>
+    usesVitePlusConfig(profile)
+      ? {
+          ...VITE_CONFIG_FILE,
+          isManaged: (text: string) => classifyBlock(text, block) === 'managed',
+        }
+      : standalone;
+}
+
+function configTargets(standalone: string): Array<string> {
+  return [
+    ...SCRIPT_EXTENSIONS.map((extension) => `${standalone}${extension}`),
+    'vite.config.ts',
+  ];
+}
+
 export function createOxlintTask(options: LintTaskOptions = {}): DefinedTask {
+  const standalone: TaskTarget = {
+    ...OXLINT_FILE,
+    kind: 'text',
+    policy: oxlintPolicy,
+    render: (profile, existing) =>
+      renderOxlintStandalone(profile, existing, options),
+  };
+  const vitePlus = createVitePlusConfigTarget(VITE_LINT_BLOCK, options);
   return defineTask({
     applicable: (profile) =>
       !(profile.existing.eslint || profile.existing.biome) &&
       (profile.vitePlus || profile.existing.oxlint),
+    configTargets: configTargets(OXLINT_FILE.filepath),
     deps: lintTaskDeps(
       [
         { depName: 'oxlint', dev: true },
         { depName: 'ultracite', dev: true },
       ],
-      OXLINT_FILE
+      depsFile(OXLINT_FILE, VITE_LINT_BLOCK)
     ),
     group: 'Linting & Formatting',
     id: 'lint/oxlint',
     keywords: ['oxlint', 'linter', 'rust', 'static analysis', 'fast'],
     label: 'Oxlint config',
-    targets: [
-      {
-        ...OXLINT_FILE,
-        kind: 'text',
-        policy: oxlintPolicy,
-        render: (profile, existing) => renderOxlint(profile, existing, options),
-      },
+    targets: (_cwd, profile) => [
+      usesVitePlusConfig(profile) ? vitePlus : standalone,
     ],
   });
 }
@@ -132,27 +188,30 @@ function renderOxfmt(existing: string | null, options: LintTaskOptions) {
 }
 
 export function createOxfmtTask(options: LintTaskOptions = {}): DefinedTask {
+  const standalone: TaskTarget = {
+    ...OXFMT_FILE,
+    kind: 'text',
+    render: (_profile, existing) => renderOxfmt(existing, options),
+  };
+  const vitePlus = createVitePlusConfigTarget(VITE_FMT_BLOCK, options);
   return defineTask({
     applicable: (profile) =>
       !(profile.existing.prettier || profile.existing.biome) &&
       (profile.vitePlus || profile.existing.oxfmt),
+    configTargets: configTargets(OXFMT_FILE.filepath),
     deps: lintTaskDeps(
       [
         { depName: 'oxfmt', dev: true },
         { depName: 'ultracite', dev: true },
       ],
-      OXFMT_FILE
+      depsFile(OXFMT_FILE, VITE_FMT_BLOCK)
     ),
     group: 'Linting & Formatting',
     id: 'lint/oxfmt',
     keywords: ['oxfmt', 'formatter', 'rust', 'format', 'style'],
     label: 'Oxfmt config',
-    targets: [
-      {
-        ...OXFMT_FILE,
-        kind: 'text',
-        render: (_profile, existing) => renderOxfmt(existing, options),
-      },
+    targets: (_cwd, profile) => [
+      usesVitePlusConfig(profile) ? vitePlus : standalone,
     ],
   });
 }
