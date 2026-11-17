@@ -17,6 +17,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@xtarter/config": "workspace:*",
     "@xtarterize/core": "workspace:*",
     "@xtarterize/patchers": "workspace:*",
     "effect": "catalog:",

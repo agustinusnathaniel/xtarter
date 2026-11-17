@@ -16,7 +16,7 @@ The profile contains:
 - Package manager and whether the project uses Vite+
 - Monorepo status, monorepo tool, and whether the current directory is the workspace root
 - Git and GitHub presence
-- Existing configuration files, such as Biome, ESLint, tsconfig, Renovate, commitlint, knip, Vite config, and GitHub workflows
+- Existing configuration files, such as Biome, ESLint, Prettier, tsconfig, Renovate, commitlint, knip, Vite config, and GitHub workflows
 
 Detection runs on every invocation; there is no profile cache. Each run inspects `package.json`, root config files, lockfiles, config directories, and ancestor markers, then computes a fresh profile. Signals come from two sources:
 
@@ -56,7 +56,7 @@ Covered commands are `init`, `sync`, `diff`, `check`, `add`, `list`, `query`, `r
 
 `check` and `doctor` additionally run tooling diagnostics:
 
-- **Conflicting tools**: Biome alongside ESLint or Prettier, and legacy `.eslintrc` files, are reported as warnings.
+- **Unsupported tools**: ESLint or Prettier, found from config files or dependencies, is reported as one warning naming the linting or formatting tasks xtarterize skips.
 - **Tool installation**: for each tool declared in `package.json` (Biome, ESLint, TypeScript, Commitlint, Knip), the tool's version command confirms it is installed.
 
 `check` runs the tools and configuration groups. `doctor` runs every group (environment, tools, project, and configuration), and `--verbose` adds a system group with host platform information. Checks report `pass`, `warn`, or `fail` with a message; a check that throws becomes a single failure entry, so one broken check never hides the others, and a failing diagnostic sets exit code `1`.

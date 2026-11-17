@@ -65,6 +65,7 @@ const baseProfile: ProjectProfile = {
     githubWorkflows: [],
     oxfmt: false,
     oxlint: false,
+    prettier: false,
     tsconfig: false,
     turbo: false,
   },

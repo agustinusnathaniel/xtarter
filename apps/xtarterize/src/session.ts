@@ -160,7 +160,9 @@ export class CommandSession {
     orderTasks: SessionOpenOptions['orderTasks']
   ): Effect.Effect<CommandSession, TaskError, ProcessRunner> {
     return Effect.gen(function* () {
-      const discovered = getAllTasks();
+      const discovered = getAllTasks({
+        ejectLintConfigs: runtime.ejectLintConfigs,
+      });
       const tasks = orderTasks ? orderTasks(discovered, runtime) : discovered;
       const resolved = yield* resolveProjectTasks(runtime.cwd, tasks);
       const selection = yield* loadSelectionConfig(runtime.cwd);

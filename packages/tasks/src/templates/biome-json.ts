@@ -1,4 +1,7 @@
+import { biomeCoreLayer, sharedConfigEntry } from '@xtarter/config';
 import type { ProjectProfile } from '@xtarterize/core';
+
+import type { LintConfigForm } from '@/lint/config-form.js';
 
 import { collectUltracitePresets } from './ultracite-presets.js';
 
@@ -16,94 +19,49 @@ function buildBiomeFilesConfig(): Record<string, unknown> {
   };
 }
 
-// Only skipBlankLines is supported (skipComments not in schema); Oxlint supports both
-function buildBiomeLinterRules(): Record<string, unknown> {
+function buildBiomeProjectSettings(): Record<string, unknown> {
   return {
-    complexity: {
-      noExcessiveLinesPerFunction: {
-        level: 'error',
-        options: { maxLines: 60 },
-      },
-    },
-    style: {
-      noExcessiveLinesPerFile: {
-        level: 'error',
-        options: {
-          maxLines: 500,
-          skipBlankLines: true,
-        },
-      },
-      useBlockStatements: 'error',
-      useConsistentArrayType: {
-        level: 'error',
-        options: { syntax: 'generic' },
-      },
-      useConsistentTypeDefinitions: 'off',
-      useFilenamingConvention: {
-        level: 'error',
-        options: { filenameCases: ['kebab-case'] },
-      },
-    },
-  };
-}
-
-function buildBiomeAssistConfig(): Record<string, unknown> {
-  return {
-    actions: {
-      source: {
-        organizeImports: {
-          level: 'on',
-          options: {
-            groups: [
-              [':URL:', ':NODE:', ':PACKAGE:'],
-              ':BLANK_LINE:',
-              [':ALIAS:'],
-              ':BLANK_LINE:',
-              [':PATH:'],
-            ],
-          },
-        },
-      },
-    },
-    enabled: true,
-  };
-}
-
-function buildBiomeOverrides(): Array<Record<string, unknown>> {
-  return [
-    {
-      includes: ['*.test.ts', '*.test.tsx', '*.spec.ts', '*.spec.tsx'],
-      linter: {
-        rules: {
-          nursery: {
-            useConsistentTestIt: {
-              level: 'error',
-              options: {
-                function: 'it',
-                withinDescribe: 'test',
-              },
-            },
-          },
-        },
-      },
-    },
-  ];
-}
-
-function buildBiomeConfig(profile: ProjectProfile): Record<string, unknown> {
-  return {
-    $schema: './node_modules/@biomejs/biome/configuration_schema.json',
-    assist: buildBiomeAssistConfig(),
-    extends: collectUltracitePresets(profile, 'ultracite/biome/'),
     files: buildBiomeFilesConfig(),
-    formatter: { enabled: true, indentStyle: 'space' },
-    javascript: { formatter: { quoteStyle: 'single' } },
-    linter: {
-      enabled: true,
-      rules: buildBiomeLinterRules(),
-    },
-    overrides: buildBiomeOverrides(),
     vcs: { clientKind: 'git', enabled: true, useIgnoreFile: true },
+  };
+}
+
+const BIOME_SCHEMA = './node_modules/@biomejs/biome/configuration_schema.json';
+
+/** The full config: Ultracite presets plus the xtarter layer written inline. */
+function buildEjectedBiomeConfig(
+  profile: ProjectProfile
+): Record<string, unknown> {
+  const layer = biomeCoreLayer();
+  const { files, vcs } = buildBiomeProjectSettings();
+  return {
+    $schema: BIOME_SCHEMA,
+    assist: layer.assist,
+    extends: collectUltracitePresets(profile, 'ultracite/biome/'),
+    files,
+    formatter: layer.formatter,
+    javascript: layer.javascript,
+    linter: layer.linter,
+    overrides: layer.overrides,
+    vcs,
+  };
+}
+
+/** The shared entries a managed Biome config extends, core first. */
+export function managedBiomeExtends(profile: ProjectProfile): Array<string> {
+  return collectUltracitePresets(profile).map((preset) =>
+    sharedConfigEntry('biome', preset)
+  );
+}
+
+/** A short config extending `@xtarter/config`, plus project-specific settings. */
+function buildManagedBiomeConfig(
+  profile: ProjectProfile
+): Record<string, unknown> {
+  return {
+    $schema: BIOME_SCHEMA,
+    extends: managedBiomeExtends(profile),
+    ...buildBiomeProjectSettings(),
   };
 }
 
@@ -114,10 +72,24 @@ function hasTailwindStyling(profile: ProjectProfile): boolean {
   );
 }
 
-export function renderBiomeJson(profile: ProjectProfile): string {
-  const config = buildBiomeConfig(profile);
+function withProjectCss(
+  profile: ProjectProfile,
+  config: Record<string, unknown>
+): Record<string, unknown> {
   if (hasTailwindStyling(profile)) {
     config.css = { parser: { tailwindDirectives: true } };
   }
-  return JSON.stringify(config, null, 2);
+  return config;
+}
+
+export function buildBiomeJson(
+  profile: ProjectProfile,
+  form: LintConfigForm
+): Record<string, unknown> {
+  return withProjectCss(
+    profile,
+    form === 'managed'
+      ? buildManagedBiomeConfig(profile)
+      : buildEjectedBiomeConfig(profile)
+  );
 }

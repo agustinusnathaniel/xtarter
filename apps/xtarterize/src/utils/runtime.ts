@@ -5,6 +5,7 @@ import type { DisplayFormat } from '@/ui/diff-display.js';
 export interface RuntimeArgs {
   _?: Array<string | number>;
   cwd?: string;
+  eject?: boolean;
   format?: string;
   json?: boolean | string | number | Array<string>;
   quiet?: boolean | string | number | Array<string>;
@@ -12,6 +13,8 @@ export interface RuntimeArgs {
 
 export interface RuntimeContext {
   cwd: string;
+  /** Create lint and format configs in the ejected form (ADR-043). */
+  ejectLintConfigs?: boolean;
   format: DisplayFormat;
   quiet: boolean;
 }
@@ -35,5 +38,5 @@ export function resolveRuntimeContext(args: RuntimeArgs): RuntimeContext {
   const format = resolveFormat(args.format, args.json === true);
   const quiet = args.quiet === true || isCI() || format === 'json';
   const cwd = typeof args.cwd === 'string' ? args.cwd : process.cwd();
-  return { cwd, format, quiet };
+  return { cwd, ejectLintConfigs: args.eject === true, format, quiet };
 }

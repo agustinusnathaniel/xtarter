@@ -51,6 +51,7 @@ export interface ExistingConfig {
   githubWorkflows: Array<string>;
   oxfmt: boolean;
   oxlint: boolean;
+  prettier: boolean;
   tsconfig: boolean;
   turbo: boolean;
 }

@@ -76,6 +76,7 @@ export type {
 export { ProcessRunner } from '@/services/process-runner.js';
 export { toTaskEffect } from '@/task-effect.js';
 export type { ApplyTiming, ResolveTiming } from '@/timing.js';
+export { unsupportedToolsNotice } from '@/unsupported-tools.js';
 export {
   computeSemanticJsonDiff,
   enhanceDiff,
