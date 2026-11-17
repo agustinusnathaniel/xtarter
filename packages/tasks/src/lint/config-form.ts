@@ -1,5 +1,5 @@
 import { sharedConfigPackage } from '@xtarter/config';
-import { fileExists, readFile } from '@xtarterize/core';
+import { fileExists, type ProjectProfile, readFile } from '@xtarterize/core';
 
 import type { DepResolver, TaskDep } from '@/factory/define-task.js';
 import { resolveTaskFile } from '@/factory/utils.js';
@@ -40,6 +40,13 @@ async function readTargetText(
   return readFile(fullPath);
 }
 
+/** The file a lint task's dependencies are read from, and how it shows managed. */
+export interface LintDepsFile {
+  extensions: Array<string>;
+  filepath: string;
+  isManaged?: (text: string) => boolean;
+}
+
 /**
  * Dependencies for a lint task whose managed form also needs the shared
  * package. The written text decides: a pending diff's content when there is
@@ -47,15 +54,14 @@ async function readTargetText(
  */
 export function lintTaskDeps(
   base: Array<TaskDep>,
-  target: { filepath: string; extensions: Array<string> }
+  resolveFile: (profile: ProjectProfile) => LintDepsFile
 ): DepResolver {
-  return async (resolution, { cwd }) => {
+  return async (resolution, { cwd, profile }) => {
+    const file = resolveFile(profile);
     const pending = resolution.diffs[0]?.after;
     const text =
-      pending ??
-      (await readTargetText(cwd, target.filepath, target.extensions));
-    return text !== null && isManagedConfig(text)
-      ? [...base, sharedConfigDep]
-      : base;
+      pending ?? (await readTargetText(cwd, file.filepath, file.extensions));
+    const isManaged = file.isManaged ?? isManagedConfig;
+    return text !== null && isManaged(text) ? [...base, sharedConfigDep] : base;
   };
 }

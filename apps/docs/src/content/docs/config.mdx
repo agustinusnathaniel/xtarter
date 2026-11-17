@@ -59,6 +59,29 @@ export default defineConfig({
 });
 ```
 
+## Vite+
+
+Vite+ reads Oxlint and Oxfmt settings from the `lint` and `fmt` blocks of `vite.config.ts` and ignores `oxlint.config.ts` and `oxfmt.config.ts`, so put the entries there:
+
+<AllPackageManagers pkg="@xtarter/config" dev />
+
+```ts title="vite.config.ts"
+import xtarterFmt from '@xtarter/config/oxfmt';
+import xtarterCore from '@xtarter/config/oxlint/core';
+import xtarterReact from '@xtarter/config/oxlint/react';
+import { defineConfig } from 'vite-plus';
+
+export default defineConfig({
+  fmt: {
+    ...xtarterFmt,
+  },
+  lint: {
+    env: { node: true },
+    extends: [xtarterCore, xtarterReact],
+  },
+});
+```
+
 ## Layers
 
 Every Biome and Oxlint entry extends the Ultracite preset of the same name. List `core` first, then the layers for your stack; later layers win, so framework exceptions (such as route file names in Remix or TanStack) apply.

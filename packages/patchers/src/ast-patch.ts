@@ -248,9 +248,25 @@ function resolveConfigObject(
     : null;
 }
 
+/** Follow a dotted key path such as `lint.extends` through nested objects. */
+function resolvePath(
+  config: Record<string, unknown> | null,
+  path: string
+): unknown {
+  let current: unknown = config;
+  for (const segment of path.split('.')) {
+    if (typeof current !== 'object' || current === null) {
+      return;
+    }
+    current = (current as Record<string, unknown>)[segment];
+  }
+  return current;
+}
+
 /**
  * Add default imports to a config module and append their bindings to one array
  * property of the default export (a plain object or `defineConfig({...})`).
+ * The key may be a dotted path into nested objects, such as `lint.extends`.
  * Imports whose specifier the code already contains are skipped. Returns null
  * when the module has no array at that key to extend.
  */
@@ -269,13 +285,202 @@ export function appendConfigArrayImports(
     const indent = detectIndent(code);
     const mod = parseModuleWithIndent(code, indent);
     const config = resolveConfigObject(mod.exports.default);
-    const target = config?.[key];
+    const target = resolvePath(config, key);
     if (!Array.isArray(target)) {
       return null;
     }
     for (const { from, local } of missing) {
       mod.imports.$append({ from, imported: 'default', local });
       target.push(parseExpression(local));
+    }
+    return generateCodeWithIndent(code, mod, indent);
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * What a config module holds at one top-level key of its default export:
+ * `unsupported` when there is no object to read (such as a function config),
+ * `absent` when the key is missing, otherwise the module specifiers of the
+ * imports whose bindings the value references.
+ */
+export type ConfigPropertyState =
+  | { kind: 'unsupported' }
+  | { kind: 'absent' }
+  | { kind: 'present'; importSources: Array<string> };
+
+interface AstNode {
+  computed?: boolean;
+  key?: AstNode;
+  name?: string;
+  type: string;
+}
+
+function isAstNode(value: unknown): value is AstNode {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    typeof (value as { type?: unknown }).type === 'string'
+  );
+}
+
+const AST_METADATA_KEYS = new Set([
+  'comments',
+  'extra',
+  'leadingComments',
+  'loc',
+  'trailingComments',
+]);
+
+/** Identifier names a value expression references, skipping property keys. */
+function collectIdentifiers(node: AstNode, names: Set<string>): void {
+  if (node.type === 'Identifier' && node.name !== undefined) {
+    names.add(node.name);
+    return;
+  }
+  for (const [field, child] of Object.entries(node)) {
+    if (AST_METADATA_KEYS.has(field)) {
+      continue;
+    }
+    if (field === 'key' && node.computed !== true) {
+      continue;
+    }
+    const children: Array<unknown> = Array.isArray(child) ? child : [child];
+    for (const item of children) {
+      if (isAstNode(item)) {
+        collectIdentifiers(item, names);
+      }
+    }
+  }
+}
+
+interface ObjectPropertyNode extends AstNode {
+  value: AstNode;
+}
+
+function findProperty(
+  config: Record<string, unknown>,
+  key: string
+): ObjectPropertyNode | undefined {
+  const ast = (config as { $ast?: { properties?: Array<unknown> } }).$ast;
+  return ast?.properties?.find(
+    (property): property is ObjectPropertyNode =>
+      isAstNode(property) &&
+      property.type === 'ObjectProperty' &&
+      property.computed !== true &&
+      (property.key?.name === key ||
+        (property.key as { value?: unknown } | undefined)?.value === key)
+  );
+}
+
+/** True for a config object literal, not a function or other expression. */
+function isObjectConfig(
+  config: Record<string, unknown> | null
+): config is Record<string, unknown> {
+  return (config as { $type?: unknown } | null)?.$type === 'object';
+}
+
+function propertyName(property: unknown): string | undefined {
+  if (!isAstNode(property) || property.type !== 'ObjectProperty') {
+    return;
+  }
+  const key = property.key as { name?: string; value?: unknown } | undefined;
+  return key?.name ?? (typeof key?.value === 'string' ? key.value : undefined);
+}
+
+/**
+ * Move a just-added property to its sorted position when the object's other
+ * keys are already sorted, so a sort-keys lint rule stays satisfied.
+ */
+function placeSorted(config: Record<string, unknown>, key: string): void {
+  const properties = (config as { $ast?: { properties?: Array<unknown> } }).$ast
+    ?.properties;
+  if (properties === undefined) {
+    return;
+  }
+  const index = properties.findIndex((p) => propertyName(p) === key);
+  const [added] = properties.splice(index, 1);
+  const names = properties.map(propertyName);
+  const sorted = names.every(
+    (name, i) => name !== undefined && (i === 0 || (names[i - 1] ?? '') <= name)
+  );
+  const target = sorted ? names.findIndex((name) => (name ?? '') > key) : -1;
+  properties.splice(target === -1 ? properties.length : target, 0, added);
+}
+
+interface ImportItem {
+  from: string;
+  local: string;
+}
+
+function importItems(mod: ReturnType<typeof parseModule>): Array<ImportItem> {
+  return (mod.imports as unknown as { $items: Array<ImportItem> }).$items;
+}
+
+/** Read one top-level key of a config module's default export. */
+export function inspectConfigProperty(
+  code: string,
+  key: string
+): ConfigPropertyState {
+  try {
+    const mod = parseModule(code);
+    const config = resolveConfigObject(mod.exports.default);
+    if (!isObjectConfig(config)) {
+      return { kind: 'unsupported' };
+    }
+    const property = findProperty(config, key);
+    if (property === undefined) {
+      return { kind: 'absent' };
+    }
+    const names = new Set<string>();
+    collectIdentifiers(property.value, names);
+    const importSources = importItems(mod)
+      .filter(({ local }) => names.has(local))
+      .map(({ from }) => from);
+    return { importSources, kind: 'present' };
+  } catch {
+    return { kind: 'unsupported' };
+  }
+}
+
+/** An expression to set a config key to, plus the default imports it references. */
+export interface ConfigPropertyValue {
+  expression: string;
+  imports: Array<ConfigArrayImport>;
+}
+
+/**
+ * Set one top-level key of a config module's default export to an expression,
+ * adding the default imports it needs. An import with the same specifier and
+ * binding is not added twice. A new key goes to its sorted position when the
+ * other keys are sorted. Returns null when the module has no object to patch.
+ */
+export function setConfigProperty(
+  code: string,
+  key: string,
+  { expression, imports }: ConfigPropertyValue
+): string | null {
+  try {
+    const indent = detectIndent(code);
+    const mod = parseModuleWithIndent(code, indent);
+    const config = resolveConfigObject(mod.exports.default);
+    if (!isObjectConfig(config)) {
+      return null;
+    }
+    const isNew = findProperty(config, key) === undefined;
+    config[key] = parseExpression(expression);
+    if (isNew) {
+      placeSorted(config, key);
+    }
+    const existing = importItems(mod);
+    for (const { from, local } of imports) {
+      const present = existing.some(
+        (item) => item.from === from && item.local === local
+      );
+      if (!present) {
+        mod.imports.$append({ from, imported: 'default', local });
+      }
     }
     return generateCodeWithIndent(code, mod, indent);
   } catch {
