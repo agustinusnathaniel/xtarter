@@ -1,5 +1,10 @@
 export { type BiomeLayer, biomeCoreLayer } from './biome.js';
-export { type OxlintLayer, oxfmtLayer, oxlintCoreLayer } from './oxlint.js';
+export {
+  type OxfmtLayer,
+  type OxlintLayer,
+  oxfmtLayer,
+  oxlintCoreLayer,
+} from './oxlint.js';
 export {
   type BiomePreset,
   biomePresets,

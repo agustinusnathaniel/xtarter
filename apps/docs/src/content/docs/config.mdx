@@ -10,7 +10,7 @@ import AllPackageManagers from '@/components/AllPackageManagers.astro'
 - 500 lines per file and 60 per function
 - block statements required (`curly` in Oxlint)
 - generic array syntax and kebab-case file names
-- single quotes and grouped imports
+- single quotes, and the same import groups in Biome and Oxfmt: built-ins and packages, then aliases (`@/`, `#`, `~`, `$`, `%`), then relative paths
 - `console` limited to `info`, `warn`, and `error` (Oxlint)
 - test files get `it()` at the top level and `test()` inside `describe()`
 

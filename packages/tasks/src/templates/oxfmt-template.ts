@@ -3,7 +3,10 @@ import { oxfmtLayer, sharedOxfmtEntry } from '@xtarter/config';
 /** The full config: Ultracite's options plus the xtarter layer written inline. */
 export function renderOxfmtTsConfig(): string {
   const overrides = Object.entries(oxfmtLayer())
-    .map(([key, value]) => `\n  ${key}: ${JSON.stringify(value)},`)
+    .map(
+      ([key, value]) =>
+        `\n  ${key}: ${JSON.stringify(value, null, 2).replaceAll('\n', '\n  ')},`
+    )
     .join('');
   return `import { defineConfig } from "oxfmt";
 import ultracite from "ultracite/oxfmt";

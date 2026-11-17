@@ -1,3 +1,9 @@
+import { execFile } from 'node:child_process';
+import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { promisify } from 'node:util';
 import {
   fixtureDir,
   fixtureProfile,
@@ -254,5 +260,92 @@ export default { ...xtarter, printWidth: 100 };
         );
       }
     );
+  });
+});
+
+const configDist = fileURLToPath(
+  new URL('../../packages/config/dist/', import.meta.url)
+);
+const configBin = fileURLToPath(
+  new URL('../../packages/config/node_modules/.bin/', import.meta.url)
+);
+
+const unsortedImports = `import { z } from './z';
+import a from '@/a';
+import fs from 'node:fs';
+import React from 'react';
+import { b } from '../b';
+import x from '#x';
+import type { T } from 'zod';
+import y from '~/y';
+import { Effect } from 'effect';
+
+export const all = [z, a, fs, React, b, x, y, Effect] as Array<T>;
+`;
+
+const groupedImports = `import fs from 'node:fs';
+import { Effect } from 'effect';
+import React from 'react';
+import type { T } from 'zod';
+
+import x from '#x';
+import a from '@/a';
+import y from '~/y';
+
+import { b } from '../b';
+import { z } from './z';
+
+export const all = [z, a, fs, React, b, x, y, Effect] as Array<T>;
+`;
+
+/** Formats the sample with one tool in a fresh directory and returns the result. */
+async function formatSample(
+  config: { file: string; content: string },
+  args: Array<string>
+): Promise<string> {
+  const cwd = await mkdtemp(join(tmpdir(), 'xtarter-import-sort-'));
+  try {
+    await writeFile(join(cwd, config.file), config.content);
+    await writeFile(join(cwd, 'sample.ts'), unsortedImports);
+    // Under Vite+ (VP_VERSION set by `vp test`), oxfmt reads only vite.config.ts.
+    // Unset it so oxfmt finds oxfmt.config.ts as in a standalone install.
+    await promisify(execFile)(join(configBin, args[0]), args.slice(1), {
+      cwd,
+      env: { ...process.env, VP_VERSION: undefined },
+    });
+    return await readFile(join(cwd, 'sample.ts'), 'utf8');
+  } finally {
+    await rm(cwd, { force: true, recursive: true });
+  }
+}
+
+describe('@xtarter/config import sorting', () => {
+  test('Oxfmt groups imports the way Biome does', async () => {
+    const biome = await formatSample(
+      {
+        content: JSON.stringify({
+          extends: [join(configDist, 'biome/core.jsonc')],
+        }),
+        file: 'biome.json',
+      },
+      [
+        'biome',
+        'check',
+        '--write',
+        '--vcs-enabled=false',
+        '--linter-enabled=false',
+        'sample.ts',
+      ]
+    );
+    const oxfmt = await formatSample(
+      {
+        content: `import xtarter from ${JSON.stringify(join(configDist, 'oxfmt/index.mjs'))};\nexport default xtarter;\n`,
+        file: 'oxfmt.config.ts',
+      },
+      ['oxfmt', 'sample.ts']
+    );
+
+    expect(biome).toBe(groupedImports);
+    expect(oxfmt).toBe(groupedImports);
   });
 });
