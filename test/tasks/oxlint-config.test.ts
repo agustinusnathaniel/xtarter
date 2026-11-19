@@ -58,11 +58,17 @@ describe('oxlint config validation', () => {
     expect(configFile.after).toContain(
       'import react from "@xtarter/config/oxlint/react"'
     );
-    expect(configFile.after).toContain('extends: [core, react]');
+    expect(configFile.after).toContain(
+      'import landmines from "@xtarter/config/oxlint/landmines"'
+    );
+    expect(configFile.after).toContain('extends: [core, react, landmines]');
+    expect(configFile.after).toContain('jsPlugins: landmines.jsPlugins');
     expect(configFile.after).not.toContain('ultracite');
     expect(configFile.after).not.toContain('rules');
     const deps = await run(oxlintTask.getDeps(testDir, profile));
-    expect(deps.map((dep) => dep.depName)).toContain('@xtarter/config');
+    expect(deps.map((dep) => dep.depName)).toEqual(
+      expect.arrayContaining(['@xtarter/config', '@interfere/landmines'])
+    );
   });
 });
 
@@ -120,8 +126,10 @@ describe('oxlint ejected config', () => {
     expect(config.overrides).toBeDefined();
     expect(config.overrides[0].files).toContain('*.test.ts');
   });
+});
 
-  test('ejected config includes ultracite react preset when framework is react', async () => {
+describe('oxlint ejected layers', () => {
+  test('ejected config extends the detected presets, then landmines', async () => {
     const testDir = fixtureDir('vite-plus-no-lint');
     const profile = await standaloneProfile('vite-plus-no-lint');
     const diffs = await run(ejectedOxlintTask.dryRun(testDir, profile));
@@ -132,7 +140,11 @@ describe('oxlint ejected config', () => {
     }
     const content = configFile.after;
     expect(content).toContain('import react from "ultracite/oxlint/react"');
-    expect(content).toContain('extends: [core, react]');
+    expect(content).toContain(
+      'import landmines from "ultracite/oxlint/landmines"'
+    );
+    expect(content).toContain('extends: [core, react, landmines]');
+    expect(content).toContain('jsPlugins: landmines.jsPlugins');
   });
 });
 
@@ -186,6 +198,12 @@ export default defineConfig({
         );
         expect(diff.after).toContain('extends: [core, react]');
         expect(diff.after).toContain('"no-alert": "off"');
+        // landmines is only part of new configs, never added by upkeep.
+        expect(diff.after).not.toContain('landmines');
+        const deps = await run(oxlintTask.getDeps(cwd, profile));
+        expect(deps.map((dep) => dep.depName)).not.toContain(
+          '@interfere/landmines'
+        );
       }
     );
   });
@@ -302,9 +320,17 @@ describe('Vite+ lint and fmt blocks', () => {
         expect(lint.after).toContain(
           "import xtarterCore from '@xtarter/config/oxlint/core'"
         );
-        expect(lint.after).toContain('extends: [xtarterCore]');
+        expect(lint.after).toContain(
+          "import xtarterLandmines from '@xtarter/config/oxlint/landmines'"
+        );
+        expect(lint.after).toContain(
+          'extends: [xtarterCore, xtarterLandmines]'
+        );
+        expect(lint.after).toContain('jsPlugins: xtarterLandmines.jsPlugins');
         const deps = await run(oxlintTask.getDeps(cwd, profile));
-        expect(deps.map((dep) => dep.depName)).toContain('@xtarter/config');
+        expect(deps.map((dep) => dep.depName)).toEqual(
+          expect.arrayContaining(['@xtarter/config', '@interfere/landmines'])
+        );
       }
     );
   });
@@ -329,7 +355,9 @@ describe('Vite+ lint and fmt blocks', () => {
         expect(config).toContain(
           "import xtarterReact from '@xtarter/config/oxlint/react'"
         );
-        expect(config).toContain('extends: [xtarterCore, xtarterReact]');
+        expect(config).toContain(
+          'extends: [xtarterCore, xtarterReact, xtarterLandmines]'
+        );
         expect(config).toContain(
           "import xtarterFmt from '@xtarter/config/oxfmt'"
         );
@@ -356,6 +384,7 @@ describe('Vite+ ejected blocks', () => {
         expect(config).toContain(
           "import ultraciteCore from 'ultracite/oxlint/core'"
         );
+        expect(config).toContain('jsPlugins: ultraciteLandmines.jsPlugins');
         expect(config).toContain('"no-console"');
         expect(config).toMatch(/import ultraciteFmt from .ultracite\/oxfmt./u);
         expect(config).toContain('singleQuote: true');
@@ -393,6 +422,7 @@ export default defineConfig({
         const [diff] = await run(oxlintTask.dryRun(cwd, profile));
         expect(diff.after).toContain('extends: [xtarterCore, xtarterReact]');
         expect(diff.after).toContain("'no-alert': 'off'");
+        expect(diff.after).not.toContain('landmines');
       }
     );
   });

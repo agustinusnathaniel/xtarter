@@ -94,7 +94,7 @@ Every Biome and Oxlint entry extends the Ultracite preset of the same name. List
 
 ### Opt-in Oxlint layers
 
-xtarterize never adds these layers itself; extend them when you want stricter rules and a slower lint pass, since each runs through Oxlint's JS plugins.
+Extend these when you want stricter rules and accept a slower lint pass, since each runs through Oxlint's JS plugins. xtarterize adds only `landmines`, and only to an Oxlint config it creates; it never adds a layer to an existing config.
 
 | Layer | What it catches | Install |
 | --- | --- | --- |
