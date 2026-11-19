@@ -1,8 +1,7 @@
+import { plopTask } from '@tasks/codegen/plop.js';
 import { fixtureDir, fixtureProfile } from '@test/helpers/project.js';
 import { run } from '@test/helpers/run.js';
 import { describe, expect } from 'vite-plus/test';
-
-import { plopTask } from '../../packages/tasks/src/codegen/plop.js';
 
 const fixture = 'react-vite-tailwind' as const;
 const cwd = fixtureDir(fixture);

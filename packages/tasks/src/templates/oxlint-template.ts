@@ -3,9 +3,8 @@ import type { ProjectProfile } from '@xtarterize/core';
 import type { ConfigArrayImport } from '@xtarterize/patchers';
 
 import type { LintConfigForm } from '@/lint/config-form.js';
-
-import type { VitePlusBlock } from './oxfmt-template.js';
-import { collectUltracitePresets } from './ultracite-presets.js';
+import type { VitePlusBlock } from '@/templates/oxfmt-template.js';
+import { collectUltracitePresets } from '@/templates/ultracite-presets.js';
 
 function getOxlintEnv(profile: ProjectProfile): Record<string, boolean> {
   const env: Record<string, boolean> = { builtin: true };

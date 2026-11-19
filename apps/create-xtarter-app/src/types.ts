@@ -1,4 +1,4 @@
-import type { TemplateConfig } from './templates/registry';
+import type { TemplateConfig } from '@/templates/registry';
 
 export const PACKAGE_MANAGERS = ['pnpm', 'npm', 'bun', 'yarn'] as const;
 

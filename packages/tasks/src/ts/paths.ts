@@ -1,8 +1,7 @@
 import type { ProjectProfile } from '@xtarterize/core';
 
 import { defineTask, type TargetPolicy } from '@/factory/define-task.js';
-
-import { getCompilerOptions } from './utils.js';
+import { getCompilerOptions } from '@/ts/utils.js';
 
 function getPathStatus(
   content: string | null,

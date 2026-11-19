@@ -12,7 +12,7 @@ import {
 } from '@xtarterize/core';
 import { Effect } from 'effect';
 
-import { checkMissingDeps, writeTaskDiffs } from './ops.js';
+import { checkMissingDeps, writeTaskDiffs } from '@/factory/ops.js';
 import {
   deriveConfigTargets,
   type ResolveContext,
@@ -20,7 +20,7 @@ import {
   resolveTarget,
   type TargetDraft,
   type TaskTarget,
-} from './targets.js';
+} from '@/factory/targets.js';
 
 export type { TaskDep } from '@xtarterize/core';
 
@@ -30,7 +30,7 @@ export type {
   TaskTarget,
   TextTarget,
   TransformTarget,
-} from './targets.js';
+} from '@/factory/targets.js';
 
 /**
  * A spec surface may stay synchronous, return a Promise, or return an Effect

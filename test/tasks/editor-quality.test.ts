@@ -1,5 +1,8 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { agentsMdTask } from '@tasks/agent/agents-md.js';
+import { vscodeTask } from '@tasks/editor/vscode.js';
+import { turboTask } from '@tasks/monorepo/turbo.js';
 import {
   fixtureDir,
   fixtureProfile,
@@ -7,10 +10,6 @@ import {
 } from '@test/helpers/project.js';
 import { run } from '@test/helpers/run.js';
 import { describe, expect } from 'vite-plus/test';
-
-import { agentsMdTask } from '../../packages/tasks/src/agent/agents-md.js';
-import { vscodeTask } from '../../packages/tasks/src/editor/vscode.js';
-import { turboTask } from '../../packages/tasks/src/monorepo/turbo.js';
 
 describe('vscodeTask', () => {
   test('includes practical framework and styling settings', async () => {

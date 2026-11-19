@@ -1,7 +1,7 @@
 import type { Task, TaskStatus } from '@xtarterize/core';
 import { pc, statusTag } from '@xtarterize/core';
 
-import { createCliTable } from './table-chars.js';
+import { createCliTable } from '@/ui/table-chars.js';
 
 export function displayPlan(
   tasks: Array<Task>,

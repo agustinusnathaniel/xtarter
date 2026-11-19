@@ -1,15 +1,14 @@
 import type { Task } from '@/_base.js';
-
-import { expandAliases } from './aliases.js';
-import { similarity } from './fuzzy.js';
-import { stem } from './stemmer.js';
-import { tokenize } from './tokenizer.js';
+import { expandAliases } from '@/inquiry/aliases.js';
+import { similarity } from '@/inquiry/fuzzy.js';
+import { stem } from '@/inquiry/stemmer.js';
+import { tokenize } from '@/inquiry/tokenizer.js';
 import type {
   InquiryOptions,
   InquiryResult,
   RelevanceSignal,
   WeightConfig,
-} from './types.js';
+} from '@/inquiry/types.js';
 
 const DEFAULT_WEIGHTS: WeightConfig = {
   config: 0.1,

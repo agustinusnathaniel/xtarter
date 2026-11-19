@@ -2,11 +2,10 @@ import type { PreflightError } from '@xtarterize/core';
 import { logError, logInfo, logSuccess, pc } from '@xtarterize/core';
 
 import type { SessionOutcome } from '@/session.js';
+import { type DisplayFormat, displayDiffs } from '@/ui/diff-display.js';
+import { formatRunResult } from '@/ui/json-formatter.js';
 import type { RuntimeContext } from '@/utils/runtime.js';
 import { printTiming } from '@/utils/timing-display.js';
-
-import { type DisplayFormat, displayDiffs } from './diff-display.js';
-import { formatRunResult } from './json-formatter.js';
 
 function reportRunOutcome(
   outcome: SessionOutcome,

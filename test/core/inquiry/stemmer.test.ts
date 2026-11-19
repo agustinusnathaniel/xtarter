@@ -1,6 +1,5 @@
+import { stem } from '@core/inquiry/stemmer.js';
 import { describe, expect } from 'vite-plus/test';
-
-import { stem } from '../../../packages/core/src/inquiry/stemmer.js';
 
 // Stems only need to make inflections of one word match each other; the exact
 // stem string for words with suffixes is an implementation detail.

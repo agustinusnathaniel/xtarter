@@ -2,6 +2,7 @@ import { spinner } from '@clack/prompts';
 import { Cause, Effect, Exit } from 'effect';
 
 import type { TaskServices } from '@/_base.js';
+import type { ApplyPlan, ApplyPlanEntry } from '@/apply/plan.js';
 import { backupFile, toBackupError, writeRunManifest } from '@/backup.js';
 import type { ProjectProfile } from '@/detect.js';
 import type { BackupError } from '@/errors.js';
@@ -11,8 +12,6 @@ import { toTaskEffect } from '@/task-effect.js';
 import type { ApplyTiming } from '@/timing.js';
 import { logError, pc } from '@/utils/logger.js';
 import { statusTag } from '@/utils/tags.js';
-
-import type { ApplyPlan, ApplyPlanEntry } from './plan.js';
 
 export interface ApplyResult {
   applied: number;

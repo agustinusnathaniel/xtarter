@@ -7,7 +7,7 @@ import {
   getDefaultFilepath,
   normalizeLineEndings,
   resolveTaskFile,
-} from './utils.js';
+} from '@/factory/utils.js';
 
 /** What a target policy hook sees: the pair the diff was computed from. */
 export interface TargetPolicyInput {

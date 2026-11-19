@@ -1,3 +1,4 @@
+import { gitHooksTask } from '@tasks/release/git-hooks.js';
 import {
   fixtureDir,
   fixtureProfile,
@@ -5,8 +6,6 @@ import {
 } from '@test/helpers/project.js';
 import { run } from '@test/helpers/run.js';
 import { describe, expect } from 'vite-plus/test';
-
-import { gitHooksTask } from '../../packages/tasks/src/release/git-hooks.js';
 
 const huskyFiles = {
   '.husky/commit-msg': 'content',

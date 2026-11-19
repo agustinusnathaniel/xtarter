@@ -1,13 +1,12 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { defineTask } from '@tasks/factory/define-task.js';
+import { writeTaskDiffs } from '@tasks/factory/ops.js';
 import { run } from '@test/helpers/run.js';
 import { withTempDir } from '@test/helpers/temp.js';
 import { type ProjectProfile, TaskError } from '@xtarterize/core';
 import { Effect } from 'effect';
 import { describe, expect } from 'vite-plus/test';
-
-import { defineTask } from '../../packages/tasks/src/factory/define-task.js';
-import { writeTaskDiffs } from '../../packages/tasks/src/factory/ops.js';
 
 describe('writeTaskDiffs', () => {
   test('writes file diffs to disk', async () => {

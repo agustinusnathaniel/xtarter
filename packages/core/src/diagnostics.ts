@@ -1,6 +1,7 @@
 import os from 'node:os';
 import { Cause, Effect, Exit } from 'effect';
 
+import { LOCKFILES } from '@/detect/package-manager.js';
 import { detectExistingConfigs } from '@/detect.js';
 import { ProcessRunner } from '@/services/process-runner.js';
 import { unsupportedToolsNotice } from '@/unsupported-tools.js';
@@ -9,8 +10,6 @@ import {
   collectDependencyVersions,
   readPackageJsonOrNull,
 } from '@/utils/pkg.js';
-
-import { LOCKFILES } from './detect/package-manager.js';
 
 export interface DiagnosticCheck {
   message: string;

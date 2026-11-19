@@ -1,7 +1,6 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-
-import { withTempDir } from './temp.js';
+import { withTempDir } from '@test/helpers/temp.js';
 
 /** Layout options for the minimal React + TypeScript skills fixture. */
 export interface SkillsProjectOptions {

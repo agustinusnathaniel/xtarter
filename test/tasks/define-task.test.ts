@@ -1,15 +1,14 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import {
+  defineTask,
+  type TargetPolicyInput,
+} from '@tasks/factory/define-task.js';
 import { withProject } from '@test/helpers/project.js';
 import { run } from '@test/helpers/run.js';
 import { planTasks } from '@xtarterize/core';
 import { getAllTasks } from '@xtarterize/tasks';
 import { describe, expect } from 'vite-plus/test';
-
-import {
-  defineTask,
-  type TargetPolicyInput,
-} from '../../packages/tasks/src/factory/define-task.js';
 
 const writeFile = (cwd: string, filepath: string, content: string) =>
   fs.writeFile(path.join(cwd, filepath), content);

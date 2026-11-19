@@ -5,8 +5,8 @@ import {
 } from '@xtarterize/core';
 import type { PackageJson } from 'pkg-types';
 
-import { defineTask, type TaskDep } from './define-task.js';
-import { extractTool } from './equivalence.js';
+import { defineTask, type TaskDep } from '@/factory/define-task.js';
+import { extractTool } from '@/factory/equivalence.js';
 import {
   filterMissingScripts,
   hasInstalledDependency,
@@ -15,7 +15,7 @@ import {
   type ScriptsMap,
   type ScriptsState,
   toScriptsPatch,
-} from './scripts.js';
+} from '@/factory/scripts.js';
 
 export type LintTool = 'ultracite' | 'biome' | 'oxlint' | 'vp';
 

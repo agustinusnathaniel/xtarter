@@ -3,10 +3,9 @@ import { type ProjectProfile, TaskError } from '@xtarterize/core';
 import { inspectConfigProperty, setConfigProperty } from '@xtarterize/patchers';
 
 import type { TargetPolicy, TextTarget } from '@/factory/define-task.js';
+import { type LintTaskOptions, newConfigForm } from '@/lint/config-form.js';
 import type { VitePlusBlock } from '@/templates/oxfmt-template.js';
 import { VITE_CONFIG_EXTENSIONS } from '@/vite/plugin.js';
-
-import { type LintTaskOptions, newConfigForm } from './config-form.js';
 
 /**
  * Vite+ runs Oxlint and Oxfmt with its own config discovery: `vp lint`,

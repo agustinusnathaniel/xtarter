@@ -1,8 +1,7 @@
 import { makeStatuses, makeTask } from '@test/helpers/factories.js';
+import { formatCheckAnnotations } from '@xtarterize/app/ui/annotations.js';
 import type { DiagnosticCheck } from '@xtarterize/core';
 import { describe, expect } from 'vite-plus/test';
-
-import { formatCheckAnnotations } from '../../apps/xtarterize/src/ui/annotations.js';
 
 const annotationTask = (
   id: string,

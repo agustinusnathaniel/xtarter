@@ -1,3 +1,6 @@
+import { gitignoreTsbuildinfoTask } from '@tasks/ts/gitignore-tsbuildinfo.js';
+import { pathsTask } from '@tasks/ts/paths.js';
+import { strictTask } from '@tasks/ts/strict.js';
 import {
   fixtureDir,
   fixtureProfile,
@@ -5,10 +8,6 @@ import {
 } from '@test/helpers/project.js';
 import { run } from '@test/helpers/run.js';
 import { describe, expect } from 'vite-plus/test';
-
-import { gitignoreTsbuildinfoTask } from '../../packages/tasks/src/ts/gitignore-tsbuildinfo.js';
-import { pathsTask } from '../../packages/tasks/src/ts/paths.js';
-import { strictTask } from '../../packages/tasks/src/ts/strict.js';
 
 describe('gitignoreTsbuildinfoTask', () => {
   test('is applicable to TS projects only', async () => {

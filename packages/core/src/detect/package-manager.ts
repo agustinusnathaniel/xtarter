@@ -1,8 +1,7 @@
 import { detectPackageManager as detectPM } from 'nypm';
 
+import type { PackageManager } from '@/detect/types.js';
 import { fileExists, resolvePath } from '@/utils/fs.js';
-
-import type { PackageManager } from './types.js';
 
 /**
  * Type guard to check if a value is a Record

@@ -1,10 +1,9 @@
-import { describe, expect } from 'vite-plus/test';
-
 import {
   type LintTool,
   lintToolScripts,
   resolveLintTool,
-} from '../../packages/tasks/src/factory/package-scripts.js';
+} from '@tasks/factory/package-scripts.js';
+import { describe, expect } from 'vite-plus/test';
 
 type ResolveLintToolInput = Parameters<typeof resolveLintTool>[0];
 

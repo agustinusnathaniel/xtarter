@@ -3,7 +3,7 @@ import {
   defineScriptCases,
   scriptPkg,
   turboPkg,
-} from './package-scripts-runner.js';
+} from '@test/tasks/package-scripts-runner.js';
 
 /**
  * Core `packageScriptsTask` cases, formerly `package-scripts.test.ts`, plus

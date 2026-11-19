@@ -1,9 +1,8 @@
 import fs from 'node:fs/promises';
 import { dirname, relative } from 'pathe';
 
+import type { MonorepoDetection } from '@/detect/types.js';
 import { fileExists, resolvePath } from '@/utils/fs.js';
-
-import type { MonorepoDetection } from './types.js';
 
 const MONOREPO_MARKERS = ['turbo.json', 'nx.json', 'lerna.json'];
 /** A top-level `packages:` key, optionally quoted. */

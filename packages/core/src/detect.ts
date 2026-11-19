@@ -1,17 +1,9 @@
 import { readdir } from 'node:fs/promises';
 import type { PackageJson } from 'pkg-types';
 
-import {
-  fileExists,
-  findConfigFile,
-  readFile,
-  resolvePath,
-} from '@/utils/fs.js';
-import { collectDependencyVersions, readPackageJson } from '@/utils/pkg.js';
-
-import { detectBundler } from './detect/bundler.js';
-import { detectMonorepo } from './detect/monorepo.js';
-import { detectPackageManager } from './detect/package-manager.js';
+import { detectBundler } from '@/detect/bundler.js';
+import { detectMonorepo } from '@/detect/monorepo.js';
+import { detectPackageManager } from '@/detect/package-manager.js';
 import type {
   Bundler,
   ExistingConfig,
@@ -20,7 +12,14 @@ import type {
   ProjectProfile,
   Router,
   Styling,
-} from './detect/types.js';
+} from '@/detect/types.js';
+import {
+  fileExists,
+  findConfigFile,
+  readFile,
+  resolvePath,
+} from '@/utils/fs.js';
+import { collectDependencyVersions, readPackageJson } from '@/utils/pkg.js';
 
 export type { Framework, PackageManager, ProjectProfile };
 export { detectPackageManager };
