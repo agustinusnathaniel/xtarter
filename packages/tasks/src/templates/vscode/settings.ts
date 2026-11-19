@@ -28,7 +28,7 @@ export function vscodeSettings(profile: ProjectProfile) {
     };
   }
 
-  if (profile.bundler === 'vite') {
+  if (profile.styling.includes('tailwind')) {
     settings['files.associations'] = {
       '*.css': 'tailwindcss',
     };

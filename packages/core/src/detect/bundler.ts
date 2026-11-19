@@ -50,5 +50,10 @@ export async function detectBundler(
   if (await hasBundlerConfig(cwd, 'webpack.config')) {
     return 'webpack';
   }
+  // Vite+ runs Vite itself (`vp dev`, `vp build`), and xtarterize may write its
+  // vite.config.ts, so it counts as Vite before that file exists too.
+  if (deps['vite-plus'] || deps.vp) {
+    return 'vite';
+  }
   return 'none';
 }
