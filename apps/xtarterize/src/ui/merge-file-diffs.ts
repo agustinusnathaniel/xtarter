@@ -1,4 +1,5 @@
-import { enhanceDiff, type FileDiff, isJsonFile } from '@xtarterize/core';
+import type { FileDiff } from '@xtarterize/core';
+import { enhanceDiff, isJsonFile } from '@xtarterize/core';
 import { patchJson } from '@xtarterize/patchers';
 
 export function mergeFileDiffs(diffs: Array<FileDiff>): Array<FileDiff> {

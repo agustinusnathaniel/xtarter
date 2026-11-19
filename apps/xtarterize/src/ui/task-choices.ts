@@ -7,7 +7,8 @@ import type {
 } from '@xtarterize/core';
 import { Effect } from 'effect';
 
-import { type PromptError, Prompter } from '@/ui/prompter.js';
+import type { PromptError } from '@/ui/prompter.js';
+import { Prompter } from '@/ui/prompter.js';
 
 type ChoiceGroups = Record<string, Array<TaskChoiceOption>>;
 

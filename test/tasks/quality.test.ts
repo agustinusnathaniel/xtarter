@@ -1,9 +1,8 @@
 import { packageEnginesTask } from '@tasks/quality/package-engines.js';
+import type { ProjectContext, ProjectFileMap } from '@test/helpers/project.js';
 import {
   fixtureDir,
   fixtureProfile,
-  type ProjectContext,
-  type ProjectFileMap,
   withProject,
 } from '@test/helpers/project.js';
 import { run } from '@test/helpers/run.js';

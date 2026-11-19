@@ -2,7 +2,8 @@ import type { Task, TaskStatus } from '@xtarterize/core';
 import { Effect } from 'effect';
 
 import type { TaskWithStatus } from '@/commands/add/types.js';
-import { type PromptError, Prompter } from '@/ui/prompter.js';
+import type { PromptError } from '@/ui/prompter.js';
+import { Prompter } from '@/ui/prompter.js';
 import { defaultSelectedIds, statusHint } from '@/utils/display.js';
 
 /** Resolve selected task IDs, or `null` when the user cancels the prompt. */

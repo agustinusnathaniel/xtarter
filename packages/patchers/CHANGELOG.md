@@ -25,14 +25,12 @@ No changes in this release.
 ### Patch Changes
 
 - [#193](https://github.com/agustinusnathaniel/xtarter/pull/193) [`affac6f`](https://github.com/agustinusnathaniel/xtarter/commit/affac6fd8a3d9a6dcbd88b04786ed6a94dfb9f95) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Remove dead exports and unused internal APIs from the maintained packages
-  
   - Removed the `applyTasks` wrapper from core, so callers compose `planTasks` and `executePlan` directly, and consolidated the duplicate CLI invocation guard into `createInvocationGuard`.
   - Removed the YAML patcher (`mergeYaml`/`parseYaml`) and the filesystem `injectVitePlugin`; `injectVitePluginIntoCode` is the single in-memory entry point.
   - Dropped the unused `js-yaml` dependencies from the patchers package and the bundled CLI, so the `xtarterize` binary no longer inlines them.
   - CLI behavior and generated configurations are unchanged.
 
 - [#198](https://github.com/agustinusnathaniel/xtarter/pull/198) [`66512f1`](https://github.com/agustinusnathaniel/xtarter/commit/66512f139b863769400deaddf3186da5eed3c4e0) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Fix script equivalence, Turbo detection, and patcher exports
-  
   - `turborepo run` is no longer treated as equivalent to `turbo run`; composite equivalence requires an extractable task list.
   - Non-string script values in `package.json` are ignored instead of being coerced.
   - Turbo detection checks both `dependencies` and `devDependencies`, and `check:turbo` recognizes renamed `typecheck`/`test` scripts through tool mapping.
@@ -107,7 +105,6 @@ No changes in this release.
 - [#75](https://github.com/agustinusnathaniel/xtarter/pull/75) [`be651f3`](https://github.com/agustinusnathaniel/xtarter/commit/be651f3aa5e6bac9098fc145fd0a3651f7b4fbbb) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - feat: add natural language task query engine with `query` command and `init --compose`
 
   New features:
-
   - `xtarterize query <query>` - search and discover tasks using natural language with a pure-algorithmic scoring engine
   - `xtarterize init --compose <query>` - compose a targeted task plan by ranking tasks by relevance
   - Task metadata enrichment: new optional `searchMeta` field on the Task interface with `tags`, `configTargets`, and `keywords` supports richer search results
@@ -125,7 +122,6 @@ No changes in this release.
 - [#73](https://github.com/agustinusnathaniel/xtarter/pull/73) [`aec3c0a`](https://github.com/agustinusnathaniel/xtarter/commit/aec3c0a4d289c5984183d738d99727555b84c602) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Refactor task resolution with TaskScope system for monorepo-aware task filtering
 
   Introduces a `TaskScope` type (`'root' | 'package' | 'both'`) that each task can declare. When running in a monorepo:
-
   - **Root-scoped tasks** (CI/CD, release tooling, turbo, renovate, editor config, npmrc, gitignore, package scripts) are excluded when running inside a workspace package.
   - **Package-scoped tasks** (tsconfig path aliases, vite-plugin-checker, rollup-plugin-visualizer) are excluded when running from the monorepo root.
   - Tasks without explicit scope (or with `scope: 'both'`) are included everywhere, preserving backward compatibility.
@@ -273,7 +269,6 @@ No changes in this release.
 - [`ccd9287`](https://github.com/agustinusnathaniel/xtarterize/commit/ccd9287afd967ed1ea0ef0c64b4a4a468e95b550) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - feat: add `patchJson` for surgical JSON text edits using `jsonc-parser`
 
   Replaced `JSON.stringify(mergeJson(...), null, 2)` with `patchJson`, which performs byte-level text edits via Microsoft's [`jsonc-parser`](https://github.com/microsoft/node-jsonc-parser). This preserves:
-
   - Comments (`// inline` and `/* block */`)
   - Key ordering
   - Whitespace and indentation style

@@ -1,7 +1,5 @@
-import {
-  defineSingleTargetTask,
-  type TargetPolicy,
-} from '@/factory/define-task.js';
+import type { TargetPolicy } from '@/factory/define-task.js';
+import { defineSingleTargetTask } from '@/factory/define-task.js';
 
 const ENTRIES = ['*.tsbuildinfo', '.tsbuildinfo/'];
 

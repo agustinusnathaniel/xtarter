@@ -71,24 +71,23 @@
 
 ## Quick Reference
 
-| Concern                | Location                        |
-| ---------------------- | ------------------------------- |
-| Task interface         | `packages/core/src/_base.ts`    |
+| Concern                | Location                           |
+| ---------------------- | ---------------------------------- |
+| Task interface         | `packages/core/src/_base.ts`       |
 | Task Effect bridge     | `packages/core/src/task-effect.ts` |
-| Task services          | `packages/core/src/services/`   |
-| Core utilities         | `packages/core/src/`            |
-| Patching engine        | `packages/patchers/src/`        |
-| Shared lint config     | `packages/config/src/`          |
-| Task implementations   | `packages/tasks/src/`           |
-| CLI commands           | `apps/xtarterize/src/commands/` |
-| CLI runtime edge       | `apps/xtarterize/src/runtime.ts` |
-| Scaffolding CLI        | `apps/create-xtarter-app/src/`  |
-| vp create integration  | `apps/xtarter-create/`          |
-| Documentation site     | `apps/docs/`                    |
-| Publishable docs       | `apps/docs/src/content/docs/`   |
-| Architecture decisions | `docs/ADRs/`                    |
-| Tests                  | `test/`                         |
-
+| Task services          | `packages/core/src/services/`      |
+| Core utilities         | `packages/core/src/`               |
+| Patching engine        | `packages/patchers/src/`           |
+| Shared lint config     | `packages/config/src/`             |
+| Task implementations   | `packages/tasks/src/`              |
+| CLI commands           | `apps/xtarterize/src/commands/`    |
+| CLI runtime edge       | `apps/xtarterize/src/runtime.ts`   |
+| Scaffolding CLI        | `apps/create-xtarter-app/src/`     |
+| vp create integration  | `apps/xtarter-create/`             |
+| Documentation site     | `apps/docs/`                       |
+| Publishable docs       | `apps/docs/src/content/docs/`      |
+| Architecture decisions | `docs/ADRs/`                       |
+| Tests                  | `test/`                            |
 
 # Ultracite Code Standards
 
@@ -180,14 +179,17 @@ Write code that is **accessible, performant, type-safe, and maintainable**. Focu
 ### Framework-Specific Guidance
 
 **Next.js:**
+
 - Use Next.js `<Image>` component for images
 - Use `next/head` or App Router metadata API for head elements
 - Use Server Components for async data fetching instead of async Client Components
 
 **React 19+:**
+
 - Use ref as a prop instead of `React.forwardRef`
 
 **Solid/Svelte/Vue/Qwik:**
+
 - Use `class` and `for` attributes (not `className` or `htmlFor`)
 
 ---

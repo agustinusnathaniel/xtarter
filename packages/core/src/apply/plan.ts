@@ -9,11 +9,11 @@ import type {
 } from '@/_base.js';
 import type { ProjectProfile } from '@/detect.js';
 import type { TaskError } from '@/errors.js';
+import type { TaskCheckResult } from '@/resolve.js';
 import {
   collectTaskChecks,
   failureDetail,
   TASK_CONCURRENCY,
-  type TaskCheckResult,
 } from '@/resolve.js';
 import { toTaskEffect } from '@/task-effect.js';
 import { logInfo } from '@/utils/logger.js';

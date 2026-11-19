@@ -1,9 +1,10 @@
 import { mergeJson } from '@xtarterize/patchers';
 
-import { type DefinedTask, defineTask } from '@/factory/define-task.js';
+import type { DefinedTask } from '@/factory/define-task.js';
+import { defineTask } from '@/factory/define-task.js';
+import type { LintTaskOptions } from '@/lint/config-form.js';
 import {
   isManagedConfig,
-  type LintTaskOptions,
   lintTaskDeps,
   newConfigForm,
 } from '@/lint/config-form.js';

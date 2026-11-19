@@ -28,18 +28,18 @@ without prompts. Use `--format json` or `--json` for machine-readable output.
 
 ## Commands
 
-| Command | Purpose |
-| --- | --- |
-| `init` | Detect, preview, and apply applicable tasks |
-| `sync` | Update existing configurations |
-| `diff` | Preview pending changes without writing |
-| `check` | Audit task status and diagnostics |
-| `add [task-id]` | Apply one task or choose tasks interactively |
-| `list` | List tasks and their status |
-| `query <query>` | Search tasks with natural language |
-| `doctor` | Run environment and project diagnostics |
-| `undo` | Restore the most recent run |
-| `restore <file>` | Restore one file from backup |
+| Command          | Purpose                                      |
+| ---------------- | -------------------------------------------- |
+| `init`           | Detect, preview, and apply applicable tasks  |
+| `sync`           | Update existing configurations               |
+| `diff`           | Preview pending changes without writing      |
+| `check`          | Audit task status and diagnostics            |
+| `add [task-id]`  | Apply one task or choose tasks interactively |
+| `list`           | List tasks and their status                  |
+| `query <query>`  | Search tasks with natural language           |
+| `doctor`         | Run environment and project diagnostics      |
+| `undo`           | Restore the most recent run                  |
+| `restore <file>` | Restore one file from backup                 |
 
 See the [CLI reference](https://xtarter.sznm.dev/xtarterize/guide/cli/overview/)
 for command options, exit codes, and JSON output shapes.

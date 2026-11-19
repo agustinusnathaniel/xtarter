@@ -1,6 +1,7 @@
 import { isDeepStrictEqual } from 'node:util';
 
-import { defineTask, type TargetPolicy } from '@/factory/define-task.js';
+import type { TargetPolicy } from '@/factory/define-task.js';
+import { defineTask } from '@/factory/define-task.js';
 import { getCompilerOptions } from '@/ts/utils.js';
 
 const EXPECTED_OPTIONS = {

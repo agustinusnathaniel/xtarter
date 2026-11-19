@@ -5,7 +5,8 @@ import {
   captureJson,
   captureStreams,
 } from '@test/helpers/console.js';
-import { type ProjectFileMap, withProject } from '@test/helpers/project.js';
+import type { ProjectFileMap } from '@test/helpers/project.js';
+import { withProject } from '@test/helpers/project.js';
 import { runCli } from '@test/helpers/run.js';
 import { withTempDir } from '@test/helpers/temp.js';
 import { checkCommand } from '@xtarterize/app/commands/check.js';

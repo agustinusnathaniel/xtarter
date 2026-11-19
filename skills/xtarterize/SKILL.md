@@ -32,17 +32,17 @@ npx xtarterize init --json --yes
 
 After each command, parse the JSON to decide the next action:
 
-| Command | Parse this field | To decide |
-|---------|-----------------|-----------|
-| `check --json` | `tasks[].status` | If any status is `"new"` or `"patch"`, run `init` or `add` |
-| `check --json` | `diagnostics[].status` | If any is `"fail"`, run `doctor` before proceeding |
-| `diff --json` | `files`, `ok` | Empty `files` (or `ok: true`) means nothing to change; otherwise show `files[].filepath` and `files[].stats.added`/`stats.removed` as the change magnitude |
-| `list --json` | `tasks[].status`, `profile` | Find the right task ID to pass to `add`; understand the detected stack (framework, bundler, etc.) |
-| `doctor --json` | `diagnostics[].status` | Any `"fail"` needs fixing; `"warn"` is advisory |
-| `init --json` | `ok` | If `false`, something went wrong - check stderr |
-| `query --json` | `results[].relevance` | Score >= threshold means relevant. Use `results[].signals` to see which fields matched strongest |
-| `query --json` | `results[].taskId` | Pass to `add` to apply the matched task |
-| `query --json` | `count` | If 0, no tasks met the threshold - broaden query or lower `--threshold` |
+| Command         | Parse this field            | To decide                                                                                                                                                  |
+| --------------- | --------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `check --json`  | `tasks[].status`            | If any status is `"new"` or `"patch"`, run `init` or `add`                                                                                                 |
+| `check --json`  | `diagnostics[].status`      | If any is `"fail"`, run `doctor` before proceeding                                                                                                         |
+| `diff --json`   | `files`, `ok`               | Empty `files` (or `ok: true`) means nothing to change; otherwise show `files[].filepath` and `files[].stats.added`/`stats.removed` as the change magnitude |
+| `list --json`   | `tasks[].status`, `profile` | Find the right task ID to pass to `add`; understand the detected stack (framework, bundler, etc.)                                                          |
+| `doctor --json` | `diagnostics[].status`      | Any `"fail"` needs fixing; `"warn"` is advisory                                                                                                            |
+| `init --json`   | `ok`                        | If `false`, something went wrong - check stderr                                                                                                            |
+| `query --json`  | `results[].relevance`       | Score >= threshold means relevant. Use `results[].signals` to see which fields matched strongest                                                           |
+| `query --json`  | `results[].taskId`          | Pass to `add` to apply the matched task                                                                                                                    |
+| `query --json`  | `count`                     | If 0, no tasks met the threshold - broaden query or lower `--threshold`                                                                                    |
 
 Task statuses are `new`, `patch`, `skip`, and `conflict`; the parsing table above shows how to act on each.
 
@@ -80,14 +80,14 @@ out=$(npx xtarterize doctor --json --cwd "$dir")
 
 ## Error handling
 
-| Signal | Likely cause | Fix |
-|--------|-------------|-----|
-| `add <id>` → "Task not found" | Wrong task ID | `list --json`, parse `tasks[].id` |
-| `Unknown option --jsn ... Did you mean --json?` | Typoed flag or command | Follow the suggestion, or run the command with `--help` for valid options |
-| `doctor` shows tool not installed | Missing dep | xtarterize only writes configs; user may need to install separately |
-| Task shows `"conflict"` | Config differs | **Never auto-apply** - present to user, only with `--include-conflicts` |
-| `--cwd` fails preflight | No `package.json` | Verify path exists and is a JS/TS project |
-| `query` returns empty results | Query too narrow or no matching tasks | Broaden the query or lower `--threshold` |
+| Signal                                          | Likely cause                          | Fix                                                                       |
+| ----------------------------------------------- | ------------------------------------- | ------------------------------------------------------------------------- |
+| `add <id>` → "Task not found"                   | Wrong task ID                         | `list --json`, parse `tasks[].id`                                         |
+| `Unknown option --jsn ... Did you mean --json?` | Typoed flag or command                | Follow the suggestion, or run the command with `--help` for valid options |
+| `doctor` shows tool not installed               | Missing dep                           | xtarterize only writes configs; user may need to install separately       |
+| Task shows `"conflict"`                         | Config differs                        | **Never auto-apply** - present to user, only with `--include-conflicts`   |
+| `--cwd` fails preflight                         | No `package.json`                     | Verify path exists and is a JS/TS project                                 |
+| `query` returns empty results                   | Query too narrow or no matching tasks | Broaden the query or lower `--threshold`                                  |
 
 ## Anti-patterns
 

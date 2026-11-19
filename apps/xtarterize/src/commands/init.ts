@@ -3,7 +3,8 @@ import { scoreTasks } from '@xtarterize/core';
 import type { Effect } from 'effect';
 
 import { cliCommand } from '@/commands/command.js';
-import { type RunCommandArgs, runCommand } from '@/commands/run-command.js';
+import type { RunCommandArgs } from '@/commands/run-command.js';
+import { runCommand } from '@/commands/run-command.js';
 import type { CliError, CliServices } from '@/runtime.js';
 import { sharedRunArgs } from '@/utils/args.js';
 import type { RuntimeContext } from '@/utils/runtime.js';

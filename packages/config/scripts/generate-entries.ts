@@ -6,11 +6,10 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import type { BiomePreset, OxlintPreset } from '../dist/index.mjs';
 import {
-  type BiomePreset,
   biomeCoreLayer,
   biomePresets,
-  type OxlintPreset,
   oxfmtLayer,
   oxlintCoreLayer,
   oxlintPresets,

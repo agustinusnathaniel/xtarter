@@ -1,5 +1,6 @@
 import { captureConsole, captureJson } from '@test/helpers/console.js';
-import { type ProjectFileMap, withProject } from '@test/helpers/project.js';
+import type { ProjectFileMap } from '@test/helpers/project.js';
+import { withProject } from '@test/helpers/project.js';
 import {
   recordingDepsInstaller,
   recordingProcessRunner,

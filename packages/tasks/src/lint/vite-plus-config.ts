@@ -1,9 +1,11 @@
 import { sharedConfigPackage } from '@xtarter/config';
-import { type ProjectProfile, TaskError } from '@xtarterize/core';
+import type { ProjectProfile } from '@xtarterize/core';
+import { TaskError } from '@xtarterize/core';
 import { inspectConfigProperty, setConfigProperty } from '@xtarterize/patchers';
 
 import type { TargetPolicy, TextTarget } from '@/factory/define-task.js';
-import { type LintTaskOptions, newConfigForm } from '@/lint/config-form.js';
+import type { LintTaskOptions } from '@/lint/config-form.js';
+import { newConfigForm } from '@/lint/config-form.js';
 import type { VitePlusBlock } from '@/templates/oxfmt-template.js';
 import { VITE_CONFIG_EXTENSIONS } from '@/vite/plugin.js';
 

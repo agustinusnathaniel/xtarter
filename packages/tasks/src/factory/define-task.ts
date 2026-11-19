@@ -1,26 +1,24 @@
-import {
-  type FileDiff,
-  type ProjectProfile,
-  type Task,
-  type TaskDep,
-  TaskError,
-  type TaskScope,
-  type TaskSearchMeta,
-  type TaskServices,
-  type TaskStatus,
-  toTaskEffect,
+import type {
+  FileDiff,
+  ProjectProfile,
+  Task,
+  TaskDep,
+  TaskScope,
+  TaskSearchMeta,
+  TaskServices,
+  TaskStatus,
 } from '@xtarterize/core';
+import { TaskError, toTaskEffect } from '@xtarterize/core';
 import { Effect } from 'effect';
 
 import { checkMissingDeps, writeTaskDiffs } from '@/factory/ops.js';
-import {
-  deriveConfigTargets,
-  type ResolveContext,
-  type ResolvedTarget,
-  resolveTarget,
-  type TargetDraft,
-  type TaskTarget,
+import type {
+  ResolveContext,
+  ResolvedTarget,
+  TargetDraft,
+  TaskTarget,
 } from '@/factory/targets.js';
+import { deriveConfigTargets, resolveTarget } from '@/factory/targets.js';
 
 export type { TaskDep } from '@xtarterize/core';
 

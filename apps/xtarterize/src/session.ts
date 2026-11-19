@@ -9,6 +9,7 @@ import type {
   ProjectProfile,
   ResolveTiming,
   Task,
+  TaskError,
   TaskSelectionConfig,
   TaskStatus,
 } from '@xtarterize/core';
@@ -19,7 +20,6 @@ import {
   planTasks,
   resolveProjectTasks,
   runPreflight,
-  type TaskError,
   toTaskEffect,
 } from '@xtarterize/core';
 import { getAllTasks } from '@xtarterize/tasks';
@@ -27,11 +27,8 @@ import { Effect } from 'effect';
 
 import { mergeFileDiffs } from '@/ui/merge-file-diffs.js';
 import { reportPreflightFailure, reportSessionOutcome } from '@/ui/reporter.js';
-import {
-  type RuntimeArgs,
-  type RuntimeContext,
-  resolveRuntimeContext,
-} from '@/utils/runtime.js';
+import type { RuntimeArgs, RuntimeContext } from '@/utils/runtime.js';
+import { resolveRuntimeContext } from '@/utils/runtime.js';
 
 export type SessionOutcomeKind =
   | 'apply'

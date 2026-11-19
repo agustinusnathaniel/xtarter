@@ -1,9 +1,8 @@
 import { packageScriptsTask } from '@tasks/factory/package-scripts.js';
+import type { FixtureName, ProjectFileMap } from '@test/helpers/project.js';
 import {
-  type FixtureName,
   fixtureDir,
   fixtureProfile,
-  type ProjectFileMap,
   withProject,
 } from '@test/helpers/project.js';
 import { run } from '@test/helpers/run.js';

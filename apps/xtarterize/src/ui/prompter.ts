@@ -1,9 +1,9 @@
+import type { Option } from '@clack/prompts';
 import {
   confirm,
   groupMultiselect,
   isCancel,
   multiselect,
-  type Option,
   select,
 } from '@clack/prompts';
 import { Context, Data, Effect, Layer } from 'effect';

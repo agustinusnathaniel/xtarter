@@ -1,10 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import {
-  fixtureProfile,
-  type ProjectFileMap,
-  withProject,
-} from '@test/helpers/project.js';
+import type { ProjectFileMap } from '@test/helpers/project.js';
+import { fixtureProfile, withProject } from '@test/helpers/project.js';
 import { run } from '@test/helpers/run.js';
 import { withTempDir } from '@test/helpers/temp.js';
 import { detectProject, runDiagnostics } from '@xtarterize/core';

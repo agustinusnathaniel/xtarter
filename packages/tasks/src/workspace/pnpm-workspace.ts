@@ -1,10 +1,9 @@
 import type { ProjectProfile } from '@xtarterize/core';
-import { isNode, isScalar, isSeq, type Node, parseDocument } from 'yaml';
+import type { Node } from 'yaml';
+import { isNode, isScalar, isSeq, parseDocument } from 'yaml';
 
-import {
-  defineSingleTargetTask,
-  type TargetPolicy,
-} from '@/factory/define-task.js';
+import type { TargetPolicy } from '@/factory/define-task.js';
+import { defineSingleTargetTask } from '@/factory/define-task.js';
 
 const REQUIRED_PACKAGES = ['apps/*', 'packages/*'] as const;
 

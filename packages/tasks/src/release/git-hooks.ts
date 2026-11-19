@@ -1,13 +1,11 @@
 import type { ProjectProfile } from '@xtarterize/core';
 import { fileExists, readPackageJson, resolvePath } from '@xtarterize/core';
-import { dlxCommand, type PackageManagerName, runScriptCommand } from 'nypm';
+import type { PackageManagerName } from 'nypm';
+import { dlxCommand, runScriptCommand } from 'nypm';
 import type { PackageJson } from 'pkg-types';
 
-import {
-  defineTask,
-  type TargetPolicy,
-  type TaskTarget,
-} from '@/factory/define-task.js';
+import type { TargetPolicy, TaskTarget } from '@/factory/define-task.js';
+import { defineTask } from '@/factory/define-task.js';
 import {
   filterMissingScripts,
   hasInstalledDependency,

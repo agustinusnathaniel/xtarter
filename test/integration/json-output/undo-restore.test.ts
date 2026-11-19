@@ -1,7 +1,8 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { captureJson } from '@test/helpers/console.js';
-import { type ProjectFileMap, withProject } from '@test/helpers/project.js';
+import type { ProjectFileMap } from '@test/helpers/project.js';
+import { withProject } from '@test/helpers/project.js';
 import { checkCommand } from '@xtarterize/app/commands/check.js';
 import { listCommand } from '@xtarterize/app/commands/list.js';
 import { queryCommand } from '@xtarterize/app/commands/query.js';

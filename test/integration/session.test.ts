@@ -1,6 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import { type ProjectFileMap, withProject } from '@test/helpers/project.js';
+import type { ProjectFileMap } from '@test/helpers/project.js';
+import { withProject } from '@test/helpers/project.js';
 import { createScriptedPrompter } from '@test/helpers/prompter.js';
 import { run, runCli } from '@test/helpers/run.js';
 import { addProgram } from '@xtarterize/app/commands/add/index.js';

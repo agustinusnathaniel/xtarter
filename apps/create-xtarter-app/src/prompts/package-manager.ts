@@ -1,7 +1,8 @@
 import { select } from '@clack/prompts';
 import { abortIfCancelled } from '@xtarterize/core/plain';
 
-import { PACKAGE_MANAGERS, type PackageManager } from '@/types';
+import type { PackageManager } from '@/types';
+import { PACKAGE_MANAGERS } from '@/types';
 
 const PACKAGE_MANAGER_META: Record<
   PackageManager,

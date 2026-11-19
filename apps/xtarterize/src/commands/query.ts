@@ -8,7 +8,8 @@ import {
 
 import { cliCommand } from '@/commands/command.js';
 import { runCliProgram } from '@/runtime.js';
-import { type CommandSession, openSession } from '@/session.js';
+import type { CommandSession } from '@/session.js';
+import { openSession } from '@/session.js';
 import { formatQueryResult } from '@/ui/json-formatter.js';
 import { displayQueryResults } from '@/ui/query-display.js';
 import { cwdArg, jsonArg } from '@/utils/args.js';

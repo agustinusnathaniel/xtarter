@@ -1,9 +1,9 @@
 ---
 name: Feature request
 about: Suggest a new task, template, or improvement
-title: ''
+title: ""
 labels: enhancement
-assignees: ''
+assignees: ""
 ---
 
 **Is your feature request related to a problem?**
