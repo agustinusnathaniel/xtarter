@@ -28,7 +28,28 @@ describe('vscodeTask', () => {
       'always'
     );
     expect(settings['tailwindCSS.experimental.classRegex']).toBeDefined();
+    expect(settings['files.associations']).toEqual({ '*.css': 'tailwindcss' });
     expect(extensions.recommendations).toContain('bradlc.vscode-tailwindcss');
+  });
+
+  test('leaves CSS associations alone in Vite projects without Tailwind', async () => {
+    await withProject(
+      {
+        'package.json': {
+          devDependencies: { typescript: '^5.9.0', 'vite-plus': '^1.5.0' },
+          name: 'vite-plus-no-tailwind',
+        },
+      },
+      async ({ cwd, profile }) => {
+        expect(profile.bundler).toBe('vite');
+        const diffs = await run(vscodeTask.dryRun(cwd, profile));
+        const settings = JSON.parse(
+          diffs.find((d) => d.filepath.includes('settings.json'))?.after ?? '{}'
+        );
+
+        expect(settings['files.associations']).toBeUndefined();
+      }
+    );
   });
 });
 

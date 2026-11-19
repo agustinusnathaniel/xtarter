@@ -241,6 +241,23 @@ describe('detectProject', () => {
     }
   });
 
+  test('detects Vite+ as Vite with or without its vite.config', async () => {
+    const vitePlusPackage = {
+      'package.json': { devDependencies: { 'vite-plus': '^1.5.0' } },
+    };
+    // The first init writes vite.config.ts for the Vite+ lint and fmt blocks,
+    // so detection must not change between the first and second run.
+    for (const files of [
+      vitePlusPackage,
+      { ...vitePlusPackage, 'vite.config.ts': 'export default {}\n' },
+    ]) {
+      await withProject(files, async ({ profile }) => {
+        expect(profile.bundler).toBe('vite');
+        expect(profile.vitePlus).toBe(true);
+      });
+    }
+  });
+
   test('keeps dependency bundler detection ahead of config files', async () => {
     await withProject(
       {
