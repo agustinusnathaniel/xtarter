@@ -21,7 +21,7 @@
 ### Patch Changes
 
 - [#199](https://github.com/agustinusnathaniel/xtarter/pull/199) [`1bc9c41`](https://github.com/agustinusnathaniel/xtarter/commit/1bc9c41ef5b9052e531f9056d83835cd87c57ad5) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Import the plain core entry so Effect stays out of the scaffold bundle
-  
+
   `create-xtarter-app` now imports helpers from `@xtarterize/core/plain`, whose
   import graph never reaches `effect`. The published bundle is smaller and
   `effect` is no longer part of `inlinedDependencies`. Behavior is unchanged.
@@ -31,7 +31,6 @@
 ### Minor Changes
 
 - [#193](https://github.com/agustinusnathaniel/xtarter/pull/193) [`f01672f`](https://github.com/agustinusnathaniel/xtarter/commit/f01672f8669873c7b8edf0ed6c097301c92bfa81) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Clean up failed scaffolds and trim the programmatic entry point
-  
   - A failed scaffold now removes the project directory it created, so a partial download, install, or git setup no longer leaves an empty or half-written directory behind.
   - `prepareProjectDir` no longer creates the directory; `scaffoldProject` owns creation and cleanup.
   - Removed the `CliOptions` type export from the package entry and dropped the unused `SUPPORTED_PACKAGE_MANAGERS` catalog plus the `getInstallCommand`/`getDevCommand` helpers.
@@ -39,14 +38,12 @@
 ### Patch Changes
 
 - [#198](https://github.com/agustinusnathaniel/xtarter/pull/198) [`66512f1`](https://github.com/agustinusnathaniel/xtarter/commit/66512f139b863769400deaddf3186da5eed3c4e0) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Validate inputs before touching the target directory and report git failures truthfully
-  
   - Template and package manager values are validated before `--force` can remove an existing directory, so an invalid invocation never deletes anything.
   - A failed git initialization logs a warning and reports `gitInitialized: false` in `--json` output instead of discarding an otherwise successful scaffold.
   - The exported `initializeGit` now resolves `false` on git failure instead of rejecting, so programmatic callers branch on the returned boolean.
   - `--json` output reports the real scaffold result values.
 
 - [#193](https://github.com/agustinusnathaniel/xtarter/pull/193) [`8e0518f`](https://github.com/agustinusnathaniel/xtarter/commit/8e0518fcfe91f1b82e0fa84a32ad3985a739e7c0) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Trim repeated task and CLI plumbing without changing generated output
-  
   - The skill catalog groups entries behind `skillsFor`/`alwaysSkills`; the expanded catalog, entry order, sources, and conditions are unchanged.
   - `readPackageJson` is imported from core directly instead of a pass-through wrapper, and the skills task uses one static `node:fs/promises` import.
   - CLI commands report outcomes through `CommandSession.reportOutcome`, and interactive `add` executes its confirmed selection through `session.apply`; messages, exit codes, backups, and manifests are unchanged.
@@ -63,7 +60,7 @@
 ### Minor Changes
 
 - [#185](https://github.com/agustinusnathaniel/xtarter/pull/185) [`1902457`](https://github.com/agustinusnathaniel/xtarter/commit/19024572866fa04acb6aa88a3eca84f282366320) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Fix the primary scaffold flow under citty 0.2: `create-xtarter-app my-app` no longer fails with "Unknown command". Unmatched positionals are project names again; the `preview` subcommand dispatches only when invoked, and it no longer falls through into the scaffold flow after printing. Help output keeps `preview` discoverable.
-  
+
   Flag cleanup: `--git` and `--color` are now declared booleans (default on) with `--no-git`/`--no-color` negations shown in `--help`, matching what the docs advertise. Invalid invocations (unknown command or option) exit `1` with a suggested correction instead of being silently ignored.
 
 ## 1.15.2
@@ -71,7 +68,7 @@
 ### Patch Changes
 
 - [#177](https://github.com/agustinusnathaniel/xtarter/pull/177) [`bc5552e`](https://github.com/agustinusnathaniel/xtarter/commit/bc5552e0c9273b4eba6cab95b1f19f059dcb609a) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Enforce file and function size limits via Biome and Oxlint
-  
+
   Adds 500-line file and 60-line function limits to generated configs. Biome uses skipBlankLines (skipComments unsupported in 2.5.9) while Oxlint uses both skipBlankLines and skipComments. Test files disable function limit. Refactors core apply pipeline, task factories, and CLI commands to comply with new limits.
 
 ## 1.15.1
@@ -85,17 +82,14 @@
 ### Minor Changes
 
 - [#69](https://github.com/agustinusnathaniel/xtarter/pull/69) [`7ce1d7e`](https://github.com/agustinusnathaniel/xtarter/commit/7ce1d7e6b54424afaa49579ef3bf27106b77af2b) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - feat: add --quiet, --json, and --no-color flags
-
   - `--quiet` suppresses banners, spinners, and decorative output
   - `--json` outputs scaffold result as structured JSON
   - `--no-color` disables colorized output
 
   feat: improve --yes flag behavior
-
   - `--yes` now defaults to next-chakra template when -t is omitted
 
   feat: migrate to citty built-in help and version handling
-
   - Removes hand-rolled HELP_TEXT constant in favor of citty auto-generation
 
 ## 1.14.2
@@ -109,7 +103,6 @@
 ### Patch Changes
 
 - [`c637a36`](https://github.com/agustinusnathaniel/xtarter/commit/c637a3686e1c32e5a0cb658c2030201dcb5c32b1) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Edge-case fixes for project scaffolding:
-
   - Windows-compatible path handling (use `basename()` instead of `split('/')`)
   - Fixed pnpm overrides crash with type-check before `.includes()` call
   - Async `readdir` from `fs/promises` replaces sync `readdirSync`
@@ -123,7 +116,6 @@
 ### Minor Changes
 
 - [#56](https://github.com/agustinusnathaniel/xtarter/pull/56) [`e973326`](https://github.com/agustinusnathaniel/xtarter/commit/e973326f9dd96e9a3e9f483fd35c5d177d0858ac) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - feat: add --force, --ref flags, cwd scaffold, better --yes behavior, and error recovery
-
   - New `--force` / `-f` flag overwrites existing directories
   - New `--ref` flag pins template version to a git ref
   - `create-xtarter-app .` scaffolds into current directory

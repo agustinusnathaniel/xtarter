@@ -29,11 +29,14 @@ catalog:
   diff: ^9.0.0
   pkg-types: ^2.4.0
   vite: npm:@voidzero-dev/vite-plus-core@1.5.0
-  ultracite: 8.1.1
+  ultracite: 8.3.1
 
 # Only resolve versions published at least a day ago (pnpm's default, made
 # explicit so a global override cannot loosen it for this repository).
 minimumReleaseAge: 1440
+# Exact versions let through early. Remove each entry once it is a day old.
+minimumReleaseAgeExclude:
+  - ultracite@8.3.1
 
 onlyBuiltDependencies:
   - esbuild

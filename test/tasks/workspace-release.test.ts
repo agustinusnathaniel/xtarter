@@ -2,10 +2,10 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { versionrcTask } from '@tasks/release/versionrc.js';
 import { pnpmWorkspaceTask } from '@tasks/workspace/pnpm-workspace.js';
+import type { ProjectContext } from '@test/helpers/project.js';
 import {
   fixtureDir,
   fixtureProfile,
-  type ProjectContext,
   withProject,
 } from '@test/helpers/project.js';
 import { run } from '@test/helpers/run.js';

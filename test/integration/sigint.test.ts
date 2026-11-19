@@ -16,7 +16,8 @@
  * generous (observed 255-291 ms locally) and no lower bound is asserted,
  * because exiting immediately is also valid.
  */
-import { type ChildProcess, execFile, spawn } from 'node:child_process';
+import type { ChildProcess } from 'node:child_process';
+import { execFile, spawn } from 'node:child_process';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import { setTimeout as delay } from 'node:timers/promises';

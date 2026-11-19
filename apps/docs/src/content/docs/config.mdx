@@ -89,8 +89,38 @@ Every Biome and Oxlint entry extends the Ultracite preset of the same name. List
 | Tool | Entries |
 | --- | --- |
 | Biome | `core`, `angular`, `astro`, `cypress`, `drizzle`, `jest`, `nestjs`, `next`, `playwright`, `qwik`, `react`, `react-native`, `remix`, `solid`, `storybook`, `svelte`, `tanstack`, `type-aware`, `vitest`, `vue` |
-| Oxlint | `core`, `angular`, `anti-slop`, `astro`, `cypress`, `drizzle`, `gdp`, `jest`, `js-plugins`, `nestjs`, `next`, `playwright`, `qwik`, `react`, `react-native`, `remix`, `shadcn`, `solid`, `storybook`, `svelte`, `tanstack`, `vitest`, `vue` |
+| Oxlint | `core`, `angular`, `anti-slop`, `astro`, `cypress`, `drizzle`, `gdp`, `jest`, `js-plugins`, `landmines`, `nestjs`, `next`, `playwright`, `qwik`, `react`, `react-native`, `remix`, `shadcn`, `solid`, `storybook`, `svelte`, `tanstack`, `vitest`, `vue` |
 | Oxfmt | `@xtarter/config/oxfmt` (no layers) |
+
+### Opt-in Oxlint layers
+
+xtarterize never adds these layers itself; extend them when you want stricter rules and a slower lint pass, since each runs through Oxlint's JS plugins.
+
+| Layer | What it catches | Install |
+| --- | --- | --- |
+| `anti-slop` | Unjustified type assertions, `unknown` leaking through signatures, module mocking, and similar escape hatches ([anti-slop](https://github.com/dmmulroy/anti-slop)) | Nothing extra |
+| `landmines` | Shortcuts coding agents take to get a green check: mocking the code under test, fixed sleeps, retries, raised timeouts, and comments narrating the diff ([landmines](https://github.com/interfere-inc/landmines)) | `@interfere/landmines` 0.1.1 or newer |
+| `gdp` | Forged authorization proofs ([gdp-ts](https://github.com/rauchg/gdp-ts)) | `@gdp-ts/core` |
+| `shadcn` | Tailwind v4 classes that break your components, variants, or theme ([@shadcn/lint](https://github.com/shadcn-ui/lint)) | `@shadcn/lint` |
+| `js-plugins` | Rules Oxlint lacks natively, from eslint-plugin-github, eslint-plugin-sonarjs, and React Doctor | `eslint-plugin-github`, `eslint-plugin-sonarjs`, `oxlint-plugin-react-doctor` |
+
+Repeat the layer's `jsPlugins` at the root of your config. Oxlint loads the plugins through `extends` either way, but tools such as Knip read `jsPlugins` only from the root and would otherwise report the plugin package as unused:
+
+<AllPackageManagers pkg="oxlint @xtarter/config @interfere/landmines" dev />
+
+```ts title="oxlint.config.ts"
+import { defineConfig } from 'oxlint';
+import core from '@xtarter/config/oxlint/core';
+import landmines from '@xtarter/config/oxlint/landmines';
+
+export default defineConfig({
+  extends: [core, landmines],
+  env: { node: true },
+  jsPlugins: landmines.jsPlugins,
+});
+```
+
+`landmines` is opinionated beyond tests. It rejects comments other than directives, `WARNING:` and `SAFETY:` notes, and TSDoc on exported API; annotated return types; and `.spec.ts` file names. Turn `landmines-structure/test-file-names` off for frameworks whose convention is `.spec.ts`, such as Playwright, Cypress, Angular, and NestJS.
 
 ## Versioning
 

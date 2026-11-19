@@ -1,6 +1,7 @@
 import { exec } from 'tinyexec';
 
-import { PACKAGE_MANAGERS, type PackageManager } from '@/types';
+import type { PackageManager } from '@/types';
+import { PACKAGE_MANAGERS } from '@/types';
 import { runStep } from '@/utils/run-step';
 
 const VALID_PACKAGE_MANAGERS: ReadonlySet<PackageManager> = new Set(

@@ -1,5 +1,5 @@
+import type { LintTool } from '@tasks/factory/package-scripts.js';
 import {
-  type LintTool,
   lintToolScripts,
   resolveLintTool,
 } from '@tasks/factory/package-scripts.js';

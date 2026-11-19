@@ -1,9 +1,11 @@
 # ADR 006: Citty Subcommand Dispatch and Invocation Guard
 
 ## Status
+
 Accepted
 
 ## Date
+
 2026-09-06
 
 ## Context

@@ -5,9 +5,9 @@
 ### Minor Changes
 
 - [#258](https://github.com/agustinusnathaniel/xtarter/pull/258) [`33f4178`](https://github.com/agustinusnathaniel/xtarter/commit/33f41789f50a131d87363398b93297ce78a294d8) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Lint and format configs now extend `@xtarter/config` by default. New `biome.json`, `oxlint.config.ts`, and `oxfmt.config.ts` files are a few lines long, and rule updates arrive as a dependency bump. Pass `--eject` to `init`, `sync`, or `add` to write the full rule set into the file instead. Oxfmt now sorts imports into the same groups as Biome (built-ins and packages, then aliases, then relative paths), so the next format run may reorder imports in Oxfmt projects. Existing configs keep their form: a config that already extends `@xtarter/config` is checked for newly detected layers (for example after adding React), and any other config is updated as before.
-  
+
   ESLint and Prettier are reported once as unsupported, by the run and by `doctor`. ESLint skips the linting tasks and Prettier skips the formatting tasks, so a Vite+ project with ESLint now gets Oxfmt, and a project with Prettier no longer gets Biome on top of it. Prettier is now detected from its config files and dependency.
-  
+
   Generated Biome configs put `useConsistentTestIt` in the `style` group, where Biome 2.6 expects it. Earlier configs had it under `nursery`, which Biome 2.6 rejects; `sync` moves it.
 
 ### Patch Changes
@@ -41,11 +41,11 @@
 ### Patch Changes
 
 - [#202](https://github.com/agustinusnathaniel/xtarter/pull/202) [`ad4781e`](https://github.com/agustinusnathaniel/xtarter/commit/ad4781e2154dcab523e8806b316021f22b5a9e9a) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Restore task search recall for related words
-  
+
   `query` and `init --compose` find tasks from related phrasings again: `typing`
   reaches strict TypeScript, `updates` the dependency updater, and `code` the VS
   Code task. Multi-word queries like `auto update` rank the exact phrase first.
-  
+
   A 33-query check went from 83 results (0.580 mean top-1 relevance) to 168
   (0.834), near the 191 and 0.783 before 2.0.0. Alias hits are discounted; direct
   hits win. See ADR 039. Patch: no command, dependency, or config change.
@@ -55,28 +55,27 @@
 ### Major Changes
 
 - [#199](https://github.com/agustinusnathaniel/xtarter/pull/199) [`6eac520`](https://github.com/agustinusnathaniel/xtarter/commit/6eac52055fa601a3c1092e372195138cb93c1582) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Remove external task plugins and the Promise task contract
-  
+
   External task plugin loading is removed: the `plugins` key in `.xtarterizerc`,
   `.xtarterizerc.json`, `.xtarterizerc.json5`, or the `"xtarterize"` key in
   `package.json` is no longer read. Existing configs keep supporting `only` and
   `skip` task selection with the same precedence rules.
-  
+
   `PromiseTask` and `EffectTask` collapse into a single Effect-only `Task`
   interface. `toTaskEffect()` remains as the normalizer for synchronous and
   Promise-returning spec functions at the task-factory seam, and built-in tasks
   are unchanged.
-  
+
   **Breaking:** any project that configured `plugins` will no longer load those
   task packages. Remove the `plugins` entries and use built-in tasks instead.
 
 ### Patch Changes
 
 - [#199](https://github.com/agustinusnathaniel/xtarter/pull/199) [`1bc9c41`](https://github.com/agustinusnathaniel/xtarter/commit/1bc9c41ef5b9052e531f9056d83835cd87c57ad5) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Re-adopt Effect as the CLI orchestration layer
-  
+
   Internal architecture change recorded in ADR 036. `@xtarterize/core` and
   `@xtarterize/tasks` now return `Effect` values, and the `xtarterize` CLI runs
   each command program through a single Effect runtime edge.
-  
   - Failures use typed tagged errors (`TaskError`, `DepsInstallError`,
     `ProcessError`, `BackupError`, `FileSystemError`) with the same message text
     as before.
@@ -89,7 +88,6 @@
   - Observable CLI behavior and generated files are unchanged.
 
 - [#199](https://github.com/agustinusnathaniel/xtarter/pull/199) [`fac0f63`](https://github.com/agustinusnathaniel/xtarter/commit/fac0f63c0f3afb78f8f515b81c589d85531f4240) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Fix the CLI failure contract and keep manifest errors typed
-  
   - `runCliProgram` now returns `A | undefined` instead of promising a value it
     cannot produce on failure or interrupt, and `query` returns early when extra
     task statuses are interrupted instead of crashing.
@@ -99,20 +97,20 @@
     instead of leaking them as defects.
 
 - [#199](https://github.com/agustinusnathaniel/xtarter/pull/199) [`d3b94ae`](https://github.com/agustinusnathaniel/xtarter/commit/d3b94ae7201278ba705f508e291e69f9f0a0f14c) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Remove synonym expansion from task query scoring
-  
+
   The `query` command and `init --compose` no longer expand query terms through a
   hardcoded synonym map. Scoring still tokenizes the query and matches tokens
   against task metadata with stemming (0.95), fuzzy (0.85), prefix (0.75), and
   substring (0.55) tiers, so the documented rankings for "strict typescript",
   "ci pipeline", "linting and formatting tool", "react testing", and
   "dependency updates" are unchanged.
-  
+
   Queries that matched through a synonym still match their tasks but score much
   lower: "types" still ranks `ts/strict` first, "updates" still ranks
   `deps/renovate` first, and "code" still ranks `editor/vscode` second. "typing"
   now returns no results. Broaden the query or lower `--threshold` when that
   happens. Recorded in ADR 038.
-  
+
   Patch rather than major: the CLI contract still works, and no dependency or
   generated config format changed. A major bump for the fixed group is already
   pending from the plugin-removal changeset, so this rides the same release.
@@ -122,19 +120,17 @@
 ### Patch Changes
 
 - [#198](https://github.com/agustinusnathaniel/xtarter/pull/198) [`66512f1`](https://github.com/agustinusnathaniel/xtarter/commit/66512f139b863769400deaddf3186da5eed3c4e0) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Correct CLI option handling and quiet-mode output
-  
   - Flags must be passed after the command (`xtarterize check --json`). Entry-level flags such as `xtarterize --json check` are rejected by the invocation guard instead of being silently dropped.
   - Removed the dead `check --verbose` flag; `check` always reports the tool and configuration diagnostics it runs.
   - `list --quiet` no longer prints the timing block, and `init --compose --quiet` no longer prints plan banners.
 
 - [#191](https://github.com/agustinusnathaniel/xtarter/pull/191) [`8df2e74`](https://github.com/agustinusnathaniel/xtarter/commit/8df2e7446b2db7d0c5fc6dca7070c3806f53d6a2) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Align project detection with the detection registry
-  
   - Workspace packages under `services/` are detected consistently with `packages/` and `apps/`, and `hasGit` stays fresh when `.git` changes.
   - `tsconfig.jsonc` now sets both `existing.tsconfig` and `typescript`, and `.eslintrc.mjs` is detected consistently with the doctor legacy-config check.
   - Detection reads most inputs directly, and the registry declares the inputs and keyed detector entries that still have a runtime consumer; the profile cache was removed in a subsequent changeset.
 
 - [#193](https://github.com/agustinusnathaniel/xtarter/pull/193) [`4bcf794`](https://github.com/agustinusnathaniel/xtarter/commit/4bcf7941d140cd7f5cdc60d8e1ba063b3393f57a) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Preserve existing `pnpm-workspace.yaml` content in the workspace task
-  
+
   The `workspace/pnpm-workspace` task now patches an existing `packages:` list
   in place instead of replacing the file with a fixed template. Only missing
   `apps/*` and `packages/*` entries are inserted; comments, `catalog:`,
@@ -146,32 +142,27 @@
   rewritten.
 
 - [#193](https://github.com/agustinusnathaniel/xtarter/pull/193) [`8e0518f`](https://github.com/agustinusnathaniel/xtarter/commit/8e0518fcfe91f1b82e0fa84a32ad3985a739e7c0) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Trim repeated task and CLI plumbing without changing generated output
-  
   - The skill catalog groups entries behind `skillsFor`/`alwaysSkills`; the expanded catalog, entry order, sources, and conditions are unchanged.
   - `readPackageJson` is imported from core directly instead of a pass-through wrapper, and the skills task uses one static `node:fs/promises` import.
   - CLI commands report outcomes through `CommandSession.reportOutcome`, and interactive `add` executes its confirmed selection through `session.apply`; messages, exit codes, backups, and manifests are unchanged.
   - `create-xtarter-app` inlines its JSON result formatting, and merged diffs use core's `isJsonFile` predicate.
 
 - [#198](https://github.com/agustinusnathaniel/xtarter/pull/198) [`66512f1`](https://github.com/agustinusnathaniel/xtarter/commit/66512f139b863769400deaddf3186da5eed3c4e0) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Remove the detection profile cache and compute the profile directly
-  
   - `detectProject()` reads the detection registry inputs and computes a fresh `ProjectProfile` on every invocation; `packages/core/src/detect/cache.ts`, the fingerprint and cache-entry types, and `PROFILE_CACHE_VERSION` are removed.
   - No `.xtarterize/cache/` directory is created; `.xtarterize/` now holds backups, the run manifest, and the skills-install log only.
   - Measured, a warm cache hit (~2.2ms) was slower than direct detection (~1.3ms), so repeat runs are also faster.
 
 - [#193](https://github.com/agustinusnathaniel/xtarter/pull/193) [`0e15177`](https://github.com/agustinusnathaniel/xtarter/commit/0e151773c3e90f2b1106e72870c07a3a3d2b5596) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Remove test-only diff exports and route session reporting through `reportOutcome`
-  
   - `@xtarterize/core` no longer exports the test-only `computeChangeStats` and `computeUnifiedHunks`; diff stats and hunks are reached through `enhanceDiff`, which derives both from a single pass.
   - CLI command outcomes are reported through `CommandSession.reportOutcome`; messages and exit codes are unchanged.
 
 - [#193](https://github.com/agustinusnathaniel/xtarter/pull/193) [`affac6f`](https://github.com/agustinusnathaniel/xtarter/commit/affac6fd8a3d9a6dcbd88b04786ed6a94dfb9f95) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Remove dead exports and unused internal APIs from the maintained packages
-  
   - Removed the `applyTasks` wrapper from core, so callers compose `planTasks` and `executePlan` directly, and consolidated the duplicate CLI invocation guard into `createInvocationGuard`.
   - Removed the YAML patcher (`mergeYaml`/`parseYaml`) and the filesystem `injectVitePlugin`; `injectVitePluginIntoCode` is the single in-memory entry point.
   - Dropped the unused `js-yaml` dependencies from the patchers package and the bundled CLI, so the `xtarterize` binary no longer inlines them.
   - CLI behavior and generated configurations are unchanged.
 
 - [#191](https://github.com/agustinusnathaniel/xtarter/pull/191) [`a1d2202`](https://github.com/agustinusnathaniel/xtarter/commit/a1d220235423de0b90992716163a8e5fd7d864a3) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Surface apply failures and preserve existing files through the deepened task engine
-  
   - Batch dependency install failures are now reported as apply errors and set a failing exit code instead of only logging to the console.
   - Interactive `add` plans and executes the confirmed selection once, so one run manifest covers the whole operation and `undo` restores all of it.
   - `package.json` changes are patched through the package.json owner, so comments, indentation, key order, and unrelated entries survive apply.
@@ -189,9 +180,9 @@
 ### Minor Changes
 
 - [#185](https://github.com/agustinusnathaniel/xtarter/pull/185) [`1902457`](https://github.com/agustinusnathaniel/xtarter/commit/19024572866fa04acb6aa88a3eca84f282366320) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - CLIs now fail fast on invalid invocations instead of silently ignoring mistakes. Unknown commands and unknown options exit `1` before anything runs, with a suggested correction when one is close (`Unknown option --jsn for "xtarterize check". Did you mean --json?`). Typos in flags were previously dropped silently by the parser, so commands could run with defaults instead of what was requested.
-  
+
   Also ships the flags the agent-facing docs already promised but the parser never declared: `-y` aliases for `init`/`sync`/`restore` (`--yes`), and `--json` on `add`.
-  
+
   `@xtarterize/core` exports the reusable validation helpers (`validateInvocation`, `findUnknownFlags`, `findFirstPositionalIndex`, `suggestSimilar`) so downstream CLIs can share the same contract.
 
 ## 1.24.0
@@ -199,13 +190,13 @@
 ### Minor Changes
 
 - [#177](https://github.com/agustinusnathaniel/xtarter/pull/177) [`bc5552e`](https://github.com/agustinusnathaniel/xtarter/commit/bc5552e0c9273b4eba6cab95b1f19f059dcb609a) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Enforce file and function size limits via Biome and Oxlint
-  
+
   Adds 500-line file and 60-line function limits to generated configs. Biome uses skipBlankLines (skipComments unsupported in 2.5.9) while Oxlint uses both skipBlankLines and skipComments. Test files disable function limit. Refactors core apply pipeline, task factories, and CLI commands to comply with new limits.
 
 ### Patch Changes
 
 - [#180](https://github.com/agustinusnathaniel/xtarter/pull/180) [`bd98deb`](https://github.com/agustinusnathaniel/xtarter/commit/bd98deb09db09603055874823e6cd4a5ec3a31b7) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Validate query --limit and --threshold inputs
-  
+
   Fixes silent fallback when passing invalid values like `--limit abc` (previously returned 20 results without warning) or `--threshold 5` (previously clamped to 1). Now validates inputs and exits with an error message for non-numeric, negative, or out-of-range values.
 
 ## 1.23.4
@@ -225,7 +216,7 @@
 ### Patch Changes
 
 - [#164](https://github.com/agustinusnathaniel/xtarter/pull/164) [`4a510a6`](https://github.com/agustinusnathaniel/xtarter/commit/4a510a6c5b596a03a797f717db50e8fa78963ae4) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - fix: `add --all` JSON output no longer claims success when a task check fails
-  
+
   When a task's `check()` threw during `add --all --format json` (e.g. a misbehaving plugin task), the command set exit code 1 but still emitted `{"ok": true}` — the JSON `ok` field disagreed with the process exit code. Check failures are now collected into the reported errors, so `ok` is false and the errors array names the failed checks whenever any task check throws.
 
 ## 1.23.1
@@ -239,15 +230,14 @@
 ### Minor Changes
 
 - [#157](https://github.com/agustinusnathaniel/xtarter/pull/157) [`2522f04`](https://github.com/agustinusnathaniel/xtarter/commit/2522f04d302aa4b6f02b4830ded686c0a3909b56) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - feat: persist task selection in `.xtarterizerc`
-  
+
   `.xtarterizerc` (and the `"xtarterize"` key in `package.json`) now accepts
   `skip` and `only` arrays alongside `plugins`, giving every run a persisted
   default filter:
-  
   - `skip` — task IDs always excluded from runs.
   - `only` — when non-empty, restricts runs to these task IDs; an empty or
     absent list means no restriction.
-  
+
   CLI flags keep precedence over the config: `--only` replaces the config
   `only` list, while `--skip` extends the config `skip` list. A task listed
   in both `skip` and `only` is excluded (skip wins). Entries are trimmed,
@@ -256,10 +246,9 @@
   mode so stdout stays machine-readable.
 
 - [#155](https://github.com/agustinusnathaniel/xtarter/pull/155) [`af32df5`](https://github.com/agustinusnathaniel/xtarter/commit/af32df5ef8ab52c6e6023bf629908d282572836e) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - feat: emit machine-readable JSON from undo and restore
-  
+
   `undo` and `restore` now support `--json` (or `--format json`) and emit a
   single machine-readable result payload on stdout instead of human logs:
-  
   - `undo --json` — `{ ok, timestamp, restored, total, files, errors }`, plus
     `removed: <count>` when the run created files that undo deleted (created-by-
     run files have no backup, so removal is the correct pre-run restore).

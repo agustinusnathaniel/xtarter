@@ -17,7 +17,8 @@ import {
 import { Effect } from 'effect';
 
 import type { CliError, CliServices } from '@/runtime.js';
-import { type CommandSession, openSession } from '@/session.js';
+import type { CommandSession } from '@/session.js';
+import { openSession } from '@/session.js';
 import { displayPlan } from '@/ui/plan-display.js';
 import { Prompter } from '@/ui/prompter.js';
 import { selectTasks } from '@/ui/select-menu.js';

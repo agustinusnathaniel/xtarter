@@ -6,24 +6,24 @@ import {
   parseJsonc,
 } from '@xtarterize/patchers';
 
-import {
-  type DefinedTask,
-  defineTask,
-  type TargetPolicy,
-  type TaskTarget,
+import type {
+  DefinedTask,
+  TargetPolicy,
+  TaskTarget,
 } from '@/factory/define-task.js';
+import { defineTask } from '@/factory/define-task.js';
+import type { LintTaskOptions } from '@/lint/config-form.js';
 import {
   isManagedConfig,
-  type LintTaskOptions,
   lintTaskDeps,
   newConfigForm,
 } from '@/lint/config-form.js';
+import type { VitePlusBlockSpec } from '@/lint/vite-plus-config.js';
 import {
   classifyBlock,
   createVitePlusConfigTarget,
   usesVitePlusConfig,
   VITE_CONFIG_FILE,
-  type VitePlusBlockSpec,
 } from '@/lint/vite-plus-config.js';
 import {
   renderManagedOxfmtTsConfig,

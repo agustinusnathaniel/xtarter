@@ -33,16 +33,16 @@ npx create-xtarter-app@latest preview [template-name]   # Preview a template, or
 
 Parse the user's stack description to pick a template:
 
-| If the user says... | They want... | Pick |
-|--------------------|-------------|------|
-| "Next.js app" + "Chakra UI" | SSR framework + component lib | `next-chakra` |
-| "Next.js app" + "Tailwind" | SSR framework + utility CSS | `next-tailwind` |
-| "Vite SPA" + "Chakra UI" | Client SPA + component lib | `vite-chakra` |
-| "Vite SPA" + "Tailwind" | Client SPA + utility CSS | `vite-tailwind` |
-| "Next.js" (no UI lib) | SSR framework | Ask "Chakra UI or Tailwind?" |
-| "Vite" (no UI lib) | Client SPA | Ask "Chakra UI or Tailwind?" |
-| No framework preference | - | Ask "SSR/static (Next.js) or client SPA (Vite)?" |
-| No UI lib preference | - | Prompt for a template ID with `preview` (no args) |
+| If the user says...         | They want...                  | Pick                                              |
+| --------------------------- | ----------------------------- | ------------------------------------------------- |
+| "Next.js app" + "Chakra UI" | SSR framework + component lib | `next-chakra`                                     |
+| "Next.js app" + "Tailwind"  | SSR framework + utility CSS   | `next-tailwind`                                   |
+| "Vite SPA" + "Chakra UI"    | Client SPA + component lib    | `vite-chakra`                                     |
+| "Vite SPA" + "Tailwind"     | Client SPA + utility CSS      | `vite-tailwind`                                   |
+| "Next.js" (no UI lib)       | SSR framework                 | Ask "Chakra UI or Tailwind?"                      |
+| "Vite" (no UI lib)          | Client SPA                    | Ask "Chakra UI or Tailwind?"                      |
+| No framework preference     | -                             | Ask "SSR/static (Next.js) or client SPA (Vite)?"  |
+| No UI lib preference        | -                             | Prompt for a template ID with `preview` (no args) |
 
 ## CLI reference
 
@@ -50,20 +50,20 @@ Parse the user's stack description to pick a template:
 npx create-xtarter-app@latest [project-name] [options]
 ```
 
-| Flag | Short | Description |
-|------|-------|-------------|
-| `--template <name>` | `-t` | Template ID (skips prompt). **See reference below** |
-| `--pm <manager>` | `-p` | Package manager: `pnpm`, `npm`, `bun`, `yarn` |
-| `--git` / `--no-git` | | Git init is on by default; `--no-git` skips it |
-| `--clean` | | Remove supported CI/CD configuration files |
-| `--force` | `-f` | Overwrite a non-empty target directory |
-| `--ref <ref>` | | Download a branch, tag, or commit |
-| `--yes` | `-y` | Use defaults: pnpm, git init, no clean; without `--template`, uses `next-chakra` |
-| `--quiet` | | Suppress banners, spinners, and decorative output |
-| `--json` | | Output scaffold result as JSON (also suppresses banners/spinners) |
-| `--color` / `--no-color` | | Colorized output is on by default; `--no-color` disables it |
-| `--help` | `-h` | Show help |
-| `--version` | `-v` | Show version |
+| Flag                     | Short | Description                                                                      |
+| ------------------------ | ----- | -------------------------------------------------------------------------------- |
+| `--template <name>`      | `-t`  | Template ID (skips prompt). **See reference below**                              |
+| `--pm <manager>`         | `-p`  | Package manager: `pnpm`, `npm`, `bun`, `yarn`                                    |
+| `--git` / `--no-git`     |       | Git init is on by default; `--no-git` skips it                                   |
+| `--clean`                |       | Remove supported CI/CD configuration files                                       |
+| `--force`                | `-f`  | Overwrite a non-empty target directory                                           |
+| `--ref <ref>`            |       | Download a branch, tag, or commit                                                |
+| `--yes`                  | `-y`  | Use defaults: pnpm, git init, no clean; without `--template`, uses `next-chakra` |
+| `--quiet`                |       | Suppress banners, spinners, and decorative output                                |
+| `--json`                 |       | Output scaffold result as JSON (also suppresses banners/spinners)                |
+| `--color` / `--no-color` |       | Colorized output is on by default; `--no-color` disables it                      |
+| `--help`                 | `-h`  | Show help                                                                        |
+| `--version`              | `-v`  | Show version                                                                     |
 
 `--yes` skips selection prompts, but it does not provide a project name. Pass
 `[project-name]` for a fully non-interactive run.
@@ -112,14 +112,14 @@ npx create-xtarter-app@latest my-app --yes
 
 ## Error handling
 
-| Signal | Likely cause | Fix |
-|--------|-------------|-----|
-| `--template <name>` → "not found" | Wrong name | Run `preview` with no args, use exact ID |
-| "Directory exists and not empty" | Target has files | Choose different name or empty dir |
-| Download fails | Network | Templates are GitHub-hosted; check connectivity |
-| Git init fails | Git not installed | Use `--no-git` |
-| `--pm <name>` rejected | Invalid | Only `pnpm`, `npm`, `bun`, `yarn` |
-| Install hangs | Lockfile/registry issue | Run install manually in scaffolded dir |
+| Signal                            | Likely cause            | Fix                                             |
+| --------------------------------- | ----------------------- | ----------------------------------------------- |
+| `--template <name>` → "not found" | Wrong name              | Run `preview` with no args, use exact ID        |
+| "Directory exists and not empty"  | Target has files        | Choose different name or empty dir              |
+| Download fails                    | Network                 | Templates are GitHub-hosted; check connectivity |
+| Git init fails                    | Git not installed       | Use `--no-git`                                  |
+| `--pm <name>` rejected            | Invalid                 | Only `pnpm`, `npm`, `bun`, `yarn`               |
+| Install hangs                     | Lockfile/registry issue | Run install manually in scaffolded dir          |
 
 ## Anti-patterns
 

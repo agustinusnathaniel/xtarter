@@ -7,7 +7,8 @@ import {
 } from '@xtarterize/core';
 import { Cause, Effect, Exit, Layer } from 'effect';
 
-import { type PromptError, Prompter } from '@/ui/prompter.js';
+import type { PromptError } from '@/ui/prompter.js';
+import { Prompter } from '@/ui/prompter.js';
 
 /** The production wiring for every CLI command program. */
 export const AppLayer = Layer.mergeAll(

@@ -1,19 +1,19 @@
-import {
-  collectDependencyVersions,
-  type Framework,
-  type ProjectProfile,
-} from '@xtarterize/core';
+import type { Framework, ProjectProfile } from '@xtarterize/core';
+import { collectDependencyVersions } from '@xtarterize/core';
 import type { PackageJson } from 'pkg-types';
 
-import { defineTask, type TaskDep } from '@/factory/define-task.js';
+import type { TaskDep } from '@/factory/define-task.js';
+import { defineTask } from '@/factory/define-task.js';
 import { extractTool } from '@/factory/equivalence.js';
+import type {
+  ScriptEntry,
+  ScriptsMap,
+  ScriptsState,
+} from '@/factory/scripts.js';
 import {
   filterMissingScripts,
   hasInstalledDependency,
   readScriptsState,
-  type ScriptEntry,
-  type ScriptsMap,
-  type ScriptsState,
   toScriptsPatch,
 } from '@/factory/scripts.js';
 

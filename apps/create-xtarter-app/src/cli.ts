@@ -7,14 +7,8 @@ import {
   findFirstPositionalIndex,
   pc,
 } from '@xtarterize/core/plain';
-import {
-  type ArgsDef,
-  type CommandDef,
-  defineCommand,
-  runMain,
-  type SubCommandsDef,
-  showUsage,
-} from 'citty';
+import type { ArgsDef, CommandDef, SubCommandsDef } from 'citty';
+import { defineCommand, runMain, showUsage } from 'citty';
 
 import { APP_NAME, BANNER, DEFAULT_TEMPLATE, VERSION } from '@/constants';
 import { promptCleanCI, promptGitInit } from '@/prompts/options';

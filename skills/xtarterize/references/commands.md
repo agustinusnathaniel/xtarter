@@ -29,15 +29,15 @@ npx xtarterize init --json --only ts/strict   # Apply only specific tasks
 npx xtarterize init --json --compose "strict TypeScript with CI"  # Rank by relevance, then apply
 ```
 
-| Flag                  | Description                                                                                                    |
-| --------------------- | -------------------------------------------------------------------------------------------------------------- |
-| `--dry-run`           | Preview changes without applying                                                                               |
-| `--yes` / `-y`        | Skip all confirmations, apply all                                                                              |
-| `--skip <ids>`        | Exclude tasks (comma-separated IDs, e.g. `lint/biome,ts/strict`); skip wins over `--only`                      |
-| `--only <ids>`        | Apply only specific tasks (comma-separated). A non-empty CLI `--only` overrides a persisted `only` selection   |
-| `--include-conflicts` | Include conflicting tasks when applying                                                                        |
+| Flag                  | Description                                                                                                     |
+| --------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `--dry-run`           | Preview changes without applying                                                                                |
+| `--yes` / `-y`        | Skip all confirmations, apply all                                                                               |
+| `--skip <ids>`        | Exclude tasks (comma-separated IDs, e.g. `lint/biome,ts/strict`); skip wins over `--only`                       |
+| `--only <ids>`        | Apply only specific tasks (comma-separated). A non-empty CLI `--only` overrides a persisted `only` selection    |
+| `--include-conflicts` | Include conflicting tasks when applying                                                                         |
 | `--compose <query>`   | Natural language query to order the task plan by relevance (e.g. `"strict TypeScript with CI"`); unmatched last |
-| `--threshold <n>`     | Minimum relevance score for `--compose`, from 0 to 1 (default: `0.1`)                                          |
+| `--threshold <n>`     | Minimum relevance score for `--compose`, from 0 to 1 (default: `0.1`)                                           |
 
 Without `--yes`, opens an interactive menu (Apply all / Select tasks / Dry run / Quit). In CI or with `--yes`, applies all applicable non-conflicting tasks non-interactively.
 
@@ -74,9 +74,9 @@ npx xtarterize check --json --badge ./badges   # Write conformance.svg into a di
 npx xtarterize check --badge -                 # SVG to stdout (stderr with --json)
 ```
 
-| Flag             | Description                                                                                                     |
-| ---------------- | --------------------------------------------------------------------------------------------------------------- |
-| `--annotations`  | Emit GitHub Actions workflow command annotations (auto-enabled when `GITHUB_ACTIONS=true`)                      |
+| Flag             | Description                                                                                                                                                   |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `--annotations`  | Emit GitHub Actions workflow command annotations (auto-enabled when `GITHUB_ACTIONS=true`)                                                                    |
 | `--badge <path>` | Generate a conformance badge SVG at a file or directory path, or `-` for stdout. With `--json`, `-` writes the SVG to stderr so stdout stays machine-readable |
 
 Exits 1 unless every task is conformant and no diagnostic fails. Parse `tasks[].status` for non-conformant items (`"new"`, `"patch"`, `"conflict"`); `"skip"` means conformant.
@@ -93,10 +93,10 @@ npx xtarterize add ts/strict --json
 npx xtarterize add --all --json               # Apply all applicable new/patch tasks
 ```
 
-| Flag                  | Description                                                   |
-| --------------------- | ------------------------------------------------------------- |
-| `--all`               | Apply all applicable new and patch tasks without interaction  |
-| `--include-conflicts` | Apply conflicting tasks as well                               |
+| Flag                  | Description                                                  |
+| --------------------- | ------------------------------------------------------------ |
+| `--all`               | Apply all applicable new and patch tasks without interaction |
+| `--include-conflicts` | Apply conflicting tasks as well                              |
 
 **Before running, load `references/tasks.md` to find the exact task ID.**
 
@@ -189,7 +189,15 @@ Field names are stable agent contract; do not rename them.
 **Run commands** (`init`, `sync`, `add`):
 
 ```json
-{ "applied": 3, "errors": [], "ok": true, "skipped": 0, "taskId": "ts/strict", "status": "skip", "timing": { "detectionMs": 23, "resolutionMs": 14, "resolutionSumMs": 37 } }
+{
+  "applied": 3,
+  "errors": [],
+  "ok": true,
+  "skipped": 0,
+  "taskId": "ts/strict",
+  "status": "skip",
+  "timing": { "detectionMs": 23, "resolutionMs": 14, "resolutionSumMs": 37 }
+}
 ```
 
 For a single-task `add`, `taskId` is present and `status` is one of `new`, `patch`, `skip`, `conflict`, or `not-applicable`; `timing` appears only with `--timing`. `ok` is false when `errors` is non-empty (exit 1).
@@ -198,7 +206,24 @@ For a single-task `add`, `taskId` is present and `status` is one of `new`, `patc
 
 ```json
 {
-  "files": [{ "action": "modify", "after": "{ ...new content... }", "before": "{ ...existing content... }", "filepath": "tsconfig.json", "hunks": [{ "header": "@@ ... @@", "lines": ["-old", "+new"], "added": 1, "removed": 1 }], "semantic": { "added": { "compilerOptions.strict": "true" } }, "stats": { "added": 5, "removed": 2 } }],
+  "files": [
+    {
+      "action": "modify",
+      "after": "{ ...new content... }",
+      "before": "{ ...existing content... }",
+      "filepath": "tsconfig.json",
+      "hunks": [
+        {
+          "header": "@@ ... @@",
+          "lines": ["-old", "+new"],
+          "added": 1,
+          "removed": 1
+        }
+      ],
+      "semantic": { "added": { "compilerOptions.strict": "true" } },
+      "stats": { "added": 5, "removed": 2 }
+    }
+  ],
   "ok": false,
   "summary": { "total": 1, "stats": { "added": 5, "removed": 2 } }
 }

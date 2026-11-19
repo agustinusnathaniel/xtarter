@@ -1,6 +1,7 @@
 # ADR 002: Dependency Selection
 
 ## Status
+
 Accepted
 
 ## Context

@@ -3,18 +3,12 @@ import {
   resolveSkillsExecutor,
   skillsInstallTask,
 } from '@tasks/agent/skills-install.js';
-import {
-  type FixtureName,
-  fixtureDir,
-  fixtureProfile,
-} from '@test/helpers/project.js';
+import type { FixtureName } from '@test/helpers/project.js';
+import { fixtureDir, fixtureProfile } from '@test/helpers/project.js';
 import { recordingProcessRunner, run, runWith } from '@test/helpers/run.js';
 import { withSkillsProject } from '@test/helpers/skills-project.js';
-import {
-  detectProject,
-  type ProjectProfile,
-  planTasks,
-} from '@xtarterize/core';
+import type { ProjectProfile } from '@xtarterize/core';
+import { detectProject, planTasks } from '@xtarterize/core';
 import { Duration } from 'effect';
 import { beforeEach, describe, expect } from 'vite-plus/test';
 

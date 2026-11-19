@@ -1,6 +1,7 @@
 import type { CliServices } from '@xtarterize/app/runtime.js';
 import { runCliProgram } from '@xtarterize/app/runtime.js';
-import { Prompter, type PrompterShape } from '@xtarterize/app/ui/prompter.js';
+import type { PrompterShape } from '@xtarterize/app/ui/prompter.js';
+import { Prompter } from '@xtarterize/app/ui/prompter.js';
 import type {
   CommandResult,
   ProcessError,

@@ -1,4 +1,5 @@
-import { defineTask, type TargetPolicy } from '@/factory/define-task.js';
+import type { TargetPolicy } from '@/factory/define-task.js';
+import { defineTask } from '@/factory/define-task.js';
 import { renderCommitlintConfig } from '@/templates/commitlint-config.js';
 
 const CONFIG_CONVENTIONAL_EXTENDS = /['"]@commitlint\/config-conventional['"]/u;

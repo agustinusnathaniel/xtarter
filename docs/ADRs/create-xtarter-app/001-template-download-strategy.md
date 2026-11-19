@@ -1,6 +1,7 @@
 # ADR 001: Template Download Strategy
 
 ## Status
+
 Accepted
 
 ## Context

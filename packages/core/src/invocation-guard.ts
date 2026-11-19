@@ -1,6 +1,8 @@
-import { type CittyPlugin, defineCittyPlugin, type Resolvable } from 'citty';
+import type { CittyPlugin, Resolvable } from 'citty';
+import { defineCittyPlugin } from 'citty';
 
-import { type CliArgsDefinition, validateInvocation } from '@/cli-args.js';
+import type { CliArgsDefinition } from '@/cli-args.js';
+import { validateInvocation } from '@/cli-args.js';
 
 /**
  * Loaders returning each subcommand's definition. Typed structurally - the

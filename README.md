@@ -42,18 +42,18 @@ reported as conflicts for you to review.
 
 ## xtarterize Commands
 
-| Command                         | Description                                              |
-| ------------------------------- | -------------------------------------------------------- |
-| `npx xtarterize init`           | Initialize xtarterize conformance for a project          |
-| `npx xtarterize query <query>`  | Search tasks by natural language query                   |
-| `npx xtarterize sync`           | Update existing configurations to latest conformance     |
-| `npx xtarterize diff`           | Show pending changes without applying                    |
-| `npx xtarterize check`          | Audit current conformance status                         |
-| `npx xtarterize doctor`         | Run environment and project diagnostics                  |
-| `npx xtarterize add [task]`     | Add a specific task (or pick interactively)              |
-| `npx xtarterize restore <file>` | Restore a file from backup                               |
+| Command                         | Description                                               |
+| ------------------------------- | --------------------------------------------------------- |
+| `npx xtarterize init`           | Initialize xtarterize conformance for a project           |
+| `npx xtarterize query <query>`  | Search tasks by natural language query                    |
+| `npx xtarterize sync`           | Update existing configurations to latest conformance      |
+| `npx xtarterize diff`           | Show pending changes without applying                     |
+| `npx xtarterize check`          | Audit current conformance status                          |
+| `npx xtarterize doctor`         | Run environment and project diagnostics                   |
+| `npx xtarterize add [task]`     | Add a specific task (or pick interactively)               |
+| `npx xtarterize restore <file>` | Restore a file from backup                                |
 | `npx xtarterize undo`           | Undo the last xtarterize run by restoring backed-up files |
-| `npx xtarterize list`           | List all available tasks                                 |
+| `npx xtarterize list`           | List all available tasks                                  |
 
 ## How xtarterize Works
 
@@ -104,9 +104,9 @@ xtarterize/
 
 | Package                | Description                                                                    | Publishable |
 | ---------------------- | ------------------------------------------------------------------------------ | ----------- |
-| `@xtarter/config`      | Biome, Oxlint, and Oxfmt configs: Ultracite plus the xtarter rule layer       | Yes         |
+| `@xtarter/config`      | Biome, Oxlint, and Oxfmt configs: Ultracite plus the xtarter rule layer        | Yes         |
 | `@xtarterize/core`     | Project detection, task interface, file utilities, resolve/apply/backup engine | Internal    |
-| `@xtarterize/patchers` | Deep JSON merge (defu), AST patching (magicast) for config files                | Internal    |
+| `@xtarterize/patchers` | Deep JSON merge (defu), AST patching (magicast) for config files               | Internal    |
 | `@xtarterize/tasks`    | All task implementations and template renderers                                | Internal    |
 | `xtarterize`           | CLI for applying conformance configurations to existing projects               | Yes         |
 | `create-xtarter-app`   | CLI for scaffolding new projects from templates                                | Yes         |

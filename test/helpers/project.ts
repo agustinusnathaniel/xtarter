@@ -2,7 +2,8 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { withTempDir } from '@test/helpers/temp.js';
-import { detectProject, type ProjectProfile } from '@xtarterize/core';
+import type { ProjectProfile } from '@xtarterize/core';
+import { detectProject } from '@xtarterize/core';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 

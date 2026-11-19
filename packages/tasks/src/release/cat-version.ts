@@ -1,6 +1,7 @@
 import { fileExists, resolvePath } from '@xtarterize/core';
 
-import { defineTask, type TargetPolicy } from '@/factory/define-task.js';
+import type { TargetPolicy } from '@/factory/define-task.js';
+import { defineTask } from '@/factory/define-task.js';
 import {
   hasInstalledDependency,
   resolveScriptsResolution,

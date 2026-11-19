@@ -126,6 +126,19 @@
   "overrides": [
     {
       "includes": [
+        "packages/core/src/errors.ts",
+        "apps/xtarterize/src/ui/prompter.ts"
+      ],
+      "linter": {
+        "rules": {
+          "style": {
+            "noExcessiveClassesPerFile": "off"
+          }
+        }
+      }
+    },
+    {
+      "includes": [
         "packages/*/src/**",
         "apps/*/src/**",
         "test/**",

@@ -1,4 +1,5 @@
-import { defineTask, type TargetPolicy } from '@/factory/define-task.js';
+import type { TargetPolicy } from '@/factory/define-task.js';
+import { defineTask } from '@/factory/define-task.js';
 import { renderReleaseWorkflow } from '@/templates/workflows/release-yml.js';
 
 function hasReleaseJob(content: string): boolean {

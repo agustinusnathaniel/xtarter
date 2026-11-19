@@ -29,6 +29,7 @@ Publish `@xtarter/config`, a plain-data package with one entry per tool and per 
 
 - Direct users get new error-level rules in minor releases, so each such release names those rules in its changelog. An Ultracite upgrade inside the package counts as a rule change.
 - Oxlint's JSON config format cannot extend npm packages, so the shared Oxlint entry works only from a TypeScript or JavaScript Oxlint config.
+- Amended 2026-11-19: an Oxlint entry whose Ultracite preset loads JS plugins (`anti-slop`, `gdp`, `js-plugins`, `landmines`, `shadcn`) also exports that preset's `jsPlugins`. Oxlint loads plugins through `extends` regardless, but Knip reads `jsPlugins` only from the root config, so consumers repeat them there. These layers stay opt-in: xtarterize never selects them, because each needs a slower JS-plugin pass and most need a plugin package the project installs itself.
 
 ## Alternatives
 

@@ -7,7 +7,8 @@ import type { CliError, CliServices } from '@/runtime.js';
 import type { CommandSession, SessionTaskOutcome } from '@/session.js';
 import { displayDiffs } from '@/ui/diff-display.js';
 import { mergeFileDiffs } from '@/ui/merge-file-diffs.js';
-import { type PromptError, Prompter } from '@/ui/prompter.js';
+import type { PromptError } from '@/ui/prompter.js';
+import { Prompter } from '@/ui/prompter.js';
 import { refineTaskChoices } from '@/ui/task-choices.js';
 
 function reportMissingTask(options: {

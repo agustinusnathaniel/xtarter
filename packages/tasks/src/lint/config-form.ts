@@ -1,5 +1,6 @@
 import { sharedConfigPackage } from '@xtarter/config';
-import { fileExists, type ProjectProfile, readFile } from '@xtarterize/core';
+import type { ProjectProfile } from '@xtarterize/core';
+import { fileExists, readFile } from '@xtarterize/core';
 
 import type { DepResolver, TaskDep } from '@/factory/define-task.js';
 import { resolveTaskFile } from '@/factory/utils.js';

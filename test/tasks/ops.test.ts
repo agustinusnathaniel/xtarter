@@ -4,7 +4,8 @@ import { defineTask } from '@tasks/factory/define-task.js';
 import { writeTaskDiffs } from '@tasks/factory/ops.js';
 import { run } from '@test/helpers/run.js';
 import { withTempDir } from '@test/helpers/temp.js';
-import { type ProjectProfile, TaskError } from '@xtarterize/core';
+import type { ProjectProfile } from '@xtarterize/core';
+import { TaskError } from '@xtarterize/core';
 import { Effect } from 'effect';
 import { describe, expect } from 'vite-plus/test';
 

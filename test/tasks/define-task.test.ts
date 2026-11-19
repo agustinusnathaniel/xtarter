@@ -1,9 +1,7 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
-import {
-  defineTask,
-  type TargetPolicyInput,
-} from '@tasks/factory/define-task.js';
+import type { TargetPolicyInput } from '@tasks/factory/define-task.js';
+import { defineTask } from '@tasks/factory/define-task.js';
 import { withProject } from '@test/helpers/project.js';
 import { run } from '@test/helpers/run.js';
 import { planTasks } from '@xtarterize/core';

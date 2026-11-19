@@ -17,7 +17,8 @@ import {
 } from '@xtarterize/core';
 import { Duration, Effect } from 'effect';
 
-import { getSkillsToInstall, type SkillEntry } from '@/agent/catalog.js';
+import type { SkillEntry } from '@/agent/catalog.js';
+import { getSkillsToInstall } from '@/agent/catalog.js';
 import { defineTask } from '@/factory/define-task.js';
 
 const SKILLS_PACKAGE = 'skills@latest';

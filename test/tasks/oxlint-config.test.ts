@@ -10,8 +10,8 @@ import {
   oxfmtTask,
   oxlintTask,
 } from '@tasks/lint/oxlint.js';
+import type { FixtureName } from '@test/helpers/project.js';
 import {
-  type FixtureName,
   fixtureDir,
   fixtureProfile,
   withProject,

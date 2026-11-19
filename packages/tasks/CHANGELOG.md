@@ -25,14 +25,14 @@
 ### Patch Changes
 
 - [#224](https://github.com/agustinusnathaniel/xtarter/pull/224) [`9ced66a`](https://github.com/agustinusnathaniel/xtarter/commit/9ced66ab478fececa13428153cd4436919c1edf9) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Install dependencies once in generated pnpm CI
-  
+
   `pnpm/setup` already runs `pnpm install`, so generated CI, release, and
   auto-update workflows installed dependencies twice for pnpm projects. There is
   now a single install, and the setup action moves to `v3`.
-  
+
   Generated pnpm CI also fails when a project has no `pnpm-lock.yaml`, instead of
   resolving from the registry and writing one on the fly.
-  
+
   Re-run `sync` to update an existing project.
 - Updated dependencies []:
   - @xtarterize/core@2.0.4
@@ -51,13 +51,13 @@
 ### Patch Changes
 
 - [#213](https://github.com/agustinusnathaniel/xtarter/pull/213) [`5304a97`](https://github.com/agustinusnathaniel/xtarter/commit/5304a97dfea81fca852011d47aa8ecc0309d530f) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Generate workflows with pnpm/setup@v2
-  
+
   Newly applied CI and release workflows now install pnpm with `pnpm/setup@v2`
   instead of `v1`. Existing projects pick up the bump on the shared setup step
   when re-running `apply`; workflow behavior is otherwise unchanged.
 
 - [#213](https://github.com/agustinusnathaniel/xtarter/pull/213) [`5304a97`](https://github.com/agustinusnathaniel/xtarter/commit/5304a97dfea81fca852011d47aa8ecc0309d530f) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Enforce function line limits in scaffolded test files
-  
+
   The generated `biome.json` no longer disables
   `complexity/noExcessiveLinesPerFunction` for test globs, so `*.test.*` and
   `*.spec.*` files in newly conformed projects follow the same 60-line function
@@ -73,11 +73,11 @@
 ### Patch Changes
 
 - [#202](https://github.com/agustinusnathaniel/xtarter/pull/202) [`ad4781e`](https://github.com/agustinusnathaniel/xtarter/commit/ad4781e2154dcab523e8806b316021f22b5a9e9a) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Restore task search recall for related words
-  
+
   `query` and `init --compose` find tasks from related phrasings again: `typing`
   reaches strict TypeScript, `updates` the dependency updater, and `code` the VS
   Code task. Multi-word queries like `auto update` rank the exact phrase first.
-  
+
   A 33-query check went from 83 results (0.580 mean top-1 relevance) to 168
   (0.834), near the 191 and 0.783 before 2.0.0. Alias hits are discounted; direct
   hits win. See ADR 039. Patch: no command, dependency, or config change.
@@ -90,11 +90,10 @@
 ### Patch Changes
 
 - [#199](https://github.com/agustinusnathaniel/xtarter/pull/199) [`1bc9c41`](https://github.com/agustinusnathaniel/xtarter/commit/1bc9c41ef5b9052e531f9056d83835cd87c57ad5) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Re-adopt Effect as the CLI orchestration layer
-  
+
   Internal architecture change recorded in ADR 036. `@xtarterize/core` and
   `@xtarterize/tasks` now return `Effect` values, and the `xtarterize` CLI runs
   each command program through a single Effect runtime edge.
-  
   - Failures use typed tagged errors (`TaskError`, `DepsInstallError`,
     `ProcessError`, `BackupError`, `FileSystemError`) with the same message text
     as before.
@@ -107,7 +106,7 @@
   - Observable CLI behavior and generated files are unchanged.
 
 - [#199](https://github.com/agustinusnathaniel/xtarter/pull/199) [`a9301da`](https://github.com/agustinusnathaniel/xtarter/commit/a9301da8eeaba1b58adb6971917b1e91cd712442) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Run the skills install through the project's package manager
-  
+
   `agent/skills-install` now selects the dlx executor that matches the detected
   package manager: `pnpm dlx`, `yarn dlx` for Yarn Berry projects, and `bunx`,
   while npm keeps `npx --yes`. npm 11 rejects `npx` when
@@ -124,7 +123,7 @@
 ### Patch Changes
 
 - [#193](https://github.com/agustinusnathaniel/xtarter/pull/193) [`4bcf794`](https://github.com/agustinusnathaniel/xtarter/commit/4bcf7941d140cd7f5cdc60d8e1ba063b3393f57a) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Preserve existing `pnpm-workspace.yaml` content in the workspace task
-  
+
   The `workspace/pnpm-workspace` task now patches an existing `packages:` list
   in place instead of replacing the file with a fixed template. Only missing
   `apps/*` and `packages/*` entries are inserted; comments, `catalog:`,
@@ -136,21 +135,18 @@
   rewritten.
 
 - [#193](https://github.com/agustinusnathaniel/xtarter/pull/193) [`8e0518f`](https://github.com/agustinusnathaniel/xtarter/commit/8e0518fcfe91f1b82e0fa84a32ad3985a739e7c0) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Trim repeated task and CLI plumbing without changing generated output
-  
   - The skill catalog groups entries behind `skillsFor`/`alwaysSkills`; the expanded catalog, entry order, sources, and conditions are unchanged.
   - `readPackageJson` is imported from core directly instead of a pass-through wrapper, and the skills task uses one static `node:fs/promises` import.
   - CLI commands report outcomes through `CommandSession.reportOutcome`, and interactive `add` executes its confirmed selection through `session.apply`; messages, exit codes, backups, and manifests are unchanged.
   - `create-xtarter-app` inlines its JSON result formatting, and merged diffs use core's `isJsonFile` predicate.
 
 - [#193](https://github.com/agustinusnathaniel/xtarter/pull/193) [`affac6f`](https://github.com/agustinusnathaniel/xtarter/commit/affac6fd8a3d9a6dcbd88b04786ed6a94dfb9f95) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Remove dead exports and unused internal APIs from the maintained packages
-  
   - Removed the `applyTasks` wrapper from core, so callers compose `planTasks` and `executePlan` directly, and consolidated the duplicate CLI invocation guard into `createInvocationGuard`.
   - Removed the YAML patcher (`mergeYaml`/`parseYaml`) and the filesystem `injectVitePlugin`; `injectVitePluginIntoCode` is the single in-memory entry point.
   - Dropped the unused `js-yaml` dependencies from the patchers package and the bundled CLI, so the `xtarterize` binary no longer inlines them.
   - CLI behavior and generated configurations are unchanged.
 
 - [#198](https://github.com/agustinusnathaniel/xtarter/pull/198) [`66512f1`](https://github.com/agustinusnathaniel/xtarter/commit/66512f139b863769400deaddf3186da5eed3c4e0) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Fix script equivalence, Turbo detection, and patcher exports
-  
   - `turborepo run` is no longer treated as equivalent to `turbo run`; composite equivalence requires an extractable task list.
   - Non-string script values in `package.json` are ignored instead of being coerced.
   - Turbo detection checks both `dependencies` and `devDependencies`, and `check:turbo` recognizes renamed `typecheck`/`test` scripts through tool mapping.
@@ -172,7 +168,6 @@
 ### Patch Changes
 
 - [#187](https://github.com/agustinusnathaniel/xtarter/pull/187) [`eb190d0`](https://github.com/agustinusnathaniel/xtarter/commit/eb190d0ff69c9d1ae9d6ab23eb22d7836dbad10e) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Fix stale entries in the skill catalog (`packages/tasks/src/agent/catalog.ts`) so `xtarterize` scaffolds install skills that actually exist upstream:
-  
   - `expo/skills`: replace 5 renamed skills (`expo-cicd-workflows` → `eas-workflows`, `expo-deployment` → `eas-app-stores`, `building-native-ui` → `expo-native-ui`, `native-data-fetching` → `expo-data-fetching`, `upgrading-expo` → `expo-upgrade`) and drop `expo-tailwind-setup`, which has no upstream equivalent.
   - Add `expo-overview` (gated on an `expo` bundler/dependency, per upstream guidance that bare React Native is not Expo work), `expo-router`, and `eas-update` for Expo projects.
   - `mattpocock/skills`: `writing-great-skills` → `writing-for-agents` (old skill removed upstream).
@@ -187,7 +182,7 @@
 ### Minor Changes
 
 - [#177](https://github.com/agustinusnathaniel/xtarter/pull/177) [`bc5552e`](https://github.com/agustinusnathaniel/xtarter/commit/bc5552e0c9273b4eba6cab95b1f19f059dcb609a) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Enforce file and function size limits via Biome and Oxlint
-  
+
   Adds 500-line file and 60-line function limits to generated configs. Biome uses skipBlankLines (skipComments unsupported in 2.5.9) while Oxlint uses both skipBlankLines and skipComments. Test files disable function limit. Refactors core apply pipeline, task factories, and CLI commands to comply with new limits.
 
 ### Patch Changes
@@ -325,7 +320,6 @@
 ### Minor Changes
 
 - [#88](https://github.com/agustinusnathaniel/xtarter/pull/88) [`b916204`](https://github.com/agustinusnathaniel/xtarter/commit/b916204b790fa85e2e7919be24df960d05439f30) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - feat: enhance TypeScript strict config, add new tasks, extend git hooks, improve VSCode settings
-
   - ts/strict: now manages noUnusedLocals, noUnusedParameters, verbatimModuleSyntax alongside strict
   - quality/package-engines: add devEngines field to package.json
   - workspace/pnpm-workspace: generate pnpm-workspace.yaml for pnpm projects
@@ -382,7 +376,6 @@
 - [#75](https://github.com/agustinusnathaniel/xtarter/pull/75) [`be651f3`](https://github.com/agustinusnathaniel/xtarter/commit/be651f3aa5e6bac9098fc145fd0a3651f7b4fbbb) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - feat: add natural language task query engine with `query` command and `init --compose`
 
   New features:
-
   - `xtarterize query <query>` - search and discover tasks using natural language with a pure-algorithmic scoring engine
   - `xtarterize init --compose <query>` - compose a targeted task plan by ranking tasks by relevance
   - Task metadata enrichment: new optional `searchMeta` field on the Task interface with `tags`, `configTargets`, and `keywords` supports richer search results
@@ -406,7 +399,6 @@
 - [#73](https://github.com/agustinusnathaniel/xtarter/pull/73) [`aec3c0a`](https://github.com/agustinusnathaniel/xtarter/commit/aec3c0a4d289c5984183d738d99727555b84c602) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Refactor task resolution with TaskScope system for monorepo-aware task filtering
 
   Introduces a `TaskScope` type (`'root' | 'package' | 'both'`) that each task can declare. When running in a monorepo:
-
   - **Root-scoped tasks** (CI/CD, release tooling, turbo, renovate, editor config, npmrc, gitignore, package scripts) are excluded when running inside a workspace package.
   - **Package-scoped tasks** (tsconfig path aliases, vite-plugin-checker, rollup-plugin-visualizer) are excluded when running from the monorepo root.
   - Tasks without explicit scope (or with `scope: 'both'`) are included everywhere, preserving backward compatibility.
@@ -467,7 +459,6 @@
 ### Patch Changes
 
 - [`c637a36`](https://github.com/agustinusnathaniel/xtarter/commit/c637a3686e1c32e5a0cb658c2030201dcb5c32b1) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Edge-case hardening across CLI, core, tasks, and UI layers:
-
   - **CLI** - try/catch guards on `init`, `sync`, `diff`, `add`, `doctor`, and `restore` prevent crashes from individual task failures; `--skip`/`--only` no longer matches phantom empty-string values; `doctor` uses `Promise.allSettled` for resilient diagnostics
   - **Core** - robust atomic writes with temp file cleanup on failure; schema validation guards against corrupted cache entries; fixed React Native + React co-detection; skipped count now correctly tracks explicit skips from check phase
   - **Tasks** - fixed `this.getScripts` undefined crash in `packageScriptsTask`; `commitMsgHook` accepts a package manager parameter instead of hardcoding pnpm; corrected `check()` status detection for `conflict` vs `new`
@@ -491,7 +482,6 @@
 ### Patch Changes
 
 - [#59](https://github.com/agustinusnathaniel/xtarter/pull/59) [`07caf22`](https://github.com/agustinusnathaniel/xtarter/commit/07caf22d6eca92bbae24c43c4a08314f846b2c59) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Remove editorconfig, nvmrc, and agent/skills tasks; simplify AGENTS.md to minimal root; make plop framework-aware
-
   - Drop `editor/editorconfig` - redundant with linters + VSCode settings
   - Drop `scripts/nvmrc` - `lts/*` too vague to be meaningful
   - Drop `agent/skills` - not a real skill structure, duplicated AGENTS.md content
@@ -526,7 +516,6 @@
 
   Adds 6 general-purpose skills to the `SKILL_CATALOG` that are always
   applicable to any TypeScript project:
-
   - `opensrc` (vercel-labs/opensrc)
   - `grill-me` (mattpocock/skills)
   - `handoff` (mattpocock/skills)
@@ -568,7 +557,6 @@
 
   Rather than making every function return `Effect<A, E>` (which would require
   all callers to understand Effect), we apply Effect at two levels:
-
   1. **Internal composition** - async workflows use `Effect.gen` + `yield*`,
      `Effect.all` for concurrency, and `Effect.tryPromise` with typed error
      handlers. This gives us structured error handling without changing
@@ -580,7 +568,6 @@
   **What changed (26 files, +1857/-1571):**
 
   Tagged errors and Effect composition:
-
   - `packages/core/src/errors.ts` (new) - consolidated `Data.TaggedError`
     types: `FileSystemError` (read/write/parse failures), `BackupError`
     (backup operations), `TaskError` (task check/apply failures)
@@ -605,7 +592,6 @@
     with `Equal.equals` from Effect
 
   Reducing Effect ceremony:
-
   - `packages/tasks/src/factory/ops.ts` - added `wrapTask(taskId, method, fn)`
     internal helper collapsing the 6-line `Effect.runPromise(Effect.tryPromise)`
     pattern into 1 line
@@ -617,7 +603,6 @@
     removed `Effect` import, fixed hardcoded task IDs in error metadata
 
   **Trade-offs.**
-
   - Added Effect v4 beta as a dependency (~44 MB install size, 10 transitive
     deps). Beta stability risk is mitigated by pinning the exact version in
     `pnpm-workspace.yaml` catalog.
@@ -697,7 +682,6 @@
 - [`f1069d6`](https://github.com/agustinusnathaniel/xtarter/commit/f1069d6bea26aabece3ed030303642e1d3f14693) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - refactor: enrich oxlint and biome config templates with additional lint rules
 
   Add non-recommended rules mapped from typical ESLint configs:
-
   - Oxlint: max-params, eqeqeq, prefer-const, no-var, prefer-template, no-shadow, consistent-type-definitions, array-type, react rules, vitest overrides, unicorn relaxations, import rules
   - Biome: noExcessiveCognitiveComplexity, useMaxParams, useConsistentTypeDefinitions, useConsistentTestIt overrides
 
@@ -712,7 +696,6 @@
 - [#31](https://github.com/agustinusnathaniel/xtarter/pull/31) [`76953e4`](https://github.com/agustinusnathaniel/xtarter/commit/76953e423f4e0c652251f6a9c4d5b3eeefa6e9b7) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - feat: add oxlint and oxfmt support with Vite+ auto-detection
 
   When Vite+ is detected, xtarterize now configures oxlint/oxfmt (via `vp`) instead of Biome as the default linting/formatting stack:
-
   - **Scripts**: `vp lint` / `vp check` / `vp check --fix` for Vite+ projects (instead of `biome check .` / `biome check --write .`)
   - **Config**: `.oxlintrc.json` (with `consistent-type-imports`, `import/order`, `no-console` rules) and `.oxfmtrc.json` for Vite+ projects
   - **Standalone oxlint**: Direct `oxlint`/`oxfmt` commands when oxlint/oxfmt config exists without Vite+
@@ -814,7 +797,6 @@
 ### Minor Changes
 
 - [`82e1d9f`](https://github.com/agustinusnathaniel/xtarterize/commit/82e1d9f24fd223a8f3c15c0b516c89fe5537c105) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Improve script merging and task architecture
-
   - Enhance script merging logic with better conflict resolution
   - Improve task architecture for better maintainability
   - Add tests for scripts and codegen tasks
@@ -833,13 +815,11 @@
 ### Patch Changes
 
 - [`82e1d9f`](https://github.com/agustinusnathaniel/xtarterize/commit/82e1d9f24fd223a8f3c15c0b516c89fe5537c105) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Add ADR for pragmatic script merge strategy
-
   - Document the decision to use data-driven equivalence rules
   - Explain the factory consolidation approach
   - Provide rationale for script merging architecture
 
 - [`890eab5`](https://github.com/agustinusnathaniel/xtarterize/commit/890eab57054e0b953cb42ba0884e0b2c6770bc82) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Fix TypeScript build error for type imports
-
   - Add `type` modifier to `PackageScriptsMap` import in `factory/index.ts`
   - Fixes: `"PackageScriptsMap" is not exported` build error with tsdown/rolldown
 
@@ -949,7 +929,6 @@
 - [`ccd9287`](https://github.com/agustinusnathaniel/xtarterize/commit/ccd9287afd967ed1ea0ef0c64b4a4a468e95b550) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - feat: add `patchJson` for surgical JSON text edits using `jsonc-parser`
 
   Replaced `JSON.stringify(mergeJson(...), null, 2)` with `patchJson`, which performs byte-level text edits via Microsoft's [`jsonc-parser`](https://github.com/microsoft/node-jsonc-parser). This preserves:
-
   - Comments (`// inline` and `/* block */`)
   - Key ordering
   - Whitespace and indentation style
@@ -974,7 +953,6 @@
 ### Patch Changes
 
 - [`ccd9287`](https://github.com/agustinusnathaniel/xtarterize/commit/ccd9287afd967ed1ea0ef0c64b4a4a468e95b550) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - fix: `renovateTask` and `biomeTask` extends handling
-
   - Converted `renovateTask` from `createSimpleFileTask` to `createJsonMergeTask` so it properly deep-merges with existing `renovate.json` / `renovate.json5` configs instead of conflicting when the file already exists
   - Fixed `biomeTask` to handle string-form `extends` values (e.g., `"extends": "ultracite"`) in addition to arrays
   - Added `checkFn` to `renovateTask` for proper `skip` detection when the config already matches
@@ -984,7 +962,6 @@
   `resolveTaskFile` used `filepath.replace(/\.[^.]+$/, '')` which stripped the `.config` suffix from names like `commitlint.config.ts`, causing the file finder to search for `commitlint.ts` instead of `commitlint.config.ts`. The logic now checks whether the existing extension is in the allowed list before stripping, and falls back to searching with the full filename.
 
 - [`5b93cc4`](https://github.com/agustinusnathaniel/xtarterize/commit/5b93cc443fbe95d6ec777daa1f47e4520e25f3e1) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - chore: update dependencies to latest safe versions
-
   - `@clack/prompts` ^1.2.0 → ^1.3.0
   - `astro` ^6.1.10 → ^6.2.1
   - `sharp` ^0.34.3 → ^0.34.5
