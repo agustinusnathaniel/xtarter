@@ -1,6 +1,10 @@
 import { logWarn } from '@xtarterize/core';
 import { Effect } from 'effect';
 
+import type {
+  RunInteractiveOptions,
+  TaskWithStatus,
+} from '@/commands/add/types.js';
 import type { CliError, CliServices } from '@/runtime.js';
 import type { CommandSession } from '@/session.js';
 import { displayDiffs } from '@/ui/diff-display.js';
@@ -9,8 +13,6 @@ import { Prompter } from '@/ui/prompter.js';
 import { selectTasksGrouped } from '@/ui/select-menu.js';
 import { refineTaskChoices } from '@/ui/task-choices.js';
 import { isActionableStatus } from '@/utils/display.js';
-
-import type { RunInteractiveOptions, TaskWithStatus } from './types.js';
 
 function confirmSelected(options: {
   includeConflicts: boolean;

@@ -2,7 +2,7 @@ import {
   DEPS,
   defineScriptCases,
   scriptPkg,
-} from './package-scripts-runner.js';
+} from '@test/tasks/package-scripts-runner.js';
 
 /**
  * Edge cases for `packageScriptsTask`, formerly

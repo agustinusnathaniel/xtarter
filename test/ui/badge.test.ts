@@ -1,6 +1,5 @@
+import { generateBadgeSvg } from '@xtarterize/app/ui/badge.js';
 import { describe, expect } from 'vite-plus/test';
-
-import { generateBadgeSvg } from '../../apps/xtarterize/src/ui/badge.js';
 
 describe('generateBadgeSvg', () => {
   test('generates valid SVG with 100% conformance', () => {

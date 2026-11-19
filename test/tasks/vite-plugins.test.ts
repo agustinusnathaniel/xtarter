@@ -1,10 +1,9 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { viteCheckerTask } from '@tasks/vite/checker.js';
 import { fixtureProfile, withProject } from '@test/helpers/project.js';
 import { run } from '@test/helpers/run.js';
 import { describe, expect } from 'vite-plus/test';
-
-import { viteCheckerTask } from '../../packages/tasks/src/vite/checker.js';
 
 describe('viteCheckerTask', () => {
   test('is applicable to vite projects only', async () => {

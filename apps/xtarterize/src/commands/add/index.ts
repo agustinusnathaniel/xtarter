@@ -1,6 +1,8 @@
 import { logWarn } from '@xtarterize/core';
 import { Effect } from 'effect';
 
+import { runInteractive } from '@/commands/add/interactive.js';
+import { runSingleTask } from '@/commands/add/single-task.js';
 import { cliCommand } from '@/commands/command.js';
 import {
   type RunCommandArgs,
@@ -15,9 +17,6 @@ import {
   includeConflictsArg,
   timingArg,
 } from '@/utils/args.js';
-
-import { runInteractive } from './interactive.js';
-import { runSingleTask } from './single-task.js';
 
 export const addCommand = cliCommand({
   args: {

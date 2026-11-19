@@ -4,7 +4,7 @@ import type { PackageJson } from 'pkg-types';
 import {
   hasScriptWithEquivalentValue,
   type PackageScriptsMap,
-} from './equivalence.js';
+} from '@/factory/equivalence.js';
 
 export interface ScriptEntry {
   script: string;

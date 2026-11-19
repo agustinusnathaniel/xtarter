@@ -5,7 +5,7 @@ import {
   conditionalScriptStep,
   createSetupSteps,
   renderSteps,
-} from './shared/workflow.js';
+} from '@/templates/workflows/shared/workflow.js';
 
 export function renderCiWorkflow(profile: ProjectProfile): string {
   const pm = profile.packageManager;

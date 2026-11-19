@@ -1,14 +1,13 @@
-import { describe } from 'vite-plus/test';
-
 import {
   packageScriptsCases,
   packageScriptsPlopCases,
-} from './package-scripts-cases.js';
+} from '@test/tasks/package-scripts-cases.js';
 import {
   packageScriptsEdgeCases,
   packageScriptsPragmaticCases,
-} from './package-scripts-edge-cases.js';
-import { runScriptCases } from './package-scripts-runner.js';
+} from '@test/tasks/package-scripts-edge-cases.js';
+import { runScriptCases } from '@test/tasks/package-scripts-runner.js';
+import { describe } from 'vite-plus/test';
 
 describe('packageScriptsTask', () => {
   runScriptCases(packageScriptsCases);

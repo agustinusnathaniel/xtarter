@@ -1,8 +1,7 @@
 import { captureConsole } from '@test/helpers/console.js';
+import { displayDiffs } from '@xtarterize/app/ui/diff-display.js';
 import type { FileDiff } from '@xtarterize/core';
 import { describe, expect } from 'vite-plus/test';
-
-import { displayDiffs } from '../../apps/xtarterize/src/ui/diff-display.js';
 
 function makeDiff(overrides: Partial<FileDiff> = {}): FileDiff {
   return {

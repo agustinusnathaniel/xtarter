@@ -2,14 +2,13 @@ import type { Task, TaskStatus } from '@xtarterize/core';
 import { logInfo, statusTag } from '@xtarterize/core';
 import { Effect } from 'effect';
 
+import type { RunSingleTaskOptions } from '@/commands/add/types.js';
 import type { CliError, CliServices } from '@/runtime.js';
 import type { CommandSession, SessionTaskOutcome } from '@/session.js';
 import { displayDiffs } from '@/ui/diff-display.js';
 import { mergeFileDiffs } from '@/ui/merge-file-diffs.js';
 import { type PromptError, Prompter } from '@/ui/prompter.js';
 import { refineTaskChoices } from '@/ui/task-choices.js';
-
-import type { RunSingleTaskOptions } from './types.js';
 
 function reportMissingTask(options: {
   allTasks: Array<Task>;

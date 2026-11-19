@@ -125,6 +125,31 @@
   },
   "overrides": [
     {
+      "includes": [
+        "packages/*/src/**",
+        "apps/*/src/**",
+        "test/**",
+        "!test/fixtures/**"
+      ],
+      "linter": {
+        "rules": {
+          "style": {
+            "noRestrictedImports": {
+              "level": "error",
+              "options": {
+                "patterns": [
+                  {
+                    "group": ["./**", "../**"],
+                    "message": "Import through a path alias instead: `@/` inside a package or app, or the root tsconfig aliases from test/."
+                  }
+                ]
+              }
+            }
+          }
+        }
+      }
+    },
+    {
       "includes": ["test/**"],
       "linter": {
         "rules": {

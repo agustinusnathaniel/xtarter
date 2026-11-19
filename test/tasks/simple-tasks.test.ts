@@ -1,3 +1,5 @@
+import { npmrcTask } from '@tasks/npmrc.js';
+import { lintStagedTask } from '@tasks/quality/lint-staged.js';
 import {
   fixtureDir,
   fixtureProfile,
@@ -5,9 +7,6 @@ import {
 } from '@test/helpers/project.js';
 import { run } from '@test/helpers/run.js';
 import { describe, expect } from 'vite-plus/test';
-
-import { npmrcTask } from '../../packages/tasks/src/npmrc.js';
-import { lintStagedTask } from '../../packages/tasks/src/quality/lint-staged.js';
 
 describe('npmrcTask', () => {
   test('returns expected content in dryRun', async () => {

@@ -1,12 +1,12 @@
 import type { ProjectProfile } from '@xtarterize/core';
 import { runScriptCommand } from 'nypm';
 
-import type { YamlStep } from './shared/workflow.js';
+import type { YamlStep } from '@/templates/workflows/shared/workflow.js';
 import {
   conditionalScriptStep,
   createSetupSteps,
   renderSteps,
-} from './shared/workflow.js';
+} from '@/templates/workflows/shared/workflow.js';
 
 function renderTagPushWorkflow(profile: ProjectProfile): string {
   const pm = profile.packageManager;

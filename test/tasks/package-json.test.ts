@@ -1,10 +1,9 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { defineTask } from '@tasks/factory/define-task.js';
 import { withProject } from '@test/helpers/project.js';
 import { run } from '@test/helpers/run.js';
 import { describe, expect } from 'vite-plus/test';
-
-import { defineTask } from '../../packages/tasks/src/factory/define-task.js';
 
 const readPackageJson = (cwd: string): Promise<string> =>
   fs.readFile(path.join(cwd, 'package.json'), 'utf-8');

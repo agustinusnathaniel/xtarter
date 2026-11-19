@@ -1,7 +1,7 @@
 import type { ProjectProfile } from '@xtarterize/core';
 import { installDependenciesCommand } from 'nypm';
 
-import { ACTION_VERSIONS } from './versions.js';
+import { ACTION_VERSIONS } from '@/templates/workflows/shared/versions.js';
 
 export interface YamlStep {
   continueOnError?: boolean;

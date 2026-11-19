@@ -1,3 +1,8 @@
+import { getSkillsToInstall } from '@tasks/agent/catalog.js';
+import {
+  resolveSkillsExecutor,
+  skillsInstallTask,
+} from '@tasks/agent/skills-install.js';
 import {
   type FixtureName,
   fixtureDir,
@@ -12,12 +17,6 @@ import {
 } from '@xtarterize/core';
 import { Duration } from 'effect';
 import { beforeEach, describe, expect } from 'vite-plus/test';
-
-import { getSkillsToInstall } from '../../packages/tasks/src/agent/catalog.js';
-import {
-  resolveSkillsExecutor,
-  skillsInstallTask,
-} from '../../packages/tasks/src/agent/skills-install.js';
 
 // The task talks to the ProcessRunner service, so the test swaps in a stub
 // layer that records commands and scripts the exit code per test.

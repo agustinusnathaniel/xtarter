@@ -1,6 +1,5 @@
+import type { Bundler } from '@/detect/types.js';
 import { findConfigFile } from '@/utils/fs.js';
-
-import type { Bundler } from './types.js';
 
 const CONFIG_EXTENSIONS = ['.ts', '.js', '.mts', '.mjs', '.cts', '.cjs'];
 

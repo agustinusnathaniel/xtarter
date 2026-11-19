@@ -13,6 +13,19 @@ import {
   type TaskTarget,
 } from '@/factory/define-task.js';
 import {
+  isManagedConfig,
+  type LintTaskOptions,
+  lintTaskDeps,
+  newConfigForm,
+} from '@/lint/config-form.js';
+import {
+  classifyBlock,
+  createVitePlusConfigTarget,
+  usesVitePlusConfig,
+  VITE_CONFIG_FILE,
+  type VitePlusBlockSpec,
+} from '@/lint/vite-plus-config.js';
+import {
   renderManagedOxfmtTsConfig,
   renderOxfmtTsConfig,
   vitePlusFmtBlock,
@@ -25,20 +38,6 @@ import {
   VITE_PLUS_LINT_PREFIX,
   vitePlusLintBlock,
 } from '@/templates/oxlint-template.js';
-
-import {
-  isManagedConfig,
-  type LintTaskOptions,
-  lintTaskDeps,
-  newConfigForm,
-} from './config-form.js';
-import {
-  classifyBlock,
-  createVitePlusConfigTarget,
-  usesVitePlusConfig,
-  VITE_CONFIG_FILE,
-  type VitePlusBlockSpec,
-} from './vite-plus-config.js';
 
 const ULTRACITE_OXLINT_MARKER = 'ultracite/oxlint/';
 const SCRIPT_EXTENSIONS = ['.ts', '.js', '.mjs', '.json'];

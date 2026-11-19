@@ -1,5 +1,7 @@
 import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { biomeTask, createBiomeTask } from '@tasks/lint/biome.js';
+import { oxfmtTask, oxlintTask } from '@tasks/lint/oxlint.js';
 import {
   fixtureDir,
   fixtureProfile,
@@ -7,12 +9,6 @@ import {
 } from '@test/helpers/project.js';
 import { run } from '@test/helpers/run.js';
 import { describe, expect } from 'vite-plus/test';
-
-import {
-  biomeTask,
-  createBiomeTask,
-} from '../../packages/tasks/src/lint/biome.js';
-import { oxfmtTask, oxlintTask } from '../../packages/tasks/src/lint/oxlint.js';
 
 describe('biomeTask', () => {
   test('is applicable to project with biome dep', async () => {

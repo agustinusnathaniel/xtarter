@@ -2,8 +2,7 @@ import { biomeCoreLayer, sharedConfigEntry } from '@xtarter/config';
 import type { ProjectProfile } from '@xtarterize/core';
 
 import type { LintConfigForm } from '@/lint/config-form.js';
-
-import { collectUltracitePresets } from './ultracite-presets.js';
+import { collectUltracitePresets } from '@/templates/ultracite-presets.js';
 
 function buildBiomeFilesConfig(): Record<string, unknown> {
   return {

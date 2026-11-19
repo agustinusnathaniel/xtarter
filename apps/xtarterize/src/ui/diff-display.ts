@@ -1,7 +1,7 @@
 import type { DiffHunk, FileDiff } from '@xtarterize/core';
 import { actionTag, formatDiffHeader, pc } from '@xtarterize/core';
 
-import { createCliTable } from './table-chars.js';
+import { createCliTable } from '@/ui/table-chars.js';
 
 export type DisplayFormat = 'terminal' | 'json';
 

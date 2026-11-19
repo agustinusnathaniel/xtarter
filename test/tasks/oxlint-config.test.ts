@@ -5,6 +5,12 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 import {
+  createOxfmtTask,
+  createOxlintTask,
+  oxfmtTask,
+  oxlintTask,
+} from '@tasks/lint/oxlint.js';
+import {
   type FixtureName,
   fixtureDir,
   fixtureProfile,
@@ -13,13 +19,6 @@ import {
 import { run } from '@test/helpers/run.js';
 import type { ProjectProfile } from '@xtarterize/core';
 import { describe, expect } from 'vite-plus/test';
-
-import {
-  createOxfmtTask,
-  createOxlintTask,
-  oxfmtTask,
-  oxlintTask,
-} from '../../packages/tasks/src/lint/oxlint.js';
 
 const ejectedOxlintTask = createOxlintTask({ eject: true });
 const ejectedOxfmtTask = createOxfmtTask({ eject: true });

@@ -1,3 +1,4 @@
+import { packageEnginesTask } from '@tasks/quality/package-engines.js';
 import {
   fixtureDir,
   fixtureProfile,
@@ -7,8 +8,6 @@ import {
 } from '@test/helpers/project.js';
 import { run } from '@test/helpers/run.js';
 import { describe, expect } from 'vite-plus/test';
-
-import { packageEnginesTask } from '../../packages/tasks/src/quality/package-engines.js';
 
 const EXPECTED_DEV_ENGINES = {
   packageManager: { name: 'pnpm', version: '>=11' },

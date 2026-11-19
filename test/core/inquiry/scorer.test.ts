@@ -1,8 +1,7 @@
+import { expandAliases } from '@core/inquiry/aliases.js';
 import { makeTask } from '@test/helpers/factories.js';
 import { scoreTasks } from '@xtarterize/core';
 import { describe, expect } from 'vite-plus/test';
-
-import { expandAliases } from '../../../packages/core/src/inquiry/aliases.js';
 
 const searchTasks: Array<{
   configTargets: Array<string>;

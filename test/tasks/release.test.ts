@@ -1,12 +1,11 @@
 import fs from 'node:fs/promises';
 import path from 'node:path';
+import { releaseWorkflowTask } from '@tasks/ci/release.js';
+import { catVersionTask } from '@tasks/release/cat-version.js';
+import { renderReleaseWorkflow } from '@tasks/templates/workflows/release-yml.js';
 import { fixtureProfile, withProject } from '@test/helpers/project.js';
 import { run } from '@test/helpers/run.js';
 import { describe, expect } from 'vite-plus/test';
-
-import { releaseWorkflowTask } from '../../packages/tasks/src/ci/release.js';
-import { catVersionTask } from '../../packages/tasks/src/release/cat-version.js';
-import { renderReleaseWorkflow } from '../../packages/tasks/src/templates/workflows/release-yml.js';
 
 describe('catVersionTask', () => {
   test('skips release script when it already exists with a different value', async () => {

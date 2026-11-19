@@ -1,11 +1,10 @@
-import { describe, expect } from 'vite-plus/test';
-
 import {
   areEquivalent,
   extractTool,
   findEquivalentScriptKey,
   normalizeCommand,
-} from '../../packages/tasks/src/factory/equivalence.js';
+} from '@tasks/factory/equivalence.js';
+import { describe, expect } from 'vite-plus/test';
 
 describe('normalizeCommand', () => {
   test('trims and collapses whitespace', () => {

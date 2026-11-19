@@ -1,14 +1,13 @@
 import { mergeJson } from '@xtarterize/patchers';
 
 import { type DefinedTask, defineTask } from '@/factory/define-task.js';
-import { buildBiomeJson, managedBiomeExtends } from '@/templates/biome-json.js';
-
 import {
   isManagedConfig,
   type LintTaskOptions,
   lintTaskDeps,
   newConfigForm,
-} from './config-form.js';
+} from '@/lint/config-form.js';
+import { buildBiomeJson, managedBiomeExtends } from '@/templates/biome-json.js';
 
 const BIOME_FILE = { extensions: ['.json', '.jsonc'], filepath: 'biome.json' };
 

@@ -1,12 +1,12 @@
 import type { ProjectProfile } from '@xtarterize/core';
 import { runScriptCommand } from 'nypm';
 
-import { ACTION_VERSIONS } from './shared/versions.js';
+import { ACTION_VERSIONS } from '@/templates/workflows/shared/versions.js';
 import {
   conditionalScriptStep,
   createSetupSteps,
   renderSteps,
-} from './shared/workflow.js';
+} from '@/templates/workflows/shared/workflow.js';
 
 export function renderAutoUpdateWorkflow(profile: ProjectProfile): string {
   const pm = profile.packageManager;

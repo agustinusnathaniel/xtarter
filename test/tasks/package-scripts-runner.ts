@@ -1,3 +1,4 @@
+import { packageScriptsTask } from '@tasks/factory/package-scripts.js';
 import {
   type FixtureName,
   fixtureDir,
@@ -8,8 +9,6 @@ import {
 import { run } from '@test/helpers/run.js';
 import type { ProjectProfile, TaskStatus } from '@xtarterize/core';
 import { expect, test } from 'vite-plus/test';
-
-import { packageScriptsTask } from '../../packages/tasks/src/factory/package-scripts.js';
 
 /** Dev dependency sets shared by the package-scripts case tables. */
 export const DEPS = {
