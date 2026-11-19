@@ -29,6 +29,18 @@ export interface SkillsExecutor {
 }
 
 /**
+ * Corepack shims (0.35 at least) turn a `devEngines.packageManager` that has a
+ * range but no `packageManager` field, such as the `pnpm@>=11` that
+ * `quality/package-engines` writes, into an "expected a semver version" error
+ * before the package manager starts. A dlx run does not need the project's
+ * pinned version, so it tells Corepack to ignore the project spec. Package
+ * managers started without Corepack ignore the variable.
+ */
+const SKILLS_EXECUTOR_ENV: Readonly<Record<string, string>> = {
+  COREPACK_ENABLE_PROJECT_SPEC: '0',
+};
+
+/**
  * npm 11 rejects `npx` when `devEngines.packageManager` names another package
  * manager (EBADDEVENGINES), and `quality/package-engines` writes that field
  * during `init`. Projects on another package manager therefore go through their
@@ -176,6 +188,7 @@ function runSkills(
       const result = yield* Effect.mapError(
         runner.run(executor.command, args, {
           cwd,
+          env: SKILLS_EXECUTOR_ENV,
           stdio: 'inherit',
           timeout: Duration.millis(60_000),
         }),

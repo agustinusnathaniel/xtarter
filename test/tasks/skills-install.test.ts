@@ -550,8 +550,11 @@ describe('skillsInstallTask executor selection', () => {
           expect(
             callArgs[1].slice(0, executorCase.expectedPrefix.length + 1)
           ).toEqual([...executorCase.expectedPrefix, 'add']);
+          // Corepack shims reject the range-only devEngines.packageManager
+          // that quality/package-engines writes unless the project spec is off.
           expect(callArgs[2]).toMatchObject({
             cwd: tmpDir,
+            env: { COREPACK_ENABLE_PROJECT_SPEC: '0' },
             stdio: 'inherit',
             timeout: Duration.millis(60_000),
           });
