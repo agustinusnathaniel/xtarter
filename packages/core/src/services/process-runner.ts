@@ -12,6 +12,8 @@ export interface CommandResult {
 
 export interface ProcessRunOptions {
   cwd?: string;
+  /** Extra variables merged over the parent environment. */
+  env?: Readonly<Record<string, string>>;
   stdio?: 'pipe' | 'inherit';
   timeout?: Duration.Input;
 }
@@ -29,7 +31,11 @@ function runCommand(
       }),
     try: (signal) =>
       x(command, [...args], {
-        nodeOptions: { cwd: options?.cwd, stdio: options?.stdio },
+        nodeOptions: {
+          cwd: options?.cwd,
+          env: options?.env,
+          stdio: options?.stdio,
+        },
         signal,
       }).then((result) => ({
         exitCode: result.exitCode ?? -1,
