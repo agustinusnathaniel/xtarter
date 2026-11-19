@@ -37,6 +37,7 @@ export const oxlintPresets = [
   'gdp',
   'jest',
   'js-plugins',
+  'landmines',
   'nestjs',
   'next',
   'playwright',

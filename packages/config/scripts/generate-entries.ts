@@ -43,14 +43,32 @@ function biomeEntry(preset: BiomePreset): string {
   })}\n`;
 }
 
-function oxlintEntry(preset: OxlintPreset): string {
-  const body = preset === 'core' ? objectBody(oxlintCoreLayer()) : '';
-  const rest = body === '' ? '' : `\n  ${body},`;
+/**
+ * Whether the Ultracite preset loads JS plugins. Oxlint loads them through
+ * `extends` either way, but Knip reads `jsPlugins` only from the root config,
+ * so the entry re-exports them for a consumer to repeat at its root
+ * (`jsPlugins: landmines.jsPlugins`).
+ */
+async function hasJsPlugins(preset: OxlintPreset): Promise<boolean> {
+  const { default: config } = (await import(`ultracite/oxlint/${preset}`)) as {
+    default: { jsPlugins?: Array<unknown> };
+  };
+  return (config.jsPlugins?.length ?? 0) > 0;
+}
+
+async function oxlintEntry(preset: OxlintPreset): Promise<string> {
+  const lines = ['extends: [ultracite],'];
+  if (await hasJsPlugins(preset)) {
+    lines.push('jsPlugins: ultracite.jsPlugins,');
+  }
+  if (preset === 'core') {
+    lines.push(`${objectBody(oxlintCoreLayer())},`);
+  }
   return `// ${GENERATED}
 import ultracite from "ultracite/oxlint/${preset}";
 
 export default {
-  extends: [ultracite],${rest}
+  ${lines.join('\n  ')}
 };
 `;
 }
@@ -85,7 +103,7 @@ const writes: Array<Promise<void>> = [
     write(`biome/${preset}.jsonc`, biomeEntry(preset))
   ),
   ...oxlintPresets.flatMap((preset) => [
-    write(`oxlint/${preset}.mjs`, oxlintEntry(preset)),
+    oxlintEntry(preset).then((entry) => write(`oxlint/${preset}.mjs`, entry)),
     write(`oxlint/${preset}.d.mts`, oxlintTypes),
   ]),
   write('oxfmt/index.mjs', oxfmtEntry()),
