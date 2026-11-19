@@ -48,21 +48,35 @@ export interface LintDepsFile {
   isManaged?: (text: string) => boolean;
 }
 
+/** A dependency the config needs only when its text references something. */
+export interface ConditionalDep {
+  dep: TaskDep;
+  when: (text: string) => boolean;
+}
+
 /**
  * Dependencies for a lint task whose managed form also needs the shared
- * package. The written text decides: a pending diff's content when there is
- * one, otherwise the file on disk.
+ * package, plus any the config's text calls for. The written text decides: a
+ * pending diff's content when there is one, otherwise the file on disk.
  */
 export function lintTaskDeps(
   base: Array<TaskDep>,
-  resolveFile: (profile: ProjectProfile) => LintDepsFile
+  resolveFile: (profile: ProjectProfile) => LintDepsFile,
+  conditional: Array<ConditionalDep> = []
 ): DepResolver {
   return async (resolution, { cwd, profile }) => {
     const file = resolveFile(profile);
     const pending = resolution.diffs[0]?.after;
     const text =
       pending ?? (await readTargetText(cwd, file.filepath, file.extensions));
+    if (text === null) {
+      return base;
+    }
     const isManaged = file.isManaged ?? isManagedConfig;
-    return text !== null && isManaged(text) ? [...base, sharedConfigDep] : base;
+    return [
+      ...base,
+      ...(isManaged(text) ? [sharedConfigDep] : []),
+      ...conditional.filter(({ when }) => when(text)).map(({ dep }) => dep),
+    ];
   };
 }

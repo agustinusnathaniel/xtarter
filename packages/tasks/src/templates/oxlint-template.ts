@@ -33,9 +33,32 @@ function presetBinding(preset: string): string {
   );
 }
 
+/**
+ * The opt-in Ultracite layer xtarterize adds only when it writes a new Oxlint
+ * config (ADR-046). Upkeep of an existing config never adds it, so projects
+ * set up earlier keep the rules they had.
+ */
+export const NEW_CONFIG_OXLINT_PRESET = 'landmines';
+
+/** The package the landmines layer loads its JS plugins from. */
+export const LANDMINES_PACKAGE = '@interfere/landmines';
+
+/** The presets a new Oxlint config extends: the detected layers, then landmines. */
+function newConfigPresets(profile: ProjectProfile): Array<string> {
+  return [...collectUltracitePresets(profile), NEW_CONFIG_OXLINT_PRESET];
+}
+
+/**
+ * Repeats the landmines plugins at the root, where Knip looks for them, so it
+ * does not report the plugin package as unused.
+ */
+function jsPluginsLine(binding: string): string {
+  return `\n  jsPlugins: ${binding}.jsPlugins,`;
+}
+
 /** The full config: Ultracite presets plus the xtarter layer written inline. */
 export function renderOxlintTsConfig(profile: ProjectProfile): string {
-  const presets = collectUltracitePresets(profile);
+  const presets = newConfigPresets(profile);
   const layer = oxlintCoreLayer();
 
   const importLines = presets.map(
@@ -46,7 +69,7 @@ export function renderOxlintTsConfig(profile: ProjectProfile): string {
 ${importLines.join('\n')}
 
 export default defineConfig({
-  extends: [${presets.map(presetBinding).join(', ')}],${renderEnvLine(profile)}
+  extends: [${presets.map(presetBinding).join(', ')}],${renderEnvLine(profile)}${jsPluginsLine(presetBinding(NEW_CONFIG_OXLINT_PRESET))}
   rules: ${nestJson(layer.rules)},
   overrides: ${nestJson(layer.overrides)},
 });
@@ -75,12 +98,23 @@ export function managedOxlintImports(
   }));
 }
 
-/** The Ultracite presets an ejected Oxlint config extends, core first. */
+/** The shared imports a new managed Oxlint config extends: detected layers, then landmines. */
+function newManagedOxlintImports(
+  profile: ProjectProfile,
+  prefix = ''
+): Array<ConfigArrayImport> {
+  return newConfigPresets(profile).map((preset) => ({
+    from: sharedConfigEntry('oxlint', preset),
+    local: prefixedBinding(prefix, preset),
+  }));
+}
+
+/** The Ultracite presets a new ejected Oxlint config extends, core first. */
 function ejectedOxlintImports(
   profile: ProjectProfile,
   prefix: string
 ): Array<ConfigArrayImport> {
-  return collectUltracitePresets(profile).map((preset) => ({
+  return newConfigPresets(profile).map((preset) => ({
     from: `ultracite/oxlint/${preset}`,
     local: prefixedBinding(prefix, preset),
   }));
@@ -98,17 +132,22 @@ export function vitePlusLintBlock(
   form: LintConfigForm
 ): VitePlusBlock {
   if (form === 'managed') {
-    const imports = managedOxlintImports(profile, VITE_PLUS_LINT_PREFIX);
+    const imports = newManagedOxlintImports(profile, VITE_PLUS_LINT_PREFIX);
+    const landmines = prefixedBinding(
+      VITE_PLUS_LINT_PREFIX,
+      NEW_CONFIG_OXLINT_PRESET
+    );
     return {
-      expression: `{${renderEnvLine(profile)}\n  extends: [${imports.map(({ local }) => local).join(', ')}],\n}`,
+      expression: `{${renderEnvLine(profile)}\n  extends: [${imports.map(({ local }) => local).join(', ')}],${jsPluginsLine(landmines)}\n}`,
       imports,
     };
   }
   const imports = ejectedOxlintImports(profile, 'ultracite');
+  const landmines = prefixedBinding('ultracite', NEW_CONFIG_OXLINT_PRESET);
   const layer = oxlintCoreLayer();
   return {
     expression: `{${renderEnvLine(profile)}
-  extends: [${imports.map(({ local }) => local).join(', ')}],
+  extends: [${imports.map(({ local }) => local).join(', ')}],${jsPluginsLine(landmines)}
   overrides: ${nestJson(layer.overrides)},
   rules: ${nestJson(layer.rules)},
 }`,
@@ -118,7 +157,7 @@ export function vitePlusLintBlock(
 
 /** A short config extending `@xtarter/config`, plus the project's runtime env. */
 export function renderManagedOxlintTsConfig(profile: ProjectProfile): string {
-  const imports = managedOxlintImports(profile);
+  const imports = newManagedOxlintImports(profile);
   const importLines = imports.map(
     ({ from, local }) => `import ${local} from "${from}";`
   );
@@ -127,7 +166,7 @@ export function renderManagedOxlintTsConfig(profile: ProjectProfile): string {
 ${importLines.join('\n')}
 
 export default defineConfig({
-  extends: [${imports.map(({ local }) => local).join(', ')}],${renderEnvLine(profile)}
+  extends: [${imports.map(({ local }) => local).join(', ')}],${renderEnvLine(profile)}${jsPluginsLine(presetBinding(NEW_CONFIG_OXLINT_PRESET))}
 });
 `;
 }

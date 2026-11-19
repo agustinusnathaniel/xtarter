@@ -31,7 +31,9 @@ import {
   vitePlusFmtBlock,
 } from '@/templates/oxfmt-template.js';
 import {
+  LANDMINES_PACKAGE,
   managedOxlintImports,
+  NEW_CONFIG_OXLINT_PRESET,
   renderManagedOxlintTsConfig,
   renderOxlintJsonConfig,
   renderOxlintTsConfig,
@@ -49,6 +51,11 @@ const OXFMT_FILE = { extensions: SCRIPT_EXTENSIONS, filepath: 'oxfmt.config' };
 
 function isJsonConfig(text: string): boolean {
   return text.trim().startsWith('{');
+}
+
+/** True when the config extends the landmines layer, shared or ejected. */
+function usesLandmines(text: string): boolean {
+  return text.includes(`/oxlint/${NEW_CONFIG_OXLINT_PRESET}`);
 }
 
 /**
@@ -162,7 +169,13 @@ export function createOxlintTask(options: LintTaskOptions = {}): DefinedTask {
         { depName: 'oxlint', dev: true },
         { depName: 'ultracite', dev: true },
       ],
-      depsFile(OXLINT_FILE, VITE_LINT_BLOCK)
+      depsFile(OXLINT_FILE, VITE_LINT_BLOCK),
+      [
+        {
+          dep: { depName: LANDMINES_PACKAGE, dev: true },
+          when: usesLandmines,
+        },
+      ]
     ),
     group: 'Linting & Formatting',
     id: 'lint/oxlint',
