@@ -1,5 +1,11 @@
 # @xtarterize/core
 
+## 2.3.0
+
+### Patch Changes
+
+- [#264](https://github.com/agustinusnathaniel/xtarter/pull/264) [`f18ea61`](https://github.com/agustinusnathaniel/xtarter/commit/f18ea613a877807c2369d315038770682885dd96) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Fix `agent/skills-install` failing with "Invalid package manager specification in package.json (pnpm@>=11); expected a semver version" when `pnpm` is a Corepack shim. Corepack rejects the range-only `devEngines.packageManager` that `quality/package-engines` writes, so the skills CLI now runs with `COREPACK_ENABLE_PROJECT_SPEC=0`. `ProcessRunner.run` accepts an `env` option for this.
+
 ## 2.2.0
 
 No changes in this release.

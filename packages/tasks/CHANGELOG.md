@@ -1,5 +1,15 @@
 # @xtarterize/tasks
 
+## 2.3.0
+
+### Patch Changes
+
+- [#264](https://github.com/agustinusnathaniel/xtarter/pull/264) [`f18ea61`](https://github.com/agustinusnathaniel/xtarter/commit/f18ea613a877807c2369d315038770682885dd96) Thanks [@agustinusnathaniel](https://github.com/agustinusnathaniel)! - Fix `agent/skills-install` failing with "Invalid package manager specification in package.json (pnpm@>=11); expected a semver version" when `pnpm` is a Corepack shim. Corepack rejects the range-only `devEngines.packageManager` that `quality/package-engines` writes, so the skills CLI now runs with `COREPACK_ENABLE_PROJECT_SPEC=0`. `ProcessRunner.run` accepts an `env` option for this.
+- Updated dependencies [[`901e41d`](https://github.com/agustinusnathaniel/xtarter/commit/901e41df09225a9a1372dae7909ac038060fb9f4), [`f18ea61`](https://github.com/agustinusnathaniel/xtarter/commit/f18ea613a877807c2369d315038770682885dd96), [`901e41d`](https://github.com/agustinusnathaniel/xtarter/commit/901e41df09225a9a1372dae7909ac038060fb9f4)]:
+  - @xtarter/config@0.2.0
+  - @xtarterize/core@2.3.0
+  - @xtarterize/patchers@2.3.0
+
 ## 2.2.0
 
 ### Patch Changes
