@@ -27,7 +27,7 @@
 - [ ] Changes are idempotent (running twice produces same result)
 - [ ] New tasks follow the `Task` interface
 - [ ] Templates are accurate and production-grade
-- [ ] ADR created/updated for architectural changes
+- [ ] ADR written or superseded if a reader of the code alone would undo a decision here (see `docs/ADRs/README.md`)
 
 ## Contributors
 
