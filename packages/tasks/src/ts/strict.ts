@@ -23,7 +23,7 @@ function getCompilerOption(content: string, key: string): unknown {
 }
 
 /**
- * ADR 008 tristate: a missing option projects `patch`, a matching option
+ * ADR-010 three states: a missing option projects `patch`, a matching option
  * `skip`, and an option the project explicitly sets to another value projects
  * `conflict`. Conflict wins over missing so an explicit override is reported.
  */

@@ -14,7 +14,6 @@ Own a minimal Cloudflare Pages advanced-mode worker in the docs app, copied into
 - Every response carries a merged `Vary: Accept, Accept-Encoding` header, so CDN cache variation is correct for negotiated variants.
 - When `Accept` explicitly includes `text/markdown`, the worker serves an existing `.md` twin; wildcard-only accepts (`*/*`, `text/*`) still receive HTML, and no conversion happens at request time.
 - A 404 returns a short markdown recovery body to markdown clients; other clients get the HTML 404.
-- Organization JSON-LD keeps `address`, `email`, and `telephone` absent by policy, with GitHub Issues as the only contact point; guard tests enforce this.
 
 ## Rationale
 
@@ -33,5 +32,4 @@ Own a minimal Cloudflare Pages advanced-mode worker in the docs app, copied into
 
 - The docs app maintains a small request-time worker; the deployed artifact matches what is reviewed in source control.
 - The build gains a copy step; running it twice still produces byte-identical output, preserving the idempotency contract.
-- Worker helpers are unit-tested, with artifact checks when a local build exists.
 - Reverting to the zone feature requires deleting the worker and updating this ADR; no content or twin-generation changes.

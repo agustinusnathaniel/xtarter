@@ -1,6 +1,6 @@
 # ADR-043: Managed Lint Configs by Default
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-11-17
 
 ## Context

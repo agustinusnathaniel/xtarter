@@ -1,10 +1,8 @@
-# ADR 024: Natural Language Task Query Engine
+# ADR 024: Offline Task Query Engine
 
 ## Status
 
 Accepted
-
-External task plugins were later removed by ADR 037, and the original transitive synonym map was replaced by the compact alias expansion of ADR 039. The scoring signals and the search metadata contract below remain as decided.
 
 ## Date
 
@@ -12,25 +10,33 @@ External task plugins were later removed by ADR 037, and the original transitive
 
 ## Context
 
-Users had to know a task's exact ID to target it, or scan a flat `list` of all applicable tasks. There was no way to search by loose description, rank a composition plan, or score tasks programmatically. Any new module had to respect core's package boundaries and stay dependency-free.
+Users had to know a task's exact ID to target it, or scan a flat list of every applicable task. The `query` command and `init --compose` let them search by description and get a ranked plan. The engine lives in core, so it must stay free of dependencies. This record absorbs ADR 039, which restored query expansion.
 
 ## Decision
 
-Add optional search metadata to the task interface and a pure-function scoring engine in core. Two CLI surfaces use it: `query <query>` for task discovery and `init --compose <query>` for ranked composition plans. Scoring combines weighted signals (label, id, keywords, group, config targets) with tokenization and fuzzy matching; no AI model or external dependency is involved.
+- Tasks carry optional search metadata, and a pure scoring engine in core ranks them. Scoring combines weighted signals (label, id, keywords, group, config targets) with tokenization, stemming, and fuzzy, prefix, and substring matching. No AI model or external service is involved.
+- Query expansion uses one compact, hand-written alias table. A term expands to the other members of its group, one hop only, with no closure across groups; a term in two groups gets the union of both.
+- Alias matches score below direct matches at the same tier, alias substrings need meaningful containment, and a multi-word query that exactly matches an authored keyword ranks in a reserved tier above alias matches. The design follows the search in Meta's MIT-licensed Astryx design system.
+- Tasks add vocabulary through their keywords; the alias table holds synonyms shared across tasks.
 
 ## Rationale
 
-- Natural-language discovery does not require users to memorize IDs.
-- Pure functions keep the engine testable, fast, and offline.
+- Pure functions keep the engine fast, offline, deterministic, and testable.
+- The alias table is a reversal, not a first attempt. The original transitive synonym map let synonyms outrank literal terms, so expansion was removed entirely (ADR 038). A broader query battery then measured a recall regression: zero-result queries and inverted top results. The compact table restores recall, and the discount keeps literal matches ahead.
+- Stemming stays: a cut that also removed it inverted a documented ranking.
 
 ## Alternatives Considered
 
-- **A separate search index registry.** Rejected: it could drift from task definitions, and tasks would register in two places.
-- **LLM-based query parsing.** Rejected: adds an AI dependency, latency, and an offline failure mode, against the no-AI requirement.
-- **Regex-based classification.** Rejected: does not scale to new tasks and composes worse than signal scoring.
+- **LLM-based query parsing.** Adds an AI dependency, latency, and an offline failure mode, against the no-AI requirement.
+- **An external search library.** Adds a dependency and an index lifecycle to a pure engine.
+- **A separate search index registry.** Drifts from task definitions, and tasks would register in two places.
+- **The original transitive synonym map.** Synonyms outranked literal matches.
+- **No expansion.** Measured recall loss.
+- **Aliases only in task keywords.** Duplicates terms across the catalog and lets them drift.
 
 ## Consequences
 
-- Users can discover tasks by description; tasks without search metadata still score on label, id, and group.
-- Scoring is algorithmic and cannot match AI nuance, by design.
-- Every built-in task needs search metadata, and the match terms need updating as the catalog grows.
+- Scoring cannot match an AI model's nuance, by design.
+- The alias table is a second hand-written list that can drift from task metadata; revisit the design if it grows beyond a small, reviewable size.
+- Alias expansion can still outrank an unrelated weak direct match by one tier; the discount bounds this but does not remove it.
+- Multi-word alias keys never fire per token, so phrase promotion covers whole queries only.

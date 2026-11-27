@@ -1,4 +1,4 @@
-# ADR 028: Apply Plan and Execute Seam
+# ADR 028: Plan, Then Execute Against Current Files
 
 ## Status
 
@@ -10,28 +10,31 @@ Accepted
 
 ## Context
 
-The apply pipeline mixed planning and execution across several phase modules with shared mutable timing state. Dry-run content was discarded before execution, so preview and execution could drift, and batch install failures were logged but never reported, so JSON output and exit codes claimed success. The CLI kept a second dry-run collector for diff and preview, compounding the divergence.
+The apply pipeline once mixed planning and execution: preview content was discarded before apply, batch install failures were logged but reported as success, and the CLI kept a second dry-run collector. `package.json` had three writers (a cached whole-object writer, a text patch writer, and the package manager during install), so a cached write could erase dependencies the install had just added. Tasks also computed status separately from their diffs, so check, dry run, and apply could disagree. This record absorbs ADR 027 (one `package.json` owner) and the invariant behind ADR 029 (the task spec).
 
 ## Decision
 
-Split the pipeline into a side-effect-free plan and an executor. Planning returns a plan whose entries carry task, status, diffs, timing, and any check or dry-run error, plus dependency declarations and the backup set; it performs no writes, backups, or installs. Execution takes the plan and derives backup, one run manifest, one batch dependency install, and sequential applies from it, replaying each task against current state rather than planned bytes. Install failures surface in the result's errors. The CLI uses the plan for diff, dry run, and interactive preview.
+- Each task resolves once into a status and its diffs; check, dry run, and apply all read that one resolution.
+- Planning has no side effects. It returns entries with status, diffs, timing, and errors, plus dependency declarations and the backup set. Diff, dry run, and interactive preview all use the plan.
+- Execution takes the plan and derives the backup, one run manifest, one batch dependency install, and the sequential applies. Each apply replays its task against the current files rather than writing planned bytes. Install failures surface in the result's errors and exit code.
+- One module owns every xtarterize write to `package.json`. It reads the file fresh on each call and applies a merge patch against the current text, never a cached object.
 
 ## Rationale
 
-- One resolution feeds diff, dry run, apply, and reporting, so the paths cannot drift.
-- Execution must replay because the package manager rewrites `package.json` after planning; writing planned bytes would discard installed dependencies.
-- The plan governs backup and the run manifest, so undo reflects the whole operation.
+- The package manager rewrites `package.json` after planning, and users can edit files in between. Writing planned bytes or a cached object would discard installed dependencies or user edits, which is why execution replays and the owner never caches.
+- One resolution feeds every path, so preview and apply cannot drift.
+- The plan governs backup and the run manifest, so undo covers the whole operation (ADR 022).
 
 ## Alternatives Considered
 
-- **Execution writes planned bytes.** Impossible: the installer rewrites `package.json` after planning, and users can edit files in between.
-- **Keep the plan private.** The CLI keeps its duplicate dry-run collector, which is where preview and apply drift originated.
-- **Derive without a plan object.** Reporting and execution would re-derive statuses, restoring the duplication.
-- **Keep the phase modules with a shared accumulator.** Removes neither the spread nor the discarded dry-run content.
+- **Execute by writing planned bytes.** Discards what the installer and the user changed after planning.
+- **Cache `package.json` and invalidate it.** Still races external writers.
+- **A run-scoped store shared between tasks.** Needs a new public task field or ambient state.
+- **Keep the plan private.** The CLI keeps its duplicate dry-run collector, where preview and apply drift began.
+- **Compute status separately from diffs.** The disagreement this record removes.
 
 ## Consequences
 
-- Diff, dry run, and preview share one plan, and install failures affect JSON output and exit codes.
-- A run whose install fails now reports failure instead of logging and continuing, a user-facing behavior change.
-- The plan shape becomes public and must stay compatible.
-- Timing is measured per entry during planning and separately for execution.
+- A run whose install fails reports failure instead of logging and continuing.
+- The plan shape is public and must stay compatible.
+- Every apply re-reads and rewrites `package.json`; if something edits it between compute and apply, the last writer wins.

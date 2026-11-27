@@ -24,7 +24,7 @@ Adopt no library for config discovery, workspace discovery, or framework detecti
 ## Rationale
 
 - The maintained options solve different problems: deployment-preset detection and source-merging config loaders, not a profile contract over a fixed set of inputs.
-- Detection is small, and the detection registry (ADR 032) removed the drift that made it look like it needed a library.
+- Detection is small and reads its inputs directly (ADR 034), so a library would replace little code.
 - A loader would add dependencies while disabling most of its behavior.
 
 ## Alternatives Considered

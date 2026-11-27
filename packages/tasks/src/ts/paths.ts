@@ -37,7 +37,7 @@ function getPathStatus(
 }
 
 /**
- * ADR 008 tristate: a missing alias projects `patch`, a valid alias (plus
+ * ADR-010 three states: a missing alias projects `patch`, a valid alias (plus
  * `baseUrl: "."` outside Next) projects `skip`, and anything else projects
  * `conflict` so an existing alias is never silently overwritten.
  */

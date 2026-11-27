@@ -1,6 +1,6 @@
 # ADR-044: ESLint and Prettier Are Unsupported
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-11-17
 
 ## Context
