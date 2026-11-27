@@ -22,7 +22,7 @@
 - Non-Effect consumers (for example `create-xtarter-app`) import core helpers from `@xtarterize/core/plain`; modules re-exported there must keep an Effect-free import graph. The root `@xtarterize/core` entry is the full, Effect-based API.
 - JSON modifications go through `packages/patchers/`. Direct string writes to config files are almost always wrong.
 - Package boundaries exist because crossing them created maintenance problems. Core has zero patcher or task deps. `docs` imports from published packages only. `create-xtarter-app` is intentionally isolated.
-- ADRs record every significant architecture decision. Read the relevant one before touching architecture.
+- ADRs record the decisions the code cannot defend on its own: rejected approaches, outside constraints, and reversals. Read the relevant one before touching architecture.
 
 ---
 
@@ -37,7 +37,7 @@
 
 3. **Read the ADRs**
    - Read relevant ADRs in `docs/ADRs/` before implementing
-   - Create a new ADR (Status, Date, Context, Decision, Rationale, Alternatives, Consequences) if your change introduces new architecture or dependencies
+   - Write a new ADR only when a future agent reading just the code would reasonably undo your decision; [`docs/ADRs/README.md`](docs/ADRs/README.md) holds the bar and the format
 
 4. **Reuse Before Reinventing**
    - Check `packages/core/src/`, `packages/patchers/src/`, `packages/tasks/src/` before writing new helpers
@@ -60,7 +60,7 @@
    - Split unrelated concerns into separate commits
 
 8. **Documentation**
-   - Add or update ADRs in the appropriate `docs/ADRs/` subdirectory
+   - When a change reverses a recorded decision, supersede that ADR as [`docs/ADRs/README.md`](docs/ADRs/README.md) describes
    - Update Starlight docs in `apps/docs/src/content/docs/` if behavior or features change
    - Treat `apps/docs/src/content/docs/xtarterize/changelog.mdx` as append-only, newest-first user-facing release history: add new releases at the top and never condense, stub, delete, or rewrite existing entries
    - Present package-manager commands in docs with `<AllPackageManagers>`: `type="dlx"` to run remote packages, `type="create"` to scaffold; import it from `@/components/AllPackageManagers.astro` in each page
