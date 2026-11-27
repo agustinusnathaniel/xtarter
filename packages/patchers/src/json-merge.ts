@@ -3,6 +3,8 @@ import { createDefu } from 'defu';
 import JSON5 from 'json5';
 import { applyEdits, modify } from 'jsonc-parser';
 
+// defu concatenates arrays by default, which would duplicate entries such as
+// presets on every run, so config arrays are replaced wholesale.
 const mergeJsonDefu = createDefu((obj, key, value) => {
   if (Array.isArray(obj[key])) {
     obj[key] = value;

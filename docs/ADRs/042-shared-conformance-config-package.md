@@ -1,21 +1,21 @@
 # ADR-042: Publish the Conformance Rules as a Shared Config Package
 
-**Status:** Proposed
+**Status:** Accepted
 **Date:** 2026-11-17
 
 ## Context
 
-xtarterize writes Biome, Oxlint, and Oxfmt configs that extend Ultracite's presets and add a small xtarter layer on top: size limits, block statements, filename casing, array and import style, quote style, and test-file overrides. That layer exists only in the generated files. Some users want the same conformance as a dependency they import once and never edit.
+xtarterize writes Biome, Oxlint, and Oxfmt configs that extend Ultracite's presets and add a small xtarter layer on top. That layer exists only in the generated files. Some users want the same conformance as a dependency they import once and never edit.
 
 ## Decision
 
 Publish `@xtarter/config`, a plain-data package with one entry per tool and per preset:
 
-- Biome, Oxlint, and Oxfmt entries, each layered the way Ultracite's presets are: a core layer plus framework and router layers (React, Vue, Solid, Svelte, Next, Remix, and the others xtarterize detects). Consumers extend core and add the layers that match their stack.
+- Biome, Oxlint, and Oxfmt entries, each layered the way Ultracite's presets are: a core layer plus framework and router layers (one for each framework and router xtarterize detects). Consumers extend core and add the layers that match their stack.
 - Each xtarter layer extends the matching Ultracite preset. The package depends on Ultracite directly, so one release of `@xtarter/config` always means one rule set. The tools themselves are optional peer dependencies.
-- Only portable settings belong in the package. File includes, VCS integration, CSS parser options, and anything else that depends on a project's layout stay in the consumer's own config.
-- Entries are published as package subpath exports, not through Biome's manifest. A manifest export key makes the package invalid for Node, which loads the Oxlint and Oxfmt entries. If xtarter later ships GritQL plugins, which require the manifest, they go in a separate package.
-- The package owns the xtarter layer. The tasks package imports it to render every config it writes on top of Ultracite, so the rules have one definition. This amends ADR-002: tasks may depend on the config package, which itself depends on nothing in the workspace.
+- Only portable settings belong in the package; anything that depends on a project's layout, such as file includes or VCS integration, stays in the consumer's own config.
+- Entries are published as package subpath exports, not through Biome's manifest. A manifest export key makes the package invalid for Node, which loads the Oxlint and Oxfmt entries, so any future GritQL plugins, which need the manifest, go in a separate package.
+- The package owns the xtarter layer. The tasks package imports it to render every config it writes on top of Ultracite, so the rules have one definition. The package itself depends on nothing in the workspace (ADR-002).
 - Versioning: a new or stricter rule is a minor release, a relaxed rule or a fix is a patch, and removing an entry or raising a peer's major version is a major release.
 
 ## Rationale
@@ -29,7 +29,7 @@ Publish `@xtarter/config`, a plain-data package with one entry per tool and per 
 
 - Direct users get new error-level rules in minor releases, so each such release names those rules in its changelog. An Ultracite upgrade inside the package counts as a rule change.
 - Oxlint's JSON config format cannot extend npm packages, so the shared Oxlint entry works only from a TypeScript or JavaScript Oxlint config.
-- Amended 2026-11-19: an Oxlint entry whose Ultracite preset loads JS plugins (`anti-slop`, `gdp`, `js-plugins`, `landmines`, `shadcn`) also exports that preset's `jsPlugins`. Oxlint loads plugins through `extends` regardless, but Knip reads `jsPlugins` only from the root config, so consumers repeat them there. These layers stay opt-in for direct users. xtarterize adds only `landmines`, to Oxlint configs it creates (ADR-046).
+- An Oxlint entry whose Ultracite preset loads JS plugins also exports them, because Knip reads JS plugins only from the root config. Those layers stay opt-in for direct users; xtarterize adds only `landmines`, to Oxlint configs it creates (ADR-046).
 
 ## Alternatives
 

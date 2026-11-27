@@ -1,4 +1,4 @@
-# ADR 034: Direct Project Detection Without a Profile Cache
+# ADR 034: Detection Reads Its Inputs Directly
 
 ## Status
 
@@ -10,30 +10,27 @@ Accepted
 
 ## Context
 
-ADR 021 added a fingerprint cache for project detection to skip re-reading package manifests, lockfiles, and config files on repeated invocations. It estimated that a warm cache hit would be far cheaper than computing the profile. Measurement during a production-reduction round did not reproduce that: a cache hit was slower than direct detection, because the fingerprint stat calls, JSON read, and validation cost more than the detection work they avoided. The cache also carried a module, cache-entry types, a version, malformed-entry validation, and registry accessors used only for fingerprinting.
+Two layers once sat in front of project detection. A fingerprint cache (ADR 021) skipped re-reading manifests, lockfiles, and config files on repeated runs. A detection registry (ADR 032) declared those inputs once, because detection, fingerprinting, diagnostics, and cache validation each re-listed them and the lists had drifted. Measurement then showed a warm cache hit was slower than detecting directly: the fingerprint stats, JSON read, and validation cost more than the work they skipped. With the cache gone, each registry list had a single reader. This record absorbs ADR 041, which removed the registry.
 
 ## Decision
 
-Remove the profile cache and compute the project profile directly on every invocation. No cache directory is created. The detection registry (ADR 032) stays as the shared declaration for the keyed detector entries and the inputs consumed by detection helpers and doctor lockfile checks.
+- Compute the project profile directly on every invocation. No cache is written.
+- Detection declares its inputs as plain constants next to the code that reads them. A list with two readers, such as the lockfile names shared by package-manager detection and the doctor check, is a constant shared from the module that owns it.
+- The profile records only facts something reads. Unread existence keys and the unused framework version were dropped, along with their filesystem probes.
 
 ## Rationale
 
-- Direct detection measured at least as fast as a warm cache hit, so the cache did not deliver its promised saving.
-- Removing the cache removes an artifact, a storage format, a version, the validation code, and the stale or malformed entry failure modes.
-- Detection stays deterministic and idempotent: every run observes the current inputs instead of trusting a stored snapshot.
+- Direct detection measured at least as fast as a warm cache hit, so the cache never delivered its saving, while it carried a storage format, a version, validation, and stale-entry failure modes.
+- The drift the registry fixed came from many consumers re-listing the same inputs. With one consumer per list, a declaration layer adds indirection and prevents nothing.
+- Every run observes current inputs, which keeps detection deterministic.
 
 ## Alternatives Considered
 
-- **Keep the cache and lower its overhead.** Attempted in ADR 032; the remaining cost is inherent to stat-and-compare plus file I/O.
-- **In-memory cache only.** Does not persist across CLI invocations, so it cannot help the repeated-run case ADR 021 targeted.
-- **Content-hash cache.** More accurate than mtime plus size, but more expensive per input and further from the measured result.
+- **Keep the cache and lower its overhead.** Attempted; the remaining cost is inherent to stat-and-compare plus file reads.
+- **An in-memory or content-hash cache.** In-memory cannot help across CLI invocations, and hashing costs more per input than the measured detection.
+- **Keep the registry and drop only the unread keys.** Keeps builders, ids, and selectors for lists with one reader each.
 
 ## Consequences
 
-### Positive
-
-- Detection is one function with no cache module or schema version, no cache artifact on disk, and less I/O.
-
-### Negative
-
-- Every invocation pays the full detection cost, which measurement showed to be small; the cache optimization is lost.
+- Every invocation pays the full detection cost, which measurement showed to be small.
+- Adding an existence check means adding a field to the profile type and a probe to detection; the type keeps them in step.

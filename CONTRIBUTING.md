@@ -56,8 +56,10 @@ Declare tasks with `defineTask()` from `packages/tasks/src/factory/define-task.t
 - **Tested** - Run the relevant existing tests and add coverage when the behavior and regression risk justify it
 - **Typed** - TypeScript strict mode, no `any`
 - **Formatted** - `pnpm check` (Biome) must pass
+- **Shared dependencies** - A dependency used by two or more packages goes in the pnpm catalog and is referenced with `catalog:`; package-local dependencies keep literal ranges
+- **Agent skills** - When CLI commands, flags, or the task catalog change, update the published skills in `skills/`
 
-Read `docs/ADRs/` before making architectural changes, and create a new ADR if your change introduces new patterns.
+Read `docs/ADRs/` before making architectural changes. Write a new ADR only when someone reading just the code would reasonably undo your decision; [`docs/ADRs/README.md`](docs/ADRs/README.md) holds the bar and the format.
 
 ## Documentation
 

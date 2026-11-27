@@ -1,34 +1,31 @@
-# ADR-014: Vite Plus Migration
+# ADR-014: Vite Plus Toolchain
 
 **Status:** Accepted
 **Date:** 2026-05-07
 
 ## Context
 
-The monorepo previously used a split toolchain: Vite for development, Vitest for testing, a separate bundler for libraries, Biome for linting and formatting, and Turborepo for task orchestration. Each tool needed its own config file and dependency declarations.
+The monorepo used a split toolchain: Vite for development, Vitest for tests, a separate library bundler, Biome for linting and formatting, and Turborepo for orchestration, each with its own config and dependencies. Generated projects that use Vite+ faced a related choice of lint and format stack.
 
 ## Decision
 
-Migrate the monorepo toolchain to Vite Plus, a unified CLI that wraps Vite, Vitest, Rolldown, and related tooling. Build, test, and pack run through it, and its check command combines formatting, linting, and type checking.
-
-Retain Turborepo for task orchestration and Biome for linting and formatting, because Vite Plus's Oxlint and Oxfmt were not mature enough to replace Biome's project-specific rules. Do not redirect Vite and Vitest to their Vite Plus equivalents at the workspace level: packages that need Vite Plus declare it directly, and the documentation site keeps standard Vite because its Astro toolchain needs plugin hooks that Rolldown does not yet implement.
-
-For generated projects, Vite+ detection selects the Vite Plus linting and formatting stack as the default, while a project that already uses Biome keeps it. This supersedes ADR-003's position that Vite+ detection must not gate lint tooling or scripts; type checking remains ungated.
+- Build, test, and pack the monorepo through Vite Plus, which wraps Vite, Vitest, and Rolldown.
+- Keep Turborepo for orchestration and Biome for the repository's own linting and formatting.
+- Packages declare Vite Plus directly instead of redirecting Vite and Vitest at the workspace level. The docs site stays on standard Vite, because Astro needs plugin hooks Rolldown does not yet implement.
+- In generated projects, detecting Vite+ selects Oxlint and Oxfmt as the default lint and format stack, while a project that already uses Biome keeps it. This reverses ADR-003, which kept Vite+ detection from gating lint tooling; type checking stays ungated.
 
 ## Rationale
 
-A single dependency for build, test, and pack reduces version drift and dependency count, and one check command simplifies CI. Retaining Turborepo keeps a well-tested task graph.
+- One dependency for build, test, and pack reduces version drift, and Turborepo keeps a well-tested task graph.
+- Vite+ projects run Vite+'s own lint and format commands, so the default stack is the one those commands run (ADR-045).
 
 ## Alternatives Considered
 
-- Keep the split toolchain: more config files, more dependencies, and separate CI steps with no single check command.
-- Replace Biome with Oxlint and Oxfmt now: those tools were less mature than Biome's project-specific rules.
-- Replace Turborepo with Vite Task: the Vite Task graph was new and might not model the existing dependency graph correctly.
-- Redirect Vite and Vitest at the workspace level: breaks the Astro documentation site.
+- **Replace Turborepo with Vite Task.** Its task graph was new and might not model the existing dependencies correctly.
+- **Replace Biome with Oxlint and Oxfmt in this repository.** They were not mature enough for the project's own rules at the time.
+- **Redirect Vite and Vitest at the workspace level.** Breaks the Astro docs site.
 
 ## Consequences
 
-- Fewer config files overall, but per-package config is larger.
 - The toolchain depends on a young, fast-moving CLI.
-- The development workflow requires the Vite Plus CLI to be available.
-- The documentation site stays on standard Vite and Vitest, so the repository runs two toolchains side by side.
+- The repository runs two toolchains side by side: Vite Plus for packages and standard Vite for the docs site.
